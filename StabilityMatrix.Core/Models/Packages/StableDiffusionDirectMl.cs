@@ -16,8 +16,9 @@ public class StableDiffusionDirectMl(
     IGithubApiCache githubApi,
     ISettingsManager settingsManager,
     IDownloadService downloadService,
-    IPrerequisiteHelper prerequisiteHelper
-) : A3WebUI(githubApi, settingsManager, downloadService, prerequisiteHelper)
+    IPrerequisiteHelper prerequisiteHelper,
+    IPyInstallationManager pyInstallationManager
+) : A3WebUI(githubApi, settingsManager, downloadService, prerequisiteHelper, pyInstallationManager)
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -74,7 +75,11 @@ public class StableDiffusionDirectMl(
     {
         progress?.Report(new ProgressReport(-1f, "Setting up venv", isIndeterminate: true));
         // Setup venv
-        await using var venvRunner = await SetupVenvPure(installLocation).ConfigureAwait(false);
+        await using var venvRunner = await SetupVenvPure(
+                installLocation,
+                pythonVersion: options.PythonOptions.PythonVersion
+            )
+            .ConfigureAwait(false);
 
         var torchVersion = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
         var pipArgs = new PipInstallArgs()

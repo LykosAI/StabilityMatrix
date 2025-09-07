@@ -55,6 +55,8 @@ public class InstalledPackage : IJsonOnDeserialized
 
     public List<PipPackageSpecifierOverride>? PipOverrides { get; set; }
 
+    public string PythonVersion { get; set; } = PyInstallationManager.Python_3_10_11.StringValue;
+
     /// <summary>
     /// Get the launch args host option value.
     /// </summary>

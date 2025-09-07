@@ -1,5 +1,6 @@
 ﻿using System.Collections.Immutable;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using Injectio.Attributes;
 using NLog;
@@ -19,7 +20,13 @@ using StabilityMatrix.Core.Services;
 namespace StabilityMatrix.Core.Models.Packages;
 
 [RegisterSingleton<BasePackage, InvokeAI>(Duplicate = DuplicateStrategy.Append)]
-public class InvokeAI : BaseGitPackage
+public class InvokeAI(
+    IGithubApiCache githubApi,
+    ISettingsManager settingsManager,
+    IDownloadService downloadService,
+    IPrerequisiteHelper prerequisiteHelper,
+    IPyInstallationManager pyInstallationManager
+) : BaseGitPackage(githubApi, settingsManager, downloadService, prerequisiteHelper, pyInstallationManager)
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private const string RelativeRootPath = "invokeai-root";
@@ -33,10 +40,7 @@ public class InvokeAI : BaseGitPackage
 
     public override string Blurb => "Professional Creative Tools for Stable Diffusion";
     public override string LaunchCommand => "invokeai-web";
-    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Nightmare;
-
-    public override IReadOnlyList<string> ExtraLaunchCommands =>
-        ["invokeai-db-maintenance", "invokeai-import-images"];
+    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Advanced;
 
     public override Uri PreviewImageUri =>
         new("https://raw.githubusercontent.com/invoke-ai/InvokeAI/main/docs/assets/canvas_preview.png");
@@ -46,14 +50,7 @@ public class InvokeAI : BaseGitPackage
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Configuration;
 
     public override string MainBranch => "main";
-
-    public InvokeAI(
-        IGithubApiCache githubApi,
-        ISettingsManager settingsManager,
-        IDownloadService downloadService,
-        IPrerequisiteHelper prerequisiteHelper
-    )
-        : base(githubApi, settingsManager, downloadService, prerequisiteHelper) { }
+    public override bool ShouldIgnoreBranches => true;
 
     public override Dictionary<SharedFolderType, IReadOnlyList<string>> SharedFolders =>
         new()
@@ -100,6 +97,8 @@ public class InvokeAI : BaseGitPackage
     public override IEnumerable<TorchIndex> AvailableTorchIndices =>
         [TorchIndex.Cpu, TorchIndex.Cuda, TorchIndex.Rocm, TorchIndex.Mps];
 
+    public override PyVersion RecommendedPythonVersion => Python.PyInstallationManager.Python_3_12_10;
+
     public override TorchIndex GetRecommendedTorchVersion()
     {
         if (Compat.IsMacOS && Compat.IsArm)
@@ -111,12 +110,17 @@ public class InvokeAI : BaseGitPackage
     }
 
     public override IEnumerable<PackagePrerequisite> Prerequisites =>
-        [
-            PackagePrerequisite.Python310,
-            PackagePrerequisite.VcRedist,
-            PackagePrerequisite.Git,
-            PackagePrerequisite.Node,
-        ];
+        [PackagePrerequisite.Python310, PackagePrerequisite.VcRedist, PackagePrerequisite.Git];
+
+    public override Task DownloadPackage(
+        string installLocation,
+        DownloadPackageOptions options,
+        IProgress<ProgressReport>? progress = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return Task.CompletedTask;
+    }
 
     public override async Task InstallPackage(
         string installLocation,
@@ -127,144 +131,128 @@ public class InvokeAI : BaseGitPackage
         CancellationToken cancellationToken = default
     )
     {
+        // Backup existing files/folders except for known directories
+        try
+        {
+            var excludedNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            {
+                "invokeai-root",
+                "invoke.old",
+                "venv",
+            };
+
+            if (Directory.Exists(installLocation))
+            {
+                var entriesToMove = Directory
+                    .EnumerateFileSystemEntries(installLocation)
+                    .Where(p => !excludedNames.Contains(Path.GetFileName(p)))
+                    .ToList();
+
+                if (entriesToMove.Count > 0)
+                {
+                    var backupFolderName = "invoke.old";
+                    var backupFolderPath = Path.Combine(installLocation, backupFolderName);
+
+                    if (Directory.Exists(backupFolderPath) || File.Exists(backupFolderPath))
+                    {
+                        backupFolderPath = Path.Combine(
+                            installLocation,
+                            $"invoke.old.{DateTime.Now:yyyyMMddHHmmss}"
+                        );
+                    }
+
+                    Directory.CreateDirectory(backupFolderPath);
+
+                    foreach (var entry in entriesToMove)
+                    {
+                        var destinationPath = Path.Combine(backupFolderPath, Path.GetFileName(entry));
+
+                        // Ensure we do not overwrite existing files if names collide
+                        if (File.Exists(destinationPath) || Directory.Exists(destinationPath))
+                        {
+                            var name = Path.GetFileNameWithoutExtension(entry);
+                            var ext = Path.GetExtension(entry);
+                            var uniqueName = $"{name}_{DateTime.Now:yyyyMMddHHmmss}{ext}";
+                            destinationPath = Path.Combine(backupFolderPath, uniqueName);
+                        }
+
+                        if (Directory.Exists(entry))
+                        {
+                            Directory.Move(entry, destinationPath);
+                        }
+                        else if (File.Exists(entry))
+                        {
+                            File.Move(entry, destinationPath);
+                        }
+                    }
+
+                    Logger.Info($"Moved {entriesToMove.Count} item(s) to '{backupFolderPath}'.");
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            Logger.Warn(e, "Failed to move existing files to 'invoke.old'. Continuing with installation.");
+        }
+
         // Setup venv
         progress?.Report(new ProgressReport(-1f, "Setting up venv", isIndeterminate: true));
 
-        var venvPath = Path.Combine(installLocation, "venv");
-        var exists = Directory.Exists(venvPath);
-
-        await using var venvRunner = await SetupVenvPure(installLocation).ConfigureAwait(false);
+        await using var venvRunner = await SetupVenvPure(
+                installLocation,
+                pythonVersion: options.PythonOptions.PythonVersion
+            )
+            .ConfigureAwait(false);
         venvRunner.UpdateEnvironmentVariables(env => GetEnvVars(env, installLocation));
 
         progress?.Report(new ProgressReport(-1f, "Installing Package", isIndeterminate: true));
 
-        await SetupAndBuildInvokeFrontend(
-                installLocation,
-                progress,
-                onConsoleOutput,
-                venvRunner.EnvironmentVariables
+        var torchVersion = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
+        var isLegacyNvidiaGpu =
+            SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu() ?? HardwareHelper.HasLegacyNvidiaGpu();
+        var fallbackIndex = torchVersion switch
+        {
+            TorchIndex.Cpu when Compat.IsLinux => "https://download.pytorch.org/whl/cpu",
+            TorchIndex.Cuda when isLegacyNvidiaGpu => "https://download.pytorch.org/whl/cu126",
+            TorchIndex.Cuda => "https://download.pytorch.org/whl/cu128",
+            TorchIndex.Rocm => "https://download.pytorch.org/whl/rocm6.2.4",
+            _ => string.Empty,
+        };
+
+        var invokeInstallArgs = new PipInstallArgs($"invokeai=={options.VersionOptions.VersionTag}");
+
+        var contentStream = await DownloadService
+            .GetContentAsync(
+                $"https://raw.githubusercontent.com/invoke-ai/InvokeAI/refs/tags/{options.VersionOptions.VersionTag}/pins.json",
+                cancellationToken
             )
             .ConfigureAwait(false);
 
-        var pipCommandArgs = "-e . --use-pep517 --extra-index-url https://download.pytorch.org/whl/cpu";
+        // read to json, just deserialize as JObject or whtaever it is in System.Text>json
+        using var reader = new StreamReader(contentStream);
+        var json = await reader.ReadToEndAsync(cancellationToken).ConfigureAwait(false);
+        var pins = JsonNode.Parse(json);
+        var platform =
+            Compat.IsWindows ? "win32"
+            : Compat.IsMacOS ? "darwin"
+            : "linux";
+        var index = pins?["torchIndexUrl"]?[platform]?[
+            torchVersion.ToString().ToLowerInvariant()
+        ]?.GetValue<string>();
 
-        var torchVersion = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
-        var isLegacyNvidiaGpu =
-            torchVersion is TorchIndex.Cuda
-            && (
-                SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu()
-                ?? HardwareHelper.HasLegacyNvidiaGpu()
-            );
-
-        var torchInstallArgs = new PipInstallArgs();
-
-        switch (torchVersion)
+        if (!string.IsNullOrWhiteSpace(index) && !isLegacyNvidiaGpu)
         {
-            case TorchIndex.Cuda:
-                var torchIndex = isLegacyNvidiaGpu ? "cu126" : "cu128";
-                torchInstallArgs = torchInstallArgs
-                    .WithTorch("==2.7.0")
-                    .WithTorchVision("==0.22.0")
-                    .WithTorchAudio("==2.7.0")
-                    .WithXFormers("==0.0.30")
-                    .WithTorchExtraIndex(torchIndex);
-
-                Logger.Info("Starting InvokeAI install (CUDA)...");
-                pipCommandArgs =
-                    $"-e .[xformers] --use-pep517 --extra-index-url https://download.pytorch.org/whl/{torchIndex}";
-                break;
-
-            case TorchIndex.Rocm:
-                torchInstallArgs = torchInstallArgs
-                    .WithTorch("==2.2.2")
-                    .WithTorchVision("==0.17.2")
-                    .WithExtraIndex("rocm5.6");
-
-                Logger.Info("Starting InvokeAI install (ROCm)...");
-                pipCommandArgs =
-                    "-e . --use-pep517 --extra-index-url https://download.pytorch.org/whl/rocm5.6";
-                break;
-
-            case TorchIndex.Mps:
-                // For Apple silicon, use MPS
-                Logger.Info("Starting InvokeAI install (MPS)...");
-                pipCommandArgs = "-e . --use-pep517";
-                break;
+            invokeInstallArgs = invokeInstallArgs.AddArg("--index").AddArg(index);
+        }
+        else if (!string.IsNullOrWhiteSpace(fallbackIndex))
+        {
+            invokeInstallArgs = invokeInstallArgs.AddArg("--index").AddArg(fallbackIndex);
         }
 
-        if (installedPackage.PipOverrides != null)
-        {
-            torchInstallArgs = torchInstallArgs.WithUserOverrides(installedPackage.PipOverrides);
-        }
+        invokeInstallArgs = invokeInstallArgs.AddArg("--force-reinstall");
 
-        if (torchInstallArgs.Arguments.Count > 0)
-        {
-            await venvRunner.PipInstall(torchInstallArgs, onConsoleOutput).ConfigureAwait(false);
-        }
-
-        await venvRunner
-            .PipInstall($"{pipCommandArgs}{(exists ? " --upgrade" : "")}", onConsoleOutput)
-            .ConfigureAwait(false);
-
-        await venvRunner.PipInstall("rich packaging python-dotenv", onConsoleOutput).ConfigureAwait(false);
+        await venvRunner.PipInstall(invokeInstallArgs, onConsoleOutput).ConfigureAwait(false);
         progress?.Report(new ProgressReport(1f, "Done!", isIndeterminate: false));
-    }
-
-    private async Task SetupAndBuildInvokeFrontend(
-        string installLocation,
-        IProgress<ProgressReport>? progress,
-        Action<ProcessOutput>? onConsoleOutput,
-        IReadOnlyDictionary<string, string>? envVars = null,
-        InstallPackageOptions? installOptions = null
-    )
-    {
-        await PrerequisiteHelper.InstallNodeIfNecessary(progress).ConfigureAwait(false);
-
-        var pnpmVersion = installOptions?.VersionOptions.VersionTag?.Contains("v5") == true ? "8" : "10";
-
-        await PrerequisiteHelper
-            .RunNpm(["i", $"pnpm@{pnpmVersion}"], installLocation, envVars: envVars)
-            .ConfigureAwait(false);
-
-        await PrerequisiteHelper
-            .RunNpm(["i", "vite", "--ignore-scripts=true"], installLocation, envVars: envVars)
-            .ConfigureAwait(false);
-
-        var pnpmPath = Path.Combine(
-            installLocation,
-            "node_modules",
-            ".bin",
-            Compat.IsWindows ? "pnpm.cmd" : "pnpm"
-        );
-
-        var vitePath = Path.Combine(
-            installLocation,
-            "node_modules",
-            ".bin",
-            Compat.IsWindows ? "vite.cmd" : "vite"
-        );
-
-        var invokeFrontendPath = Path.Combine(installLocation, "invokeai", "frontend", "web");
-
-        var process = ProcessRunner.StartAnsiProcess(
-            pnpmPath,
-            "i --ignore-scripts=true --force",
-            invokeFrontendPath,
-            onConsoleOutput,
-            envVars
-        );
-
-        await process.WaitForExitAsync().ConfigureAwait(false);
-
-        process = ProcessRunner.StartAnsiProcess(
-            Compat.IsWindows ? pnpmPath : vitePath,
-            Compat.IsWindows ? "vite build" : "build",
-            invokeFrontendPath,
-            onConsoleOutput,
-            envVars
-        );
-
-        await process.WaitForExitAsync().ConfigureAwait(false);
     }
 
     public override Task RunPackage(
@@ -298,28 +286,19 @@ public class InvokeAI : BaseGitPackage
             throw new InvalidOperationException("Cannot spam 3 if not running detached");
         }
 
-        await SetupVenv(installedPackagePath).ConfigureAwait(false);
+        await SetupVenv(installedPackagePath, pythonVersion: PyVersion.Parse(installedPackage.PythonVersion))
+            .ConfigureAwait(false);
 
         VenvRunner.UpdateEnvironmentVariables(env => GetEnvVars(env, installedPackagePath));
-
-        // fix frontend build missing for people who updated to v3.6 before the fix
-        var frontendExistsPath = Path.Combine(installedPackagePath, relativeFrontendBuildPath);
-        if (!Directory.Exists(frontendExistsPath))
-        {
-            await SetupAndBuildInvokeFrontend(
-                    installedPackagePath,
-                    null,
-                    onConsoleOutput,
-                    VenvRunner.EnvironmentVariables
-                )
-                .ConfigureAwait(false);
-        }
 
         // Launch command is for a console entry point, and not a direct script
         var entryPoint = await VenvRunner.GetEntryPoint(command).ConfigureAwait(false);
 
         // Split at ':' to get package and function
         var split = entryPoint?.Split(':');
+
+        // Console message because Invoke takes forever to start sometimes with no output of what its doing
+        onConsoleOutput?.Invoke(new ProcessOutput { Text = "Starting InvokeAI...\n" });
 
         if (split is not { Length: > 1 })
         {
@@ -391,6 +370,42 @@ public class InvokeAI : BaseGitPackage
             var result = await VenvRunner.Run($"-c \"{code}\" {arguments}".TrimEnd()).ConfigureAwait(false);
             onConsoleOutput?.Invoke(new ProcessOutput { Text = result.StandardOutput });
         }
+    }
+
+    public override async Task<InstalledPackageVersion> Update(
+        string installLocation,
+        InstalledPackage installedPackage,
+        UpdatePackageOptions options,
+        IProgress<ProgressReport>? progress = null,
+        Action<ProcessOutput>? onConsoleOutput = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        await InstallPackage(
+                installLocation,
+                installedPackage,
+                options.AsInstallOptions(),
+                progress,
+                onConsoleOutput,
+                cancellationToken
+            )
+            .ConfigureAwait(false);
+
+        if (!string.IsNullOrWhiteSpace(options.VersionOptions.VersionTag))
+        {
+            return new InstalledPackageVersion
+            {
+                InstalledReleaseVersion = options.VersionOptions.VersionTag,
+                IsPrerelease = options.VersionOptions.IsPrerelease,
+            };
+        }
+
+        return new InstalledPackageVersion
+        {
+            InstalledBranch = options.VersionOptions.BranchName,
+            InstalledCommitSha = options.VersionOptions.CommitHash,
+            IsPrerelease = options.VersionOptions.IsPrerelease,
+        };
     }
 
     // Invoke doing shared folders on startup instead

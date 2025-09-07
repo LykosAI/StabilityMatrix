@@ -132,6 +132,7 @@ Stability Matrix is now available in the following languages, thanks to our comm
 - 🇷🇺 Русский
   - aolko
   - den1251
+  - vanja-san
 - 🇹🇷 Türkçe
   - Progesor
 - 🇩🇪 Deutsch
@@ -143,6 +144,10 @@ Stability Matrix is now available in the following languages, thanks to our comm
   - thiagojramos
 - 🇰🇷 한국어
   - maakcode
+- 🇺🇦 Українська
+  - rodtty
+- 🇨🇿 Čeština
+  - PEKArt!
 
 If you would like to contribute a translation, please create an issue or contact us on Discord. Include an email where we'll send an invite to our [POEditor](https://poeditor.com/) project.
 

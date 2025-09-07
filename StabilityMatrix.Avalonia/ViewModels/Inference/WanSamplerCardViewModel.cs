@@ -8,6 +8,7 @@ using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models.Api.Comfy;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
+using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
@@ -18,9 +19,11 @@ public class WanSamplerCardViewModel : SamplerCardViewModel
 {
     public WanSamplerCardViewModel(
         IInferenceClientManager clientManager,
-        IServiceManager<ViewModelBase> vmFactory
+        IServiceManager<ViewModelBase> vmFactory,
+        ISettingsManager settingsManager,
+        TabContext tabContext
     )
-        : base(clientManager, vmFactory)
+        : base(clientManager, vmFactory, settingsManager, tabContext)
     {
         EnableAddons = false;
         IsLengthEnabled = true;
@@ -59,7 +62,7 @@ public class WanSamplerCardViewModel : SamplerCardViewModel
                         e.Builder.Connections.BaseClipVision
                         ?? throw new ValidationException("BaseClipVision not set"),
                     Image = e.Builder.GetPrimaryAsImage(),
-                    Crop = "none"
+                    Crop = "none",
                 }
             );
 
@@ -75,7 +78,7 @@ public class WanSamplerCardViewModel : SamplerCardViewModel
                     Width = Width,
                     Height = Height,
                     Length = Length,
-                    BatchSize = e.Builder.Connections.BatchSize
+                    BatchSize = e.Builder.Connections.BatchSize,
                 }
             );
 

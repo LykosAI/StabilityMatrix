@@ -52,4 +52,11 @@ public interface ICivitTRPCApi
         [Authorize] string bearerToken,
         CancellationToken cancellationToken = default
     );
+
+    [QueryUriFormat(UriFormat.UriEscaped)]
+    [Get("/api/trpc/image.getGenerationData")]
+    Task<CivitTrpcResponse<CivitImageGenerationDataResponse>> GetImageGenerationData(
+        [Query] string input,
+        CancellationToken cancellationToken = default
+    );
 }

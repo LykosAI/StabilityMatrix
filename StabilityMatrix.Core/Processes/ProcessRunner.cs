@@ -259,6 +259,141 @@ public static class ProcessRunner
         };
     }
 
+    /// <summary>
+    /// Starts a process, captures its output in real-time via a callback, and returns the final process result.
+    /// </summary>
+    /// <param name="fileName">The name of the file to execute.</param>
+    /// <param name="arguments">The command-line arguments to pass to the executable.</param>
+    /// <param name="workingDirectory">The working directory for the process.</param>
+    /// <param name="outputDataReceived">Callback that receives process output in real-time.</param>
+    /// <param name="environmentVariables">Environment variables to set for the process.</param>
+    /// <param name="cancellationToken">Cancellation token to cancel waiting for process exit and close the process.</param>
+    /// <returns>A ProcessResult containing the exit code and combined output.</returns>
+    public static async Task<ProcessResult> GetAnsiProcessResultAsync(
+        string fileName,
+        ProcessArgs arguments,
+        string? workingDirectory = null,
+        Action<ProcessOutput>? outputDataReceived = null,
+        IReadOnlyDictionary<string, string>? environmentVariables = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        Logger.Debug($"Starting process '{fileName}' with arguments '{arguments}'");
+
+        var info = new ProcessStartInfo
+        {
+            FileName = fileName,
+            Arguments = arguments,
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            CreateNoWindow = true,
+        };
+
+        if (environmentVariables != null)
+        {
+            foreach (var (key, value) in environmentVariables)
+            {
+                info.EnvironmentVariables[key] = value;
+            }
+        }
+
+        if (workingDirectory != null)
+        {
+            info.WorkingDirectory = workingDirectory;
+        }
+
+        var stdoutBuilder = new StringBuilder();
+        var stderrBuilder = new StringBuilder();
+
+        using var process = new AnsiProcess(info);
+        StartTrackedProcess(process);
+
+        try
+        {
+            if (outputDataReceived != null)
+            {
+                process.BeginAnsiRead(output =>
+                {
+                    // Call the user's callback
+                    outputDataReceived(output);
+
+                    // Also capture the output for the final result
+                    if (output.IsStdErr)
+                    {
+                        stderrBuilder.AppendLine(output.Text);
+                    }
+                    else
+                    {
+                        stdoutBuilder.AppendLine(output.Text);
+                    }
+                });
+            }
+
+            await process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
+
+            // Ensure we've processed all output
+            if (outputDataReceived != null)
+            {
+                await process.WaitUntilOutputEOF(cancellationToken).ConfigureAwait(false);
+            }
+
+            string? processName = null;
+            var elapsed = TimeSpan.Zero;
+
+            // Accessing these properties may throw an exception if the process has already exited
+            try
+            {
+                processName = process.ProcessName;
+            }
+            catch (SystemException) { }
+
+            try
+            {
+                elapsed = process.ExitTime - process.StartTime;
+            }
+            catch (SystemException) { }
+
+            return new ProcessResult
+            {
+                ExitCode = process.ExitCode,
+                StandardOutput = stdoutBuilder.ToString(),
+                StandardError = stderrBuilder.ToString(),
+                ProcessName = processName,
+                Elapsed = elapsed,
+            };
+        }
+        catch (OperationCanceledException e)
+        {
+            // Handle cancellation
+            Logger.Info($"Process '{fileName}' was cancelled. Killing the process.");
+            process.CancelStreamReaders();
+            process.Kill(true);
+
+            var result = new ProcessResult
+            {
+                ExitCode = process.ExitCode,
+                StandardOutput = stdoutBuilder.ToString(),
+                StandardError = stderrBuilder.ToString(),
+            };
+
+            // Accessing these properties may throw an exception if the process has already exited
+            try
+            {
+                result = result with { ProcessName = process.ProcessName };
+            }
+            catch (SystemException) { }
+
+            try
+            {
+                result = result with { Elapsed = process.ExitTime - process.StartTime };
+            }
+            catch (SystemException) { }
+
+            throw new OperationCanceledException(e.Message, new ProcessException(result), cancellationToken);
+        }
+    }
+
     public static Process StartProcess(
         string fileName,
         string arguments,

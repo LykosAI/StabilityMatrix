@@ -24,6 +24,7 @@ public partial class RunningPackageViewModel : PageViewModelBase, IDisposable, I
     private readonly ISettingsManager settingsManager;
     private readonly INotificationService notificationService;
     private readonly RunningPackageService runningPackageService;
+    private readonly RunPackageOptions runPackageOptions;
 
     private readonly CompositeDisposable subscriptions = new();
 
@@ -56,12 +57,14 @@ public partial class RunningPackageViewModel : PageViewModelBase, IDisposable, I
         INotificationService notificationService,
         RunningPackageService runningPackageService,
         PackagePair runningPackage,
+        RunPackageOptions runPackageOptions,
         ConsoleViewModel console
     )
     {
         this.settingsManager = settingsManager;
         this.notificationService = notificationService;
         this.runningPackageService = runningPackageService;
+        this.runPackageOptions = runPackageOptions;
 
         RunningPackage = runningPackage;
         Console = console;
@@ -145,7 +148,7 @@ public partial class RunningPackageViewModel : PageViewModelBase, IDisposable, I
     [RelayCommand]
     private void LaunchPackage()
     {
-        EventManager.Instance.OnPackageRelaunchRequested(RunningPackage.InstalledPackage);
+        EventManager.Instance.OnPackageRelaunchRequested(RunningPackage.InstalledPackage, runPackageOptions);
     }
 
     [RelayCommand]

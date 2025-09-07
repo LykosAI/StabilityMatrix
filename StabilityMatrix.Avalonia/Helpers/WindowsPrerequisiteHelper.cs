@@ -2,6 +2,7 @@
 using System.Runtime.Versioning;
 using Microsoft.Win32;
 using NLog;
+using Python.Runtime;
 using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.HardwareInfo;
@@ -19,7 +20,8 @@ namespace StabilityMatrix.Avalonia.Helpers;
 public class WindowsPrerequisiteHelper(
     IDownloadService downloadService,
     ISettingsManager settingsManager,
-    IPyRunner pyRunner
+    IPyRunner pyRunner,
+    IPyInstallationManager pyInstallationManager
 ) : IPrerequisiteHelper
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -46,6 +48,9 @@ public class WindowsPrerequisiteHelper(
         "https://download.amd.com/developer/eula/rocm-hub/AMD-Software-PRO-Edition-24.Q4-Win10-Win11-For-HIP.exe";
     private const string PythonLibsDownloadUrl = "https://cdn.lykos.ai/python_libs_for_sage.zip";
 
+    private const string UvWindowsDownloadUrl =
+        "https://github.com/astral-sh/uv/releases/download/0.8.4/uv-x86_64-pc-windows-msvc.zip";
+
     private string HomeDir => settingsManager.LibraryDir;
 
     private string VcRedistDownloadPath => Path.Combine(HomeDir, "vcredist.x64.exe");
@@ -53,21 +58,36 @@ public class WindowsPrerequisiteHelper(
     private string AssetsDir => Path.Combine(HomeDir, "Assets");
     private string SevenZipPath => Path.Combine(AssetsDir, "7za.exe");
 
-    private string PythonDownloadPath => Path.Combine(AssetsDir, "python-3.10.11-embed-amd64.zip");
-    private string PythonDir => Path.Combine(AssetsDir, "Python310");
-    private string PythonDllPath => Path.Combine(PythonDir, "python310.dll");
-    private string PythonLibraryZipPath => Path.Combine(PythonDir, "python310.zip");
-    private string GetPipPath => Path.Combine(PythonDir, "get-pip.pyc");
+    private string GetPythonDownloadPath(PyVersion version) =>
+        Path.Combine(
+            AssetsDir,
+            version == PyInstallationManager.Python_3_10_11
+                ? "python-3.10.11-embed-amd64.zip"
+                : $"python-{version}-amd64.tar.gz"
+        );
+
+    private string GetPythonDir(PyVersion version) =>
+        version == PyInstallationManager.Python_3_10_11
+            ? Path.Combine(AssetsDir, "Python310")
+            : Path.Combine(AssetsDir, $"Python{version.Major}{version.Minor}{version.Micro}");
+
+    private string GetPythonDllPath(PyVersion version) =>
+        Path.Combine(GetPythonDir(version), $"python{version.Major}{version.Minor}.dll");
+
+    private string GetPythonLibraryZipPath(PyVersion version) =>
+        Path.Combine(GetPythonDir(version), $"python{version.Major}{version.Minor}.zip");
+
+    private string GetPipPath(PyVersion version) => Path.Combine(GetPythonDir(version), "get-pip.pyc");
 
     // Temporary directory to extract venv to during python install
-    private string VenvTempDir => Path.Combine(PythonDir, "venv");
+    private string GetVenvTempDir(PyVersion version) => Path.Combine(GetPythonDir(version), "venv");
 
     private string PortableGitInstallDir => Path.Combine(HomeDir, "PortableGit");
     private string PortableGitDownloadPath => Path.Combine(HomeDir, "PortableGit.7z.exe");
     private string GitExePath => Path.Combine(PortableGitInstallDir, "bin", "git.exe");
     private string TkinterZipPath => Path.Combine(AssetsDir, "tkinter.zip");
-    private string TkinterExtractPath => PythonDir;
-    private string TkinterExistsPath => Path.Combine(PythonDir, "tkinter");
+    private string TkinterExtractPath => Path.Combine(AssetsDir, "Python310");
+    private string TkinterExistsPath => Path.Combine(TkinterExtractPath, "tkinter");
     private string NodeExistsPath => Path.Combine(AssetsDir, "nodejs", "npm.cmd");
     private string NodeExePath => Path.Combine(AssetsDir, "nodejs", "node.exe");
     private string NodeDownloadPath => Path.Combine(AssetsDir, "nodejs.zip");
@@ -92,10 +112,33 @@ public class WindowsPrerequisiteHelper(
     private string HipInstalledPath =>
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "AMD", "ROCm", "6.2");
 
+    private string UvDownloadPath => Path.Combine(AssetsDir, "uv.zip");
+    private string UvExtractPath => Path.Combine(AssetsDir, "uv");
+    public string UvExePath => Path.Combine(UvExtractPath, "uv.exe");
+    public bool IsUvInstalled => File.Exists(UvExePath);
+    private string ExpectedUvVersion => "0.8.4";
+
     public string GitBinPath => Path.Combine(PortableGitInstallDir, "bin");
-    public bool IsPythonInstalled => File.Exists(PythonDllPath);
     public bool IsVcBuildToolsInstalled => Directory.Exists(VcBuildToolsExistsPath);
     public bool IsHipSdkInstalled => Directory.Exists(HipInstalledPath);
+
+    // Check if a specific Python version is installed
+    public bool IsPythonVersionInstalled(PyVersion version) => File.Exists(GetPythonDllPath(version));
+
+    // Legacy property for compatibility
+    public bool IsPythonInstalled => IsPythonVersionInstalled(PyInstallationManager.DefaultVersion);
+
+    // Implement interface method - uses default Python version
+    public Task InstallPythonIfNecessary(IProgress<ProgressReport>? progress = null)
+    {
+        return InstallPythonIfNecessary(PyInstallationManager.DefaultVersion, progress);
+    }
+
+    // Implement interface method - uses default Python version
+    public Task InstallTkinterIfNecessary(IProgress<ProgressReport>? progress = null)
+    {
+        return InstallTkinterIfNecessary(PyInstallationManager.DefaultVersion, progress);
+    }
 
     public async Task RunGit(
         ProcessArgs args,
@@ -111,6 +154,7 @@ public class WindowsPrerequisiteHelper(
             environmentVariables: new Dictionary<string, string>
             {
                 { "PATH", Compat.GetEnvPathWithExtensions(GitBinPath) },
+                { "GIT_TERMINAL_PROMPT", "0" },
             }
         );
         await process.WaitForExitAsync().ConfigureAwait(false);
@@ -133,6 +177,20 @@ public class WindowsPrerequisiteHelper(
         );
     }
 
+    private async Task<string> RunNode(
+        ProcessArgs args,
+        string? workingDirectory = null,
+        IReadOnlyDictionary<string, string>? envVars = null
+    )
+    {
+        var result = await ProcessRunner
+            .GetProcessResultAsync(NodeExePath, args, workingDirectory, envVars)
+            .ConfigureAwait(false);
+
+        result.EnsureSuccessExitCode();
+        return result.StandardOutput ?? result.StandardError ?? string.Empty;
+    }    
+
     public async Task RunNpm(
         ProcessArgs args,
         string? workingDirectory = null,
@@ -149,30 +207,85 @@ public class WindowsPrerequisiteHelper(
         onProcessOutput?.Invoke(ProcessOutput.FromStdErrLine(result.StandardError));
     }
 
-    // NOTE TO FUTURE DEVS: if this is causing merge conflicts with dev, just nuke it we don't need anymore
-    private async Task<string> RunNode(
+    public AnsiProcess RunNpmDetached(
         ProcessArgs args,
         string? workingDirectory = null,
+        Action<ProcessOutput>? onProcessOutput = null,
         IReadOnlyDictionary<string, string>? envVars = null
     )
     {
-        var result = await ProcessRunner
-            .GetProcessResultAsync(NodeExePath, args, workingDirectory, envVars)
-            .ConfigureAwait(false);
-
-        result.EnsureSuccessExitCode();
-        return result.StandardOutput ?? result.StandardError ?? string.Empty;
+        return ProcessRunner.StartAnsiProcess(
+            NodeExistsPath,
+            args,
+            workingDirectory,
+            onProcessOutput,
+            envVars ?? new Dictionary<string, string>()
+        );
     }
 
-    public Task InstallPackageRequirements(BasePackage package, IProgress<ProgressReport>? progress = null) =>
-        InstallPackageRequirements(package.Prerequisites.ToList(), progress);
+    public Task InstallPackageRequirements(
+        BasePackage package,
+        PyVersion? pyVersion = null,
+        IProgress<ProgressReport>? progress = null
+    ) => InstallPackageRequirements(package.Prerequisites.ToList(), pyVersion, progress);
+
+    public async Task InstallUvIfNecessary(IProgress<ProgressReport>? progress = null)
+    {
+        if (IsUvInstalled)
+        {
+            var version = await GetInstalledUvVersionAsync();
+            if (version.Contains(ExpectedUvVersion))
+            {
+                Logger.Debug("UV already installed at {UvExePath}", UvExePath);
+                return;
+            }
+
+            Logger.Warn(
+                "UV version mismatch at {UvExePath}. Expected: {ExpectedVersion}, Found: {FoundVersion}",
+                UvExePath,
+                ExpectedUvVersion,
+                version
+            );
+        }
+
+        Logger.Info("UV not found at {UvExePath}, downloading...", UvExePath);
+
+        Directory.CreateDirectory(AssetsDir);
+
+        // Download UV zip
+        await downloadService.DownloadToFileAsync(UvWindowsDownloadUrl, UvDownloadPath, progress: progress);
+
+        progress?.Report(
+            new ProgressReport(
+                progress: 0.5f,
+                isIndeterminate: true,
+                type: ProgressType.Generic,
+                message: "Installing UV package manager..."
+            )
+        );
+
+        // Create extraction directory
+        Directory.CreateDirectory(UvExtractPath);
+
+        // Extract UV
+        await ArchiveHelper.Extract(UvDownloadPath, UvExtractPath, progress);
+
+        progress?.Report(
+            new ProgressReport(progress: 1f, message: "UV installation complete", type: ProgressType.Generic)
+        );
+
+        // Clean up download
+        File.Delete(UvDownloadPath);
+    }
 
     public async Task InstallPackageRequirements(
         List<PackagePrerequisite> prerequisites,
+        PyVersion? pyVersion = null,
         IProgress<ProgressReport>? progress = null
     )
     {
         await UnpackResourcesIfNecessary(progress);
+        await InstallUvIfNecessary(progress);
 
         if (prerequisites.Contains(PackagePrerequisite.HipSdk))
         {
@@ -181,8 +294,19 @@ public class WindowsPrerequisiteHelper(
 
         if (prerequisites.Contains(PackagePrerequisite.Python310))
         {
-            await InstallPythonIfNecessary(progress);
-            await InstallVirtualenvIfNecessary(progress);
+            await InstallPythonIfNecessary(PyInstallationManager.Python_3_10_11, progress);
+            await InstallVirtualenvIfNecessary(PyInstallationManager.Python_3_10_11, progress);
+        }
+
+        if (pyVersion is not null)
+        {
+            if (!await EnsurePythonVersion(pyVersion.Value))
+            {
+                throw new MissingPrerequisiteException(
+                    @"Python",
+                    @$"Python {pyVersion} was not found and/or failed to install. Please check the logs for more details."
+                );
+            }
         }
 
         if (prerequisites.Contains(PackagePrerequisite.Git))
@@ -207,24 +331,25 @@ public class WindowsPrerequisiteHelper(
 
         if (prerequisites.Contains(PackagePrerequisite.Tkinter))
         {
-            await InstallTkinterIfNecessary(progress);
+            await InstallTkinterIfNecessary(PyInstallationManager.Python_3_10_11, progress);
         }
 
-        if (prerequisites.Contains(PackagePrerequisite.VcBuildTools))
-        {
-            await InstallVcBuildToolsIfNecessary(progress);
-        }
+        // if (prerequisites.Contains(PackagePrerequisite.VcBuildTools))
+        // {
+        //     await InstallVcBuildToolsIfNecessary(progress);
+        // }
     }
 
     public async Task InstallAllIfNecessary(IProgress<ProgressReport>? progress = null)
     {
         await InstallVcRedistIfNecessary(progress);
         await UnpackResourcesIfNecessary(progress);
-        await InstallPythonIfNecessary(progress);
+        await InstallPythonIfNecessary(PyInstallationManager.Python_3_10_11, progress);
         await InstallGitIfNecessary(progress);
         await InstallNodeIfNecessary(progress);
         await InstallVcBuildToolsIfNecessary(progress);
         await InstallHipSdkIfNecessary(progress);
+        await InstallUvIfNecessary(progress);
     }
 
     public async Task UnpackResourcesIfNecessary(IProgress<ProgressReport>? progress = null)
@@ -243,49 +368,69 @@ public class WindowsPrerequisiteHelper(
         progress?.Report(new ProgressReport(1, message: "Unpacking resources", isIndeterminate: false));
     }
 
-    public async Task InstallPythonIfNecessary(IProgress<ProgressReport>? progress = null)
+    public async Task InstallPythonIfNecessary(PyVersion version, IProgress<ProgressReport>? progress = null)
     {
-        if (File.Exists(PythonDllPath))
+        var pythonDllPath = GetPythonDllPath(version);
+
+        if (File.Exists(pythonDllPath))
         {
-            Logger.Debug("Python already installed at {PythonDllPath}", PythonDllPath);
+            Logger.Debug("Python {Version} already installed at {PythonDllPath}", version, pythonDllPath);
             return;
         }
 
-        Logger.Info("Python not found at {PythonDllPath}, downloading...", PythonDllPath);
+        Logger.Info("Python {Version} not found at {PythonDllPath}, downloading...", version, pythonDllPath);
 
         Directory.CreateDirectory(AssetsDir);
 
+        var pythonLibraryZipPath = GetPythonLibraryZipPath(version);
+
         // Delete existing python zip if it exists
-        if (File.Exists(PythonLibraryZipPath))
+        if (File.Exists(pythonLibraryZipPath))
         {
-            File.Delete(PythonLibraryZipPath);
+            File.Delete(pythonLibraryZipPath);
         }
 
-        var remote = Assets.PythonDownloadUrl;
-        var url = remote.Url.ToString();
-        Logger.Info($"Downloading Python from {url} to {PythonLibraryZipPath}");
+        // Get the correct download URL for this Python version
+        RemoteResource? remote = null;
+        if (version == PyInstallationManager.Python_3_10_11)
+        {
+            remote = Assets.PythonDownloadUrl;
+        }
+        else
+        {
+            throw new ArgumentException($"No download URL configured for Python {version}");
+        }
+
+        var url = remote.Value.Url.ToString();
+        var pythonDownloadPath = GetPythonDownloadPath(version);
+
+        Logger.Info($"Downloading Python {version} from {url} to {pythonDownloadPath}");
 
         // Cleanup to remove zip if download fails
         try
         {
             // Download python zip
-            await downloadService.DownloadToFileAsync(url, PythonDownloadPath, progress: progress);
+            await downloadService.DownloadToFileAsync(url, pythonDownloadPath, progress: progress);
 
             // Verify python hash
-            var downloadHash = await FileHash.GetSha256Async(PythonDownloadPath, progress);
-            if (downloadHash != remote.HashSha256)
+            var downloadHash = await FileHash.GetSha256Async(pythonDownloadPath, progress);
+            if (downloadHash != remote.Value.HashSha256)
             {
-                var fileExists = File.Exists(PythonDownloadPath);
-                var fileSize = new FileInfo(PythonDownloadPath).Length;
+                var fileExists = File.Exists(pythonDownloadPath);
+                var fileSize = new FileInfo(pythonDownloadPath).Length;
                 var msg =
-                    $"Python download hash mismatch: {downloadHash} != {remote.HashSha256} "
+                    $"Python download hash mismatch: {downloadHash} != {remote.Value.HashSha256} "
                     + $"(file exists: {fileExists}, size: {fileSize})";
                 throw new Exception(msg);
             }
 
-            progress?.Report(new ProgressReport(progress: 1f, message: "Python download complete"));
+            progress?.Report(
+                new ProgressReport(progress: 1f, message: $"Python {version} download complete")
+            );
 
-            progress?.Report(new ProgressReport(-1, "Installing Python...", isIndeterminate: true));
+            progress?.Report(
+                new ProgressReport(-1, $"Installing Python {version}...", isIndeterminate: true)
+            );
 
             // We also need 7z if it's not already unpacked
             if (!File.Exists(SevenZipPath))
@@ -294,97 +439,149 @@ public class WindowsPrerequisiteHelper(
                 await Assets.SevenZipLicense.ExtractToDir(AssetsDir);
             }
 
+            var pythonDir = GetPythonDir(version);
+
             // Delete existing python dir
-            if (Directory.Exists(PythonDir))
+            if (Directory.Exists(pythonDir))
             {
-                Directory.Delete(PythonDir, true);
+                Directory.Delete(pythonDir, true);
+            }
+
+            // For Python 3.10.11, we need to handle embedded venv folder
+            if (version == PyInstallationManager.Python_3_10_11)
+            {
+                try
+                {
+                    // Extract embedded venv folder
+                    var venvTempDir = GetVenvTempDir(version);
+                    Directory.CreateDirectory(venvTempDir);
+                    foreach (var (resource, relativePath) in Assets.PyModuleVenv)
+                    {
+                        var path = Path.Combine(venvTempDir, relativePath);
+                        // Create missing directories
+                        var dir = Path.GetDirectoryName(path);
+                        if (dir != null)
+                        {
+                            Directory.CreateDirectory(dir);
+                        }
+
+                        await resource.ExtractTo(path);
+                    }
+                    // Add venv to python's library zip
+                    await ArchiveHelper.AddToArchive7Z(pythonLibraryZipPath, venvTempDir);
+                }
+                finally
+                {
+                    // Remove venv
+                    var venvTempDir = GetVenvTempDir(version);
+                    if (Directory.Exists(venvTempDir))
+                    {
+                        Directory.Delete(venvTempDir, true);
+                    }
+                }
             }
 
             // Unzip python
-            await ArchiveHelper.Extract7Z(PythonDownloadPath, PythonDir);
-
-            try
+            if (version == PyInstallationManager.Python_3_10_11)
             {
-                // Extract embedded venv folder
-                Directory.CreateDirectory(VenvTempDir);
-                foreach (var (resource, relativePath) in Assets.PyModuleVenv)
+                await ArchiveHelper.Extract7Z(pythonDownloadPath, pythonDir);
+                // We need to uncomment the #import site line in python._pth for pip to work
+                var pythonPthPath = Path.Combine(pythonDir, $"python{version.Major}{version.Minor}._pth");
+                var pythonPthContent = await File.ReadAllTextAsync(pythonPthPath);
+                pythonPthContent = pythonPthContent.Replace("#import site", "import site");
+                await File.WriteAllTextAsync(pythonPthPath, pythonPthContent);
+
+                // Install TKinter
+                await InstallTkinterIfNecessary(version, progress);
+            }
+            else
+            {
+                await ArchiveHelper.Extract7ZTar(pythonDownloadPath, pythonDir);
+                // it gets extracted into a folder named `python`, we need to move the contents to this pythonDir
+                var extractedDir = Path.Combine(pythonDir, "python");
+                if (Directory.Exists(extractedDir))
                 {
-                    var path = Path.Combine(VenvTempDir, relativePath);
-                    // Create missing directories
-                    var dir = Path.GetDirectoryName(path);
-                    if (dir != null)
+                    foreach (var file in Directory.GetFiles(extractedDir))
                     {
-                        Directory.CreateDirectory(dir);
+                        var destFile = Path.Combine(pythonDir, Path.GetFileName(file));
+                        File.Move(file, destFile);
                     }
 
-                    await resource.ExtractTo(path);
-                }
-                // Add venv to python's library zip
+                    foreach (var dir in Directory.GetDirectories(extractedDir))
+                    {
+                        var destDir = Path.Combine(pythonDir, Path.GetFileName(dir));
+                        Directory.Move(dir, destDir);
+                    }
 
-                await ArchiveHelper.AddToArchive7Z(PythonLibraryZipPath, VenvTempDir);
-            }
-            finally
-            {
-                // Remove venv
-                if (Directory.Exists(VenvTempDir))
-                {
-                    Directory.Delete(VenvTempDir, true);
+                    Directory.Delete(extractedDir, true);
                 }
             }
 
             // Extract get-pip.pyc
-            await Assets.PyScriptGetPip.ExtractToDir(PythonDir);
-
-            // We need to uncomment the #import site line in python310._pth for pip to work
-            var pythonPthPath = Path.Combine(PythonDir, "python310._pth");
-            var pythonPthContent = await File.ReadAllTextAsync(pythonPthPath);
-            pythonPthContent = pythonPthContent.Replace("#import site", "import site");
-            await File.WriteAllTextAsync(pythonPthPath, pythonPthContent);
-
-            // Install TKinter
-            await InstallTkinterIfNecessary(progress);
-
-            progress?.Report(new ProgressReport(1f, "Python install complete"));
+            await Assets.PyScriptGetPip.ExtractToDir(pythonDir);
+            progress?.Report(new ProgressReport(1f, $"Python {version} install complete"));
         }
         finally
         {
             // Always delete zip after download
-            if (File.Exists(PythonDownloadPath))
+            if (File.Exists(pythonDownloadPath))
             {
-                File.Delete(PythonDownloadPath);
+                File.Delete(pythonDownloadPath);
             }
         }
     }
 
-    private async Task InstallVirtualenvIfNecessary(IProgress<ProgressReport>? progress = null)
+    public async Task InstallVirtualenvIfNecessary(
+        PyVersion version,
+        IProgress<ProgressReport>? progress = null
+    )
     {
-        // python stuff
-        if (!PyRunner.PipInstalled || !PyRunner.VenvInstalled)
+        var installation = await pyInstallationManager.GetInstallationAsync(version);
+
+        // Check if pip and venv are installed for this version
+        if (!installation.PipInstalled || !installation.VenvInstalled)
         {
             progress?.Report(
-                new ProgressReport(-1f, "Installing Python prerequisites...", isIndeterminate: true)
+                new ProgressReport(
+                    -1f,
+                    $"Installing Python {version} prerequisites...",
+                    isIndeterminate: true
+                )
             );
 
-            await pyRunner.Initialize().ConfigureAwait(false);
-
-            if (!PyRunner.PipInstalled)
+            // Switch to this version if needed
+            if (PythonEngine.IsInitialized)
             {
-                await pyRunner.SetupPip().ConfigureAwait(false);
+                await pyRunner.SwitchToInstallation(version).ConfigureAwait(false);
+            }
+            else
+            {
+                // Initialize with this version
+                await pyRunner.Initialize().ConfigureAwait(false);
+                await pyRunner.SwitchToInstallation(version).ConfigureAwait(false);
             }
 
-            if (!PyRunner.VenvInstalled)
+            if (!installation.PipInstalled)
             {
-                await pyRunner.InstallPackage("virtualenv").ConfigureAwait(false);
+                await pyRunner.SetupPip(version).ConfigureAwait(false);
+            }
+
+            if (!installation.VenvInstalled)
+            {
+                await pyRunner.InstallPackage("virtualenv", version).ConfigureAwait(false);
             }
         }
     }
 
     [SupportedOSPlatform("windows")]
-    public async Task InstallTkinterIfNecessary(IProgress<ProgressReport>? progress = null)
+    public async Task InstallTkinterIfNecessary(PyVersion version, IProgress<ProgressReport>? progress = null)
     {
-        if (!Directory.Exists(TkinterExistsPath))
+        var pythonDir = GetPythonDir(version);
+        var tkinterPath = Path.Combine(pythonDir, "tkinter");
+
+        if (!Directory.Exists(tkinterPath))
         {
-            Logger.Info("Downloading Tkinter");
+            Logger.Info($"Downloading Tkinter for Python {version}");
             await downloadService.DownloadToFileAsync(TkinterDownloadUrl, TkinterZipPath, progress: progress);
             progress?.Report(
                 new ProgressReport(
@@ -394,7 +591,7 @@ public class WindowsPrerequisiteHelper(
                 )
             );
 
-            await ArchiveHelper.Extract(TkinterZipPath, TkinterExtractPath, progress);
+            await ArchiveHelper.Extract(TkinterZipPath, pythonDir, progress);
 
             File.Delete(TkinterZipPath);
         }
@@ -678,38 +875,50 @@ public class WindowsPrerequisiteHelper(
     [SupportedOSPlatform("Windows")]
     public async Task AddMissingLibsToVenv(
         DirectoryPath installedPackagePath,
+        PyBaseInstall baseInstall,
         IProgress<ProgressReport>? progress = null
     )
     {
         var venvLibsDir = installedPackagePath.JoinDir("venv", "libs");
         var venvIncludeDir = installedPackagePath.JoinDir("venv", "include");
-        if (
-            venvLibsDir.Exists
-            && venvIncludeDir.Exists
-            && venvLibsDir.JoinFile("python3.lib").Exists
-            && venvLibsDir.JoinFile("python310.lib").Exists
-        )
+        if (venvLibsDir.Exists && venvIncludeDir.Exists && venvLibsDir.JoinFile("python3.lib").Exists)
         {
             Logger.Debug("Python libs already installed at {VenvLibsDir}", venvLibsDir);
             return;
         }
 
-        var downloadPath = installedPackagePath.JoinFile("python_libs_for_sage.zip");
-        var venvDir = installedPackagePath.JoinDir("venv");
-        await downloadService
-            .DownloadToFileAsync(PythonLibsDownloadUrl, downloadPath, progress)
-            .ConfigureAwait(false);
+        var sourceLibsDir = new DirectoryPath(baseInstall.RootPath, "libs");
+        var sourceIncludeDir = new DirectoryPath(baseInstall.RootPath, "include");
 
-        progress?.Report(
-            new ProgressReport(-1f, message: "Extracting Python libraries", isIndeterminate: true)
-        );
-        await ArchiveHelper.Extract7Z(downloadPath, venvDir, progress);
+        var destLibsDir = installedPackagePath.JoinDir("venv", "libs");
+        var destIncludeDir = installedPackagePath.JoinDir("venv", "include");
+        var destIncludeScriptsDir = installedPackagePath.JoinDir("venv", "Scripts", "include");
 
-        var includeFolder = venvDir.JoinDir("include");
-        var scriptsIncludeFolder = venvDir.JoinDir("Scripts").JoinDir("include");
-        await includeFolder.CopyToAsync(scriptsIncludeFolder);
+        destLibsDir.Create();
+        destIncludeDir.Create();
+        destIncludeScriptsDir.Create();
 
-        await downloadPath.DeleteAsync();
+        // Copy libs
+        await sourceLibsDir.CopyToAsync(destLibsDir);
+        await sourceIncludeDir.CopyToAsync(destIncludeDir);
+        await sourceIncludeDir.CopyToAsync(destIncludeScriptsDir);
+
+        // var downloadPath = installedPackagePath.JoinFile("python_libs_for_sage.zip");
+        // var venvDir = installedPackagePath.JoinDir("venv");
+        // await downloadService
+        //     .DownloadToFileAsync(PythonLibsDownloadUrl, downloadPath, progress)
+        //     .ConfigureAwait(false);
+        //
+        // progress?.Report(
+        //     new ProgressReport(-1f, message: "Extracting Python libraries", isIndeterminate: true)
+        // );
+        // await ArchiveHelper.Extract7Z(downloadPath, venvDir, progress);
+        //
+        // var includeFolder = venvDir.JoinDir("include");
+        // var scriptsIncludeFolder = venvDir.JoinDir("Scripts").JoinDir("include");
+        // await includeFolder.CopyToAsync(scriptsIncludeFolder);
+        //
+        // await downloadPath.DeleteAsync();
     }
 
     private async Task DownloadAndExtractPrerequisite(
@@ -893,5 +1102,25 @@ public class WindowsPrerequisiteHelper(
         }
 
         return null;
+    }
+
+    private async Task<string> GetInstalledUvVersionAsync()
+    {
+        try
+        {
+            var processResult = await ProcessRunner.GetProcessResultAsync(UvExePath, "--version");
+            return processResult.StandardOutput ?? processResult.StandardError ?? string.Empty;
+        }
+        catch (Exception e)
+        {
+            Logger.Warn(e, "Failed to get UV version from {UvExePath}", UvExePath);
+            return string.Empty;
+        }
+    }
+
+    private async Task<bool> EnsurePythonVersion(PyVersion pyVersion)
+    {
+        var result = await pyInstallationManager.GetInstallationAsync(pyVersion);
+        return result.Exists();
     }
 }

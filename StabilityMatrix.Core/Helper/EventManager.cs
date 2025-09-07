@@ -4,6 +4,7 @@ using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Inference;
 using StabilityMatrix.Core.Models.PackageModification;
+using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Models.Update;
 
@@ -24,7 +25,13 @@ public class EventManager
     public event EventHandler<bool>? DevModeSettingChanged;
     public event EventHandler<UpdateInfo>? UpdateAvailable;
     public event EventHandler<Guid>? PackageLaunchRequested;
-    public event EventHandler<InstalledPackage>? PackageRelaunchRequested;
+
+    public delegate Task PackageRelaunchRequestedEventHandler(
+        object? sender,
+        InstalledPackage package,
+        RunPackageOptions runPackageOptions
+    );
+    public event PackageRelaunchRequestedEventHandler? PackageRelaunchRequested;
     public event EventHandler? ScrollToBottomRequested;
     public event EventHandler<ProgressItem>? ProgressChanged;
     public event EventHandler<RunningPackageStatusChangedEventArgs>? RunningPackageStatusChanged;
@@ -101,8 +108,8 @@ public class EventManager
     public void OnRecommendedModelsDialogClosed() =>
         RecommendedModelsDialogClosed?.Invoke(this, EventArgs.Empty);
 
-    public void OnPackageRelaunchRequested(InstalledPackage package) =>
-        PackageRelaunchRequested?.Invoke(this, package);
+    public void OnPackageRelaunchRequested(InstalledPackage package, RunPackageOptions runPackageOptions) =>
+        PackageRelaunchRequested?.Invoke(this, package, runPackageOptions);
 
     public void OnWorkflowInstalled() => WorkflowInstalled?.Invoke(this, EventArgs.Empty);
 

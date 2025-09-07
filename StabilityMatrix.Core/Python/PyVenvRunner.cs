@@ -16,7 +16,7 @@ namespace StabilityMatrix.Core.Python;
 /// <summary>
 /// Python runner using a subprocess, mainly for venv support.
 /// </summary>
-public class PyVenvRunner : IDisposable, IAsyncDisposable
+public class PyVenvRunner : IDisposable, IAsyncDisposable, IPyVenvRunner
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -25,6 +25,18 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
     /// <summary>
     /// Relative path to the site-packages folder from the venv root.
     /// This is platform specific.
+    /// </summary>
+    public static string GetRelativeSitePackagesPath(PyVersion? version = null)
+    {
+        var minorVersion = version?.Minor ?? 10;
+        return Compat.Switch(
+            (PlatformKind.Windows, "Lib/site-packages"),
+            (PlatformKind.Unix, $"lib/python3.{minorVersion}/site-packages")
+        );
+    }
+
+    /// <summary>
+    /// Legacy path for compatibility
     /// </summary>
     public static string RelativeSitePackagesPath =>
         Compat.Switch(
@@ -91,6 +103,11 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
     public FilePath PipPath => RootPath.JoinFile(RelativePipPath);
 
     /// <summary>
+    /// The Python version of this venv
+    /// </summary>
+    public PyVersion Version => BaseInstall.Version;
+
+    /// <summary>
     /// List of substrings to suppress from the output.
     /// When a line contains any of these substrings, it will not be forwarded to callbacks.
     /// A corresponding Info log will be written instead.
@@ -135,7 +152,7 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
         var args = new string[] { "-m", "virtualenv", Compat.IsWindows ? "--always-copy" : "", RootPath };
 
         var venvProc = ProcessRunner.StartAnsiProcess(
-            PyRunner.PythonExePath,
+            BaseInstall.PythonExePath,
             args,
             WorkingDirectory?.FullPath,
             onConsoleOutput
@@ -248,7 +265,7 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
     /// Run a pip uninstall command. Waits for the process to exit.
     /// workingDirectory defaults to RootPath.
     /// </summary>
-    public async Task PipUninstall(string args, Action<ProcessOutput>? outputDataReceived = null)
+    public async Task PipUninstall(ProcessArgs args, Action<ProcessOutput>? outputDataReceived = null)
     {
         if (!File.Exists(PipPath))
         {

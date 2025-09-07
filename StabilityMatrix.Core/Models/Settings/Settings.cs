@@ -3,9 +3,7 @@ using System.Globalization;
 using System.Text.Json.Serialization;
 using Semver;
 using StabilityMatrix.Core.Converters.Json;
-using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper.HardwareInfo;
-using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Update;
 
 namespace StabilityMatrix.Core.Models.Settings;
@@ -121,14 +119,33 @@ public class Settings
 
     public bool IsDiscordRichPresenceEnabled { get; set; }
 
+    public HashSet<string> DisabledBaseModelTypes { get; set; } = [];
+
+    public HashSet<string> SavedInferenceDimensions { get; set; } =
+        [
+            "1024 x 1024",
+            "1152 x 896",
+            "1216 x 832",
+            "1280 x 720",
+            "1344 x 768",
+            "1536 x 640",
+            "768 x 768",
+            "512 x 512",
+            "640 x 1536",
+            "768 x 1344",
+            "720 x 1280",
+            "832 x 1216",
+            "896 x 1152",
+        ];
+
     [JsonIgnore]
     public Dictionary<string, string> DefaultEnvironmentVariables { get; } =
         new()
         {
             // Fixes potential setuptools error on Portable Windows Python
-            ["SETUPTOOLS_USE_DISTUTILS"] = "stdlib",
+            // ["SETUPTOOLS_USE_DISTUTILS"] = "stdlib",
             // Suppresses 'A new release of pip is available' messages
-            ["PIP_DISABLE_PIP_VERSION_CHECK"] = "1"
+            ["PIP_DISABLE_PIP_VERSION_CHECK"] = "1",
         };
 
     [JsonPropertyName("EnvironmentVariables")]
@@ -139,6 +156,14 @@ public class Settings
     {
         get
         {
+            // add here when can use GlobalConfig
+            DefaultEnvironmentVariables["UV_CACHE_DIR"] = Path.Combine(
+                GlobalConfig.LibraryDir,
+                "Assets",
+                "uv",
+                "cache"
+            );
+
             if (UserEnvironmentVariables is null || UserEnvironmentVariables.Count == 0)
             {
                 return DefaultEnvironmentVariables;
@@ -217,8 +242,18 @@ public class Settings
 
     public bool FilterExtraNetworksByBaseModel { get; set; } = true;
 
+    public bool ShowAllAvailablePythonVersions { get; set; }
+
     public bool IsMainWindowSidebarOpen { get; set; }
-    
+
+    public Dictionary<string, LastDownloadLocationInfo> ModelTypeDownloadPreferences { get; set; } = new();
+
+    public bool ShowTrainingDataInModelBrowser { get; set; }
+
+    public string? CivitModelBrowserFileNamePattern { get; set; }
+
+    public int InferenceDimensionStepChange { get; set; } = 128;
+
     [JsonIgnore]
     public bool IsHolidayModeActive =>
         HolidayModeSetting == HolidayMode.Automatic
@@ -295,4 +330,6 @@ public class Settings
 [JsonSerializable(typeof(bool))]
 [JsonSerializable(typeof(int))]
 [JsonSerializable(typeof(string))]
+[JsonSerializable(typeof(LastDownloadLocationInfo))]
+[JsonSerializable(typeof(Dictionary<string, LastDownloadLocationInfo>))]
 internal partial class SettingsSerializerContext : JsonSerializerContext;

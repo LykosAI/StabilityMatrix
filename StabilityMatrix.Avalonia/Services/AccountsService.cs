@@ -31,6 +31,7 @@ public class AccountsService : IAccountsService
     private readonly ILykosAuthApiV1 lykosAuthApi;
     private readonly ILykosAuthApiV2 lykosAuthApiV2;
     private readonly ICivitTRPCApi civitTRPCApi;
+    private readonly IHuggingFaceApi huggingFaceApi; // Added
     private readonly OpenIddictClientService openIdClient;
 
     /// <inheritdoc />
@@ -39,9 +40,14 @@ public class AccountsService : IAccountsService
     /// <inheritdoc />
     public event EventHandler<CivitAccountStatusUpdateEventArgs>? CivitAccountStatusUpdate;
 
+    /// <inheritdoc />
+    public event EventHandler<HuggingFaceAccountStatusUpdateEventArgs>? HuggingFaceAccountStatusUpdate;
+
     public LykosAccountStatusUpdateEventArgs? LykosStatus { get; private set; }
 
     public CivitAccountStatusUpdateEventArgs? CivitStatus { get; private set; }
+
+    public HuggingFaceAccountStatusUpdateEventArgs? HuggingFaceStatus { get; private set; }
 
     public AccountsService(
         ILogger<AccountsService> logger,
@@ -49,6 +55,7 @@ public class AccountsService : IAccountsService
         ILykosAuthApiV1 lykosAuthApi,
         ILykosAuthApiV2 lykosAuthApiV2,
         ICivitTRPCApi civitTRPCApi,
+        IHuggingFaceApi huggingFaceApi, // Added
         OpenIddictClientService openIdClient
     )
     {
@@ -57,10 +64,13 @@ public class AccountsService : IAccountsService
         this.lykosAuthApi = lykosAuthApi;
         this.lykosAuthApiV2 = lykosAuthApiV2;
         this.civitTRPCApi = civitTRPCApi;
+        this.huggingFaceApi = huggingFaceApi; // Added
         this.openIdClient = openIdClient;
 
         // Update our own status when the Lykos account status changes
         LykosAccountStatusUpdate += (_, args) => LykosStatus = args;
+        CivitAccountStatusUpdate += (_, args) => CivitStatus = args; // Assuming this was intended
+        HuggingFaceAccountStatusUpdate += (_, args) => HuggingFaceStatus = args;
     }
 
     public async Task<bool> HasStoredLykosAccountAsync()
@@ -191,6 +201,7 @@ public class AccountsService : IAccountsService
 
         await RefreshLykosAsync(secrets);
         await RefreshCivitAsync(secrets);
+        await RefreshHuggingFaceAsync(secrets);
     }
 
     public async Task RefreshLykosAsync()
@@ -198,6 +209,12 @@ public class AccountsService : IAccountsService
         var secrets = await secretsManager.SafeLoadAsync();
 
         await RefreshLykosAsync(secrets);
+    }
+
+    public async Task RefreshHuggingFaceAsync()
+    {
+        var secrets = await secretsManager.SafeLoadAsync();
+        await RefreshHuggingFaceAsync(secrets);
     }
 
     private async Task RefreshLykosAsync(Secrets secrets)
@@ -253,6 +270,45 @@ public class AccountsService : IAccountsService
         }
 
         OnLykosAccountStatusUpdate(LykosAccountStatusUpdateEventArgs.Disconnected);
+    }
+
+    private async Task RefreshHuggingFaceAsync(Secrets secrets)
+    {
+        if (!string.IsNullOrWhiteSpace(secrets.HuggingFaceToken))
+        {
+            try
+            {
+                var response = await huggingFaceApi.GetCurrentUserAsync($"Bearer {secrets.HuggingFaceToken}");
+                if (response.IsSuccessStatusCode && response.Content != null)
+                {
+                    // Token is valid, user info fetched
+                    logger.LogInformation("Hugging Face token is valid. User: {Username}", response.Content.Name);
+                    OnHuggingFaceAccountStatusUpdate(new HuggingFaceAccountStatusUpdateEventArgs(true, response.Content.Name));
+                }
+                else
+                {
+                    // Token is likely invalid or other API error
+                    logger.LogWarning("Hugging Face token validation failed. Status: {StatusCode}, Error: {Error}, Content: {Content}", response.StatusCode, response.Error?.ToString(), await response.Error?.GetContentAsAsync<string>() ?? "N/A");
+                    OnHuggingFaceAccountStatusUpdate(new HuggingFaceAccountStatusUpdateEventArgs(false, null, $"Token validation failed: {response.StatusCode}"));
+                }
+            }
+            catch (ApiException apiEx)
+            {
+                // Handle Refit's ApiException (network issues, non-success status codes not caught by IsSuccessStatusCode if IApiResponse isn't used directly)
+                logger.LogError(apiEx, "Hugging Face API request failed during token validation. Content: {Content}", await apiEx.GetContentAsAsync<string>() ?? "N/A");
+                OnHuggingFaceAccountStatusUpdate(new HuggingFaceAccountStatusUpdateEventArgs(false, null, "API request failed during token validation."));
+            }
+            catch (Exception ex)
+            {
+                // Handle other unexpected errors
+                logger.LogError(ex, "An unexpected error occurred during Hugging Face token validation.");
+                OnHuggingFaceAccountStatusUpdate(new HuggingFaceAccountStatusUpdateEventArgs(false, null, "An unexpected error occurred."));
+            }
+        }
+        else
+        {
+            OnHuggingFaceAccountStatusUpdate(HuggingFaceAccountStatusUpdateEventArgs.Disconnected);
+        }
     }
 
     private async Task RefreshCivitAsync(Secrets secrets)
@@ -323,5 +379,38 @@ public class AccountsService : IAccountsService
         }
 
         CivitAccountStatusUpdate?.Invoke(this, e);
+    }
+
+    private void OnHuggingFaceAccountStatusUpdate(HuggingFaceAccountStatusUpdateEventArgs e)
+    {
+        if (!e.IsConnected && HuggingFaceStatus?.IsConnected == true)
+        {
+            logger.LogInformation("Hugging Face account disconnected");
+        }
+        else if (e.IsConnected && HuggingFaceStatus?.IsConnected == false)
+        {
+            // Assuming Username might be null for now as we are not fetching it.
+            logger.LogInformation("Hugging Face account connected" + (string.IsNullOrWhiteSpace(e.Username) ? "" : $" (User: {e.Username})"));
+        }
+        else if (!e.IsConnected && !string.IsNullOrWhiteSpace(e.ErrorMessage))
+        {
+            logger.LogWarning("Hugging Face connection/validation failed: {ErrorMessage}", e.ErrorMessage);
+        }
+        HuggingFaceAccountStatusUpdate?.Invoke(this, e);
+    }
+
+    public async Task HuggingFaceLoginAsync(string token)
+    {
+        var secrets = await secretsManager.SafeLoadAsync();
+        secrets = secrets with { HuggingFaceToken = token };
+        await secretsManager.SaveAsync(secrets);
+        await RefreshHuggingFaceAsync(secrets);
+    }
+
+    public async Task HuggingFaceLogoutAsync()
+    {
+        var secrets = await secretsManager.SafeLoadAsync();
+        await secretsManager.SaveAsync(secrets with { HuggingFaceToken = null });
+        OnHuggingFaceAccountStatusUpdate(HuggingFaceAccountStatusUpdateEventArgs.Disconnected);
     }
 }

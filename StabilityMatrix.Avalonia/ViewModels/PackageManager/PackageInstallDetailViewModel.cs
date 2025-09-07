@@ -41,11 +41,11 @@ public partial class PackageInstallDetailViewModel(
     ISettingsManager settingsManager,
     INotificationService notificationService,
     ILogger<PackageInstallDetailViewModel> logger,
-    IPyRunner pyRunner,
     IPrerequisiteHelper prerequisiteHelper,
     INavigationService<PackageManagerViewModel> packageNavigationService,
     IPackageFactory packageFactory,
-    IAnalyticsHelper analyticsHelper
+    IAnalyticsHelper analyticsHelper,
+    IPyInstallationManager pyInstallationManager
 ) : PageViewModelBase
 {
     public BasePackage SelectedPackage { get; } = package;
@@ -54,6 +54,7 @@ public partial class PackageInstallDetailViewModel(
 
     public string FullInstallPath => Path.Combine(settingsManager.LibraryDir, "Packages", InstallName);
     public bool ShowReleaseMode => SelectedPackage.ShouldIgnoreReleases == false;
+    public bool ShowBranchMode => SelectedPackage.ShouldIgnoreBranches == false;
 
     public string? ReleaseTooltipText =>
         ShowReleaseMode ? null : Resources.Label_ReleasesUnavailableForThisPackage;
@@ -96,6 +97,12 @@ public partial class PackageInstallDetailViewModel(
     [ObservableProperty]
     private bool canInstall;
 
+    [ObservableProperty]
+    private ObservableCollection<UvPythonInfo> availablePythonVersions = new();
+
+    [ObservableProperty]
+    private UvPythonInfo selectedPythonVersion;
+
     public PythonPackageSpecifiersViewModel PythonPackageSpecifiersViewModel { get; } =
         new() { Title = null };
 
@@ -104,7 +111,9 @@ public partial class PackageInstallDetailViewModel(
     public override async Task OnLoadedAsync()
     {
         if (Design.IsDesignMode)
+        {
             return;
+        }
 
         OnInstallNameChanged(InstallName);
 
@@ -112,6 +121,13 @@ public partial class PackageInstallDetailViewModel(
 
         SelectedTorchIndex = SelectedPackage.GetRecommendedTorchVersion();
         SelectedSharedFolderMethod = SelectedPackage.RecommendedSharedFolderMethod;
+
+        // Initialize Python versions
+        await prerequisiteHelper.UnpackResourcesIfNecessary();
+        await prerequisiteHelper.InstallUvIfNecessary();
+        var pythonVersions = await pyInstallationManager.GetAllAvailablePythonsAsync();
+        AvailablePythonVersions = new ObservableCollection<UvPythonInfo>(pythonVersions);
+        SelectedPythonVersion = GetRecommendedPyVersion() ?? AvailablePythonVersions.LastOrDefault();
 
         allOptions = await SelectedPackage.GetAllVersionOptions();
         if (ShowReleaseMode)
@@ -145,13 +161,13 @@ public partial class PackageInstallDetailViewModel(
         if (SelectedPackage.InstallRequiresAdmin)
         {
             var reason = $"""
-                          # **{SelectedPackage.DisplayName}** may require administrator privileges during the installation. If necessary, you will be prompted to allow the installer to run with elevated privileges.
-                          
-                          ## The reason for this requirement is:
-                          {SelectedPackage.AdminRequiredReason}
-                          
-                          ## Would you like to proceed?
-                          """;
+                # **{SelectedPackage.DisplayName}** may require administrator privileges during the installation. If necessary, you will be prompted to allow the installer to run with elevated privileges.
+
+                ## The reason for this requirement is:
+                {SelectedPackage.AdminRequiredReason}
+
+                ## Would you like to proceed?
+                """;
             var dialog = DialogHelper.CreateMarkdownDialog(reason, string.Empty);
             dialog.PrimaryButtonText = Resources.Action_Yes;
             dialog.CloseButtonText = Resources.Action_Cancel;
@@ -167,8 +183,8 @@ public partial class PackageInstallDetailViewModel(
 
         if (SelectedPackage is StableSwarm)
         {
-            var comfy = settingsManager.Settings.InstalledPackages.FirstOrDefault(
-                x => x.PackageName is nameof(ComfyUI) or "ComfyUI-Zluda"
+            var comfy = settingsManager.Settings.InstalledPackages.FirstOrDefault(x =>
+                x.PackageName is nameof(ComfyUI) or "ComfyUI-Zluda"
             );
 
             if (comfy == null)
@@ -180,7 +196,7 @@ public partial class PackageInstallDetailViewModel(
                     Content = Resources.Label_ComfyRequiredDetail,
                     PrimaryButtonText = Resources.Action_Yes,
                     CloseButtonText = Resources.Label_No,
-                    DefaultButton = ContentDialogButton.Primary
+                    DefaultButton = ContentDialogButton.Primary,
                 };
 
                 var result = await dialog.ShowAsync();
@@ -197,11 +213,11 @@ public partial class PackageInstallDetailViewModel(
                     settingsManager,
                     notificationService,
                     logger,
-                    pyRunner,
                     prerequisiteHelper,
                     packageNavigationService,
                     packageFactory,
-                    analyticsHelper
+                    analyticsHelper,
+                    pyInstallationManager
                 );
                 packageNavigationService.NavigateTo(vm);
                 return;
@@ -256,13 +272,14 @@ public partial class PackageInstallDetailViewModel(
             PreferredTorchIndex = SelectedTorchIndex,
             PreferredSharedFolderMethod = SelectedSharedFolderMethod,
             UseSharedOutputFolder = IsOutputSharingEnabled,
-            PipOverrides = pipOverrides.Count > 0 ? pipOverrides : null
+            PipOverrides = pipOverrides.Count > 0 ? pipOverrides : null,
+            PythonVersion = SelectedPythonVersion.Version.StringValue,
         };
 
         var steps = new List<IPackageStep>
         {
             new SetPackageInstallingStep(settingsManager, InstallName),
-            new SetupPrerequisitesStep(prerequisiteHelper, pyRunner, SelectedPackage),
+            new SetupPrerequisitesStep(prerequisiteHelper, SelectedPackage, SelectedPythonVersion.Version),
             new DownloadPackageVersionStep(
                 SelectedPackage,
                 installLocation,
@@ -277,10 +294,14 @@ public partial class PackageInstallDetailViewModel(
                 {
                     SharedFolderMethod = SelectedSharedFolderMethod,
                     VersionOptions = downloadOptions,
-                    PythonOptions = { TorchIndex = SelectedTorchIndex }
+                    PythonOptions =
+                    {
+                        TorchIndex = SelectedTorchIndex,
+                        PythonVersion = SelectedPythonVersion.Version,
+                    },
                 }
             ),
-            new SetupModelFoldersStep(SelectedPackage, SelectedSharedFolderMethod, installLocation)
+            new SetupModelFoldersStep(SelectedPackage, SelectedSharedFolderMethod, installLocation),
         };
 
         if (IsOutputSharingEnabled)
@@ -296,7 +317,7 @@ public partial class PackageInstallDetailViewModel(
         {
             ModificationCompleteMessage = $"Installed {packageName} at [{installLocation}]",
             ModificationFailedMessage = $"Could not install {packageName}",
-            ShowDialogOnStart = true
+            ShowDialogOnStart = true,
         };
         runner.Completed += (_, completedRunner) =>
         {
@@ -346,7 +367,7 @@ public partial class PackageInstallDetailViewModel(
         if (commits != null)
         {
             AvailableCommits = new ObservableCollection<GitCommit>(
-                [..commits, new GitCommit { Sha = "Custom " }]
+                [.. commits, new GitCommit { Sha = "Custom " }]
             );
         }
         else
@@ -360,8 +381,8 @@ public partial class PackageInstallDetailViewModel(
 
     partial void OnInstallNameChanged(string? value)
     {
-        ShowDuplicateWarning = settingsManager.Settings.InstalledPackages.Any(
-            p => p.LibraryPath == $"Packages{Path.DirectorySeparatorChar}{value}"
+        ShowDuplicateWarning = settingsManager.Settings.InstalledPackages.Any(p =>
+            p.LibraryPath == $"Packages{Path.DirectorySeparatorChar}{value}"
         );
         CanInstall = !ShowDuplicateWarning;
     }
@@ -404,4 +425,10 @@ public partial class PackageInstallDetailViewModel(
         AvailableCommits?.Insert(AvailableCommits.IndexOf(newValue), commit);
         SelectedCommit = commit;
     }
+
+    private UvPythonInfo? GetRecommendedPyVersion() =>
+        AvailablePythonVersions.LastOrDefault(x =>
+            x.Version.Major.Equals(SelectedPackage.RecommendedPythonVersion.Major)
+            && x.Version.Minor.Equals(SelectedPackage.RecommendedPythonVersion.Minor)
+        );
 }

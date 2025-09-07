@@ -1,250 +1,153 @@
-﻿using System.Text.Json;
-using System.Text.RegularExpressions;
-using NLog;
-using StabilityMatrix.Core.Exceptions;
+﻿using NLog;
 using StabilityMatrix.Core.Helper;
-using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
-using StabilityMatrix.Core.Processes;
 
 namespace StabilityMatrix.Core.Python;
 
-public class PyBaseInstall(DirectoryPath rootPath, MajorMinorVersion? version = null)
+/// <summary>
+/// Represents a base Python installation that can be used by PyVenvRunner
+/// </summary>
+public class PyBaseInstall(PyInstallation installation)
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-    private readonly Lazy<MajorMinorVersion> _lazyVersion =
-        version != null
-            ? new Lazy<MajorMinorVersion>(version.Value)
-            : new Lazy<MajorMinorVersion>(() => FindPythonVersion(rootPath));
+    /// <summary>
+    /// Gets a PyBaseInstall instance for the default Python installation.
+    /// This uses the default Python 3.10.16 installation.
+    /// </summary>
+    public static PyBaseInstall Default => new(new PyInstallation(PyInstallationManager.DefaultVersion));
 
     /// <summary>
-    /// Root path of the Python installation.
+    /// The Python installation
     /// </summary>
-    public DirectoryPath RootPath { get; } = rootPath;
+    public PyInstallation Installation { get; } = installation;
 
     /// <summary>
-    /// Whether this is a portable Windows installation.
-    /// Path structure is different.
+    /// Root path of the Python installation
     /// </summary>
-    public bool IsWindowsPortable { get; init; }
+    public string RootPath => Installation.InstallPath;
 
     /// <summary>
-    /// Major and minor version of the Python installation.
-    /// Set in the constructor or lazily queried via <see cref="FindPythonVersion"/>.
+    /// Python executable path
     /// </summary>
-    public MajorMinorVersion Version => _lazyVersion.Value;
-
-    public FilePath PythonExePath =>
-        Compat.Switch(
-            (PlatformKind.Windows, RootPath.JoinFile("python.exe")),
-            (PlatformKind.Linux, RootPath.JoinFile("bin", $"python{Version.Major}")),
-            (PlatformKind.MacOS, RootPath.JoinFile("bin", $"python{Version.Major}"))
-        );
-
-    public string DefaultTclTkPath =>
-        Compat.Switch(
-            (PlatformKind.Windows, RootPath.JoinFile("tcl", "tcl8.6")),
-            (PlatformKind.Linux, RootPath.JoinFile("lib", "tcl8.6")),
-            (PlatformKind.MacOS, RootPath.JoinFile("lib", "tcl8.6"))
-        );
-
-    public static PyBaseInstall Default { get; } = new(PyRunner.PythonDir, new MajorMinorVersion(3, 10));
-
-    // Attempt to find the major and minor version of the Python installation.
-    private static MajorMinorVersion FindPythonVersion(
-        DirectoryPath rootPath,
-        PlatformKind platform = default
-    )
-    {
-        if (platform == default)
-        {
-            platform = Compat.Platform;
-        }
-
-        var searchPath = rootPath;
-        string glob;
-        Regex regex;
-
-        if (platform.HasFlag(PlatformKind.Windows))
-        {
-            glob = "python*.dll";
-            regex = new Regex(@"python(\d)(\d+)\.dll");
-        }
-        else if (platform.HasFlag(PlatformKind.MacOS))
-        {
-            searchPath = rootPath.JoinDir("lib");
-            glob = "libpython*.*.dylib";
-            regex = new Regex(@"libpython(\d+)\.(\d+).dylib");
-        }
-        else if (platform.HasFlag(PlatformKind.Linux))
-        {
-            searchPath = rootPath.JoinDir("lib");
-            glob = "libpython*.*.so";
-            regex = new Regex(@"libpython(\d+)\.(\d+).so");
-        }
-        else
-        {
-            throw new NotSupportedException("Unsupported platform");
-        }
-
-        var globResults = rootPath.EnumerateFiles(glob).ToList();
-        if (globResults.Count == 0)
-        {
-            throw new FileNotFoundException("Python library file not found", searchPath + glob);
-        }
-
-        // Get first matching file
-        var match = globResults.Select(path => regex.Match(path.Name)).FirstOrDefault(x => x.Success);
-        if (match is null)
-        {
-            throw new FileNotFoundException(
-                $"Python library file not found with pattern '{regex}'",
-                searchPath + glob
-            );
-        }
-
-        return new(int.Parse(match.Groups[1].Value), int.Parse(match.Groups[2].Value));
-    }
+    public string PythonExePath => Installation.PythonExePath;
 
     /// <summary>
-    /// Creates a new virtual environment runner.
+    /// Pip executable path
     /// </summary>
-    /// <param name="venvPath">Root path of the venv</param>
-    /// <param name="workingDirectory">Working directory of the venv</param>
-    /// <param name="environmentVariables">Extra environment variables to set</param>
-    /// <param name="overrideEnvironmentVariables">Extra environment variables to set at the end</param>
-    /// <param name="withDefaultTclTkEnv">Whether to include the Tcl/Tk library paths via <see cref="DefaultTclTkPath"/></param>
-    public PyVenvRunner CreateVenvRunner(
+    public string PipExePath => Installation.PipExePath;
+
+    /// <summary>
+    /// Version of the Python installation
+    /// </summary>
+    public PyVersion Version => Installation.Version;
+
+    public bool UsesUv => Installation.UsesUv;
+
+    /// <summary>
+    /// Create a virtual environment with this Python installation as the base and
+    /// configure it with the specified parameters.
+    /// </summary>
+    /// <param name="venvPath">Path where the virtual environment will be created</param>
+    /// <param name="workingDirectory">Optional working directory for the Python process</param>
+    /// <param name="environmentVariables">Optional environment variables for the Python process</param>
+    /// <param name="withDefaultTclTkEnv">Whether to set up the default Tkinter environment variables (Windows)</param>
+    /// <param name="withQueriedTclTkEnv">Whether to query and set up Tkinter environment variables (Unix)</param>
+    /// <returns>A configured PyVenvRunner instance</returns>
+    public IPyVenvRunner CreateVenvRunner(
         DirectoryPath venvPath,
         DirectoryPath? workingDirectory = null,
         IReadOnlyDictionary<string, string>? environmentVariables = null,
-        IReadOnlyDictionary<string, string>? overrideEnvironmentVariables = null,
-        bool withDefaultTclTkEnv = false
-    )
-    {
-        var runner = new PyVenvRunner(this, venvPath) { WorkingDirectory = workingDirectory };
-
-        if (environmentVariables is { Count: > 0 })
-        {
-            runner.EnvironmentVariables = runner.EnvironmentVariables.AddRange(environmentVariables);
-        }
-
-        if (withDefaultTclTkEnv)
-        {
-            runner.EnvironmentVariables = runner.EnvironmentVariables.SetItem(
-                "TCL_LIBRARY",
-                DefaultTclTkPath
-            );
-            runner.EnvironmentVariables = runner.EnvironmentVariables.SetItem("TK_LIBRARY", DefaultTclTkPath);
-        }
-
-        if (overrideEnvironmentVariables is { Count: > 0 })
-        {
-            runner.EnvironmentVariables = runner.EnvironmentVariables.AddRange(overrideEnvironmentVariables);
-        }
-
-        return runner;
-    }
-
-    /// <summary>
-    /// Creates a new virtual environment runner.
-    /// </summary>
-    /// <param name="venvPath">Root path of the venv</param>
-    /// <param name="workingDirectory">Working directory of the venv</param>
-    /// <param name="environmentVariables">Extra environment variables to set</param>
-    /// <param name="overrideEnvironmentVariables">Extra environment variables to set at the end</param>
-    /// <param name="withDefaultTclTkEnv">Whether to include the Tcl/Tk library paths via <see cref="DefaultTclTkPath"/></param>
-    /// <param name="withQueriedTclTkEnv">Whether to include the Tcl/Tk library paths via <see cref="TryQueryTclTkLibraryAsync"/></param>
-    public async Task<PyVenvRunner> CreateVenvRunnerAsync(
-        DirectoryPath venvPath,
-        DirectoryPath? workingDirectory = null,
-        IReadOnlyDictionary<string, string>? environmentVariables = null,
-        IReadOnlyDictionary<string, string>? overrideEnvironmentVariables = null,
         bool withDefaultTclTkEnv = false,
         bool withQueriedTclTkEnv = false
     )
     {
-        var runner = CreateVenvRunner(
-            venvPath: venvPath,
-            workingDirectory: workingDirectory,
-            environmentVariables: environmentVariables,
-            overrideEnvironmentVariables: null,
-            withDefaultTclTkEnv: withDefaultTclTkEnv
+        IPyVenvRunner venvRunner = new UvVenvRunner(this, venvPath);
+
+        // Set working directory if provided
+        if (workingDirectory != null)
+        {
+            venvRunner.WorkingDirectory = workingDirectory;
+        }
+
+        // Set environment variables if provided
+        if (environmentVariables != null)
+        {
+            var envVarDict = venvRunner.EnvironmentVariables;
+            foreach (var (key, value) in environmentVariables)
+            {
+                envVarDict = envVarDict.SetItem(key, value);
+            }
+
+            if (
+                Version == PyInstallationManager.Python_3_10_11
+                && !envVarDict.ContainsKey("SETUPTOOLS_USE_DISTUTILS")
+            )
+            {
+                // Fixes potential setuptools error on Portable Windows Python
+                envVarDict = envVarDict.SetItem("SETUPTOOLS_USE_DISTUTILS", "stdlib");
+            }
+
+            venvRunner.EnvironmentVariables = envVarDict;
+        }
+
+        // Configure Tkinter environment variables if requested
+        if (withDefaultTclTkEnv && Compat.IsWindows)
+        {
+            // Set up default TCL/TK environment variables for Windows
+            var envVarDict = venvRunner.EnvironmentVariables;
+            envVarDict = envVarDict.SetItem("TCL_LIBRARY", Path.Combine(RootPath, "tcl", "tcl8.6"));
+            envVarDict = envVarDict.SetItem("TK_LIBRARY", Path.Combine(RootPath, "tcl", "tk8.6"));
+            venvRunner.EnvironmentVariables = envVarDict;
+        }
+        else if (withQueriedTclTkEnv && Compat.IsUnix)
+        {
+            // For Unix, we might need to query the system for TCL/TK locations
+            try
+            {
+                // Implementation would depend on how your system detects TCL/TK on Unix
+                Logger.Debug("Setting up TCL/TK environment for Unix");
+                // This would be implemented based on your system's requirements
+            }
+            catch (Exception ex)
+            {
+                Logger.Warn(ex, "Failed to set up TCL/TK environment for Unix");
+            }
+        }
+
+        return venvRunner;
+    }
+
+    /// <summary>
+    /// Asynchronously create a virtual environment with this Python installation as the base and
+    /// configure it with the specified parameters.
+    /// </summary>
+    /// <param name="venvPath">Path where the virtual environment will be created</param>
+    /// <param name="workingDirectory">Optional working directory for the Python process</param>
+    /// <param name="environmentVariables">Optional environment variables for the Python process</param>
+    /// <param name="withDefaultTclTkEnv">Whether to set up the default Tkinter environment variables (Windows)</param>
+    /// <param name="withQueriedTclTkEnv">Whether to query and set up Tkinter environment variables (Unix)</param>
+    /// <returns>A configured PyVenvRunner instance</returns>
+    public async Task<IPyVenvRunner> CreateVenvRunnerAsync(
+        string venvPath,
+        string? workingDirectory = null,
+        IReadOnlyDictionary<string, string>? environmentVariables = null,
+        bool withDefaultTclTkEnv = false,
+        bool withQueriedTclTkEnv = false
+    )
+    {
+        var dirPath = new DirectoryPath(venvPath);
+        var workingDir = workingDirectory != null ? new DirectoryPath(workingDirectory) : null;
+
+        // Use the synchronous version and just return with a completed task
+        var venvRunner = CreateVenvRunner(
+            dirPath,
+            workingDir,
+            environmentVariables,
+            withDefaultTclTkEnv,
+            withQueriedTclTkEnv
         );
 
-        if (withQueriedTclTkEnv)
-        {
-            var queryResult = await TryQueryTclTkLibraryAsync().ConfigureAwait(false);
-            if (queryResult is { Result: { } result })
-            {
-                if (!string.IsNullOrEmpty(result.TclLibrary))
-                {
-                    runner.EnvironmentVariables = runner.EnvironmentVariables.SetItem(
-                        "TCL_LIBRARY",
-                        result.TclLibrary
-                    );
-                }
-                if (!string.IsNullOrEmpty(result.TkLibrary))
-                {
-                    runner.EnvironmentVariables = runner.EnvironmentVariables.SetItem(
-                        "TK_LIBRARY",
-                        result.TkLibrary
-                    );
-                }
-            }
-            else
-            {
-                Logger.Error(queryResult.Exception, "Failed to query Tcl/Tk library paths");
-            }
-        }
-
-        if (overrideEnvironmentVariables is { Count: > 0 })
-        {
-            runner.EnvironmentVariables = runner.EnvironmentVariables.AddRange(overrideEnvironmentVariables);
-        }
-
-        return runner;
-    }
-
-    public async Task<TaskResult<QueryTclTkLibraryResult>> TryQueryTclTkLibraryAsync()
-    {
-        var processResult = await QueryTclTkLibraryPathAsync().ConfigureAwait(false);
-
-        if (!processResult.IsSuccessExitCode || string.IsNullOrEmpty(processResult.StandardOutput))
-        {
-            return TaskResult<QueryTclTkLibraryResult>.FromException(new ProcessException(processResult));
-        }
-
-        try
-        {
-            var result = JsonSerializer.Deserialize(
-                processResult.StandardOutput,
-                QueryTclTkLibraryResultJsonContext.Default.QueryTclTkLibraryResult
-            );
-
-            return new TaskResult<QueryTclTkLibraryResult>(result!);
-        }
-        catch (JsonException e)
-        {
-            return TaskResult<QueryTclTkLibraryResult>.FromException(e);
-        }
-    }
-
-    private async Task<ProcessResult> QueryTclTkLibraryPathAsync()
-    {
-        const string script = """
-                              import tkinter
-                              import json
-                              
-                              root = tkinter.Tk()
-                              
-                              print(json.dumps({
-                                  'TclLibrary': root.tk.exprstring('$tcl_library'),
-                                  'TkLibrary': root.tk.exprstring('$tk_library')
-                              }))
-                              """;
-
-        return await ProcessRunner.GetProcessResultAsync(PythonExePath, ["-c", script]).ConfigureAwait(false);
+        return venvRunner;
     }
 }

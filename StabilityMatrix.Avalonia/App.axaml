@@ -99,6 +99,7 @@
         <StyleInclude Source="Controls/MarkdownViewer.axaml" />
         <StyleInclude Source="Controls/Inference/WanModelCard.axaml" />
         <StyleInclude Source="Controls/Inference/PlasmaNoiseCard.axaml" />
+        <StyleInclude Source="Controls/Inference/NrsCard.axaml" />
         <labs:ControlThemes />
 
         <Style Selector="DockControl">
@@ -106,6 +107,49 @@
         </Style>
         <Style Selector="ScrollViewer">
             <Setter Property="BringIntoViewOnFocusChange" Value="False" />
+        </Style>
+
+        <Style Selector="DataValidationErrors">
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <DockPanel LastChildFill="True">
+                        <ContentControl
+                            Content="{Binding (DataValidationErrors.Errors)}"
+                            ContentTemplate="{TemplateBinding ErrorTemplate}"
+                            DataContext="{TemplateBinding Owner}"
+                            DockPanel.Dock="Bottom"
+                            IsVisible="{Binding (DataValidationErrors.HasErrors)}" />
+                        <ContentPresenter
+                            Name="PART_ContentPresenter"
+                            Padding="{TemplateBinding Padding}"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            Content="{TemplateBinding Content}"
+                            ContentTemplate="{TemplateBinding ContentTemplate}"
+                            CornerRadius="{TemplateBinding CornerRadius}" />
+                    </DockPanel>
+                </ControlTemplate>
+            </Setter>
+            <Setter Property="ErrorTemplate">
+                <DataTemplate x:DataType="{x:Type x:Object}">
+                    <StackPanel
+                        Margin="4,8,1,0"
+                        Background="Transparent"
+                        Orientation="Horizontal">
+                        <Path
+                            VerticalAlignment="Center"
+                            Data="M14,7 A7,7 0 0,0 0,7 M0,7 A7,7 0 1,0 14,7 M7,3l0,5 M7,9l0,2"
+                            Stroke="OrangeRed"
+                            StrokeThickness="2" />
+                        <ItemsControl
+                            Margin="4,0,0,0"
+                            VerticalAlignment="Center"
+                            Foreground="OrangeRed"
+                            ItemsSource="{Binding}" />
+                    </StackPanel>
+                </DataTemplate>
+            </Setter>
         </Style>
     </Application.Styles>
 </Application>

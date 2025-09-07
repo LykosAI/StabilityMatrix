@@ -185,7 +185,7 @@ public partial class ModelIndexService : IModelIndexService
         {
             0 => Task.FromResult(Enumerable.Empty<LocalModelFile>()),
             1 => liteDbContext.LocalModelFiles.FindAsync(m => m.SharedFolderType == type),
-            _ => liteDbContext.LocalModelFiles.FindAsync(m => types.Contains(m.SharedFolderType))
+            _ => liteDbContext.LocalModelFiles.FindAsync(m => types.Contains(m.SharedFolderType)),
         };
     }
 
@@ -268,7 +268,7 @@ public partial class ModelIndexService : IModelIndexService
             var localModel = new LocalModelFile
             {
                 RelativePath = relativePath,
-                SharedFolderType = sharedFolderType
+                SharedFolderType = sharedFolderType,
             };
 
             // Try to find a connected model info
@@ -303,8 +303,8 @@ public partial class ModelIndexService : IModelIndexService
 
             // Try to find a preview image
             var previewImagePath = LocalModelFile
-                .SupportedImageExtensions.Select(
-                    ext => fileDirectory.JoinFile($"{fileNameWithoutExtension}.preview{ext}")
+                .SupportedImageExtensions.Select(ext =>
+                    fileDirectory.JoinFile($"{fileNameWithoutExtension}.preview{ext}")
                 )
                 .FirstOrDefault(filePath => paths.Contains(filePath));
 
@@ -386,7 +386,7 @@ public partial class ModelIndexService : IModelIndexService
         {
             >= 20 => Environment.ProcessorCount / 3 - 1,
             > 1 => Environment.ProcessorCount,
-            _ => 1
+            _ => 1,
         };
 
         Parallel.ForEach(
@@ -428,7 +428,7 @@ public partial class ModelIndexService : IModelIndexService
                 var localModel = new LocalModelFile
                 {
                     RelativePath = relativePath,
-                    SharedFolderType = sharedFolderType
+                    SharedFolderType = sharedFolderType,
                 };
 
                 // Try to find a connected model info
@@ -447,6 +447,22 @@ public partial class ModelIndexService : IModelIndexService
                             ConnectedModelInfoSerializerContext.Default.ConnectedModelInfo
                         );
 
+                        // Seems there is a limitation of LiteDB datetime resolution, so drop nanoseconds on load
+                        // Otherwise new loaded models with ns will cause mismatching equality with models loaded from db with no ns
+                        if (connectedModelInfo?.ImportedAt is { } importedAt && importedAt.Nanosecond != 0)
+                        {
+                            connectedModelInfo.ImportedAt = new DateTimeOffset(
+                                importedAt.Year,
+                                importedAt.Month,
+                                importedAt.Day,
+                                importedAt.Hour,
+                                importedAt.Minute,
+                                importedAt.Second,
+                                importedAt.Millisecond,
+                                importedAt.Offset
+                            );
+                        }
+
                         localModel.ConnectedModelInfo = connectedModelInfo;
                     }
                     catch (Exception e)
@@ -461,8 +477,8 @@ public partial class ModelIndexService : IModelIndexService
 
                 // Try to find a preview image
                 var previewImagePath = LocalModelFile
-                    .SupportedImageExtensions.Select(
-                        ext => fileDirectory.JoinFile($"{fileNameWithoutExtension}.preview{ext}")
+                    .SupportedImageExtensions.Select(ext =>
+                        fileDirectory.JoinFile($"{fileNameWithoutExtension}.preview{ext}")
                     )
                     .FirstOrDefault(filePath => paths.Contains(filePath));
 

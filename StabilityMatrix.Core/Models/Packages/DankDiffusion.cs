@@ -3,6 +3,7 @@ using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
+using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Models.Packages;
@@ -13,9 +14,10 @@ public class DankDiffusion : BaseGitPackage
         IGithubApiCache githubApi,
         ISettingsManager settingsManager,
         IDownloadService downloadService,
-        IPrerequisiteHelper prerequisiteHelper
+        IPrerequisiteHelper prerequisiteHelper,
+        IPyInstallationManager pyInstallationManager
     )
-        : base(githubApi, settingsManager, downloadService, prerequisiteHelper) { }
+        : base(githubApi, settingsManager, downloadService, prerequisiteHelper, pyInstallationManager) { }
 
     public override string Name => "dank-diffusion";
     public override string DisplayName { get; set; } = "Dank Diffusion";
@@ -26,7 +28,8 @@ public class DankDiffusion : BaseGitPackage
     public override string LaunchCommand => "test";
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Symlink;
 
-    public override IReadOnlyList<string> ExtraLaunchCommands => new[] { "test-config", };
+    public override IReadOnlyDictionary<string, string> ExtraLaunchCommands =>
+        new Dictionary<string, string> { ["test-config"] = "test-config" };
 
     public override Uri PreviewImageUri { get; }
 

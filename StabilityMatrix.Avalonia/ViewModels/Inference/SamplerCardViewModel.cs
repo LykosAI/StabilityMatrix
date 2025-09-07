@@ -18,6 +18,7 @@ using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.Comfy;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 using StabilityMatrix.Core.Models.Api.Comfy.NodeTypes;
+using StabilityMatrix.Core.Services;
 using Size = System.Drawing.Size;
 
 #pragma warning disable CS0657 // Not a valid attribute location for this declaration
@@ -29,6 +30,9 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 [RegisterTransient<SamplerCardViewModel>]
 public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLoadableState, IComfyStep
 {
+    private ISettingsManager settingsManager;
+    private readonly TabContext tabContext;
+
     public const string ModuleKey = "Sampler";
 
     [ObservableProperty]
@@ -105,6 +109,15 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
     [ObservableProperty]
     private int length;
 
+    [ObservableProperty]
+    public partial List<string> AvailableResolutions { get; set; }
+
+    [ObservableProperty]
+    public partial Dictionary<string, List<string>> GroupedResolutionsByAspectRatio { get; set; } = new();
+
+    [ObservableProperty]
+    public partial int DimensionStepChange { get; set; }
+
     [JsonPropertyName("Modules")]
     public StackEditableCardViewModel ModulesCardViewModel { get; }
 
@@ -121,9 +134,13 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
 
     public SamplerCardViewModel(
         IInferenceClientManager clientManager,
-        IServiceManager<ViewModelBase> vmFactory
+        IServiceManager<ViewModelBase> vmFactory,
+        ISettingsManager settingsManager,
+        TabContext tabContext
     )
     {
+        this.settingsManager = settingsManager;
+        this.tabContext = tabContext;
         ClientManager = clientManager;
         ModulesCardViewModel = vmFactory.Get<StackEditableCardViewModel>(modulesCard =>
         {
@@ -136,15 +153,95 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
                 typeof(FluxGuidanceModule),
                 typeof(DiscreteModelSamplingModule),
                 typeof(RescaleCfgModule),
-                typeof(PlasmaNoiseModule)
+                typeof(PlasmaNoiseModule),
+                typeof(NRSModule),
             ];
         });
+    }
+
+    public override void OnLoaded()
+    {
+        base.OnLoaded();
+        DimensionStepChange = settingsManager.Settings.InferenceDimensionStepChange;
+        AvailableResolutions = settingsManager.Settings.SavedInferenceDimensions.ToList();
+        LoadAvailableResolutions();
+
+        tabContext.StateChanged += TabContextOnStateChanged;
+    }
+
+    public override void OnUnloaded()
+    {
+        base.OnUnloaded();
+        tabContext.StateChanged -= TabContextOnStateChanged;
+    }
+
+    private void TabContextOnStateChanged(object? sender, TabContext.TabStateChangedEventArgs e)
+    {
+        if (e.PropertyName != nameof(tabContext.SelectedModel))
+            return;
+
+        if (tabContext.SelectedModel?.Local?.ConnectedModelInfo?.InferenceDefaults is not { } defaults)
+            return;
+
+        Width = defaults.Width;
+        Height = defaults.Height;
+        Steps = defaults.Steps;
+        CfgScale = defaults.CfgScale;
+        SelectedSampler = defaults.Sampler;
+        SelectedScheduler = defaults.Scheduler;
     }
 
     [RelayCommand]
     private void SwapDimensions()
     {
         (Width, Height) = (Height, Width);
+    }
+
+    [RelayCommand]
+    private void SetResolution(string resolution)
+    {
+        if (string.IsNullOrWhiteSpace(resolution))
+        {
+            return;
+        }
+
+        // split on 'x' or 'X'
+        var parts = resolution
+            .ToLowerInvariant()
+            .Split('x', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        if (parts.Length != 2 || !int.TryParse(parts[0], out var w) || !int.TryParse(parts[1], out var h))
+        {
+            return;
+        }
+
+        Width = w;
+        Height = h;
+    }
+
+    [RelayCommand]
+    private void SaveDimensionsToFavorites()
+    {
+        var dimension = $"{Width}x{Height}";
+        var dimensionWithSpace = $"{Width} x {Height}";
+        // Check if already exists
+        if (
+            settingsManager.Settings.SavedInferenceDimensions.Any(d =>
+                d == dimension || d == dimensionWithSpace
+            )
+        )
+        {
+            return;
+        }
+
+        // Add to favorites
+        settingsManager.Transaction(s => s.SavedInferenceDimensions.Add(dimensionWithSpace));
+
+        var orientation =
+            Width > Height ? "Landscape"
+            : Width < Height ? "Portrait"
+            : "Square";
+        GroupedResolutionsByAspectRatio[orientation].Add(dimensionWithSpace);
     }
 
     /// <inheritdoc />
@@ -224,7 +321,7 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
             new ComfyNodeBuilder.KSamplerSelect
             {
                 Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.KSamplerSelect)),
-                SamplerName = e.Builder.Connections.PrimarySampler?.Name!
+                SamplerName = e.Builder.Connections.PrimarySampler?.Name!,
             }
         );
 
@@ -254,7 +351,7 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
                     Model = e.Temp.Base.Model.Unwrap(),
                     Scheduler = e.Builder.Connections.PrimaryScheduler?.Name!,
                     Denoise = IsDenoiseStrengthEnabled ? DenoiseStrength : 1.0d,
-                    Steps = Steps
+                    Steps = Steps,
                 }
             );
 
@@ -266,7 +363,7 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
             new ComfyNodeBuilder.RandomNoise
             {
                 Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.RandomNoise)),
-                NoiseSeed = e.Builder.Connections.Seed
+                NoiseSeed = e.Builder.Connections.Seed,
             }
         );
 
@@ -280,7 +377,7 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
                 {
                     Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.FluxGuidance)),
                     Conditioning = e.Builder.Connections.GetRefinerOrBaseConditioning().Positive,
-                    Guidance = CfgScale
+                    Guidance = CfgScale,
                 }
             );
 
@@ -295,7 +392,7 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
                 {
                     Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.BasicGuider)),
                     Model = e.Builder.Connections.Base.Model.Unwrap(),
-                    Conditioning = e.Builder.Connections.GetRefinerOrBaseConditioning().Positive
+                    Conditioning = e.Builder.Connections.GetRefinerOrBaseConditioning().Positive,
                 }
             );
 
@@ -312,7 +409,7 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
                     Model = e.Temp.Base.Model.Unwrap(),
                     Positive = e.Builder.Connections.Base.Conditioning.Positive,
                     Negative = e.Builder.Connections.Base.Conditioning.Negative,
-                    Cfg = CfgScale
+                    Cfg = CfgScale,
                 }
             );
 
@@ -328,7 +425,7 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
                 Noise = e.Builder.Connections.PrimaryNoise,
                 Sampler = e.Builder.Connections.PrimarySamplerNode,
                 Sigmas = e.Builder.Connections.PrimarySigmas,
-                LatentImage = primaryLatent
+                LatentImage = primaryLatent,
             }
         );
 
@@ -383,7 +480,7 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
                 {
                     Name = e.Nodes.GetUniqueName("FluxGuidance"),
                     Conditioning = conditioning.Positive,
-                    Guidance = CfgScale
+                    Guidance = CfgScale,
                 }
             );
 
@@ -403,7 +500,7 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
                 new ComfyNodeBuilder.KSamplerSelect
                 {
                     Name = "KSamplerSelect",
-                    SamplerName = e.Builder.Connections.PrimarySampler?.Name!
+                    SamplerName = e.Builder.Connections.PrimarySampler?.Name!,
                 }
             );
 
@@ -413,7 +510,7 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
                     Name = "SDTurboScheduler",
                     Model = e.Builder.Connections.Base.Model.Unwrap(),
                     Steps = Steps,
-                    Denoise = DenoiseStrength
+                    Denoise = DenoiseStrength,
                 }
             );
 
@@ -429,7 +526,7 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
                     Negative = conditioning.Negative,
                     Sampler = kSamplerSelect.Output,
                     Sigmas = turboScheduler.Output,
-                    LatentImage = primaryLatent
+                    LatentImage = primaryLatent,
                 }
             );
 
@@ -456,7 +553,7 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
                     LatentImage = primaryLatent,
                     Denoise = DenoiseStrength,
                     DistributionType = "rand",
-                    LatentNoise = plasmaViewModel.PlasmaSamplerLatentNoise
+                    LatentNoise = plasmaViewModel.PlasmaSamplerLatentNoise,
                 }
             );
 
@@ -504,7 +601,7 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
                     LatentImage = primaryLatent,
                     StartAtStep = 0,
                     EndAtStep = Steps,
-                    ReturnWithLeftoverNoise = true
+                    ReturnWithLeftoverNoise = true,
                 }
             );
 
@@ -514,43 +611,47 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
         // If temp batched, add a LatentFromBatch to pick the temp batch right after first sampler
         if (e.Temp.IsPrimaryTempBatched)
         {
-            e.Builder.Connections.Primary = e.Nodes.AddTypedNode(
-                new ComfyNodeBuilder.LatentFromBatch
-                {
-                    Name = e.Nodes.GetUniqueName("ControlNet_LatentFromBatch"),
-                    Samples = e.Builder.GetPrimaryAsLatent(),
-                    BatchIndex = e.Temp.PrimaryTempBatchPickIndex,
-                    // Use max length here as recommended
-                    // https://github.com/comfyanonymous/ComfyUI_experiments/issues/11
-                    Length = 64
-                }
-            ).Output;
+            e.Builder.Connections.Primary = e
+                .Nodes.AddTypedNode(
+                    new ComfyNodeBuilder.LatentFromBatch
+                    {
+                        Name = e.Nodes.GetUniqueName("ControlNet_LatentFromBatch"),
+                        Samples = e.Builder.GetPrimaryAsLatent(),
+                        BatchIndex = e.Temp.PrimaryTempBatchPickIndex,
+                        // Use max length here as recommended
+                        // https://github.com/comfyanonymous/ComfyUI_experiments/issues/11
+                        Length = 64,
+                    }
+                )
+                .Output;
         }
 
         // Refiner
         if (e.Builder.Connections.Refiner.Model is not null)
         {
             // Add refiner sampler
-            e.Builder.Connections.Primary = e.Nodes.AddTypedNode(
-                new ComfyNodeBuilder.KSamplerAdvanced
-                {
-                    Name = "Sampler_Refiner",
-                    Model = e.Builder.Connections.Refiner.Model,
-                    AddNoise = false,
-                    NoiseSeed = e.Builder.Connections.Seed,
-                    Steps = TotalSteps,
-                    Cfg = CfgScale,
-                    SamplerName = primarySampler.Name,
-                    Scheduler = primaryScheduler.Name,
-                    Positive = refinerConditioning!.Positive,
-                    Negative = refinerConditioning.Negative,
-                    // Connect to previous sampler
-                    LatentImage = e.Builder.GetPrimaryAsLatent(),
-                    StartAtStep = Steps,
-                    EndAtStep = TotalSteps,
-                    ReturnWithLeftoverNoise = false
-                }
-            ).Output;
+            e.Builder.Connections.Primary = e
+                .Nodes.AddTypedNode(
+                    new ComfyNodeBuilder.KSamplerAdvanced
+                    {
+                        Name = "Sampler_Refiner",
+                        Model = e.Builder.Connections.Refiner.Model,
+                        AddNoise = false,
+                        NoiseSeed = e.Builder.Connections.Seed,
+                        Steps = TotalSteps,
+                        Cfg = CfgScale,
+                        SamplerName = primarySampler.Name,
+                        Scheduler = primaryScheduler.Name,
+                        Positive = refinerConditioning!.Positive,
+                        Negative = refinerConditioning.Negative,
+                        // Connect to previous sampler
+                        LatentImage = e.Builder.GetPrimaryAsLatent(),
+                        StartAtStep = Steps,
+                        EndAtStep = TotalSteps,
+                        ReturnWithLeftoverNoise = false,
+                    }
+                )
+                .Output;
         }
     }
 
@@ -611,5 +712,60 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
             CfgScale = CfgScale,
             Sampler = sampler,
         };
+    }
+
+    private void LoadAvailableResolutions()
+    {
+        GroupedResolutionsByAspectRatio.Clear();
+        foreach (var res in AvailableResolutions)
+        {
+            // split on 'x' or 'X'
+            var parts = res.ToLowerInvariant()
+                .Split('x', StringSplitOptions.RemoveEmptyEntries)
+                .Select(p => p.Trim())
+                .ToArray();
+
+            if (parts.Length != 2 || !int.TryParse(parts[0], out var w) || !int.TryParse(parts[1], out var h))
+            {
+                continue;
+            }
+
+            var category = "Square";
+            if (w > h)
+            {
+                category = "Landscape";
+            }
+            else if (h > w)
+            {
+                category = "Portrait";
+            }
+
+            if (!GroupedResolutionsByAspectRatio.TryGetValue(category, out var list))
+            {
+                list = [];
+                GroupedResolutionsByAspectRatio[category] = list;
+            }
+            list.Add(res.Trim());
+        }
+
+        // Sort the resolutions by width and height
+        foreach (var key in GroupedResolutionsByAspectRatio.Keys.ToList())
+        {
+            if (key == "Portrait")
+            {
+                GroupedResolutionsByAspectRatio[key] = GroupedResolutionsByAspectRatio[key]
+                    .Order(DimensionStringComparer.Instance)
+                    .ToList();
+            }
+            else
+            {
+                GroupedResolutionsByAspectRatio[key] = GroupedResolutionsByAspectRatio[key]
+                    .OrderDescending(DimensionStringComparer.Instance)
+                    .ToList();
+            }
+        }
+
+        // fire that off just in case
+        OnPropertyChanged(nameof(GroupedResolutionsByAspectRatio));
     }
 }

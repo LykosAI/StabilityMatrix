@@ -1,5 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 using Injectio.Attributes;
+using Python.Runtime;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Models.Progress;
@@ -14,8 +15,9 @@ public class VoltaML(
     IGithubApiCache githubApi,
     ISettingsManager settingsManager,
     IDownloadService downloadService,
-    IPrerequisiteHelper prerequisiteHelper
-) : BaseGitPackage(githubApi, settingsManager, downloadService, prerequisiteHelper)
+    IPrerequisiteHelper prerequisiteHelper,
+    IPyInstallationManager pyInstallationManager
+) : BaseGitPackage(githubApi, settingsManager, downloadService, prerequisiteHelper, pyInstallationManager)
 {
     public override string Name => "voltaML-fast-stable-diffusion";
     public override string DisplayName { get; set; } = "VoltaML";
@@ -27,9 +29,10 @@ public class VoltaML(
     public override string LaunchCommand => "main.py";
 
     public override Uri PreviewImageUri => new("https://cdn.lykos.ai/sm/packages/voltaml/preview.webp");
-    public override string Disclaimer => "This package may no longer be actively maintained";
-    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.UltraNightmare;
+    public override string Disclaimer => "This package may no longer receive updates from its author.";
+    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Impossible;
     public override bool OfferInOneClickInstaller => false;
+    public override PackageType PackageType => PackageType.Legacy;
 
     // There are releases but the manager just downloads the latest commit anyways,
     // so we'll just limit to commit mode to be more consistent
@@ -77,27 +80,27 @@ public class VoltaML(
                     "--log-level INFO",
                     "--log-level WARNING",
                     "--log-level ERROR",
-                    "--log-level CRITICAL"
-                }
+                    "--log-level CRITICAL",
+                },
             },
             new()
             {
                 Name = "Use ngrok to expose the API",
                 Type = LaunchOptionType.Bool,
-                Options = { "--ngrok" }
+                Options = { "--ngrok" },
             },
             new()
             {
                 Name = "Expose the API to the network",
                 Type = LaunchOptionType.Bool,
-                Options = { "--host" }
+                Options = { "--host" },
             },
             new()
             {
                 Name = "Skip virtualenv check",
                 Type = LaunchOptionType.Bool,
                 InitialValue = true,
-                Options = { "--in-container" }
+                Options = { "--in-container" },
             },
             new()
             {
@@ -110,35 +113,35 @@ public class VoltaML(
                     "--pytorch-type rocm",
                     "--pytorch-type directml",
                     "--pytorch-type intel",
-                    "--pytorch-type vulkan"
-                }
+                    "--pytorch-type vulkan",
+                },
             },
             new()
             {
                 Name = "Run in tandem with the Discord bot",
                 Type = LaunchOptionType.Bool,
-                Options = { "--bot" }
+                Options = { "--bot" },
             },
             new()
             {
                 Name = "Enable Cloudflare R2 bucket upload support",
                 Type = LaunchOptionType.Bool,
-                Options = { "--enable-r2" }
+                Options = { "--enable-r2" },
             },
             new()
             {
                 Name = "Port",
                 Type = LaunchOptionType.String,
                 DefaultValue = "5003",
-                Options = { "--port" }
+                Options = { "--port" },
             },
             new()
             {
                 Name = "Only install requirements and exit",
                 Type = LaunchOptionType.Bool,
-                Options = { "--install-only" }
+                Options = { "--install-only" },
             },
-            LaunchOptionDefinition.Extras
+            LaunchOptionDefinition.Extras,
         };
 
     public override string MainBranch => "main";
@@ -154,7 +157,11 @@ public class VoltaML(
     {
         // Setup venv
         progress?.Report(new ProgressReport(-1, "Setting up venv", isIndeterminate: true));
-        await using var venvRunner = await SetupVenvPure(installLocation).ConfigureAwait(false);
+        await using var venvRunner = await SetupVenvPure(
+                installLocation,
+                pythonVersion: options.PythonOptions.PythonVersion
+            )
+            .ConfigureAwait(false);
 
         // Install requirements
         progress?.Report(new ProgressReport(-1, "Installing Package Requirements", isIndeterminate: true));
@@ -178,7 +185,8 @@ public class VoltaML(
         CancellationToken cancellationToken = default
     )
     {
-        await SetupVenv(installLocation).ConfigureAwait(false);
+        await SetupVenv(installLocation, pythonVersion: PyVersion.Parse(installedPackage.PythonVersion))
+            .ConfigureAwait(false);
 
         var foundIndicator = false;
 
@@ -207,7 +215,7 @@ public class VoltaML(
         }
 
         VenvRunner.RunDetached(
-            [Path.Combine(installLocation, options.Command ?? LaunchCommand), ..options.Arguments],
+            [Path.Combine(installLocation, options.Command ?? LaunchCommand), .. options.Arguments],
             HandleConsoleOutput,
             OnExit
         );

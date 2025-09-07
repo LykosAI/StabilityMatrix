@@ -10,6 +10,7 @@
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:models="clr-namespace:StabilityMatrix.Avalonia.Models"
     xmlns:outputsPage="clr-namespace:StabilityMatrix.Avalonia.ViewModels.OutputsPage"
     xmlns:scroll="clr-namespace:StabilityMatrix.Avalonia.Controls.Scroll"
     xmlns:selectableImageCard="clr-namespace:StabilityMatrix.Avalonia.Controls.SelectableImageCard"
@@ -48,7 +49,16 @@
             Margin="0,0,12,0"
             IsVisible="{Binding ShowFolders}"
             ItemsSource="{Binding Categories}"
-            SelectedItem="{Binding SelectedCategory}">
+            SelectedItem="{Binding SelectedCategory}"
+            SelectionMode="AlwaysSelected">
+            <TreeView.ItemContainerTheme>
+                <ControlTheme
+                    x:DataType="models:TreeViewDirectory"
+                    BasedOn="{StaticResource {x:Type TreeViewItem}}"
+                    TargetType="TreeViewItem">
+                    <Setter Property="IsExpanded" Value="{Binding IsExpanded}" />
+                </ControlTheme>
+            </TreeView.ItemContainerTheme>
             <TreeView.ItemTemplate>
                 <TreeDataTemplate ItemsSource="{Binding SubDirectories}">
                     <TextBlock

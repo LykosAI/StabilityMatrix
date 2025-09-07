@@ -4,6 +4,9 @@ namespace StabilityMatrix.Core.Models.Api;
 
 public class CivitFile
 {
+    [JsonPropertyName("id")]
+    public int Id { get; set; }
+
     [JsonPropertyName("sizeKB")]
     public double SizeKb { get; set; }
 

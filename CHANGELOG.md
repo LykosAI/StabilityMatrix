@@ -5,6 +5,186 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.15.0
+### Added
+- Added new package - [AI Toolkit](https://github.com/ostris/ai-toolkit/)
+- Added new package - [FramePack](https://github.com/lllyasviel/FramePack)
+- Added new package - [FramePack Studio](https://github.com/colinurbs/FramePack-Studio)
+- Added Python Version selector for all new package installs
+- Added the ability to rename packages
+- Added support for authenticated model downloads in the HuggingFace model browser. Visit Settings → Accounts to add your HuggingFace token.
+- Added support for dragging-and-dropping Civitai-generated images into Inference to load metadata
+- Added the ability to search by pasting an entire Civitai model URL into the search bar in the Civitai model browser
+- Added "Clear Pip Cache" and "Clear uv Cache" commands to the Settings -> Embedded Python section
+- Added settings to disable base models from appearing in the Checkpoint Manager and Civitai Model Browser base model selectors
+- Added Inference "Favorite Dimensions" quick selector - editable in Settings → Inference, or click the 💾 button inside the dropdown
+- Added setting for Inference dimension step change - the value the dimensions increase or decrease by when using the step buttons or scroll wheel in Inference
+- Added "Install Nunchaku" option to the ComfyUI Package Commands menu
+- Added "Select All" button to the Installed Extensions page
+- Added experimental ROCm pytorch install for ComfyUI (non-Zluda) on Windows - requires a compatible AMD GPU
+- Added base model type labels (SD1.5, SDXL, Flux, etc.) to Inference model selection boxes
+- Added UNET shared folder link for SD.Next
+- Added Manual Install button for installing Package extensions that aren't in the indexes
+- Added Next and Previous buttons to the Civitai details page to navigate between results
+- Added Negative Rejection Steering (NRS) by @reithan to Inference
+- Added Wan 2.2 models to the HuggingFace tab of the model browser
+- Added Tiled Encode/Decode options to FaceDetailer in Inference
+- Added Ukrainian translation thanks to @r0ddty!
+- Added Czech translation thanks to @PEKArt!
+### Changed
+🌟 Civitai Model Details: A Grand Reimagining! 🌟
+- No more peering through a tiny window! Introducing a massive overhaul of the Civitai Model Details page, transforming it from a cramped dialog into a spacious, feature-rich hub for all your model exploration needs.
+- We've listened to your howls for more, and now you can dive deep into every aspect of your favorite models with unprecedented clarity and control:
+    - Expansive View: The new full-page layout means all essential information, descriptions, and previews are laid out beautifully, banishing the old, restrictive dialog forever.
+    - Rich Details at a Glance: Author, base model, last updated, SHA hashes, file name overrides/patterns – everything you need, perfectly organized and always accessible.
+    - Overhauled Image Viewer: Enjoy a sleek, modern image viewer that includes Civitai metadata and supports zooming, panning, and full-screen viewing. No more squinting at tiny thumbnails!
+    - Integrated Inference Options: For supported models, adjust sampler, scheduler, steps, CFG Scale, width, and height directly from the details page, streamlining your workflow like never before!
+----
+- Updated all Python version management, virtual environment creation, and pip installs to use `uv` for improved reliability, compatibility, and speed
+- You can now select release versions when installing ComfyUI
+- You can no longer select branches when installing InvokeAI
+- Updated InvokeAI install to use the intended install method (resolves [#1329](https://github.com/LykosAI/StabilityMatrix/issues/1329))
+- Updated ComfyUI installs for AMD users on Linux to use the latest rocm6.3 torch index
+- Updated ComfyUI-Zluda installs to use the newer install-n method (fixes [#1347](https://github.com/LykosAI/StabilityMatrix/issues/1347))
+- Removed disclaimer from reForge since the author is now active again
+- Updated git operations to better avoid conflicts
+- Updated Japanese translation
+- Civitai model browser image loading now uses dynamic resizing for better performance and a smoother scrolling experience
+- Undo ComfyUI process tracking changes for now due to causing more issues than it solved
+- Updated GPU parsing fallback on Linux systems to use the method provided by @irql-notlessorequal
+- New installs of ComfyUI, SD.Next, and InvokeAI will now use Python 3.12, unless otherwise specified in the Advanced Options during installation
+- New installs of all other packages will now use Python 3.10.18, unless otherwise specified in the Advanced Options during installation
+- Updated ComfyUI installs for AMD users on Linux to use the latest rocm6.4 torch index
+- Updated package delete confirmation dialog
+### Fixed
+- Fixed an error when packages and other processes exit before process tracking on windows can initialize
+- Fixed "none" appearing in wildcard field when using Face Detailer in Inference
+- Fixed [#1254](https://github.com/LykosAI/StabilityMatrix/issues/1254) - Unable to scroll samplers in Inference
+- Fixed [#1294](https://github.com/LykosAI/StabilityMatrix/issues/1294) - Improper sorting of output folders in Output Browser
+- Fixed [#1300](https://github.com/LykosAI/StabilityMatrix/issues/1300) - Git errors when installing Extension Packs
+- Fixed [#1317](https://github.com/LykosAI/StabilityMatrix/issues/1317) - Inference missing GGUF text encoders
+- Fixed [#1324](https://github.com/LykosAI/StabilityMatrix/issues/1324) - Window height slightly increasing every launch
+- Fixed [#1357](https://github.com/LykosAI/StabilityMatrix/issues/1357) - Case insensitivity causing duplicate key exceptions on non-Windows systems
+- Fixed [#1360](https://github.com/LykosAI/StabilityMatrix/issues/1360) - A1111 install not using correct torch for 5000-series GPUs
+- Fixed [#1361](https://github.com/LykosAI/StabilityMatrix/issues/1361) - numpy and other Forge startup
+- Fixed [#1365](https://github.com/LykosAI/StabilityMatrix/issues/1365) - Output folder list not updating when Refresh button clicked
+### Supporters
+#### 🌟 Visionaries
+To our incredible Visionaries, the architects of our ambition: Your profound support is the powerhouse behind this massive v2.15.0 release. You don't just light the path; you fuel the entire journey, allowing us to build bigger, move faster, and turn bold ideas into reality. Our deepest gratitude to: **Waterclouds**, **Corey T**, **bluepopsicle**, **Bob S**, **Ibixat**, **whudunit**, and **TheTekknician**! We are immensely grateful for your trust and partnership in shaping the future of Stability Matrix. Thank you for everything!
+#### 🚀 Pioneers
+A heartfelt salute to our trailblazing Pioneers! Your consistent support helps us navigate the development landscape, ensuring we stay on the right track and can explore new frontiers. A huge thanks to: **tankfox**, **Mr. Unknown**, **Szir777**, **Tigon**, **Noah M**, **USATechDude**, **Thom**, **SeraphOfSalem**, and a special welcome to our newest Pioneers - **Desert Viber**, **Tundra Everquill**, **Adam**, and **Droolguy**! Thank you for being the vanguard of our community!
+ 
+## v2.15.0-pre.2
+### Added
+- Added new package - [AI Toolkit](https://github.com/ostris/ai-toolkit/)
+- Added Manual Install button for installing Package extensions that aren't in the indexes
+- Added Next and Previous buttons to the Civitai details page to navigate between results
+- Added Negative Rejection Steering (NRS) by @reithan to Inference
+- Added Czech translation thanks to @PEKArt!
+- Added Wan 2.2 models to the HuggingFace tab of the model browser
+- Added Tiled Encode/Decode options to FaceDetailer in Inference
+### Changed
+- Brought back the "size remaining after download" tooltip in the new Civitai details page
+- Updated ComfyUI installs for AMD users on Linux to use the latest rocm6.4 torch index
+- Updated package delete confirmation dialog
+### Fixed
+- Fixed Inference custom step (e.g. HiresFix) Samplers potentially sharing state with other card UIs like model browser.
+- Fixed extension manager failing to install extensions due to incorrect clone directory
+- Fixed duplicate Python versions appearing in the Advanced Options when installing a package
+- Fixed an error when packages and other processes exit before process tracking on windows can initialize
+- Fixed "none" appearing in wildcard field when using Face Detailer in Inference
+- Fixed [#1254](https://github.com/LykosAI/StabilityMatrix/issues/1254) - Unable to scroll samplers in Inference
+- Fixed [#1294](https://github.com/LykosAI/StabilityMatrix/issues/1294) - Improper sorting of output folders in Output Browser
+- Fixed [#1300](https://github.com/LykosAI/StabilityMatrix/issues/1300) - Git errors when installing Extension Packs
+- Fixed [#1317](https://github.com/LykosAI/StabilityMatrix/issues/1317) - Inference missing GGUF text encoders
+- Fixed [#1324](https://github.com/LykosAI/StabilityMatrix/issues/1324) - Window height slightly increasing every launch
+- Fixed [#1360](https://github.com/LykosAI/StabilityMatrix/issues/1360) - A1111 install not using correct torch for 5000-series GPUs
+- Fixed [#1361](https://github.com/LykosAI/StabilityMatrix/issues/1361) - numpy and other Forge startup
+### Supporters
+#### 🌟 Visionaries
+A huge thank-you to our incredible Visionary-tier supporters: **Waterclouds**, **Corey T**, **bluepopsicle**, **Bob S**, **Ibixat**, **whudunit**, and **Akiro_Senkai**! Your continued support lights the way for Stability Matrix and helps us keep building features like these. We couldn’t do it without you.
+
+## v2.15.0-pre.1
+### Added
+- Added settings to disable base models from appearing in the Checkpoint Manager and Civitai Model Browser base model selectors
+- Added Inference "Favorite Dimensions" quick selector - editable in Settings → Inference, or click the 💾 button inside the dropdown
+- Added setting for Inference dimension step change - the value the dimensions increase or decrease by when using the step buttons or scroll wheel in Inference
+- Added "Install Nunchaku" option to the ComfyUI Package Commands menu
+- Added "Select All" button to the Installed Extensions page
+- Added experimental ROCm pytorch install for ComfyUI (non-Zluda) on Windows - requires a compatible AMD GPU
+- Added base model type labels (SD1.5, SDXL, Flux, etc.) to Inference model selection boxes
+- Added UNET shared folder link for SD.Next
+- Added Ukrainian translation thanks to @r0ddty!
+### Changed
+🌟 Civitai Model Details: A Grand Reimagining! 🌟
+  - No more peering through a tiny window! Introducing a massive overhaul of the Civitai Model Details page, transforming it from a cramped dialog into a spacious, feature-rich hub for all your model exploration needs.
+  - We've listened to your howls for more, and now you can dive deep into every aspect of your favorite models with unprecedented clarity and control:
+    - Expansive View: The new full-page layout means all essential information, descriptions, and previews are laid out beautifully, banishing the old, restrictive dialog forever.
+    - Rich Details at a Glance: Author, base model, last updated, SHA hashes, file name overrides/patterns – everything you need, perfectly organized and always accessible.
+    - Overhauled Image Viewer: Enjoy a sleek, modern image viewer that includes Civitai metadata and supports zooming, panning, and full-screen viewing. No more squinting at tiny thumbnails!
+    - Integrated Inference Options: For supported models, adjust sampler, scheduler, steps, CFG Scale, width, and height directly from the details page, streamlining your workflow like never before!
+----
+- You can now select release versions when installing ComfyUI
+- You can no longer select branches when installing InvokeAI
+- Updated InvokeAI install to use pinned torch index from release tag
+- Updated ComfyUI installs for AMD users on Linux to use the latest rocm6.3 torch index
+- Updated ComfyUI-Zluda installs to use the newer install-n method (fixes [#1347](https://github.com/LykosAI/StabilityMatrix/issues/1347))
+- Updated uv to 0.8.4
+- Removed disclaimer from reForge since the author is now active again
+- Updated git operations to better avoid conflicts
+- Updated Japanese translation
+- Undo ComfyUI process tracking changes for now due to causing more issues than it solved
+- Updated GPU parsing fallback on Linux systems to use the method provided by @irql-notlessorequal
+### Fixed
+- Fixed Civitai-generated image parsing in Inference
+- Fixed some first-time setup crashes from missing prerequisites
+- Fixed one-click installer not using default preferred Python version
+- Fixed updating from old installs of InvokeAI using old frontend
+- Fixed [#1357](https://github.com/LykosAI/StabilityMatrix/issues/1357) - Case insensitivity causing duplicate key exceptions on non-Windows systems
+### Supporters
+#### 🌟 Visionaries
+To our brilliant Visionary-tier Patrons: **Waterclouds**, **Corey T**, **bluepopsicle**, **Bob S**, **Ibixat**, and **whudunit** — your support is the spark that keeps Stability Matrix blazing forward. Thanks to you, we can explore bolder features, tackle complex challenges, and keep making the impossible feel effortless. Thank you all so very much! 🚀
+
+## v2.15.0-dev.2
+### Added
+- Added new package - [FramePack](https://github.com/lllyasviel/FramePack)
+- Added new package - [FramePack Studio](https://github.com/colinurbs/FramePack-Studio)
+- Added support for authenticated model downloads in the HuggingFace model browser. Visit Settings → Accounts to add your HuggingFace token.
+- Added support for dragging-and-dropping Civitai-generated images into Inference to load metadata
+- Added the ability to search by pasting an entire Civitai model URL into the search bar in the Civitai model browser (when the Civitai API gets fixed)
+- Added "Clear Pip Cache" and "Clear uv Cache" commands to the Settings -> Embedded Python section
+### Changed
+- Civitai model browser image loading now uses dynamic resizing for better performance and a smoother scrolling experience
+- Detailed notifications for Civitai model browser api errors
+- The main sidebar now remembers whether it was collapsed or expanded between restarts
+- Updated pre-selected download locations for certain model types in the Civitai model browser
+- Updated uv to 0.7.19
+- Changed InvokeAI update process to no longer clone the repo
+### Fixed
+- Fixed missing .NET 8 dependency for SwarmUI installs in certain cases
+- Fixed [#1291](https://github.com/LykosAI/StabilityMatrix/issues/1291) - Certain GPUs not being detected on Linux
+- Fixed [#1284](https://github.com/LykosAI/StabilityMatrix/issues/1284) - Output browser not ignoring InvokeAI thumbnails folders
+- Fixed [#1305](https://github.com/LykosAI/StabilityMatrix/issues/1305) - FluxGym installing incorrect packages for Blackwell GPUs
+- Fixed [#1316](https://github.com/LykosAI/StabilityMatrix/issues/1316) - Errors when installing Triton & SageAttention
+- Fixed "directory is not empty" error when updating packages with symlinks
+- Fixed missing base model types in the Checkpoint Manager & Civitai Model Browser
+### Supporters
+#### 🌟 Visionaries
+A huge thank you to our amazing Visionary-tier Patrons: **Waterclouds**, **Corey T**, **bluepopsicle**, **Bob S**, **Ibixat**, and our newest Visionary, **whudunit**! 🚀 Your generous support enables Stability Matrix to grow faster and tackle ambitious new ideas. You're truly making all the magic happen!
+
+## v2.15.0-dev.1
+### Added
+- Added Python Version selector for all new package installs
+- Added the ability to rename packages
+### Changed
+- Updated all Python version management, virtual environment creation, and pip installs to use `uv` for improved reliability, compatibility, and speed
+- The Civitai model browser Download Location selector will now remember the last location used based on the model type
+- New installs of ComfyUI, SD.Next, and InvokeAI will now use Python 3.12.10, unless otherwise specified in the Advanced Options during installation
+- New installs of all other packages will now use Python 3.10.17, unless otherwise specified in the Advanced Options during installation
+### Supporters
+#### 🌟 Visionaries
+A massive thank you to our esteemed Visionary-tier Patrons: **Waterclouds**, **bluepopsicle**, **Bob S**, **Ibixat**, and **Corey T**! Your exceptional commitment propels Stability Matrix to new heights and allows us to push the boundaries of innovation. We're incredibly grateful for your foundational support! 🚀
+
 ## v2.14.3
 ### Added
 - Added the ability to search by pasting an entire Civitai model URL into the search bar in the Civitai model browser

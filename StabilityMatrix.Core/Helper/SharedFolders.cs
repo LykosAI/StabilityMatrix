@@ -20,16 +20,15 @@ public class SharedFolders(ISettingsManager settingsManager, IPackageFactory pac
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
     // mapping is old:new
-    private static readonly Dictionary<string, string> LegacySharedFolderMapping =
-        new()
-        {
-            { "CLIP", "TextEncoders" },
-            { "Unet", "DiffusionModels" },
-            { "InvokeClipVision", "ClipVision" },
-            { "InvokeIpAdapters15", "IpAdapters15" },
-            { "InvokeIpAdaptersXl", "IpAdaptersXl" },
-            { "TextualInversion", "Embeddings" }
-        };
+    private static readonly Dictionary<string, string> LegacySharedFolderMapping = new()
+    {
+        { "CLIP", "TextEncoders" },
+        { "Unet", "DiffusionModels" },
+        { "InvokeClipVision", "ClipVision" },
+        { "InvokeIpAdapters15", "IpAdapters15" },
+        { "InvokeIpAdaptersXl", "IpAdaptersXl" },
+        { "TextualInversion", "Embeddings" },
+    };
 
     public bool IsDisposed { get; private set; }
 
@@ -70,6 +69,12 @@ public class SharedFolders(ISettingsManager settingsManager, IPackageFactory pac
         {
             Logger.Info($"Creating junction source {sourceDir}");
             sourceDir.Create();
+        }
+
+        var destAsFile = new FilePath(destinationDir.ToString());
+        if (destAsFile.Exists)
+        {
+            await destAsFile.DeleteAsync().ConfigureAwait(false);
         }
 
         if (destinationDir.Exists)

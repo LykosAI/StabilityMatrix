@@ -51,6 +51,9 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
     [ObservableProperty]
     private DateTimeOffset created;
 
+    [ObservableProperty]
+    public partial FilePath FullPath { get; set; } = string.Empty;
+
     private readonly ISettingsManager settingsManager;
     private readonly IModelIndexService modelIndexService;
     private readonly INotificationService notificationService;
@@ -96,6 +99,7 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
         FileSize = GetFileSize(CheckpointFile.GetFullPath(settingsManager.ModelsDirectory));
         LastModified = GetLastModified(CheckpointFile.GetFullPath(settingsManager.ModelsDirectory));
         Created = GetCreated(CheckpointFile.GetFullPath(settingsManager.ModelsDirectory));
+        FullPath = new FilePath(CheckpointFile.GetFullPath(settingsManager.ModelsDirectory));
     }
 
     [RelayCommand]
@@ -137,18 +141,17 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
 
         return CheckpointFile.ConnectedModelInfo.Source switch
         {
-            ConnectedModelSource.Civitai when CheckpointFile.ConnectedModelInfo.ModelId == null
-                => Task.CompletedTask,
-            ConnectedModelSource.Civitai when CheckpointFile.ConnectedModelInfo.ModelId != null
-                => App.Clipboard.SetTextAsync(
+            ConnectedModelSource.Civitai when CheckpointFile.ConnectedModelInfo.ModelId == null =>
+                Task.CompletedTask,
+            ConnectedModelSource.Civitai when CheckpointFile.ConnectedModelInfo.ModelId != null =>
+                App.Clipboard.SetTextAsync(
                     $"https://civitai.com/models/{CheckpointFile.ConnectedModelInfo.ModelId}"
                 ),
 
-            ConnectedModelSource.OpenModelDb
-                => App.Clipboard.SetTextAsync(
-                    $"https://openmodeldb.info/models/{CheckpointFile.ConnectedModelInfo.ModelName}"
-                ),
-            _ => Task.CompletedTask
+            ConnectedModelSource.OpenModelDb => App.Clipboard.SetTextAsync(
+                $"https://openmodeldb.info/models/{CheckpointFile.ConnectedModelInfo.ModelName}"
+            ),
+            _ => Task.CompletedTask,
         };
     }
 
@@ -268,8 +271,8 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
                     if (File.Exists(Path.Combine(parentPath, text)))
                         throw new DataValidationException("File name already exists");
                 },
-                Text = CheckpointFile.FileName
-            }
+                Text = CheckpointFile.FileName,
+            },
         };
 
         var dialog = DialogHelper.CreateTextEntryDialog("Rename Model", "", textFields);
@@ -409,6 +412,17 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
             cmInfo.ThumbnailImageUrl = vm.ThumbnailFilePath;
             cmInfo.ModelType = vm.ModelType;
             cmInfo.VersionName = vm.VersionName;
+            cmInfo.InferenceDefaults = vm.IsInferenceDefaultsEnabled
+                ? new InferenceDefaults
+                {
+                    Sampler = vm.SamplerCardViewModel.SelectedSampler,
+                    Scheduler = vm.SamplerCardViewModel.SelectedScheduler,
+                    Width = vm.SamplerCardViewModel.Width,
+                    Height = vm.SamplerCardViewModel.Height,
+                    CfgScale = vm.SamplerCardViewModel.CfgScale,
+                    Steps = vm.SamplerCardViewModel.Steps,
+                }
+                : null;
 
             var modelFilePath = new FilePath(
                 Path.Combine(settingsManager.ModelsDirectory, CheckpointFile.RelativePath)
@@ -427,7 +441,7 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
                         {
                             Progress = report with { Title = "Calculating hash..." };
                         })
-                    )
+                    ),
                 };
                 cmInfo.ImportedAt = DateTimeOffset.Now;
             }
@@ -498,6 +512,15 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
         {
             IsLoading = false;
         }
+    }
+
+    [RelayCommand]
+    private async Task OpenInExplorer()
+    {
+        if (string.IsNullOrWhiteSpace(FullPath))
+            return;
+
+        await ProcessRunner.OpenFileBrowser(FullPath);
     }
 
     private long GetFileSize(string filePath)

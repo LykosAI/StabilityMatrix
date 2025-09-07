@@ -11,7 +11,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference.Video;
 
 [View(typeof(ModelCard))]
 [ManagedService]
-[RegisterScoped<ImgToVidModelCardViewModel>]
+[RegisterTransient<ImgToVidModelCardViewModel>]
 public class ImgToVidModelCardViewModel : ModelCardViewModel
 {
     public ImgToVidModelCardViewModel(
@@ -30,7 +30,7 @@ public class ImgToVidModelCardViewModel : ModelCardViewModel
             new ComfyNodeBuilder.ImageOnlyCheckpointLoader
             {
                 Name = "ImageOnlyCheckpointLoader",
-                CkptName = SelectedModel?.RelativePath ?? throw new ValidationException("Model not selected")
+                CkptName = SelectedModel?.RelativePath ?? throw new ValidationException("Model not selected"),
             }
         );
 

@@ -2,7 +2,7 @@
 
 namespace StabilityMatrix.Core.Models.Api;
 
-public class CivitFileMetadata
+public record CivitFileMetadata
 {
     [JsonPropertyName("fp")]
     public string? Fp { get; set; }

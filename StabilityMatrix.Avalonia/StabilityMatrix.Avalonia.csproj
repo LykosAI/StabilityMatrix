@@ -263,6 +263,10 @@
         <DependentUpon>InferenceWanTextToVideoView.axaml</DependentUpon>
         <SubType>Code</SubType>
       </Compile>
+      <Compile Update="Controls\Inference\NrsCard.axaml.cs">
+        <DependentUpon>NrsCard.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
     </ItemGroup>
 
     <!-- set HUSKY to 0 to disable, or opt-in during CI by setting HUSKY to 1 -->

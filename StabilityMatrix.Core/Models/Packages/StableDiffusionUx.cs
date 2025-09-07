@@ -20,8 +20,9 @@ public class StableDiffusionUx(
     IGithubApiCache githubApi,
     ISettingsManager settingsManager,
     IDownloadService downloadService,
-    IPrerequisiteHelper prerequisiteHelper
-) : BaseGitPackage(githubApi, settingsManager, downloadService, prerequisiteHelper)
+    IPrerequisiteHelper prerequisiteHelper,
+    IPyInstallationManager pyInstallationManager
+) : BaseGitPackage(githubApi, settingsManager, downloadService, prerequisiteHelper, pyInstallationManager)
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -37,12 +38,14 @@ public class StableDiffusionUx(
     public override string LaunchCommand => "launch.py";
     public override Uri PreviewImageUri =>
         new("https://raw.githubusercontent.com/anapnoe/stable-diffusion-webui-ux/master/screenshot.png");
+    public override string Disclaimer => "This package may no longer receive updates from its author.";
 
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Symlink;
 
-    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Advanced;
+    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Impossible;
 
     public override IPackageExtensionManager? ExtensionManager => new A3WebUiExtensionManager(this);
+    public override PackageType PackageType => PackageType.Legacy;
 
     public override Dictionary<SharedFolderType, IReadOnlyList<string>> SharedFolders =>
         new()
@@ -62,7 +65,7 @@ public class StableDiffusionUx(
             [SharedFolderType.ControlNet] = new[] { "models/ControlNet" },
             [SharedFolderType.Codeformer] = new[] { "models/Codeformer" },
             [SharedFolderType.LDSR] = new[] { "models/LDSR" },
-            [SharedFolderType.AfterDetailer] = new[] { "models/adetailer" }
+            [SharedFolderType.AfterDetailer] = new[] { "models/adetailer" },
         };
 
     public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>
@@ -73,7 +76,7 @@ public class StableDiffusionUx(
             [SharedOutputType.Img2Img] = new[] { "outputs/img2img-images" },
             [SharedOutputType.Text2Img] = new[] { "outputs/txt2img-images" },
             [SharedOutputType.Img2ImgGrids] = new[] { "outputs/img2img-grids" },
-            [SharedOutputType.Text2ImgGrids] = new[] { "outputs/txt2img-grids" }
+            [SharedOutputType.Text2ImgGrids] = new[] { "outputs/txt2img-grids" },
         };
 
     [SuppressMessage("ReSharper", "ArrangeObjectCreationWhenTypeNotEvident")]
@@ -84,14 +87,14 @@ public class StableDiffusionUx(
                 Name = "Host",
                 Type = LaunchOptionType.String,
                 DefaultValue = "localhost",
-                Options = ["--server-name"]
+                Options = ["--server-name"],
             },
             new()
             {
                 Name = "Port",
                 Type = LaunchOptionType.String,
                 DefaultValue = "7860",
-                Options = ["--port"]
+                Options = ["--port"],
             },
             new()
             {
@@ -101,44 +104,44 @@ public class StableDiffusionUx(
                 {
                     MemoryLevel.Low => "--lowvram",
                     MemoryLevel.Medium => "--medvram",
-                    _ => null
+                    _ => null,
                 },
-                Options = ["--lowvram", "--medvram", "--medvram-sdxl"]
+                Options = ["--lowvram", "--medvram", "--medvram-sdxl"],
             },
             new()
             {
                 Name = "Xformers",
                 Type = LaunchOptionType.Bool,
                 InitialValue = HardwareHelper.HasNvidiaGpu(),
-                Options = ["--xformers"]
+                Options = ["--xformers"],
             },
             new()
             {
                 Name = "API",
                 Type = LaunchOptionType.Bool,
                 InitialValue = true,
-                Options = ["--api"]
+                Options = ["--api"],
             },
             new()
             {
                 Name = "Auto Launch Web UI",
                 Type = LaunchOptionType.Bool,
                 InitialValue = false,
-                Options = ["--autolaunch"]
+                Options = ["--autolaunch"],
             },
             new()
             {
                 Name = "Skip Torch CUDA Check",
                 Type = LaunchOptionType.Bool,
                 InitialValue = !HardwareHelper.HasNvidiaGpu(),
-                Options = ["--skip-torch-cuda-test"]
+                Options = ["--skip-torch-cuda-test"],
             },
             new()
             {
                 Name = "Skip Python Version Check",
                 Type = LaunchOptionType.Bool,
                 InitialValue = true,
-                Options = ["--skip-python-version-check"]
+                Options = ["--skip-python-version-check"],
             },
             new()
             {
@@ -147,22 +150,22 @@ public class StableDiffusionUx(
                 Description = "Do not switch the model to 16-bit floats",
                 InitialValue =
                     HardwareHelper.PreferRocm() || HardwareHelper.PreferDirectMLOrZluda() || Compat.IsMacOS,
-                Options = ["--no-half"]
+                Options = ["--no-half"],
             },
             new()
             {
                 Name = "Skip SD Model Download",
                 Type = LaunchOptionType.Bool,
                 InitialValue = false,
-                Options = ["--no-download-sd-model"]
+                Options = ["--no-download-sd-model"],
             },
             new()
             {
                 Name = "Skip Install",
                 Type = LaunchOptionType.Bool,
-                Options = ["--skip-install"]
+                Options = ["--skip-install"],
             },
-            LaunchOptionDefinition.Extras
+            LaunchOptionDefinition.Extras,
         ];
 
     public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods =>
@@ -191,7 +194,11 @@ public class StableDiffusionUx(
     {
         progress?.Report(new ProgressReport(-1f, "Setting up venv", isIndeterminate: true));
 
-        await using var venvRunner = await SetupVenvPure(installLocation).ConfigureAwait(false);
+        await using var venvRunner = await SetupVenvPure(
+                installLocation,
+                pythonVersion: options.PythonOptions.PythonVersion
+            )
+            .ConfigureAwait(false);
 
         var torchVersion = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
         var pipArgs = new PipInstallArgs();
@@ -247,7 +254,8 @@ public class StableDiffusionUx(
         CancellationToken cancellationToken = default
     )
     {
-        await SetupVenv(installLocation).ConfigureAwait(false);
+        await SetupVenv(installLocation, pythonVersion: PyVersion.Parse(installedPackage.PythonVersion))
+            .ConfigureAwait(false);
 
         void HandleConsoleOutput(ProcessOutput s)
         {
@@ -268,8 +276,8 @@ public class StableDiffusionUx(
         VenvRunner.RunDetached(
             [
                 Path.Combine(installLocation, options.Command ?? LaunchCommand),
-                ..options.Arguments,
-                ..ExtraLaunchArguments
+                .. options.Arguments,
+                .. ExtraLaunchArguments,
             ],
             HandleConsoleOutput,
             OnExit
@@ -287,7 +295,7 @@ public class StableDiffusionUx(
                     new Uri(
                         "https://raw.githubusercontent.com/AUTOMATIC1111/stable-diffusion-webui-extensions/master/index.json"
                     )
-                )
+                ),
             ];
 
         public override async Task<IEnumerable<PackageExtension>> GetManifestExtensionsAsync(

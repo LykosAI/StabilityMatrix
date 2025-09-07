@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
+using AvaloniaEdit.Document;
 using AvaloniaEdit.Utils;
 using DynamicData.Binding;
 using Microsoft.Extensions.DependencyInjection;
@@ -28,13 +29,16 @@ using StabilityMatrix.Avalonia.ViewModels.OutputsPage;
 using StabilityMatrix.Avalonia.ViewModels.PackageManager;
 using StabilityMatrix.Avalonia.ViewModels.Progress;
 using StabilityMatrix.Avalonia.ViewModels.Settings;
+using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Database;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
+using StabilityMatrix.Core.Models.Api.CivitTRPC;
 using StabilityMatrix.Core.Models.Api.Comfy;
 using StabilityMatrix.Core.Models.Api.OpenArt;
 using StabilityMatrix.Core.Models.Api.OpenModelsDb;
@@ -83,7 +87,7 @@ public static class DesignData
                     {
                         Id = activePackageId,
                         DisplayName = "My Installed Package",
-                        PackageName = "stable-diffusion-webui",
+                        PackageName = "framepack",
                         Version = new InstalledPackageVersion { InstalledReleaseVersion = "v1.0.0" },
                         LibraryPath = $"Packages{Path.DirectorySeparatorChar}example-webui",
                         LastUpdateCheck = DateTimeOffset.Now,
@@ -208,9 +212,36 @@ public static class DesignData
             null,
             null,
             null,
-            null,
             packageFactory,
+            null,
             null
+        );
+
+        PackageInstallDetailViewModel.AvailablePythonVersions = new ObservableCollection<UvPythonInfo>(
+            [
+                new UvPythonInfo(
+                    PyInstallationManager.Python_3_10_17,
+                    "C:\\SMData\\Data\\Data\\Assets\\Python\\cpython-3.11.12-windows-x86_64-none",
+                    true,
+                    "cpython",
+                    "x86_64",
+                    "windows",
+                    "cpython-3.10.17-windows-x86_64-none",
+                    "default",
+                    "none"
+                ),
+                new UvPythonInfo(
+                    PyInstallationManager.Python_3_12_10,
+                    null,
+                    false,
+                    "cpython",
+                    "x86_64",
+                    "windows",
+                    "guh I can't be bothered",
+                    "freethreaded",
+                    "none"
+                ),
+            ]
         );
 
         /*ObservableCacheEx.AddOrUpdate(
@@ -644,8 +675,23 @@ public static class DesignData
     public static InferenceSettingsViewModel InferenceSettingsViewModel =>
         Services.GetRequiredService<InferenceSettingsViewModel>();
 
-    public static MainSettingsViewModel MainSettingsViewModel =>
-        Services.GetRequiredService<MainSettingsViewModel>();
+    public static MainSettingsViewModel MainSettingsViewModel
+    {
+        get
+        {
+            var vm = Services.GetRequiredService<MainSettingsViewModel>();
+            vm.AllBaseModelTypes = new List<string>()
+            {
+                CivitBaseModelType.WanVideo.GetStringValue(),
+                CivitBaseModelType.Sdxl10.GetStringValue(),
+                CivitBaseModelType.Flux1D.GetStringValue(),
+                "Flux 1. Kontext",
+            }
+                .Select(s => new BaseModelOptionViewModel { ModelType = s, IsSelected = true })
+                .ToList();
+            return vm;
+        }
+    }
 
     public static AccountSettingsViewModel AccountSettingsViewModel =>
         Services.GetRequiredService<AccountSettingsViewModel>();
@@ -689,6 +735,91 @@ public static class DesignData
 
     public static CheckpointBrowserViewModel CheckpointBrowserViewModel =>
         Services.GetRequiredService<CheckpointBrowserViewModel>();
+
+    public static CivitDetailsPageViewModel CivitDetailsPageViewModel =>
+        DialogFactory.Get<CivitDetailsPageViewModel>(vm =>
+        {
+            vm.CivitModel = new CivitModel
+            {
+                Name = "BB95 Furry Mix",
+                Description = "A furry mix of BB95",
+                Stats = new CivitModelStats
+                {
+                    Rating = 3.5,
+                    RatingCount = 24,
+                    ThumbsUpCount = 1337,
+                    DownloadCount = 100_000,
+                },
+                Tags = ["base model", "furry", "animals", "photorealistic", "highly detailed", "yiff"],
+                ModelVersions =
+                [
+                    new CivitModelVersion
+                    {
+                        Name = "v1.2.2-Inpainting",
+                        PublishedAt = DateTimeOffset.Now,
+                        Images =
+                        [
+                            new CivitImage
+                            {
+                                Url =
+                                    "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/244bc929-9bbc-44b2-8a26-7622a1669f4a/original=true,quality=90/00123-3430906941-1girl,%20hatsune%20miku,%20white%20pupils,%20power%20elements,%20microphone,%20vibrant%20blue%20color%20palette,%20abstract,abstract%20background,%20dreamli.jpeg",
+                            },
+                            new CivitImage
+                            {
+                                Url =
+                                    "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/aa671302-496f-4dcc-839a-b75a70a7665e/original=true,quality=90/00136-4204868169-1girl,%20solo,%20long%20hair,%20city,%20boots,%20hands%20in%20pockets,%20coat,%20blonde%20hair,%20sky,%20planet,%20night,%20knee%20boots,%20building,%20star%20_(sky_).jpeg",
+                            },
+                        ],
+                        Files =
+                        [
+                            new CivitFile
+                            {
+                                Name = "bb95-v100-uwu-reallylongfilename-v1234576802.safetensors",
+                                Type = CivitFileType.Model,
+                                Metadata = new CivitFileMetadata
+                                {
+                                    Format = CivitModelFormat.SafeTensor,
+                                    Fp = "fp16",
+                                    Size = "pruned",
+                                },
+                            },
+                            new CivitFile
+                            {
+                                Name = "bb95-v100-uwu-reallylongfilename-v1234576802-fp32.safetensors",
+                                Type = CivitFileType.Model,
+                                Metadata = new CivitFileMetadata
+                                {
+                                    Format = CivitModelFormat.SafeTensor,
+                                    Fp = "fp32",
+                                    Size = "full",
+                                },
+                                Hashes = new CivitFileHashes
+                                {
+                                    BLAKE3 =
+                                        "A7383E54F2E4570678B0F18545B2EB8FD95325DA76CCBA8467DBDBD481CF6B99",
+                                    SHA256 =
+                                        "BDB59BAC77D94AE7A55FF893170F9554C3F349E48A1B73C0C17C0B7C6F4D41A2",
+                                },
+                            },
+                        ],
+                    },
+                    new CivitModelVersion { Name = "v1.2.0", PublishedAt = DateTimeOffset.Now.AddDays(-3) },
+                    new CivitModelVersion { Name = "v1.1.0", PublishedAt = DateTimeOffset.Now.AddDays(-3) },
+                    new CivitModelVersion { Name = "v1.0.0", PublishedAt = DateTimeOffset.Now.AddDays(-3) },
+                    new CivitModelVersion { Name = "v0.9.0", PublishedAt = DateTimeOffset.Now.AddDays(-3) },
+                    new CivitModelVersion { Name = "v0.8.0", PublishedAt = DateTimeOffset.Now.AddDays(-3) },
+                    new CivitModelVersion { Name = "v0.7.0", PublishedAt = DateTimeOffset.Now.AddDays(-3) },
+                    new CivitModelVersion { Name = "v0.6.0", PublishedAt = DateTimeOffset.Now.AddDays(-3) },
+                    new CivitModelVersion { Name = "v0.5.0", PublishedAt = DateTimeOffset.Now.AddDays(-3) },
+                    new CivitModelVersion { Name = "v0.4.0", PublishedAt = DateTimeOffset.Now.AddDays(-3) },
+                ],
+                Creator = new CivitCreator
+                {
+                    Image = "https://gravatar.com/avatar/fe74084ae8a081dc2283f5bde4736756ad?f=y&d=retro",
+                    Username = "creator-1",
+                },
+            };
+        });
 
     public static SelectModelVersionViewModel SelectModelVersionViewModel =>
         DialogFactory.Get<SelectModelVersionViewModel>(vm =>
@@ -937,6 +1068,8 @@ The gallery images are often inpainted, but you will get something very similar 
 
     public static FreeUCardViewModel FreeUCardViewModel => DialogFactory.Get<FreeUCardViewModel>();
 
+    public static NrsCardViewModel NrsCardViewModel => DialogFactory.Get<NrsCardViewModel>();
+
     public static PromptCardViewModel PromptCardViewModel =>
         DialogFactory.Get<PromptCardViewModel>(vm =>
         {
@@ -1000,6 +1133,16 @@ The gallery images are often inpainted, but you will get something very similar 
 
     public static ExtraNetworkCardViewModel ExtraNetworkCardViewModel =>
         DialogFactory.Get<ExtraNetworkCardViewModel>();
+
+    public static ConfirmPackageDeleteDialogViewModel ConfirmPackageDeleteDialogViewModel =>
+        DialogFactory.Get<ConfirmPackageDeleteDialogViewModel>(vm =>
+            vm.Package = new InstalledPackage
+            {
+                PackageName = "a1111",
+                DisplayName = "Automatic1111 WebUI",
+                LibraryPath = "packages\\a1111",
+            }
+        );
 
     public static InstalledWorkflowsViewModel InstalledWorkflowsViewModel
     {
@@ -1137,6 +1280,12 @@ The gallery images are often inpainted, but you will get something very similar 
                     {
                         ModelName = "Art Shaper (very long name example)",
                         VersionName = "Style v8 (very long name)",
+                        ModelId = 0,
+                        VersionId = 0,
+                        ModelDescription =
+                            "This is a very long description for the Art Shaper model, which is used to demonstrate how long descriptions can be handled in the UI. It should be able to display multiple lines and still look good.",
+                        ModelType = CivitModelType.Checkpoint,
+                        BaseModel = "SD 1.5",
                     },
                 }
             ),
@@ -1151,6 +1300,12 @@ The gallery images are often inpainted, but you will get something very similar 
                     {
                         ModelName = "Background Arts",
                         VersionName = "Anime Style v10",
+                        ModelId = 0,
+                        VersionId = 0,
+                        ModelDescription =
+                            "This is a very long description for the Art Shaper model, which is used to demonstrate how long descriptions can be handled in the UI. It should be able to display multiple lines and still look good.",
+                        ModelType = CivitModelType.Checkpoint,
+                        BaseModel = "SDXL 1.0",
                     },
                 }
             ),
@@ -1171,6 +1326,43 @@ The gallery images are often inpainted, but you will get something very similar 
             vm.FileNameText = "TextToImage_00041.png";
             vm.FileSizeText = "2.4 MB";
             vm.ImageSizeText = "1280 x 1792";
+
+            vm.CivitImageMetadata = new CivitImageGenerationDataResponse
+            {
+                Metadata = new CivitImageMetadata
+                {
+                    Prompt =
+                        "closeup photp of a red haired anthro wolf female,\n holding an apple, wearing medieval drees is eating a apple, wolf ears, wolf tail with white tip\n,anthro,furry",
+                    NegativePrompt = "Bad quality , watermark",
+                    CfgScale = 2.5d,
+                    Steps = 30,
+                    Sampler = "DPM++ SDE",
+                    Seed = 255842256659122,
+                    Model = "RatatoskrIllustriousV2.3",
+                    Height = 1152,
+                    Width = 768,
+                    Scheduler = "normal",
+                },
+                Resources =
+                [
+                    new CivitImageResource
+                    {
+                        ModelName = "noobAI XL (NAI-XL) really long name example with even more words",
+                        ModelId = 1337,
+                        VersionId = 1234,
+                        VersionName = "Epsilon-pred 1.1-Version",
+                        ModelType = "Checkpoint",
+                    },
+                ],
+            };
+
+            vm.CivitImageMetadata.OtherMetadata = new Dictionary<string, string>
+            {
+                ["CFG"] = "2.5",
+                ["Steps"] = "30",
+                ["Sampler"] = "DPM++ SDE",
+                ["Seed"] = "255842256659122",
+            };
         });
 
     public static DownloadResourceViewModel DownloadResourceViewModel =>
@@ -1222,6 +1414,42 @@ The gallery images are often inpainted, but you will get something very similar 
                 .Range(1, 64)
                 .Select(i => $"C:/Users/ExampleUser/Data/ExampleFile{i}.txt")
                 .ToArray();
+        });
+
+    public static ConfirmBulkDownloadDialogViewModel ConfirmBulkDownloadDialogViewModel =>
+        DialogFactory.Get<ConfirmBulkDownloadDialogViewModel>(vm =>
+        {
+            vm.Model = new CivitModel
+            {
+                Name = "Test Model",
+                ModelVersions = Enumerable
+                    .Range(1, 64)
+                    .Select(i => new CivitModelVersion
+                    {
+                        Name = $"Version {i}",
+                        Files =
+                        [
+                            new CivitFile
+                            {
+                                Name = $"test-file-{i}.safetensors",
+                                Type = CivitFileType.Model,
+                                Metadata = new CivitFileMetadata
+                                {
+                                    Format = CivitModelFormat.SafeTensor,
+                                    Fp = "fp16",
+                                    Size = "pruned",
+                                },
+                                SizeKb = new Random().Next(1, 10) * 1024 * 1024,
+                            },
+                        ],
+                    })
+                    .ToList(),
+            };
+
+            vm.FpTypePreference = CivitModelFpType.fp16;
+            vm.IncludeVae = true;
+
+            return vm;
         });
 
     public static SponsorshipPromptViewModel SponsorshipPromptViewModel =>
@@ -1311,6 +1539,25 @@ The gallery images are often inpainted, but you will get something very similar 
             vm.ModelType = CivitModelType.Checkpoint;
             vm.BaseModelType = "Pony";
         });
+
+    public static PackageInstallProgressItemViewModel PackageInstallProgressItemViewModel =>
+        new(
+            new PackageModificationRunner
+            {
+                CurrentProgress = new ProgressReport(50, "Installing Package", "Description"),
+                ModificationCompleteMessage = "Install Complete",
+            }
+        )
+        {
+            Progress = new ContentDialogProgressViewModelBase
+            {
+                Value = 50,
+                CloseWhenFinished = true,
+                Text = "Installing Package",
+                Description = "Description",
+                Console = { Document = new TextDocument("Hello world") },
+            },
+        };
 
     public static MockGitVersionProvider MockGitVersionProvider => new();
 

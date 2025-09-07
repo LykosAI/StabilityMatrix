@@ -9,11 +9,11 @@
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:models1="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
     xmlns:native="clr-namespace:StabilityMatrix.Native;assembly=StabilityMatrix.Native"
     xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
     xmlns:system="clr-namespace:System;assembly=System.Runtime"
     xmlns:ui="using:FluentAvalonia.UI.Controls"
-    xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
     xmlns:vmSettings="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Settings"
     d:DataContext="{x:Static mocks:DesignData.InferenceSettingsViewModel}"
     d:DesignHeight="650"
@@ -26,6 +26,10 @@
             <Setter Property="Margin" Value="8,0" />
         </Style>
     </controls:UserControlBase.Styles>
+
+    <controls:UserControlBase.Resources>
+        <models1:DimensionStringComparer x:Key="DimensionStringComparer" />
+    </controls:UserControlBase.Resources>
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="8,16" Spacing="8">
@@ -163,6 +167,92 @@
                     <DataGrid AutoGenerateColumns="True" ItemsSource="{Binding OutputImageFileNameFormatVars}" />
                 </ui:TeachingTip>
 
+            </sg:SpacedGrid>
+
+            <!--  Dimensions  -->
+            <sg:SpacedGrid RowDefinitions="Auto,*,*,*" RowSpacing="4">
+                <TextBlock
+                    Margin="0,0,0,4"
+                    FontWeight="Medium"
+                    Text="Dimensions" />
+
+                <!--  Step Change  -->
+                <ui:SettingsExpander
+                    Grid.Row="1"
+                    Description="Controls how much the dimensions increase or decrease per step when adjusting with arrows or scroll."
+                    Header="Step Size">
+                    <ui:SettingsExpander.IconSource>
+                        <controls:FASymbolIconSource Symbol="fa-solid fa-stairs" />
+                    </ui:SettingsExpander.IconSource>
+                    <ui:SettingsExpander.Footer>
+                        <ui:NumberBox
+                            LargeChange="16"
+                            Maximum="1024"
+                            Minimum="8"
+                            SmallChange="8"
+                            SpinButtonPlacementMode="Inline"
+                            ValidationMode="InvalidInputOverwritten"
+                            Value="{Binding InferenceDimensionStepChange}" />
+                    </ui:SettingsExpander.Footer>
+                </ui:SettingsExpander>
+
+                <!--  Favorite Dimensions  -->
+                <ui:SettingsExpander
+                    Grid.Row="2"
+                    Header="Favorite Dimensions"
+                    IsExpanded="True">
+                    <ui:SettingsExpander.IconSource>
+                        <fluentIcons:SymbolIconSource Symbol="Grid" />
+                    </ui:SettingsExpander.IconSource>
+
+                    <ui:SettingsExpanderItem>
+                        <Grid RowDefinitions="Auto, *">
+                            <ui:CommandBar>
+                                <ui:CommandBar.PrimaryCommands>
+                                    <ui:CommandBarButton
+                                        Width="45"
+                                        Height="50"
+                                        Command="{Binding AddRowCommand}"
+                                        IconSource="Add"
+                                        Label="{x:Static lang:Resources.Action_Save}" />
+                                    <ui:CommandBarButton
+                                        Width="45"
+                                        Height="50"
+                                        Command="{Binding RemoveSelectedRowCommand}"
+                                        CommandParameter="{Binding #DimensionsGrid.SelectedItem}"
+                                        IconSource="Remove"
+                                        Label="{x:Static lang:Resources.Action_Remove}">
+                                        <ui:CommandBarButton.IsEnabled>
+                                            <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                                <Binding
+                                                    Converter="{x:Static ObjectConverters.IsNotNull}"
+                                                    ElementName="DimensionsGrid"
+                                                    Path="SelectedItem" />
+                                            </MultiBinding>
+                                        </ui:CommandBarButton.IsEnabled>
+                                    </ui:CommandBarButton>
+                                </ui:CommandBar.PrimaryCommands>
+                            </ui:CommandBar>
+                            <DataGrid
+                                x:Name="DimensionsGrid"
+                                Grid.Row="1"
+                                MaxHeight="400"
+                                ItemsSource="{Binding FavoriteDimensions}">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn
+                                        Width="5*"
+                                        x:DataType="system:String"
+                                        Binding="{Binding .}"
+                                        CanUserSort="True"
+                                        CustomSortComparer="{StaticResource DimensionStringComparer}"
+                                        FontFamily="Cascadia Code,Consolas,Menlo,Monospace,DejaVu Sans Mono,monospace"
+                                        Header="Dimension"
+                                        SortMemberPath="." />
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </Grid>
+                    </ui:SettingsExpanderItem>
+                </ui:SettingsExpander>
             </sg:SpacedGrid>
 
         </StackPanel>

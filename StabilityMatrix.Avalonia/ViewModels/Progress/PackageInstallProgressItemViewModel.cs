@@ -1,8 +1,6 @@
-﻿using System;
-using System.Linq;
-using System.Threading.Tasks;
-using Avalonia.Controls;
+﻿using Avalonia.Controls;
 using Avalonia.Threading;
+using CommunityToolkit.Mvvm.ComponentModel;
 using FluentAvalonia.UI.Controls;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -62,7 +60,10 @@ public class PackageInstallProgressItemViewModel : ProgressItemViewModelBase
             Progress.Console.PostLine(e.Message);
         }
 
-        EventManager.Instance.OnScrollToBottomRequested();
+        if (Progress.AutoScrollToBottom)
+        {
+            EventManager.Instance.OnScrollToBottomRequested();
+        }
 
         if (
             e is { Message: not null, Percentage: >= 100 }
@@ -93,7 +94,7 @@ public class PackageInstallProgressItemViewModel : ProgressItemViewModelBase
             IsPrimaryButtonEnabled = false,
             IsSecondaryButtonEnabled = false,
             IsFooterVisible = false,
-            Content = new PackageModificationDialog { DataContext = Progress }
+            Content = new PackageModificationDialog { DataContext = Progress },
         };
         EventManager.Instance.OnToggleProgressFlyout();
         await dialog.ShowAsync();

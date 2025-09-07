@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.IO;
-using System.Linq;
+﻿using System.Collections.Immutable;
 using System.Reactive.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Controls;
 using Avalonia.Threading;
@@ -35,7 +29,6 @@ namespace StabilityMatrix.Avalonia.ViewModels.PackageManager;
 /// <summary>
 ///  This is our ViewModel for the second page
 /// </summary>
-
 [View(typeof(MainPackageManagerView))]
 [ManagedService]
 [RegisterSingleton<MainPackageManagerViewModel>]
@@ -96,13 +89,12 @@ public partial class MainPackageManagerViewModel : PageViewModelBase
             .Or(unknown)
             .DeferUntilLoaded()
             .Bind(Packages)
-            .Transform(
-                p =>
-                    dialogFactory.Get<PackageCardViewModel>(vm =>
-                    {
-                        vm.Package = p;
-                        vm.OnLoadedAsync().SafeFireAndForget();
-                    })
+            .Transform(p =>
+                dialogFactory.Get<PackageCardViewModel>(vm =>
+                {
+                    vm.Package = p;
+                    vm.OnLoadedAsync().SafeFireAndForget();
+                })
             )
             .Bind(PackageCards)
             .ObserveOn(SynchronizationContext.Current)

@@ -16,8 +16,9 @@ public class FooocusMre(
     IGithubApiCache githubApi,
     ISettingsManager settingsManager,
     IDownloadService downloadService,
-    IPrerequisiteHelper prerequisiteHelper
-) : BaseGitPackage(githubApi, settingsManager, downloadService, prerequisiteHelper)
+    IPrerequisiteHelper prerequisiteHelper,
+    IPyInstallationManager pyInstallationManager
+) : BaseGitPackage(githubApi, settingsManager, downloadService, prerequisiteHelper, pyInstallationManager)
 {
     public override string Name => "Fooocus-MRE";
     public override string DisplayName { get; set; } = "Fooocus-MRE";
@@ -37,11 +38,11 @@ public class FooocusMre(
             "https://user-images.githubusercontent.com/130458190/265366059-ce430ea0-0995-4067-98dd-cef1d7dc1ab6.png"
         );
 
-    public override string Disclaimer =>
-        "This package may no longer receive updates from its author. It may be removed from Stability Matrix in the future.";
+    public override string Disclaimer => "This package may no longer receive updates from its author.";
 
     public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Impossible;
     public override bool OfferInOneClickInstaller => false;
+    public override PackageType PackageType => PackageType.Legacy;
 
     public override List<LaunchOptionDefinition> LaunchOptions =>
         new()
@@ -51,23 +52,23 @@ public class FooocusMre(
                 Name = "Port",
                 Type = LaunchOptionType.String,
                 Description = "Sets the listen port",
-                Options = { "--port" }
+                Options = { "--port" },
             },
             new LaunchOptionDefinition
             {
                 Name = "Share",
                 Type = LaunchOptionType.Bool,
                 Description = "Set whether to share on Gradio",
-                Options = { "--share" }
+                Options = { "--share" },
             },
             new LaunchOptionDefinition
             {
                 Name = "Listen",
                 Type = LaunchOptionType.String,
                 Description = "Set the listen interface",
-                Options = { "--listen" }
+                Options = { "--listen" },
             },
-            LaunchOptionDefinition.Extras
+            LaunchOptionDefinition.Extras,
         };
 
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Symlink;
@@ -88,7 +89,7 @@ public class FooocusMre(
             [SharedFolderType.ControlNet] = new[] { "models/controlnet" },
             [SharedFolderType.GLIGEN] = new[] { "models/gligen" },
             [SharedFolderType.ESRGAN] = new[] { "models/upscale_models" },
-            [SharedFolderType.Hypernetwork] = new[] { "models/hypernetworks" }
+            [SharedFolderType.Hypernetwork] = new[] { "models/hypernetworks" },
         };
 
     public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>
@@ -110,7 +111,11 @@ public class FooocusMre(
         CancellationToken cancellationToken = default
     )
     {
-        await using var venvRunner = await SetupVenvPure(installLocation).ConfigureAwait(false);
+        await using var venvRunner = await SetupVenvPure(
+                installLocation,
+                pythonVersion: options.PythonOptions.PythonVersion
+            )
+            .ConfigureAwait(false);
 
         progress?.Report(new ProgressReport(-1f, "Installing torch...", isIndeterminate: true));
 
@@ -128,7 +133,7 @@ public class FooocusMre(
                 TorchIndex.Cpu => "cpu",
                 TorchIndex.Cuda => "cu118",
                 TorchIndex.Rocm => "rocm5.4.2",
-                _ => throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null)
+                _ => throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null),
             };
 
             pipInstallArgs = pipInstallArgs
@@ -159,7 +164,8 @@ public class FooocusMre(
         CancellationToken cancellationToken = default
     )
     {
-        await SetupVenv(installLocation).ConfigureAwait(false);
+        await SetupVenv(installLocation, pythonVersion: PyVersion.Parse(installedPackage.PythonVersion))
+            .ConfigureAwait(false);
 
         void HandleConsoleOutput(ProcessOutput s)
         {
@@ -178,7 +184,7 @@ public class FooocusMre(
         }
 
         VenvRunner.RunDetached(
-            [Path.Combine(installLocation, options.Command ?? LaunchCommand), ..options.Arguments],
+            [Path.Combine(installLocation, options.Command ?? LaunchCommand), .. options.Arguments],
             HandleConsoleOutput,
             OnExit
         );

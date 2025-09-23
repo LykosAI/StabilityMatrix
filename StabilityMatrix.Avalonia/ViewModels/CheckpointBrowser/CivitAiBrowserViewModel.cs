@@ -52,6 +52,8 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
 
     private readonly SourceCache<OrderedValue<CivitModel>, int> modelCache = new(static ov => ov.Value.Id);
 
+    private const int TargetPageItemCount = 30;
+
     [ObservableProperty]
     private IObservableCollection<CheckpointBrowserCardViewModel> modelCards =
         new ObservableCollectionExtended<CheckpointBrowserCardViewModel>();
@@ -453,8 +455,46 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
             }
             else
             {
-                modelsResponse = await civitApi.GetModels(request);
-                models = modelsResponse.Items;
+                // Auto-paginate via cursor until we fill the target page size or run out
+                var collectedById = new HashSet<int>();
+                var targetCount = request.Limit ?? TargetPageItemCount;
+                var safetyGuard = 0;
+
+                while (true)
+                {
+                    var resp = await civitApi.GetModels(request);
+                    modelsResponse = resp;
+
+                    if (resp.Items != null)
+                    {
+                        foreach (var item in resp.Items)
+                        {
+                            if (collectedById.Add(item.Id))
+                            {
+                                models.Add(item);
+                            }
+                        }
+                    }
+
+                    // Check how many items survive local filtering
+                    var filteredCount = models
+                        .Where(m => m.Type.ConvertTo<SharedFolderType>() > 0)
+                        .Count(m => m.Mode == null);
+
+                    var next = resp.Metadata?.NextCursor;
+                    if (filteredCount >= targetCount || string.IsNullOrEmpty(next))
+                    {
+                        break;
+                    }
+
+                    request.Cursor = next;
+
+                    if (++safetyGuard >= 10)
+                    {
+                        // Avoid unbounded looping on unexpected cursors
+                        break;
+                    }
+                }
             }
 
             if (models is null)
@@ -634,6 +674,7 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
         // Build request
         var modelRequest = new CivitModelsRequest
         {
+            Limit = TargetPageItemCount + 20, // Fetch a few extra to account for local filtering
             Nsfw = "true", // Handled by local view filter
             Sort = SortMode,
             Period = SelectedPeriod,

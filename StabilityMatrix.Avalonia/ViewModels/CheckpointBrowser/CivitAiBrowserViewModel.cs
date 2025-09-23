@@ -674,7 +674,7 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
         // Build request
         var modelRequest = new CivitModelsRequest
         {
-            Limit = TargetPageItemCount,
+            Limit = TargetPageItemCount + 20, // Fetch a few extra to account for local filtering
             Nsfw = "true", // Handled by local view filter
             Sort = SortMode,
             Period = SelectedPeriod,

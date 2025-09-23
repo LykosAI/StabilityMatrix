@@ -3,6 +3,7 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:avalonia="clr-namespace:FluentIcons.Avalonia;assembly=FluentIcons.Avalonia"
+    xmlns:avalonia1="https://github.com/projektanker/icons.avalonia"
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:database="clr-namespace:StabilityMatrix.Core.Models.Database;assembly=StabilityMatrix.Core"
@@ -12,6 +13,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
     xmlns:packageManager="clr-namespace:StabilityMatrix.Avalonia.ViewModels.PackageManager"
+    xmlns:python="clr-namespace:StabilityMatrix.Core.Python;assembly=StabilityMatrix.Core"
     d:DataContext="{x:Static designData:DesignData.PackageInstallDetailViewModel}"
     d:DesignHeight="850"
     d:DesignWidth="800"
@@ -59,7 +61,8 @@
                     Grid.Column="0"
                     Content="Branches"
                     CornerRadius="8,0,0,8"
-                    IsChecked="{Binding !IsReleaseMode, Mode=TwoWay}" />
+                    IsChecked="{Binding !IsReleaseMode, Mode=TwoWay}"
+                    IsEnabled="{Binding ShowBranchMode}" />
                 <ToggleButton
                     Grid.Column="1"
                     Content="Releases"
@@ -193,6 +196,49 @@
                             VerticalAlignment="Center"
                             VerticalContentAlignment="Center"
                             IsChecked="{Binding IsOutputSharingEnabled}" />
+                    </StackPanel>
+
+                    <StackPanel Margin="0,4,24,0" Orientation="Vertical">
+                        <Label Content="Python Version" />
+                        <controls:BetterComboBox
+                            MinWidth="150"
+                            MinHeight="38"
+                            ItemsSource="{Binding AvailablePythonVersions}"
+                            SelectedItem="{Binding SelectedPythonVersion}">
+                            <controls:BetterComboBox.ItemTemplate>
+                                <DataTemplate DataType="{x:Type python:UvPythonInfo}">
+                                    <Grid ColumnDefinitions="*, Auto" RowDefinitions="Auto, Auto">
+                                        <TextBlock
+                                            Grid.Row="0"
+                                            Grid.Column="0"
+                                            Margin="8,4,0,4"
+                                            FontSize="18"
+                                            FontWeight="Light"
+                                            Text="{Binding Version}" />
+                                        <avalonia1:Icon
+                                            Grid.Row="0"
+                                            Grid.Column="1"
+                                            Foreground="{DynamicResource ThemeGreenColor}"
+                                            IsVisible="{Binding IsInstalled}"
+                                            Value="fa-solid fa-check" />
+                                        <TextBlock
+                                            Grid.Row="1"
+                                            Grid.Column="0"
+                                            Grid.ColumnSpan="2"
+                                            Margin="8,4,0,4"
+                                            FontSize="12"
+                                            Foreground="{DynamicResource TextControlForegroundDisabled}"
+                                            Text="{Binding Key}" />
+                                    </Grid>
+
+                                </DataTemplate>
+                            </controls:BetterComboBox.ItemTemplate>
+                            <controls:BetterComboBox.SelectionBoxItemTemplate>
+                                <DataTemplate DataType="{x:Type python:UvPythonInfo}">
+                                    <TextBlock Margin="8,4,0,4" Text="{Binding Version}" />
+                                </DataTemplate>
+                            </controls:BetterComboBox.SelectionBoxItemTemplate>
+                        </controls:BetterComboBox>
                     </StackPanel>
                 </WrapPanel>
             </Expander>

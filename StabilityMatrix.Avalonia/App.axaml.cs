@@ -63,6 +63,7 @@ using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Configs;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Settings;
+using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 using StabilityMatrix.Core.Updater;
 using ApiOptions = StabilityMatrix.Core.Models.Configs.ApiOptions;
@@ -718,6 +719,15 @@ public sealed class App : Application
                 c.Timeout = TimeSpan.FromHours(1);
             })
             .AddPolicyHandler(retryPolicy);
+
+        services
+            .AddRefitClient<IHuggingFaceApi>(defaultRefitSettings) // Assuming defaultRefitSettings is suitable
+            .ConfigureHttpClient(c =>
+            {
+                c.BaseAddress = new Uri("https://huggingface.co");
+                c.Timeout = TimeSpan.FromHours(1); // Or a more appropriate timeout like 60 seconds, consistent with retry policy
+            })
+            .AddPolicyHandler(retryPolicy); // Assuming retryPolicy is suitable
 
         // Apizr clients
         services.AddApizrManagerFor<IOpenModelDbApi, OpenModelDbManager>(options =>

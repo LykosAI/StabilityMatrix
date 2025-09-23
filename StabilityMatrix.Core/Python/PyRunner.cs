@@ -23,9 +23,78 @@ public class PyRunner : IPyRunner
     // Set by ISettingsManager.TryFindLibrary()
     public static DirectoryPath HomeDir { get; set; } = string.Empty;
 
-    // This is same for all platforms
-    public const string PythonDirName = "Python310";
+    // The installation manager for handling different Python versions
+    private readonly IPyInstallationManager installationManager;
 
+    // The current Python installation being used
+    private PyInstallation? currentInstallation;
+
+    /// <summary>
+    /// Get the Python directory name for the given version, or the default version if none specified
+    /// </summary>
+    public string GetPythonDirName(PyVersion? version = null) =>
+        version != null
+            ? $"Python{version.Value.Major}{version.Value.Minor}{version.Value.Micro}"
+            : "Python310"; // Default to 3.10.11 for compatibility
+
+    /// <summary>
+    /// Get the Python directory for the given version, or the default version if none specified
+    /// </summary>
+    public string GetPythonDir(PyVersion? version = null) =>
+        Path.Combine(GlobalConfig.LibraryDir, "Assets", GetPythonDirName(version));
+
+    /// <summary>
+    /// Get the Python DLL path for the given version, or the default version if none specified
+    /// </summary>
+    public string GetPythonDllPath(PyVersion? version = null)
+    {
+        var pythonDir = GetPythonDir(version);
+        var relativePath =
+            version != null
+                ? Compat.Switch(
+                    (PlatformKind.Windows, $"python{version.Value.Major}{version.Value.Minor}.dll"),
+                    (
+                        PlatformKind.Linux,
+                        Path.Combine("lib", $"libpython{version.Value.Major}.{version.Value.Minor}.so")
+                    ),
+                    (
+                        PlatformKind.MacOS,
+                        Path.Combine("lib", $"libpython{version.Value.Major}.{version.Value.Minor}.dylib")
+                    )
+                )
+                : RelativePythonDllPath;
+
+        return Path.Combine(pythonDir, relativePath);
+    }
+
+    /// <summary>
+    /// Get the Python executable path for the given version, or the default version if none specified
+    /// </summary>
+    public string GetPythonExePath(PyVersion? version = null)
+    {
+        var pythonDir = GetPythonDir(version);
+        return Compat.Switch(
+            (PlatformKind.Windows, Path.Combine(pythonDir, "python.exe")),
+            (PlatformKind.Linux, Path.Combine(pythonDir, "bin", "python3")),
+            (PlatformKind.MacOS, Path.Combine(pythonDir, "bin", "python3"))
+        );
+    }
+
+    /// <summary>
+    /// Get the pip executable path for the given version, or the default version if none specified
+    /// </summary>
+    public string GetPipExePath(PyVersion? version = null)
+    {
+        var pythonDir = GetPythonDir(version);
+        return Compat.Switch(
+            (PlatformKind.Windows, Path.Combine(pythonDir, "Scripts", "pip.exe")),
+            (PlatformKind.Linux, Path.Combine(pythonDir, "bin", "pip3")),
+            (PlatformKind.MacOS, Path.Combine(pythonDir, "bin", "pip3"))
+        );
+    }
+
+    // Legacy properties for compatibility - these use the default Python version
+    public const string PythonDirName = "Python310";
     public static string PythonDir => Path.Combine(GlobalConfig.LibraryDir, "Assets", PythonDirName);
 
     /// <summary>
@@ -61,35 +130,78 @@ public class PyRunner : IPyRunner
 
     private static readonly SemaphoreSlim PyRunning = new(1, 1);
 
-    public PyIOStream? StdOutStream;
-    public PyIOStream? StdErrStream;
+    public PyIOStream? StdOutStream { get; private set; }
+    public PyIOStream? StdErrStream { get; private set; }
 
-    /// <summary>$
-    /// Initializes the Python runtime using the embedded dll.
-    /// Can be called with no effect after initialization.
+    public PyRunner(IPyInstallationManager installationManager)
+    {
+        this.installationManager = installationManager;
+    }
+
+    /// <summary>
+    /// Switch to a specific Python installation
     /// </summary>
-    /// <exception cref="FileNotFoundException">Thrown if Python DLL not found.</exception>
-    public async Task Initialize()
+    public async Task SwitchToInstallation(PyVersion version)
+    {
+        // If Python is already initialized with a different version, we need to shutdown first
+        if (PythonEngine.IsInitialized && currentInstallation?.Version != version)
+        {
+            // hacky stuff until Python.NET stops using BinaryFormatter
+            AppContext.SetSwitch(
+                "System.Runtime.Serialization.EnableUnsafeBinaryFormatterSerialization",
+                true
+            );
+            Logger.Info("Shutting down previous Python runtime for version switch");
+            PythonEngine.Shutdown();
+            AppContext.SetSwitch(
+                "System.Runtime.Serialization.EnableUnsafeBinaryFormatterSerialization",
+                false
+            );
+        }
+
+        // If not initialized or we had to shutdown, initialize with the new version
+        if (!PythonEngine.IsInitialized)
+        {
+            // Get the installation for this version
+            var installation = await installationManager.GetInstallationAsync(version).ConfigureAwait(false);
+            if (!installation.Exists())
+            {
+                throw new FileNotFoundException(
+                    $"Python {version} installation not found at {installation.InstallPath}"
+                );
+            }
+
+            currentInstallation = installation;
+
+            // Initialize with this installation
+            await InitializeWithInstallation(installation).ConfigureAwait(false);
+        }
+    }
+
+    /// <summary>
+    /// Initialize Python runtime with a specific installation
+    /// </summary>
+    private async Task InitializeWithInstallation(PyInstallation installation)
     {
         if (PythonEngine.IsInitialized)
             return;
 
-        Logger.Info("Setting PYTHONHOME={PythonDir}", PythonDir.ToRepr());
+        Logger.Info("Setting PYTHONHOME={PythonDir}", installation.InstallPath.ToRepr());
 
         // Append Python path to PATH
-        var newEnvPath = Compat.GetEnvPathWithExtensions(PythonDir);
+        var newEnvPath = Compat.GetEnvPathWithExtensions(installation.InstallPath);
         Logger.Debug("Setting PATH={NewEnvPath}", newEnvPath.ToRepr());
         Environment.SetEnvironmentVariable("PATH", newEnvPath, EnvironmentVariableTarget.Process);
 
-        Logger.Info("Initializing Python runtime with DLL: {DllPath}", PythonDllPath);
+        Logger.Info("Initializing Python runtime with DLL: {DllPath}", installation.PythonDllPath);
         // Check PythonDLL exists
-        if (!File.Exists(PythonDllPath))
+        if (!File.Exists(installation.PythonDllPath))
         {
-            throw new FileNotFoundException("Python linked library not found", PythonDllPath);
+            throw new FileNotFoundException("Python linked library not found", installation.PythonDllPath);
         }
 
-        Runtime.PythonDLL = PythonDllPath;
-        PythonEngine.PythonHome = PythonDir;
+        Runtime.PythonDLL = installation.PythonDllPath;
+        PythonEngine.PythonHome = installation.InstallPath;
         PythonEngine.Initialize();
         PythonEngine.BeginAllowThreads();
 
@@ -106,18 +218,52 @@ public class PyRunner : IPyRunner
             .ConfigureAwait(false);
     }
 
+    /// <summary>$
+    /// Initializes the Python runtime using the embedded dll.
+    /// Can be called with no effect after initialization.
+    /// </summary>
+    /// <exception cref="FileNotFoundException">Thrown if Python DLL not found.</exception>
+    public async Task Initialize()
+    {
+        if (PythonEngine.IsInitialized)
+            return;
+
+        // Get the default installation
+        var defaultInstallation = await installationManager
+            .GetDefaultInstallationAsync()
+            .ConfigureAwait(false);
+        if (!defaultInstallation.Exists())
+        {
+            throw new FileNotFoundException(
+                $"Default Python installation not found at {defaultInstallation.InstallPath}"
+            );
+        }
+
+        currentInstallation = defaultInstallation;
+        await InitializeWithInstallation(defaultInstallation).ConfigureAwait(false);
+    }
+
     /// <summary>
     /// One-time setup for get-pip
     /// </summary>
-    public async Task SetupPip()
+    public async Task SetupPip(PyVersion? version = null)
     {
-        if (!File.Exists(GetPipPath))
+        // Use either the specified version or the current installation
+        var installation =
+            version != null
+                ? await installationManager.GetInstallationAsync(version.Value).ConfigureAwait(false)
+                : currentInstallation
+                    ?? await installationManager.GetDefaultInstallationAsync().ConfigureAwait(false);
+
+        var getPipPath = Path.Combine(installation.InstallPath, "get-pip.pyc");
+
+        if (!File.Exists(getPipPath))
         {
-            throw new FileNotFoundException("get-pip not found", GetPipPath);
+            throw new FileNotFoundException("get-pip not found", getPipPath);
         }
 
         await ProcessRunner
-            .GetProcessResultAsync(PythonExePath, ["-m", "get-pip"])
+            .GetProcessResultAsync(installation.PythonExePath, ["-m", "get-pip"])
             .EnsureSuccessExitCode()
             .ConfigureAwait(false);
 
@@ -125,7 +271,7 @@ public class PyRunner : IPyRunner
         // So make the base pip less than that for compatibility, venvs can upgrade themselves if needed
         await ProcessRunner
             .GetProcessResultAsync(
-                PythonExePath,
+                installation.PythonExePath,
                 ["-m", "pip", "install", "pip==23.3.2", "setuptools==69.5.1"]
             )
             .EnsureSuccessExitCode()
@@ -135,14 +281,21 @@ public class PyRunner : IPyRunner
     /// <summary>
     /// Install a Python package with pip
     /// </summary>
-    public async Task InstallPackage(string package)
+    public async Task InstallPackage(string package, PyVersion? version = null)
     {
-        if (!File.Exists(PipExePath))
+        // Use either the specified version or the current installation
+        var installation =
+            version != null
+                ? await installationManager.GetInstallationAsync(version.Value).ConfigureAwait(false)
+                : currentInstallation
+                    ?? await installationManager.GetDefaultInstallationAsync().ConfigureAwait(false);
+
+        if (!File.Exists(installation.PipExePath))
         {
-            throw new FileNotFoundException("pip not found", PipExePath);
+            throw new FileNotFoundException("pip not found", installation.PipExePath);
         }
         var result = await ProcessRunner
-            .GetProcessResultAsync(PythonExePath, $"-m pip install {package}")
+            .GetProcessResultAsync(installation.PythonExePath, $"-m pip install {package}")
             .ConfigureAwait(false);
         result.EnsureSuccessExitCode();
     }

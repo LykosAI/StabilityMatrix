@@ -45,7 +45,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(PromptCard))]
 [ManagedService]
-[RegisterScoped<PromptCardViewModel>]
+[RegisterTransient<PromptCardViewModel>]
 public partial class PromptCardViewModel
     : DisposableLoadableViewModelBase,
         IParametersLoadableState,
@@ -108,6 +108,9 @@ public partial class PromptCardViewModel
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ShowLowTokenWarning))]
     private int lowTokenThreshold = 25;
+
+    [ObservableProperty]
+    public partial bool IsStackCardEnabled { get; set; } = true;
 
     public bool ShowLowTokenWarning => TokensRemaining <= LowTokenThreshold && TokensRemaining >= 0;
 
@@ -337,7 +340,7 @@ public partial class PromptCardViewModel
                 {
                     Name = $"PositiveCLIP_{modelConnections.Name}",
                     Clip = e.Builder.Connections.Base.Clip!,
-                    Text = e.Builder.Connections.PositivePrompt
+                    Text = e.Builder.Connections.PositivePrompt,
                 }
             );
             var negativeClip = e.Nodes.AddTypedNode(
@@ -345,7 +348,7 @@ public partial class PromptCardViewModel
                 {
                     Name = $"NegativeCLIP_{modelConnections.Name}",
                     Clip = e.Builder.Connections.Base.Clip!,
-                    Text = e.Builder.Connections.NegativePrompt
+                    Text = e.Builder.Connections.NegativePrompt,
                 }
             );
 
@@ -419,60 +422,60 @@ public partial class PromptCardViewModel
     private async Task ShowHelpDialog()
     {
         var md = $$"""
-                  ## {{Resources.Label_Emphasis}}
-                  You can also use (`Ctrl+Up`/`Ctrl+Down`) in the editor to adjust the 
-                  weight emphasis of the token under the caret or the currently selected text.
-                  ```prompt
-                  (keyword)
-                  (keyword:1.0)
-                  ```
-                  
-                  ## {{Resources.Label_Deemphasis}}
-                  ```prompt
-                  [keyword]
-                  ```
-                  
-                  ## {{Resources.Label_EmbeddingsOrTextualInversion}}
-                  They may be used in either the positive or negative prompts. 
-                  Essentially they are text presets, so the position where you place them 
-                  could make a difference. 
-                  ```prompt
-                  <embedding:model>
-                  <embedding:model:1.0>
-                  ```
-                  
-                  ## {{Resources.Label_NetworksLoraOrLycoris}}
-                  Unlike embeddings, network tags do not get tokenized to the model, 
-                  so the position in the prompt where you place them does not matter.
-                  ```prompt
-                  <lora:model>
-                  <lora:model:1.0>
-                  <lyco:model>
-                  <lyco:model:1.0>
-                  ```
-                  
-                  ## {{Resources.Label_Comments}}
-                  Inline comments can be marked by a hashtag ' # '. 
-                  All text after a ' # ' on a line will be disregarded during generation.
-                  ```prompt
-                  # comments
-                  a red cat # also comments
-                  detailed
-                  ```
-                  
-                  ## {{Resources.Label_Wildcards}}
-                  Wildcards can be used to select a random value from a list of options.
-                  ```prompt
-                  {red|green|blue} cat
-                  ```
-                  In this example, a color will be randomly chosen at the start of each generation. 
-                  The final output could be "red cat", "green cat", or "blue cat".
-                  
-                  You can also use networks and embeddings in wildcards. For example:
-                  ```prompt
-                  {<lora:model:1>|<embedding:model>} cat
-                  ```
-                  """;
+            ## {{Resources.Label_Emphasis}}
+            You can also use (`Ctrl+Up`/`Ctrl+Down`) in the editor to adjust the 
+            weight emphasis of the token under the caret or the currently selected text.
+            ```prompt
+            (keyword)
+            (keyword:1.0)
+            ```
+
+            ## {{Resources.Label_Deemphasis}}
+            ```prompt
+            [keyword]
+            ```
+
+            ## {{Resources.Label_EmbeddingsOrTextualInversion}}
+            They may be used in either the positive or negative prompts. 
+            Essentially they are text presets, so the position where you place them 
+            could make a difference. 
+            ```prompt
+            <embedding:model>
+            <embedding:model:1.0>
+            ```
+
+            ## {{Resources.Label_NetworksLoraOrLycoris}}
+            Unlike embeddings, network tags do not get tokenized to the model, 
+            so the position in the prompt where you place them does not matter.
+            ```prompt
+            <lora:model>
+            <lora:model:1.0>
+            <lyco:model>
+            <lyco:model:1.0>
+            ```
+
+            ## {{Resources.Label_Comments}}
+            Inline comments can be marked by a hashtag ' # '. 
+            All text after a ' # ' on a line will be disregarded during generation.
+            ```prompt
+            # comments
+            a red cat # also comments
+            detailed
+            ```
+
+            ## {{Resources.Label_Wildcards}}
+            Wildcards can be used to select a random value from a list of options.
+            ```prompt
+            {red|green|blue} cat
+            ```
+            In this example, a color will be randomly chosen at the start of each generation. 
+            The final output could be "red cat", "green cat", or "blue cat".
+
+            You can also use networks and embeddings in wildcards. For example:
+            ```prompt
+            {<lora:model:1>|<embedding:model>} cat
+            ```
+            """;
 
         var dialog = DialogHelper.CreateMarkdownDialog(md, "Prompt Syntax", TextEditorPreset.Prompt);
         dialog.MinDialogWidth = 800;
@@ -531,7 +534,7 @@ public partial class PromptCardViewModel
                 builder.AppendLine($"## Networks ({networks.Count}):");
                 builder.AppendLine("```csharp");
                 builder.AppendLine(
-                    JsonSerializer.Serialize(networks, new JsonSerializerOptions() { WriteIndented = true, })
+                    JsonSerializer.Serialize(networks, new JsonSerializerOptions() { WriteIndented = true })
                 );
                 builder.AppendLine("```");
             }
@@ -622,11 +625,10 @@ public partial class PromptCardViewModel
             "illustrious" => [ModelTags.Illustrious],
             _ => [],
         };
-        var mode = IsFocused
-            ? PromptExpansionRequestMode.Focused
-            : IsImaginative
-                ? PromptExpansionRequestMode.Imaginative
-                : PromptExpansionRequestMode.Balanced;
+        var mode =
+            IsFocused ? PromptExpansionRequestMode.Focused
+            : IsImaginative ? PromptExpansionRequestMode.Imaginative
+            : PromptExpansionRequestMode.Balanced;
         try
         {
             var expandedPrompt = await promptGenApi.ExpandPrompt(
@@ -636,11 +638,11 @@ public partial class PromptCardViewModel
                     {
                         PositivePrompt = prompt.ProcessedText ?? prompt.RawText,
                         NegativePrompt = negativePrompt.ProcessedText ?? negativePrompt.RawText,
-                        Model = selectedModel?.Local?.DisplayModelName
+                        Model = selectedModel?.Local?.DisplayModelName,
                     },
                     Model = IsThinkingEnabled ? "PromptV1ThinkingDev" : "PromptV1Dev",
                     Mode = mode,
-                    ModelTags = modelTags
+                    ModelTags = modelTags,
                 }
             );
 
@@ -661,8 +663,8 @@ public partial class PromptCardViewModel
                         "Rate Limit Reached"
                     );
                     dialog.PrimaryButtonText = "Upgrade";
-                    dialog.PrimaryButtonCommand = new RelayCommand(
-                        () => ProcessRunner.OpenUrl("https://patreon.com/join/StabilityMatrix")
+                    dialog.PrimaryButtonCommand = new RelayCommand(() =>
+                        ProcessRunner.OpenUrl("https://patreon.com/join/StabilityMatrix")
                     );
                     dialog.IsPrimaryButtonEnabled = true;
                     dialog.DefaultButton = ContentDialogButton.Primary;
@@ -753,7 +755,7 @@ public partial class PromptCardViewModel
             {
                 Prompt = PromptDocument.Text,
                 NegativePrompt = NegativePromptDocument.Text,
-                ModulesCardState = ModulesCardViewModel.SaveStateToJsonObject()
+                ModulesCardState = ModulesCardViewModel.SaveStateToJsonObject(),
             }
         );
     }
@@ -785,7 +787,7 @@ public partial class PromptCardViewModel
         return parameters with
         {
             PositivePrompt = PromptDocument.Text,
-            NegativePrompt = NegativePromptDocument.Text
+            NegativePrompt = NegativePromptDocument.Text,
         };
     }
 
@@ -799,7 +801,7 @@ public partial class PromptCardViewModel
         dialog.Buttons =
         [
             new TaskDialogButton(Resources.Action_Login, TaskDialogStandardResult.OK),
-            TaskDialogButton.CloseButton
+            TaskDialogButton.CloseButton,
         ];
 
         if (await dialog.ShowAsync(true) is not TaskDialogStandardResult.OK)
@@ -808,7 +810,7 @@ public partial class PromptCardViewModel
         var vm = vmFactory.Get<OAuthDeviceAuthViewModel>();
         vm.ChallengeRequest = new OpenIddictClientModels.DeviceChallengeRequest
         {
-            ProviderName = OpenIdClientConstants.LykosAccount.ProviderName
+            ProviderName = OpenIdClientConstants.LykosAccount.ProviderName,
         };
         await vm.ShowDialogAsync();
 

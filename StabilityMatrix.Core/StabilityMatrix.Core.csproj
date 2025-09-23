@@ -68,6 +68,7 @@
       <PackageReference Include="SharpCompress" />
       <PackageReference Include="SkiaSharp" />
       <PackageReference Include="TextMateSharp.Grammars" />
+      <PackageReference Include="System.Runtime.Serialization.Formatters" />
       <PackageReference Include="Websocket.Client" />
       <PackageReference Include="YamlDotNet" />
       <PackageReference Include="Yoh.Text.Json.NamingPolicies" />

@@ -1,4 +1,3 @@
-using System;
 using System.Globalization;
 using Avalonia.Data.Converters;
 using StabilityMatrix.Core.Extensions;
@@ -18,9 +17,10 @@ public class FileUriConverter : IValueConverter
         return value switch
         {
             string str when str.StartsWith("avares://") => new Uri(str),
+            string str when (str.StartsWith("https://") || str.StartsWith("http://")) => new Uri(str),
             string str => new Uri("file://" + str),
             IFormattable formattable => new Uri("file://" + formattable.ToString(null, culture)),
-            _ => null
+            _ => null,
         };
     }
 

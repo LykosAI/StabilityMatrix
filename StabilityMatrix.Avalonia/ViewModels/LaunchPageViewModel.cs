@@ -93,8 +93,8 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
     public virtual BasePackage? SelectedBasePackage =>
         PackageFactory.FindPackageByName(SelectedPackage?.PackageName);
 
-    public IEnumerable<string> SelectedPackageExtraCommands =>
-        SelectedBasePackage?.ExtraLaunchCommands ?? Enumerable.Empty<string>();
+    public IReadOnlyDictionary<string, string> SelectedPackageExtraCommands =>
+        SelectedBasePackage?.ExtraLaunchCommands ?? new Dictionary<string, string>();
 
     // private bool clearingPackages;
     private string webUiUrl = string.Empty;
@@ -394,7 +394,7 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
             DefaultButton = ContentDialogButton.Primary,
             ContentMargin = new Thickness(32, 16),
             Padding = new Thickness(0, 16),
-            Content = new LaunchOptionsDialog { DataContext = viewModel, }
+            Content = new LaunchOptionsDialog { DataContext = viewModel },
         };
 
         var result = await dialog.ShowAsync();
@@ -584,7 +584,7 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
         dialog.Buttons = new List<TaskDialogButton>
         {
             new("Exit", TaskDialogStandardResult.Yes),
-            TaskDialogButton.CancelButton
+            TaskDialogButton.CancelButton,
         };
         dialog.Buttons[0].IsDefault = true;
 

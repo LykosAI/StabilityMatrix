@@ -8,4 +8,7 @@ public partial class TreeViewDirectory : ObservableObject
     public ObservableCollection<TreeViewDirectory> SubDirectories { get; set; } = new();
     public required string Name { get; set; }
     public required string Path { get; set; }
+
+    [ObservableProperty]
+    public partial bool IsExpanded { get; set; }
 }

@@ -1,7 +1,5 @@
-﻿using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
-using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using Injectio.Attributes;
 using NLog;
@@ -24,8 +22,9 @@ public class VladAutomatic(
     IGithubApiCache githubApi,
     ISettingsManager settingsManager,
     IDownloadService downloadService,
-    IPrerequisiteHelper prerequisiteHelper
-) : BaseGitPackage(githubApi, settingsManager, downloadService, prerequisiteHelper)
+    IPrerequisiteHelper prerequisiteHelper,
+    IPyInstallationManager pyInstallationManager
+) : BaseGitPackage(githubApi, settingsManager, downloadService, prerequisiteHelper, pyInstallationManager)
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -42,6 +41,7 @@ public class VladAutomatic(
 
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Symlink;
     public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Expert;
+    public override PyVersion RecommendedPythonVersion => Python.PyInstallationManager.Python_3_12_10;
 
     public override IEnumerable<TorchIndex> AvailableTorchIndices =>
         new[]
@@ -66,105 +66,111 @@ public class VladAutomatic(
                 {
                     SourceTypes = [SharedFolderType.StableDiffusion],
                     TargetRelativePaths = ["models/Stable-diffusion"],
-                    ConfigDocumentPaths = ["ckpt_dir"]
+                    ConfigDocumentPaths = ["ckpt_dir"],
                 },
                 new SharedFolderLayoutRule
                 {
                     SourceTypes = [SharedFolderType.Diffusers],
                     TargetRelativePaths = ["models/Diffusers"],
-                    ConfigDocumentPaths = ["diffusers_dir"]
+                    ConfigDocumentPaths = ["diffusers_dir"],
                 },
                 new SharedFolderLayoutRule
                 {
                     SourceTypes = [SharedFolderType.VAE],
                     TargetRelativePaths = ["models/VAE"],
-                    ConfigDocumentPaths = ["vae_dir"]
+                    ConfigDocumentPaths = ["vae_dir"],
                 },
                 new SharedFolderLayoutRule
                 {
                     SourceTypes = [SharedFolderType.Embeddings],
                     TargetRelativePaths = ["models/embeddings"],
-                    ConfigDocumentPaths = ["embeddings_dir"]
+                    ConfigDocumentPaths = ["embeddings_dir"],
                 },
                 new SharedFolderLayoutRule
                 {
                     SourceTypes = [SharedFolderType.Hypernetwork],
                     TargetRelativePaths = ["models/hypernetworks"],
-                    ConfigDocumentPaths = ["hypernetwork_dir"]
+                    ConfigDocumentPaths = ["hypernetwork_dir"],
                 },
                 new SharedFolderLayoutRule
                 {
                     SourceTypes = [SharedFolderType.Codeformer],
                     TargetRelativePaths = ["models/Codeformer"],
-                    ConfigDocumentPaths = ["codeformer_models_path"]
+                    ConfigDocumentPaths = ["codeformer_models_path"],
                 },
                 new SharedFolderLayoutRule
                 {
                     SourceTypes = [SharedFolderType.GFPGAN],
                     TargetRelativePaths = ["models/GFPGAN"],
-                    ConfigDocumentPaths = ["gfpgan_models_path"]
+                    ConfigDocumentPaths = ["gfpgan_models_path"],
                 },
                 new SharedFolderLayoutRule
                 {
                     SourceTypes = [SharedFolderType.BSRGAN],
                     TargetRelativePaths = ["models/BSRGAN"],
-                    ConfigDocumentPaths = ["bsrgan_models_path"]
+                    ConfigDocumentPaths = ["bsrgan_models_path"],
                 },
                 new SharedFolderLayoutRule
                 {
                     SourceTypes = [SharedFolderType.ESRGAN],
                     TargetRelativePaths = ["models/ESRGAN"],
-                    ConfigDocumentPaths = ["esrgan_models_path"]
+                    ConfigDocumentPaths = ["esrgan_models_path"],
                 },
                 new SharedFolderLayoutRule
                 {
                     SourceTypes = [SharedFolderType.RealESRGAN],
                     TargetRelativePaths = ["models/RealESRGAN"],
-                    ConfigDocumentPaths = ["realesrgan_models_path"]
+                    ConfigDocumentPaths = ["realesrgan_models_path"],
                 },
                 new SharedFolderLayoutRule
                 {
                     SourceTypes = [SharedFolderType.ScuNET],
                     TargetRelativePaths = ["models/ScuNET"],
-                    ConfigDocumentPaths = ["scunet_models_path"]
+                    ConfigDocumentPaths = ["scunet_models_path"],
                 },
                 new SharedFolderLayoutRule
                 {
                     SourceTypes = [SharedFolderType.SwinIR],
                     TargetRelativePaths = ["models/SwinIR"],
-                    ConfigDocumentPaths = ["swinir_models_path"]
+                    ConfigDocumentPaths = ["swinir_models_path"],
                 },
                 new SharedFolderLayoutRule
                 {
                     SourceTypes = [SharedFolderType.LDSR],
                     TargetRelativePaths = ["models/LDSR"],
-                    ConfigDocumentPaths = ["ldsr_models_path"]
+                    ConfigDocumentPaths = ["ldsr_models_path"],
                 },
                 new SharedFolderLayoutRule
                 {
                     SourceTypes = [SharedFolderType.TextEncoders],
                     TargetRelativePaths = ["models/CLIP"],
-                    ConfigDocumentPaths = ["clip_models_path"]
+                    ConfigDocumentPaths = ["clip_models_path"],
                 }, // CLIP
                 new SharedFolderLayoutRule
                 {
                     SourceTypes = [SharedFolderType.Lora],
                     TargetRelativePaths = ["models/Lora"],
-                    ConfigDocumentPaths = ["lora_dir"]
+                    ConfigDocumentPaths = ["lora_dir"],
                 },
                 new SharedFolderLayoutRule
                 {
                     SourceTypes = [SharedFolderType.LyCORIS],
                     TargetRelativePaths = ["models/LyCORIS"],
-                    ConfigDocumentPaths = ["lyco_dir"]
+                    ConfigDocumentPaths = ["lyco_dir"],
                 },
                 new SharedFolderLayoutRule
                 {
                     SourceTypes = [SharedFolderType.ControlNet, SharedFolderType.T2IAdapter],
                     TargetRelativePaths = ["models/ControlNet"],
-                    ConfigDocumentPaths = ["control_net_models_path"]
+                    ConfigDocumentPaths = ["control_net_models_path"],
                 }, // Combined ControlNet/T2I
-            ]
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.DiffusionModels],
+                    TargetRelativePaths = ["models/UNET"],
+                    ConfigDocumentPaths = ["unet_dir"],
+                },
+            ],
         };
 
     public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>
@@ -189,14 +195,14 @@ public class VladAutomatic(
                 Name = "Host",
                 Type = LaunchOptionType.String,
                 DefaultValue = "localhost",
-                Options = ["--server-name"]
+                Options = ["--server-name"],
             },
             new()
             {
                 Name = "Port",
                 Type = LaunchOptionType.String,
                 DefaultValue = "7860",
-                Options = ["--port"]
+                Options = ["--port"],
             },
             new()
             {
@@ -206,75 +212,75 @@ public class VladAutomatic(
                 {
                     MemoryLevel.Low => "--lowvram",
                     MemoryLevel.Medium => "--medvram",
-                    _ => null
+                    _ => null,
                 },
-                Options = ["--lowvram", "--medvram"]
+                Options = ["--lowvram", "--medvram"],
             },
             new()
             {
                 Name = "Auto-Launch Web UI",
                 Type = LaunchOptionType.Bool,
-                Options = ["--autolaunch"]
+                Options = ["--autolaunch"],
             },
             new()
             {
                 Name = "Force use of Intel OneAPI XPU backend",
                 Type = LaunchOptionType.Bool,
-                Options = ["--use-ipex"]
+                Options = ["--use-ipex"],
             },
             new()
             {
                 Name = "Use DirectML if no compatible GPU is detected",
                 Type = LaunchOptionType.Bool,
-                Options = ["--use-directml"]
+                Options = ["--use-directml"],
             },
             new()
             {
                 Name = "Force use of Nvidia CUDA backend",
                 Type = LaunchOptionType.Bool,
                 InitialValue = HardwareHelper.HasNvidiaGpu(),
-                Options = ["--use-cuda"]
+                Options = ["--use-cuda"],
             },
             new()
             {
                 Name = "Force use of Intel OneAPI XPU backend",
                 Type = LaunchOptionType.Bool,
                 InitialValue = HardwareHelper.HasIntelGpu(),
-                Options = ["--use-ipex"]
+                Options = ["--use-ipex"],
             },
             new()
             {
                 Name = "Force use of AMD ROCm backend",
                 Type = LaunchOptionType.Bool,
                 InitialValue = HardwareHelper.PreferRocm(),
-                Options = ["--use-rocm"]
+                Options = ["--use-rocm"],
             },
             new()
             {
                 Name = "Force use of ZLUDA backend",
                 Type = LaunchOptionType.Bool,
                 InitialValue = HardwareHelper.PreferDirectMLOrZluda(),
-                Options = ["--use-zluda"]
+                Options = ["--use-zluda"],
             },
             new()
             {
                 Name = "CUDA Device ID",
                 Type = LaunchOptionType.String,
-                Options = ["--device-id"]
+                Options = ["--device-id"],
             },
             new()
             {
                 Name = "API",
                 Type = LaunchOptionType.Bool,
-                Options = ["--api"]
+                Options = ["--api"],
             },
             new()
             {
                 Name = "Debug Logging",
                 Type = LaunchOptionType.Bool,
-                Options = ["--debug"]
+                Options = ["--debug"],
             },
-            LaunchOptionDefinition.Extras
+            LaunchOptionDefinition.Extras,
         ];
 
     public override string MainBranch => "master";
@@ -290,15 +296,29 @@ public class VladAutomatic(
     {
         progress?.Report(new ProgressReport(-1f, "Installing package...", isIndeterminate: true));
         // Setup venv
-        await using var venvRunner = await SetupVenvPure(installLocation).ConfigureAwait(false);
+        await using var venvRunner = await SetupVenvPure(
+                installLocation,
+                pythonVersion: options.PythonOptions.PythonVersion
+            )
+            .ConfigureAwait(false);
 
-        await venvRunner.PipInstall("numpy==1.26.4").ConfigureAwait(false);
+        await venvRunner.PipInstall(["setuptools", "rich", "uv"]).ConfigureAwait(false);
+        if (options.PythonOptions.PythonVersion is { Minor: < 12 })
+        {
+            venvRunner.UpdateEnvironmentVariables(env =>
+                env.SetItem("SETUPTOOLS_USE_DISTUTILS", "setuptools")
+            );
+        }
 
+        var requirementsContent = await new FilePath(installLocation, "requirements.txt")
+            .ReadAllTextAsync(cancellationToken)
+            .ConfigureAwait(false);
+        var pipArgs = new PipInstallArgs("--upgrade").WithParsedFromRequirementsTxt(requirementsContent);
         if (installedPackage.PipOverrides != null)
         {
-            var pipArgs = new PipInstallArgs().WithUserOverrides(installedPackage.PipOverrides);
-            await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
+            pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
         }
+        await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
 
         var torchVersion = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
         switch (torchVersion)
@@ -306,90 +326,38 @@ public class VladAutomatic(
             // Run initial install
             case TorchIndex.Cuda:
                 await venvRunner
-                    .CustomInstall("launch.py --use-cuda --debug --test", onConsoleOutput)
+                    .CustomInstall("launch.py --use-cuda --debug --test --uv", onConsoleOutput)
                     .ConfigureAwait(false);
                 break;
             case TorchIndex.Rocm:
                 await venvRunner
-                    .CustomInstall("launch.py --use-rocm --debug --test", onConsoleOutput)
+                    .CustomInstall("launch.py --use-rocm --debug --test --uv", onConsoleOutput)
                     .ConfigureAwait(false);
                 break;
             case TorchIndex.DirectMl:
                 await venvRunner
-                    .CustomInstall("launch.py --use-directml --debug --test", onConsoleOutput)
+                    .CustomInstall("launch.py --use-directml --debug --test --uv", onConsoleOutput)
                     .ConfigureAwait(false);
                 break;
             case TorchIndex.Zluda:
                 await venvRunner
-                    .CustomInstall("launch.py --use-zluda --debug --test", onConsoleOutput)
+                    .CustomInstall("launch.py --use-zluda --debug --test --uv", onConsoleOutput)
                     .ConfigureAwait(false);
                 break;
             case TorchIndex.Ipex:
                 await venvRunner
-                    .CustomInstall("launch.py --use-ipex --debug --test", onConsoleOutput)
+                    .CustomInstall("launch.py --use-ipex --debug --test --uv", onConsoleOutput)
                     .ConfigureAwait(false);
                 break;
             default:
                 // CPU
                 await venvRunner
-                    .CustomInstall("launch.py --debug --test", onConsoleOutput)
+                    .CustomInstall("launch.py --debug --test --uv", onConsoleOutput)
                     .ConfigureAwait(false);
                 break;
         }
 
         progress?.Report(new ProgressReport(1f, isIndeterminate: false));
-    }
-
-    public override async Task DownloadPackage(
-        string installLocation,
-        DownloadPackageOptions options,
-        IProgress<ProgressReport>? progress = null,
-        CancellationToken cancellationToken = default
-    )
-    {
-        progress?.Report(
-            new ProgressReport(
-                -1f,
-                message: "Downloading package...",
-                isIndeterminate: true,
-                type: ProgressType.Download
-            )
-        );
-
-        var installDir = new DirectoryPath(installLocation);
-        installDir.Create();
-
-        var versionOptions = options.VersionOptions;
-
-        if (string.IsNullOrWhiteSpace(versionOptions.BranchName))
-        {
-            throw new InvalidOperationException("Branch name is required for VladAutomatic");
-        }
-
-        await PrerequisiteHelper
-            .RunGit(
-                new[]
-                {
-                    "clone",
-                    "-b",
-                    versionOptions.BranchName,
-                    "https://github.com/vladmandic/automatic",
-                    installDir.Name
-                },
-                progress?.AsProcessOutputHandler(),
-                installDir.Parent?.FullPath ?? ""
-            )
-            .ConfigureAwait(false);
-        if (!string.IsNullOrWhiteSpace(versionOptions.CommitHash) && !versionOptions.IsLatest)
-        {
-            await PrerequisiteHelper
-                .RunGit(
-                    new[] { "checkout", versionOptions.CommitHash },
-                    progress?.AsProcessOutputHandler(),
-                    installLocation
-                )
-                .ConfigureAwait(false);
-        }
     }
 
     public override async Task RunPackage(
@@ -400,7 +368,15 @@ public class VladAutomatic(
         CancellationToken cancellationToken = default
     )
     {
-        await SetupVenv(installLocation).ConfigureAwait(false);
+        await SetupVenv(installLocation, pythonVersion: PyVersion.Parse(installedPackage.PythonVersion))
+            .ConfigureAwait(false);
+
+        if (PyVersion.Parse(installedPackage.PythonVersion) is { Minor: < 12 })
+        {
+            VenvRunner.UpdateEnvironmentVariables(env =>
+                env.SetItem("SETUPTOOLS_USE_DISTUTILS", "setuptools")
+            );
+        }
 
         void HandleConsoleOutput(ProcessOutput s)
         {
@@ -418,7 +394,7 @@ public class VladAutomatic(
         }
 
         VenvRunner.RunDetached(
-            [Path.Combine(installLocation, options.Command ?? LaunchCommand), ..options.Arguments],
+            [Path.Combine(installLocation, options.Command ?? LaunchCommand), "--uv", .. options.Arguments],
             HandleConsoleOutput,
             OnExit
         );
@@ -434,16 +410,19 @@ public class VladAutomatic(
     )
     {
         var baseUpdateResult = await base.Update(
-            installLocation,
-            installedPackage,
-            options,
-            progress,
-            onConsoleOutput,
-            cancellationToken
-        )
+                installLocation,
+                installedPackage,
+                options,
+                progress,
+                onConsoleOutput,
+                cancellationToken
+            )
             .ConfigureAwait(false);
 
-        await using var venvRunner = await SetupVenvPure(installedPackage.FullPath!.Unwrap())
+        await using var venvRunner = await SetupVenvPure(
+                installedPackage.FullPath!.Unwrap(),
+                pythonVersion: PyVersion.Parse(installedPackage.PythonVersion)
+            )
             .ConfigureAwait(false);
 
         await venvRunner.CustomInstall("launch.py --upgrade --test", onConsoleOutput).ConfigureAwait(false);
@@ -461,7 +440,7 @@ public class VladAutomatic(
                 InstalledCommitSha = result
                     .StandardOutput?.Replace(Environment.NewLine, "")
                     .Replace("\n", ""),
-                IsPrerelease = false
+                IsPrerelease = false,
             };
         }
         catch (Exception e)
@@ -509,18 +488,15 @@ public class VladAutomatic(
                     new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }
                 );
 
-                return jsonManifest?.Select(
-                        entry =>
-                            new PackageExtension
-                            {
-                                Title = entry.Name,
-                                Author = entry.Long?.Split('/').FirstOrDefault() ?? "Unknown",
-                                Reference = entry.Url,
-                                Files = [entry.Url],
-                                Description = entry.Description,
-                                InstallType = "git-clone"
-                            }
-                    ) ?? Enumerable.Empty<PackageExtension>();
+                return jsonManifest?.Select(entry => new PackageExtension
+                    {
+                        Title = entry.Name,
+                        Author = entry.Long?.Split('/').FirstOrDefault() ?? "Unknown",
+                        Reference = entry.Url,
+                        Files = [entry.Url],
+                        Description = entry.Description,
+                        InstallType = "git-clone",
+                    }) ?? Enumerable.Empty<PackageExtension>();
             }
             catch (Exception e)
             {

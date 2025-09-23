@@ -73,7 +73,8 @@ public partial class MainWindowViewModel : ViewModelBase
     public UpdateViewModel UpdateViewModel { get; init; }
 
     public double PaneWidth =>
-        Cultures.Current switch
+        (Compat.IsWindows ? 0 : 20)
+        + Cultures.Current switch
         {
             { Name: "it-IT" } => 250,
             { Name: "fr-FR" } => 250,
@@ -84,6 +85,7 @@ public partial class MainWindowViewModel : ViewModelBase
             { Name: "pt-PT" } => 300,
             { Name: "pt-BR" } => 260,
             { Name: "ko-KR" } => 235,
+            { Name: "cs-CZ" } => 250,
             _ => 200,
         };
 
@@ -522,8 +524,13 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private async Task ShowMigrationTipIfNecessaryAsync()
     {
-        if (settingsManager.Settings.SeenTeachingTips.Contains(TeachingTip.SharedFolderMigrationTip))
+        if (
+            settingsManager.Settings.SeenTeachingTips.Contains(TeachingTip.SharedFolderMigrationTip)
+            || settingsManager.Settings.InstalledPackages.Count == 0
+        )
+        {
             return;
+        }
 
         var folderReference = DialogHelper.CreateMarkdownDialog(MarkdownSnippets.SharedFolderMigration);
         folderReference.CloseButtonText = Resources.Action_OK;

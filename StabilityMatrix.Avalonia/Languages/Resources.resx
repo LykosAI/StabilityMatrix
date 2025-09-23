@@ -1422,4 +1422,91 @@ The Spark model operates at a scale comparable to trillion-parameter foundation 
 ### 🔒 Privacy First
 We prioritize your privacy ([Gen AI Terms](&lt;https://lykos.ai/gen-ai-terms&gt;)). **Your prompts/outputs are NEVER used for AI training by Lykos AI or our necessary cloud infrastructure partners.** Secure processing occurs solely to generate your amplification, **after which we only retain metadata (like timestamps and token counts), not the prompt content itself.** Your data is never sold or shared.</value>
   </data>
+  <data name="Label_ShowUnsupportedPythonVersions" xml:space="preserve">
+    <value>Show Unsupported Python Versions</value>
+  </data>
+  <data name="Label_UnsupportedPythonVersionDetails" xml:space="preserve">
+    <value>You may encounter problems with some packages when using unsupported Python versions</value>
+  </data>
+  <data name="Label_UnsupportedPythonVersionWarningDescription" xml:space="preserve">
+    <value>This will show all available Python versions, including those that are not supported by Stability Matrix. Are you sure?</value>
+  </data>
+  <data name="Label_PythonVersionWarningTitle" xml:space="preserve">
+    <value>Unsupported Python Versions</value>
+  </data>
+  <data name="Label_HuggingFaceLoginRequired" xml:space="preserve">
+    <value>You must be logged in to download this checkpoint. Please enter a Hugging Face Access Token in the settings.</value>
+  </data>
+  <data name="Label_LoginRequired" xml:space="preserve">
+    <value>Login required to download this model</value>
+  </data>
+  <data name="Watermark_EnterPackageName" xml:space="preserve">
+    <value>Enter package name</value>
+  </data>
+  <data name="Validation_PackageNameCannotBeEmpty" xml:space="preserve">
+    <value>Package name cannot be empty</value>
+  </data>
+  <data name="Description_RenamePackage" xml:space="preserve">
+    <value>Enter a new name for '{0}'</value>
+  </data>
+  <data name="ValidationError_PackageExists" xml:space="preserve">
+    <value>Package named '{0}' already exists</value>
+  </data>
+  <data name="Label_BulkDownloadStarted" xml:space="preserve">
+    <value>Bulk Download Started</value>
+  </data>
+  <data name="Label_BulkDownloadStartedMessage" xml:space="preserve">
+    <value>{0} files have started downloading. Check the Downloads tab for progress.</value>
+  </data>
+  <data name="Label_DownloadStarted" xml:space="preserve">
+    <value>Download Started</value>
+  </data>
+  <data name="Label_DownloadWillBeSavedToLocation" xml:space="preserve">
+    <value>{0} will be saved to {1}</value>
+  </data>
+  <data name="Label_Author" xml:space="preserve">
+    <value>Author</value>
+  </data>
+  <data name="Label_Hash" xml:space="preserve">
+    <value>Hash</value>
+  </data>
+  <data name="Label_LastUpdatedAt" xml:space="preserve">
+    <value>Last Updated</value>
+  </data>
+  <data name="Label_FileNamePattern" xml:space="preserve">
+    <value>File Name Pattern</value>
+  </data>
+  <data name="Label_Files" xml:space="preserve">
+    <value>Files</value>
+  </data>
+  <data name="Label_InferenceDefaultsHeader" xml:space="preserve">
+    <value>Inference Defaults</value>
+  </data>
+  <data name="Tooltip_InferenceDefaults" xml:space="preserve">
+    <value>When enabled, these settings will be applied automatically when this model is selected in the Inference tab</value>
+  </data>
+  <data name="Label_Show" xml:space="preserve">
+    <value>Show</value>
+  </data>
+  <data name="Label_EarlyAccessModels" xml:space="preserve">
+    <value>Early Access Models</value>
+  </data>
+  <data name="Label_NsfwContent" xml:space="preserve">
+    <value>NSFW Content</value>
+  </data>
+  <data name="Label_NonModelFiles" xml:space="preserve">
+    <value>Non-Model Files</value>
+  </data>
+  <data name="Label_InstalledModels" xml:space="preserve">
+    <value>Installed Models</value>
+  </data>
+  <data name="Label_DownloadAllFilesAllVersions" xml:space="preserve">
+    <value>Download All Files (All Versions)</value>
+  </data>
+  <data name="Label_View" xml:space="preserve">
+    <value>View</value>
+  </data>
+  <data name="Label_Filter" xml:space="preserve">
+    <value>Filter</value>
+  </data>
 </root>

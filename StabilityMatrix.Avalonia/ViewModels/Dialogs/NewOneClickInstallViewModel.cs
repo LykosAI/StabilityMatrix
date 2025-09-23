@@ -98,6 +98,15 @@ public partial class NewOneClickInstallViewModel : ContentDialogViewModelBase
         AllPackagesCache.AddOrUpdate(packageFactory.GetAllAvailablePackages());
     }
 
+    public override void OnLoaded()
+    {
+        base.OnLoaded();
+        if (ShownPackages.Count > 0)
+            return;
+
+        ShowIncompatiblePackages = true;
+    }
+
     [RelayCommand]
     private async Task InstallComfyForInference()
     {
@@ -115,11 +124,12 @@ public partial class NewOneClickInstallViewModel : ContentDialogViewModelBase
         OnPrimaryButtonClick();
 
         var installLocation = Path.Combine(settingsManager.LibraryDir, "Packages", selectedPackage.Name);
+        var recommendedPython = selectedPackage.RecommendedPythonVersion;
 
         var steps = new List<IPackageStep>
         {
             new SetPackageInstallingStep(settingsManager, selectedPackage.Name),
-            new SetupPrerequisitesStep(prerequisiteHelper, pyRunner, selectedPackage)
+            new SetupPrerequisitesStep(prerequisiteHelper, selectedPackage, recommendedPython),
         };
 
         // get latest version & download & install
@@ -155,7 +165,9 @@ public partial class NewOneClickInstallViewModel : ContentDialogViewModelBase
             LaunchCommand = selectedPackage.LaunchCommand,
             LastUpdateCheck = DateTimeOffset.Now,
             PreferredTorchIndex = torchVersion,
-            PreferredSharedFolderMethod = recommendedSharedFolderMethod
+            PreferredSharedFolderMethod = recommendedSharedFolderMethod,
+            UseSharedOutputFolder = selectedPackage.SharedOutputFolders is { Count: > 0 },
+            PythonVersion = recommendedPython.StringValue,
         };
 
         var downloadStep = new DownloadPackageVersionStep(
@@ -176,7 +188,7 @@ public partial class NewOneClickInstallViewModel : ContentDialogViewModelBase
             {
                 SharedFolderMethod = recommendedSharedFolderMethod,
                 VersionOptions = downloadVersion,
-                PythonOptions = { TorchIndex = torchVersion }
+                PythonOptions = { TorchIndex = torchVersion, PythonVersion = recommendedPython },
             }
         );
         steps.Add(installStep);
@@ -198,7 +210,7 @@ public partial class NewOneClickInstallViewModel : ContentDialogViewModelBase
         {
             ShowDialogOnStart = false,
             HideCloseButton = false,
-            ModificationCompleteMessage = $"{selectedPackage.DisplayName} installed successfully"
+            ModificationCompleteMessage = $"{selectedPackage.DisplayName} installed successfully",
         };
 
         runner

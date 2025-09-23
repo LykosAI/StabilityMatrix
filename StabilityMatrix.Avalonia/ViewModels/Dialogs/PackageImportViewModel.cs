@@ -19,6 +19,7 @@ using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Packages;
+using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
@@ -265,11 +266,12 @@ public partial class PackageImportViewModel : ContentDialogViewModelBase
             LaunchCommand = SelectedBasePackage.LaunchCommand,
             LastUpdateCheck = DateTimeOffset.Now,
             PreferredTorchIndex = torchVersion,
-            PreferredSharedFolderMethod = sharedFolderRecommendation
+            PreferredSharedFolderMethod = sharedFolderRecommendation,
+            PythonVersion = PyInstallationManager.Python_3_10_11.StringValue
         };
 
         // Recreate venv if it's a BaseGitPackage
-        if (SelectedBasePackage is BaseGitPackage gitPackage)
+        if (SelectedBasePackage is BaseGitPackage { UsesVenv: true } gitPackage)
         {
             Logger.Info(
                 "Recreating venv for imported package {Name} ({PackageName})",
@@ -279,6 +281,7 @@ public partial class PackageImportViewModel : ContentDialogViewModelBase
             await gitPackage.SetupVenv(
                 PackagePath,
                 forceRecreate: true,
+                pythonVersion: PyVersion.Parse(package.PythonVersion),
                 onConsoleOutput: output =>
                 {
                     Logger.Debug("SetupVenv output: {Output}", output.Text);

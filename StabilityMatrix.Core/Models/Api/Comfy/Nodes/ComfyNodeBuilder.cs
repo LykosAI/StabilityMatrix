@@ -203,8 +203,8 @@ public class ComfyNodeBuilder
             Inputs = new Dictionary<string, object?>
             {
                 ["upscale_model"] = upscaleModel.Data,
-                ["image"] = image.Data
-            }
+                ["image"] = image.Data,
+            },
         };
     }
 
@@ -213,7 +213,7 @@ public class ComfyNodeBuilder
         return new NamedComfyNode<UpscaleModelNodeConnection>(name)
         {
             ClassType = "UpscaleModelLoader",
-            Inputs = new Dictionary<string, object?> { ["model_name"] = modelName }
+            Inputs = new Dictionary<string, object?> { ["model_name"] = modelName },
         };
     }
 
@@ -235,8 +235,8 @@ public class ComfyNodeBuilder
                 ["upscale_method"] = method,
                 ["height"] = height,
                 ["width"] = width,
-                ["crop"] = crop ? "center" : "disabled"
-            }
+                ["crop"] = crop ? "center" : "disabled",
+            },
         };
     }
 
@@ -263,8 +263,8 @@ public class ComfyNodeBuilder
                 ["clip"] = clip.Data,
                 ["lora_name"] = loraName,
                 ["strength_model"] = strengthModel,
-                ["strength_clip"] = strengthClip
-            }
+                ["strength_clip"] = strengthClip,
+            },
         };
     }
 
@@ -672,10 +672,9 @@ public class ComfyNodeBuilder
 
     [TypedNodeOptions(
         Name = "UltralyticsDetectorProvider",
-        RequiredExtensions =
-        [
+        RequiredExtensions = [
             "https://github.com/ltdrdata/ComfyUI-Impact-Pack",
-            "https://github.com/ltdrdata/ComfyUI-Impact-Subpack"
+            "https://github.com/ltdrdata/ComfyUI-Impact-Subpack",
         ]
     )]
     public record UltralyticsDetectorProvider
@@ -686,10 +685,9 @@ public class ComfyNodeBuilder
 
     [TypedNodeOptions(
         Name = "SAMLoader",
-        RequiredExtensions =
-        [
+        RequiredExtensions = [
             "https://github.com/ltdrdata/ComfyUI-Impact-Pack",
-            "https://github.com/ltdrdata/ComfyUI-Impact-Subpack"
+            "https://github.com/ltdrdata/ComfyUI-Impact-Subpack",
         ]
     )]
     public record SamLoader : ComfyTypedNodeBase<SamModelNodeConnection>
@@ -704,10 +702,9 @@ public class ComfyNodeBuilder
 
     [TypedNodeOptions(
         Name = "FaceDetailer",
-        RequiredExtensions =
-        [
+        RequiredExtensions = [
             "https://github.com/ltdrdata/ComfyUI-Impact-Pack",
-            "https://github.com/ltdrdata/ComfyUI-Impact-Subpack"
+            "https://github.com/ltdrdata/ComfyUI-Impact-Subpack",
         ]
     )]
     public record FaceDetailer : ComfyTypedNodeBase<ImageNodeConnection>
@@ -768,7 +765,7 @@ public class ComfyNodeBuilder
         /// </summary>
         public required string SamMaskHintUseNegative { get; init; } = "False";
 
-        public required StringNodeConnection Wildcard { get; init; }
+        public required string Wildcard { get; init; }
 
         [Range(1, 32768)]
         public required int DropSize { get; init; } = 10;
@@ -778,6 +775,8 @@ public class ComfyNodeBuilder
 
         public SamModelNodeConnection? SamModelOpt { get; set; }
         public SegmDetectorNodeConnection? SegmDetectorOpt { get; set; }
+        public bool TiledEncode { get; init; }
+        public bool TiledDecode { get; init; }
     }
 
     /// <summary>
@@ -1047,6 +1046,24 @@ public class ComfyNodeBuilder
         public required LatentNodeConnection LatentImage { get; init; }
     }
 
+    [TypedNodeOptions(
+        Name = "NRS",
+        RequiredExtensions = ["https://github.com/Reithan/negative_rejection_steering"]
+    )]
+    public record NRS : ComfyTypedNodeBase<ModelNodeConnection>
+    {
+        public required ModelNodeConnection Model { get; init; }
+
+        [Range(-30.0f, 30.0f)]
+        public required double Skew { get; set; }
+
+        [Range(-30.0f, 30.0f)]
+        public required double Stretch { get; set; }
+
+        [Range(0f, 1f)]
+        public required double Squash { get; set; }
+    }
+
     public ImageNodeConnection Lambda_LatentToImage(LatentNodeConnection latent, VAENodeConnection vae)
     {
         var name = GetUniqueName("VAEDecode");
@@ -1056,7 +1073,7 @@ public class ComfyNodeBuilder
                 {
                     Name = name,
                     Samples = latent,
-                    Vae = vae
+                    Vae = vae,
                 }
             )
             .Output;
@@ -1071,7 +1088,7 @@ public class ComfyNodeBuilder
                 {
                     Name = name,
                     Pixels = pixels,
-                    Vae = vae
+                    Vae = vae,
                 }
             )
             .Output;
@@ -1123,7 +1140,7 @@ public class ComfyNodeBuilder
                                     ["height"] = height,
                                     ["crop"] = "disabled",
                                     ["samples"] = latent.Data,
-                                }
+                                },
                             }
                         )
                         .Output,
@@ -1184,7 +1201,7 @@ public class ComfyNodeBuilder
                         ["height"] = height,
                         ["crop"] = "disabled",
                         ["samples"] = latent.Data,
-                    }
+                    },
                 }
             );
         }
@@ -1197,7 +1214,7 @@ public class ComfyNodeBuilder
                 {
                     Name = $"{name}_VAEDecode",
                     Samples = latent,
-                    Vae = vae
+                    Vae = vae,
                 }
             );
 
@@ -1219,7 +1236,7 @@ public class ComfyNodeBuilder
                 {
                     Name = $"{name}_VAEEncode",
                     Pixels = resizedScaled.Output,
-                    Vae = vae
+                    Vae = vae,
                 }
             );
         }
@@ -1252,7 +1269,7 @@ public class ComfyNodeBuilder
                         ["height"] = height,
                         ["crop"] = "disabled",
                         ["samples"] = latent.Data,
-                    }
+                    },
                 }
             );
 
@@ -1262,7 +1279,7 @@ public class ComfyNodeBuilder
                 {
                     Name = $"{name}_VAEDecode",
                     Samples = latentUpscale.Output,
-                    Vae = vae
+                    Vae = vae,
                 }
             );
         }
@@ -1275,7 +1292,7 @@ public class ComfyNodeBuilder
                 {
                     Name = $"{name}_VAEDecode",
                     Samples = latent,
-                    Vae = vae
+                    Vae = vae,
                 }
             );
 
@@ -1322,7 +1339,7 @@ public class ComfyNodeBuilder
                         ["width"] = width,
                         ["height"] = height,
                         ["crop"] = "disabled",
-                    }
+                    },
                 }
             );
         }

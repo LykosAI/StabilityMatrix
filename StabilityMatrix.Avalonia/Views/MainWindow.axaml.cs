@@ -172,7 +172,7 @@ public partial class MainWindow : AppWindowBase
 
         Observable
             .FromEventPattern<SizeChangedEventArgs>(this, nameof(SizeChanged))
-            .Where(x => x.EventArgs.PreviousSize != x.EventArgs.NewSize)
+            .Where(x => x.EventArgs.NewSize != x.EventArgs.PreviousSize)
             .Throttle(TimeSpan.FromMilliseconds(100))
             .Select(x => x.EventArgs.NewSize)
             .ObserveOn(SynchronizationContext.Current!)
@@ -190,9 +190,13 @@ public partial class MainWindow : AppWindowBase
                         }
                         else
                         {
+                            // idk where these 30 pixels come from, probably title bar height? seems to be windows specific
+                            var newHeight = Compat.IsWindows
+                                ? Math.Max(0, newSize.Height - 30)
+                                : newSize.Height;
                             s.WindowSettings = new WindowSettings(
                                 newSize.Width,
-                                newSize.Height,
+                                newHeight,
                                 validWindowPosition ? Position.X : 0,
                                 validWindowPosition ? Position.Y : 0,
                                 WindowState == WindowState.Maximized
@@ -224,8 +228,8 @@ public partial class MainWindow : AppWindowBase
                         else
                         {
                             s.WindowSettings = new WindowSettings(
-                                Width,
-                                Height,
+                                s.WindowSettings?.Width ?? Width,
+                                s.WindowSettings?.Height ?? Height,
                                 validWindowPosition ? position.X : 0,
                                 validWindowPosition ? position.Y : 0,
                                 WindowState == WindowState.Maximized

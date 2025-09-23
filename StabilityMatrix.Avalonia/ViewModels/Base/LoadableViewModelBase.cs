@@ -25,6 +25,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Base;
 [JsonDerivedType(typeof(DiscreteModelSamplingCardViewModel), DiscreteModelSamplingCardViewModel.ModuleKey)]
 [JsonDerivedType(typeof(RescaleCfgCardViewModel), RescaleCfgCardViewModel.ModuleKey)]
 [JsonDerivedType(typeof(PlasmaNoiseCardViewModel), PlasmaNoiseCardViewModel.ModuleKey)]
+[JsonDerivedType(typeof(NrsCardViewModel), NrsCardViewModel.ModuleKey)]
 [JsonDerivedType(typeof(FreeUModule))]
 [JsonDerivedType(typeof(HiresFixModule))]
 [JsonDerivedType(typeof(FluxHiresFixModule))]
@@ -39,6 +40,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Base;
 [JsonDerivedType(typeof(DiscreteModelSamplingModule))]
 [JsonDerivedType(typeof(RescaleCfgModule))]
 [JsonDerivedType(typeof(PlasmaNoiseModule))]
+[JsonDerivedType(typeof(NRSModule))]
 public abstract class LoadableViewModelBase : ViewModelBase, IJsonLoadableState
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -47,8 +49,10 @@ public abstract class LoadableViewModelBase : ViewModelBase, IJsonLoadableState
 
     private static readonly string[] SerializerIgnoredNames = { nameof(HasErrors) };
 
-    private static readonly JsonSerializerOptions SerializerOptions =
-        new() { IgnoreReadOnlyProperties = true };
+    private static readonly JsonSerializerOptions SerializerOptions = new()
+    {
+        IgnoreReadOnlyProperties = true,
+    };
 
     private static bool ShouldIgnoreProperty(PropertyInfo property)
     {

@@ -3,6 +3,7 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
+    xmlns:checkpointManager="clr-namespace:StabilityMatrix.Avalonia.ViewModels.CheckpointManager"
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
     xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -12,7 +13,9 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
     xmlns:models="clr-namespace:StabilityMatrix.Avalonia.Models"
+    xmlns:scroll="clr-namespace:StabilityMatrix.Avalonia.Controls.Scroll"
     xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
+    xmlns:system="clr-namespace:System;assembly=System.Runtime"
     xmlns:ui="using:FluentAvalonia.UI.Controls"
     xmlns:vmSettings="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Settings"
     d:DataContext="{x:Static mocks:DesignData.MainSettingsViewModel}"
@@ -154,7 +157,7 @@
             </Grid>
 
             <!--  Environment Options  -->
-            <Grid RowDefinitions="Auto,Auto,Auto,Auto">
+            <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto">
                 <TextBlock
                     Margin="0,0,0,8"
                     FontWeight="Medium"
@@ -188,6 +191,8 @@
                                 <DropDownButton.Flyout>
                                     <MenuFlyout Placement="Bottom">
                                         <MenuItem Command="{Binding RunPythonProcessCommand}" Header="Command" />
+                                        <MenuItem Command="{Binding ClearPipCacheCommand}" Header="Clear Pip Cache" />
+                                        <MenuItem Command="{Binding ClearUvCacheCommand}" Header="Clear uv Cache" />
                                     </MenuFlyout>
                                 </DropDownButton.Flyout>
                             </DropDownButton>
@@ -220,10 +225,23 @@
                         </StackPanel>
                     </ui:SettingsExpander.Footer>
                 </ui:SettingsExpander>
+
+                <ui:SettingsExpander
+                    Grid.Row="4"
+                    Margin="8,4,8,4"
+                    Description="{x:Static lang:Resources.Label_UnsupportedPythonVersionDetails}"
+                    Header="{x:Static lang:Resources.Label_ShowUnsupportedPythonVersions}">
+                    <ui:SettingsExpander.IconSource>
+                        <controls:FASymbolIconSource Symbol="fa-brands fa-python" />
+                    </ui:SettingsExpander.IconSource>
+                    <ui:SettingsExpander.Footer>
+                        <ToggleSwitch IsChecked="{Binding ShowAllAvailablePythonVersions}" />
+                    </ui:SettingsExpander.Footer>
+                </ui:SettingsExpander>
             </Grid>
 
             <!--  Model Browser Options  -->
-            <Grid RowDefinitions="auto,*,Auto">
+            <Grid RowDefinitions="Auto,*,Auto">
                 <TextBlock
                     Margin="0,0,0,8"
                     FontWeight="Medium"
@@ -239,6 +257,47 @@
                     <ui:SettingsExpander.Footer>
                         <ToggleSwitch IsChecked="{Binding AutoLoadCivitModels}" />
                     </ui:SettingsExpander.Footer>
+                </ui:SettingsExpander>
+                <ui:SettingsExpander
+                    Grid.Row="2"
+                    Margin="8,4"
+                    Description="Show/hide certain base model types in the Model Browser"
+                    Header="Base Model Filter">
+                    <ui:SettingsExpander.IconSource>
+                        <controls:FASymbolIconSource Symbol="fa-solid fa-filter" />
+                    </ui:SettingsExpander.IconSource>
+                    <scroll:BetterScrollViewer MaxHeight="400">
+                        <ItemsRepeater ItemsSource="{Binding AllBaseModelTypes}">
+                            <ItemsRepeater.Layout>
+                                <StackLayout Orientation="Vertical" />
+                            </ItemsRepeater.Layout>
+                            <ItemsRepeater.ItemTemplate>
+                                <DataTemplate x:DataType="checkpointManager:BaseModelOptionViewModel">
+                                    <Grid ColumnDefinitions="*,*" RowDefinitions="Auto, Auto">
+                                        <Separator
+                                            Grid.Row="0"
+                                            Grid.Column="0"
+                                            Grid.ColumnSpan="2" />
+                                        <TextBlock
+                                            Grid.Row="1"
+                                            Grid.Column="0"
+                                            Margin="32,0,0,0"
+                                            VerticalAlignment="Center"
+                                            FontSize="16"
+                                            Text="{Binding ModelType}" />
+                                        <ToggleSwitch
+                                            Grid.Row="1"
+                                            Grid.Column="1"
+                                            Margin="0,0,32,0"
+                                            HorizontalAlignment="Center"
+                                            FontSize="16"
+                                            IsChecked="{Binding IsSelected}" />
+
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsRepeater.ItemTemplate>
+                        </ItemsRepeater>
+                    </scroll:BetterScrollViewer>
                 </ui:SettingsExpander>
             </Grid>
 

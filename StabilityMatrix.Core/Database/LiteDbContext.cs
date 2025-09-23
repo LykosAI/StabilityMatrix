@@ -10,6 +10,7 @@ using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Configs;
 using StabilityMatrix.Core.Models.Database;
+using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Database;
@@ -63,18 +64,25 @@ public class LiteDbContext : ILiteDbContext
 
     private LiteDatabaseAsync CreateDatabase()
     {
-        LiteDatabaseAsync? db = null;
+        // Try at most twice:
+        //  - attempt 0: open/repair if needed
+        //  - on "Detected loop in FindAll": dispose, delete file, try once more
+        const int maxAttempts = 2;
+        var dbPath = Path.Combine(settingsManager.LibraryDir, "StabilityMatrix.db");
 
-        if (debugOptions.TempDatabase)
+        for (var attempt = 0; attempt < maxAttempts; attempt++)
         {
-            db = new LiteDatabaseAsync(":temp:");
-        }
-        else
-        {
-            // Attempt to create connection, might be in use
+            LiteDatabaseAsync? db = null;
+
             try
             {
-                var dbPath = Path.Combine(settingsManager.LibraryDir, "StabilityMatrix.db");
+                if (debugOptions.TempDatabase)
+                {
+                    db = new LiteDatabaseAsync(":temp:");
+                    RegisterRefs();
+                    return db;
+                }
+
                 db = new LiteDatabaseAsync(
                     new ConnectionString { Filename = dbPath, Connection = ConnectionType.Shared }
                 );
@@ -86,33 +94,73 @@ public class LiteDbContext : ILiteDbContext
                         "Database collation is not Ordinal ({SortOption}), rebuilding...",
                         sortOption
                     );
-
                     var options = new RebuildOptions
                     {
                         Collation = new Collation(CultureInfo.InvariantCulture.LCID, CompareOptions.Ordinal),
                     };
-
                     db.RebuildAsync(options).GetAwaiter().GetResult();
                 }
+
+                RegisterRefs();
+                return db;
             }
-            catch (IOException e)
+            catch (LiteAsyncException ex)
+                when (ex.InnerException is LiteException e
+                    && e.Message.Contains("Detected loop in FindAll", StringComparison.OrdinalIgnoreCase)
+                )
+            {
+                logger.LogWarning("Database corruption detected ({Message}), rebuilding...", e.Message);
+
+                try
+                {
+                    db?.Dispose();
+                }
+                catch
+                {
+                    // ignored
+                }
+
+                try
+                {
+                    // Backup then delete, in case we want to inspect later.
+                    var corruptPath = dbPath + ".old-" + DateTime.UtcNow.ToString("yyyyMMddHHmmss");
+                    if (File.Exists(dbPath))
+                    {
+                        File.Copy(dbPath, corruptPath, overwrite: false);
+                        File.Delete(dbPath);
+                    }
+                }
+                catch (Exception delEx)
+                {
+                    logger.LogWarning("Failed to delete corrupt DB: {Message}", delEx.Message);
+                    // If we can't delete, no point retrying; break to fallback.
+                    break;
+                }
+            }
+            catch (IOException ioEx)
             {
                 logger.LogWarning(
                     "Database in use or not accessible ({Message}), using temporary database",
-                    e.Message
+                    ioEx.Message
                 );
+                break; // fall through to temp
             }
         }
 
         // Fallback to temporary database
-        db ??= new LiteDatabaseAsync(":temp:");
+        var tempDb = new LiteDatabaseAsync(":temp:");
+        RegisterRefs();
+        return tempDb;
 
-        // Register reference fields
-        LiteDBExtensions.Register<CivitModel, CivitModelVersion>(m => m.ModelVersions, "CivitModelVersions");
-        LiteDBExtensions.Register<CivitModelQueryCacheEntry, CivitModel>(e => e.Items, "CivitModels");
-        LiteDBExtensions.Register<LocalModelFile, CivitModel>(e => e.LatestModelInfo, "CivitModels");
-
-        return db;
+        void RegisterRefs()
+        {
+            LiteDBExtensions.Register<CivitModel, CivitModelVersion>(
+                m => m.ModelVersions,
+                "CivitModelVersions"
+            );
+            LiteDBExtensions.Register<CivitModelQueryCacheEntry, CivitModel>(e => e.Items, "CivitModels");
+            LiteDBExtensions.Register<LocalModelFile, CivitModel>(e => e.LatestModelInfo, "CivitModels");
+        }
     }
 
     public async Task<(CivitModel?, CivitModelVersion?)> FindCivitModelFromFileHashAsync(string hashBlake3)

@@ -183,6 +183,9 @@ public class AiToolkit(
 
     private ImmutableDictionary<string, string> GetEnvVars(ImmutableDictionary<string, string> env)
     {
+        // set SETUPTOOLS_USE_DISTUTILS=setuptools to avoid job errors
+        env = env.SetItem("SETUPTOOLS_USE_DISTUTILS", "setuptools");
+
         var pathBuilder = new EnvPathBuilder();
 
         if (env.TryGetValue("PATH", out var value))

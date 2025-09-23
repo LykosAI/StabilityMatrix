@@ -309,7 +309,7 @@ public partial class ModelCardViewModel(
             ? HybridModelFile.None
             : ClientManager.ClipModels.FirstOrDefault(x => x.RelativePath == model.SelectedClip3Name);
 
-        SelectedClip4 = model.SelectedClip3Name is null
+        SelectedClip4 = model.SelectedClip4Name is null
             ? HybridModelFile.None
             : ClientManager.ClipModels.FirstOrDefault(x => x.RelativePath == model.SelectedClip4Name);
 

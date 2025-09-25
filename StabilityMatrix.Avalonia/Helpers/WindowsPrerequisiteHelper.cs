@@ -997,7 +997,7 @@ public class WindowsPrerequisiteHelper(
 
         var zipFolderName = downloadUrl switch
         {
-            _ when downloadUrl.Contains("gfx1103.AMD") => "rocm gfx1103 for hip 6.4.2",
+            _ when downloadUrl.Contains("gfx1103.for.hip") => "rocm gfx1103 for hip 6.4.2",
             _ when downloadUrl.Contains("gfx1034") => "rocm gfx1034.gfx1035.gfx1036 for hip 6.4.2",
             _ when downloadUrl.Contains("gfx1032") => "rocm gfx1032 for hip 6.4.2",
             _ when downloadUrl.Contains("gfx1031") => "rocm gfx1031 for hip 6.4.2",

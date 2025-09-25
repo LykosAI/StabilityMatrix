@@ -61,7 +61,7 @@ public abstract partial class InferenceGenerationViewModelBase
     private readonly ISettingsManager settingsManager;
     private readonly RunningPackageService runningPackageService;
     private readonly IServiceManager<ViewModelBase> vmFactory;
-    internal readonly INotificationService NotificationService;
+    private readonly INotificationService notificationService;
 
     [JsonPropertyName("ImageGallery")]
     public ImageGalleryCardViewModel ImageGalleryCardViewModel { get; }
@@ -85,7 +85,7 @@ public abstract partial class InferenceGenerationViewModelBase
     )
         : base(notificationService)
     {
-        this.NotificationService = notificationService;
+        this.notificationService = notificationService;
         this.settingsManager = settingsManager;
         this.runningPackageService = runningPackageService;
         this.vmFactory = vmFactory;
@@ -384,7 +384,7 @@ public abstract partial class InferenceGenerationViewModelBase
             if (imageOutputs.Values.All(images => images is null or { Count: 0 }))
             {
                 // No images match
-                NotificationService.Show(
+                notificationService.Show(
                     "No output",
                     "Did not receive any output images",
                     NotificationType.Warning
@@ -404,7 +404,7 @@ public abstract partial class InferenceGenerationViewModelBase
 
             var notificationImage = outputImages.FirstOrDefault()?.LocalFile;
 
-            await NotificationService.ShowAsync(
+            await notificationService.ShowAsync(
                 NotificationKey.Inference_PromptCompleted,
                 new Notification
                 {
@@ -631,7 +631,7 @@ public abstract partial class InferenceGenerationViewModelBase
         catch (ValidationException e)
         {
             Logger.Debug("Image Generation Validation Error: {Message}", e.Message);
-            NotificationService.Show("Validation Error", e.Message, NotificationType.Error);
+            notificationService.Show("Validation Error", e.Message, NotificationType.Error);
         }
     }
 
@@ -803,7 +803,7 @@ public abstract partial class InferenceGenerationViewModelBase
                     {
                         Logger.Error(e, "Error while restarting package");
 
-                        NotificationService.ShowPersistent(
+                        notificationService.ShowPersistent(
                             new AppException(
                                 "Could not restart package",
                                 "Please manually restart the package for extension changes to take effect"

@@ -19,6 +19,8 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 [RegisterScoped<InferenceWanTextToVideoViewModel>, ManagedService]
 public class InferenceWanTextToVideoViewModel : InferenceGenerationViewModelBase, IParametersLoadableState
 {
+    private readonly INotificationService notificationService;
+
     [JsonIgnore]
     public StackCardViewModel StackCardViewModel { get; }
 
@@ -49,6 +51,7 @@ public class InferenceWanTextToVideoViewModel : InferenceGenerationViewModelBase
     )
         : base(vmFactory, inferenceClientManager, notificationService, settingsManager, runningPackageService)
     {
+        this.notificationService = notificationService;
         SeedCardViewModel = vmFactory.Get<SeedCardViewModel>();
         SeedCardViewModel.GenerateNewSeed();
 
@@ -185,7 +188,7 @@ public class InferenceWanTextToVideoViewModel : InferenceGenerationViewModelBase
             await RunGeneration(args, cancellationToken);
         }
 
-        await NotificationService.ShowAsync(
+        await notificationService.ShowAsync(
             NotificationKey.Inference_BatchCompleted,
             new Notification
             {

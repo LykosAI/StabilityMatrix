@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive.Linq;
+﻿using System.Reactive.Linq;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
-using System.Threading;
-using System.Threading.Tasks;
+using DesktopNotifications;
 using DynamicData.Binding;
 using Injectio.Attributes;
 using NLog;
@@ -18,8 +14,8 @@ using StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models;
-using StabilityMatrix.Core.Models.Api.Comfy;
 using StabilityMatrix.Core.Models.Inference;
+using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Services;
 using InferenceTextToImageView = StabilityMatrix.Avalonia.Views.Inference.InferenceTextToImageView;
 
@@ -103,7 +99,7 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
                 typeof(HiresFixModule),
                 typeof(UpscalerModule),
                 typeof(SaveImageModule),
-                typeof(FaceDetailerModule)
+                typeof(FaceDetailerModule),
             };
             modulesCard.DefaultModules = new[] { typeof(HiresFixModule), typeof(UpscalerModule) };
             modulesCard.InitializeDefaults();
@@ -158,7 +154,7 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
         builder.Connections.Seed = args.SeedOverride switch
         {
             { } seed => Convert.ToUInt64(seed),
-            _ => Convert.ToUInt64(SeedCardViewModel.Seed)
+            _ => Convert.ToUInt64(SeedCardViewModel.Seed),
         };
 
         var applyArgs = args.ToModuleApplyStepEventArgs();
@@ -319,13 +315,13 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
                 OutputNodeNames = buildPromptArgs.Builder.Connections.OutputNodeNames.ToArray(),
                 Parameters = SaveStateToParameters(new GenerationParameters()) with
                 {
-                    Seed = Convert.ToUInt64(seed)
+                    Seed = Convert.ToUInt64(seed),
                 },
                 Project = inferenceProject,
                 FilesToTransfer = buildPromptArgs.FilesToTransfer,
                 BatchIndex = i,
                 // Only clear output images on the first batch
-                ClearOutputImages = i == 0
+                ClearOutputImages = i == 0,
             };
 
             batchArgs.Add(generationArgs);
@@ -336,6 +332,17 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
         {
             await RunGeneration(args, cancellationToken);
         }
+
+        await notificationService.ShowAsync(
+            NotificationKey.Inference_BatchCompleted,
+            new Notification
+            {
+                Title = "Batch Completed",
+                Body =
+                    $"Batch of {batches} items [{Guid.NewGuid().ToString()[..7].ToLower()}] completed successfully",
+                BodyImagePath = ImageGalleryCardViewModel.ImageSources.LastOrDefault()?.LocalFile?.FullPath,
+            }
+        );
     }
 
     /// <inheritdoc />

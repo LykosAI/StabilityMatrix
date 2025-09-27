@@ -57,6 +57,14 @@ public class ForgeAmdGpu(
                         InitialValue = HardwareHelper.PreferDirectMLOrZluda(),
                         Options = ["--use-zluda"],
                     },
+                    new LaunchOptionDefinition
+                    {
+                        Name = "Use DirectML",
+                        Description = "Use DirectML for DirectML acceleration on compatible GPUs",
+                        Type = LaunchOptionType.Bool,
+                        InitialValue = false,
+                        Options = ["--use-directml"],
+                    },
                 ]
             )
             .ToList();
@@ -78,7 +86,7 @@ public class ForgeAmdGpu(
     {
         if (!PrerequisiteHelper.IsHipSdkInstalled) // for updates
         {
-            progress?.Report(new ProgressReport(-1, "Installing HIP SDK 6.2", isIndeterminate: true));
+            progress?.Report(new ProgressReport(-1, "Installing HIP SDK 6.4", isIndeterminate: true));
             await PrerequisiteHelper
                 .InstallPackageRequirements(this, options.PythonOptions.PythonVersion, progress)
                 .ConfigureAwait(false);
@@ -106,7 +114,7 @@ public class ForgeAmdGpu(
         {
             throw new MissingPrerequisiteException(
                 "HIP SDK",
-                "Your package has not yet been upgraded to use HIP SDK 6.2. To continue, please update this package or select \"Change Version\" from the 3-dots menu to have it upgraded automatically for you"
+                "Your package has not yet been upgraded to use HIP SDK 6.4. To continue, please update this package or select \"Change Version\" from the 3-dots menu to have it upgraded automatically for you"
             );
         }
         await SetupVenv(installLocation, pythonVersion: PyVersion.Parse(installedPackage.PythonVersion))
@@ -116,14 +124,14 @@ public class ForgeAmdGpu(
             Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
             "AMD",
             "ROCm",
-            "6.2"
+            "6.4"
         );
         var hipBinPath = Path.Combine(hipPath, "bin");
         var envVars = new Dictionary<string, string>
         {
             ["ZLUDA_COMGR_LOG_LEVEL"] = "1",
             ["HIP_PATH"] = hipPath,
-            ["HIP_PATH_62"] = hipPath,
+            ["HIP_PATH_64"] = hipPath,
             ["GIT"] = portableGitBin.JoinFile("git.exe"),
         };
         envVars.Update(settingsManager.Settings.EnvironmentVariables);

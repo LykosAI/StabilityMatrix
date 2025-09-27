@@ -5,6 +5,15 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.15.1
+### Changed
+- Upgraded ComfyUI-Zluda and Stable Diffusion WebUI AMDGPU Forge packages to install and use HIP SDK 6.4.2
+### Fixed
+- Fixed [#1372](https://github.com/LykosAI/StabilityMatrix/issues/1372) - LiteAsyncException upon starting Stability Matrix v2.15.0
+- Fixed [#1391](https://github.com/LykosAI/StabilityMatrix/issues/1391) - "Failed to parse" error when upgrading pip packages with extra index url
+- Fixed "cannot access local variable 'job' where it is not associated with a value" error when running jobs in AI Toolkit
+- Fixed Civitai browser not always returning at least 30 results when possible on initial search
+
 ## v2.15.0
 ### Added
 - Added new package - [AI Toolkit](https://github.com/ostris/ai-toolkit/)

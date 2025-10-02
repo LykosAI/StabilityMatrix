@@ -67,12 +67,12 @@ public class InstallSageAttentionStep(
         else if (torchInfo.Version.Contains("2.5.1") && torchInfo.Version.Contains("cu124"))
         {
             sageWheelUrl =
-                "https://github.com/woct0rdho/SageAttention/releases/download/v2.2.0-windows.post2/sageattention-2.2.0+cu124torch2.5.1.post2-cp39-abi3-win_amd64.whl";
+                "https://github.com/woct0rdho/SageAttention/releases/download/v2.2.0-windows.post3/sageattention-2.2.0+cu124torch2.5.1.post3-cp39-abi3-win_amd64.whl";
         }
         else if (torchInfo.Version.Contains("2.6.0") && torchInfo.Version.Contains("cu126"))
         {
             sageWheelUrl =
-                $"https://github.com/woct0rdho/SageAttention/releases/download/v2.2.0-windows.post2/sageattention-2.2.0+cu126torch2.6.0.post2-cp39-abi3-win_amd64.whl";
+                "https://github.com/woct0rdho/SageAttention/releases/download/v2.2.0-windows.post3/sageattention-2.2.0+cu126torch2.6.0.post3-cp39-abi3-win_amd64.whl";
         }
         else if (torchInfo.Version.Contains("2.7.0") && torchInfo.Version.Contains("cu128"))
         {
@@ -82,20 +82,20 @@ public class InstallSageAttentionStep(
         else if (torchInfo.Version.Contains("2.7.1") && torchInfo.Version.Contains("cu128"))
         {
             sageWheelUrl =
-                $"https://github.com/woct0rdho/SageAttention/releases/download/v2.2.0-windows.post2/sageattention-2.2.0+cu128torch2.7.1.post2-cp39-abi3-win_amd64.whl";
+                "https://github.com/woct0rdho/SageAttention/releases/download/v2.2.0-windows.post3/sageattention-2.2.0+cu128torch2.7.1.post3-cp39-abi3-win_amd64.whl";
         }
         else if (torchInfo.Version.Contains("2.8.0") && torchInfo.Version.Contains("cu128"))
         {
             sageWheelUrl =
-                $"https://github.com/woct0rdho/SageAttention/releases/download/v2.2.0-windows.post2/sageattention-2.2.0+cu128torch2.8.0.post2-cp39-abi3-win_amd64.whl";
+                "https://github.com/woct0rdho/SageAttention/releases/download/v2.2.0-windows.post3/sageattention-2.2.0+cu128torch2.8.0.post3-cp39-abi3-win_amd64.whl";
+        }
+        else if (torchInfo.Version.Contains("2.9.0") && torchInfo.Version.Contains("cu128"))
+        {
+            sageWheelUrl =
+                "https://github.com/woct0rdho/SageAttention/releases/download/v2.2.0-windows.post3/sageattention-2.2.0+cu128torch2.9.0.post3-cp39-abi3-win_amd64.whl";
         }
 
-        var pipArgs = new PipInstallArgs();
-        if (IsBlackwellGpu)
-        {
-            pipArgs = pipArgs.AddArg("--pre");
-        }
-        pipArgs = pipArgs.AddArg("triton-windows");
+        var pipArgs = new PipInstallArgs("triton-windows");
 
         if (!string.IsNullOrWhiteSpace(sageWheelUrl))
         {

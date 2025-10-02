@@ -166,7 +166,7 @@ public static class ProcessRunner
             Arguments = arguments,
             UseShellExecute = false,
             RedirectStandardOutput = true,
-            CreateNoWindow = true
+            CreateNoWindow = true,
         };
 
         if (environmentVariables != null)
@@ -196,7 +196,8 @@ public static class ProcessRunner
         string fileName,
         ProcessArgs arguments,
         string? workingDirectory = null,
-        IReadOnlyDictionary<string, string>? environmentVariables = null
+        IReadOnlyDictionary<string, string>? environmentVariables = null,
+        bool useUtf8Encoding = false
     )
     {
         Logger.Debug($"Starting process '{fileName}' with arguments '{arguments}'");
@@ -208,8 +209,14 @@ public static class ProcessRunner
             UseShellExecute = false,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
-            CreateNoWindow = true
+            CreateNoWindow = true,
         };
+
+        if (useUtf8Encoding)
+        {
+            info.StandardOutputEncoding = Encoding.UTF8;
+            info.StandardErrorEncoding = Encoding.UTF8;
+        }
 
         if (environmentVariables != null)
         {
@@ -255,7 +262,7 @@ public static class ProcessRunner
             StandardOutput = stdout,
             StandardError = stderr,
             ProcessName = processName,
-            Elapsed = elapsed
+            Elapsed = elapsed,
         };
     }
 
@@ -410,7 +417,7 @@ public static class ProcessRunner
             UseShellExecute = false,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
-            CreateNoWindow = true
+            CreateNoWindow = true,
         };
 
         if (environmentVariables != null)
@@ -458,7 +465,7 @@ public static class ProcessRunner
             UseShellExecute = false,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
-            CreateNoWindow = true
+            CreateNoWindow = true,
         };
 
         if (environmentVariables != null)
@@ -544,7 +551,7 @@ public static class ProcessRunner
         {
             ExitCode = process.ExitCode,
             StandardOutput = stdout.ToString(),
-            StandardError = stderr.ToString()
+            StandardError = stderr.ToString(),
         };
     }
 

@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ## v2.15.1
 ### Changed
 - Upgraded ComfyUI-Zluda and Stable Diffusion WebUI AMDGPU Forge packages to install and use HIP SDK 6.4.2
+- Changed ComfyUI torch index from `cu129` back to `cu128` for better compatibility with custom nodes
+- Updated SageAttention installer to install v2.2.0-windows.post3
+- Updated Nunchaku installer to install v1.0.1
 ### Fixed
 - Fixed [#1372](https://github.com/LykosAI/StabilityMatrix/issues/1372) - LiteAsyncException upon starting Stability Matrix v2.15.0
 - Fixed [#1391](https://github.com/LykosAI/StabilityMatrix/issues/1391) - "Failed to parse" error when upgrading pip packages with extra index url

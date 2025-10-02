@@ -411,7 +411,7 @@ public class ComfyUI(
                 RequirementsFilePaths = ["requirements.txt"],
                 ExtraPipArgs = ["numpy<2"],
                 TorchaudioVersion = " ", // Request torchaudio without a specific version
-                CudaIndex = isLegacyNvidia ? "cu126" : "cu129",
+                CudaIndex = isLegacyNvidia ? "cu126" : "cu128",
                 RocmIndex = "rocm6.4",
                 UpgradePackages = true,
             };

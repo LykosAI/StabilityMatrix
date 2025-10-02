@@ -50,6 +50,7 @@ public class InstallNunchakuStep(IPyInstallationManager pyInstallationManager) :
             10 => "cp310",
             11 => "cp311",
             12 => "cp312",
+            13 => "cp313",
             _ => throw new ArgumentOutOfRangeException("Invalid Python version"),
         };
         var platform = Compat.IsWindows ? "win_amd64" : "linux_x86_64";
@@ -65,13 +66,13 @@ public class InstallNunchakuStep(IPyInstallationManager pyInstallationManager) :
             var v when v.StartsWith("2.6") => "2.6",
             var v when v.StartsWith("2.7") => "2.7",
             var v when v.StartsWith("2.8") => "2.8",
+            var v when v.StartsWith("2.10") => "2.10",
             _ => throw new InvalidOperationException(
                 "No compatible torch version found in the virtual environment."
             ),
         };
-
         var downloadUrl =
-            $"https://github.com/mit-han-lab/nunchaku/releases/download/v0.3.1/nunchaku-0.3.1+torch{torchVersion}-{shortPythonVersionString}-{shortPythonVersionString}-{platform}.whl";
+            $"https://github.com/nunchaku-tech/nunchaku/releases/download/v1.0.1/nunchaku-1.0.1+torch{torchVersion}-{shortPythonVersionString}-{shortPythonVersionString}-{platform}.whl";
         progress?.Report(
             new ProgressReport(-1f, message: "Installing Nunchaku backend", isIndeterminate: true)
         );
@@ -82,31 +83,43 @@ public class InstallNunchakuStep(IPyInstallationManager pyInstallationManager) :
             new ProgressReport(1f, message: "Nunchaku backend installed successfully", isIndeterminate: false)
         );
 
-        var nunchakuNodePath = WorkingDirectory.JoinDir("custom_nodes", "ComfyUI-nunchaku");
-        if (nunchakuNodePath.Exists)
-        {
-            progress?.Report(
-                new ProgressReport(
-                    1f,
-                    message: "Nunchaku extension installed successfully.",
-                    isIndeterminate: false
-                )
-            );
-            return;
-        }
-
         var extensions = await ComfyExtensionManager
             .GetManifestExtensionsAsync(ComfyExtensionManager.DefaultManifests)
             .ConfigureAwait(false);
         var nunchakuExtension = extensions.FirstOrDefault(e =>
             e.Title.Equals("ComfyUI-nunchaku", StringComparison.OrdinalIgnoreCase)
         );
+
         if (nunchakuExtension is null)
             return;
 
-        await ComfyExtensionManager
-            .InstallExtensionAsync(nunchakuExtension, InstalledPackage, null, progress)
+        var installedExtensions = await ComfyExtensionManager
+            .GetInstalledExtensionsLiteAsync(InstalledPackage)
             .ConfigureAwait(false);
+        var installedNunchakuExtension = installedExtensions.FirstOrDefault(e =>
+            e.Title.Equals("ComfyUI-nunchaku", StringComparison.OrdinalIgnoreCase)
+        );
+
+        if (installedNunchakuExtension is not null)
+        {
+            var installedNunchakuExtensionWithVersion = await ComfyExtensionManager
+                .GetInstalledExtensionInfoAsync(installedNunchakuExtension)
+                .ConfigureAwait(false);
+            installedNunchakuExtensionWithVersion = installedNunchakuExtensionWithVersion with
+            {
+                Definition = nunchakuExtension,
+            };
+
+            await ComfyExtensionManager
+                .UpdateExtensionAsync(installedNunchakuExtensionWithVersion, InstalledPackage, null, progress)
+                .ConfigureAwait(false);
+        }
+        else
+        {
+            await ComfyExtensionManager
+                .InstallExtensionAsync(nunchakuExtension, InstalledPackage, null, progress)
+                .ConfigureAwait(false);
+        }
 
         progress?.Report(
             new ProgressReport(

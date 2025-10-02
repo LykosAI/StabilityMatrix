@@ -12,8 +12,10 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Updated SageAttention installer to install v2.2.0-windows.post3
 - Updated Nunchaku installer to install v1.0.1
 ### Fixed
-- Fixed [#1372](https://github.com/LykosAI/StabilityMatrix/issues/1372) - LiteAsyncException upon starting Stability Matrix v2.15.0
+- Fixed [#1372](https://github.com/LykosAI/StabilityMatrix/issues/1372), [#1399](https://github.com/LykosAI/StabilityMatrix/issues/1399) - LiteAsyncException upon starting Stability Matrix v2.15.0
 - Fixed [#1391](https://github.com/LykosAI/StabilityMatrix/issues/1391) - "Failed to parse" error when upgrading pip packages with extra index url
+- Fixed [#1401](https://github.com/LykosAI/StabilityMatrix/issues/1401) - "Python <version> was not found and/or failed to install" errors when path contains special characters
+- Fixed [#1403](https://github.com/LykosAI/StabilityMatrix/issues/1403) - Checkpoint Manager filters not being saved correctly
 - Fixed "cannot access local variable 'job' where it is not associated with a value" error when running jobs in AI Toolkit
 - Fixed Civitai browser not always returning at least 30 results when possible on initial search
 

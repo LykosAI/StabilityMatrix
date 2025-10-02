@@ -160,8 +160,6 @@ public partial class CheckpointsPageViewModel(
 
         await base.OnInitialLoadedAsync();
 
-        var settingsSelectedBaseModels = settingsManager.Settings.SelectedBaseModels;
-
         AddDisposable(
             BaseModelCache
                 .Connect()
@@ -169,7 +167,7 @@ public partial class CheckpointsPageViewModel(
                 .Transform(baseModel => new BaseModelOptionViewModel
                 {
                     ModelType = baseModel,
-                    IsSelected = settingsSelectedBaseModels.Contains(baseModel),
+                    IsSelected = settingsManager.Settings.SelectedBaseModels.Contains(baseModel),
                 })
                 .SortAndBind(
                     BaseModelOptions,
@@ -179,10 +177,15 @@ public partial class CheckpointsPageViewModel(
                 .ObserveOn(SynchronizationContext.Current)
                 .Subscribe(next =>
                 {
-                    if (next.Sender.IsSelected)
-                        SelectedBaseModels.Add(next.Sender.ModelType);
-                    else
-                        SelectedBaseModels.Remove(next.Sender.ModelType);
+                    switch (next.Sender.IsSelected)
+                    {
+                        case true when !SelectedBaseModels.Contains(next.Sender.ModelType):
+                            SelectedBaseModels.Add(next.Sender.ModelType);
+                            break;
+                        case false when SelectedBaseModels.Contains(next.Sender.ModelType):
+                            SelectedBaseModels.Remove(next.Sender.ModelType);
+                            break;
+                    }
 
                     OnPropertyChanged(nameof(ClearButtonText));
                     OnPropertyChanged(nameof(SelectedBaseModels));
@@ -191,6 +194,7 @@ public partial class CheckpointsPageViewModel(
 
         var settingsTransactionObservable = this.WhenPropertyChanged(x => x.SelectedBaseModels)
             .Throttle(TimeSpan.FromMilliseconds(50))
+            .Skip(1)
             .ObserveOn(SynchronizationContext.Current)
             .Subscribe(_ =>
             {

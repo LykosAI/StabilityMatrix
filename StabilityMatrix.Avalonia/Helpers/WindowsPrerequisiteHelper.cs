@@ -45,7 +45,7 @@ public class WindowsPrerequisiteHelper(
     private const string CppBuildToolsUrl = "https://aka.ms/vs/17/release/vs_BuildTools.exe";
 
     private const string HipSdkDownloadUrl =
-        "https://download.amd.com/developer/eula/rocm-hub/AMD-Software-PRO-Edition-24.Q4-Win10-Win11-For-HIP.exe";
+        "https://download.amd.com/developer/eula/rocm-hub/AMD-Software-PRO-Edition-25.Q3-Win10-Win11-For-HIP.exe";
     private const string PythonLibsDownloadUrl = "https://cdn.lykos.ai/python_libs_for_sage.zip";
 
     private const string UvWindowsDownloadUrl =
@@ -110,7 +110,7 @@ public class WindowsPrerequisiteHelper(
     private string HipSdkDownloadPath => Path.Combine(AssetsDir, "AMD-HIP-SDK.exe");
 
     private string HipInstalledPath =>
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "AMD", "ROCm", "6.2");
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "AMD", "ROCm", "6.4");
 
     private string UvDownloadPath => Path.Combine(AssetsDir, "uv.zip");
     private string UvExtractPath => Path.Combine(AssetsDir, "uv");
@@ -189,7 +189,7 @@ public class WindowsPrerequisiteHelper(
 
         result.EnsureSuccessExitCode();
         return result.StandardOutput ?? result.StandardError ?? string.Empty;
-    }    
+    }
 
     public async Task RunNpm(
         ProcessArgs args,
@@ -997,15 +997,11 @@ public class WindowsPrerequisiteHelper(
 
         var zipFolderName = downloadUrl switch
         {
-            _ when downloadUrl.Contains("gfx1201") => null,
-            _ when downloadUrl.Contains("gfx1150") => "rocm gfx1150 for hip skd 6.2.4",
-            _ when downloadUrl.Contains("gfx1103.AMD") =>
-                "rocm gfx1103 AMD 780M phoenix V5.0 for hip skd 6.2.4",
-            _ when downloadUrl.Contains("gfx1034") => "rocm gfx1034-gfx1035-gfx1036 for hip sdk 6.2.4",
-            _ when downloadUrl.Contains("gfx1032") => "rocm gfx1032 for hip skd 6.2.4(navi21 logic)",
-            _ when downloadUrl.Contains("gfx1031") => "rocm gfx1031 for hip skd 6.2.4 (littlewu's logic)",
-            _ when downloadUrl.Contains("gfx1010") =>
-                "rocm gfx1010-xnack-gfx1011-xnack-gfx1012-xnack- for hip sdk 6.2.4",
+            _ when downloadUrl.Contains("gfx1103.for.hip") => "rocm gfx1103 for hip 6.4.2",
+            _ when downloadUrl.Contains("gfx1034") => "rocm gfx1034.gfx1035.gfx1036 for hip 6.4.2",
+            _ when downloadUrl.Contains("gfx1032") => "rocm gfx1032 for hip 6.4.2",
+            _ when downloadUrl.Contains("gfx1031") => "rocm gfx1031 for hip 6.4.2",
+            _ when downloadUrl.Contains("gfx1010") => "rocm gfx1010-xnack-gfx1012-xnack-.for.hip6.4.2",
             _ => null,
         };
 
@@ -1035,27 +1031,29 @@ public class WindowsPrerequisiteHelper(
 
     private string? GetDownloadUrlFromGpuName(string name)
     {
+        // not used anymore but good to know for gfx -> name reference
         // gfx1201
-        if (name.Contains("9060") || name.Contains("9070"))
-        {
-            return "https://github.com/likelovewant/ROCmLibs-for-gfx1103-AMD780M-APU/releases/download/v0.6.2.4/rocm.gfx1201.for.hip.skd.6.2.4-no-optimized.7z";
-        }
+        // if (name.Contains("9060") || name.Contains("9070"))
+        // {
+        //     return "https://github.com/likelovewant/ROCmLibs-for-gfx1103-AMD780M-APU/releases/download/v0.6.2.4/rocm.gfx1201.for.hip.skd.6.2.4-no-optimized.7z";
+        // }
 
+        // not used anymore but good to know for gfx -> name reference
         // gfx1150
-        if (
-            name.Contains("8050S")
-            || name.Contains("8060S")
-            || name.Contains("880M")
-            || name.Contains("890M")
-        )
-        {
-            return "https://github.com/likelovewant/ROCmLibs-for-gfx1103-AMD780M-APU/releases/download/v0.6.2.4/rocm.gfx1150.for.hip.skd.6.2.4.7z";
-        }
+        // if (
+        //     name.Contains("8050S")
+        //     || name.Contains("8060S")
+        //     || name.Contains("880M")
+        //     || name.Contains("890M")
+        // )
+        // {
+        //     return "https://github.com/likelovewant/ROCmLibs-for-gfx1103-AMD780M-APU/releases/download/v0.6.2.4/rocm.gfx1150.for.hip.skd.6.2.4.7z";
+        // }
 
         // gfx1103
         if (name.Contains("740M") || name.Contains("760M") || name.Contains("780M") || name.Contains("Z1"))
         {
-            return "https://github.com/likelovewant/ROCmLibs-for-gfx1103-AMD780M-APU/releases/download/v0.6.2.4/rocm.gfx1103.AMD.780M.phoenix.V5.0.for.hip.sdk.6.2.4.7z";
+            return "https://github.com/likelovewant/ROCmLibs-for-gfx1103-AMD780M-APU/releases/download/v0.6.4.2/rocm.gfx1103.for.hip.6.4.2.7z";
         }
 
         // gfx1034, gfx1035, gfx1036
@@ -1070,7 +1068,7 @@ public class WindowsPrerequisiteHelper(
             || name.Contains("Graphics 128SP")
         )
         {
-            return "https://github.com/likelovewant/ROCmLibs-for-gfx1103-AMD780M-APU/releases/download/v0.6.2.4/rocm.gfx1034-gfx1035-gfx1036.for.hip.sdk.6.2.4.7z";
+            return "https://github.com/likelovewant/ROCmLibs-for-gfx1103-AMD780M-APU/releases/download/v0.6.4.2/rocm.gfx1034.gfx1035.gfx1036.for.hip.6.4.2.7z";
         }
 
         // gfx1032
@@ -1081,7 +1079,7 @@ public class WindowsPrerequisiteHelper(
             || name.Contains("6650")
         )
         {
-            return "https://github.com/likelovewant/ROCmLibs-for-gfx1103-AMD780M-APU/releases/download/v0.6.2.4/rocm.gfx1032.for.hip.sdk.6.2.4.navi21.logic.7z";
+            return "https://github.com/likelovewant/ROCmLibs-for-gfx1103-AMD780M-APU/releases/download/v0.6.4.2/rocm.gfx1032.for.hip.6.4.2.7z";
         }
 
         // gfx1031
@@ -1092,13 +1090,13 @@ public class WindowsPrerequisiteHelper(
             || name.Contains("6850M")
         )
         {
-            return "https://github.com/likelovewant/ROCmLibs-for-gfx1103-AMD780M-APU/releases/download/v0.6.2.4/rocm.gfx1031.for.hip.sdk.6.2.4.littlewu.s.logic.7z";
+            return "https://github.com/likelovewant/ROCmLibs-for-gfx1103-AMD780M-APU/releases/download/v0.6.4.2/rocm.gfx1031.for.hip.6.4.2.7z";
         }
 
         // gfx1010/1012
         if (name.Contains("5700") || name.Contains("5600") || name.Contains("5300") || name.Contains("5500"))
         {
-            return "https://github.com/likelovewant/ROCmLibs-for-gfx1103-AMD780M-APU/releases/download/v0.6.2.4/rocm.gfx1010-xnack-gfx1011-xnack-gfx1012-xnack-.for.hip.sdk.6.2.4.7z";
+            return "https://github.com/likelovewant/ROCmLibs-for-gfx1103-AMD780M-APU/releases/download/v0.6.4.2/rocm.gfx1010-xnack-gfx1012-xnack-.for.hip6.4.2.7z";
         }
 
         return null;

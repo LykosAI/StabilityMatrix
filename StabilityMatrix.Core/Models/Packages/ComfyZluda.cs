@@ -68,39 +68,15 @@ public class ComfyZluda(
     {
         if (!PrerequisiteHelper.IsHipSdkInstalled) // for updates
         {
-            progress?.Report(new ProgressReport(-1, "Installing HIP SDK 6.2", isIndeterminate: true));
+            progress?.Report(new ProgressReport(-1, "Installing HIP SDK 6.4", isIndeterminate: true));
             await PrerequisiteHelper
                 .InstallPackageRequirements(this, options.PythonOptions.PythonVersion, progress)
                 .ConfigureAwait(false);
         }
 
-        // download & setup hip sdk extension if not already done
-        var hipPath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
-            "AMD",
-            "ROCm",
-            "6.2"
-        );
-        var hipblasltPath = new DirectoryPath(hipPath, "hipblaslt");
-        var otherHipPath = new DirectoryPath(hipPath, "include", "hipblaslt");
-
-        if (!hipblasltPath.Exists || !otherHipPath.Exists)
+        if (options.IsUpdate)
         {
-            var hipSdkExtensionPath = new FilePath(
-                SettingsManager.LibraryDir,
-                "Assets",
-                "hip-sdk-extension.7z"
-            );
-            await DownloadService
-                .DownloadToFileAsync(
-                    HipSdkExtensionDownloadUrl,
-                    hipSdkExtensionPath,
-                    progress,
-                    cancellationToken: cancellationToken
-                )
-                .ConfigureAwait(false);
-
-            await ArchiveHelper.Extract7Z(hipSdkExtensionPath, hipPath, progress).ConfigureAwait(false);
+            return;
         }
 
         progress?.Report(new ProgressReport(-1, "Setting up venv", isIndeterminate: true));
@@ -110,139 +86,34 @@ public class ComfyZluda(
             )
             .ConfigureAwait(false);
 
-        var config = new PipInstallConfig
+        var installNBatPath = new FilePath(installLocation, "install-n.bat");
+        var newInstallBatPath = new FilePath(installLocation, "install-sm.bat");
+
+        var installNText = await installNBatPath.ReadAllTextAsync(cancellationToken).ConfigureAwait(false);
+        var installNLines = installNText.Split(Environment.NewLine);
+        var cutoffIndex = Array.FindIndex(installNLines, line => line.Contains("Installation is completed"));
+
+        IEnumerable<string> filtered = installNLines;
+        if (cutoffIndex >= 0)
         {
-            RequirementsFilePaths = ["requirements.txt"],
-            RequirementsExcludePattern = "(torch|numpy)", // Keep numpy excluded for specific install below
-            TorchVersion = "==2.7.0",
-            TorchvisionVersion = "==0.22.0",
-            TorchaudioVersion = "==2.7.0",
-            CudaIndex = "cu118",
-            ForceReinstallTorch = true,
-            ExtraPipArgs = ["numpy==1.26.0"],
-        };
-
-        await StandardPipInstallProcessAsync(
-                venvRunner,
-                options,
-                installedPackage,
-                config,
-                onConsoleOutput,
-                progress,
-                cancellationToken
-            )
-            .ConfigureAwait(false);
-
-        progress?.Report(new ProgressReport(1, "Installed Package Requirements", isIndeterminate: false));
-
-        progress?.Report(new ProgressReport(-1f, "Setting up ZLUDA...", isIndeterminate: true));
-
-        // patch zluda
-        var zludaPatchPath = new FilePath(installLocation, "zluda.zip");
-        var zludaExtractPath = new DirectoryPath(installLocation, "zluda");
-        if (zludaExtractPath.Exists)
-        {
-            await zludaExtractPath.DeleteAsync(true).ConfigureAwait(false);
+            filtered = installNLines.Take(cutoffIndex);
         }
-        zludaExtractPath.Create();
 
-        await downloadService
-            .DownloadToFileAsync(
-                ZludaPatchDownloadUrl,
-                zludaPatchPath,
-                progress,
-                cancellationToken: cancellationToken
-            )
+        newInstallBatPath.Create();
+        await newInstallBatPath
+            .WriteAllTextAsync(string.Join(Environment.NewLine, filtered), cancellationToken)
             .ConfigureAwait(false);
 
-        await ArchiveHelper.Extract(zludaPatchPath, zludaExtractPath, progress).ConfigureAwait(false);
-        await zludaPatchPath.DeleteAsync(cancellationToken).ConfigureAwait(false);
+        var installProcess = ProcessRunner.StartAnsiProcess(
+            newInstallBatPath,
+            [],
+            installLocation,
+            onConsoleOutput,
+            GetEnvVars(true)
+        );
+        await installProcess.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
 
-        // copy some stuff into the venv
-        var cublasSourcePath = new FilePath(installLocation, "zluda", "cublas.dll");
-        var cusparseSourcePath = new FilePath(installLocation, "zluda", "cusparse.dll");
-        var nvrtc112SourcePath = new FilePath(
-            venvRunner.RootPath,
-            "Lib",
-            "site-packages",
-            "torch",
-            "lib",
-            "nvrtc64_112_0.dll"
-        );
-        var nvrtcSourcePath = new FilePath(installLocation, "zluda", "nvrtc.dll");
-        var cudnnSourcePath = new FilePath(installLocation, "zluda", "cudnn.dll");
-        var cufftSourcePath = new FilePath(installLocation, "zluda", "cufft.dll");
-        var cufftwSourcePath = new FilePath(installLocation, "zluda", "cufftw.dll");
-        var zludaPySourcePath = new FilePath(installLocation, "comfy", "customzluda", "zluda.py");
-
-        var cublasDestPath = new FilePath(
-            venvRunner.RootPath,
-            "Lib",
-            "site-packages",
-            "torch",
-            "lib",
-            "cublas64_11.dll"
-        );
-        var cusparseDestPath = new FilePath(
-            venvRunner.RootPath,
-            "Lib",
-            "site-packages",
-            "torch",
-            "lib",
-            "cusparse64_11.dll"
-        );
-        var nvrtc112DestPath = new FilePath(
-            venvRunner.RootPath,
-            "Lib",
-            "site-packages",
-            "torch",
-            "lib",
-            "nvrtc_cuda.dll"
-        );
-        var nvrtcDestPath = new FilePath(
-            venvRunner.RootPath,
-            "Lib",
-            "site-packages",
-            "torch",
-            "lib",
-            "nvrtc64_112_0.dll"
-        );
-        var cudnnDestPath = new FilePath(
-            venvRunner.RootPath,
-            "Lib",
-            "site-packages",
-            "torch",
-            "lib",
-            "cudnn64_9.dll"
-        );
-        var cufftDestPath = new FilePath(
-            venvRunner.RootPath,
-            "Lib",
-            "site-packages",
-            "torch",
-            "lib",
-            "cufft64_10.dll"
-        );
-        var cufftwDestPath = new FilePath(
-            venvRunner.RootPath,
-            "Lib",
-            "site-packages",
-            "torch",
-            "lib",
-            "cufftw64_10.dll"
-        );
-        var zludaPyDestPath = new FilePath(installLocation, "comfy", "zluda.py");
-
-        await cublasSourcePath.CopyToAsync(cublasDestPath, true).ConfigureAwait(false);
-        await cusparseSourcePath.CopyToAsync(cusparseDestPath, true).ConfigureAwait(false);
-        await nvrtc112SourcePath.CopyToAsync(nvrtc112DestPath, true).ConfigureAwait(false);
-        await nvrtcSourcePath.CopyToAsync(nvrtcDestPath, true).ConfigureAwait(false);
-        await cudnnSourcePath.CopyToAsync(cudnnDestPath, true).ConfigureAwait(false);
-        await cufftSourcePath.CopyToAsync(cufftDestPath, true).ConfigureAwait(false);
-        await cufftwSourcePath.CopyToAsync(cufftwDestPath, true).ConfigureAwait(false);
-        await zludaPySourcePath.CopyToAsync(zludaPyDestPath, true).ConfigureAwait(false);
-
-        progress?.Report(new ProgressReport(1, "Installed ZLUDA", isIndeterminate: false));
+        progress?.Report(new ProgressReport(1, "Installed Successfully", isIndeterminate: false));
     }
 
     public override async Task RunPackage(
@@ -257,36 +128,11 @@ public class ComfyZluda(
         {
             throw new MissingPrerequisiteException(
                 "HIP SDK",
-                "Your package has not yet been upgraded to use HIP SDK 6.2. To continue, please update this package or select \"Change Version\" from the 3-dots menu to have it upgraded automatically for you"
+                "Your package has not yet been upgraded to use HIP SDK 6.4. To continue, please update this package or select \"Change Version\" from the 3-dots menu to have it upgraded automatically for you"
             );
         }
         await SetupVenv(installLocation, pythonVersion: PyVersion.Parse(installedPackage.PythonVersion))
             .ConfigureAwait(false);
-        var portableGitBin = new DirectoryPath(PrerequisiteHelper.GitBinPath);
-        var hipPath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
-            "AMD",
-            "ROCm",
-            "6.2"
-        );
-        var hipBinPath = Path.Combine(hipPath, "bin");
-        var envVars = new Dictionary<string, string>
-        {
-            ["ZLUDA_COMGR_LOG_LEVEL"] = "1",
-            ["HIP_PATH"] = hipPath,
-            ["HIP_PATH_62"] = hipPath,
-            ["GIT"] = portableGitBin.JoinFile("git.exe"),
-        };
-        envVars.Update(settingsManager.Settings.EnvironmentVariables);
-
-        if (envVars.TryGetValue("PATH", out var pathValue))
-        {
-            envVars["PATH"] = Compat.GetEnvPathWithExtensions(hipBinPath, portableGitBin, pathValue);
-        }
-        else
-        {
-            envVars["PATH"] = Compat.GetEnvPathWithExtensions(hipBinPath, portableGitBin);
-        }
 
         var zludaPath = Path.Combine(installLocation, LaunchCommand);
         ProcessArgs args = ["--", VenvRunner.PythonPath.ToString(), "main.py", .. options.Arguments];
@@ -295,7 +141,7 @@ public class ComfyZluda(
             args,
             installLocation,
             HandleConsoleOutput,
-            envVars
+            GetEnvVars(false)
         );
 
         return;
@@ -336,5 +182,43 @@ public class ComfyZluda(
 
         zludaProcess = null;
         GC.SuppressFinalize(this);
+    }
+
+    private Dictionary<string, string> GetEnvVars(bool isInstall)
+    {
+        var portableGitBin = new DirectoryPath(PrerequisiteHelper.GitBinPath);
+        var hipPath = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
+            "AMD",
+            "ROCm",
+            "6.4"
+        );
+        var hipBinPath = Path.Combine(hipPath, "bin");
+        var envVars = new Dictionary<string, string>
+        {
+            ["ZLUDA_COMGR_LOG_LEVEL"] = "1",
+            ["HIP_PATH"] = hipPath,
+            ["HIP_PATH_64"] = hipPath,
+            ["GIT"] = portableGitBin.JoinFile("git.exe"),
+        };
+        envVars.Update(settingsManager.Settings.EnvironmentVariables);
+
+        if (envVars.TryGetValue("PATH", out var pathValue))
+        {
+            envVars["PATH"] = Compat.GetEnvPathWithExtensions(hipBinPath, portableGitBin, pathValue);
+        }
+        else
+        {
+            envVars["PATH"] = Compat.GetEnvPathWithExtensions(hipBinPath, portableGitBin);
+        }
+
+        if (isInstall)
+            return envVars;
+
+        envVars["FLASH_ATTENTION_TRITON_AMD_ENABLE"] = "TRUE";
+        envVars["MIOPEN_FIND_MODE"] = "2";
+        envVars["MIOPEN_LOG_LEVEL"] = "3";
+
+        return envVars;
     }
 }

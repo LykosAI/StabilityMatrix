@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Collections.Immutable;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using Injectio.Attributes;
 using NLog;
@@ -411,7 +412,7 @@ public class ComfyUI(
                 RequirementsFilePaths = ["requirements.txt"],
                 ExtraPipArgs = ["numpy<2"],
                 TorchaudioVersion = " ", // Request torchaudio without a specific version
-                CudaIndex = isLegacyNvidia ? "cu126" : "cu129",
+                CudaIndex = isLegacyNvidia ? "cu126" : "cu128",
                 RocmIndex = "rocm6.4",
                 UpgradePackages = true,
             };
@@ -442,6 +443,8 @@ public class ComfyUI(
         // Use the same Python version that was used for installation
         await SetupVenv(installLocation, pythonVersion: PyVersion.Parse(installedPackage.PythonVersion))
             .ConfigureAwait(false);
+
+        VenvRunner.UpdateEnvironmentVariables(GetEnvVars);
 
         VenvRunner.RunDetached(
             [Path.Combine(installLocation, options.Command ?? LaunchCommand), .. options.Arguments],
@@ -807,5 +810,21 @@ public class ComfyUI(
         };
         EventManager.Instance.OnPackageInstallProgressAdded(runner);
         await runner.ExecuteSteps([installNunchaku]).ConfigureAwait(false);
+    }
+
+    private ImmutableDictionary<string, string> GetEnvVars(ImmutableDictionary<string, string> env)
+    {
+        // if we're not on windows or we don't have a windows rocm gpu, return original env
+        var hasRocmGpu =
+            SettingsManager.Settings.PreferredGpu?.IsWindowsRocmSupportedGpu()
+            ?? HardwareHelper.HasWindowsRocmSupportedGpu();
+
+        if (!Compat.IsWindows || !hasRocmGpu)
+            return env;
+
+        // set some experimental speed improving env vars for Windows ROCm
+        return env.SetItem("PYTORCH_TUNABLEOP_ENABLED", "1")
+            .SetItem("MIOPEN_FIND_MODE", "2")
+            .SetItem("TORCH_ROCM_AOTRITON_ENABLE_EXPERIMENTAL", "1");
     }
 }

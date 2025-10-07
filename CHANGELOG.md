@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed [#1391](https://github.com/LykosAI/StabilityMatrix/issues/1391) - "Failed to parse" error when upgrading pip packages with extra index url
 - Fixed [#1401](https://github.com/LykosAI/StabilityMatrix/issues/1401) - "Python <version> was not found and/or failed to install" errors when path contains special characters
 - Fixed [#1403](https://github.com/LykosAI/StabilityMatrix/issues/1403) - Checkpoint Manager filters not being saved correctly
+- Fixed [#1411](https://github.com/LykosAI/StabilityMatrix/issues/1411) - SD.Next installs not using correct torch version
 - Fixed "cannot access local variable 'job' where it is not associated with a value" error when running jobs in AI Toolkit
 - Fixed Civitai browser not always returning at least 30 results when possible on initial search
 - Fixed model browser crashing when downloading a file with invalid characters in the name

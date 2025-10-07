@@ -27,7 +27,7 @@ public class CivitModel
     public CivitMode? Mode { get; set; }
 
     [JsonPropertyName("creator")]
-    public CivitCreator Creator { get; set; }
+    public CivitCreator? Creator { get; set; }
 
     [JsonPropertyName("stats")]
     public CivitModelStats Stats { get; set; }

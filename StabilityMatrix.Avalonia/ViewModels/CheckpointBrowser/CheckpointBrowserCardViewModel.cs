@@ -212,7 +212,7 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
     [RelayCommand]
     public void SearchAuthor()
     {
-        EventManager.Instance.OnNavigateAndFindCivitAuthorRequested(CivitModel.Creator.Username);
+        EventManager.Instance.OnNavigateAndFindCivitAuthorRequested(CivitModel.Creator?.Username);
     }
 
     private async Task DoImport(

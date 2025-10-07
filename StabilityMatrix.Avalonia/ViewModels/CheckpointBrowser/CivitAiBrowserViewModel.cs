@@ -741,14 +741,7 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
         }
         else
         {
-            if (CivitUseDiscoveryApi)
-            {
-                modelRequest.Query = SearchQuery;
-            }
-            else
-            {
-                modelRequest.Tag = SearchQuery;
-            }
+            modelRequest.Query = SearchQuery;
         }
 
         if (SortMode == CivitSortMode.Installed)

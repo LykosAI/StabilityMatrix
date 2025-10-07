@@ -18,6 +18,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed [#1403](https://github.com/LykosAI/StabilityMatrix/issues/1403) - Checkpoint Manager filters not being saved correctly
 - Fixed "cannot access local variable 'job' where it is not associated with a value" error when running jobs in AI Toolkit
 - Fixed Civitai browser not always returning at least 30 results when possible on initial search
+- Fixed model browser crashing when downloading a file with invalid characters in the name
+- Fixed model browser crashing when no author exists for a model
 
 ## v2.15.0
 ### Added

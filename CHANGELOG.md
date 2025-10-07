@@ -19,7 +19,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed "cannot access local variable 'job' where it is not associated with a value" error when running jobs in AI Toolkit
 - Fixed Civitai browser not always returning at least 30 results when possible on initial search
 - Fixed model browser crashing when downloading a file with invalid characters in the name
-- Fixed model browser crasing when no author exists for a model
+- Fixed model browser crashing when no author exists for a model
 
 ## v2.15.0
 ### Added

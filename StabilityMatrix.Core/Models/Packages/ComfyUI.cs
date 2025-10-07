@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Collections.Immutable;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using Injectio.Attributes;
 using NLog;
@@ -443,6 +444,8 @@ public class ComfyUI(
         await SetupVenv(installLocation, pythonVersion: PyVersion.Parse(installedPackage.PythonVersion))
             .ConfigureAwait(false);
 
+        VenvRunner.UpdateEnvironmentVariables(GetEnvVars);
+
         VenvRunner.RunDetached(
             [Path.Combine(installLocation, options.Command ?? LaunchCommand), .. options.Arguments],
             HandleConsoleOutput,
@@ -807,5 +810,26 @@ public class ComfyUI(
         };
         EventManager.Instance.OnPackageInstallProgressAdded(runner);
         await runner.ExecuteSteps([installNunchaku]).ConfigureAwait(false);
+    }
+
+    private ImmutableDictionary<string, string> GetEnvVars(ImmutableDictionary<string, string> env)
+    {
+        // if we're not on windows or we don't have a windows rocm gpu, return original env
+        if (
+            !Compat.IsWindows
+            || (
+                SettingsManager.Settings.PreferredGpu?.IsWindowsRocmSupportedGpu()
+                ?? HardwareHelper.HasWindowsRocmSupportedGpu()
+            )
+                is false
+        )
+            return env;
+
+        // set some experimental speed improving env vars for Windows ROCm
+        env = env.SetItem("PYTORCH_TUNABLEOP_ENABLED", "1");
+        env = env.SetItem("MIOPEN_FIND_MODE", "2");
+        env = env.SetItem("TORCH_ROCM_AOTRITON_ENABLE_EXPERIMENTAL", "1");
+
+        return env;
     }
 }

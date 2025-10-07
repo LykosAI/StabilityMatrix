@@ -21,6 +21,11 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed Civitai browser not always returning at least 30 results when possible on initial search
 - Fixed model browser crashing when downloading a file with invalid characters in the name
 - Fixed model browser crashing when no author exists for a model
+### Supporters
+#### 🌟 Visionaries
+To our guiding stars, the Visionaries! Thank you **Waterclouds**, **JungleDragon**, **bluepopsicle**, **Bob S**, **Ibixat**, and **whudunit**! While this release is focused on fixes and stability, your foundational support is what empowers us to build a reliable and robust platform for everyone.
+#### 🚀 Pioneers
+A huge round of applause for our fantastic Pioneers! Your steady support helps us smooth out the rough edges and deliver a better experience with every update. Our deepest thanks to: **Szir777**, **Tigon**, **Noah M**, **USATechDude**, **Thom**, **SeraphOfSalem**, **Desert Viber**, **Tundra Everquill**, **Adam**, and **Droolguy**. We're also thrilled to welcome our newest Pioneers to the crew: **Philip R.**, **ACTUALLY_the_Real_Willem_Dafoe**, and **takyamtom**!
 
 ## v2.15.0
 ### Added

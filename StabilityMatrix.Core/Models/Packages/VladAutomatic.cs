@@ -304,7 +304,7 @@ public class VladAutomatic(
             );
         }
 
-        if (installedPackage.PipOverrides != null)
+        if (installedPackage.PipOverrides is { Count: > 0 })
         {
             var pipArgs = new PipInstallArgs().WithUserOverrides(installedPackage.PipOverrides);
             await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);

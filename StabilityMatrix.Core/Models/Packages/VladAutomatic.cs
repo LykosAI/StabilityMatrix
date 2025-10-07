@@ -31,12 +31,12 @@ public class VladAutomatic(
     public override string Name => "automatic";
     public override string DisplayName { get; set; } = "SD.Next";
     public override string Author => "vladmandic";
-    public override string LicenseType => "AGPL-3.0";
-    public override string LicenseUrl => "https://github.com/vladmandic/automatic/blob/master/LICENSE.txt";
-    public override string Blurb => "Stable Diffusion implementation with advanced features and modern UI";
+    public override string LicenseType => "Apache License 2.0";
+    public override string LicenseUrl => "https://github.com/vladmandic/sdnext/blob/master/LICENSE.txt";
+    public override string Blurb => "SD.Next: All-in-one WebUI for AI generative image and video creation";
     public override string LaunchCommand => "launch.py";
 
-    public override Uri PreviewImageUri => new("https://cdn.lykos.ai/sm/packages/vladautomatic/preview.webp");
+    public override Uri PreviewImageUri => new("https://github.com/user-attachments/assets/d6119a63-6ee5-4597-95f6-29ed0701d3b5");
     public override bool ShouldIgnoreReleases => true;
 
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Symlink;

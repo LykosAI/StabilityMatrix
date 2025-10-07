@@ -224,12 +224,6 @@ public class VladAutomatic(
             },
             new()
             {
-                Name = "Force use of Intel OneAPI XPU backend",
-                Type = LaunchOptionType.Bool,
-                Options = ["--use-ipex"],
-            },
-            new()
-            {
                 Name = "Use DirectML if no compatible GPU is detected",
                 Type = LaunchOptionType.Bool,
                 Options = ["--use-directml"],
@@ -310,15 +304,11 @@ public class VladAutomatic(
             );
         }
 
-        var requirementsContent = await new FilePath(installLocation, "requirements.txt")
-            .ReadAllTextAsync(cancellationToken)
-            .ConfigureAwait(false);
-        var pipArgs = new PipInstallArgs("--upgrade").WithParsedFromRequirementsTxt(requirementsContent);
-        if (installedPackage.PipOverrides != null)
+        if (installedPackage.PipOverrides is { Count: > 0 })
         {
-            pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
+            var pipArgs = new PipInstallArgs().WithUserOverrides(installedPackage.PipOverrides);
+            await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
         }
-        await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
 
         var torchVersion = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
         switch (torchVersion)

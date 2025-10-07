@@ -37,7 +37,20 @@ public record FileNameFormat
         return Prefix
             + string.Join(
                 "",
-                Parts.Select(part => part.Match(constant => constant, substitution => substitution.Invoke()))
+                Parts.Select(part =>
+                    part.Match(
+                        constant => constant,
+                        substitution =>
+                        {
+                            // Filter invalid path chars
+                            var result = substitution.Invoke();
+                            return result is null
+                                ? null
+                                : Path.GetInvalidFileNameChars()
+                                    .Aggregate(result, (current, c) => current.Replace(c, '_'));
+                        }
+                    )
+                )
             )
             + Postfix;
     }

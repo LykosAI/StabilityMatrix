@@ -553,7 +553,7 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
                 var doesBaseModelTypeMatch =
                     SelectedBaseModels.Count == 0
                         ? request.BaseModels == null || request.BaseModels.Length == 0
-                        : SelectedBaseModels.SequenceEqual(request.BaseModels);
+                        : SelectedBaseModels.SequenceEqual(request.BaseModels ?? []);
                 var doesModelTypeMatch =
                     SelectedModelType == CivitModelType.All
                         ? request.Types == null || request.Types.Length == 0

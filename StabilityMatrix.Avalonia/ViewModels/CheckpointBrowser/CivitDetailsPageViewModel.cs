@@ -651,7 +651,7 @@ public partial class CivitDetailsPageViewModel(
     private void SearchByAuthor()
     {
         navigationService.GoBack();
-        EventManager.Instance.OnNavigateAndFindCivitAuthorRequested(CivitModel.Creator.Username);
+        EventManager.Instance.OnNavigateAndFindCivitAuthorRequested(CivitModel.Creator?.Username);
     }
 
     [RelayCommand]

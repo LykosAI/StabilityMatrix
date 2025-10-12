@@ -363,6 +363,7 @@ public class ComfyUI(
                 RequirementsFilePaths = ["requirements.txt"],
                 ExtraPipArgs = ["numpy<2"],
                 SkipTorchInstall = true,
+                PostInstallPipArgs = ["typing-extensions>=4.15.0"],
             };
             await StandardPipInstallProcessAsync(
                     venvRunner,
@@ -415,6 +416,7 @@ public class ComfyUI(
                 CudaIndex = isLegacyNvidia ? "cu126" : "cu128",
                 RocmIndex = "rocm6.4",
                 UpgradePackages = true,
+                PostInstallPipArgs = ["typing-extensions>=4.15.0"],
             };
 
             await StandardPipInstallProcessAsync(

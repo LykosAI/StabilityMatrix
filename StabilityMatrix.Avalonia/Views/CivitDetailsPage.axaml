@@ -128,10 +128,7 @@
             Margin="0,8,0,0"
             ItemsSource="{Binding CivitModel.Tags}">
             <ItemsRepeater.Layout>
-                <WrapLayout
-                    HorizontalSpacing="4"
-                    Orientation="Horizontal"
-                    VerticalSpacing="4" />
+                <StackLayout Orientation="Horizontal" Spacing="4" />
             </ItemsRepeater.Layout>
             <ItemsRepeater.ItemTemplate>
                 <DataTemplate>

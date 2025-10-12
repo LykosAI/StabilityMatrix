@@ -108,7 +108,7 @@ public class FramePack(
         var extraArgs = new List<string>();
         if (isNewerNvidia)
         {
-            extraArgs.Add("triton-windows");
+            extraArgs.Add(Compat.IsWindows ? "triton-windows" : "triton");
         }
 
         var config = new PipInstallConfig

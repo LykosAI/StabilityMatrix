@@ -5,6 +5,20 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.15.2
+### Changed
+- Updated Avalonia to 11.3.7
+### Fixed
+- Fixed [#1409](https://github.com/LykosAI/StabilityMatrix/issues/1409) - incorrect triton version installed during FramePack install on non-Windows systems
+- Fixed [#1410](https://github.com/LykosAI/StabilityMatrix/issues/1410) - crash when resizing Civitai model details page
+- Fixed [#1417](https://github.com/LykosAI/StabilityMatrix/issues/1417), [#1419](https://github.com/LykosAI/StabilityMatrix/issues/1419) - unable to connect Inference to ComfyUI after updating to latest ComfyUI
+- Fixed missing dependencies for ComfyUI API nodes
+### Supporters
+#### 🌟 Visionaries
+Huge thanks to our incredible Visionaries: **Waterclouds**, **JungleDragon**, **bluepopsicle**, **Bob S**, **Ibixat**, and **whudunit**! You’re the reason Stability Matrix keeps pushing forward. Your support lights the path and keeps the dream alive.
+#### 🚀 Pioneers
+Shoutout to our amazing Pioneer crew: **Szir777**, **Tigon**, **Noah M**, **USATechDude**, **Thom**, **SeraphOfSalem**, **Desert Viber**, **Tundra Everquill**, **Adam**, **Droolguy**, **Philip R.**, **ACTUALLY_the_Real_Willem_Dafoe**, and **takyamtom**! You help keep the gears turning and the magic flowing.
+
 ## v2.15.1
 ### Changed
 - Upgraded ComfyUI-Zluda and Stable Diffusion WebUI AMDGPU Forge packages to install and use HIP SDK 6.4.2

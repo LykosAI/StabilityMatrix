@@ -18,8 +18,22 @@ public class ComfyInputInfo
 
         // value usually is a [["a", "b"]] array
         // but can also be [["a", "b"], {"x": "y"}] array
+        // or sometimes ["COMBO", {"options": ["a", "b"]}] array
 
         var outerArray = value?.Deserialize<JsonArray>();
+
+        if (
+            outerArray?.Count > 1
+            && outerArray.FirstOrDefault() is JsonValue jsonValue
+            && jsonValue.ToString().Equals("COMBO")
+        )
+        {
+            var options = outerArray[1]?["options"];
+            if (options is JsonArray optionsArray)
+            {
+                return optionsArray.Deserialize<List<string>>();
+            }
+        }
 
         if (outerArray?.FirstOrDefault() is not { } innerNode)
         {

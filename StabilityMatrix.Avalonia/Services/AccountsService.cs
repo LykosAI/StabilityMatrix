@@ -172,8 +172,10 @@ public class AccountsService : IAccountsService
         var secrets = await secretsManager.SafeLoadAsync();
 
         // Get id first using the api token
-        var userAccount = await civitTRPCApi.GetUserAccountDefault(apiToken);
-        var id = userAccount.Result.Data.Json.Id;
+        var userAccount = await civitTRPCApi.GetUserAccount(bearerToken: apiToken);
+        var id =
+            userAccount.InnerJson?.Id
+            ?? throw new InvalidOperationException("GetUserAccount did not contain an id");
 
         // Then get the username using the id
         var account = await civitTRPCApi.GetUserById(new CivitGetUserByIdRequest { Id = id }, apiToken);
@@ -241,7 +243,7 @@ public class AccountsService : IAccountsService
                     {
                         IsConnected = true,
                         Principal = principal,
-                        User = user
+                        User = user,
                     }
                 );
 
@@ -282,27 +284,55 @@ public class AccountsService : IAccountsService
                 if (response.IsSuccessStatusCode && response.Content != null)
                 {
                     // Token is valid, user info fetched
-                    logger.LogInformation("Hugging Face token is valid. User: {Username}", response.Content.Name);
-                    OnHuggingFaceAccountStatusUpdate(new HuggingFaceAccountStatusUpdateEventArgs(true, response.Content.Name));
+                    logger.LogInformation(
+                        "Hugging Face token is valid. User: {Username}",
+                        response.Content.Name
+                    );
+                    OnHuggingFaceAccountStatusUpdate(
+                        new HuggingFaceAccountStatusUpdateEventArgs(true, response.Content.Name)
+                    );
                 }
                 else
                 {
                     // Token is likely invalid or other API error
-                    logger.LogWarning("Hugging Face token validation failed. Status: {StatusCode}, Error: {Error}, Content: {Content}", response.StatusCode, response.Error?.ToString(), await response.Error?.GetContentAsAsync<string>() ?? "N/A");
-                    OnHuggingFaceAccountStatusUpdate(new HuggingFaceAccountStatusUpdateEventArgs(false, null, $"Token validation failed: {response.StatusCode}"));
+                    logger.LogWarning(
+                        "Hugging Face token validation failed. Status: {StatusCode}, Error: {Error}, Content: {Content}",
+                        response.StatusCode,
+                        response.Error?.ToString(),
+                        await response.Error?.GetContentAsAsync<string>() ?? "N/A"
+                    );
+                    OnHuggingFaceAccountStatusUpdate(
+                        new HuggingFaceAccountStatusUpdateEventArgs(
+                            false,
+                            null,
+                            $"Token validation failed: {response.StatusCode}"
+                        )
+                    );
                 }
             }
             catch (ApiException apiEx)
             {
                 // Handle Refit's ApiException (network issues, non-success status codes not caught by IsSuccessStatusCode if IApiResponse isn't used directly)
-                logger.LogError(apiEx, "Hugging Face API request failed during token validation. Content: {Content}", await apiEx.GetContentAsAsync<string>() ?? "N/A");
-                OnHuggingFaceAccountStatusUpdate(new HuggingFaceAccountStatusUpdateEventArgs(false, null, "API request failed during token validation."));
+                logger.LogError(
+                    apiEx,
+                    "Hugging Face API request failed during token validation. Content: {Content}",
+                    await apiEx.GetContentAsAsync<string>() ?? "N/A"
+                );
+                OnHuggingFaceAccountStatusUpdate(
+                    new HuggingFaceAccountStatusUpdateEventArgs(
+                        false,
+                        null,
+                        "API request failed during token validation."
+                    )
+                );
             }
             catch (Exception ex)
             {
                 // Handle other unexpected errors
                 logger.LogError(ex, "An unexpected error occurred during Hugging Face token validation.");
-                OnHuggingFaceAccountStatusUpdate(new HuggingFaceAccountStatusUpdateEventArgs(false, null, "An unexpected error occurred."));
+                OnHuggingFaceAccountStatusUpdate(
+                    new HuggingFaceAccountStatusUpdateEventArgs(false, null, "An unexpected error occurred.")
+                );
             }
         }
         else
@@ -390,7 +420,10 @@ public class AccountsService : IAccountsService
         else if (e.IsConnected && HuggingFaceStatus?.IsConnected == false)
         {
             // Assuming Username might be null for now as we are not fetching it.
-            logger.LogInformation("Hugging Face account connected" + (string.IsNullOrWhiteSpace(e.Username) ? "" : $" (User: {e.Username})"));
+            logger.LogInformation(
+                "Hugging Face account connected"
+                    + (string.IsNullOrWhiteSpace(e.Username) ? "" : $" (User: {e.Username})")
+            );
         }
         else if (!e.IsConnected && !string.IsNullOrWhiteSpace(e.ErrorMessage))
         {

@@ -20,13 +20,25 @@ public interface ICivitTRPCApi
 
     [QueryUriFormat(UriFormat.UriEscaped)]
     [Get("/api/trpc/buzz.getUserAccount")]
-    Task<CivitTrpcResponse<CivitUserAccountResponse>> GetUserAccount(
+    Task<CivitTrpcArrayResponse<CivitUserAccountResponse>> GetUserAccount(
         [Query] string input,
         [Authorize] string bearerToken,
         CancellationToken cancellationToken = default
     );
 
-    Task<CivitTrpcResponse<CivitUserAccountResponse>> GetUserAccountDefault(
+    [QueryUriFormat(UriFormat.UriEscaped)]
+    [Get("/api/trpc/buzz.getUserAccount")]
+    Task<CivitTrpcArrayResponse<CivitUserAccountResponse>> GetUserAccount(
+        [Authorize] string bearerToken,
+        CancellationToken cancellationToken = default
+    );
+
+    /// <summary>
+    /// Calls <see cref="GetUserAccount(string, string, CancellationToken)"/> with default JSON input.
+    /// Not required and returns 401 since Oct 2025 since civit changes.
+    /// Mainly just use <see cref="GetUserAccount(string, CancellationToken)"/> instead.
+    /// </summary>
+    Task<CivitTrpcArrayResponse<CivitUserAccountResponse>> GetUserAccountDefault(
         string bearerToken,
         CancellationToken cancellationToken = default
     )

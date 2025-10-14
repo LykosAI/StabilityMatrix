@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 
 ## v2.15.3
 ### Fixed
-- Fixed Civitai account 401 error when connecting accounts, updated for new API changes
+- Fixed [#1424](https://github.com/LykosAI/StabilityMatrix/issues/1424) - Civitai account 401 error when connecting accounts, updated for new API changes
 
 ## v2.15.2
 ### Changed

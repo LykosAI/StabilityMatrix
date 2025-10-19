@@ -239,7 +239,7 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
 
         if (extraIndexUrl != null)
         {
-            args = args.AddArg(("--extra-index-url", extraIndexUrl));
+            args = args.AddArgs("--extra-index-url", extraIndexUrl);
         }
 
         var steps = new List<IPackageStep>

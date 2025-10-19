@@ -5,6 +5,43 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.15.2
+### Changed
+- Updated Avalonia to 11.3.7
+### Fixed
+- Fixed [#1409](https://github.com/LykosAI/StabilityMatrix/issues/1409) - incorrect triton version installed during FramePack install on non-Windows systems
+- Fixed [#1410](https://github.com/LykosAI/StabilityMatrix/issues/1410) - crash when resizing Civitai model details page
+- Fixed [#1417](https://github.com/LykosAI/StabilityMatrix/issues/1417), [#1419](https://github.com/LykosAI/StabilityMatrix/issues/1419) - unable to connect Inference to ComfyUI after updating to latest ComfyUI
+- Fixed missing dependencies for ComfyUI API nodes
+### Supporters
+#### 🌟 Visionaries
+Huge thanks to our incredible Visionaries: **Waterclouds**, **JungleDragon**, **bluepopsicle**, **Bob S**, **Ibixat**, and **whudunit**! You’re the reason Stability Matrix keeps pushing forward. Your support lights the path and keeps the dream alive.
+#### 🚀 Pioneers
+Shoutout to our amazing Pioneer crew: **Szir777**, **Tigon**, **Noah M**, **USATechDude**, **Thom**, **SeraphOfSalem**, **Desert Viber**, **Tundra Everquill**, **Adam**, **Droolguy**, **Philip R.**, **ACTUALLY_the_Real_Willem_Dafoe**, and **takyamtom**! You help keep the gears turning and the magic flowing.
+
+## v2.15.1
+### Changed
+- Upgraded ComfyUI-Zluda and Stable Diffusion WebUI AMDGPU Forge packages to install and use HIP SDK 6.4.2
+- Changed ComfyUI torch index from `cu129` back to `cu128` for better compatibility with custom nodes
+- Updated SageAttention installer to install v2.2.0-windows.post3
+- Updated Nunchaku installer to install v1.0.1
+- Updated Windows ROCm ComfyUI installs to use recommended environment variables by default
+### Fixed
+- Fixed [#1372](https://github.com/LykosAI/StabilityMatrix/issues/1372), [#1399](https://github.com/LykosAI/StabilityMatrix/issues/1399) - LiteAsyncException upon starting Stability Matrix v2.15.0
+- Fixed [#1391](https://github.com/LykosAI/StabilityMatrix/issues/1391) - "Failed to parse" error when upgrading pip packages with extra index url
+- Fixed [#1401](https://github.com/LykosAI/StabilityMatrix/issues/1401) - "Python <version> was not found and/or failed to install" errors when path contains special characters
+- Fixed [#1403](https://github.com/LykosAI/StabilityMatrix/issues/1403) - Checkpoint Manager filters not being saved correctly
+- Fixed [#1411](https://github.com/LykosAI/StabilityMatrix/issues/1411) - SD.Next installs not using correct torch version
+- Fixed "cannot access local variable 'job' where it is not associated with a value" error when running jobs in AI Toolkit
+- Fixed Civitai browser not always returning at least 30 results when possible on initial search
+- Fixed model browser crashing when downloading a file with invalid characters in the name
+- Fixed model browser crashing when no author exists for a model
+### Supporters
+#### 🌟 Visionaries
+To our guiding stars, the Visionaries! Thank you **Waterclouds**, **JungleDragon**, **bluepopsicle**, **Bob S**, **Ibixat**, and **whudunit**! While this release is focused on fixes and stability, your foundational support is what empowers us to build a reliable and robust platform for everyone.
+#### 🚀 Pioneers
+A huge round of applause for our fantastic Pioneers! Your steady support helps us smooth out the rough edges and deliver a better experience with every update. Our deepest thanks to: **Szir777**, **Tigon**, **Noah M**, **USATechDude**, **Thom**, **SeraphOfSalem**, **Desert Viber**, **Tundra Everquill**, **Adam**, and **Droolguy**. We're also thrilled to welcome our newest Pioneers to the crew: **Philip R.**, **ACTUALLY_the_Real_Willem_Dafoe**, and **takyamtom**!
+
 ## v2.15.0
 ### Added
 - Added new package - [AI Toolkit](https://github.com/ostris/ai-toolkit/)

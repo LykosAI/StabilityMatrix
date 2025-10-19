@@ -1,6 +1,8 @@
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
+using System.Text.Unicode;
 using Injectio.Attributes;
 using NLog;
 using StabilityMatrix.Core.Helper;
@@ -20,6 +22,7 @@ public partial class UvManager : IUvManager
     {
         Converters = { new JsonStringEnumConverter() },
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        Encoder = JavaScriptEncoder.Create(UnicodeRanges.All),
     };
     private string? uvExecutablePath;
     private DirectoryPath? uvPythonInstallPath;
@@ -120,7 +123,7 @@ public partial class UvManager : IUvManager
         var uvDirectory = Path.GetDirectoryName(uvExecutablePath);
 
         var result = await ProcessRunner
-            .GetProcessResultAsync(uvExecutablePath, args, uvDirectory, envVars)
+            .GetProcessResultAsync(uvExecutablePath, args, uvDirectory, envVars, useUtf8Encoding: true)
             .ConfigureAwait(false);
 
         if (!result.IsSuccessExitCode)

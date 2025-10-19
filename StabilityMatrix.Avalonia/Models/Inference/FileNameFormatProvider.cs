@@ -47,7 +47,7 @@ public partial class FileNameFormatProvider
             { "project_name", () => ProjectName },
             { "date", () => DateTime.Now.ToString("yyyy-MM-dd") },
             { "time", () => DateTime.Now.ToString("HH-mm-ss") },
-            { "author", () => CivitModel?.Creator.Username },
+            { "author", () => CivitModel?.Creator?.Username },
             { "base_model", () => CivitModelVersion?.BaseModel },
             { "file_name", () => Path.GetFileNameWithoutExtension(CivitFile?.Name) },
             { "file_id", () => CivitFile?.Id.ToString() },

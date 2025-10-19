@@ -6,7 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
 ## v2.15.3
+### Changed
+- Updated fallback rocm index for InvokeAI to rocm6.3
+- Updated SwarmUI to launch via the launch script for better compatibility
 ### Fixed
+- Fixed cuDNN frontend error on ComfyUI-Zluda startup (thanks @neural_fault!)
+- Maybe finally actually fixed threading issue with the Python Packages dialog search box for real this time? (may fix [#1392](https://github.com/LykosAI/StabilityMatrix/issues/1392))
+- Fixed potential install failures when moving duplicate files into shared model folders (may fix [#1393](https://github.com/LykosAI/StabilityMatrix/issues/1393))
+- Fixed potential threading issues with the Inference image gallery (may fix [#1408](https://github.com/LykosAI/StabilityMatrix/issues/1408))
 - Fixed [#1424](https://github.com/LykosAI/StabilityMatrix/issues/1424) - Civitai account 401 error when connecting accounts, updated for new API changes
 
 ## v2.15.2

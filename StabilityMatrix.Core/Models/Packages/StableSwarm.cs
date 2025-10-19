@@ -432,22 +432,20 @@ public class StableSwarm(
             );
         }
 
-        var releaseFolder = Path.Combine(installLocation, "src", "bin", "live_release");
-        var dllName = "StableSwarmUI.dll";
-        if (File.Exists(Path.Combine(releaseFolder, "SwarmUI.dll")))
-        {
-            dllName = "SwarmUI.dll";
-        }
+        var launchScriptPath = Path.Combine(
+            installLocation,
+            Compat.IsWindows ? "launch-windows.bat"
+                : Compat.IsMacOS ? "launch-macos.sh"
+                : "launch-linux.sh"
+        );
 
-        dotnetProcess = await prerequisiteHelper
-            .RunDotnet(
-                args: [Path.Combine(releaseFolder, dllName), .. options.Arguments],
-                workingDirectory: installLocation,
-                envVars: aspEnvVars,
-                onProcessOutput: HandleConsoleOutput,
-                waitForExit: false
-            )
-            .ConfigureAwait(false);
+        dotnetProcess = ProcessRunner.StartAnsiProcess(
+            launchScriptPath,
+            options.Arguments,
+            installLocation,
+            HandleConsoleOutput,
+            aspEnvVars
+        );
     }
 
     public override async Task<bool> CheckForUpdates(InstalledPackage package)

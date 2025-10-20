@@ -24,7 +24,7 @@ public static class FileTransfers
             < 100 * Size.MiB => 16 * Size.KiB,
             < 500 * Size.MiB => Size.MiB,
             < Size.GiB => 16 * Size.MiB,
-            _ => 32 * Size.MiB
+            _ => 32 * Size.MiB,
         };
 
     /// <summary>
@@ -234,12 +234,15 @@ public static class FileTransfers
                 // append a number to the file name until it doesn't exist
                 for (var i = 0; i < 100; i++)
                 {
-                    if (!destinationFile.Exists)
+                    var destDir = destinationFile.Directory;
+                    var baseName = destinationFile.NameWithoutExtension;
+                    var ext = destinationFile.Extension;
+                    var candidate = destDir?.JoinFile($"{baseName} ({i}){ext}");
+                    if (candidate?.Exists is false)
+                    {
+                        destinationFile = candidate;
                         break;
-
-                    destinationFile = new FilePath(
-                        destinationFile.NameWithoutExtension + $" ({i})" + destinationFile.Extension
-                    );
+                    }
                 }
             }
             else if (!overwrite)

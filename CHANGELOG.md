@@ -15,6 +15,12 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed potential install failures when moving duplicate files into shared model folders (may fix [#1393](https://github.com/LykosAI/StabilityMatrix/issues/1393))
 - Fixed potential threading issues with the Inference image gallery (may fix [#1408](https://github.com/LykosAI/StabilityMatrix/issues/1408))
 - Fixed [#1424](https://github.com/LykosAI/StabilityMatrix/issues/1424) - Civitai account 401 error when connecting accounts, updated for new API changes
+### Supporters
+#### 🌟 Visionaries
+Our deepest gratitude to our Visionaries for their foundational support: **Waterclouds**, **JungleDragon**, **bluepopsicle**, **Bob S**, and **whudunit**! Your commitment allows us to focus on the essential work of squashing bugs and improving stability, ensuring a rock-solid experience for everyone.
+#### 🚀 Pioneers
+A huge thank you to our incredible Pioneers for keeping the project on track! Your support is vital for these important refinement updates. Thank you to **Szir777**, **Noah M**, **USATechDude**, **Thom**, **SeraphOfSalem**, **Desert Viber**, **Tundra Everquill**, **Adam**, **Droolguy**, **Philip R.**, **ACTUALLY_the_Real_Willem_Dafoe**, **takyamtom**, and a warm welcome to our newest Pioneer, **robek**!
+
 
 ## v2.15.2
 ### Changed

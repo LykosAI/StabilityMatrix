@@ -12,6 +12,7 @@ using NLog;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Packages;
@@ -694,6 +695,69 @@ public class UnixPrerequisiteHelper(
 
         // Clean up download
         File.Delete(UvDownloadPath);
+    }
+
+    public string? GetGfxArchFromAmdGpuName()
+    {
+        var gpu =
+            settingsManager.Settings.PreferredGpu
+            ?? HardwareHelper.IterGpuInfo().FirstOrDefault(x => x is { Name: not null, IsAmd: true });
+
+        if (gpu?.Name is null || !gpu.IsAmd)
+            return null;
+
+        // Normalize for safer substring checks (handles RX7800 vs RX 7800, etc.)
+        var name = gpu.Name;
+        var nameNoSpaces = name.Replace(" ", "", StringComparison.Ordinal);
+
+        return name switch
+        {
+            // RDNA4
+            _ when Has("9060") || Has("9070") => "gfx1201",
+
+            // RDNA3.5 APUs
+            _ when Has("860M") => "gfx1152",
+            _ when Has("890M") => "gfx1150",
+            _ when Has("8040S") || Has("8050S") || Has("8060S") || Has("880M") || Has("Z2 Extreme") =>
+                "gfx1151",
+
+            // RDNA3 APUs (Phoenix)
+            _ when Has("740M") || Has("760M") || Has("780M") || Has("Z1") || Has("Z2") => "gfx1103",
+
+            // RDNA3 dGPU Navi33
+            _ when Has("7400") || Has("7500") || Has("7600") || Has("7650") || Has("7700S") => "gfx1102",
+
+            // RDNA3 dGPU Navi32
+            _ when Has("7700") || Has("RX 7800") || HasNoSpace("RX7800") => "gfx1101",
+
+            // RDNA3 dGPU Navi31 (incl. Pro)
+            _ when Has("W7800") || Has("7900") || Has("7950") || Has("7990") => "gfx1100",
+
+            // RDNA2 APUs (Rembrandt)
+            _ when Has("660M") || Has("680M") => "gfx1035",
+
+            // RDNA2 Navi24 low-end (incl. some mobiles)
+            _ when Has("6300") || Has("6400") || Has("6450") || Has("6500") || Has("6550") || Has("6500M") =>
+                "gfx1034",
+
+            // RDNA2 Navi23
+            _ when Has("6600") || Has("6650") || Has("6700S") || Has("6800S") || Has("6600M") => "gfx1032",
+
+            // RDNA2 Navi22 (note: desktop 6800 is NOT here; that’s Navi21/gfx1030)
+            _ when Has("6700") || Has("6750") || Has("6800M") || Has("6850M") => "gfx1031",
+
+            // RDNA2 Navi21 (big die)
+            _ when Has("6800") || Has("6900") || Has("6950") => "gfx1030",
+
+            _ => null,
+        };
+
+        bool HasNoSpace(string s) =>
+            nameNoSpaces.Contains(
+                s.Replace(" ", "", StringComparison.Ordinal),
+                StringComparison.OrdinalIgnoreCase
+            );
+        bool Has(string s) => name.Contains(s, StringComparison.OrdinalIgnoreCase);
     }
 
     private async Task DownloadAndExtractPrerequisite(

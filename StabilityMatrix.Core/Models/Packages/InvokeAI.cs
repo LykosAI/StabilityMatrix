@@ -215,7 +215,7 @@ public class InvokeAI(
             TorchIndex.Cpu when Compat.IsLinux => "https://download.pytorch.org/whl/cpu",
             TorchIndex.Cuda when isLegacyNvidiaGpu => "https://download.pytorch.org/whl/cu126",
             TorchIndex.Cuda => "https://download.pytorch.org/whl/cu128",
-            TorchIndex.Rocm => "https://download.pytorch.org/whl/rocm6.2.4",
+            TorchIndex.Rocm => "https://download.pytorch.org/whl/rocm6.3",
             _ => string.Empty,
         };
 

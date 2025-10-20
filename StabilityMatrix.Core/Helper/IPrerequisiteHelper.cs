@@ -297,4 +297,5 @@ public interface IPrerequisiteHelper
     Task InstallPythonIfNecessary(PyVersion version, IProgress<ProgressReport>? progress = null);
     Task InstallVirtualenvIfNecessary(PyVersion version, IProgress<ProgressReport>? progress = null);
     Task InstallTkinterIfNecessary(PyVersion version, IProgress<ProgressReport>? progress = null);
+    string? GetGfxArchFromAmdGpuName();
 }

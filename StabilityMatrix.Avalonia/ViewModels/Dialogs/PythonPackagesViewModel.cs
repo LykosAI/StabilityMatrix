@@ -68,6 +68,7 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
         var searchPredicate = this.WhenPropertyChanged(vm => vm.SearchQuery)
             .Throttle(TimeSpan.FromMilliseconds(100))
             .DistinctUntilChanged()
+            .ObserveOn(SynchronizationContext.Current!)
             .Select(value =>
             {
                 if (string.IsNullOrWhiteSpace(value.Value))
@@ -86,8 +87,8 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
             .Filter(searchPredicate)
             .Transform(p => new PythonPackagesItemViewModel(settingsManager) { Package = p })
             .SortBy(vm => vm.Package.Name)
-            .Bind(Packages)
             .ObserveOn(SynchronizationContext.Current!)
+            .Bind(Packages)
             .Subscribe();
     }
 
@@ -120,10 +121,14 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
 
                 var packages = await venvRunner.PipList();
 
-                packageSource.EditDiff(packages);
+                Dispatcher.UIThread.Post(() =>
+                {
+                    var currentName = SelectedPackage?.Package.Name;
+                    SelectedPackage = null;
 
-                // Delay a bit to prevent thread issues with UI list
-                await Task.Delay(100);
+                    packageSource.EditDiff(packages);
+                    SelectedPackage = Packages.FirstOrDefault(p => p.Package.Name == currentName);
+                });
             }
         }
         finally
@@ -155,6 +160,7 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
         {
             // Backup selected package
             var currentPackageName = SelectedPackage?.Package.Name;
+            SelectedPackage = null;
 
             packageSource.EditDiff(packages);
 

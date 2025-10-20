@@ -201,7 +201,6 @@ public class ComfyZluda(
             ["HIP_PATH_64"] = hipPath,
             ["GIT"] = portableGitBin.JoinFile("git.exe"),
         };
-        envVars.Update(settingsManager.Settings.EnvironmentVariables);
 
         if (envVars.TryGetValue("PATH", out var pathValue))
         {
@@ -218,6 +217,14 @@ public class ComfyZluda(
         envVars["FLASH_ATTENTION_TRITON_AMD_ENABLE"] = "TRUE";
         envVars["MIOPEN_FIND_MODE"] = "2";
         envVars["MIOPEN_LOG_LEVEL"] = "3";
+
+        var gfxArch = PrerequisiteHelper.GetGfxArchFromAmdGpuName();
+        if (!string.IsNullOrWhiteSpace(gfxArch))
+        {
+            envVars["TRITON_OVERRIDE_ARCH"] = gfxArch;
+        }
+
+        envVars.Update(settingsManager.Settings.EnvironmentVariables);
 
         return envVars;
     }

@@ -1,0 +1,35 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
+        xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+        xmlns:vmInference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
+        x:DataType="vmInference:CfzCudnnToggleCardViewModel">
+    <Design.PreviewWith>
+        <controls:CfzCudnnToggleCard Width="400" />
+    </Design.PreviewWith>
+
+    <Style Selector="controls|CfzCudnnToggleCard">
+        <Setter Property="Template">
+            <ControlTemplate>
+                <controls:Card x:Name="PART_Card">
+                    <StackPanel Spacing="8" Margin="8">
+                        <TextBlock
+                            Text="CUDNN Settings (ComfyUI-Zluda)"
+                            FontWeight="SemiBold"
+                            Margin="0,0,0,4" />
+                        
+                        <CheckBox
+                            Content="Enable CUDNN"
+                            IsChecked="{Binding EnableCudnn}"
+                            ToolTip.Tip="Enable or disable CUDA Deep Neural Network library acceleration" />
+                        
+                        <CheckBox
+                            Content="CUDNN Benchmark"
+                            IsChecked="{Binding CudnnBenchmark}"
+                            ToolTip.Tip="Enable CUDNN benchmark mode for potential performance improvements" />
+                    </StackPanel>
+                </controls:Card>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+</Styles>

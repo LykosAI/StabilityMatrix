@@ -96,7 +96,8 @@ public class InferenceFluxTextToImageViewModel : InferenceGenerationViewModelBas
                 typeof(FluxHiresFixModule),
                 typeof(UpscalerModule),
                 typeof(SaveImageModule),
-                typeof(FaceDetailerModule)
+                typeof(FaceDetailerModule),
+                typeof(CfzCudnnToggleModule),
             };
             modulesCard.DefaultModules = new[] { typeof(FluxHiresFixModule), typeof(UpscalerModule) };
             modulesCard.InitializeDefaults();
@@ -121,7 +122,7 @@ public class InferenceFluxTextToImageViewModel : InferenceGenerationViewModelBas
         builder.Connections.Seed = args.SeedOverride switch
         {
             { } seed => Convert.ToUInt64(seed),
-            _ => Convert.ToUInt64(SeedCardViewModel.Seed)
+            _ => Convert.ToUInt64(SeedCardViewModel.Seed),
         };
 
         var applyArgs = args.ToModuleApplyStepEventArgs();
@@ -217,7 +218,7 @@ public class InferenceFluxTextToImageViewModel : InferenceGenerationViewModelBas
                 FilesToTransfer = buildPromptArgs.FilesToTransfer,
                 BatchIndex = i,
                 // Only clear output images on the first batch
-                ClearOutputImages = i == 0
+                ClearOutputImages = i == 0,
             };
 
             batchArgs.Add(generationArgs);

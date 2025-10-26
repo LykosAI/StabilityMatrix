@@ -48,7 +48,7 @@ public class CfzCudnnToggleModule : ModuleBase
                     Model = null,
                     Conditioning = null,
                     Latent = latentConnection, // Pass through the latent from sampler
-                    EnableCudnn = Card.EnableCudnn,
+                    EnableCudnn = !Card.DisableCudnn,
                     CudnnBenchmark = Card.CudnnBenchmark,
                 }
             );

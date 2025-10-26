@@ -1,4 +1,3 @@
-using System.Linq;
 using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;

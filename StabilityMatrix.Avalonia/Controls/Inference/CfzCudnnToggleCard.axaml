@@ -12,21 +12,18 @@
         <Setter Property="Template">
             <ControlTemplate>
                 <controls:Card x:Name="PART_Card">
-                    <StackPanel Spacing="8" Margin="8">
-                        <TextBlock
-                            Text="CUDNN Settings (ComfyUI-Zluda)"
-                            FontWeight="SemiBold"
-                            Margin="0,0,0,4" />
-                        
-                        <CheckBox
-                            Content="Enable CUDNN"
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="Enable CUDNN" FontSize="14" FontWeight="Bold" />
+                        <ToggleSwitch
                             IsChecked="{Binding EnableCudnn}"
-                            ToolTip.Tip="Enable or disable CUDA Deep Neural Network library acceleration" />
+                            Margin="8,0,4,0"
+                            HorizontalAlignment="Stretch" />
                         
-                        <CheckBox
-                            Content="CUDNN Benchmark"
+                        <TextBlock Text="CUDNN Benchmark" FontSize="14" FontWeight="Bold" />
+                        <ToggleSwitch
                             IsChecked="{Binding CudnnBenchmark}"
-                            ToolTip.Tip="Enable CUDNN benchmark mode for potential performance improvements" />
+                            Margin="8,0,4,0"
+                            HorizontalAlignment="Stretch" />
                     </StackPanel>
                 </controls:Card>
             </ControlTemplate>

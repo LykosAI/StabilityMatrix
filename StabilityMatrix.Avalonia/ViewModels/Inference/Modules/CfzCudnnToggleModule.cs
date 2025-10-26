@@ -19,7 +19,7 @@ public class CfzCudnnToggleModule : ModuleBase
     public CfzCudnnToggleModule(IServiceManager<ViewModelBase> vmFactory)
         : base(vmFactory)
     {
-        Title = "Disable CUDNN (ComfyUI-Zluda)";
+        Title = "CUDNN Toggle (ComfyUI-Zluda)";
     }
 
     /// <summary>

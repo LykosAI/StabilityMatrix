@@ -93,11 +93,11 @@ public class InferenceFluxTextToImageViewModel : InferenceGenerationViewModelBas
         {
             modulesCard.AvailableModules = new[]
             {
-                typeof(FluxHiresFixModule),
-                typeof(UpscalerModule),
                 typeof(CfzCudnnToggleModule),
-                typeof(SaveImageModule),
                 typeof(FaceDetailerModule),
+                typeof(FluxHiresFixModule),
+                typeof(SaveImageModule),
+                typeof(UpscalerModule),
             };
             modulesCard.DefaultModules = new[] { typeof(FluxHiresFixModule), typeof(UpscalerModule) };
             modulesCard.InitializeDefaults();

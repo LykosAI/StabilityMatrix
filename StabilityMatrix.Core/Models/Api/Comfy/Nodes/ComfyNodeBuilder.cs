@@ -1007,8 +1007,8 @@ public class ComfyNodeBuilder
         public ModelNodeConnection? Model { get; init; }
         public ConditioningNodeConnection? Conditioning { get; init; }
         public LatentNodeConnection? Latent { get; init; }
-        public required bool enable_cudnn { get; init; } = false;
-        public required bool cudnn_benchmark { get; init; } = false;
+        public required bool EnableCudnn { get; init; } = false;
+        public required bool CudnnBenchmark { get; init; } = false;
     }
 
     /// <summary>

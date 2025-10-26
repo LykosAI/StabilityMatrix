@@ -15,7 +15,4 @@ public partial class CfzCudnnToggleCardViewModel : LoadableViewModelBase
 
     [ObservableProperty]
     private bool disableCudnn = true;
-
-    [ObservableProperty]
-    private bool cudnnBenchmark = false;
 }

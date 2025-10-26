@@ -13,12 +13,6 @@
             <ControlTemplate>
                 <controls:Card x:Name="PART_Card">
                     <StackPanel Spacing="8">
-                        <TextBlock Text="Enable CUDNN" FontSize="14" FontWeight="Bold" />
-                        <ToggleSwitch
-                            IsChecked="{Binding EnableCudnn}"
-                            Margin="8,0,4,0"
-                            HorizontalAlignment="Stretch" />
-                        
                         <TextBlock Text="Disable CUDNN" FontSize="14" FontWeight="Bold" />
                         <ToggleSwitch
                             IsChecked="{Binding DisableCudnn}"

@@ -19,6 +19,7 @@ public class CfzCudnnToggleModule : ModuleBase
         : base(vmFactory)
     {
         Title = "CUDNN Toggle (ComfyUI-Zluda)";
+        AddCards(vmFactory.Get<CfzCudnnToggleCardViewModel>());
     }
 
     /// <summary>
@@ -37,6 +38,7 @@ public class CfzCudnnToggleModule : ModuleBase
         // Check if primary is a latent (from sampler output)
         if (primary.IsT0) // T0 is LatentNodeConnection
         {
+            var card = GetCard<CfzCudnnToggleCardViewModel>();
             var latentConnection = primary.AsT0;
 
             // Insert CUDNN toggle node between sampler and VAE decode
@@ -47,8 +49,8 @@ public class CfzCudnnToggleModule : ModuleBase
                     Model = null,
                     Conditioning = null,
                     Latent = latentConnection, // Pass through the latent from sampler
-                    EnableCudnn = !Card.DisableCudnn,
-                    CudnnBenchmark = Card.CudnnBenchmark,
+                    EnableCudnn = !card.DisableCudnn,
+                    CudnnBenchmark = false,
                 }
             );
 

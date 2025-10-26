@@ -14,8 +14,8 @@ public partial class CfzCudnnToggleCardViewModel : LoadableViewModelBase
     public const string ModuleKey = "CfzCudnnToggle";
 
     [ObservableProperty]
-    private bool enableCudnn = false;
+    private bool disableCudnn = true;
 
     [ObservableProperty]
-    private bool cudnnBenchmark;
+    private bool cudnnBenchmark = false;
 }

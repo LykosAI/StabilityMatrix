@@ -19,9 +19,9 @@
                             Margin="8,0,4,0"
                             HorizontalAlignment="Stretch" />
                         
-                        <TextBlock Text="CUDNN Benchmark" FontSize="14" FontWeight="Bold" />
+                        <TextBlock Text="Disable CUDNN" FontSize="14" FontWeight="Bold" />
                         <ToggleSwitch
-                            IsChecked="{Binding CudnnBenchmark}"
+                            IsChecked="{Binding DisableCudnn}"
                             Margin="8,0,4,0"
                             HorizontalAlignment="Stretch" />
                     </StackPanel>

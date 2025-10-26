@@ -9,8 +9,8 @@
         <ApplicationIcon>./Assets/Icon.ico</ApplicationIcon>
         <Version>2.16.0-dev.999</Version>
         <InformationalVersion>$(Version)</InformationalVersion>
-        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <EnableWindowsTargeting>true</EnableWindowsTargeting>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
     
     <PropertyGroup Condition=" '$(RuntimeIdentifier)' == 'win-x64' ">

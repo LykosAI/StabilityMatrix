@@ -1000,18 +1000,15 @@ public class ComfyNodeBuilder
     /// <summary>
     /// CUDNN Toggle node for controlling CUDA Deep Neural Network library settings (CUDNNToggleAutoPassthrough)
     /// </summary>
-    [TypedNodeOptions(
-        Name = "CUDNNToggleAutoPassthrough",
-        RequiredExtensions = ["https://github.com/patientx/ComfyUI-Zluda"]
-    )]
+    [TypedNodeOptions(Name = "CUDNNToggleAutoPassthrough")]
     public record CUDNNToggleAutoPassthrough
         : ComfyTypedNodeBase<ModelNodeConnection, ConditioningNodeConnection, LatentNodeConnection>
     {
         public ModelNodeConnection? Model { get; init; }
         public ConditioningNodeConnection? Conditioning { get; init; }
         public LatentNodeConnection? Latent { get; init; }
-        public required bool EnableCudnn { get; init; } = false;
-        public required bool CudnnBenchmark { get; init; } = false;
+        public required bool enable_cudnn { get; init; } = false;
+        public required bool cudnn_benchmark { get; init; } = false;
     }
 
     /// <summary>

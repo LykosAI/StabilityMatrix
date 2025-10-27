@@ -26,6 +26,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Base;
 [JsonDerivedType(typeof(RescaleCfgCardViewModel), RescaleCfgCardViewModel.ModuleKey)]
 [JsonDerivedType(typeof(PlasmaNoiseCardViewModel), PlasmaNoiseCardViewModel.ModuleKey)]
 [JsonDerivedType(typeof(NrsCardViewModel), NrsCardViewModel.ModuleKey)]
+[JsonDerivedType(typeof(CfzCudnnToggleCardViewModel), CfzCudnnToggleCardViewModel.ModuleKey)]
 [JsonDerivedType(typeof(FreeUModule))]
 [JsonDerivedType(typeof(HiresFixModule))]
 [JsonDerivedType(typeof(FluxHiresFixModule))]
@@ -41,6 +42,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Base;
 [JsonDerivedType(typeof(RescaleCfgModule))]
 [JsonDerivedType(typeof(PlasmaNoiseModule))]
 [JsonDerivedType(typeof(NRSModule))]
+[JsonDerivedType(typeof(CfzCudnnToggleModule))]
 public abstract class LoadableViewModelBase : ViewModelBase, IJsonLoadableState
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();

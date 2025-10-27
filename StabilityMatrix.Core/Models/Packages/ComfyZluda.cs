@@ -27,6 +27,7 @@ public class ComfyZluda(
         "https://github.com/lshqqytiger/ZLUDA/releases/download/rel.5e717459179dc272b7d7d23391f0fad66c7459cf/ZLUDA-nightly-windows-rocm6-amd64.zip";
 
     private const string HipSdkExtensionDownloadUrl = "https://cdn.lykos.ai/HIP-SDK-extension.7z";
+    private const string VenvDirectoryName = "venv";
 
     private Process? zludaProcess;
 
@@ -109,7 +110,7 @@ public class ComfyZluda(
             [],
             installLocation,
             onConsoleOutput,
-            GetEnvVars(true, installLocation)
+            GetEnvVars(true)
         );
         await installProcess.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
 
@@ -141,7 +142,7 @@ public class ComfyZluda(
             args,
             installLocation,
             HandleConsoleOutput,
-            GetEnvVars(false, installLocation)
+            GetEnvVars(false)
         );
 
         return;
@@ -184,7 +185,7 @@ public class ComfyZluda(
         GC.SuppressFinalize(this);
     }
 
-    private Dictionary<string, string> GetEnvVars(bool isInstall, string installLocation)
+    private Dictionary<string, string> GetEnvVars(bool isInstall)
     {
         var portableGitBin = new DirectoryPath(PrerequisiteHelper.GitBinPath);
         var hipPath = Path.Combine(
@@ -204,7 +205,7 @@ public class ComfyZluda(
 
         if (isInstall)
         {
-            envVars["VIRTUAL_ENV"] = "venv";
+            envVars["VIRTUAL_ENV"] = VenvDirectoryName;
         }
 
         if (envVars.TryGetValue("PATH", out var pathValue))

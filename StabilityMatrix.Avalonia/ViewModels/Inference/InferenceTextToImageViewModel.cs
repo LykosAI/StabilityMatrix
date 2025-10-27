@@ -100,10 +100,11 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
         {
             modulesCard.AvailableModules = new[]
             {
+                typeof(CfzCudnnToggleModule),
+                typeof(FaceDetailerModule),
                 typeof(HiresFixModule),
-                typeof(UpscalerModule),
                 typeof(SaveImageModule),
-                typeof(FaceDetailerModule)
+                typeof(UpscalerModule),
             };
             modulesCard.DefaultModules = new[] { typeof(HiresFixModule), typeof(UpscalerModule) };
             modulesCard.InitializeDefaults();
@@ -158,7 +159,7 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
         builder.Connections.Seed = args.SeedOverride switch
         {
             { } seed => Convert.ToUInt64(seed),
-            _ => Convert.ToUInt64(SeedCardViewModel.Seed)
+            _ => Convert.ToUInt64(SeedCardViewModel.Seed),
         };
 
         var applyArgs = args.ToModuleApplyStepEventArgs();
@@ -319,13 +320,13 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
                 OutputNodeNames = buildPromptArgs.Builder.Connections.OutputNodeNames.ToArray(),
                 Parameters = SaveStateToParameters(new GenerationParameters()) with
                 {
-                    Seed = Convert.ToUInt64(seed)
+                    Seed = Convert.ToUInt64(seed),
                 },
                 Project = inferenceProject,
                 FilesToTransfer = buildPromptArgs.FilesToTransfer,
                 BatchIndex = i,
                 // Only clear output images on the first batch
-                ClearOutputImages = i == 0
+                ClearOutputImages = i == 0,
             };
 
             batchArgs.Add(generationArgs);

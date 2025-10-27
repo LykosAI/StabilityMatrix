@@ -27,6 +27,7 @@ public class ComfyZluda(
         "https://github.com/lshqqytiger/ZLUDA/releases/download/rel.5e717459179dc272b7d7d23391f0fad66c7459cf/ZLUDA-nightly-windows-rocm6-amd64.zip";
 
     private const string HipSdkExtensionDownloadUrl = "https://cdn.lykos.ai/HIP-SDK-extension.7z";
+    private const string VenvDirectoryName = "venv";
 
     private Process? zludaProcess;
 
@@ -201,6 +202,11 @@ public class ComfyZluda(
             ["HIP_PATH_64"] = hipPath,
             ["GIT"] = portableGitBin.JoinFile("git.exe"),
         };
+
+        if (isInstall)
+        {
+            envVars["VIRTUAL_ENV"] = VenvDirectoryName;
+        }
 
         if (envVars.TryGetValue("PATH", out var pathValue))
         {

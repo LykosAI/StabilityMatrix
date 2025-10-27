@@ -39,6 +39,7 @@ public class ComfyZluda(
         "Windows-only version of ComfyUI which uses ZLUDA to get better performance with AMD GPUs.";
     public override string Disclaimer =>
         "Prerequisite install may require admin privileges and a reboot. "
+        + "Visual Studio Build Tools for C++ Desktop Development will be installed automatically."
         + "AMD GPUs under the RX 6800 may require additional manual setup.";
     public override string LaunchCommand => Path.Combine("zluda", "zluda.exe");
     public override IEnumerable<TorchIndex> AvailableTorchIndices => [TorchIndex.Zluda];
@@ -52,11 +53,11 @@ public class ComfyZluda(
     public override bool ShouldIgnoreReleases => true;
 
     public override IEnumerable<PackagePrerequisite> Prerequisites =>
-        base.Prerequisites.Concat([PackagePrerequisite.HipSdk]);
+        base.Prerequisites.Concat([PackagePrerequisite.HipSdk, PackagePrerequisite.VcBuildTools]);
 
     public override bool InstallRequiresAdmin => true;
     public override string AdminRequiredReason =>
-        "HIP SDK installation and (if applicable) ROCmLibs patching requires admin privileges for accessing the HIP SDK files in the Program Files directory.";
+        "HIP SDK and Visual Studio Build Tools installation, as well as (if applicable) ROCmLibs patching, require admin privileges for accessing files in the Program Files directory. This may take several minutes to complete.";
 
     public override async Task InstallPackage(
         string installLocation,

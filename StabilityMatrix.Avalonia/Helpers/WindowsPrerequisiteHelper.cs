@@ -334,10 +334,10 @@ public class WindowsPrerequisiteHelper(
             await InstallTkinterIfNecessary(PyInstallationManager.Python_3_10_11, progress);
         }
 
-        // if (prerequisites.Contains(PackagePrerequisite.VcBuildTools))
-        // {
-        //     await InstallVcBuildToolsIfNecessary(progress);
-        // }
+        if (prerequisites.Contains(PackagePrerequisite.VcBuildTools))
+        {
+            await InstallVcBuildToolsIfNecessary(progress);
+        }
     }
 
     public async Task InstallAllIfNecessary(IProgress<ProgressReport>? progress = null)
@@ -782,7 +782,7 @@ public class WindowsPrerequisiteHelper(
 
         var process = ProcessRunner.StartAnsiProcess(
             VcBuildToolsDownloadPath,
-            "--quiet --wait --add Microsoft.VisualStudio.Workload.VCTools;includeRecommended;includeOptional",
+            "--quiet --wait --add Microsoft.VisualStudio.Workload.VCTools --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Component.VC.CMake.Project --add Microsoft.VisualStudio.Component.VC.Llvm.Clang --add Microsoft.VisualStudio.ComponentGroup.NativeDesktop.Llvm.Clang --add Microsoft.VisualStudio.Component.Windows10SDK.18362 --add Microsoft.VisualStudio.Component.Windows10SDK.19041 --add Microsoft.VisualStudio.Component.Windows10SDK.20348 --add Microsoft.VisualStudio.Component.Windows11SDK.22000 --add Microsoft.VisualStudio.Component.Windows11SDK.22621 --add Microsoft.VisualStudio.Component.Windows11SDK.26100",
             outputDataReceived: output =>
                 progress?.Report(
                     new ProgressReport(

@@ -109,7 +109,7 @@ public class ComfyZluda(
             [],
             installLocation,
             onConsoleOutput,
-            GetEnvVars(true)
+            GetEnvVars(true, installLocation)
         );
         await installProcess.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
 
@@ -141,7 +141,7 @@ public class ComfyZluda(
             args,
             installLocation,
             HandleConsoleOutput,
-            GetEnvVars(false)
+            GetEnvVars(false, installLocation)
         );
 
         return;
@@ -184,7 +184,7 @@ public class ComfyZluda(
         GC.SuppressFinalize(this);
     }
 
-    private Dictionary<string, string> GetEnvVars(bool isInstall)
+    private Dictionary<string, string> GetEnvVars(bool isInstall, string installLocation)
     {
         var portableGitBin = new DirectoryPath(PrerequisiteHelper.GitBinPath);
         var hipPath = Path.Combine(
@@ -201,6 +201,11 @@ public class ComfyZluda(
             ["HIP_PATH_64"] = hipPath,
             ["GIT"] = portableGitBin.JoinFile("git.exe"),
         };
+
+        if (isInstall)
+        {
+            envVars["VIRTUAL_ENV"] = "venv";
+        }
 
         if (envVars.TryGetValue("PATH", out var pathValue))
         {

@@ -39,7 +39,7 @@ public class ComfyZluda(
         "Windows-only version of ComfyUI which uses ZLUDA to get better performance with AMD GPUs.";
     public override string Disclaimer =>
         "Prerequisite install may require admin privileges and a reboot. "
-        + "Visual Studio Build Tools for C++ Desktop Development will be installed automatically."
+        + "Visual Studio Build Tools for C++ Desktop Development will be installed automatically. "
         + "AMD GPUs under the RX 6800 may require additional manual setup.";
     public override string LaunchCommand => Path.Combine("zluda", "zluda.exe");
     public override IEnumerable<TorchIndex> AvailableTorchIndices => [TorchIndex.Zluda];

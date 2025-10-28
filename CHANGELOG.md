@@ -13,6 +13,11 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed [#1435](https://github.com/LykosAI/StabilityMatrix/issues/1435) - SwarmUI not launching due to missing dotnet
 - Fixed various install and Inference issues with ComfyUI-Zluda - big thanks to @neural_fault for the PRs!
 - Fixed sageattention version getting out of sync after torch updates in ComfyUI
+### Supporters
+#### 🌟 Visionaries
+Our heartfelt thanks to the driving force behind our progress, our Visionaries: **Waterclouds**, **JungleDragon**, **bluepopsicle**, **Bob S**, and **whudunit**! Your incredible support is the fuel that powers our development, allowing us to tackle bugs and push forward with confidence.
+#### 🚀 Pioneers
+A huge shoutout to our amazing Pioneers, who keep the momentum going strong! Thank you for being our trusted crew on this journey: **Szir777**, **Noah M**, **USATechDude**, **Thom**, **SeraphOfSalem**, **Desert Viber**, **Tundra Everquill**, **Adam**, **Droolguy**, **Philip R.**, **ACTUALLY_the_Real_Willem_Dafoe**, **takyamtom**, and **robek**!
 
 ## v2.15.3
 ### Added

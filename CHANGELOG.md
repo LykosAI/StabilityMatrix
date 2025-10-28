@@ -5,7 +5,18 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.15.4
+### Changed
+- Updated Early Access indicators in the Civitai Details page to be more visible
+- Updated error message when attempting to download a website-generation-only model from Civitai
+### Fixed
+- Fixed [#1435](https://github.com/LykosAI/StabilityMatrix/issues/1435) - SwarmUI not launching due to missing dotnet
+- Fixed various install and Inference issues with ComfyUI-Zluda - big thanks to @neural_fault for the PRs!
+- Fixed sageattention version getting out of sync after torch updates in ComfyUI
+
 ## v2.15.3
+### Added
+- Added "Run Python Command" option to 3-dots menu for running commands inside the virtual environment
 ### Changed
 - Updated fallback rocm index for InvokeAI to rocm6.3
 - Updated SwarmUI to launch via the launch script for better compatibility
@@ -20,7 +31,6 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 Our deepest gratitude to our Visionaries for their foundational support: **Waterclouds**, **JungleDragon**, **bluepopsicle**, **Bob S**, and **whudunit**! Your commitment allows us to focus on the essential work of squashing bugs and improving stability, ensuring a rock-solid experience for everyone.
 #### 🚀 Pioneers
 A huge thank you to our incredible Pioneers for keeping the project on track! Your support is vital for these important refinement updates. Thank you to **Szir777**, **Noah M**, **USATechDude**, **Thom**, **SeraphOfSalem**, **Desert Viber**, **Tundra Everquill**, **Adam**, **Droolguy**, **Philip R.**, **ACTUALLY_the_Real_Willem_Dafoe**, **takyamtom**, and a warm welcome to our newest Pioneer, **robek**!
-
 
 ## v2.15.2
 ### Changed

@@ -145,6 +145,24 @@ public partial class ProgressManagerViewModel : PageViewModelBase
                             ShowHuggingFaceLoginRequiredDialog();
                             return;
                         }
+                        else if (
+                            exception is CivitDownloadDisabledException
+                            || exception.InnerException is CivitDownloadDisabledException
+                        )
+                        {
+                            Dispatcher.UIThread.InvokeAsync(async () =>
+                                await notificationService.ShowPersistentAsync(
+                                    NotificationKey.Download_Failed,
+                                    new Notification
+                                    {
+                                        Title = "Download Disabled",
+                                        Body =
+                                            $"The creator of {e.FileName} has disabled downloads on this file",
+                                    }
+                                )
+                            );
+                            return;
+                        }
                     }
 
                     Dispatcher.UIThread.InvokeAsync(async () =>

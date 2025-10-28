@@ -375,22 +375,29 @@ public class StableSwarm(
     )
     {
         var portableGitBin = new DirectoryPath(PrerequisiteHelper.GitBinPath);
+        var dotnetDir = PrerequisiteHelper.DotnetDir;
         var aspEnvVars = new Dictionary<string, string>
         {
             ["ASPNETCORE_ENVIRONMENT"] = "Production",
             ["ASPNETCORE_URLS"] = "http://*:7801",
             ["GIT"] = portableGitBin.JoinFile("git.exe"),
+            ["DOTNET_ROOT"] = dotnetDir.FullPath,
         };
-        aspEnvVars.Update(settingsManager.Settings.EnvironmentVariables);
 
         if (aspEnvVars.TryGetValue("PATH", out var pathValue))
         {
-            aspEnvVars["PATH"] = Compat.GetEnvPathWithExtensions(portableGitBin, pathValue);
+            aspEnvVars["PATH"] = Compat.GetEnvPathWithExtensions(
+                dotnetDir.FullPath,
+                portableGitBin,
+                pathValue
+            );
         }
         else
         {
-            aspEnvVars["PATH"] = Compat.GetEnvPathWithExtensions(portableGitBin);
+            aspEnvVars["PATH"] = Compat.GetEnvPathWithExtensions(dotnetDir.FullPath, portableGitBin);
         }
+
+        aspEnvVars.Update(settingsManager.Settings.EnvironmentVariables);
 
         void HandleConsoleOutput(ProcessOutput s)
         {

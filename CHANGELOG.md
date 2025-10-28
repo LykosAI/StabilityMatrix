@@ -20,8 +20,6 @@ Our heartfelt thanks to the driving force behind our progress, our Visionaries: 
 A huge shoutout to our amazing Pioneers, who keep the momentum going strong! Thank you for being our trusted crew on this journey: **Szir777**, **Noah M**, **USATechDude**, **Thom**, **SeraphOfSalem**, **Desert Viber**, **Tundra Everquill**, **Adam**, **Droolguy**, **Philip R.**, **ACTUALLY_the_Real_Willem_Dafoe**, **takyamtom**, and **robek**!
 
 ## v2.15.3
-### Added
-- Added "Run Python Command" option to 3-dots menu for running commands inside the virtual environment
 ### Changed
 - Updated fallback rocm index for InvokeAI to rocm6.3
 - Updated SwarmUI to launch via the launch script for better compatibility

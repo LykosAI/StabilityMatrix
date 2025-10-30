@@ -22,6 +22,7 @@ public interface IPrerequisiteHelper
     Task InstallUvIfNecessary(IProgress<ProgressReport>? progress = null);
     string UvExePath { get; }
     bool IsUvInstalled { get; }
+    DirectoryPath DotnetDir { get; }
     Task UnpackResourcesIfNecessary(IProgress<ProgressReport>? progress = null);
     Task InstallGitIfNecessary(IProgress<ProgressReport>? progress = null);
     Task InstallPythonIfNecessary(IProgress<ProgressReport>? progress = null);

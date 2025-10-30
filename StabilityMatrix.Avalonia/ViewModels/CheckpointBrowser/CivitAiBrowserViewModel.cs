@@ -359,6 +359,9 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
 
     public override async Task OnLoadedAsync()
     {
+        if (Design.IsDesignMode)
+            return;
+
         var baseModels = await baseModelTypeService.GetBaseModelTypes(includeAllOption: false);
         baseModels = baseModels.Except(settingsManager.Settings.DisabledBaseModelTypes).ToList();
         if (baseModels.Count == 0)

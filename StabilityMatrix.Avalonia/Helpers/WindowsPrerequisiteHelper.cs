@@ -93,10 +93,9 @@ public class WindowsPrerequisiteHelper(
     private string NodeDownloadPath => Path.Combine(AssetsDir, "nodejs.zip");
     private string Dotnet7DownloadPath => Path.Combine(AssetsDir, "dotnet-sdk-7.0.405-win-x64.zip");
     private string Dotnet8DownloadPath => Path.Combine(AssetsDir, "dotnet-sdk-8.0.101-win-x64.zip");
-    private string DotnetExtractPath => Path.Combine(AssetsDir, "dotnet");
-    private string DotnetExistsPath => Path.Combine(DotnetExtractPath, "dotnet.exe");
-    private string Dotnet7SdkExistsPath => Path.Combine(DotnetExtractPath, "sdk", "7.0.405");
-    private string Dotnet8SdkExistsPath => Path.Combine(DotnetExtractPath, "sdk", "8.0.101");
+    private string DotnetExistsPath => Path.Combine(DotnetDir, "dotnet.exe");
+    private string Dotnet7SdkExistsPath => Path.Combine(DotnetDir, "sdk", "7.0.405");
+    private string Dotnet8SdkExistsPath => Path.Combine(DotnetDir, "sdk", "8.0.101");
     private string VcBuildToolsDownloadPath => Path.Combine(AssetsDir, "vs_BuildTools.exe");
 
     private string VcBuildToolsExistsPath =>
@@ -121,6 +120,7 @@ public class WindowsPrerequisiteHelper(
     public string GitBinPath => Path.Combine(PortableGitInstallDir, "bin");
     public bool IsVcBuildToolsInstalled => Directory.Exists(VcBuildToolsExistsPath);
     public bool IsHipSdkInstalled => Directory.Exists(HipInstalledPath);
+    public DirectoryPath DotnetDir => Path.Combine(AssetsDir, "dotnet");
 
     // Check if a specific Python version is installed
     public bool IsPythonVersionInstalled(PyVersion version) => File.Exists(GetPythonDllPath(version));
@@ -740,7 +740,7 @@ public class WindowsPrerequisiteHelper(
                 progress,
                 Dotnet7DownloadUrl,
                 Dotnet7DownloadPath,
-                DotnetExtractPath
+                DotnetDir
             );
         }
 
@@ -750,7 +750,7 @@ public class WindowsPrerequisiteHelper(
                 progress,
                 Dotnet8DownloadUrl,
                 Dotnet8DownloadPath,
-                DotnetExtractPath
+                DotnetDir
             );
         }
     }
@@ -782,18 +782,18 @@ public class WindowsPrerequisiteHelper(
 
         var process = ProcessRunner.StartAnsiProcess(
             VcBuildToolsDownloadPath,
-            "--quiet --wait " +
-            "--add Microsoft.VisualStudio.Workload.VCTools " +
-            "--add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 " +
-            "--add Microsoft.VisualStudio.Component.VC.CMake.Project " +
-            "--add Microsoft.VisualStudio.Component.VC.Llvm.Clang " +
-            "--add Microsoft.VisualStudio.ComponentGroup.NativeDesktop.Llvm.Clang " +
-            "--add Microsoft.VisualStudio.Component.Windows10SDK.18362 " +
-            "--add Microsoft.VisualStudio.Component.Windows10SDK.19041 " +
-            "--add Microsoft.VisualStudio.Component.Windows10SDK.20348 " +
-            "--add Microsoft.VisualStudio.Component.Windows11SDK.22000 " +
-            "--add Microsoft.VisualStudio.Component.Windows11SDK.22621 " +
-            "--add Microsoft.VisualStudio.Component.Windows11SDK.26100",
+            "--quiet --wait "
+                + "--add Microsoft.VisualStudio.Workload.VCTools "
+                + "--add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 "
+                + "--add Microsoft.VisualStudio.Component.VC.CMake.Project "
+                + "--add Microsoft.VisualStudio.Component.VC.Llvm.Clang "
+                + "--add Microsoft.VisualStudio.ComponentGroup.NativeDesktop.Llvm.Clang "
+                + "--add Microsoft.VisualStudio.Component.Windows10SDK.18362 "
+                + "--add Microsoft.VisualStudio.Component.Windows10SDK.19041 "
+                + "--add Microsoft.VisualStudio.Component.Windows10SDK.20348 "
+                + "--add Microsoft.VisualStudio.Component.Windows11SDK.22000 "
+                + "--add Microsoft.VisualStudio.Component.Windows11SDK.22621 "
+                + "--add Microsoft.VisualStudio.Component.Windows11SDK.26100",
             outputDataReceived: output =>
                 progress?.Report(
                     new ProgressReport(

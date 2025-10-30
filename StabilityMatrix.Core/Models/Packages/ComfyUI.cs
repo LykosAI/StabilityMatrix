@@ -441,7 +441,7 @@ public class ComfyUI(
                 var version = torchVersion.Version;
                 var plusPos = version.IndexOf('+');
                 var index = plusPos >= 0 ? version[(plusPos + 1)..] : string.Empty;
-                var versionWithoutIndex = plusPos >= 0 ? version[..plusPos] : string.Empty;
+                var versionWithoutIndex = plusPos >= 0 ? version[..plusPos] : version;
 
                 if (
                     !sageVersion.Version.Contains(index) || !sageVersion.Version.Contains(versionWithoutIndex)

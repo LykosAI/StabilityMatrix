@@ -108,7 +108,7 @@ public partial class UvManager : IUvManager
             Compat.IsWindows ? "uv.exe" : "uv"
         );
 
-        var args = new ProcessArgsBuilder("python", "list", "--output-format", "json");
+        var args = new ProcessArgsBuilder("python", "list", "--managed-python", "--output-format", "json");
         if (settingsManager.Settings.ShowAllAvailablePythonVersions)
         {
             args = args.AddArg("--all-versions");

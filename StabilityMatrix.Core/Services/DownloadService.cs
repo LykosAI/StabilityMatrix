@@ -211,6 +211,14 @@ public class DownloadService : IDownloadService
                     ) == true
                 )
                 {
+                    var responseContent = await noRedirectResponse
+                        .Content.ReadAsStringAsync(cancellationToken)
+                        .ConfigureAwait(false);
+                    if (responseContent.Contains("The creator of this asset has disabled downloads"))
+                    {
+                        throw new CivitDownloadDisabledException();
+                    }
+
                     throw new CivitLoginRequiredException();
                 }
 

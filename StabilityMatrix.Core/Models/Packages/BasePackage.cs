@@ -298,12 +298,7 @@ public abstract class BasePackage(ISettingsManager settingsManager)
             : PackageVersionType.GithubRelease | PackageVersionType.Commit;
 
     public virtual IEnumerable<PackagePrerequisite> Prerequisites =>
-        [
-            PackagePrerequisite.Git,
-            PackagePrerequisite.Python310,
-            PackagePrerequisite.VcRedist,
-            PackagePrerequisite.VcBuildTools,
-        ];
+        [PackagePrerequisite.Git, PackagePrerequisite.Python310, PackagePrerequisite.VcRedist];
 
     public abstract Task<DownloadPackageVersionOptions?> GetUpdate(InstalledPackage installedPackage);
 

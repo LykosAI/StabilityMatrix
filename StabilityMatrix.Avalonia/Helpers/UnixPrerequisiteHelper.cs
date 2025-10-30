@@ -60,8 +60,6 @@ public class UnixPrerequisiteHelper(
     private DirectoryPath NodeDir => AssetsDir.JoinDir("nodejs");
     private string NpmPath => Path.Combine(NodeDir, "bin", "npm");
     private bool IsNodeInstalled => File.Exists(NpmPath);
-
-    private DirectoryPath DotnetDir => AssetsDir.JoinDir("dotnet");
     private string DotnetPath => Path.Combine(DotnetDir, "dotnet");
     private string Dotnet7SdkExistsPath => Path.Combine(DotnetDir, "sdk", "7.0.405");
     private string Dotnet8SdkExistsPath => Path.Combine(DotnetDir, "sdk", "8.0.101");
@@ -77,13 +75,15 @@ public class UnixPrerequisiteHelper(
     // Cached store of whether or not git is installed
     private bool? isGitInstalled;
 
+    private string ExpectedUvVersion => "0.8.4";
+
     public bool IsVcBuildToolsInstalled => false;
     public bool IsHipSdkInstalled => false;
     private string UvDownloadPath => Path.Combine(AssetsDir, "uv.tar.gz");
     private string UvExtractPath => Path.Combine(AssetsDir, "uv");
     public string UvExePath => Path.Combine(UvExtractPath, "uv");
     public bool IsUvInstalled => File.Exists(UvExePath);
-    private string ExpectedUvVersion => "0.8.4";
+    public DirectoryPath DotnetDir => AssetsDir.JoinDir("dotnet");
 
     // Helper method to get Python download URL for a specific version
     private RemoteResource GetPythonDownloadResource(PyVersion version)

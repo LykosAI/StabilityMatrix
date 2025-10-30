@@ -109,7 +109,8 @@ public partial class CivitDetailsPageViewModel(
         nameof(LastUpdated),
         nameof(ShortSha256),
         nameof(BaseModelType),
-        nameof(ModelFileNameFormat)
+        nameof(ModelFileNameFormat),
+        nameof(IsEarlyAccess)
     )]
     public partial ModelVersionViewModel? SelectedVersion { get; set; }
 
@@ -168,6 +169,8 @@ public partial class CivitDetailsPageViewModel(
         SelectedVersion?.ModelVersion.Files?.FirstOrDefault()?.Hashes.ShortSha256 ?? string.Empty;
 
     public string BaseModelType => SelectedVersion?.ModelVersion.BaseModel?.Trim() ?? string.Empty;
+
+    public bool IsEarlyAccess => SelectedVersion?.ModelVersion.IsEarlyAccess ?? false;
 
     public string CivitUrl => $@"https://civitai.com/models/{CivitModel.Id}";
 

@@ -1,61 +1,105 @@
-﻿<controls:UserControlBase xmlns="https://github.com/avaloniaui"
-                          xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                          xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-                          xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-                          xmlns:ui="using:FluentAvalonia.UI.Controls"
-                          xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
-                          xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
-                          xmlns:vmDialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
-                          xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
-                          d:DataContext="{x:Static mocks:DesignData.PackageImportViewModel}"
-                          x:DataType="vmDialogs:PackageImportViewModel"
-                          mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-                          x:Class="StabilityMatrix.Avalonia.Views.Dialogs.PackageImportDialog">
+﻿<controls:UserControlBase
+    x:Class="StabilityMatrix.Avalonia.Views.Dialogs.PackageImportDialog"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
+    xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:python="clr-namespace:StabilityMatrix.Core.Python;assembly=StabilityMatrix.Core"
+    xmlns:ui="using:FluentAvalonia.UI.Controls"
+    xmlns:vmDialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
+    d:DataContext="{x:Static mocks:DesignData.PackageImportViewModel}"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    x:DataType="vmDialogs:PackageImportViewModel"
+    mc:Ignorable="d">
     <StackPanel Margin="8" Spacing="8">
         <ui:SettingsExpander Header="{x:Static lang:Resources.Label_PackageType}">
             <ui:SettingsExpander.Footer>
                 <ui:FAComboBox
                     HorizontalAlignment="Stretch"
+                    DisplayMemberBinding="{Binding DisplayName}"
                     IsEnabled="{Binding CanSelectBasePackage}"
                     ItemsSource="{Binding AvailablePackages}"
-                    DisplayMemberBinding="{Binding DisplayName}"
-                    SelectedItem="{Binding SelectedBasePackage}"/>
+                    SelectedItem="{Binding SelectedBasePackage}" />
             </ui:SettingsExpander.Footer>
         </ui:SettingsExpander>
-        
-        <ui:SettingsExpander Header="{x:Static lang:Resources.Label_VersionType}"
-                             IsVisible="{Binding IsReleaseModeAvailable}">
+
+        <ui:SettingsExpander Header="{x:Static lang:Resources.Label_VersionType}" IsVisible="{Binding IsReleaseModeAvailable}">
             <ui:SettingsExpander.Footer>
                 <ToggleSwitch
+                    IsChecked="{Binding IsReleaseMode}"
                     IsEnabled="{Binding IsReleaseModeAvailable}"
-                    OnContent="{x:Static lang:Resources.Label_Releases}"
                     OffContent="{x:Static lang:Resources.Label_Branches}"
-                    IsChecked="{Binding IsReleaseMode}"/>
+                    OnContent="{x:Static lang:Resources.Label_Releases}" />
             </ui:SettingsExpander.Footer>
         </ui:SettingsExpander>
-        
+
         <ui:SettingsExpander Header="{x:Static lang:Resources.Label_Version}">
             <ui:SettingsExpander.Footer>
                 <StackPanel Orientation="Horizontal" Spacing="8">
-                    <ui:FAComboBox 
-                        ItemsSource="{Binding AvailableVersions}"
+                    <ui:FAComboBox
                         DisplayMemberBinding="{Binding TagName}"
-                        SelectedItem="{Binding SelectedVersion}"/>
-                    <ui:FAComboBox 
+                        ItemsSource="{Binding AvailableVersions}"
+                        SelectedItem="{Binding SelectedVersion}" />
+                    <ui:FAComboBox
+                        DisplayMemberBinding="{Binding Sha}"
                         IsVisible="{Binding !IsReleaseMode}"
                         ItemsSource="{Binding AvailableCommits}"
-                        DisplayMemberBinding="{Binding Sha}"
-                        SelectedItem="{Binding SelectedCommit}"/>
+                        SelectedItem="{Binding SelectedCommit}" />
                 </StackPanel>
             </ui:SettingsExpander.Footer>
         </ui:SettingsExpander>
-        <ui:SettingsExpander Header="{x:Static lang:Resources.Label_Commit}"
-                             IsVisible="{Binding ShowCustomCommitSha}">
+        <ui:SettingsExpander Header="{x:Static lang:Resources.Label_Commit}" IsVisible="{Binding ShowCustomCommitSha}">
             <ui:SettingsExpander.Footer>
                 <StackPanel Orientation="Horizontal" Spacing="8">
-                    <TextBox Text="{Binding CustomCommitSha, Mode=TwoWay}"
-                             MinWidth="250"/>
+                    <TextBox MinWidth="250" Text="{Binding CustomCommitSha, Mode=TwoWay}" />
                 </StackPanel>
+            </ui:SettingsExpander.Footer>
+        </ui:SettingsExpander>
+
+        <ui:SettingsExpander Header="Python Version" IsVisible="{Binding ShowPythonVersionSelection}">
+            <ui:SettingsExpander.Footer>
+                <controls:BetterComboBox
+                    HorizontalAlignment="Stretch"
+                    ItemsSource="{Binding AvailablePythonVersions}"
+                    SelectedItem="{Binding SelectedPythonVersion}">
+                    <controls:BetterComboBox.ItemTemplate>
+                        <DataTemplate DataType="{x:Type python:UvPythonInfo}">
+                            <Grid ColumnDefinitions="*, Auto" RowDefinitions="Auto, Auto">
+                                <TextBlock
+                                    Grid.Row="0"
+                                    Grid.Column="0"
+                                    Margin="8,4,0,4"
+                                    FontSize="18"
+                                    FontWeight="Light"
+                                    Text="{Binding Version}" />
+                                <avalonia:Icon
+                                    Grid.Row="0"
+                                    Grid.Column="1"
+                                    Foreground="{DynamicResource ThemeGreenColor}"
+                                    IsVisible="{Binding IsInstalled}"
+                                    Value="fa-solid fa-check" />
+                                <TextBlock
+                                    Grid.Row="1"
+                                    Grid.Column="0"
+                                    Grid.ColumnSpan="2"
+                                    Margin="8,4,0,4"
+                                    FontSize="12"
+                                    Foreground="{DynamicResource TextControlForegroundDisabled}"
+                                    Text="{Binding Key}" />
+                            </Grid>
+                        </DataTemplate>
+                    </controls:BetterComboBox.ItemTemplate>
+                    <controls:BetterComboBox.SelectionBoxItemTemplate>
+                        <DataTemplate DataType="{x:Type python:UvPythonInfo}">
+                            <TextBlock Text="{Binding Version}" />
+                        </DataTemplate>
+                    </controls:BetterComboBox.SelectionBoxItemTemplate>
+                </controls:BetterComboBox>
             </ui:SettingsExpander.Footer>
         </ui:SettingsExpander>
     </StackPanel>

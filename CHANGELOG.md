@@ -9,10 +9,13 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Changed
 - Updated Early Access indicators in the Civitai Details page to be more visible
 - Updated error message when attempting to download a website-generation-only model from Civitai
+- Updated nunchaku installer to 1.0.2
+- Updated Package Import dialog to have Python version selector
 ### Fixed
 - Fixed [#1435](https://github.com/LykosAI/StabilityMatrix/issues/1435) - SwarmUI not launching due to missing dotnet
 - Fixed various install and Inference issues with ComfyUI-Zluda - big thanks to @neural_fault for the PRs!
 - Fixed sageattention version getting out of sync after torch updates in ComfyUI
+- Potentially fixed issue where uv-managed Python versions would not appear in the version selector
 ### Supporters
 #### 🌟 Visionaries
 Our heartfelt thanks to the driving force behind our progress, our Visionaries: **Waterclouds**, **JungleDragon**, **bluepopsicle**, **Bob S**, and **whudunit**! Your incredible support is the fuel that powers our development, allowing us to tackle bugs and push forward with confidence.

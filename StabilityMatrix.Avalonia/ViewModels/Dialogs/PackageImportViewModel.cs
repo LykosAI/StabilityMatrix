@@ -14,6 +14,7 @@ using NLog;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Database;
@@ -27,12 +28,14 @@ namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 [View(typeof(PackageImportDialog))]
 [ManagedService]
 [RegisterTransient<PackageImportViewModel>]
-public partial class PackageImportViewModel : ContentDialogViewModelBase
+public partial class PackageImportViewModel(
+    IPackageFactory packageFactory,
+    ISettingsManager settingsManager,
+    IPyInstallationManager pyInstallationManager
+) : ContentDialogViewModelBase
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-
-    private readonly IPackageFactory packageFactory;
-    private readonly ISettingsManager settingsManager;
+    private bool venvDetected = false;
 
     [ObservableProperty]
     private DirectoryPath? packagePath;
@@ -40,8 +43,7 @@ public partial class PackageImportViewModel : ContentDialogViewModelBase
     [ObservableProperty]
     private BasePackage? selectedBasePackage;
 
-    public IReadOnlyList<BasePackage> AvailablePackages =>
-        packageFactory.GetAllAvailablePackages().ToImmutableArray();
+    public IReadOnlyList<BasePackage> AvailablePackages => [.. packageFactory.GetAllAvailablePackages()];
 
     [ObservableProperty]
     private PackageVersion? selectedVersion;
@@ -64,6 +66,9 @@ public partial class PackageImportViewModel : ContentDialogViewModelBase
     [ObservableProperty]
     private bool showCustomCommitSha;
 
+    [ObservableProperty]
+    public partial bool ShowPythonVersionSelection { get; set; } = true;
+
     // Version types (release or commit)
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ReleaseLabelText), nameof(IsReleaseMode), nameof(SelectedVersion))]
@@ -73,6 +78,13 @@ public partial class PackageImportViewModel : ContentDialogViewModelBase
     [NotifyPropertyChangedFor(nameof(IsReleaseModeAvailable))]
     private PackageVersionType availableVersionTypes =
         PackageVersionType.GithubRelease | PackageVersionType.Commit;
+
+    [ObservableProperty]
+    public partial ObservableCollection<UvPythonInfo> AvailablePythonVersions { get; set; } = [];
+
+    [ObservableProperty]
+    public partial UvPythonInfo? SelectedPythonVersion { get; set; }
+
     public string ReleaseLabelText => IsReleaseMode ? "Version" : "Branch";
     public bool IsReleaseMode
     {
@@ -81,12 +93,6 @@ public partial class PackageImportViewModel : ContentDialogViewModelBase
     }
 
     public bool IsReleaseModeAvailable => AvailableVersionTypes.HasFlag(PackageVersionType.GithubRelease);
-
-    public PackageImportViewModel(IPackageFactory packageFactory, ISettingsManager settingsManager)
-    {
-        this.packageFactory = packageFactory;
-        this.settingsManager = settingsManager;
-    }
 
     public override async Task OnLoadedAsync()
     {
@@ -115,6 +121,24 @@ public partial class PackageImportViewModel : ContentDialogViewModelBase
                 );
                 UpdateSelectedVersionToLatestMain();
             }
+
+            var pythonVersions = await pyInstallationManager.GetAllAvailablePythonsAsync();
+            AvailablePythonVersions = new ObservableCollection<UvPythonInfo>(pythonVersions);
+
+            if (
+                PackagePath is not null
+                && Utilities.TryGetPyVenvVersion(PackagePath.FullPath, out var venvPyVersion)
+            )
+            {
+                var matchingVenvPy = AvailablePythonVersions.FirstOrDefault(x => x.Version == venvPyVersion);
+                if (matchingVenvPy != default)
+                {
+                    SelectedPythonVersion = matchingVenvPy;
+                    venvDetected = true;
+                }
+            }
+
+            SelectedPythonVersion ??= GetRecommendedPyVersion() ?? AvailablePythonVersions.LastOrDefault();
         }
         catch (Exception e)
         {
@@ -155,7 +179,7 @@ public partial class PackageImportViewModel : ContentDialogViewModelBase
                     if (commits is null || commits.Count == 0)
                         return;
 
-                    commits = [..commits, new GitCommit { Sha = "Custom..." }];
+                    commits = [.. commits, new GitCommit { Sha = "Custom..." }];
 
                     AvailableCommits = new ObservableCollection<GitCommit>(commits);
                     SelectedCommit = AvailableCommits[0];
@@ -205,11 +229,17 @@ public partial class PackageImportViewModel : ContentDialogViewModelBase
                     if (commits is null || commits.Count == 0)
                         return;
 
-                    commits = [..commits, new GitCommit { Sha = "Custom..." }];
+                    commits = [.. commits, new GitCommit { Sha = "Custom..." }];
 
                     AvailableCommits = new ObservableCollection<GitCommit>(commits);
                     SelectedCommit = AvailableCommits[0];
                     UpdateSelectedVersionToLatestMain();
+                }
+
+                if (!venvDetected)
+                {
+                    SelectedPythonVersion =
+                        GetRecommendedPyVersion() ?? AvailablePythonVersions.FirstOrDefault();
                 }
             })
             .SafeFireAndForget();
@@ -267,7 +297,9 @@ public partial class PackageImportViewModel : ContentDialogViewModelBase
             LastUpdateCheck = DateTimeOffset.Now,
             PreferredTorchIndex = torchVersion,
             PreferredSharedFolderMethod = sharedFolderRecommendation,
-            PythonVersion = PyInstallationManager.Python_3_10_11.StringValue
+            PythonVersion =
+                SelectedPythonVersion?.Version.StringValue
+                ?? PyInstallationManager.Python_3_10_17.StringValue,
         };
 
         // Recreate venv if it's a BaseGitPackage
@@ -300,4 +332,10 @@ public partial class PackageImportViewModel : ContentDialogViewModelBase
 
         settingsManager.Transaction(s => s.InstalledPackages.Add(package));
     }
+
+    private UvPythonInfo? GetRecommendedPyVersion() =>
+        AvailablePythonVersions.LastOrDefault(x =>
+            x.Version.Major.Equals(SelectedBasePackage?.RecommendedPythonVersion.Major)
+            && x.Version.Minor.Equals(SelectedBasePackage?.RecommendedPythonVersion.Minor)
+        );
 }

@@ -62,17 +62,17 @@ public class InstallNunchakuStep(IPyInstallationManager pyInstallationManager) :
 
         var torchVersion = torchInfo.Version switch
         {
-            var v when v.StartsWith("2.5") => "2.5",
-            var v when v.StartsWith("2.6") => "2.6",
             var v when v.StartsWith("2.7") => "2.7",
             var v when v.StartsWith("2.8") => "2.8",
+            var v when v.StartsWith("2.9") => "2.9",
             var v when v.StartsWith("2.10") => "2.10",
             _ => throw new InvalidOperationException(
                 "No compatible torch version found in the virtual environment."
             ),
         };
+
         var downloadUrl =
-            $"https://github.com/nunchaku-tech/nunchaku/releases/download/v1.0.1/nunchaku-1.0.1+torch{torchVersion}-{shortPythonVersionString}-{shortPythonVersionString}-{platform}.whl";
+            $"https://github.com/nunchaku-tech/nunchaku/releases/download/v1.0.2/nunchaku-1.0.2+torch{torchVersion}-{shortPythonVersionString}-{shortPythonVersionString}-{platform}.whl";
         progress?.Report(
             new ProgressReport(-1f, message: "Installing Nunchaku backend", isIndeterminate: true)
         );

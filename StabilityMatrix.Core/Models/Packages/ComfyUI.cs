@@ -431,6 +431,49 @@ public class ComfyUI(
                 .ConfigureAwait(false);
         }
 
+        try
+        {
+            var sageVersion = await venvRunner.PipShow("sageattention").ConfigureAwait(false);
+            var torchVersion = await venvRunner.PipShow("torch").ConfigureAwait(false);
+
+            if (torchVersion is not null && sageVersion is not null)
+            {
+                var version = torchVersion.Version;
+                var plusPos = version.IndexOf('+');
+                var index = plusPos >= 0 ? version[(plusPos + 1)..] : string.Empty;
+                var versionWithoutIndex = plusPos >= 0 ? version[..plusPos] : version;
+
+                if (
+                    !sageVersion.Version.Contains(index) || !sageVersion.Version.Contains(versionWithoutIndex)
+                )
+                {
+                    progress?.Report(
+                        new ProgressReport(-1f, "Updating SageAttention...", isIndeterminate: true)
+                    );
+
+                    var step = new InstallSageAttentionStep(
+                        downloadService,
+                        prerequisiteHelper,
+                        pyInstallationManager
+                    )
+                    {
+                        InstalledPackage = installedPackage,
+                        IsBlackwellGpu =
+                            SettingsManager.Settings.PreferredGpu?.IsBlackwellGpu()
+                            ?? HardwareHelper.HasBlackwellGpu(),
+                        WorkingDirectory = installLocation,
+                        EnvironmentVariables = GetEnvVars(venvRunner.EnvironmentVariables),
+                    };
+
+                    await step.ExecuteAsync(progress).ConfigureAwait(false);
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            Logger.Error(e, "Failed to verify/update SageAttention after installation");
+        }
+
         progress?.Report(new ProgressReport(1, "Install complete", isIndeterminate: false));
     }
 

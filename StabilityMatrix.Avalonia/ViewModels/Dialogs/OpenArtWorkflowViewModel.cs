@@ -164,8 +164,8 @@ public partial class OpenArtWorkflowViewModel(
                 // Add missing nodes to the list (deduplicate by title)
                 if (
                     !currentSection.IsInstalled
+                    && addedMissingNodes.Add(node)
                     && nameToManifestNodes.TryGetValue(node, out var manifestNode)
-                    && addedMissingNodes.Add(manifestNode.Title)
                 )
                 {
                     MissingNodes.Add(manifestNode);

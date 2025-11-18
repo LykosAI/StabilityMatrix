@@ -1,0 +1,81 @@
+<Styles
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
+    xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+    xmlns:vmInference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
+    x:DataType="vmInference:TiledVAECardViewModel">
+    <Design.PreviewWith>
+        <controls:TiledVAECard />
+    </Design.PreviewWith>
+
+    <Style Selector="controls|TiledVAECard">
+        <!--  Set Defaults  -->
+        <Setter Property="Template">
+            <ControlTemplate>
+                <controls:Card x:Name="PART_Card">
+                    <controls:Card.Styles>
+                        <Style Selector="ui|NumberBox">
+                            <Setter Property="Margin" Value="12,4,0,4" />
+                            <Setter Property="MinWidth" Value="70" />
+                            <Setter Property="HorizontalAlignment" Value="Stretch" />
+                            <Setter Property="ValidationMode" Value="InvalidInputOverwritten" />
+                            <Setter Property="SmallChange" Value="32" />
+                            <Setter Property="LargeChange" Value="128" />
+                            <Setter Property="SpinButtonPlacementMode" Value="Inline" />
+                        </Style>
+                    </controls:Card.Styles>
+                    <StackPanel Spacing="8">
+                        <!--  Tile Size  -->
+                        <Grid ColumnDefinitions="Auto,*">
+                            <TextBlock
+                                Grid.Column="0"
+                                VerticalAlignment="Center"
+                                Text="Tile Size" />
+                            <ui:NumberBox
+                                Grid.Column="1"
+                                Margin="12,0,0,0"
+                                Value="{Binding TileSize, Mode=TwoWay}" />
+                        </Grid>
+
+                        <!--  Overlap  -->
+                        <Grid ColumnDefinitions="Auto,*">
+                            <TextBlock
+                                Grid.Column="0"
+                                VerticalAlignment="Center"
+                                Text="Overlap" />
+                            <ui:NumberBox
+                                Grid.Column="1"
+                                Margin="12,0,0,0"
+                                Value="{Binding Overlap, Mode=TwoWay}" />
+                        </Grid>
+
+                        <!--  Temporal Size (for Video VAEs)  -->
+                        <Grid ColumnDefinitions="Auto,*">
+                            <TextBlock
+                                Grid.Column="0"
+                                VerticalAlignment="Center"
+                                Text="Temporal Size" />
+                            <ui:NumberBox
+                                Grid.Column="1"
+                                Margin="12,0,0,0"
+                                Value="{Binding TemporalSize, Mode=TwoWay}" />
+                        </Grid>
+
+                        <!--  Temporal Overlap (for Video VAEs)  -->
+                        <Grid ColumnDefinitions="Auto,*">
+                            <TextBlock
+                                Grid.Column="0"
+                                VerticalAlignment="Center"
+                                Text="Temporal Overlap" />
+                            <ui:NumberBox
+                                Grid.Column="1"
+                                Margin="12,0,0,0"
+                                Value="{Binding TemporalOverlap, Mode=TwoWay}" />
+                        </Grid>
+                    </StackPanel>
+                </controls:Card>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+</Styles>

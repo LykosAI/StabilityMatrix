@@ -16,7 +16,7 @@
                 <controls:Card x:Name="PART_Card">
                     <controls:Card.Styles>
                         <Style Selector="ui|NumberBox">
-                            <Setter Property="Margin" Value="12,4,0,4" />
+                            <Setter Property="Margin" Value="12,0,0,0" />
                             <Setter Property="MinWidth" Value="70" />
                             <Setter Property="HorizontalAlignment" Value="Stretch" />
                             <Setter Property="ValidationMode" Value="InvalidInputOverwritten" />
@@ -34,7 +34,6 @@
                                 Text="Tile Size" />
                             <ui:NumberBox
                                 Grid.Column="1"
-                                Margin="12,0,0,0"
                                 Value="{Binding TileSize, Mode=TwoWay}" />
                         </Grid>
 
@@ -46,7 +45,6 @@
                                 Text="Overlap" />
                             <ui:NumberBox
                                 Grid.Column="1"
-                                Margin="12,0,0,0"
                                 Value="{Binding Overlap, Mode=TwoWay}" />
                         </Grid>
 
@@ -58,7 +56,6 @@
                                 Text="Temporal Size" />
                             <ui:NumberBox
                                 Grid.Column="1"
-                                Margin="12,0,0,0"
                                 Value="{Binding TemporalSize, Mode=TwoWay}" />
                         </Grid>
 
@@ -70,7 +67,6 @@
                                 Text="Temporal Overlap" />
                             <ui:NumberBox
                                 Grid.Column="1"
-                                Margin="12,0,0,0"
                                 Value="{Binding TemporalOverlap, Mode=TwoWay}"
                                 SmallChange="4"
                                 LargeChange="16" />

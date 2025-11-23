@@ -44,7 +44,7 @@ public partial class PackageInstallBrowserViewModel(
     [ObservableProperty]
     private string searchFilter = string.Empty;
 
-    private SourceCache<BasePackage, string> packageSource = new(p => p.GithubUrl);
+    private SourceCache<BasePackage, string> packageSource = new(p => p.Name);
 
     public IObservableCollection<BasePackage> InferencePackages { get; } =
         new ObservableCollectionExtended<BasePackage>();
@@ -119,10 +119,7 @@ public partial class PackageInstallBrowserViewModel(
             .ObserveOn(SynchronizationContext.Current)
             .Subscribe();
 
-        packageSource.EditDiff(
-            packageFactory.GetAllAvailablePackages(),
-            (a, b) => a.GithubUrl == b.GithubUrl
-        );
+        packageSource.EditDiff(packageFactory.GetAllAvailablePackages(), (a, b) => a.Name == b.Name);
     }
 
     public void OnPackageSelected(BasePackage? package)

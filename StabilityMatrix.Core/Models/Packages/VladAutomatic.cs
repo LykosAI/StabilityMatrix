@@ -206,6 +206,13 @@ public class VladAutomatic(
             },
             new()
             {
+                Name = "Use uv",
+                Type = LaunchOptionType.Bool,
+                InitialValue = true,
+                Options = ["--uv"],
+            },
+            new()
+            {
                 Name = "VRAM",
                 Type = LaunchOptionType.Bool,
                 InitialValue = HardwareHelper.IterGpuInfo().Select(gpu => gpu.MemoryLevel).Max() switch
@@ -316,7 +323,7 @@ public class VladAutomatic(
             // Run initial install
             case TorchIndex.Cuda:
                 await venvRunner
-                    .CustomInstall("launch.py --use-cuda --debug --test --uv", onConsoleOutput)
+                    .CustomInstall(["launch.py", "--use-cuda", "--debug", "--test", "--uv"], onConsoleOutput)
                     .ConfigureAwait(false);
                 break;
             case TorchIndex.Rocm:
@@ -384,7 +391,7 @@ public class VladAutomatic(
         }
 
         VenvRunner.RunDetached(
-            [Path.Combine(installLocation, options.Command ?? LaunchCommand), "--uv", .. options.Arguments],
+            [Path.Combine(installLocation, options.Command ?? LaunchCommand), .. options.Arguments],
             HandleConsoleOutput,
             OnExit
         );

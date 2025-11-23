@@ -215,6 +215,13 @@ public class PackageFactory : IPackageFactory
                 prerequisiteHelper,
                 pyInstallationManager
             ),
+            "forge-neo" => new ForgeNeo(
+                githubApiCache,
+                settingsManager,
+                downloadService,
+                prerequisiteHelper,
+                pyInstallationManager
+            ),
             "framepack" => new FramePack(
                 githubApiCache,
                 settingsManager,

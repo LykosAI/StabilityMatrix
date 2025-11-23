@@ -10,6 +10,10 @@ public partial class ModelVersionViewModel : DisposableViewModelBase
 {
     private readonly IModelIndexService modelIndexService;
 
+    public string VersionDescription { get; set; }
+
+    public bool HasVersionDescription { get; set; }
+
     [ObservableProperty]
     public partial CivitModelVersion ModelVersion { get; set; }
 
@@ -28,7 +32,16 @@ public partial class ModelVersionViewModel : DisposableViewModelBase
                 && modelIndexService.ModelIndexBlake3Hashes.Contains(file.Hashes.BLAKE3)
             ) ?? false;
 
+        CivitFileViewModels = new ObservableCollection<CivitFileViewModel>(
+            ModelVersion.Files?.Select(file => new CivitFileViewModel(modelIndexService, file))
+                ?? new List<CivitFileViewModel>()
+        );
+
         EventManager.Instance.ModelIndexChanged += ModelIndexChanged;
+
+        HasVersionDescription = !string.IsNullOrWhiteSpace(modelVersion.Description);
+        VersionDescription =
+            $"""<html><body class="markdown-body">{modelVersion.Description}</body></html>""";
     }
 
     public void RefreshInstallStatus()

@@ -1,0 +1,1138 @@
+﻿<controls:UserControlBase
+    x:Class="StabilityMatrix.Avalonia.Views.BananaVisionPage"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
+    xmlns:bananaVision="clr-namespace:StabilityMatrix.Avalonia.Converters.BananaVision"
+    xmlns:bananaVision1="clr-namespace:StabilityMatrix.Avalonia.Models.BananaVision"
+    xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:database="clr-namespace:StabilityMatrix.Core.Models.Database;assembly=StabilityMatrix.Core"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+    xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
+    d:DesignHeight="800"
+    d:DesignWidth="1200"
+    x:DataType="vm:BananaVisionPageViewModel"
+    mc:Ignorable="d">
+    <!--  d:DataContext="{x:Static mocks:DesignData.BananaVisionPageViewModel}"  -->
+
+    <controls:UserControlBase.Resources>
+        <bananaVision:MessageAlignmentConverter x:Key="AlignConv" />
+        <bananaVision:MessageColorConverter x:Key="ColorConv" />
+        <bananaVision:MessageTextColorConverter x:Key="TextConv" />
+        <bananaVision:ProviderIdToDisplayNameConverter x:Key="ProviderDisplayConv" />
+        <Geometry x:Key="SendIconGeometry">M2.01 21L23 12 2.01 3 2 10l15 2-15 2z</Geometry>
+    </controls:UserControlBase.Resources>
+
+    <controls:UserControlBase.Styles>
+        <!--  Input Box Hover/Focus Styles to keep it dark  -->
+        <Style Selector="TextBox">
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="CaretBrush" Value="#0A84FF" />
+            <Style Selector="^:focus">
+                <Setter Property="BorderBrush" Value="Red" />
+                <Style Selector="^ /template/ Border#PART_BorderElement">
+                    <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColor}" />
+                    <Setter Property="BorderThickness" Value="1" />
+                </Style>
+            </Style>
+        </Style>
+        <!--  Remove default button hover background  -->
+        <Style Selector="Button:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <Style Selector="Button:pointerover PathIcon">
+            <Setter Property="Foreground" Value="#0A84FF" />
+        </Style>
+    </controls:UserControlBase.Styles>
+
+    <!--  Main Container  -->
+    <Grid ColumnDefinitions="250, *, Auto" RowDefinitions="Auto, *">
+
+        <!--  1. Conversation List Sidebar (Column 0)  -->
+        <Border
+            Grid.RowSpan="2"
+            Grid.Column="0"
+            Padding="8"
+            Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+            BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+            BorderThickness="0,0,1,0">
+            <Grid RowDefinitions="Auto, Auto, *, Auto">
+                <!--  Header  -->
+                <TextBlock
+                    Grid.Row="0"
+                    Margin="0,0,0,8"
+                    FontSize="18"
+                    FontWeight="SemiBold"
+                    Text="Conversations" />
+
+                <!--  New Conversation Button  -->
+                <Button
+                    Grid.Row="1"
+                    Margin="0,0,0,8"
+                    HorizontalAlignment="Stretch"
+                    Command="{Binding NewConversationCommand}">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <avalonia:Icon FontSize="14" Value="fa-solid fa-plus" />
+                        <TextBlock Text="New Conversation" />
+                    </StackPanel>
+                </Button>
+
+                <!--  Conversations List  -->
+                <ListBox
+                    Grid.Row="2"
+                    ItemsSource="{Binding Conversations}"
+                    ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                    SelectedItem="{Binding CurrentConversation}"
+                    SelectionMode="AlwaysSelected">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate DataType="database:ImageGenerationConversation">
+                            <Grid Margin="2" ColumnDefinitions="*, Auto">
+                                <StackPanel Grid.Column="0" Margin="8,6">
+                                    <!--  Title  -->
+                                    <TextBlock
+                                        FontSize="13"
+                                        FontWeight="Medium"
+                                        Text="{Binding Title}"
+                                        TextTrimming="CharacterEllipsis" />
+                                    <!--  Provider badge and timestamp  -->
+                                    <StackPanel
+                                        Margin="0,4,0,0"
+                                        Orientation="Horizontal"
+                                        Spacing="6">
+                                        <Border
+                                            Padding="5,2"
+                                            Background="#2D2D4A"
+                                            CornerRadius="4">
+                                            <TextBlock
+                                                FontSize="10"
+                                                Foreground="#9D8CFF"
+                                                Text="{Binding ProviderId, Converter={StaticResource ProviderDisplayConv}}" />
+                                        </Border>
+                                        <TextBlock
+                                            VerticalAlignment="Center"
+                                            FontSize="10"
+                                            Opacity="0.5"
+                                            Text="{Binding UpdatedAt, StringFormat='{}{0:M/d h:mm tt}'}" />
+                                    </StackPanel>
+                                </StackPanel>
+                                <!--  Action buttons  -->
+                                <StackPanel
+                                    Grid.Column="1"
+                                    Margin="0,0,4,0"
+                                    VerticalAlignment="Center"
+                                    Orientation="Horizontal"
+                                    Spacing="2">
+                                    <!--  Rename button  -->
+                                    <Button
+                                        Padding="6"
+                                        Background="Transparent"
+                                        Command="{Binding $parent[ListBox].((vm:BananaVisionPageViewModel)DataContext).RenameConversationCommand}"
+                                        CommandParameter="{Binding}"
+                                        ToolTip.Tip="Rename conversation">
+                                        <avalonia:Icon
+                                            FontSize="11"
+                                            Opacity="0.7"
+                                            Value="fa-solid fa-pen" />
+                                    </Button>
+                                    <!--  Delete button  -->
+                                    <Button
+                                        Padding="6"
+                                        Background="Transparent"
+                                        Command="{Binding $parent[ListBox].((vm:BananaVisionPageViewModel)DataContext).DeleteConversationCommand}"
+                                        CommandParameter="{Binding}"
+                                        ToolTip.Tip="Delete conversation">
+                                        <avalonia:Icon
+                                            FontSize="11"
+                                            Opacity="0.7"
+                                            Value="fa-solid fa-trash" />
+                                    </Button>
+                                </StackPanel>
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                    <ListBox.Styles>
+                        <Style Selector="ListBoxItem">
+                            <Setter Property="Padding" Value="0" />
+                            <Setter Property="Margin" Value="0,2" />
+                            <Setter Property="CornerRadius" Value="8" />
+                        </Style>
+                        <Style Selector="ListBoxItem:selected /template/ ContentPresenter">
+                            <Setter Property="Background" Value="#2D2D4A" />
+                        </Style>
+                        <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter">
+                            <Setter Property="Background" Value="#1A1A2E" />
+                        </Style>
+                    </ListBox.Styles>
+                </ListBox>
+            </Grid>
+        </Border>
+
+        <!--  2. Chat Area (Column 1)  -->
+        <Grid
+            Grid.RowSpan="2"
+            Grid.Column="1"
+            RowDefinitions="Auto, Auto, *, Auto">
+
+            <!--  Header with Provider Selector (Row 0)  -->
+            <Border
+                Grid.Row="0"
+                MinHeight="52"
+                Padding="16,8"
+                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                BorderThickness="0,0,0,1">
+                <Grid ColumnDefinitions="Auto, Auto, *, Auto">
+                    <TextBlock
+                        Grid.Column="0"
+                        Margin="0,0,16,0"
+                        VerticalAlignment="Center"
+                        FontSize="20"
+                        FontWeight="Light"
+                        Text="🍌BananaVision🍌" />
+
+                    <ComboBox
+                        Grid.Column="1"
+                        MinWidth="180"
+                        VerticalAlignment="Center"
+                        DisplayMemberBinding="{Binding DisplayName}"
+                        ItemsSource="{Binding AvailableProviders}"
+                        SelectedValue="{Binding SelectedProviderId}"
+                        SelectedValueBinding="{Binding Id}" />
+
+                    <!--  Flux Kontext Status and Controls  -->
+                    <StackPanel
+                        Grid.Column="2"
+                        Margin="12,0,0,0"
+                        VerticalAlignment="Center"
+                        IsVisible="{Binding SelectedProviderId, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                        Orientation="Horizontal"
+                        Spacing="8">
+
+                        <!--  Status Message (only for local providers)  -->
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            Text="{Binding ProviderStatusMessage}"
+                            TextWrapping="NoWrap">
+                            <TextBlock.IsVisible>
+                                <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                    <Binding Path="RequiresLocalBackend" />
+                                    <Binding Converter="{x:Static StringConverters.IsNotNullOrEmpty}" Path="ProviderStatusMessage" />
+                                </MultiBinding>
+                            </TextBlock.IsVisible>
+                        </TextBlock>
+
+                        <!--  Download Models Button (when models are missing)  -->
+                        <Button
+                            Padding="10,6"
+                            VerticalAlignment="Center"
+                            Classes="accent"
+                            Command="{Binding ShowMissingModelsDialogCommand}">
+                            <Button.IsVisible>
+                                <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                    <Binding Path="RequiresLocalBackend" />
+                                    <Binding Path="HasMissingModels" />
+                                    <Binding Path="ClientManager.IsConnected" />
+                                </MultiBinding>
+                            </Button.IsVisible>
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <avalonia:Icon FontSize="12" Value="fa-solid fa-download" />
+                                <TextBlock Text="Download Models" />
+                            </StackPanel>
+                        </Button>
+
+                        <!--  Connect Button (when ComfyUI is running but not connected - only for local providers)  -->
+                        <Button
+                            Padding="8,4"
+                            VerticalAlignment="Center"
+                            Classes="success"
+                            Command="{Binding ConnectCommand}">
+                            <Button.IsVisible>
+                                <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                    <Binding Path="RequiresLocalBackend" />
+                                    <Binding Path="IsComfyRunning" />
+                                    <Binding Path="ClientManager.CanUserConnect" />
+                                    <Binding Path="!IsWaitingForConnection" />
+                                </MultiBinding>
+                            </Button.IsVisible>
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <avalonia:Icon FontSize="12" Value="fa-solid fa-plug" />
+                                <TextBlock Text="Connect" />
+                            </StackPanel>
+                        </Button>
+
+                        <!--  Launch/Help Button (when ComfyUI is not running - only for local providers)  -->
+                        <Button
+                            Padding="8,4"
+                            VerticalAlignment="Center"
+                            Command="{Binding ShowConnectionHelpCommand}">
+                            <Button.IsVisible>
+                                <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                    <Binding Path="RequiresLocalBackend" />
+                                    <Binding Path="ClientManager.CanUserConnect" />
+                                    <Binding Path="!IsComfyRunning" />
+                                    <Binding Path="!IsWaitingForConnection" />
+                                </MultiBinding>
+                            </Button.IsVisible>
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <avalonia:Icon FontSize="12" Value="fa-solid fa-circle-question" />
+                                <TextBlock Text="Launch" />
+                            </StackPanel>
+                        </Button>
+
+                        <!--  Connected indicator (only for local providers)  -->
+                        <Border
+                            Height="28"
+                            Padding="8,4"
+                            VerticalAlignment="Center"
+                            Background="#28A745"
+                            CornerRadius="12">
+                            <Border.IsVisible>
+                                <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                    <Binding Path="RequiresLocalBackend" />
+                                    <Binding Path="ClientManager.IsConnected" />
+                                </MultiBinding>
+                            </Border.IsVisible>
+                            <StackPanel
+                                VerticalAlignment="Center"
+                                Orientation="Horizontal"
+                                Spacing="4">
+                                <avalonia:Icon
+                                    FontSize="11"
+                                    Foreground="White"
+                                    Value="fa-solid fa-check-circle" />
+                                <TextBlock
+                                    FontSize="11"
+                                    Foreground="White"
+                                    Text="Connected" />
+                            </StackPanel>
+                        </Border>
+
+                        <!--  Cloud provider "Ready" indicator  -->
+                        <Border
+                            Height="28"
+                            Padding="8,4"
+                            VerticalAlignment="Center"
+                            Background="#0A84FF"
+                            CornerRadius="12"
+                            IsVisible="{Binding IsCloudProvider}">
+                            <StackPanel
+                                VerticalAlignment="Center"
+                                Orientation="Horizontal"
+                                Spacing="4">
+                                <avalonia:Icon
+                                    FontSize="11"
+                                    Foreground="White"
+                                    Value="fa-solid fa-cloud" />
+                                <TextBlock
+                                    VerticalAlignment="Center"
+                                    FontSize="11"
+                                    Foreground="White"
+                                    Text="Cloud API" />
+                            </StackPanel>
+                        </Border>
+
+                        <!--  Thinking Toggle (Gemini 3 Pro)  -->
+                        <Border
+                            Height="28"
+                            Padding="8,4"
+                            VerticalAlignment="Center"
+                            Background="#2C2C2E"
+                            CornerRadius="12"
+                            IsVisible="{Binding SupportsThinking}">
+                            <StackPanel
+                                VerticalAlignment="Center"
+                                Orientation="Horizontal"
+                                Spacing="6">
+                                <avalonia:Icon
+                                    VerticalAlignment="Center"
+                                    FontSize="12"
+                                    Foreground="#9D8CFF"
+                                    Value="fa-solid fa-brain" />
+                                <TextBlock
+                                    VerticalAlignment="Center"
+                                    FontSize="13"
+                                    Text="Thinking" />
+                                <CheckBox
+                                    Margin="4,0,0,0"
+                                    Padding="0"
+                                    VerticalAlignment="Center"
+                                    IsChecked="{Binding ShowThinkingOutput}" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+
+                    <!--  Error Message with Retry  -->
+                    <StackPanel
+                        Grid.Column="3"
+                        Margin="8,0,0,0"
+                        VerticalAlignment="Center"
+                        IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                        Orientation="Horizontal"
+                        Spacing="8">
+                        <TextBlock
+                            MaxWidth="300"
+                            VerticalAlignment="Center"
+                            Foreground="Red"
+                            Text="{Binding ErrorMessage}"
+                            TextWrapping="Wrap" />
+                        <Button
+                            Padding="8,4"
+                            Background="#CC3340"
+                            Command="{Binding RetryLastMessageCommand}"
+                            CornerRadius="4"
+                            Foreground="White"
+                            IsVisible="{Binding CanRetryLastMessage}"
+                            ToolTip.Tip="Retry last message">
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <avalonia:Icon FontSize="11" Value="fa-solid fa-rotate-right" />
+                                <TextBlock FontSize="12" Text="Retry" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!--  Settings Panels Container (Row 1)  -->
+            <StackPanel Grid.Row="1">
+                <!--  Resolution Settings Panel (visible for all providers)  -->
+                <Border
+                    Padding="16,8"
+                    Background="#1E1E2E"
+                    BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="0,0,0,1">
+                    <StackPanel Orientation="Horizontal" Spacing="16">
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            FontSize="13"
+                            Opacity="0.8"
+                            Text="Resolution:" />
+
+                        <!--  Aspect Ratio Selector  -->
+                        <ComboBox
+                            MinWidth="220"
+                            IsEnabled="{Binding !UseCustomResolution}"
+                            ItemsSource="{Binding AvailableAspectRatios}"
+                            SelectedItem="{Binding SelectedAspectRatio}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding DisplayName}" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+
+                        <!--  Custom Resolution Toggle (only for local providers)  -->
+                        <CheckBox
+                            VerticalAlignment="Center"
+                            Content="Custom"
+                            IsChecked="{Binding UseCustomResolution}"
+                            IsVisible="{Binding RequiresLocalBackend}" />
+
+                        <!--  Custom Width/Height (only visible when custom is checked AND local provider)  -->
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <StackPanel.IsVisible>
+                                <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                    <Binding Path="UseCustomResolution" />
+                                    <Binding Path="RequiresLocalBackend" />
+                                </MultiBinding>
+                            </StackPanel.IsVisible>
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                Opacity="0.7"
+                                Text="W:" />
+                            <NumericUpDown
+                                Width="100"
+                                MinHeight="0"
+                                Padding="8,4"
+                                FontSize="13"
+                                Increment="64"
+                                Maximum="4096"
+                                Minimum="256"
+                                ShowButtonSpinner="False"
+                                Value="{Binding CustomWidth}" />
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                Opacity="0.7"
+                                Text="H:" />
+                            <NumericUpDown
+                                Width="100"
+                                MinHeight="0"
+                                Padding="8,4"
+                                FontSize="13"
+                                Increment="64"
+                                Maximum="4096"
+                                Minimum="256"
+                                ShowButtonSpinner="False"
+                                Value="{Binding CustomHeight}" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!--  Flux Kontext Settings Panel (collapsible, under header)  -->
+                <Border
+                    Padding="16,8"
+                    Background="#1E1E2E"
+                    BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="0,0,0,1"
+                    IsVisible="{Binding ShowFluxSettings}">
+                    <Expander
+                        Padding="0"
+                        Header="Model &amp; LoRA Settings"
+                        IsExpanded="{Binding IsFluxSettingsExpanded}">
+                        <Grid
+                            Margin="0,8,0,0"
+                            ColumnDefinitions="Auto, *"
+                            RowDefinitions="Auto, Auto">
+                            <!--  Model Selection (Left Column)  -->
+                            <StackPanel
+                                Grid.Row="0"
+                                Grid.Column="0"
+                                Margin="0,0,24,0"
+                                Spacing="4">
+                                <TextBlock
+                                    FontSize="12"
+                                    Opacity="0.7"
+                                    Text="Flux Kontext Model" />
+                                <controls:BetterComboBox
+                                    MinWidth="350"
+                                    Padding="8,6,4,6"
+                                    ItemsSource="{Binding AvailableFluxModels}"
+                                    SelectedItem="{Binding SelectedFluxModel}"
+                                    Theme="{StaticResource BetterComboBoxHybridModelTheme}" />
+                            </StackPanel>
+
+                            <!--  LoRA Header + Add Button (Right Column, Same Row)  -->
+                            <StackPanel
+                                Grid.Row="0"
+                                Grid.Column="1"
+                                VerticalAlignment="Top"
+                                Spacing="4">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <TextBlock
+                                        VerticalAlignment="Center"
+                                        FontSize="12"
+                                        Opacity="0.7"
+                                        Text="LoRAs" />
+                                    <Button
+                                        Padding="6,2"
+                                        Background="#2D2D4A"
+                                        Command="{Binding AddLoraCommand}"
+                                        CornerRadius="4">
+                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                            <avalonia:Icon FontSize="10" Value="fa-solid fa-plus" />
+                                            <TextBlock FontSize="11" Text="Add LoRA" />
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
+
+                                <!--  Empty State (inline with header when no loras)  -->
+                                <TextBlock
+                                    Margin="0,8,0,0"
+                                    FontSize="11"
+                                    IsVisible="{Binding !SelectedLoras.Count}"
+                                    Opacity="0.5"
+                                    Text="No LoRAs selected - click Add to get started" />
+                            </StackPanel>
+
+                            <!--  Selected LoRAs List (Full Width, Second Row)  -->
+                            <ItemsControl
+                                Grid.Row="1"
+                                Grid.Column="0"
+                                Grid.ColumnSpan="2"
+                                Margin="0,12,0,0"
+                                IsVisible="{Binding SelectedLoras.Count}"
+                                ItemsSource="{Binding SelectedLoras}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate DataType="vm:SelectedLora">
+                                        <Border
+                                            Margin="0,4"
+                                            Padding="12,10"
+                                            Background="#2A2A3E"
+                                            CornerRadius="8">
+                                            <Grid ColumnDefinitions="*, Auto, Auto, Auto">
+                                                <!--  LoRA Name  -->
+                                                <TextBlock
+                                                    Grid.Column="0"
+                                                    VerticalAlignment="Center"
+                                                    FontWeight="Medium"
+                                                    Text="{Binding DisplayName}"
+                                                    TextTrimming="CharacterEllipsis" />
+
+                                                <!--  Model Weight  -->
+                                                <StackPanel
+                                                    Grid.Column="1"
+                                                    Margin="16,0"
+                                                    Orientation="Horizontal"
+                                                    Spacing="6">
+                                                    <TextBlock
+                                                        VerticalAlignment="Center"
+                                                        FontSize="11"
+                                                        Opacity="0.7"
+                                                        Text="Model:" />
+                                                    <Slider
+                                                        Width="100"
+                                                        VerticalAlignment="Center"
+                                                        IsSnapToTickEnabled="True"
+                                                        Maximum="2"
+                                                        Minimum="0"
+                                                        TickFrequency="0.05"
+                                                        Value="{Binding ModelWeight}" />
+                                                    <NumericUpDown
+                                                        Width="65"
+                                                        MinHeight="0"
+                                                        Padding="6,4"
+                                                        VerticalAlignment="Center"
+                                                        VerticalContentAlignment="Center"
+                                                        FontSize="13"
+                                                        FormatString="F2"
+                                                        Increment="0.05"
+                                                        Maximum="2"
+                                                        Minimum="0"
+                                                        ShowButtonSpinner="False"
+                                                        Value="{Binding ModelWeight}" />
+                                                </StackPanel>
+
+                                                <!--  CLIP Weight  -->
+                                                <StackPanel
+                                                    Grid.Column="2"
+                                                    Margin="0,0,12,0"
+                                                    Orientation="Horizontal"
+                                                    Spacing="6">
+                                                    <TextBlock
+                                                        VerticalAlignment="Center"
+                                                        FontSize="11"
+                                                        Opacity="0.7"
+                                                        Text="CLIP:" />
+                                                    <Slider
+                                                        Width="100"
+                                                        VerticalAlignment="Center"
+                                                        IsSnapToTickEnabled="True"
+                                                        Maximum="2"
+                                                        Minimum="0"
+                                                        TickFrequency="0.05"
+                                                        Value="{Binding ClipWeight}" />
+                                                    <NumericUpDown
+                                                        Width="65"
+                                                        MinHeight="0"
+                                                        Padding="6,4"
+                                                        VerticalAlignment="Center"
+                                                        VerticalContentAlignment="Center"
+                                                        FontSize="13"
+                                                        FormatString="F2"
+                                                        Increment="0.05"
+                                                        Maximum="2"
+                                                        Minimum="0"
+                                                        ShowButtonSpinner="False"
+                                                        Value="{Binding ClipWeight}" />
+                                                </StackPanel>
+
+                                                <!--  Remove Button  -->
+                                                <Button
+                                                    Grid.Column="3"
+                                                    Padding="6"
+                                                    Background="Transparent"
+                                                    Command="{Binding $parent[ItemsControl].((vm:BananaVisionPageViewModel)DataContext).RemoveLoraCommand}"
+                                                    CommandParameter="{Binding}"
+                                                    ToolTip.Tip="Remove LoRA">
+                                                    <avalonia:Icon
+                                                        FontSize="12"
+                                                        Foreground="#FF6B6B"
+                                                        Value="fa-solid fa-times" />
+                                                </Button>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Grid>
+                    </Expander>
+                </Border>
+
+                <!--  Qwen Image Edit Settings Panel (collapsible, under header)  -->
+                <Border
+                    Padding="16,8"
+                    Background="#1E1E2E"
+                    BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="0,0,0,1"
+                    IsVisible="{Binding ShowQwenSettings}">
+                    <Expander
+                        Padding="0"
+                        Header="Model &amp; LoRA Settings"
+                        IsExpanded="{Binding IsQwenSettingsExpanded}">
+                        <Grid
+                            Margin="0,8,0,0"
+                            ColumnDefinitions="Auto, *"
+                            RowDefinitions="Auto, Auto">
+                            <!--  Model Selection (Left Column)  -->
+                            <StackPanel
+                                Grid.Row="0"
+                                Grid.Column="0"
+                                Margin="0,0,24,0"
+                                Spacing="4">
+                                <TextBlock
+                                    FontSize="12"
+                                    Opacity="0.7"
+                                    Text="Qwen Image Edit Model" />
+                                <controls:BetterComboBox
+                                    MinWidth="350"
+                                    Padding="8,6,4,6"
+                                    ItemsSource="{Binding AvailableQwenModels}"
+                                    SelectedItem="{Binding SelectedQwenModel}"
+                                    Theme="{StaticResource BetterComboBoxHybridModelTheme}" />
+                            </StackPanel>
+
+                            <!--  LoRA Header + Add Button (Right Column, Same Row)  -->
+                            <StackPanel
+                                Grid.Row="0"
+                                Grid.Column="1"
+                                VerticalAlignment="Top"
+                                Spacing="4">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <TextBlock
+                                        VerticalAlignment="Center"
+                                        FontSize="12"
+                                        Opacity="0.7"
+                                        Text="LoRAs" />
+                                    <Button
+                                        Padding="6,2"
+                                        Background="#2D2D4A"
+                                        Command="{Binding AddLoraCommand}"
+                                        CornerRadius="4">
+                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                            <avalonia:Icon FontSize="10" Value="fa-solid fa-plus" />
+                                            <TextBlock FontSize="11" Text="Add LoRA" />
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
+
+                                <!--  Empty State (inline with header when no loras)  -->
+                                <TextBlock
+                                    Margin="0,8,0,0"
+                                    FontSize="11"
+                                    IsVisible="{Binding !SelectedLoras.Count}"
+                                    Opacity="0.5"
+                                    Text="No LoRAs selected - click Add to get started" />
+                            </StackPanel>
+
+                            <!--  Selected LoRAs List (Full Width, Second Row)  -->
+                            <ItemsControl
+                                Grid.Row="1"
+                                Grid.Column="0"
+                                Grid.ColumnSpan="2"
+                                Margin="0,12,0,0"
+                                IsVisible="{Binding SelectedLoras.Count}"
+                                ItemsSource="{Binding SelectedLoras}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate DataType="vm:SelectedLora">
+                                        <Border
+                                            Margin="0,4"
+                                            Padding="12,10"
+                                            Background="#2A2A3E"
+                                            CornerRadius="8">
+                                            <Grid ColumnDefinitions="*, Auto, Auto, Auto">
+                                                <!--  LoRA Name  -->
+                                                <TextBlock
+                                                    Grid.Column="0"
+                                                    VerticalAlignment="Center"
+                                                    FontWeight="Medium"
+                                                    Text="{Binding DisplayName}"
+                                                    TextTrimming="CharacterEllipsis" />
+
+                                                <!--  Model Weight  -->
+                                                <StackPanel
+                                                    Grid.Column="1"
+                                                    Margin="16,0"
+                                                    Orientation="Horizontal"
+                                                    Spacing="6">
+                                                    <TextBlock
+                                                        VerticalAlignment="Center"
+                                                        FontSize="11"
+                                                        Opacity="0.7"
+                                                        Text="Model:" />
+                                                    <Slider
+                                                        Width="100"
+                                                        VerticalAlignment="Center"
+                                                        IsSnapToTickEnabled="True"
+                                                        Maximum="2"
+                                                        Minimum="0"
+                                                        TickFrequency="0.05"
+                                                        Value="{Binding ModelWeight}" />
+                                                    <NumericUpDown
+                                                        Width="65"
+                                                        MinHeight="0"
+                                                        Padding="6,4"
+                                                        VerticalAlignment="Center"
+                                                        VerticalContentAlignment="Center"
+                                                        FontSize="13"
+                                                        FormatString="F2"
+                                                        Increment="0.05"
+                                                        Maximum="2"
+                                                        Minimum="0"
+                                                        ShowButtonSpinner="False"
+                                                        Value="{Binding ModelWeight}" />
+                                                </StackPanel>
+
+                                                <!--  CLIP Weight  -->
+                                                <StackPanel
+                                                    Grid.Column="2"
+                                                    Margin="0,0,12,0"
+                                                    Orientation="Horizontal"
+                                                    Spacing="6">
+                                                    <TextBlock
+                                                        VerticalAlignment="Center"
+                                                        FontSize="11"
+                                                        Opacity="0.7"
+                                                        Text="CLIP:" />
+                                                    <Slider
+                                                        Width="100"
+                                                        VerticalAlignment="Center"
+                                                        IsSnapToTickEnabled="True"
+                                                        Maximum="2"
+                                                        Minimum="0"
+                                                        TickFrequency="0.05"
+                                                        Value="{Binding ClipWeight}" />
+                                                    <NumericUpDown
+                                                        Width="65"
+                                                        MinHeight="0"
+                                                        Padding="6,4"
+                                                        VerticalAlignment="Center"
+                                                        VerticalContentAlignment="Center"
+                                                        FontSize="13"
+                                                        FormatString="F2"
+                                                        Increment="0.05"
+                                                        Maximum="2"
+                                                        Minimum="0"
+                                                        ShowButtonSpinner="False"
+                                                        Value="{Binding ClipWeight}" />
+                                                </StackPanel>
+
+                                                <!--  Remove Button  -->
+                                                <Button
+                                                    Grid.Column="3"
+                                                    Padding="6"
+                                                    Background="Transparent"
+                                                    Command="{Binding $parent[ItemsControl].((vm:BananaVisionPageViewModel)DataContext).RemoveLoraCommand}"
+                                                    CommandParameter="{Binding}"
+                                                    ToolTip.Tip="Remove LoRA">
+                                                    <avalonia:Icon
+                                                        FontSize="12"
+                                                        Foreground="#FF6B6B"
+                                                        Value="fa-solid fa-times" />
+                                                </Button>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Grid>
+                    </Expander>
+                </Border>
+            </StackPanel>
+
+            <!--  Message List (Row 2)  -->
+            <Grid Grid.Row="2">
+                <ScrollViewer Padding="64,10">
+                    <ItemsControl ItemsSource="{Binding Messages}">
+                        <ItemsControl.DataTemplates>
+
+                            <!--  Text Template  -->
+                            <DataTemplate DataType="bananaVision1:TextMessage">
+                                <Grid Margin="0,4" HorizontalAlignment="{Binding IsMyMessage, Converter={StaticResource AlignConv}}">
+                                    <Border
+                                        MaxWidth="320"
+                                        Padding="12,8"
+                                        Background="{Binding IsMyMessage, Converter={StaticResource ColorConv}}"
+                                        CornerRadius="16">
+                                        <StackPanel>
+                                            <TextBlock
+                                                FontSize="14"
+                                                Foreground="{Binding IsMyMessage, Converter={StaticResource TextConv}}"
+                                                Text="{Binding Text}"
+                                                TextWrapping="Wrap" />
+                                            <TextBlock
+                                                Margin="0,4,0,0"
+                                                HorizontalAlignment="Right"
+                                                FontSize="10"
+                                                Foreground="White"
+                                                Opacity="0.6"
+                                                Text="{Binding Time}" />
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
+                            </DataTemplate>
+
+                            <!--  Image Template (clickable for full preview)  -->
+                            <DataTemplate DataType="bananaVision1:ImageMessage">
+                                <Grid Margin="0,4" HorizontalAlignment="{Binding IsMyMessage, Converter={StaticResource AlignConv}}">
+                                    <Border
+                                        MaxWidth="320"
+                                        Background="Transparent"
+                                        ClipToBounds="True"
+                                        CornerRadius="16">
+                                        <StackPanel>
+                                            <Button
+                                                Padding="0"
+                                                Background="Transparent"
+                                                Command="{Binding $parent[ItemsControl].((vm:BananaVisionPageViewModel)DataContext).PreviewImageCommand}"
+                                                CommandParameter="{Binding Image}"
+                                                CornerRadius="12"
+                                                Cursor="Hand"
+                                                ToolTip.Tip="Click to view full size">
+                                                <Image
+                                                    MaxHeight="300"
+                                                    Source="{Binding Image}"
+                                                    Stretch="UniformToFill" />
+                                            </Button>
+                                            <TextBlock
+                                                Margin="0,2,4,0"
+                                                HorizontalAlignment="Right"
+                                                FontSize="10"
+                                                Foreground="#98989D"
+                                                Text="{Binding Time}" />
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
+                            </DataTemplate>
+
+                            <!--  Thinking/Reasoning Template (Gemini 3 Pro)  -->
+                            <DataTemplate DataType="bananaVision1:ThinkingMessage">
+                                <Grid
+                                    MaxWidth="500"
+                                    Margin="0,8"
+                                    HorizontalAlignment="Left">
+                                    <Border
+                                        Padding="14,10"
+                                        Background="#1A1A2E"
+                                        BorderBrush="#3D3D5C"
+                                        BorderThickness="1"
+                                        CornerRadius="12">
+                                        <StackPanel Spacing="8">
+                                            <!--  Header with expand/collapse  -->
+                                            <Grid ColumnDefinitions="Auto, *, Auto">
+                                                <StackPanel
+                                                    Grid.Column="0"
+                                                    Orientation="Horizontal"
+                                                    Spacing="8">
+                                                    <Border
+                                                        Padding="6"
+                                                        Background="#2D2D4A"
+                                                        CornerRadius="10">
+                                                        <avalonia:Icon
+                                                            FontSize="12"
+                                                            Foreground="#9D8CFF"
+                                                            Value="fa-solid fa-brain" />
+                                                    </Border>
+                                                    <TextBlock
+                                                        VerticalAlignment="Center"
+                                                        FontSize="13"
+                                                        FontWeight="SemiBold"
+                                                        Foreground="#9D8CFF"
+                                                        Text="AI Reasoning" />
+                                                </StackPanel>
+                                                <Button
+                                                    Grid.Column="2"
+                                                    Padding="6"
+                                                    Background="Transparent"
+                                                    Command="{Binding ToggleExpandedCommand}"
+                                                    CornerRadius="8"
+                                                    ToolTip.Tip="Expand/Collapse">
+                                                    <Panel>
+                                                        <avalonia:Icon
+                                                            FontSize="11"
+                                                            Foreground="#8E8E93"
+                                                            IsVisible="{Binding IsExpanded}"
+                                                            Value="fa-solid fa-chevron-up" />
+                                                        <avalonia:Icon
+                                                            FontSize="11"
+                                                            Foreground="#8E8E93"
+                                                            IsVisible="{Binding !IsExpanded}"
+                                                            Value="fa-solid fa-chevron-down" />
+                                                    </Panel>
+                                                </Button>
+                                            </Grid>
+
+                                            <!--  Collapsed preview  -->
+                                            <TextBlock
+                                                FontSize="12"
+                                                FontStyle="Italic"
+                                                Foreground="#7A7A8C"
+                                                IsVisible="{Binding !IsExpanded}"
+                                                LineHeight="18"
+                                                Text="{Binding ThinkingPreview}"
+                                                TextWrapping="Wrap" />
+
+                                            <!--  Expanded content  -->
+                                            <ScrollViewer
+                                                MaxHeight="250"
+                                                HorizontalScrollBarVisibility="Disabled"
+                                                IsVisible="{Binding IsExpanded}"
+                                                VerticalScrollBarVisibility="Auto">
+                                                <TextBlock
+                                                    FontSize="12"
+                                                    Foreground="#A0A0B0"
+                                                    LineHeight="18"
+                                                    Text="{Binding ThinkingContent}"
+                                                    TextWrapping="Wrap" />
+                                            </ScrollViewer>
+
+                                            <!--  Timestamp  -->
+                                            <TextBlock
+                                                HorizontalAlignment="Right"
+                                                FontSize="10"
+                                                Foreground="#7A7A8C"
+                                                Opacity="0.4"
+                                                Text="{Binding Time}" />
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
+                            </DataTemplate>
+
+                        </ItemsControl.DataTemplates>
+                    </ItemsControl>
+                </ScrollViewer>
+
+                <!--  Loading Indicator (overlays on top)  -->
+                <Border
+                    Margin="0,0,0,16"
+                    Padding="16,8"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Bottom"
+                    Background="#2C2C2E"
+                    CornerRadius="12"
+                    IsVisible="{Binding IsGenerating}">
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <ui:ProgressRing
+                            Width="20"
+                            Height="20"
+                            IsIndeterminate="True" />
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            FontSize="14"
+                            Foreground="White"
+                            Text="Generating image..." />
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!--  Input Area (Row 3)  -->
+            <Border
+                Grid.Row="3"
+                Padding="10"
+                Background="#1C1C1E"
+                BorderBrush="#38383A"
+                BorderThickness="0,1,0,0">
+                <StackPanel Spacing="8">
+
+                    <!--  Pending Images Display  -->
+                    <ItemsControl IsVisible="{Binding PendingImages.Count}" ItemsSource="{Binding PendingImages}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel Orientation="Horizontal" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border
+                                    Width="80"
+                                    Height="80"
+                                    Margin="4"
+                                    BorderBrush="#38383A"
+                                    BorderThickness="1"
+                                    ClipToBounds="True"
+                                    CornerRadius="12">
+                                    <Grid>
+                                        <Image Source="{Binding Bitmap}" Stretch="UniformToFill" />
+                                        <!--  Action buttons overlay  -->
+                                        <StackPanel
+                                            Margin="2"
+                                            HorizontalAlignment="Right"
+                                            VerticalAlignment="Top"
+                                            Orientation="Horizontal"
+                                            Spacing="2">
+                                            <!--  Edit button  -->
+                                            <Button
+                                                Width="22"
+                                                Height="22"
+                                                Padding="2"
+                                                Background="#AA000000"
+                                                Command="{Binding $parent[ItemsControl].((vm:BananaVisionPageViewModel)DataContext).EditPendingImageCommand}"
+                                                CommandParameter="{Binding}"
+                                                CornerRadius="11"
+                                                ToolTip.Tip="Edit/annotate image">
+                                                <avalonia:Icon
+                                                    FontSize="10"
+                                                    Foreground="White"
+                                                    Value="fa-solid fa-pen" />
+                                            </Button>
+                                            <!--  Remove button  -->
+                                            <Button
+                                                Width="22"
+                                                Height="22"
+                                                Padding="2"
+                                                Background="#AA000000"
+                                                Command="{Binding $parent[ItemsControl].((vm:BananaVisionPageViewModel)DataContext).RemovePendingImageCommand}"
+                                                CommandParameter="{Binding}"
+                                                CornerRadius="11"
+                                                ToolTip.Tip="Remove image">
+                                                <avalonia:Icon
+                                                    FontSize="10"
+                                                    Foreground="White"
+                                                    Value="fa-solid fa-xmark" />
+                                            </Button>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <Grid ColumnDefinitions="*, Auto">
+                        <!--  Input Box (Dark Grey)  -->
+                        <TextBox
+                            Grid.Column="0"
+                            MinHeight="40"
+                            Padding="16,8"
+                            VerticalContentAlignment="Center"
+                            Background="#2C2C2E"
+                            BorderThickness="0"
+                            CornerRadius="16"
+                            IsEnabled="{Binding !IsGenerating}"
+                            Text="{Binding NewMessageText}"
+                            Watermark="Describe the image you want to generate...">
+                            <TextBox.KeyBindings>
+                                <KeyBinding Command="{Binding SendMessageCommand}" Gesture="Enter" />
+                            </TextBox.KeyBindings>
+                            <TextBox.InnerLeftContent>
+                                <Button
+                                    Margin="4,0,0,0"
+                                    Padding="8"
+                                    Background="Transparent"
+                                    Command="{Binding AddImageCommand}"
+                                    CornerRadius="12"
+                                    IsEnabled="{Binding !IsGenerating}"
+                                    ToolTip.Tip="Add images to send with your message">
+                                    <avalonia:Icon Foreground="#8E8E93" Value="fa-solid fa-image" />
+                                </Button>
+                            </TextBox.InnerLeftContent>
+                        </TextBox>
+
+                        <!--  Send Button  -->
+                        <Button
+                            Grid.Column="1"
+                            Margin="10,0,0,0"
+                            Padding="8"
+                            Background="Transparent"
+                            Command="{Binding SendMessageCommand}"
+                            CornerRadius="12"
+                            IsEnabled="{Binding !IsGenerating}"
+                            ToolTip.Tip="Send message">
+                            <PathIcon Data="{StaticResource SendIconGeometry}" Foreground="#0A84FF" />
+                        </Button>
+                    </Grid>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+
+</controls:UserControlBase>

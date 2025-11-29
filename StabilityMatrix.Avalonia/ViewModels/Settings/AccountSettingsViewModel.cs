@@ -74,10 +74,6 @@ public partial class AccountSettingsViewModel : PageViewModelBase
     [ObservableProperty]
     private CivitAccountStatusUpdateEventArgs civitStatus = CivitAccountStatusUpdateEventArgs.Disconnected;
 
-    // Assume HuggingFaceAccountStatusUpdateEventArgs will be created with at least these properties
-    // For now, using a placeholder or assuming a structure like:
-    // public record HuggingFaceAccountStatusUpdateEventArgs(bool IsConnected, string? Username);
-    // Initialize with a disconnected state.
     [ObservableProperty]
     private HuggingFaceAccountStatusUpdateEventArgs huggingFaceStatus = new(false, null);
 
@@ -86,6 +82,12 @@ public partial class AccountSettingsViewModel : PageViewModelBase
 
     [ObservableProperty]
     private string huggingFaceUsernameWithParentheses = string.Empty;
+
+    [ObservableProperty]
+    private GeminiAccountStatusUpdateEventArgs geminiStatus = GeminiAccountStatusUpdateEventArgs.Disconnected;
+
+    [ObservableProperty]
+    private bool hasGeminiApiKey;
 
     public string LykosAccountManageUrl =>
         apiOptions.Value.LykosAccountApiBaseUrl.Append("/manage").ToString();
@@ -132,6 +134,16 @@ public partial class AccountSettingsViewModel : PageViewModelBase
                 IsInitialUpdateFinished = true;
                 HuggingFaceStatus = args;
                 // IsHuggingFaceConnected and HuggingFaceUsernameWithParentheses will be updated by OnHuggingFaceStatusChanged
+            });
+        };
+
+        accountsService.GeminiAccountStatusUpdate += (_, args) =>
+        {
+            Dispatcher.UIThread.Post(() =>
+            {
+                IsInitialUpdateFinished = true;
+                GeminiStatus = args;
+                // HasGeminiApiKey will be updated by OnGeminiStatusChanged
             });
         };
     }
@@ -309,7 +321,7 @@ public partial class AccountSettingsViewModel : PageViewModelBase
         if (!await BeforeConnectCheck())
             return;
 
-        var field = new TextBoxField 
+        var field = new TextBoxField
         {
             Label = "Hugging Face Token", // Assuming Label is for the prompt
             IsPassword = true, // Assuming TextBoxField has an IsPassword property
@@ -325,14 +337,14 @@ public partial class AccountSettingsViewModel : PageViewModelBase
         var dialog = DialogHelper.CreateTextEntryDialog(
             "Connect Hugging Face Account",
             "Go to [Hugging Face settings](https://huggingface.co/settings/tokens) to create a new Access Token. Ensure it has read permissions. Paste the token below.",
-            [field] 
+            [field]
         );
 
         var result = await dialog.ShowAsync();
 
         if (result == ContentDialogResult.Primary && !string.IsNullOrWhiteSpace(field.Text))
         {
-            await accountsService.HuggingFaceLoginAsync(field.Text); 
+            await accountsService.HuggingFaceLoginAsync(field.Text);
             await accountsService.RefreshAsync();
         }
     }
@@ -397,5 +409,71 @@ public partial class AccountSettingsViewModel : PageViewModelBase
                 );
             }
         }
+    }
+
+    partial void OnGeminiStatusChanged(GeminiAccountStatusUpdateEventArgs value)
+    {
+        HasGeminiApiKey = value.IsConnected;
+    }
+
+    [RelayCommand]
+    private async Task SetGeminiApiKey()
+    {
+        if (!await BeforeConnectCheck())
+            return;
+
+        var field = new TextBoxField
+        {
+            Label = "Gemini API Key",
+            IsPassword = true,
+            Validator = s =>
+            {
+                if (string.IsNullOrWhiteSpace(s))
+                {
+                    throw new ValidationException("API key is required");
+                }
+            },
+        };
+
+        var dialog = DialogHelper.CreateTextEntryDialog(
+            "Set Gemini API Key",
+            """
+            Get your Gemini API key from [Google AI Studio](https://ai.google.dev/)
+
+            This key will be used for BananaVision image generation.
+            """,
+            null,
+            [field]
+        );
+        dialog.PrimaryButtonText = "Save";
+
+        if (await dialog.ShowAsync() != ContentDialogResult.Primary || field.Text is not { } apiKey)
+        {
+            return;
+        }
+
+        await accountsService.GeminiLoginAsync(apiKey);
+        notificationService.Show("Success", "Gemini API key saved", NotificationType.Success);
+    }
+
+    [RelayCommand]
+    private async Task RemoveGeminiApiKey()
+    {
+        var dialog = new BetterContentDialog
+        {
+            Title = "Remove Gemini API Key",
+            Content = "Are you sure you want to remove your Gemini API key?",
+            PrimaryButtonText = "Remove",
+            CloseButtonText = "Cancel",
+            DefaultButton = ContentDialogButton.Close,
+        };
+
+        if (await dialog.ShowAsync() != ContentDialogResult.Primary)
+        {
+            return;
+        }
+
+        await accountsService.GeminiLogoutAsync();
+        notificationService.Show("Success", "Gemini API key removed", NotificationType.Success);
     }
 }

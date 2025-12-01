@@ -45,6 +45,10 @@
         <Style Selector="Button:pointerover PathIcon">
             <Setter Property="Foreground" Value="#0A84FF" />
         </Style>
+        <!--  Image hover overlay effect  -->
+        <Style Selector="Button:pointerover Border#HoverOverlay">
+            <Setter Property="IsVisible" Value="True" />
+        </Style>
     </controls:UserControlBase.Styles>
 
     <!--  Main Container  -->
@@ -174,6 +178,10 @@
             Grid.RowSpan="2"
             Grid.Column="1"
             RowDefinitions="Auto, Auto, *, Auto">
+            <!--  Subtle background for chat area - using solid color to avoid gradient banding  -->
+            <Grid.Background>
+                <SolidColorBrush Color="#0F0F17" />
+            </Grid.Background>
 
             <!--  Header with Provider Selector (Row 0)  -->
             <Border
@@ -364,33 +372,6 @@
                     </StackPanel>
 
                     <!--  Error Message with Retry  -->
-                    <StackPanel
-                        Grid.Column="3"
-                        Margin="8,0,0,0"
-                        VerticalAlignment="Center"
-                        IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                        Orientation="Horizontal"
-                        Spacing="8">
-                        <TextBlock
-                            MaxWidth="300"
-                            VerticalAlignment="Center"
-                            Foreground="Red"
-                            Text="{Binding ErrorMessage}"
-                            TextWrapping="Wrap" />
-                        <Button
-                            Padding="8,4"
-                            Background="#CC3340"
-                            Command="{Binding RetryLastMessageCommand}"
-                            CornerRadius="4"
-                            Foreground="White"
-                            IsVisible="{Binding CanRetryLastMessage}"
-                            ToolTip.Tip="Retry last message">
-                            <StackPanel Orientation="Horizontal" Spacing="4">
-                                <avalonia:Icon FontSize="11" Value="fa-solid fa-rotate-right" />
-                                <TextBlock FontSize="12" Text="Retry" />
-                            </StackPanel>
-                        </Button>
-                    </StackPanel>
                 </Grid>
             </Border>
 
@@ -544,7 +525,7 @@
                                 IsVisible="{Binding SelectedLoras.Count}"
                                 ItemsSource="{Binding SelectedLoras}">
                                 <ItemsControl.ItemTemplate>
-                                    <DataTemplate DataType="vm:SelectedLora">
+                                    <DataTemplate DataType="bananaVision1:SelectedLora">
                                         <Border
                                             Margin="0,4"
                                             Padding="12,10"
@@ -724,7 +705,7 @@
                                 IsVisible="{Binding SelectedLoras.Count}"
                                 ItemsSource="{Binding SelectedLoras}">
                                 <ItemsControl.ItemTemplate>
-                                    <DataTemplate DataType="vm:SelectedLora">
+                                    <DataTemplate DataType="bananaVision1:SelectedLora">
                                         <Border
                                             Margin="0,4"
                                             Padding="12,10"
@@ -832,60 +813,153 @@
 
             <!--  Message List (Row 2)  -->
             <Grid Grid.Row="2">
-                <ScrollViewer Padding="64,10">
+                <!--  Drag and Drop Overlay  -->
+                <Border
+                    Background="#80000000"
+                    CornerRadius="16"
+                    IsHitTestVisible="False"
+                    IsVisible="{Binding IsDragOverImage}"
+                    ZIndex="100">
+                    <Border
+                        Margin="32"
+                        Padding="48"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Background="#2D2D4A"
+                        BorderBrush="#9D8CFF"
+                        BorderThickness="3"
+                        CornerRadius="20">
+                        <StackPanel HorizontalAlignment="Center" Spacing="16">
+                            <avalonia:Icon
+                                HorizontalAlignment="Center"
+                                FontSize="48"
+                                Foreground="#9D8CFF"
+                                Value="fa-solid fa-images" />
+                            <TextBlock
+                                HorizontalAlignment="Center"
+                                FontSize="20"
+                                FontWeight="SemiBold"
+                                Foreground="White"
+                                Text="Drop images here" />
+                            <TextBlock
+                                HorizontalAlignment="Center"
+                                FontSize="14"
+                                Foreground="#A0A0B0"
+                                Text="Images will be added to your next message" />
+                        </StackPanel>
+                    </Border>
+                </Border>
+
+                <ScrollViewer
+                    Name="MessageScrollViewer"
+                    Padding="64,10"
+                    HorizontalScrollBarVisibility="Disabled"
+                    VerticalScrollBarVisibility="Auto">
                     <ItemsControl ItemsSource="{Binding Messages}">
                         <ItemsControl.DataTemplates>
 
-                            <!--  Text Template  -->
+                            <!--  Text Template with slide-in animation  -->
                             <DataTemplate DataType="bananaVision1:TextMessage">
-                                <Grid Margin="0,4" HorizontalAlignment="{Binding IsMyMessage, Converter={StaticResource AlignConv}}">
+                                <Grid Margin="0,6" HorizontalAlignment="{Binding IsMyMessage, Converter={StaticResource AlignConv}}">
                                     <Border
-                                        MaxWidth="320"
-                                        Padding="12,8"
+                                        MaxWidth="420"
+                                        Padding="14,10"
                                         Background="{Binding IsMyMessage, Converter={StaticResource ColorConv}}"
-                                        CornerRadius="16">
+                                        BoxShadow="0 2 8 0 #20000000"
+                                        CornerRadius="18">
+                                        <Border.Styles>
+                                            <Style Selector="Border">
+                                                <Style.Animations>
+                                                    <Animation
+                                                        Easing="CubicEaseOut"
+                                                        FillMode="Forward"
+                                                        Duration="0:0:0.25">
+                                                        <KeyFrame Cue="0%">
+                                                            <Setter Property="Opacity" Value="0" />
+                                                        </KeyFrame>
+                                                        <KeyFrame Cue="100%">
+                                                            <Setter Property="Opacity" Value="1" />
+                                                        </KeyFrame>
+                                                    </Animation>
+                                                </Style.Animations>
+                                            </Style>
+                                        </Border.Styles>
                                         <StackPanel>
-                                            <TextBlock
+                                            <SelectableTextBlock
                                                 FontSize="14"
                                                 Foreground="{Binding IsMyMessage, Converter={StaticResource TextConv}}"
+                                                LineHeight="20"
                                                 Text="{Binding Text}"
                                                 TextWrapping="Wrap" />
                                             <TextBlock
-                                                Margin="0,4,0,0"
+                                                Margin="0,6,0,0"
                                                 HorizontalAlignment="Right"
                                                 FontSize="10"
                                                 Foreground="White"
-                                                Opacity="0.6"
+                                                Opacity="0.5"
                                                 Text="{Binding Time}" />
                                         </StackPanel>
                                     </Border>
                                 </Grid>
                             </DataTemplate>
 
-                            <!--  Image Template (clickable for full preview)  -->
+                            <!--  Image Template (clickable for full preview) with animation  -->
                             <DataTemplate DataType="bananaVision1:ImageMessage">
-                                <Grid Margin="0,4" HorizontalAlignment="{Binding IsMyMessage, Converter={StaticResource AlignConv}}">
+                                <Grid Margin="0,6" HorizontalAlignment="{Binding IsMyMessage, Converter={StaticResource AlignConv}}">
                                     <Border
-                                        MaxWidth="320"
+                                        MaxWidth="400"
                                         Background="Transparent"
+                                        BoxShadow="0 4 12 0 #30000000"
                                         ClipToBounds="True"
                                         CornerRadius="16">
+                                        <Border.Styles>
+                                            <Style Selector="Border">
+                                                <Style.Animations>
+                                                    <Animation
+                                                        Easing="CubicEaseOut"
+                                                        FillMode="Forward"
+                                                        Duration="0:0:0.3">
+                                                        <KeyFrame Cue="0%">
+                                                            <Setter Property="Opacity" Value="0" />
+                                                        </KeyFrame>
+                                                        <KeyFrame Cue="100%">
+                                                            <Setter Property="Opacity" Value="1" />
+                                                        </KeyFrame>
+                                                    </Animation>
+                                                </Style.Animations>
+                                            </Style>
+                                        </Border.Styles>
                                         <StackPanel>
                                             <Button
                                                 Padding="0"
                                                 Background="Transparent"
                                                 Command="{Binding $parent[ItemsControl].((vm:BananaVisionPageViewModel)DataContext).PreviewImageCommand}"
                                                 CommandParameter="{Binding Image}"
-                                                CornerRadius="12"
+                                                CornerRadius="14"
                                                 Cursor="Hand"
                                                 ToolTip.Tip="Click to view full size">
-                                                <Image
-                                                    MaxHeight="300"
-                                                    Source="{Binding Image}"
-                                                    Stretch="UniformToFill" />
+                                                <Grid>
+                                                    <Image
+                                                        MaxHeight="350"
+                                                        Source="{Binding Image}"
+                                                        Stretch="Uniform" />
+                                                    <!--  Hover overlay with zoom icon  -->
+                                                    <Border
+                                                        Name="HoverOverlay"
+                                                        Background="#40000000"
+                                                        CornerRadius="14"
+                                                        IsVisible="False">
+                                                        <avalonia:Icon
+                                                            HorizontalAlignment="Center"
+                                                            VerticalAlignment="Center"
+                                                            FontSize="24"
+                                                            Foreground="White"
+                                                            Value="fa-solid fa-magnifying-glass-plus" />
+                                                    </Border>
+                                                </Grid>
                                             </Button>
                                             <TextBlock
-                                                Margin="0,2,4,0"
+                                                Margin="0,4,4,0"
                                                 HorizontalAlignment="Right"
                                                 FontSize="10"
                                                 Foreground="#98989D"
@@ -895,57 +969,87 @@
                                 </Grid>
                             </DataTemplate>
 
-                            <!--  Thinking/Reasoning Template (Gemini 3 Pro)  -->
+                            <!--  Thinking/Reasoning Template (Gemini 3 Pro) with animation  -->
                             <DataTemplate DataType="bananaVision1:ThinkingMessage">
                                 <Grid
-                                    MaxWidth="500"
+                                    MaxWidth="550"
                                     Margin="0,8"
                                     HorizontalAlignment="Left">
                                     <Border
-                                        Padding="14,10"
-                                        Background="#1A1A2E"
+                                        Padding="16,12"
                                         BorderBrush="#3D3D5C"
                                         BorderThickness="1"
-                                        CornerRadius="12">
-                                        <StackPanel Spacing="8">
+                                        CornerRadius="14">
+                                        <Border.Background>
+                                            <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                                <GradientStop Offset="0" Color="#1A1A2E" />
+                                                <GradientStop Offset="1" Color="#1E1E36" />
+                                            </LinearGradientBrush>
+                                        </Border.Background>
+                                        <Border.Styles>
+                                            <Style Selector="Border">
+                                                <Style.Animations>
+                                                    <Animation
+                                                        Easing="CubicEaseOut"
+                                                        FillMode="Forward"
+                                                        Duration="0:0:0.3">
+                                                        <KeyFrame Cue="0%">
+                                                            <Setter Property="Opacity" Value="0" />
+                                                        </KeyFrame>
+                                                        <KeyFrame Cue="100%">
+                                                            <Setter Property="Opacity" Value="1" />
+                                                        </KeyFrame>
+                                                    </Animation>
+                                                </Style.Animations>
+                                            </Style>
+                                        </Border.Styles>
+                                        <StackPanel Spacing="10">
                                             <!--  Header with expand/collapse  -->
                                             <Grid ColumnDefinitions="Auto, *, Auto">
                                                 <StackPanel
                                                     Grid.Column="0"
                                                     Orientation="Horizontal"
-                                                    Spacing="8">
-                                                    <Border
-                                                        Padding="6"
-                                                        Background="#2D2D4A"
-                                                        CornerRadius="10">
+                                                    Spacing="10">
+                                                    <Border Padding="8" CornerRadius="12">
+                                                        <Border.Background>
+                                                            <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                                                <GradientStop Offset="0" Color="#9D8CFF" />
+                                                                <GradientStop Offset="1" Color="#6366F1" />
+                                                            </LinearGradientBrush>
+                                                        </Border.Background>
                                                         <avalonia:Icon
-                                                            FontSize="12"
-                                                            Foreground="#9D8CFF"
+                                                            FontSize="14"
+                                                            Foreground="White"
                                                             Value="fa-solid fa-brain" />
                                                     </Border>
-                                                    <TextBlock
-                                                        VerticalAlignment="Center"
-                                                        FontSize="13"
-                                                        FontWeight="SemiBold"
-                                                        Foreground="#9D8CFF"
-                                                        Text="AI Reasoning" />
+                                                    <StackPanel VerticalAlignment="Center">
+                                                        <TextBlock
+                                                            FontSize="13"
+                                                            FontWeight="SemiBold"
+                                                            Foreground="#9D8CFF"
+                                                            Text="AI Reasoning" />
+                                                        <TextBlock
+                                                            FontSize="10"
+                                                            Foreground="#6B6B7B"
+                                                            Text="Thinking process" />
+                                                    </StackPanel>
                                                 </StackPanel>
                                                 <Button
                                                     Grid.Column="2"
-                                                    Padding="6"
-                                                    Background="Transparent"
+                                                    Padding="8"
+                                                    Background="#2D2D4A"
                                                     Command="{Binding ToggleExpandedCommand}"
                                                     CornerRadius="8"
                                                     ToolTip.Tip="Expand/Collapse">
                                                     <Panel>
                                                         <avalonia:Icon
                                                             FontSize="11"
-                                                            Foreground="#8E8E93"
+                                                            Foreground="#9D8CFF"
                                                             IsVisible="{Binding IsExpanded}"
                                                             Value="fa-solid fa-chevron-up" />
                                                         <avalonia:Icon
                                                             FontSize="11"
-                                                            Foreground="#8E8E93"
+                                                            Foreground="#9D8CFF"
                                                             IsVisible="{Binding !IsExpanded}"
                                                             Value="fa-solid fa-chevron-down" />
                                                     </Panel>
@@ -958,20 +1062,20 @@
                                                 FontStyle="Italic"
                                                 Foreground="#7A7A8C"
                                                 IsVisible="{Binding !IsExpanded}"
-                                                LineHeight="18"
+                                                LineHeight="20"
                                                 Text="{Binding ThinkingPreview}"
                                                 TextWrapping="Wrap" />
 
                                             <!--  Expanded content  -->
                                             <ScrollViewer
-                                                MaxHeight="250"
+                                                MaxHeight="300"
                                                 HorizontalScrollBarVisibility="Disabled"
                                                 IsVisible="{Binding IsExpanded}"
                                                 VerticalScrollBarVisibility="Auto">
-                                                <TextBlock
+                                                <SelectableTextBlock
                                                     FontSize="12"
-                                                    Foreground="#A0A0B0"
-                                                    LineHeight="18"
+                                                    Foreground="#B0B0C0"
+                                                    LineHeight="20"
                                                     Text="{Binding ThinkingContent}"
                                                     TextWrapping="Wrap" />
                                             </ScrollViewer>
@@ -981,7 +1085,7 @@
                                                 HorizontalAlignment="Right"
                                                 FontSize="10"
                                                 Foreground="#7A7A8C"
-                                                Opacity="0.4"
+                                                Opacity="0.5"
                                                 Text="{Binding Time}" />
                                         </StackPanel>
                                     </Border>
@@ -992,25 +1096,261 @@
                     </ItemsControl>
                 </ScrollViewer>
 
-                <!--  Loading Indicator (overlays on top)  -->
+                <!--  Typing/Generating Indicator (overlays on top)  -->
                 <Border
                     Margin="0,0,0,16"
-                    Padding="16,8"
+                    Padding="16,12"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Bottom"
                     Background="#2C2C2E"
-                    CornerRadius="12"
+                    CornerRadius="16"
                     IsVisible="{Binding IsGenerating}">
-                    <StackPanel Orientation="Horizontal" Spacing="12">
-                        <ui:ProgressRing
-                            Width="20"
-                            Height="20"
-                            IsIndeterminate="True" />
+                    <StackPanel Orientation="Horizontal" Spacing="16">
+                        <!--  Animated typing dots (opacity only)  -->
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <Border
+                                Width="8"
+                                Height="8"
+                                Background="#9D8CFF"
+                                CornerRadius="4">
+                                <Border.Styles>
+                                    <Style Selector="Border">
+                                        <Style.Animations>
+                                            <Animation IterationCount="Infinite" Duration="0:0:1.2">
+                                                <KeyFrame Cue="0%">
+                                                    <Setter Property="Opacity" Value="0.3" />
+                                                </KeyFrame>
+                                                <KeyFrame Cue="25%">
+                                                    <Setter Property="Opacity" Value="1" />
+                                                </KeyFrame>
+                                                <KeyFrame Cue="50%">
+                                                    <Setter Property="Opacity" Value="0.3" />
+                                                </KeyFrame>
+                                                <KeyFrame Cue="100%">
+                                                    <Setter Property="Opacity" Value="0.3" />
+                                                </KeyFrame>
+                                            </Animation>
+                                        </Style.Animations>
+                                    </Style>
+                                </Border.Styles>
+                            </Border>
+                            <Border
+                                Width="8"
+                                Height="8"
+                                Background="#9D8CFF"
+                                CornerRadius="4">
+                                <Border.Styles>
+                                    <Style Selector="Border">
+                                        <Style.Animations>
+                                            <Animation
+                                                Delay="0:0:0.2"
+                                                IterationCount="Infinite"
+                                                Duration="0:0:1.2">
+                                                <KeyFrame Cue="0%">
+                                                    <Setter Property="Opacity" Value="0.3" />
+                                                </KeyFrame>
+                                                <KeyFrame Cue="25%">
+                                                    <Setter Property="Opacity" Value="1" />
+                                                </KeyFrame>
+                                                <KeyFrame Cue="50%">
+                                                    <Setter Property="Opacity" Value="0.3" />
+                                                </KeyFrame>
+                                                <KeyFrame Cue="100%">
+                                                    <Setter Property="Opacity" Value="0.3" />
+                                                </KeyFrame>
+                                            </Animation>
+                                        </Style.Animations>
+                                    </Style>
+                                </Border.Styles>
+                            </Border>
+                            <Border
+                                Width="8"
+                                Height="8"
+                                Background="#9D8CFF"
+                                CornerRadius="4">
+                                <Border.Styles>
+                                    <Style Selector="Border">
+                                        <Style.Animations>
+                                            <Animation
+                                                Delay="0:0:0.4"
+                                                IterationCount="Infinite"
+                                                Duration="0:0:1.2">
+                                                <KeyFrame Cue="0%">
+                                                    <Setter Property="Opacity" Value="0.3" />
+                                                </KeyFrame>
+                                                <KeyFrame Cue="25%">
+                                                    <Setter Property="Opacity" Value="1" />
+                                                </KeyFrame>
+                                                <KeyFrame Cue="50%">
+                                                    <Setter Property="Opacity" Value="0.3" />
+                                                </KeyFrame>
+                                                <KeyFrame Cue="100%">
+                                                    <Setter Property="Opacity" Value="0.3" />
+                                                </KeyFrame>
+                                            </Animation>
+                                        </Style.Animations>
+                                    </Style>
+                                </Border.Styles>
+                            </Border>
+                        </StackPanel>
                         <TextBlock
                             VerticalAlignment="Center"
                             FontSize="14"
                             Foreground="White"
-                            Text="Generating image..." />
+                            Text="Creating your image..." />
+                        <!--  Cancel Button  -->
+                        <Button
+                            Padding="8,4"
+                            Background="#CC3340"
+                            Command="{Binding SendMessageCancelCommand}"
+                            CornerRadius="8"
+                            ToolTip.Tip="Cancel generation">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <avalonia:Icon
+                                    FontSize="11"
+                                    Foreground="White"
+                                    Value="fa-solid fa-stop" />
+                                <TextBlock
+                                    FontSize="12"
+                                    Foreground="White"
+                                    Text="Cancel" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Border>
+
+                <!--  Retry Indicator (shown when generation failed)  -->
+                <Border
+                    Margin="0,0,0,16"
+                    Padding="16,12"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Bottom"
+                    Background="#2C2C2E"
+                    CornerRadius="16"
+                    IsVisible="{Binding CanRetryLastMessage}">
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <avalonia:Icon
+                            VerticalAlignment="Center"
+                            FontSize="16"
+                            Foreground="#FF6B6B"
+                            Value="fa-solid fa-exclamation-circle" />
+                        <TextBlock
+                            MaxWidth="300"
+                            VerticalAlignment="Center"
+                            FontSize="13"
+                            Foreground="#FF6B6B"
+                            Text="{Binding ErrorMessage}"
+                            TextTrimming="CharacterEllipsis" />
+                        <Button
+                            Padding="10,6"
+                            Background="#0A84FF"
+                            Command="{Binding RetryLastMessageCommand}"
+                            CornerRadius="8"
+                            ToolTip.Tip="Retry generation">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <avalonia:Icon
+                                    FontSize="12"
+                                    Foreground="White"
+                                    Value="fa-solid fa-rotate-right" />
+                                <TextBlock
+                                    FontSize="13"
+                                    Foreground="White"
+                                    Text="Retry" />
+                            </StackPanel>
+                        </Button>
+                        <Button
+                            Padding="8,6"
+                            Background="Transparent"
+                            Command="{Binding DismissErrorCommand}"
+                            CornerRadius="8"
+                            ToolTip.Tip="Dismiss">
+                            <avalonia:Icon
+                                FontSize="12"
+                                Foreground="#8E8E93"
+                                Value="fa-solid fa-xmark" />
+                        </Button>
+                    </StackPanel>
+                </Border>
+
+                <!--  Empty State / Welcome Message  -->
+                <Border
+                    Margin="32"
+                    Padding="32"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Background="#1A1A2E"
+                    CornerRadius="20"
+                    IsVisible="{Binding !Messages.Count}">
+                    <StackPanel
+                        MaxWidth="450"
+                        HorizontalAlignment="Center"
+                        Spacing="16">
+                        <!--  Icon  -->
+                        <Border
+                            Width="80"
+                            Height="80"
+                            HorizontalAlignment="Center"
+                            CornerRadius="40">
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                    <GradientStop Offset="0" Color="#9D8CFF" />
+                                    <GradientStop Offset="1" Color="#6366F1" />
+                                </LinearGradientBrush>
+                            </Border.Background>
+                            <TextBlock
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                FontSize="36"
+                                Text="🍌" />
+                        </Border>
+                        <!--  Title  -->
+                        <TextBlock
+                            HorizontalAlignment="Center"
+                            FontSize="24"
+                            FontWeight="SemiBold"
+                            Foreground="White"
+                            Text="Welcome to BananaVision!" />
+                        <!--  Description  -->
+                        <TextBlock
+                            HorizontalAlignment="Center"
+                            FontSize="14"
+                            Foreground="#A0A0B0"
+                            LineHeight="22"
+                            Text="Describe what you want to create, upload reference images, and watch the magic happen. Your AI assistant can generate, edit, and iterate on images through natural conversation."
+                            TextAlignment="Center"
+                            TextWrapping="Wrap" />
+                        <!--  Quick Tips  -->
+                        <Border
+                            Margin="0,8,0,0"
+                            Padding="16"
+                            Background="#2D2D4A"
+                            CornerRadius="12">
+                            <StackPanel Spacing="10">
+                                <TextBlock
+                                    FontSize="12"
+                                    FontWeight="SemiBold"
+                                    Foreground="#9D8CFF"
+                                    Text="✨ Quick Tips" />
+                                <StackPanel Spacing="6">
+                                    <TextBlock
+                                        FontSize="12"
+                                        Foreground="#8E8E93"
+                                        Text="• Upload an image and ask for edits" />
+                                    <TextBlock
+                                        FontSize="12"
+                                        Foreground="#8E8E93"
+                                        Text="• Be descriptive for better results" />
+                                    <TextBlock
+                                        FontSize="12"
+                                        Foreground="#8E8E93"
+                                        Text="• Drag &amp; drop or Ctrl+V to add images" />
+                                    <TextBlock
+                                        FontSize="12"
+                                        Foreground="#8E8E93"
+                                        Text="• Press Enter to send, Shift+Enter for new line" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
                 </Border>
             </Grid>
@@ -1088,25 +1428,18 @@
                     </ItemsControl>
 
                     <Grid ColumnDefinitions="*, Auto">
-                        <!--  Input Box (Dark Grey)  -->
-                        <TextBox
+                        <!--  Input Box Container (Dark Grey) - Supports multi-line with Shift+Enter  -->
+                        <Border
                             Grid.Column="0"
-                            MinHeight="40"
-                            Padding="16,8"
-                            VerticalContentAlignment="Center"
                             Background="#2C2C2E"
-                            BorderThickness="0"
-                            CornerRadius="16"
-                            IsEnabled="{Binding !IsGenerating}"
-                            Text="{Binding NewMessageText}"
-                            Watermark="Describe the image you want to generate...">
-                            <TextBox.KeyBindings>
-                                <KeyBinding Command="{Binding SendMessageCommand}" Gesture="Enter" />
-                            </TextBox.KeyBindings>
-                            <TextBox.InnerLeftContent>
+                            CornerRadius="16">
+                            <Grid ColumnDefinitions="Auto, *">
+                                <!--  Image button outside TextBox for better alignment  -->
                                 <Button
-                                    Margin="4,0,0,0"
+                                    Grid.Column="0"
+                                    Margin="8,0,0,0"
                                     Padding="8"
+                                    VerticalAlignment="Center"
                                     Background="Transparent"
                                     Command="{Binding AddImageCommand}"
                                     CornerRadius="12"
@@ -1114,20 +1447,61 @@
                                     ToolTip.Tip="Add images to send with your message">
                                     <avalonia:Icon Foreground="#8E8E93" Value="fa-solid fa-image" />
                                 </Button>
-                            </TextBox.InnerLeftContent>
-                        </TextBox>
+                                <TextBox
+                                    Name="MessageInputBox"
+                                    Grid.Column="1"
+                                    MinHeight="40"
+                                    MaxHeight="150"
+                                    Padding="8,10"
+                                    VerticalContentAlignment="Center"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    IsEnabled="{Binding !IsGenerating}"
+                                    Text="{Binding NewMessageText}"
+                                    TextWrapping="Wrap"
+                                    Watermark="Describe your image... (Ctrl+V to paste images, Enter to send)">
+                                    <Interaction.Behaviors>
+                                        <EventTriggerBehavior EventName="KeyDown">
+                                            <InvokeCommandAction Command="{Binding TextBoxKeyDownCommand}" PassEventArgsToCommand="True" />
+                                        </EventTriggerBehavior>
+                                    </Interaction.Behaviors>
+                                </TextBox>
+                            </Grid>
+                        </Border>
 
-                        <!--  Send Button  -->
+                        <!--  Send Button with hover effect  -->
                         <Button
                             Grid.Column="1"
+                            Width="44"
+                            Height="44"
                             Margin="10,0,0,0"
-                            Padding="8"
-                            Background="Transparent"
+                            Padding="0"
+                            HorizontalContentAlignment="Center"
+                            VerticalContentAlignment="Center"
+                            Background="#0A84FF"
                             Command="{Binding SendMessageCommand}"
-                            CornerRadius="12"
+                            CornerRadius="22"
                             IsEnabled="{Binding !IsGenerating}"
-                            ToolTip.Tip="Send message">
-                            <PathIcon Data="{StaticResource SendIconGeometry}" Foreground="#0A84FF" />
+                            ToolTip.Tip="Send message (Enter)">
+                            <Button.Styles>
+                                <Style Selector="Button:pointerover">
+                                    <Setter Property="Background" Value="#2196F3" />
+                                    <Setter Property="RenderTransform">
+                                        <ScaleTransform ScaleX="1.05" ScaleY="1.05" />
+                                    </Setter>
+                                </Style>
+                                <Style Selector="Button:pressed">
+                                    <Setter Property="RenderTransform">
+                                        <ScaleTransform ScaleX="0.95" ScaleY="0.95" />
+                                    </Setter>
+                                </Style>
+                            </Button.Styles>
+                            <Button.Transitions>
+                                <Transitions>
+                                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.1" />
+                                </Transitions>
+                            </Button.Transitions>
+                            <PathIcon Data="{StaticResource SendIconGeometry}" Foreground="White" />
                         </Button>
                     </Grid>
                 </StackPanel>

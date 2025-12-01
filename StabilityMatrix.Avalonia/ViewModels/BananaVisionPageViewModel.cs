@@ -1,12 +1,12 @@
 ﻿using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Reactive.Linq;
-using Avalonia;
+using AsyncAwaitBestPractices;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
-using Avalonia.Layout;
+using Avalonia.Input;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
-using Avalonia.Styling;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -25,7 +25,6 @@ using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.Packages;
-using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Services;
 using StabilityMatrix.Core.Services.ImageGeneration;
 
@@ -44,7 +43,8 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
     private readonly IModelIndexService modelIndexService;
 
     public override string Title => "BananaVision";
-    public override IconSource IconSource => new FASymbolIconSource { Symbol = "fa-solid fa-glasses" };
+    public override IconSource IconSource =>
+        new FASymbolIconSource { Symbol = "fa-solid fa-wand-magic-sparkles" };
 
     public IInferenceClientManager ClientManager { get; }
 
@@ -52,6 +52,7 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
     public partial string? NewMessageText { get; set; }
 
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(SendMessageCommand))]
     public partial bool IsGenerating { get; set; }
 
     [ObservableProperty]
@@ -65,22 +66,42 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
         ImageGenerationConversation? newValue
     )
     {
+        // Cancel any pending message load from the previous conversation
+        loadMessagesCts?.Cancel();
+        loadMessagesCts?.Dispose();
+        loadMessagesCts = null;
+
         if (newValue != null)
         {
             logger.LogInformation(
-                "Current conversation changed to: {ConversationId} - {Title}",
+                "Current conversation changed to: {ConversationId} - {Title} (provider: {ProviderId})",
                 newValue.Id,
-                newValue.Title
+                newValue.Title,
+                newValue.ProviderId
             );
 
-            // Auto-switch provider to match the conversation's provider
+            // Auto-switch to the conversation's last-used provider for convenience.
+            // Users can still freely change it afterwards, and that change will be
+            // remembered when they send the next message.
             if (newValue.ProviderId != SelectedProviderId)
             {
                 SelectedProviderId = newValue.ProviderId;
             }
 
+            // Create new cancellation token for this load operation
+            loadMessagesCts = new CancellationTokenSource();
+            var token = loadMessagesCts.Token;
+
             // Load messages for the new conversation (fire and forget with error handling)
-            _ = LoadMessagesForConversationAsync(newValue);
+            LoadMessagesForConversationAsync(newValue, token)
+                .SafeFireAndForget(ex =>
+                {
+                    logger.LogError(
+                        ex,
+                        "Unhandled error loading messages for conversation {Id}",
+                        newValue.Id
+                    );
+                });
         }
         else
         {
@@ -92,47 +113,67 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
     /// <summary>
     /// Loads messages for a conversation without changing CurrentConversation
     /// </summary>
-    private async Task LoadMessagesForConversationAsync(ImageGenerationConversation conversation)
+    private async Task LoadMessagesForConversationAsync(
+        ImageGenerationConversation conversation,
+        CancellationToken cancellationToken = default
+    )
     {
-        Messages.Clear();
+        // Clear on UI thread
+        await Dispatcher.UIThread.InvokeAsync(() => Messages.Clear());
 
         try
         {
             var messages = await chatService.GetMessagesAsync(conversation.Id);
+
+            // Check if cancelled before updating UI (user may have switched conversations)
+            cancellationToken.ThrowIfCancellationRequested();
+
             logger.LogInformation(
                 "Loaded {Count} messages for conversation {Id}",
                 messages.Count,
                 conversation.Id
             );
 
-            foreach (var message in messages)
+            // Update UI on the UI thread
+            await Dispatcher.UIThread.InvokeAsync(() =>
             {
-                // Show thinking content first (for assistant messages)
-                if (
-                    message.Role == MessageRole.Assistant
-                    && ShowThinkingOutput
-                    && !string.IsNullOrEmpty(message.ThinkingContent)
-                )
+                foreach (var message in messages)
                 {
-                    Messages.Add(new ThinkingMessage(message.ThinkingContent));
-                }
+                    // Show thinking content first (for assistant messages)
+                    if (
+                        message.Role == MessageRole.Assistant
+                        && ShowThinkingOutput
+                        && !string.IsNullOrEmpty(message.ThinkingContent)
+                    )
+                    {
+                        Messages.Add(new ThinkingMessage(message.ThinkingContent));
+                    }
 
-                if (!string.IsNullOrEmpty(message.TextContent))
-                {
-                    Messages.Add(new TextMessage(message.TextContent, message.Role == MessageRole.User));
-                }
+                    if (!string.IsNullOrEmpty(message.TextContent))
+                    {
+                        Messages.Add(new TextMessage(message.TextContent, message.Role == MessageRole.User));
+                    }
 
-                if (!string.IsNullOrEmpty(message.ImagePath) && File.Exists(message.ImagePath))
-                {
-                    var bitmap = new Bitmap(message.ImagePath);
-                    Messages.Add(new ImageMessage(bitmap, message.Role == MessageRole.User));
+                    if (!string.IsNullOrEmpty(message.ImagePath) && File.Exists(message.ImagePath))
+                    {
+                        var bitmap = new Bitmap(message.ImagePath);
+                        Messages.Add(new ImageMessage(bitmap, message.Role == MessageRole.User));
+                    }
                 }
-            }
+            });
+        }
+        catch (OperationCanceledException)
+        {
+            // Conversation switch cancelled this load - this is expected, don't log as error
+            logger.LogDebug("Message loading cancelled for conversation {ConversationId}", conversation.Id);
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to load messages for conversation {ConversationId}", conversation.Id);
-            ErrorMessage = $"Failed to load messages: {ex.Message}";
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                ErrorMessage = $"Failed to load messages: {ex.Message}";
+            });
         }
     }
 
@@ -157,27 +198,27 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
     /// <summary>
     /// Whether the selected provider supports thinking output
     /// </summary>
-    public bool SupportsThinking => SelectedProviderId == "gemini-3-pro";
+    public bool SupportsThinking => BananaVisionProviderIds.SupportsThinking(SelectedProviderId);
 
     /// <summary>
     /// Whether the selected provider requires a local backend (ComfyUI)
     /// </summary>
-    public bool RequiresLocalBackend => SelectedProviderId is "flux-kontext" or "qwen-image-edit";
+    public bool RequiresLocalBackend => BananaVisionProviderIds.IsLocalProvider(SelectedProviderId);
 
     /// <summary>
     /// Whether the selected provider is a cloud/API provider (Gemini)
     /// </summary>
-    public bool IsCloudProvider => SelectedProviderId?.Contains("gemini") == true;
+    public bool IsCloudProvider => BananaVisionProviderIds.IsCloudProvider(SelectedProviderId);
 
     /// <summary>
     /// Whether to show the Flux Kontext settings panel
     /// </summary>
-    public bool ShowFluxSettings => SelectedProviderId == "flux-kontext";
+    public bool ShowFluxSettings => SelectedProviderId == BananaVisionProviderIds.FluxKontext;
 
     /// <summary>
     /// Whether to show the Qwen Image Edit settings panel
     /// </summary>
-    public bool ShowQwenSettings => SelectedProviderId == "qwen-image-edit";
+    public bool ShowQwenSettings => SelectedProviderId == BananaVisionProviderIds.QwenImageEdit;
 
     /// <summary>
     /// Whether the Flux settings panel is expanded
@@ -275,6 +316,12 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
     [ObservableProperty]
     public partial bool IsWaitingForConnection { get; set; }
 
+    /// <summary>
+    /// Indicates whether the user is dragging an image over the page
+    /// </summary>
+    [ObservableProperty]
+    public partial bool IsDragOverImage { get; set; }
+
     partial void OnIsWaitingForConnectionChanged(bool value)
     {
         UpdateProviderStatus();
@@ -286,11 +333,18 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
     private List<string>? lastMessageImagePaths;
     private IDisposable? startupCompleteSubscription;
     private bool hasShownMissingModelsDialog;
+    private CancellationTokenSource? loadMessagesCts;
 
     /// <summary>
     /// Messages in the current conversation. Can contain MessageBase or ThinkingMessage.
     /// </summary>
-    public ObservableCollection<object> Messages { get; set; } = [];
+    public ObservableCollection<object> Messages { get; }
+
+    /// <summary>
+    /// Event raised when the message list should scroll to the end
+    /// </summary>
+    public event EventHandler? ScrollToEndRequested;
+
     public ObservableCollection<ImageGenerationConversation> Conversations { get; set; } = [];
     public ObservableCollection<ProviderDisplayItem> AvailableProviders { get; set; } = [];
 
@@ -323,6 +377,10 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
 
         ClientManager = inferenceClientManager;
 
+        // Initialize Messages collection and subscribe to changes for auto-scroll
+        Messages = [];
+        Messages.CollectionChanged += OnMessagesCollectionChanged;
+
         // Load available providers
         var providers = chatService.GetAvailableProviders();
         foreach (var provider in providers)
@@ -347,7 +405,11 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
             // When connected and using a local provider, check for missing models
             if (ClientManager.IsConnected && RequiresLocalBackend)
             {
-                _ = CheckAndShowMissingModelsDialogAsync();
+                CheckAndShowMissingModelsDialogAsync()
+                    .SafeFireAndForget(ex =>
+                    {
+                        logger.LogError(ex, "Failed to check for missing models");
+                    });
             }
         };
 
@@ -457,16 +519,24 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
         try
         {
             var conversations = await chatService.GetConversationsAsync();
-            Conversations.Clear();
-            foreach (var conversation in conversations)
+
+            // Update UI on the UI thread
+            await Dispatcher.UIThread.InvokeAsync(() =>
             {
-                Conversations.Add(conversation);
-            }
+                Conversations.Clear();
+                foreach (var conversation in conversations)
+                {
+                    Conversations.Add(conversation);
+                }
+            });
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to load conversations");
-            ErrorMessage = $"Failed to load conversations: {ex.Message}";
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                ErrorMessage = $"Failed to load conversations: {ex.Message}";
+            });
         }
     }
 
@@ -658,8 +728,14 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
             return;
         }
 
+        if (string.IsNullOrEmpty(SelectedProviderId))
+        {
+            notificationService.Show("Error", "Please select a provider", NotificationType.Error);
+            return;
+        }
+
         // Check API key only for Gemini provider
-        if (SelectedProviderId?.Contains("gemini") == true)
+        if (BananaVisionProviderIds.IsCloudProvider(SelectedProviderId))
         {
             var secrets = await secretsManager.SafeLoadAsync();
             if (string.IsNullOrEmpty(secrets.GeminiApiKey))
@@ -705,71 +781,11 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
         try
         {
             // Build provider options
-            Dictionary<string, object>? providerOptions = null;
-
-            // Add thinking support options for Gemini 3 Pro
-            if (SupportsThinking && ShowThinkingOutput)
-            {
-                providerOptions = new Dictionary<string, object>
-                {
-                    ["enableThinking"] = true,
-                    ["thinkingBudget"] = 2048,
-                };
-            }
-
-            // Add Flux Kontext model and LoRA options
-            if (SelectedProviderId == "flux-kontext")
-            {
-                providerOptions ??= new Dictionary<string, object>();
-
-                if (SelectedFluxModel != null)
-                {
-                    providerOptions["CustomUnetModel"] = SelectedFluxModel;
-                }
-
-                if (SelectedLoras.Count > 0)
-                {
-                    providerOptions["SelectedLoras"] = SelectedLoras.ToList();
-                }
-            }
-
-            // Add Qwen Image Edit model and LoRA options
-            if (SelectedProviderId == "qwen-image-edit")
-            {
-                providerOptions ??= new Dictionary<string, object>();
-
-                if (SelectedQwenModel != null)
-                {
-                    providerOptions["CustomUnetModel"] = SelectedQwenModel;
-                }
-
-                if (SelectedLoras.Count > 0)
-                {
-                    providerOptions["SelectedLoras"] = SelectedLoras.ToList();
-                }
-            }
-
-            // Add aspect ratio / resolution options
-            providerOptions ??= new Dictionary<string, object>();
-
-            if (UseCustomResolution)
-            {
-                // For local providers, pass explicit width/height
-                providerOptions["Width"] = CustomWidth;
-                providerOptions["Height"] = CustomHeight;
-            }
-            else if (SelectedAspectRatio != null)
-            {
-                // For cloud providers (Gemini), pass aspect ratio string
-                providerOptions["aspectRatio"] = SelectedAspectRatio.Ratio;
-
-                // For local providers, also pass width/height
-                providerOptions["Width"] = SelectedAspectRatio.Width;
-                providerOptions["Height"] = SelectedAspectRatio.Height;
-            }
+            var providerOptions = BuildProviderOptions();
 
             var (userMessage, assistantMessage) = await chatService.SendMessageAsync(
                 CurrentConversation.Id,
+                SelectedProviderId!,
                 messageText,
                 imagePaths.Count > 0 ? imagePaths : null,
                 providerOptions,
@@ -817,13 +833,23 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
         {
             logger.LogInformation("Message generation cancelled");
             notificationService.Show("Cancelled", "Image generation cancelled", NotificationType.Information);
+            CanRetryLastMessage = true; // Enable retry after cancel
+        }
+        catch (ImageGenerationException ex)
+        {
+            // Expected error from generation (provider error, API error, etc.)
+            logger.LogWarning("Image generation failed: {Message}", ex.Message);
+            ErrorMessage = ex.Message;
+            notificationService.Show("Generation Failed", ex.Message, NotificationType.Warning);
+            CanRetryLastMessage = true;
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to send message");
-            ErrorMessage = $"Failed to generate image: {ex.Message}";
+            // Unexpected error
+            logger.LogError(ex, "Unexpected error sending message");
+            ErrorMessage = $"Unexpected error: {ex.Message}";
             notificationService.Show("Error", ex.Message, NotificationType.Error);
-            CanRetryLastMessage = true; // Enable retry on error
+            CanRetryLastMessage = true;
         }
         finally
         {
@@ -834,35 +860,165 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
     [RelayCommand]
     private async Task RetryLastMessageAsync()
     {
-        if (lastMessageText == null && lastMessageImagePaths == null)
+        if (CurrentConversation == null)
             return;
 
-        // Restore the last message
-        NewMessageText = lastMessageText ?? string.Empty;
-
-        // Restore pending images
-        if (lastMessageImagePaths != null)
+        if (string.IsNullOrEmpty(SelectedProviderId))
         {
-            PendingImages.Clear();
-            foreach (var imagePath in lastMessageImagePaths)
-            {
-                if (File.Exists(imagePath))
-                {
-                    try
-                    {
-                        var bitmap = new Bitmap(imagePath);
-                        PendingImages.Add(new PendingImage { FilePath = imagePath, Bitmap = bitmap });
-                    }
-                    catch (Exception ex)
-                    {
-                        logger.LogWarning(ex, "Failed to reload image for retry: {ImagePath}", imagePath);
-                    }
-                }
-            }
+            notificationService.Show("Error", "Please select a provider", NotificationType.Error);
+            return;
         }
 
-        // Send the message again
-        await SendMessageAsync(CancellationToken.None);
+        // Clear error state
+        ErrorMessage = null;
+        CanRetryLastMessage = false;
+        IsGenerating = true;
+
+        try
+        {
+            // Build provider options
+            var providerOptions = BuildProviderOptions();
+
+            // Retry generation - this doesn't create a new user message
+            var assistantMessage = await chatService.RetryGenerationAsync(
+                CurrentConversation.Id,
+                SelectedProviderId,
+                providerOptions,
+                CancellationToken.None
+            );
+
+            // Add only the assistant response to UI
+            if (ShowThinkingOutput && !string.IsNullOrEmpty(assistantMessage.ThinkingContent))
+            {
+                Messages.Add(new ThinkingMessage(assistantMessage.ThinkingContent));
+            }
+
+            if (!string.IsNullOrEmpty(assistantMessage.TextContent))
+            {
+                Messages.Add(new TextMessage(assistantMessage.TextContent, false));
+            }
+
+            if (!string.IsNullOrEmpty(assistantMessage.ImagePath) && File.Exists(assistantMessage.ImagePath))
+            {
+                var bitmap = new Bitmap(assistantMessage.ImagePath);
+                Messages.Add(new ImageMessage(bitmap, false));
+            }
+
+            // Reload conversations to update timestamps
+            await LoadConversationsAsync();
+        }
+        catch (OperationCanceledException)
+        {
+            logger.LogInformation("Retry generation cancelled");
+            notificationService.Show("Cancelled", "Image generation cancelled", NotificationType.Information);
+            CanRetryLastMessage = true;
+        }
+        catch (ImageGenerationException ex)
+        {
+            logger.LogWarning("Retry generation failed: {Message}", ex.Message);
+            ErrorMessage = ex.Message;
+            notificationService.Show("Generation Failed", ex.Message, NotificationType.Warning);
+            CanRetryLastMessage = true;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Unexpected error during retry");
+            ErrorMessage = $"Unexpected error: {ex.Message}";
+            notificationService.Show("Error", ex.Message, NotificationType.Error);
+            CanRetryLastMessage = true;
+        }
+        finally
+        {
+            IsGenerating = false;
+        }
+    }
+
+    [RelayCommand]
+    private void DismissError()
+    {
+        ErrorMessage = null;
+        CanRetryLastMessage = false;
+    }
+
+    /// <summary>
+    /// Builds the provider options dictionary based on current settings
+    /// </summary>
+    private Dictionary<string, object> BuildProviderOptions()
+    {
+        Dictionary<string, object>? providerOptions = null;
+
+        if (SupportsThinking && ShowThinkingOutput)
+        {
+            providerOptions = new Dictionary<string, object>
+            {
+                ["enableThinking"] = true,
+                ["thinkingBudget"] = 2048,
+            };
+        }
+
+        if (SelectedProviderId == BananaVisionProviderIds.FluxKontext)
+        {
+            providerOptions ??= new Dictionary<string, object>();
+            if (SelectedFluxModel != null)
+                providerOptions["CustomUnetModel"] = SelectedFluxModel;
+            if (SelectedLoras.Count > 0)
+                providerOptions["SelectedLoras"] = SelectedLoras.ToList();
+        }
+
+        if (SelectedProviderId == BananaVisionProviderIds.QwenImageEdit)
+        {
+            providerOptions ??= new Dictionary<string, object>();
+            if (SelectedQwenModel != null)
+                providerOptions["CustomUnetModel"] = SelectedQwenModel;
+            if (SelectedLoras.Count > 0)
+                providerOptions["SelectedLoras"] = SelectedLoras.ToList();
+        }
+
+        providerOptions ??= new Dictionary<string, object>();
+
+        if (UseCustomResolution)
+        {
+            providerOptions["Width"] = CustomWidth;
+            providerOptions["Height"] = CustomHeight;
+        }
+        else if (SelectedAspectRatio != null)
+        {
+            providerOptions["aspectRatio"] = SelectedAspectRatio.Ratio;
+            providerOptions["Width"] = SelectedAspectRatio.Width;
+            providerOptions["Height"] = SelectedAspectRatio.Height;
+        }
+
+        return providerOptions;
+    }
+
+    /// <summary>
+    /// Handles key down events from the message input TextBox.
+    /// Enter sends the message, Shift+Enter adds a new line.
+    /// </summary>
+    [RelayCommand]
+    private void TextBoxKeyDown(KeyEventArgs? e)
+    {
+        if (e?.Key != Key.Enter)
+            return;
+
+        // Shift+Enter = let TextBox handle it naturally (insert newline at cursor position)
+        if (e.KeyModifiers.HasFlag(KeyModifiers.Shift))
+        {
+            // Don't handle it - let the TextBox process the newline naturally
+            return;
+        }
+
+        // Plain Enter = send message (but only if not already generating)
+        if (!IsGenerating && SendMessageCommand.CanExecute(null))
+        {
+            e.Handled = true;
+            SendMessageCommand.Execute(null);
+        }
+        else
+        {
+            // Prevent the Enter from doing anything if we're generating
+            e.Handled = true;
+        }
     }
 
     [RelayCommand]
@@ -919,11 +1075,179 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
     private void RemovePendingImage(PendingImage image)
     {
         PendingImages.Remove(image);
+        image.Dispose();
+    }
+
+    /// <summary>
+    /// Adds images from file paths (used by drag and drop)
+    /// </summary>
+    public async Task AddImagesFromPathsAsync(IEnumerable<string> imagePaths)
+    {
+        try
+        {
+            var pathsList = imagePaths.ToList();
+            var addedCount = 0;
+
+            foreach (var imagePath in pathsList)
+            {
+                if (!File.Exists(imagePath))
+                    continue;
+
+                var bitmap = new Bitmap(imagePath);
+                PendingImages.Add(new PendingImage { FilePath = imagePath, Bitmap = bitmap });
+                addedCount++;
+            }
+
+            if (addedCount > 0)
+            {
+                notificationService.Show(
+                    "Images Added",
+                    $"Added {addedCount} image(s). They will be sent with your next message.",
+                    NotificationType.Success
+                );
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to add images from drag and drop");
+            notificationService.Show("Error", $"Failed to add images: {ex.Message}", NotificationType.Error);
+        }
+
+        await Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Supported image extensions for clipboard paste
+    /// </summary>
+    private static readonly HashSet<string> SupportedImageExtensions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ".png",
+        ".jpg",
+        ".jpeg",
+        ".webp",
+        ".gif",
+        ".bmp",
+    };
+
+    /// <summary>
+    /// Tries to paste images from the clipboard. Returns true if images were pasted.
+    /// </summary>
+    public async Task<bool> TryPasteImagesFromClipboardAsync()
+    {
+        try
+        {
+            var clipboard = App.Clipboard;
+            if (clipboard == null)
+                return false;
+
+            // First, check for files in clipboard (e.g., copied from file explorer)
+            var formats = await clipboard.GetFormatsAsync();
+
+            if (formats.Contains(DataFormats.Files))
+            {
+                var data = await clipboard.GetDataAsync(DataFormats.Files);
+                if (data is IEnumerable<IStorageItem> files)
+                {
+                    var imagePaths = files
+                        .Select(f => f.Path.LocalPath)
+                        .Where(p => SupportedImageExtensions.Contains(Path.GetExtension(p)))
+                        .ToList();
+
+                    if (imagePaths.Count > 0)
+                    {
+                        await AddImagesFromPathsAsync(imagePaths);
+                        return true;
+                    }
+                }
+            }
+
+            // Check for bitmap/image data in clipboard (e.g., screenshots, copied images)
+            // Try common image formats
+            foreach (
+                var format in new[] { "PNG", "image/png", "Bitmap", "DeviceIndependentBitmap", "image/bmp" }
+            )
+            {
+                if (!formats.Contains(format))
+                    continue;
+
+                var data = await clipboard.GetDataAsync(format);
+                if (data is byte[] imageBytes && imageBytes.Length > 0)
+                {
+                    var tempPath = await SaveClipboardImageToTempFileAsync(imageBytes, format);
+                    if (tempPath != null)
+                    {
+                        await AddImagesFromPathsAsync([tempPath]);
+                        return true;
+                    }
+                }
+                else if (data is Stream stream)
+                {
+                    using var ms = new MemoryStream();
+                    await stream.CopyToAsync(ms);
+                    var bytes = ms.ToArray();
+
+                    if (bytes.Length > 0)
+                    {
+                        var tempPath = await SaveClipboardImageToTempFileAsync(bytes, format);
+                        if (tempPath != null)
+                        {
+                            await AddImagesFromPathsAsync([tempPath]);
+                            return true;
+                        }
+                    }
+                }
+            }
+
+            return false;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to paste images from clipboard");
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Saves clipboard image bytes to a temporary file
+    /// </summary>
+    private async Task<string?> SaveClipboardImageToTempFileAsync(byte[] imageBytes, string format)
+    {
+        try
+        {
+            var extension = format.ToLowerInvariant() switch
+            {
+                "png" or "image/png" => ".png",
+                "image/jpeg" or "jpeg" or "jpg" => ".jpg",
+                "image/bmp" or "bitmap" or "deviceindependentbitmap" => ".bmp",
+                _ => ".png",
+            };
+
+            var tempDir = Path.Combine(Path.GetTempPath(), "StabilityMatrix", "ClipboardImages");
+            Directory.CreateDirectory(tempDir);
+
+            var shortGuid = Guid.NewGuid().ToString("N")[..8];
+            var fileName = $"clipboard_{DateTime.Now:yyyyMMdd_HHmmss}_{shortGuid}{extension}";
+            var tempPath = Path.Combine(tempDir, fileName);
+
+            await File.WriteAllBytesAsync(tempPath, imageBytes);
+
+            logger.LogInformation("Saved clipboard image to temp file: {Path}", tempPath);
+            return tempPath;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to save clipboard image to temp file");
+            return null;
+        }
     }
 
     [RelayCommand]
     private void ClearPendingImages()
     {
+        foreach (var image in PendingImages)
+        {
+            image.Dispose();
+        }
         PendingImages.Clear();
     }
 
@@ -950,11 +1274,13 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
                     if (index >= 0)
                     {
                         var annotatedBitmap = new Bitmap(annotatedPath);
+                        var oldImage = PendingImages[index];
                         PendingImages[index] = new PendingImage
                         {
                             FilePath = annotatedPath,
                             Bitmap = annotatedBitmap,
                         };
+                        oldImage.Dispose(); // Dispose the old bitmap
 
                         notificationService.Show(
                             "Image Updated",
@@ -997,26 +1323,19 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
 
     partial void OnSelectedProviderIdChanged(string? value)
     {
-        // When provider changes, check if we can update the current conversation
+        // Log provider change - the actual conversation update happens when sending a message
         if (CurrentConversation != null && value != null && value != CurrentConversation.ProviderId)
         {
-            // If no messages have been sent, allow changing the provider
-            if (Messages.Count == 0)
-            {
-                _ = UpdateConversationProviderAsync(value);
-            }
-            else
-            {
-                notificationService.Show(
-                    "Provider Changed",
-                    "Create a new conversation to use the selected provider.",
-                    NotificationType.Information
-                );
-            }
+            logger.LogInformation(
+                "Provider selection changed from {OldProvider} to {NewProvider} for conversation {ConversationId}",
+                CurrentConversation.ProviderId,
+                value,
+                CurrentConversation.Id
+            );
         }
 
         // If switching away from local providers, clean up any pending connection
-        if (value is not ("flux-kontext" or "qwen-image-edit"))
+        if (!BananaVisionProviderIds.IsLocalProvider(value))
         {
             startupCompleteSubscription?.Dispose();
             startupCompleteSubscription = null;
@@ -1035,83 +1354,29 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
         OnPropertyChanged(nameof(ShowQwenSettings));
 
         // Load available Flux models when switching to Flux Kontext
-        if (value == "flux-kontext")
+        if (value == BananaVisionProviderIds.FluxKontext)
         {
             LoadAvailableFluxModels();
 
             // Auto-show missing models dialog if connected and models are missing
-            _ = CheckAndShowMissingModelsDialogAsync();
+            CheckAndShowMissingModelsDialogAsync()
+                .SafeFireAndForget(ex =>
+                {
+                    logger.LogError(ex, "Failed to check for missing Flux models");
+                });
         }
 
         // Load available Qwen models when switching to Qwen Image Edit
-        if (value == "qwen-image-edit")
+        if (value == BananaVisionProviderIds.QwenImageEdit)
         {
             LoadAvailableQwenModels();
 
             // Auto-show missing models dialog if connected and models are missing
-            _ = CheckAndShowMissingModelsDialogAsync();
-        }
-    }
-
-    /// <summary>
-    /// Check for missing models and auto-show the download dialog if needed
-    /// </summary>
-    private async Task CheckAndShowMissingModelsDialogAsync()
-    {
-        // Don't show if we've already shown it this session
-        if (hasShownMissingModelsDialog)
-            return;
-
-        // Wait a moment for connection status to settle
-        await Task.Delay(500);
-
-        // Only show if connected and models are missing
-        if (!ClientManager.IsConnected || !HasMissingModels)
-            return;
-
-        hasShownMissingModelsDialog = true;
-        await ShowMissingModelsDialogAsync();
-    }
-
-    /// <summary>
-    /// Updates the current conversation's provider (only if no messages sent yet)
-    /// </summary>
-    private async Task UpdateConversationProviderAsync(string newProviderId)
-    {
-        if (CurrentConversation == null)
-            return;
-
-        try
-        {
-            // Create updated conversation with new provider
-            var updatedConversation = CurrentConversation with
-            {
-                ProviderId = newProviderId,
-            };
-            await chatService.UpdateConversationAsync(updatedConversation);
-
-            // Update local reference
-            var index = Conversations.IndexOf(CurrentConversation);
-            if (index >= 0)
-            {
-                Conversations[index] = updatedConversation;
-            }
-            CurrentConversation = updatedConversation;
-
-            logger.LogInformation(
-                "Updated conversation {Id} provider to {Provider}",
-                updatedConversation.Id,
-                newProviderId
-            );
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Failed to update conversation provider");
-            notificationService.Show(
-                "Error",
-                "Failed to update conversation provider",
-                NotificationType.Error
-            );
+            CheckAndShowMissingModelsDialogAsync()
+                .SafeFireAndForget(ex =>
+                {
+                    logger.LogError(ex, "Failed to check for missing Qwen models");
+                });
         }
     }
 
@@ -1177,521 +1442,58 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
     }
 
     /// <summary>
-    /// Whether there are missing models that can be downloaded
+    /// Handles collection changes to trigger auto-scroll
     /// </summary>
-    [ObservableProperty]
-    public partial bool HasMissingModels { get; set; }
-
-    /// <summary>
-    /// Show the missing models download dialog
-    /// </summary>
-    [RelayCommand]
-    private async Task ShowMissingModelsDialogAsync()
+    private void OnMessagesCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        if (!ClientManager.IsConnected)
+        // Request scroll to end when new messages are added
+        if (e.Action == NotifyCollectionChangedAction.Add)
         {
-            notificationService.Show(
-                "Not Connected",
-                "Please connect to ComfyUI first to check for missing models.",
-                NotificationType.Warning
-            );
-            return;
-        }
-
-        // Get the model manager for the current provider
-        var modelManager = LocalProviderModelManagerRegistry.GetManager(SelectedProviderId);
-        if (modelManager == null)
-        {
-            logger.LogWarning("No model manager found for provider {ProviderId}", SelectedProviderId);
-            return;
-        }
-
-        var missingModels = modelManager.GetMissingModels(ClientManager).ToList();
-
-        if (missingModels.Count == 0)
-        {
-            notificationService.Show(
-                "All Models Present",
-                "All required models are already installed!",
-                NotificationType.Success
-            );
-            return;
-        }
-
-        logger.LogInformation(
-            "Showing missing models dialog for {Provider} with {Count} models",
-            modelManager.ProviderDisplayName,
-            missingModels.Count
-        );
-
-        // Create and configure the dialog using manager's properties
-        var dialogVm = vmFactory.Get<DownloadMissingModelsViewModel>();
-        dialogVm.DialogTitle = $"{modelManager.ProviderDisplayName} Setup";
-        dialogVm.Description = modelManager.DownloadDialogDescription;
-        dialogVm.SetModels(missingModels);
-
-        var dialog = dialogVm.GetDialog();
-        var result = await dialog.ShowAsync();
-
-        // If user clicked Download, start the downloads
-        if (result == ContentDialogResult.Primary && dialogVm.SelectedCount > 0)
-        {
-            // Start downloads (runs in background via TrackedDownloadService)
-            var downloads = await dialogVm.StartDownloadsAsync();
-
-            if (downloads.Count > 0)
-            {
-                notificationService.Show(
-                    "Downloads Started",
-                    $"Downloading {downloads.Count} model(s). Check the progress panel for status.",
-                    NotificationType.Information
-                );
-
-                // Track completion of all downloads
-                _ = TrackDownloadCompletionAsync(downloads, modelManager.ProviderDisplayName);
-            }
-        }
-    }
-
-    /// <summary>
-    /// Track when all downloads complete and show notification
-    /// </summary>
-    private async Task TrackDownloadCompletionAsync(
-        List<TrackedDownload> downloads,
-        string providerDisplayName
-    )
-    {
-        var completionTasks = downloads
-            .Select(d =>
-            {
-                var tcs = new TaskCompletionSource<bool>();
-
-                d.ProgressStateChanged += (s, state) =>
+            Dispatcher.UIThread.Post(
+                () =>
                 {
-                    if (state is ProgressState.Success or ProgressState.Failed or ProgressState.Cancelled)
-                    {
-                        tcs.TrySetResult(state == ProgressState.Success);
-                    }
-                };
-
-                // Check if already completed
-                if (
-                    d.ProgressState
-                    is ProgressState.Success
-                        or ProgressState.Failed
-                        or ProgressState.Cancelled
-                )
-                {
-                    tcs.TrySetResult(d.ProgressState == ProgressState.Success);
-                }
-
-                return tcs.Task;
-            })
-            .ToList();
-
-        // Wait for all downloads to complete
-        var results = await Task.WhenAll(completionTasks);
-        var successCount = results.Count(r => r);
-        var failCount = results.Count(r => !r);
-
-        logger.LogInformation(
-            "Model downloads completed: {Success} succeeded, {Failed} failed",
-            successCount,
-            failCount
-        );
-
-        // Refresh model index
-        await modelIndexService.RefreshIndex();
-
-        // Reconnect to ComfyUI to refresh model lists
-        if (ClientManager.IsConnected)
-        {
-            try
-            {
-                await ClientManager.ConnectAsync();
-            }
-            catch (Exception ex)
-            {
-                logger.LogWarning(ex, "Failed to reconnect after model download");
-            }
-        }
-
-        // Update status on UI thread
-        await Dispatcher.UIThread.InvokeAsync(() =>
-        {
-            UpdateProviderStatus();
-            LoadAvailableFluxModels();
-            LoadAvailableQwenModels();
-        });
-
-        // Show completion notification
-        if (failCount == 0 && successCount > 0)
-        {
-            notificationService.Show(
-                "Models Ready! 🎉",
-                $"All required models have been downloaded. {providerDisplayName} is ready to use!",
-                NotificationType.Success,
-                TimeSpan.FromSeconds(8)
-            );
-        }
-        else if (successCount > 0)
-        {
-            notificationService.Show(
-                "Downloads Partially Complete",
-                $"{successCount} model(s) downloaded, {failCount} failed. Check the progress panel for details.",
-                NotificationType.Warning
-            );
-        }
-        else
-        {
-            notificationService.Show(
-                "Downloads Failed",
-                "All model downloads failed. Please check your connection and try again.",
-                NotificationType.Error
+                    ScrollToEndRequested?.Invoke(this, EventArgs.Empty);
+                },
+                DispatcherPriority.Background
             );
         }
     }
 
-    /// <summary>
-    /// Loads available Flux Kontext models from the DiffusionModels folder using local model index
-    /// </summary>
-    private void LoadAvailableFluxModels()
+    /// <inheritdoc />
+    protected override void Dispose(bool disposing)
     {
-        AvailableFluxModels.Clear();
-        AvailableFluxLoras.Clear();
-
-        // Load UNet models from local index - prioritize those with "Flux.1 Kontext" base model, then show untagged
-        var kontextModels = new List<HybridModelFile>();
-        var untaggedModels = new List<HybridModelFile>();
-
-        var localUnetModels = modelIndexService
-            .FindByModelType(SharedFolderType.DiffusionModels)
-            .Select(HybridModelFile.FromLocal);
-
-        foreach (var model in localUnetModels)
+        if (disposing)
         {
-            var baseModel = model.Local?.ConnectedModelInfo?.BaseModel;
+            // Cancel and dispose any pending message load
+            loadMessagesCts?.Cancel();
+            loadMessagesCts?.Dispose();
+            loadMessagesCts = null;
 
-            if (
-                baseModel?.Contains("Kontext", StringComparison.OrdinalIgnoreCase) == true
-                || baseModel?.Contains("Flux.1 Kontext", StringComparison.OrdinalIgnoreCase) == true
-            )
+            // Dispose startup subscription
+            startupCompleteSubscription?.Dispose();
+            startupCompleteSubscription = null;
+
+            // Dispose pending images
+            foreach (var image in PendingImages)
             {
-                kontextModels.Add(model);
+                image.Dispose();
             }
-            else if (string.IsNullOrEmpty(baseModel))
+            PendingImages.Clear();
+
+            // Dispose message bitmaps
+            foreach (var message in Messages)
             {
-                // Also check filename for "kontext" as fallback
-                if (model.FileName.Contains("kontext", StringComparison.OrdinalIgnoreCase))
+                if (message is ImageMessage imageMessage)
                 {
-                    kontextModels.Add(model);
-                }
-                else
-                {
-                    untaggedModels.Add(model);
+                    imageMessage.Image?.Dispose();
                 }
             }
+            Messages.Clear();
+
+            // Unsubscribe from collection changed
+            Messages.CollectionChanged -= OnMessagesCollectionChanged;
         }
 
-        // Sort: connected models first, then alphabetically by display name
-        var sortedKontextModels = kontextModels
-            .OrderByDescending(m => m.Local?.ConnectedModelInfo != null)
-            .ThenBy(m => m.Local?.DisplayModelName ?? m.ShortDisplayName);
-
-        var sortedUntaggedModels = untaggedModels
-            .OrderByDescending(m => m.Local?.ConnectedModelInfo != null)
-            .ThenBy(m => m.Local?.DisplayModelName ?? m.ShortDisplayName);
-
-        // Add Kontext models first, then untagged
-        foreach (var model in sortedKontextModels)
-        {
-            AvailableFluxModels.Add(model);
-        }
-        foreach (var model in sortedUntaggedModels)
-        {
-            AvailableFluxModels.Add(model);
-        }
-
-        // Auto-select first Kontext model if available
-        if (SelectedFluxModel == null && AvailableFluxModels.Count > 0)
-        {
-            SelectedFluxModel =
-                AvailableFluxModels.FirstOrDefault(m =>
-                    m.FileName.Contains("kontext", StringComparison.OrdinalIgnoreCase)
-                ) ?? AvailableFluxModels.First();
-        }
-
-        // Load LoRA models from local index - prioritize Flux Kontext, then Flux, then untagged
-        var kontextLoras = new List<HybridModelFile>();
-        var fluxLoras = new List<HybridModelFile>();
-        var untaggedLoras = new List<HybridModelFile>();
-
-        var localLoraModels = modelIndexService
-            .FindByModelType(SharedFolderType.Lora | SharedFolderType.LyCORIS)
-            .Select(HybridModelFile.FromLocal);
-
-        foreach (var lora in localLoraModels)
-        {
-            var baseModel = lora.Local?.ConnectedModelInfo?.BaseModel;
-
-            if (baseModel?.Contains("Kontext", StringComparison.OrdinalIgnoreCase) == true)
-            {
-                kontextLoras.Add(lora);
-            }
-            else if (baseModel?.Contains("Flux", StringComparison.OrdinalIgnoreCase) == true)
-            {
-                fluxLoras.Add(lora);
-            }
-            else if (string.IsNullOrEmpty(baseModel))
-            {
-                untaggedLoras.Add(lora);
-            }
-        }
-
-        // Sort LoRAs: connected models first, then alphabetically
-        var sortedKontextLoras = kontextLoras
-            .OrderByDescending(l => l.Local?.ConnectedModelInfo != null)
-            .ThenBy(l => l.Local?.DisplayModelName ?? l.ShortDisplayName);
-        var sortedFluxLoras = fluxLoras
-            .OrderByDescending(l => l.Local?.ConnectedModelInfo != null)
-            .ThenBy(l => l.Local?.DisplayModelName ?? l.ShortDisplayName);
-        var sortedUntaggedLoras = untaggedLoras
-            .OrderByDescending(l => l.Local?.ConnectedModelInfo != null)
-            .ThenBy(l => l.Local?.DisplayModelName ?? l.ShortDisplayName);
-
-        foreach (var lora in sortedKontextLoras)
-            AvailableFluxLoras.Add(lora);
-        foreach (var lora in sortedFluxLoras)
-            AvailableFluxLoras.Add(lora);
-        foreach (var lora in sortedUntaggedLoras)
-            AvailableFluxLoras.Add(lora);
-
-        logger.LogInformation(
-            "Loaded {ModelCount} Flux models and {LoraCount} LoRAs from local index",
-            AvailableFluxModels.Count,
-            AvailableFluxLoras.Count
-        );
+        base.Dispose(disposing);
     }
-
-    /// <summary>
-    /// Loads available Qwen Image Edit models from the DiffusionModels folder using local model index
-    /// </summary>
-    private void LoadAvailableQwenModels()
-    {
-        AvailableQwenModels.Clear();
-        AvailableQwenLoras.Clear();
-
-        // Load UNet models from local index - prioritize those with "qwen" in name or base model
-        var qwenModels = new List<HybridModelFile>();
-        var untaggedModels = new List<HybridModelFile>();
-
-        var localUnetModels = modelIndexService
-            .FindByModelType(SharedFolderType.DiffusionModels)
-            .Select(HybridModelFile.FromLocal);
-
-        foreach (var model in localUnetModels)
-        {
-            var baseModel = model.Local?.ConnectedModelInfo?.BaseModel;
-
-            if (baseModel?.Contains("Qwen", StringComparison.OrdinalIgnoreCase) == true)
-            {
-                qwenModels.Add(model);
-            }
-            else if (string.IsNullOrEmpty(baseModel))
-            {
-                // Also check filename for "qwen" as fallback
-                if (model.FileName.Contains("qwen", StringComparison.OrdinalIgnoreCase))
-                {
-                    qwenModels.Add(model);
-                }
-                else
-                {
-                    untaggedModels.Add(model);
-                }
-            }
-        }
-
-        // Sort: connected models first, then alphabetically by display name
-        var sortedQwenModels = qwenModels
-            .OrderByDescending(m => m.Local?.ConnectedModelInfo != null)
-            .ThenBy(m => m.Local?.DisplayModelName ?? m.ShortDisplayName);
-
-        var sortedUntaggedModels = untaggedModels
-            .OrderByDescending(m => m.Local?.ConnectedModelInfo != null)
-            .ThenBy(m => m.Local?.DisplayModelName ?? m.ShortDisplayName);
-
-        // Add Qwen models first, then untagged
-        foreach (var model in sortedQwenModels)
-        {
-            AvailableQwenModels.Add(model);
-        }
-        foreach (var model in sortedUntaggedModels)
-        {
-            AvailableQwenModels.Add(model);
-        }
-
-        // Auto-select first Qwen model if available
-        if (SelectedQwenModel == null && AvailableQwenModels.Count > 0)
-        {
-            SelectedQwenModel =
-                AvailableQwenModels.FirstOrDefault(m =>
-                    m.FileName.Contains("qwen", StringComparison.OrdinalIgnoreCase)
-                ) ?? AvailableQwenModels.First();
-        }
-
-        // Load LoRA models from local index - all LoRAs are potentially compatible
-        var untaggedLoras = new List<HybridModelFile>();
-
-        var localLoraModels = modelIndexService
-            .FindByModelType(SharedFolderType.Lora | SharedFolderType.LyCORIS)
-            .Select(HybridModelFile.FromLocal);
-
-        foreach (var lora in localLoraModels)
-        {
-            untaggedLoras.Add(lora);
-        }
-
-        // Sort LoRAs: connected models first, then alphabetically
-        var sortedLoras = untaggedLoras
-            .OrderByDescending(l => l.Local?.ConnectedModelInfo != null)
-            .ThenBy(l => l.Local?.DisplayModelName ?? l.ShortDisplayName);
-
-        foreach (var lora in sortedLoras)
-            AvailableQwenLoras.Add(lora);
-
-        logger.LogInformation(
-            "Loaded {ModelCount} Qwen models and {LoraCount} LoRAs from local index",
-            AvailableQwenModels.Count,
-            AvailableQwenLoras.Count
-        );
-    }
-
-    [RelayCommand]
-    private async Task AddLoraAsync()
-    {
-        // Get available LoRAs based on current provider
-        var availableLoras =
-            SelectedProviderId == "qwen-image-edit" ? AvailableQwenLoras : AvailableFluxLoras;
-
-        if (availableLoras.Count == 0)
-        {
-            notificationService.Show(
-                "No LoRAs Available",
-                "No compatible LoRA models found.",
-                NotificationType.Warning
-            );
-            return;
-        }
-
-        // Create a styled selection dialog using BetterComboBox with HybridModel theme
-        var comboBox = new BetterComboBox
-        {
-            ItemsSource = availableLoras,
-            SelectedIndex = 0,
-            MinWidth = 350,
-            Padding = new Thickness(8, 6, 4, 6),
-            HorizontalAlignment = HorizontalAlignment.Stretch,
-        };
-
-        // Apply the HybridModel theme
-        if (
-            App.Current?.Resources.TryGetResource(
-                "BetterComboBoxHybridModelTheme",
-                App.Current.ActualThemeVariant,
-                out var theme
-            ) == true
-            && theme is ControlTheme controlTheme
-        )
-        {
-            comboBox.Theme = controlTheme;
-        }
-
-        var dialog = new ContentDialog
-        {
-            Title = "Add LoRA",
-            Content = comboBox,
-            PrimaryButtonText = "Add",
-            CloseButtonText = "Cancel",
-            DefaultButton = ContentDialogButton.Primary,
-        };
-
-        var result = await dialog.ShowAsync();
-
-        if (result == ContentDialogResult.Primary && comboBox.SelectedItem is HybridModelFile selectedLora)
-        {
-            // Check if already added
-            if (SelectedLoras.Any(l => l.Model.RelativePath == selectedLora.RelativePath))
-            {
-                notificationService.Show(
-                    "Already Added",
-                    "This LoRA is already in the list.",
-                    NotificationType.Warning
-                );
-                return;
-            }
-
-            SelectedLoras.Add(new SelectedLora { Model = selectedLora });
-        }
-    }
-
-    [RelayCommand]
-    private void RemoveLora(SelectedLora lora)
-    {
-        SelectedLoras.Remove(lora);
-    }
-
-    [RelayCommand]
-    private void ToggleFluxSettings()
-    {
-        IsFluxSettingsExpanded = !IsFluxSettingsExpanded;
-    }
-
-    [RelayCommand]
-    private void ToggleQwenSettings()
-    {
-        IsQwenSettingsExpanded = !IsQwenSettingsExpanded;
-    }
-}
-
-/// <summary>
-/// Represents an image pending to be sent
-/// </summary>
-public class PendingImage
-{
-    public required string FilePath { get; init; }
-    public required Bitmap Bitmap { get; init; }
-}
-
-/// <summary>
-/// Represents a provider for display in the ComboBox
-/// </summary>
-public record ProviderDisplayItem(string Id, string DisplayName)
-{
-    public override string ToString() => DisplayName;
-}
-
-/// <summary>
-/// Represents a selected LoRA with weight settings
-/// </summary>
-public partial class SelectedLora : ObservableObject
-{
-    public required HybridModelFile Model { get; init; }
-
-    [ObservableProperty]
-    private decimal modelWeight = 1.0m;
-
-    [ObservableProperty]
-    private decimal clipWeight = 1.0m;
-
-    public string DisplayName => Model.Local?.DisplayModelName ?? Model.ShortDisplayName;
-}
-
-/// <summary>
-/// Represents an aspect ratio option for image generation
-/// </summary>
-public record AspectRatioOption(string Ratio, string Description, int Width, int Height)
-{
-    public string DisplayName => $"{Ratio} - {Description} ({Width}x{Height})";
-
-    public override string ToString() => DisplayName;
 }

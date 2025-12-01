@@ -21,6 +21,13 @@ public record ImageGenerationResponse
     public string? ThinkingContent { get; init; }
 
     /// <summary>
+    /// Thought signature from Gemini API response.
+    /// Must be stored and passed back in follow-up requests.
+    /// See: https://ai.google.dev/gemini-api/docs/thought-signatures
+    /// </summary>
+    public string? ThoughtSignature { get; init; }
+
+    /// <summary>
     /// Whether the generation was successful
     /// </summary>
     public bool IsSuccess { get; init; }
@@ -50,4 +57,10 @@ public record GeneratedImage
     /// MIME type (e.g., "image/png", "image/jpeg")
     /// </summary>
     public required string MimeType { get; init; }
+
+    /// <summary>
+    /// Thought signature for this specific image from Gemini API.
+    /// Must be passed back in follow-up requests.
+    /// </summary>
+    public string? ThoughtSignature { get; init; }
 }

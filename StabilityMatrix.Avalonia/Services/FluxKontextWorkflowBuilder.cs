@@ -1,8 +1,5 @@
-using StabilityMatrix.Avalonia.Models;
-using StabilityMatrix.Avalonia.Services;
-using StabilityMatrix.Avalonia.ViewModels;
+using StabilityMatrix.Avalonia.Models.BananaVision;
 using StabilityMatrix.Core.Models;
-using StabilityMatrix.Core.Models.Api.Comfy;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 using StabilityMatrix.Core.Models.Api.Comfy.NodeTypes;
 using StabilityMatrix.Core.Services.ImageGeneration;

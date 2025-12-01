@@ -1,6 +1,12 @@
-﻿using Avalonia;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Markup.Xaml;
+using Avalonia.Platform.Storage;
 using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.ViewModels;
@@ -10,9 +16,33 @@ namespace StabilityMatrix.Avalonia.Views;
 [RegisterSingleton<BananaVisionPage>]
 public partial class BananaVisionPage : UserControlBase
 {
+    private ScrollViewer? messageScrollViewer;
+
+    /// <summary>
+    /// Supported image extensions for drag and drop
+    /// </summary>
+    private static readonly HashSet<string> SupportedImageExtensions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ".png",
+        ".jpg",
+        ".jpeg",
+        ".webp",
+        ".gif",
+    };
+
     public BananaVisionPage()
     {
         InitializeComponent();
+
+        // Enable drag and drop
+        DragDrop.SetAllowDrop(this, true);
+        AddHandler(DragDrop.DragEnterEvent, OnDragEnter);
+        AddHandler(DragDrop.DragLeaveEvent, OnDragLeave);
+        AddHandler(DragDrop.DragOverEvent, OnDragOver);
+        AddHandler(DragDrop.DropEvent, OnDrop);
+
+        // Handle keyboard events for paste
+        AddHandler(KeyDownEvent, OnKeyDown, handledEventsToo: true);
     }
 
     private void InitializeComponent()
@@ -31,6 +61,125 @@ public partial class BananaVisionPage : UserControlBase
             if (topLevel != null)
             {
                 viewModel.StorageProvider = topLevel.StorageProvider;
+            }
+
+            // Subscribe to scroll request events from ViewModel
+            viewModel.ScrollToEndRequested += OnScrollToEndRequested;
+        }
+
+        // Find the message scroll viewer
+        messageScrollViewer = this.FindControl<ScrollViewer>("MessageScrollViewer");
+    }
+
+    protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        base.OnDetachedFromVisualTree(e);
+
+        // Unsubscribe from ViewModel events
+        if (DataContext is BananaVisionPageViewModel viewModel)
+        {
+            viewModel.ScrollToEndRequested -= OnScrollToEndRequested;
+        }
+    }
+
+    /// <summary>
+    /// Handles scroll to end requests from the ViewModel
+    /// </summary>
+    private void OnScrollToEndRequested(object? sender, EventArgs e)
+    {
+        messageScrollViewer?.ScrollToEnd();
+    }
+
+    /// <summary>
+    /// Checks if the drag data contains valid image files
+    /// </summary>
+    private bool ContainsValidImageFiles(DragEventArgs e)
+    {
+        if (e.Data.Get(DataFormats.Files) is not IEnumerable<IStorageItem> files)
+            return false;
+
+        var paths = files.Select(f => f.Path.LocalPath).ToList();
+        return paths.Count > 0 && paths.All(p => SupportedImageExtensions.Contains(Path.GetExtension(p)));
+    }
+
+    private void OnDragEnter(object? sender, DragEventArgs e)
+    {
+        if (!ContainsValidImageFiles(e))
+        {
+            e.DragEffects = DragDropEffects.None;
+            return;
+        }
+
+        e.DragEffects = DragDropEffects.Copy;
+        e.Handled = true;
+
+        if (DataContext is BananaVisionPageViewModel viewModel)
+        {
+            viewModel.IsDragOverImage = true;
+        }
+    }
+
+    private void OnDragLeave(object? sender, DragEventArgs e)
+    {
+        if (DataContext is BananaVisionPageViewModel viewModel)
+        {
+            viewModel.IsDragOverImage = false;
+        }
+    }
+
+    private void OnDragOver(object? sender, DragEventArgs e)
+    {
+        if (!ContainsValidImageFiles(e))
+        {
+            e.DragEffects = DragDropEffects.None;
+            return;
+        }
+
+        e.DragEffects = DragDropEffects.Copy;
+        e.Handled = true;
+    }
+
+    private async void OnDrop(object? sender, DragEventArgs e)
+    {
+        if (DataContext is BananaVisionPageViewModel viewModel)
+        {
+            viewModel.IsDragOverImage = false;
+        }
+
+        if (e.Data.Get(DataFormats.Files) is not IEnumerable<IStorageItem> files)
+            return;
+
+        var imagePaths = files
+            .Select(f => f.Path.LocalPath)
+            .Where(p => SupportedImageExtensions.Contains(Path.GetExtension(p)))
+            .ToList();
+
+        if (imagePaths.Count == 0)
+            return;
+
+        e.Handled = true;
+
+        if (DataContext is BananaVisionPageViewModel viewModel2)
+        {
+            await viewModel2.AddImagesFromPathsAsync(imagePaths);
+        }
+    }
+
+    /// <summary>
+    /// Handles keyboard events for paste (Ctrl+V)
+    /// </summary>
+    private async void OnKeyDown(object? sender, KeyEventArgs e)
+    {
+        // Check for Ctrl+V (paste)
+        if (e.Key == Key.V && e.KeyModifiers.HasFlag(KeyModifiers.Control))
+        {
+            if (DataContext is BananaVisionPageViewModel viewModel)
+            {
+                var handled = await viewModel.TryPasteImagesFromClipboardAsync();
+                if (handled)
+                {
+                    e.Handled = true;
+                }
             }
         }
     }

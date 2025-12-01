@@ -1,8 +1,6 @@
 using Microsoft.Extensions.Logging;
-using StabilityMatrix.Avalonia.ViewModels;
+using StabilityMatrix.Avalonia.Models.BananaVision;
 using StabilityMatrix.Core.Models;
-using StabilityMatrix.Core.Models.Api.Comfy;
-using StabilityMatrix.Core.Services;
 using StabilityMatrix.Core.Services.ImageGeneration;
 
 namespace StabilityMatrix.Avalonia.Services;
@@ -15,7 +13,7 @@ public class QwenImageEditProvider(
     IInferenceClientManager clientManager
 ) : IImageGenerationProvider
 {
-    public string ProviderId => "qwen-image-edit";
+    public string ProviderId => BananaVisionProviderIds.QwenImageEdit;
     public string ProviderName => "Qwen Image Edit (Local)";
     public bool SupportsImageInput => true;
     public bool SupportsMultiTurn => true;

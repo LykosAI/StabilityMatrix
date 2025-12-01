@@ -1,5 +1,4 @@
 using StabilityMatrix.Core.Models;
-using StabilityMatrix.Core.Services.ImageGeneration;
 
 namespace StabilityMatrix.Avalonia.Services;
 

@@ -1,5 +1,5 @@
 using Microsoft.Extensions.Logging;
-using StabilityMatrix.Avalonia.ViewModels;
+using StabilityMatrix.Avalonia.Models.BananaVision;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Services.ImageGeneration;
 
@@ -11,7 +11,7 @@ namespace StabilityMatrix.Avalonia.Services;
 public class FluxKontextProvider(ILogger<FluxKontextProvider> logger, IInferenceClientManager clientManager)
     : IImageGenerationProvider
 {
-    public string ProviderId => "flux-kontext";
+    public string ProviderId => BananaVisionProviderIds.FluxKontext;
     public string ProviderName => "Flux Kontext (Local)";
     public bool SupportsImageInput => true;
     public bool SupportsMultiTurn => true;

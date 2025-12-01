@@ -42,6 +42,15 @@ public record GeminiPart
     /// </summary>
     [JsonPropertyName("thought")]
     public bool? Thought { get; init; }
+
+    /// <summary>
+    /// Encrypted representation of the model's internal thought process.
+    /// Must be captured from responses and passed back in follow-up requests
+    /// to preserve reasoning context across multi-turn interactions.
+    /// See: https://ai.google.dev/gemini-api/docs/thought-signatures
+    /// </summary>
+    [JsonPropertyName("thoughtSignature")]
+    public string? ThoughtSignature { get; init; }
 }
 
 /// <summary>

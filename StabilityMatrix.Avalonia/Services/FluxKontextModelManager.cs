@@ -1,4 +1,3 @@
-using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Services.ImageGeneration;
@@ -10,7 +9,7 @@ namespace StabilityMatrix.Avalonia.Services;
 /// </summary>
 public class FluxKontextModelManager : ILocalProviderModelManager
 {
-    public string ProviderId => "flux-kontext";
+    public string ProviderId => BananaVisionProviderIds.FluxKontext;
 
     public string ProviderDisplayName => "Flux Kontext";
 

@@ -41,23 +41,52 @@ public interface IImageGenerationChatService
     Task DeleteConversationAsync(Guid conversationId);
 
     /// <summary>
-    /// Send a message and generate a response
+    /// Send a message and generate a response using the specified provider
     /// </summary>
+    /// <param name="conversationId">The conversation ID</param>
+    /// <param name="providerId">The provider to use for this message</param>
+    /// <param name="textPrompt">Optional text prompt</param>
+    /// <param name="imagePaths">Optional image paths to include</param>
+    /// <param name="cancellationToken">Cancellation token</param>
     Task<(ImageGenerationMessage UserMessage, ImageGenerationMessage? AssistantMessage)> SendMessageAsync(
         Guid conversationId,
+        string providerId,
         string? textPrompt,
         List<string>? imagePaths = null,
         CancellationToken cancellationToken = default
     );
 
     /// <summary>
-    /// Send a message and generate a response with provider options
+    /// Send a message and generate a response with provider options using the specified provider
     /// </summary>
+    /// <param name="conversationId">The conversation ID</param>
+    /// <param name="providerId">The provider to use for this message</param>
+    /// <param name="textPrompt">Optional text prompt</param>
+    /// <param name="imagePaths">Optional image paths to include</param>
+    /// <param name="providerOptions">Provider-specific options</param>
+    /// <param name="cancellationToken">Cancellation token</param>
     Task<(ImageGenerationMessage UserMessage, ImageGenerationMessage? AssistantMessage)> SendMessageAsync(
         Guid conversationId,
+        string providerId,
         string? textPrompt,
         List<string>? imagePaths,
         Dictionary<string, object>? providerOptions,
+        CancellationToken cancellationToken = default
+    );
+
+    /// <summary>
+    /// Retry generation for the last user message in a conversation.
+    /// Does not create a new user message - just regenerates the assistant response.
+    /// </summary>
+    /// <param name="conversationId">The conversation ID</param>
+    /// <param name="providerId">The provider to use for regeneration</param>
+    /// <param name="providerOptions">Provider-specific options</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The generated assistant message</returns>
+    Task<ImageGenerationMessage> RetryGenerationAsync(
+        Guid conversationId,
+        string providerId,
+        Dictionary<string, object>? providerOptions = null,
         CancellationToken cancellationToken = default
     );
 

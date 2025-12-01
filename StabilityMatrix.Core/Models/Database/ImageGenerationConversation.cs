@@ -16,9 +16,10 @@ public record ImageGenerationConversation
     public required string Title { get; set; }
 
     /// <summary>
-    /// Provider ID (e.g., "gemini-2.5-flash", "flux-kontext")
+    /// Provider ID of the last-used provider (e.g., "gemini-2.5-flash", "flux-kontext").
+    /// Can be changed mid-conversation when switching providers.
     /// </summary>
-    public required string ProviderId { get; init; }
+    public required string ProviderId { get; set; }
 
     /// <summary>
     /// When the conversation was created

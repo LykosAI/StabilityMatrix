@@ -1,4 +1,3 @@
-using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Services.ImageGeneration;
@@ -10,7 +9,7 @@ namespace StabilityMatrix.Avalonia.Services;
 /// </summary>
 public class QwenImageEditModelManager : ILocalProviderModelManager
 {
-    public string ProviderId => "qwen-image-edit";
+    public string ProviderId => BananaVisionProviderIds.QwenImageEdit;
 
     public string ProviderDisplayName => "Qwen Image Edit";
 

@@ -17,7 +17,7 @@ public class Gemini3ProImageGenerationProvider(
     private const string DefaultModel = "gemini-3-pro-image-preview";
     private const int DefaultThinkingBudget = 2048;
 
-    public string ProviderId => "gemini-3-pro";
+    public string ProviderId => BananaVisionProviderIds.Gemini3Pro;
     public string ProviderName => "Gemini 3 Pro (Nano Banana Pro)";
     public bool SupportsImageInput => true;
     public bool SupportsMultiTurn => true;
@@ -112,11 +112,20 @@ public class Gemini3ProImageGenerationProvider(
 
                 if (!string.IsNullOrEmpty(message.TextContent))
                 {
-                    parts.Add(new GeminiPart { Text = message.TextContent });
+                    // Include thought signature on text parts if available (for model responses)
+                    parts.Add(
+                        new GeminiPart
+                        {
+                            Text = message.TextContent,
+                            ThoughtSignature = message.TextThoughtSignature,
+                        }
+                    );
                 }
 
                 if (message.ImageContent != null)
                 {
+                    // Include thought signature on image parts if available
+                    // This is critical for Gemini 3 Pro multi-turn conversations
                     parts.Add(
                         new GeminiPart
                         {
@@ -125,6 +134,7 @@ public class Gemini3ProImageGenerationProvider(
                                 MimeType = message.ImageContent.MimeType,
                                 Data = message.ImageContent.Base64Data,
                             },
+                            ThoughtSignature = message.ImageContent.ThoughtSignature,
                         }
                     );
                 }
@@ -211,13 +221,23 @@ public class Gemini3ProImageGenerationProvider(
         var images = new List<GeneratedImage>();
         string? textResponse = null;
         string? thinkingContent = null;
+        string? lastThoughtSignature = null;
 
         if (candidate.Content?.Parts != null)
         {
             foreach (var part in candidate.Content.Parts)
             {
+                // Capture thought signature from any part that has one
+                // According to Gemini docs, for non-function-call responses,
+                // the signature is on the last part if the model generates a thought
+                if (!string.IsNullOrEmpty(part.ThoughtSignature))
+                {
+                    lastThoughtSignature = part.ThoughtSignature;
+                    logger.LogDebug("Captured thought signature from response part");
+                }
+
                 // Check if this is thinking content
-                if (part.Thought == true && part.Text != null)
+                if (part is { Thought: true, Text: not null })
                 {
                     // Accumulate thinking content
                     thinkingContent = string.IsNullOrEmpty(thinkingContent)
@@ -232,7 +252,7 @@ public class Gemini3ProImageGenerationProvider(
                     textResponse = part.Text;
                 }
 
-                // Image response
+                // Image response - capture thought signature for this specific image
                 if (part.InlineData != null)
                 {
                     images.Add(
@@ -240,10 +260,19 @@ public class Gemini3ProImageGenerationProvider(
                         {
                             Base64Data = part.InlineData.Data,
                             MimeType = part.InlineData.MimeType,
+                            ThoughtSignature = part.ThoughtSignature,
                         }
                     );
                 }
             }
+        }
+
+        // Use the last thought signature found if no image-specific one
+        var responseThoughtSignature = images.FirstOrDefault()?.ThoughtSignature ?? lastThoughtSignature;
+
+        if (!string.IsNullOrEmpty(responseThoughtSignature))
+        {
+            logger.LogInformation("Captured thought signature for conversation continuity");
         }
 
         return new ImageGenerationResponse
@@ -252,6 +281,7 @@ public class Gemini3ProImageGenerationProvider(
             Images = images.Count > 0 ? images : null,
             TextResponse = textResponse,
             ThinkingContent = thinkingContent,
+            ThoughtSignature = responseThoughtSignature,
             Metadata = new Dictionary<string, object>
             {
                 ["finishReason"] = candidate.FinishReason ?? "unknown",

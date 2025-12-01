@@ -15,7 +15,7 @@ public class GeminiImageGenerationProvider(
 {
     private const string DefaultModel = "gemini-2.5-flash-image";
 
-    public string ProviderId => "gemini-2.5-flash";
+    public string ProviderId => BananaVisionProviderIds.Gemini25Flash;
     public string ProviderName => "Gemini 2.5 Flash (Nano Banana)";
     public bool SupportsImageInput => true;
     public bool SupportsMultiTurn => true;
@@ -90,11 +90,19 @@ public class GeminiImageGenerationProvider(
 
                 if (!string.IsNullOrEmpty(message.TextContent))
                 {
-                    parts.Add(new GeminiPart { Text = message.TextContent });
+                    // Include thought signature if available (optional for 2.5, but good for compatibility)
+                    parts.Add(
+                        new GeminiPart
+                        {
+                            Text = message.TextContent,
+                            ThoughtSignature = message.TextThoughtSignature,
+                        }
+                    );
                 }
 
                 if (message.ImageContent != null)
                 {
+                    // Include thought signature on image parts if available
                     parts.Add(
                         new GeminiPart
                         {
@@ -103,6 +111,7 @@ public class GeminiImageGenerationProvider(
                                 MimeType = message.ImageContent.MimeType,
                                 Data = message.ImageContent.Base64Data,
                             },
+                            ThoughtSignature = message.ImageContent.ThoughtSignature,
                         }
                     );
                 }
@@ -182,11 +191,18 @@ public class GeminiImageGenerationProvider(
         var candidate = response.Candidates[0];
         var images = new List<GeneratedImage>();
         string? textResponse = null;
+        string? lastThoughtSignature = null;
 
         if (candidate.Content?.Parts != null)
         {
             foreach (var part in candidate.Content.Parts)
             {
+                // Capture thought signature from any part that has one
+                if (!string.IsNullOrEmpty(part.ThoughtSignature))
+                {
+                    lastThoughtSignature = part.ThoughtSignature;
+                }
+
                 if (part.Text != null)
                 {
                     textResponse = part.Text;
@@ -199,17 +215,22 @@ public class GeminiImageGenerationProvider(
                         {
                             Base64Data = part.InlineData.Data,
                             MimeType = part.InlineData.MimeType,
+                            ThoughtSignature = part.ThoughtSignature,
                         }
                     );
                 }
             }
         }
 
+        // Use the last thought signature found if no image-specific one
+        var responseThoughtSignature = images.FirstOrDefault()?.ThoughtSignature ?? lastThoughtSignature;
+
         return new ImageGenerationResponse
         {
             IsSuccess = true,
             Images = images.Count > 0 ? images : null,
             TextResponse = textResponse,
+            ThoughtSignature = responseThoughtSignature,
             Metadata = new Dictionary<string, object>
             {
                 ["finishReason"] = candidate.FinishReason ?? "unknown",

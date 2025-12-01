@@ -45,6 +45,12 @@ public record ImageInputData
     /// Optional file path on disk (for local providers that can upload directly)
     /// </summary>
     public string? FilePath { get; init; }
+
+    /// <summary>
+    /// Thought signature from Gemini API for this image.
+    /// Must be passed back in follow-up requests to preserve reasoning context.
+    /// </summary>
+    public string? ThoughtSignature { get; init; }
 }
 
 /// <summary>
@@ -66,6 +72,12 @@ public record ConversationMessage
     /// Image content (base64 encoded)
     /// </summary>
     public ImageInputData? ImageContent { get; init; }
+
+    /// <summary>
+    /// Thought signature for text parts from Gemini API.
+    /// Must be passed back in follow-up requests to preserve reasoning context.
+    /// </summary>
+    public string? TextThoughtSignature { get; init; }
 }
 
 /// <summary>

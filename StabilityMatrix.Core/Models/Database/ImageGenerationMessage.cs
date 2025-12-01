@@ -42,6 +42,13 @@ public record ImageGenerationMessage
     public string? ThinkingContent { get; init; }
 
     /// <summary>
+    /// Thought signature from Gemini API responses.
+    /// Must be passed back in follow-up requests to preserve reasoning context.
+    /// See: https://ai.google.dev/gemini-api/docs/thought-signatures
+    /// </summary>
+    public string? ThoughtSignature { get; init; }
+
+    /// <summary>
     /// When the message was sent/received
     /// </summary>
     public DateTime Timestamp { get; init; } = DateTime.UtcNow;

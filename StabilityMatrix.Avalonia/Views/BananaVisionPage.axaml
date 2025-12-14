@@ -22,6 +22,7 @@
         <bananaVision:MessageColorConverter x:Key="ColorConv" />
         <bananaVision:MessageTextColorConverter x:Key="TextConv" />
         <bananaVision:ProviderIdToDisplayNameConverter x:Key="ProviderDisplayConv" />
+        <bananaVision:GuidEqualsConverter x:Key="GuidEqualsConv" />
         <Geometry x:Key="SendIconGeometry">M2.01 21L23 12 2.01 3 2 10l15 2-15 2z</Geometry>
     </controls:UserControlBase.Resources>
 
@@ -38,6 +39,11 @@
                 </Style>
             </Style>
         </Style>
+        <!--  Message input box - remove focus border (parent Border handles styling)  -->
+        <Style Selector="TextBox#MessageInputBox:focus /template/ Border#PART_BorderElement">
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+        </Style>
         <!--  Remove default button hover background  -->
         <Style Selector="Button:pointerover /template/ ContentPresenter">
             <Setter Property="Background" Value="Transparent" />
@@ -48,6 +54,17 @@
         <!--  Image hover overlay effect  -->
         <Style Selector="Button:pointerover Border#HoverOverlay">
             <Setter Property="IsVisible" Value="True" />
+        </Style>
+        <!--  Message action buttons (Edit/Copy) - clean hover effect  -->
+        <Style Selector="Button.MessageActionButton:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#3C3C3E" />
+        </Style>
+        <Style Selector="Button.MessageActionButton:pointerover avalonia|Icon">
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+        <!--  Input action buttons (Regenerate) - stable hover effect  -->
+        <Style Selector="Button.InputActionButton:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#3C3C3E" />
         </Style>
     </controls:UserControlBase.Styles>
 
@@ -94,12 +111,46 @@
                         <DataTemplate DataType="database:ImageGenerationConversation">
                             <Grid Margin="2" ColumnDefinitions="*, Auto">
                                 <StackPanel Grid.Column="0" Margin="8,6">
-                                    <!--  Title  -->
-                                    <TextBlock
-                                        FontSize="13"
-                                        FontWeight="Medium"
-                                        Text="{Binding Title}"
-                                        TextTrimming="CharacterEllipsis" />
+                                    <!--  Title with generating indicator  -->
+                                    <Grid ColumnDefinitions="*, Auto">
+                                        <TextBlock
+                                            Grid.Column="0"
+                                            FontSize="13"
+                                            FontWeight="Medium"
+                                            Text="{Binding Title}"
+                                            TextTrimming="CharacterEllipsis" />
+                                        <!--  Generating spinner (shows when this conversation is generating)  -->
+                                        <avalonia:Icon
+                                            Grid.Column="1"
+                                            Margin="8,0,0,0"
+                                            FontSize="12"
+                                            Foreground="#9D8CFF"
+                                            Value="fa-solid fa-circle-notch">
+                                            <avalonia:Icon.IsVisible>
+                                                <MultiBinding Converter="{StaticResource GuidEqualsConv}">
+                                                    <Binding Path="Id" />
+                                                    <Binding Path="$parent[ListBox].((vm:BananaVisionPageViewModel)DataContext).GeneratingConversationId" />
+                                                </MultiBinding>
+                                            </avalonia:Icon.IsVisible>
+                                            <avalonia:Icon.Styles>
+                                                <Style Selector="avalonia|Icon">
+                                                    <Style.Animations>
+                                                        <Animation IterationCount="Infinite" Duration="0:0:1.2">
+                                                            <KeyFrame Cue="0%">
+                                                                <Setter Property="Opacity" Value="0.4" />
+                                                            </KeyFrame>
+                                                            <KeyFrame Cue="50%">
+                                                                <Setter Property="Opacity" Value="1" />
+                                                            </KeyFrame>
+                                                            <KeyFrame Cue="100%">
+                                                                <Setter Property="Opacity" Value="0.4" />
+                                                            </KeyFrame>
+                                                        </Animation>
+                                                    </Style.Animations>
+                                                </Style>
+                                            </avalonia:Icon.Styles>
+                                        </avalonia:Icon>
+                                    </Grid>
                                     <!--  Provider badge and timestamp  -->
                                     <StackPanel
                                         Margin="0,4,0,0"
@@ -369,6 +420,28 @@
                                     IsChecked="{Binding ShowThinkingOutput}" />
                             </StackPanel>
                         </Border>
+                    </StackPanel>
+
+                    <!--  Header actions (Column 3)  -->
+                    <StackPanel
+                        Grid.Column="3"
+                        VerticalAlignment="Center"
+                        Orientation="Horizontal"
+                        Spacing="8">
+                        <!--  Gallery Toggle  -->
+                        <ToggleButton
+                            Width="36"
+                            Height="36"
+                            Padding="8"
+                            VerticalAlignment="Center"
+                            CornerRadius="8"
+                            IsChecked="{Binding IsGalleryVisible}"
+                            ToolTip.Tip="Toggle image gallery">
+                            <avalonia:Icon
+                                FontSize="14"
+                                Foreground="#8E8E93"
+                                Value="fa-solid fa-images" />
+                        </ToggleButton>
                     </StackPanel>
 
                     <!--  Error Message with Retry  -->
@@ -861,12 +934,87 @@
                             <!--  Text Template with slide-in animation  -->
                             <DataTemplate DataType="bananaVision1:TextMessage">
                                 <Grid Margin="0,6" HorizontalAlignment="{Binding IsMyMessage, Converter={StaticResource AlignConv}}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <!--  Left-side buttons (for user messages only)  -->
+                                    <StackPanel
+                                        Grid.Column="0"
+                                        Margin="0,0,6,0"
+                                        VerticalAlignment="Top"
+                                        IsVisible="{Binding IsMyMessage}"
+                                        Orientation="Horizontal"
+                                        Spacing="4">
+                                        <!--  Edit button  -->
+                                        <Button
+                                            Width="28"
+                                            Height="28"
+                                            Padding="4"
+                                            Background="#2C2C2E"
+                                            Classes="MessageActionButton"
+                                            Command="{Binding $parent[ItemsControl].((vm:BananaVisionPageViewModel)DataContext).EditUserMessageCommand}"
+                                            CommandParameter="{Binding}"
+                                            CornerRadius="14"
+                                            ToolTip.Tip="Edit message and regenerate">
+                                            <avalonia:Icon
+                                                FontSize="11"
+                                                Foreground="#8E8E93"
+                                                Value="fa-solid fa-pen" />
+                                        </Button>
+                                        <!--  Copy button  -->
+                                        <Button
+                                            Width="28"
+                                            Height="28"
+                                            Padding="4"
+                                            Background="#2C2C2E"
+                                            Classes="MessageActionButton"
+                                            Command="{Binding $parent[ItemsControl].((vm:BananaVisionPageViewModel)DataContext).CopyMessageCommand}"
+                                            CommandParameter="{Binding}"
+                                            CornerRadius="14"
+                                            ToolTip.Tip="Copy to clipboard">
+                                            <avalonia:Icon
+                                                FontSize="11"
+                                                Foreground="#8E8E93"
+                                                Value="fa-regular fa-copy" />
+                                        </Button>
+                                        <!--  Delete button  -->
+                                        <Button
+                                            Width="28"
+                                            Height="28"
+                                            Padding="4"
+                                            Background="#2C2C2E"
+                                            Classes="MessageActionButton"
+                                            Command="{Binding $parent[ItemsControl].((vm:BananaVisionPageViewModel)DataContext).DeleteMessageCommand}"
+                                            CommandParameter="{Binding}"
+                                            CornerRadius="14"
+                                            IsVisible="{Binding CanDelete}"
+                                            ToolTip.Tip="Delete message">
+                                            <avalonia:Icon
+                                                FontSize="11"
+                                                Foreground="#FF6B6B"
+                                                Value="fa-solid fa-trash" />
+                                        </Button>
+                                    </StackPanel>
+
                                     <Border
-                                        MaxWidth="420"
+                                        Grid.Column="1"
+                                        MaxWidth="550"
                                         Padding="14,10"
                                         Background="{Binding IsMyMessage, Converter={StaticResource ColorConv}}"
                                         BoxShadow="0 2 8 0 #20000000"
                                         CornerRadius="18">
+                                        <Border.ContextMenu>
+                                            <ContextMenu>
+                                                <MenuItem
+                                                    Command="{Binding $parent[ItemsControl].((vm:BananaVisionPageViewModel)DataContext).DeleteMessageCommand}"
+                                                    CommandParameter="{Binding}"
+                                                    Header="Delete"
+                                                    IsVisible="{Binding CanDelete}" />
+                                            </ContextMenu>
+                                        </Border.ContextMenu>
                                         <Border.Styles>
                                             <Style Selector="Border">
                                                 <Style.Animations>
@@ -885,12 +1033,7 @@
                                             </Style>
                                         </Border.Styles>
                                         <StackPanel>
-                                            <SelectableTextBlock
-                                                FontSize="14"
-                                                Foreground="{Binding IsMyMessage, Converter={StaticResource TextConv}}"
-                                                LineHeight="20"
-                                                Text="{Binding Text}"
-                                                TextWrapping="Wrap" />
+                                            <controls:MarkdownViewer CustomCss=".markdown-body { padding: 0; word-break: break-word; overflow-wrap: break-word; white-space: normal; }" Text="{Binding Text}" />
                                             <TextBlock
                                                 Margin="0,6,0,0"
                                                 HorizontalAlignment="Right"
@@ -900,6 +1043,49 @@
                                                 Text="{Binding Time}" />
                                         </StackPanel>
                                     </Border>
+
+                                    <!--  Right-side buttons (for assistant messages only)  -->
+                                    <StackPanel
+                                        Grid.Column="2"
+                                        Margin="6,0,0,0"
+                                        VerticalAlignment="Top"
+                                        IsVisible="{Binding !IsMyMessage}"
+                                        Orientation="Horizontal"
+                                        Spacing="4">
+                                        <!--  Copy button  -->
+                                        <Button
+                                            Width="28"
+                                            Height="28"
+                                            Padding="4"
+                                            Background="#2C2C2E"
+                                            Classes="MessageActionButton"
+                                            Command="{Binding $parent[ItemsControl].((vm:BananaVisionPageViewModel)DataContext).CopyMessageCommand}"
+                                            CommandParameter="{Binding}"
+                                            CornerRadius="14"
+                                            ToolTip.Tip="Copy to clipboard">
+                                            <avalonia:Icon
+                                                FontSize="11"
+                                                Foreground="#8E8E93"
+                                                Value="fa-regular fa-copy" />
+                                        </Button>
+                                        <!--  Delete button  -->
+                                        <Button
+                                            Width="28"
+                                            Height="28"
+                                            Padding="4"
+                                            Background="#2C2C2E"
+                                            Classes="MessageActionButton"
+                                            Command="{Binding $parent[ItemsControl].((vm:BananaVisionPageViewModel)DataContext).DeleteMessageCommand}"
+                                            CommandParameter="{Binding}"
+                                            CornerRadius="14"
+                                            IsVisible="{Binding CanDelete}"
+                                            ToolTip.Tip="Delete message">
+                                            <avalonia:Icon
+                                                FontSize="11"
+                                                Foreground="#FF6B6B"
+                                                Value="fa-solid fa-trash" />
+                                        </Button>
+                                    </StackPanel>
                                 </Grid>
                             </DataTemplate>
 
@@ -912,6 +1098,15 @@
                                         BoxShadow="0 4 12 0 #30000000"
                                         ClipToBounds="True"
                                         CornerRadius="16">
+                                        <Border.ContextMenu>
+                                            <ContextMenu>
+                                                <MenuItem
+                                                    Command="{Binding $parent[ItemsControl].((vm:BananaVisionPageViewModel)DataContext).DeleteMessageCommand}"
+                                                    CommandParameter="{Binding}"
+                                                    Header="Delete"
+                                                    IsVisible="{Binding CanDelete}" />
+                                            </ContextMenu>
+                                        </Border.ContextMenu>
                                         <Border.Styles>
                                             <Style Selector="Border">
                                                 <Style.Animations>
@@ -930,34 +1125,75 @@
                                             </Style>
                                         </Border.Styles>
                                         <StackPanel>
-                                            <Button
-                                                Padding="0"
-                                                Background="Transparent"
-                                                Command="{Binding $parent[ItemsControl].((vm:BananaVisionPageViewModel)DataContext).PreviewImageCommand}"
-                                                CommandParameter="{Binding Image}"
-                                                CornerRadius="14"
-                                                Cursor="Hand"
-                                                ToolTip.Tip="Click to view full size">
-                                                <Grid>
-                                                    <Image
-                                                        MaxHeight="350"
-                                                        Source="{Binding Image}"
-                                                        Stretch="Uniform" />
-                                                    <!--  Hover overlay with zoom icon  -->
-                                                    <Border
-                                                        Name="HoverOverlay"
-                                                        Background="#40000000"
-                                                        CornerRadius="14"
-                                                        IsVisible="False">
+                                            <Grid>
+                                                <Button
+                                                    Padding="0"
+                                                    Background="Transparent"
+                                                    Command="{Binding $parent[ItemsControl].((vm:BananaVisionPageViewModel)DataContext).PreviewImageCommand}"
+                                                    CommandParameter="{Binding Image}"
+                                                    CornerRadius="14"
+                                                    Cursor="Hand"
+                                                    ToolTip.Tip="Click to view full size">
+                                                    <Grid>
+                                                        <Image
+                                                            MaxHeight="350"
+                                                            Source="{Binding Image}"
+                                                            Stretch="Uniform" />
+                                                        <!--  Hover overlay with zoom icon  -->
+                                                        <Border
+                                                            Name="HoverOverlay"
+                                                            Background="#40000000"
+                                                            CornerRadius="14"
+                                                            IsVisible="False">
+                                                            <avalonia:Icon
+                                                                HorizontalAlignment="Center"
+                                                                VerticalAlignment="Center"
+                                                                FontSize="24"
+                                                                Foreground="White"
+                                                                Value="fa-solid fa-magnifying-glass-plus" />
+                                                        </Border>
+                                                    </Grid>
+                                                </Button>
+                                                <!--  Top-right overlay actions  -->
+                                                <StackPanel
+                                                    Margin="8"
+                                                    HorizontalAlignment="Right"
+                                                    VerticalAlignment="Top"
+                                                    Orientation="Horizontal"
+                                                    Spacing="6">
+                                                    <Button
+                                                        Width="32"
+                                                        Height="32"
+                                                        Padding="4"
+                                                        Background="#AA2C2C2E"
+                                                        Classes="MessageActionButton"
+                                                        Command="{Binding $parent[ItemsControl].((vm:BananaVisionPageViewModel)DataContext).CopyImageToClipboardCommand}"
+                                                        CommandParameter="{Binding Image}"
+                                                        CornerRadius="16"
+                                                        ToolTip.Tip="Copy image to clipboard">
                                                         <avalonia:Icon
-                                                            HorizontalAlignment="Center"
-                                                            VerticalAlignment="Center"
-                                                            FontSize="24"
-                                                            Foreground="White"
-                                                            Value="fa-solid fa-magnifying-glass-plus" />
-                                                    </Border>
-                                                </Grid>
-                                            </Button>
+                                                            FontSize="12"
+                                                            Foreground="#E0E0E0"
+                                                            Value="fa-regular fa-copy" />
+                                                    </Button>
+                                                    <Button
+                                                        Width="32"
+                                                        Height="32"
+                                                        Padding="4"
+                                                        Background="#AA2C2C2E"
+                                                        Classes="MessageActionButton"
+                                                        Command="{Binding $parent[ItemsControl].((vm:BananaVisionPageViewModel)DataContext).DeleteMessageCommand}"
+                                                        CommandParameter="{Binding}"
+                                                        CornerRadius="16"
+                                                        IsVisible="{Binding CanDelete}"
+                                                        ToolTip.Tip="Delete message">
+                                                        <avalonia:Icon
+                                                            FontSize="12"
+                                                            Foreground="#FF6B6B"
+                                                            Value="fa-solid fa-trash" />
+                                                    </Button>
+                                                </StackPanel>
+                                            </Grid>
                                             <TextBlock
                                                 Margin="0,4,4,0"
                                                 HorizontalAlignment="Right"
@@ -969,7 +1205,59 @@
                                 </Grid>
                             </DataTemplate>
 
+                            <!--  Loading Image Placeholder Template (simplified for performance)  -->
+                            <DataTemplate DataType="bananaVision1:LoadingImageMessage">
+                                <Grid Margin="0,6" HorizontalAlignment="Left">
+                                    <Border
+                                        Width="{Binding TargetWidth}"
+                                        Height="{Binding TargetHeight}"
+                                        Background="#1E1E2E"
+                                        BoxShadow="0 4 12 0 #30000000"
+                                        ClipToBounds="True"
+                                        CornerRadius="16">
+                                        <Grid>
+                                            <!--  Loading indicator  -->
+                                            <StackPanel
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center"
+                                                Spacing="12">
+                                                <avalonia:Icon
+                                                    Name="LoadingIcon"
+                                                    HorizontalAlignment="Center"
+                                                    FontSize="32"
+                                                    Foreground="#9D8CFF"
+                                                    Value="fa-solid fa-circle-notch">
+                                                    <avalonia:Icon.Styles>
+                                                        <Style Selector="avalonia|Icon#LoadingIcon">
+                                                            <Style.Animations>
+                                                                <Animation IterationCount="Infinite" Duration="0:0:1.2">
+                                                                    <KeyFrame Cue="0%">
+                                                                        <Setter Property="Opacity" Value="0.4" />
+                                                                    </KeyFrame>
+                                                                    <KeyFrame Cue="50%">
+                                                                        <Setter Property="Opacity" Value="1" />
+                                                                    </KeyFrame>
+                                                                    <KeyFrame Cue="100%">
+                                                                        <Setter Property="Opacity" Value="0.4" />
+                                                                    </KeyFrame>
+                                                                </Animation>
+                                                            </Style.Animations>
+                                                        </Style>
+                                                    </avalonia:Icon.Styles>
+                                                </avalonia:Icon>
+                                                <TextBlock
+                                                    HorizontalAlignment="Center"
+                                                    FontSize="13"
+                                                    Foreground="#8E8E93"
+                                                    Text="Generating..." />
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </Grid>
+                            </DataTemplate>
+
                             <!--  Thinking/Reasoning Template (Gemini 3 Pro) with animation  -->
+                            <!--  Note: No delete option here - thinking is part of the parent message  -->
                             <DataTemplate DataType="bananaVision1:ThinkingMessage">
                                 <Grid
                                     MaxWidth="550"
@@ -1005,7 +1293,7 @@
                                         </Border.Styles>
                                         <StackPanel Spacing="10">
                                             <!--  Header with expand/collapse  -->
-                                            <Grid ColumnDefinitions="Auto, *, Auto">
+                                            <Grid ColumnDefinitions="Auto, *, Auto, Auto">
                                                 <StackPanel
                                                     Grid.Column="0"
                                                     Orientation="Horizontal"
@@ -1054,17 +1342,14 @@
                                                             Value="fa-solid fa-chevron-down" />
                                                     </Panel>
                                                 </Button>
+                                                <!--  No delete button for thinking - it's part of the parent message  -->
                                             </Grid>
 
                                             <!--  Collapsed preview  -->
-                                            <TextBlock
-                                                FontSize="12"
-                                                FontStyle="Italic"
-                                                Foreground="#7A7A8C"
+                                            <controls:MarkdownViewer
+                                                CustomCss=".markdown-body { color: #7A7A8C; font-family: 'Segoe UI', sans-serif; font-size: 12px; font-style: italic; line-height: 1.6; padding: 0; word-break: break-word; overflow-wrap: break-word; white-space: normal; } p { margin-top: 0; margin-bottom: 0; }"
                                                 IsVisible="{Binding !IsExpanded}"
-                                                LineHeight="20"
-                                                Text="{Binding ThinkingPreview}"
-                                                TextWrapping="Wrap" />
+                                                Text="{Binding ThinkingPreview}" />
 
                                             <!--  Expanded content  -->
                                             <ScrollViewer
@@ -1072,12 +1357,7 @@
                                                 HorizontalScrollBarVisibility="Disabled"
                                                 IsVisible="{Binding IsExpanded}"
                                                 VerticalScrollBarVisibility="Auto">
-                                                <SelectableTextBlock
-                                                    FontSize="12"
-                                                    Foreground="#B0B0C0"
-                                                    LineHeight="20"
-                                                    Text="{Binding ThinkingContent}"
-                                                    TextWrapping="Wrap" />
+                                                <controls:MarkdownViewer CustomCss=".markdown-body { color: #B0B0C0; font-family: 'Segoe UI', sans-serif; font-size: 12px; line-height: 1.6; padding: 0; word-break: break-word; overflow-wrap: break-word; white-space: normal; } p { margin-top: 0; margin-bottom: 6px; } pre { background-color: #151525; padding: 8px; border-radius: 4px; overflow: auto; } code { background-color: #252535; padding: 2px 4px; border-radius: 3px; font-family: Consolas, monospace; }" Text="{Binding ThinkingContent}" />
                                             </ScrollViewer>
 
                                             <!--  Timestamp  -->
@@ -1096,7 +1376,26 @@
                     </ItemsControl>
                 </ScrollViewer>
 
-                <!--  Typing/Generating Indicator (overlays on top)  -->
+                <!--  Scroll-to-bottom button (shown when user is reading older messages)  -->
+                <Button
+                    Name="ScrollToBottomButton"
+                    Width="44"
+                    Height="44"
+                    Margin="0,0,24,24"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Bottom"
+                    Background="#2D2D4A"
+                    CornerRadius="22"
+                    IsVisible="False"
+                    ToolTip.Tip="Scroll to newest messages"
+                    ZIndex="50">
+                    <avalonia:Icon
+                        FontSize="14"
+                        Foreground="#9D8CFF"
+                        Value="fa-solid fa-arrow-down" />
+                </Button>
+
+                <!--  Typing/Generating Indicator (overlays on top, scoped to current conversation)  -->
                 <Border
                     Margin="0,0,0,16"
                     Padding="16,12"
@@ -1104,7 +1403,7 @@
                     VerticalAlignment="Bottom"
                     Background="#2C2C2E"
                     CornerRadius="16"
-                    IsVisible="{Binding IsGenerating}">
+                    IsVisible="{Binding IsCurrentConversationGenerating}">
                     <StackPanel Orientation="Horizontal" Spacing="16">
                         <!--  Animated typing dots (opacity only)  -->
                         <StackPanel Orientation="Horizontal" Spacing="4">
@@ -1197,12 +1496,23 @@
                             VerticalAlignment="Center"
                             FontSize="14"
                             Foreground="White"
-                            Text="Creating your image..." />
+                            Text="{Binding GenerationProgressText}" />
+                        <ProgressBar
+                            Width="180"
+                            Height="6"
+                            VerticalAlignment="Center"
+                            Background="#1C1C1E"
+                            Foreground="#9D8CFF"
+                            IsIndeterminate="{Binding !HasGenerationProgress}"
+                            IsVisible="{Binding RequiresLocalBackend}"
+                            Maximum="100"
+                            Minimum="0"
+                            Value="{Binding GenerationProgressPercent}" />
                         <!--  Cancel Button  -->
                         <Button
                             Padding="8,4"
                             Background="#CC3340"
-                            Command="{Binding SendMessageCancelCommand}"
+                            Command="{Binding CancelGenerationCommand}"
                             CornerRadius="8"
                             ToolTip.Tip="Cancel generation">
                             <StackPanel Orientation="Horizontal" Spacing="6">
@@ -1235,12 +1545,13 @@
                             Foreground="#FF6B6B"
                             Value="fa-solid fa-exclamation-circle" />
                         <TextBlock
-                            MaxWidth="300"
+                            MaxWidth="500"
                             VerticalAlignment="Center"
                             FontSize="13"
                             Foreground="#FF6B6B"
+                            LineHeight="18"
                             Text="{Binding ErrorMessage}"
-                            TextTrimming="CharacterEllipsis" />
+                            TextWrapping="Wrap" />
                         <Button
                             Padding="10,6"
                             Background="#0A84FF"
@@ -1452,6 +1763,7 @@
                                     Grid.Column="1"
                                     MinHeight="40"
                                     MaxHeight="150"
+                                    Margin="4,0,0,0"
                                     Padding="8,10"
                                     VerticalContentAlignment="Center"
                                     Background="Transparent"
@@ -1469,44 +1781,196 @@
                             </Grid>
                         </Border>
 
-                        <!--  Send Button with hover effect  -->
-                        <Button
+                        <!--  Input Buttons Container  -->
+                        <StackPanel
                             Grid.Column="1"
-                            Width="44"
-                            Height="44"
-                            Margin="10,0,0,0"
-                            Padding="0"
-                            HorizontalContentAlignment="Center"
-                            VerticalContentAlignment="Center"
-                            Background="#0A84FF"
-                            Command="{Binding SendMessageCommand}"
-                            CornerRadius="22"
-                            IsEnabled="{Binding !IsGenerating}"
-                            ToolTip.Tip="Send message (Enter)">
-                            <Button.Styles>
-                                <Style Selector="Button:pointerover">
-                                    <Setter Property="Background" Value="#2196F3" />
-                                    <Setter Property="RenderTransform">
-                                        <ScaleTransform ScaleX="1.05" ScaleY="1.05" />
-                                    </Setter>
-                                </Style>
-                                <Style Selector="Button:pressed">
-                                    <Setter Property="RenderTransform">
-                                        <ScaleTransform ScaleX="0.95" ScaleY="0.95" />
-                                    </Setter>
-                                </Style>
-                            </Button.Styles>
-                            <Button.Transitions>
-                                <Transitions>
-                                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.1" />
-                                </Transitions>
-                            </Button.Transitions>
-                            <PathIcon Data="{StaticResource SendIconGeometry}" Foreground="White" />
-                        </Button>
+                            Margin="12,0,0,0"
+                            Orientation="Horizontal"
+                            Spacing="8">
+                            <!--  Regenerate Button (shown when there's a response to regenerate)  -->
+                            <Button
+                                Width="44"
+                                Height="44"
+                                Padding="0"
+                                HorizontalContentAlignment="Center"
+                                VerticalContentAlignment="Center"
+                                Background="#2C2C2E"
+                                Classes="InputActionButton"
+                                Command="{Binding RegenerateLastResponseCommand}"
+                                CornerRadius="22"
+                                ToolTip.Tip="Regenerate the last response">
+                                <Button.IsVisible>
+                                    <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                        <Binding Path="CanRegenerateLastResponse" />
+                                        <Binding Path="!CanRetryLastMessage" />
+                                        <Binding Path="!IsGenerating" />
+                                    </MultiBinding>
+                                </Button.IsVisible>
+                                <avalonia:Icon
+                                    FontSize="18"
+                                    Foreground="#9D8CFF"
+                                    Value="fa-solid fa-arrows-rotate" />
+                            </Button>
+
+                            <!--  Send Button (shown when not generating)  -->
+                            <Button
+                                Width="44"
+                                Height="44"
+                                Padding="0"
+                                HorizontalContentAlignment="Center"
+                                VerticalContentAlignment="Center"
+                                Background="#0A84FF"
+                                Command="{Binding SendMessageCommand}"
+                                CornerRadius="22"
+                                IsVisible="{Binding !IsGenerating}"
+                                ToolTip.Tip="Send message (Enter)">
+                                <Button.Styles>
+                                    <Style Selector="Button:pointerover">
+                                        <Setter Property="Background" Value="#2196F3" />
+                                        <Setter Property="RenderTransform">
+                                            <ScaleTransform ScaleX="1.05" ScaleY="1.05" />
+                                        </Setter>
+                                    </Style>
+                                    <Style Selector="Button:pressed">
+                                        <Setter Property="RenderTransform">
+                                            <ScaleTransform ScaleX="0.95" ScaleY="0.95" />
+                                        </Setter>
+                                    </Style>
+                                </Button.Styles>
+                                <Button.Transitions>
+                                    <Transitions>
+                                        <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.1" />
+                                    </Transitions>
+                                </Button.Transitions>
+                                <PathIcon Data="{StaticResource SendIconGeometry}" Foreground="White" />
+                            </Button>
+
+                            <!--  Stop Button (shown when generating)  -->
+                            <Button
+                                Width="44"
+                                Height="44"
+                                Padding="0"
+                                HorizontalContentAlignment="Center"
+                                VerticalContentAlignment="Center"
+                                Background="#CC3340"
+                                Command="{Binding CancelGenerationCommand}"
+                                CornerRadius="22"
+                                IsVisible="{Binding IsGenerating}"
+                                ToolTip.Tip="Stop generation">
+                                <Button.Styles>
+                                    <Style Selector="Button:pointerover">
+                                        <Setter Property="Background" Value="#E54B4B" />
+                                        <Setter Property="RenderTransform">
+                                            <ScaleTransform ScaleX="1.05" ScaleY="1.05" />
+                                        </Setter>
+                                    </Style>
+                                    <Style Selector="Button:pressed">
+                                        <Setter Property="RenderTransform">
+                                            <ScaleTransform ScaleX="0.95" ScaleY="0.95" />
+                                        </Setter>
+                                    </Style>
+                                </Button.Styles>
+                                <Button.Transitions>
+                                    <Transitions>
+                                        <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.1" />
+                                    </Transitions>
+                                </Button.Transitions>
+                                <avalonia:Icon
+                                    FontSize="18"
+                                    Foreground="White"
+                                    Value="fa-solid fa-stop" />
+                            </Button>
+                        </StackPanel>
                     </Grid>
                 </StackPanel>
             </Border>
         </Grid>
+
+        <!--  3. Image Gallery Sidebar (Column 2)  -->
+        <Border
+            Grid.RowSpan="2"
+            Grid.Column="2"
+            Width="280"
+            Padding="8"
+            Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+            BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+            BorderThickness="1,0,0,0"
+            IsVisible="{Binding IsGalleryVisible}">
+            <Grid RowDefinitions="Auto, *">
+                <!--  Header  -->
+                <StackPanel
+                    Grid.Row="0"
+                    Margin="0,0,0,8"
+                    Orientation="Horizontal"
+                    Spacing="8">
+                    <avalonia:Icon
+                        VerticalAlignment="Center"
+                        FontSize="14"
+                        Foreground="#9D8CFF"
+                        Value="fa-solid fa-images" />
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        FontSize="14"
+                        FontWeight="SemiBold"
+                        Text="Gallery" />
+                </StackPanel>
+
+                <!--  Image Thumbnails  -->
+                <ScrollViewer
+                    Grid.Row="1"
+                    HorizontalScrollBarVisibility="Disabled"
+                    VerticalScrollBarVisibility="Auto">
+                    <ItemsControl ItemsSource="{Binding ConversationImages}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel Orientation="Horizontal" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="bananaVision1:ImageMessage">
+                                <Button
+                                    Margin="4"
+                                    Padding="0"
+                                    Background="Transparent"
+                                    Command="{Binding $parent[ItemsControl].((vm:BananaVisionPageViewModel)DataContext).PreviewImageCommand}"
+                                    CommandParameter="{Binding Image}"
+                                    CornerRadius="8"
+                                    Cursor="Hand"
+                                    ToolTip.Tip="Click to view">
+                                    <Border
+                                        Width="120"
+                                        Height="120"
+                                        ClipToBounds="True"
+                                        CornerRadius="8">
+                                        <Image Source="{Binding Image}" Stretch="UniformToFill" />
+                                    </Border>
+                                </Button>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+
+                <!--  Empty State  -->
+                <StackPanel
+                    Grid.Row="1"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    IsVisible="{Binding !HasConversationImages}"
+                    Spacing="8">
+                    <avalonia:Icon
+                        HorizontalAlignment="Center"
+                        FontSize="24"
+                        Foreground="#4A4A4A"
+                        Value="fa-regular fa-images" />
+                    <TextBlock
+                        HorizontalAlignment="Center"
+                        FontSize="12"
+                        Foreground="#6B6B6B"
+                        Text="No images yet"
+                        TextAlignment="Center" />
+                </StackPanel>
+            </Grid>
+        </Border>
     </Grid>
 
 </controls:UserControlBase>

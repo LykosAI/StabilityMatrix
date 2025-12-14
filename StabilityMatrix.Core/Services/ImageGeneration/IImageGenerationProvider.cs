@@ -26,6 +26,12 @@ public interface IImageGenerationProvider
     bool SupportsMultiTurn { get; }
 
     /// <summary>
+    /// Whether this provider requires thought signatures on image parts (Gemini 3 Pro).
+    /// If true, conversations started with non-thinking providers cannot be continued.
+    /// </summary>
+    bool RequiresThoughtSignatures { get; }
+
+    /// <summary>
     /// Generate an image based on the provided request
     /// </summary>
     Task<ImageGenerationResponse> GenerateAsync(

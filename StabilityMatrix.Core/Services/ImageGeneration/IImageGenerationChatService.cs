@@ -41,6 +41,26 @@ public interface IImageGenerationChatService
     Task DeleteConversationAsync(Guid conversationId);
 
     /// <summary>
+    /// Delete a specific message from a conversation
+    /// </summary>
+    /// <param name="messageId">The message ID to delete</param>
+    /// <param name="preserveImageFile">If true, keeps the image file on disk (for regenerate). If false, deletes it (for edit/delete)</param>
+    Task DeleteMessageAsync(Guid messageId, bool preserveImageFile = false);
+
+    /// <summary>
+    /// Remove a specific image from a message. If it's the last image, deletes the entire message.
+    /// </summary>
+    /// <param name="messageId">The message ID</param>
+    /// <param name="imagePath">The specific image path to remove</param>
+    /// <returns>True if the entire message was deleted, false if only the image was removed</returns>
+    Task<bool> RemoveImageFromMessageAsync(Guid messageId, string imagePath);
+
+    /// <summary>
+    /// Get a specific message by ID
+    /// </summary>
+    Task<ImageGenerationMessage?> GetMessageAsync(Guid messageId);
+
+    /// <summary>
     /// Send a message and generate a response using the specified provider
     /// </summary>
     /// <param name="conversationId">The conversation ID</param>
@@ -71,6 +91,7 @@ public interface IImageGenerationChatService
         string? textPrompt,
         List<string>? imagePaths,
         Dictionary<string, object>? providerOptions,
+        IProgress<ImageGenerationProgress>? progress = null,
         CancellationToken cancellationToken = default
     );
 
@@ -87,6 +108,7 @@ public interface IImageGenerationChatService
         Guid conversationId,
         string providerId,
         Dictionary<string, object>? providerOptions = null,
+        IProgress<ImageGenerationProgress>? progress = null,
         CancellationToken cancellationToken = default
     );
 

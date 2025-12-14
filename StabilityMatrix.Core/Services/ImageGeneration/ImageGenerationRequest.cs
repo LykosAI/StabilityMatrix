@@ -24,6 +24,11 @@ public record ImageGenerationRequest
     /// Provider-specific configuration options
     /// </summary>
     public Dictionary<string, object>? ProviderOptions { get; init; }
+
+    /// <summary>
+    /// Optional progress reporter for providers that can emit generation progress (e.g., local ComfyUI).
+    /// </summary>
+    public IProgress<ImageGenerationProgress>? Progress { get; init; }
 }
 
 /// <summary>

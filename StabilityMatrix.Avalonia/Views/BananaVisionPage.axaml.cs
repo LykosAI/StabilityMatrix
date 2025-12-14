@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -16,7 +16,29 @@ namespace StabilityMatrix.Avalonia.Views;
 [RegisterSingleton<BananaVisionPage>]
 public partial class BananaVisionPage : UserControlBase
 {
+    /// <summary>
+    /// Threshold in pixels from the bottom to consider the scroll position "near bottom"
+    /// </summary>
+    private const double ScrollBottomThreshold = 120;
+
     private ScrollViewer? messageScrollViewer;
+    private Button? scrollToBottomButton;
+    private bool isNearBottom = true;
+
+    private static bool IsScrollNearBottom(
+        ScrollViewer scrollViewer,
+        double thresholdPixels = ScrollBottomThreshold
+    )
+    {
+        var extentHeight = scrollViewer.Extent.Height;
+        var viewportHeight = scrollViewer.Viewport.Height;
+        var offsetY = scrollViewer.Offset.Y;
+
+        if (extentHeight <= 0 || viewportHeight <= 0)
+            return true;
+
+        return offsetY + viewportHeight >= extentHeight - thresholdPixels;
+    }
 
     /// <summary>
     /// Supported image extensions for drag and drop
@@ -65,10 +87,24 @@ public partial class BananaVisionPage : UserControlBase
 
             // Subscribe to scroll request events from ViewModel
             viewModel.ScrollToEndRequested += OnScrollToEndRequested;
+            viewModel.ScrollToEndForcedRequested += OnScrollToEndForcedRequested;
         }
 
         // Find the message scroll viewer
         messageScrollViewer = this.FindControl<ScrollViewer>("MessageScrollViewer");
+        scrollToBottomButton = this.FindControl<Button>("ScrollToBottomButton");
+
+        if (messageScrollViewer != null)
+        {
+            messageScrollViewer.ScrollChanged += OnMessageScrollChanged;
+            isNearBottom = IsScrollNearBottom(messageScrollViewer);
+        }
+
+        if (scrollToBottomButton != null)
+        {
+            scrollToBottomButton.Click += OnScrollToBottomClicked;
+            scrollToBottomButton.IsVisible = false;
+        }
     }
 
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
@@ -79,6 +115,17 @@ public partial class BananaVisionPage : UserControlBase
         if (DataContext is BananaVisionPageViewModel viewModel)
         {
             viewModel.ScrollToEndRequested -= OnScrollToEndRequested;
+            viewModel.ScrollToEndForcedRequested -= OnScrollToEndForcedRequested;
+        }
+
+        if (messageScrollViewer != null)
+        {
+            messageScrollViewer.ScrollChanged -= OnMessageScrollChanged;
+        }
+
+        if (scrollToBottomButton != null)
+        {
+            scrollToBottomButton.Click -= OnScrollToBottomClicked;
         }
     }
 
@@ -87,7 +134,77 @@ public partial class BananaVisionPage : UserControlBase
     /// </summary>
     private void OnScrollToEndRequested(object? sender, EventArgs e)
     {
-        messageScrollViewer?.ScrollToEnd();
+        if (messageScrollViewer == null)
+            return;
+
+        isNearBottom = IsScrollNearBottom(messageScrollViewer);
+
+        if (isNearBottom)
+        {
+            messageScrollViewer.ScrollToEnd();
+            if (scrollToBottomButton != null)
+            {
+                scrollToBottomButton.IsVisible = false;
+            }
+            return;
+        }
+
+        if (scrollToBottomButton != null)
+        {
+            scrollToBottomButton.IsVisible = true;
+        }
+    }
+
+    private void OnScrollToEndForcedRequested(object? sender, EventArgs e)
+    {
+        if (messageScrollViewer == null)
+            return;
+
+        messageScrollViewer.ScrollToEnd();
+        isNearBottom = true;
+
+        if (scrollToBottomButton != null)
+        {
+            scrollToBottomButton.IsVisible = false;
+        }
+    }
+
+    private void OnMessageScrollChanged(object? sender, ScrollChangedEventArgs e)
+    {
+        if (messageScrollViewer == null)
+            return;
+
+        isNearBottom = IsScrollNearBottom(messageScrollViewer);
+
+        if (isNearBottom)
+        {
+            if (scrollToBottomButton != null)
+            {
+                scrollToBottomButton.IsVisible = false;
+            }
+        }
+        else
+        {
+            // If the user scrolls up manually, keep the affordance visible so they can jump back down.
+            if (scrollToBottomButton != null)
+            {
+                scrollToBottomButton.IsVisible = true;
+            }
+        }
+    }
+
+    private void OnScrollToBottomClicked(object? sender, global::Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if (messageScrollViewer == null)
+            return;
+
+        messageScrollViewer.ScrollToEnd();
+        isNearBottom = true;
+
+        if (scrollToBottomButton != null)
+        {
+            scrollToBottomButton.IsVisible = false;
+        }
     }
 
     /// <summary>
@@ -139,7 +256,7 @@ public partial class BananaVisionPage : UserControlBase
         e.Handled = true;
     }
 
-    private async void OnDrop(object? sender, DragEventArgs e)
+    private void OnDrop(object? sender, DragEventArgs e)
     {
         if (DataContext is BananaVisionPageViewModel viewModel)
         {
@@ -161,7 +278,7 @@ public partial class BananaVisionPage : UserControlBase
 
         if (DataContext is BananaVisionPageViewModel viewModel2)
         {
-            await viewModel2.AddImagesFromPathsAsync(imagePaths);
+            viewModel2.AddImagesFromPaths(imagePaths);
         }
     }
 

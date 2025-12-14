@@ -32,6 +32,12 @@ public record ImageGenerationMessage
     public string? ImagePath { get; init; }
 
     /// <summary>
+    /// Optional list of image paths associated with this message (e.g., multiple input images, or multiple outputs).
+    /// When present, <see cref="ImagePath"/> is typically the first entry for backward compatibility.
+    /// </summary>
+    public List<string>? ImagePaths { get; init; }
+
+    /// <summary>
     /// MIME type of the image
     /// </summary>
     public string? ImageMimeType { get; init; }

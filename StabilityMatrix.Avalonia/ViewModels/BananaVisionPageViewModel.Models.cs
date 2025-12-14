@@ -47,32 +47,58 @@ public partial class BananaVisionPageViewModel
     }
 
     /// <summary>
-    /// Loads available Flux Kontext models from the DiffusionModels folder using local model index
+    /// Categorizes models from a folder type based on search terms
     /// </summary>
-    private void LoadAvailableFluxModels()
+    /// <param name="folderType">The folder type to search</param>
+    /// <param name="primaryTerms">Primary search terms (highest priority)</param>
+    /// <param name="secondaryTerms">Secondary search terms (medium priority, optional)</param>
+    /// <returns>Tuple of (matched models, secondary matched models, untagged models)</returns>
+    private (
+        List<HybridModelFile> Primary,
+        List<HybridModelFile> Secondary,
+        List<HybridModelFile> Untagged
+    ) CategorizeModelsByTerms(
+        SharedFolderType folderType,
+        string[] primaryTerms,
+        string[]? secondaryTerms = null
+    )
     {
-        // Categorize UNet models
-        var kontextModels = new List<HybridModelFile>();
+        var primaryModels = new List<HybridModelFile>();
+        var secondaryModels = new List<HybridModelFile>();
         var untaggedModels = new List<HybridModelFile>();
 
-        foreach (
-            var model in modelIndexService
-                .FindByModelType(SharedFolderType.DiffusionModels)
-                .Select(HybridModelFile.FromLocal)
-        )
+        foreach (var model in modelIndexService.FindByModelType(folderType).Select(HybridModelFile.FromLocal))
         {
             var baseModel = model.Local?.ConnectedModelInfo?.BaseModel;
 
-            if (baseModel?.Contains("Kontext", StringComparison.OrdinalIgnoreCase) == true)
+            // Check primary terms first
+            if (
+                primaryTerms.Any(term =>
+                    baseModel?.Contains(term, StringComparison.OrdinalIgnoreCase) == true
+                )
+            )
             {
-                kontextModels.Add(model);
+                primaryModels.Add(model);
             }
+            // Check secondary terms
+            else if (
+                secondaryTerms?.Any(term =>
+                    baseModel?.Contains(term, StringComparison.OrdinalIgnoreCase) == true
+                ) == true
+            )
+            {
+                secondaryModels.Add(model);
+            }
+            // Check filename fallback for untagged models
             else if (string.IsNullOrEmpty(baseModel))
             {
-                // Also check filename for "kontext" as fallback
-                if (model.FileName.Contains("kontext", StringComparison.OrdinalIgnoreCase))
+                if (
+                    primaryTerms.Any(term =>
+                        model.FileName.Contains(term, StringComparison.OrdinalIgnoreCase)
+                    )
+                )
                 {
-                    kontextModels.Add(model);
+                    primaryModels.Add(model);
                 }
                 else
                 {
@@ -80,6 +106,20 @@ public partial class BananaVisionPageViewModel
                 }
             }
         }
+
+        return (primaryModels, secondaryModels, untaggedModels);
+    }
+
+    /// <summary>
+    /// Loads available Flux Kontext models from the DiffusionModels folder using local model index
+    /// </summary>
+    private void LoadAvailableFluxModels()
+    {
+        // Load UNet models - prioritize Kontext
+        var (kontextModels, _, untaggedModels) = CategorizeModelsByTerms(
+            SharedFolderType.DiffusionModels,
+            ["Kontext"]
+        );
 
         PopulateModelCollection(AvailableFluxModels, kontextModels, untaggedModels);
 
@@ -92,32 +132,12 @@ public partial class BananaVisionPageViewModel
                 ) ?? AvailableFluxModels.First();
         }
 
-        // Categorize LoRA models - prioritize Flux Kontext, then Flux, then untagged
-        var kontextLoras = new List<HybridModelFile>();
-        var fluxLoras = new List<HybridModelFile>();
-        var untaggedLoras = new List<HybridModelFile>();
-
-        foreach (
-            var lora in modelIndexService
-                .FindByModelType(SharedFolderType.Lora | SharedFolderType.LyCORIS)
-                .Select(HybridModelFile.FromLocal)
-        )
-        {
-            var baseModel = lora.Local?.ConnectedModelInfo?.BaseModel;
-
-            if (baseModel?.Contains("Kontext", StringComparison.OrdinalIgnoreCase) == true)
-            {
-                kontextLoras.Add(lora);
-            }
-            else if (baseModel?.Contains("Flux", StringComparison.OrdinalIgnoreCase) == true)
-            {
-                fluxLoras.Add(lora);
-            }
-            else if (string.IsNullOrEmpty(baseModel))
-            {
-                untaggedLoras.Add(lora);
-            }
-        }
+        // Load LoRA models - prioritize Kontext, then Flux, then untagged
+        var (kontextLoras, fluxLoras, untaggedLoras) = CategorizeModelsByTerms(
+            SharedFolderType.Lora | SharedFolderType.LyCORIS,
+            ["Kontext"],
+            ["Flux"]
+        );
 
         PopulateModelCollection(AvailableFluxLoras, kontextLoras, fluxLoras, untaggedLoras);
 
@@ -133,35 +153,11 @@ public partial class BananaVisionPageViewModel
     /// </summary>
     private void LoadAvailableQwenModels()
     {
-        // Categorize UNet models
-        var qwenModels = new List<HybridModelFile>();
-        var untaggedModels = new List<HybridModelFile>();
-
-        foreach (
-            var model in modelIndexService
-                .FindByModelType(SharedFolderType.DiffusionModels)
-                .Select(HybridModelFile.FromLocal)
-        )
-        {
-            var baseModel = model.Local?.ConnectedModelInfo?.BaseModel;
-
-            if (baseModel?.Contains("Qwen", StringComparison.OrdinalIgnoreCase) == true)
-            {
-                qwenModels.Add(model);
-            }
-            else if (string.IsNullOrEmpty(baseModel))
-            {
-                // Also check filename for "qwen" as fallback
-                if (model.FileName.Contains("qwen", StringComparison.OrdinalIgnoreCase))
-                {
-                    qwenModels.Add(model);
-                }
-                else
-                {
-                    untaggedModels.Add(model);
-                }
-            }
-        }
+        // Load UNet models - prioritize Qwen
+        var (qwenModels, _, untaggedModels) = CategorizeModelsByTerms(
+            SharedFolderType.DiffusionModels,
+            ["Qwen"]
+        );
 
         PopulateModelCollection(AvailableQwenModels, qwenModels, untaggedModels);
 
@@ -174,13 +170,13 @@ public partial class BananaVisionPageViewModel
                 ) ?? AvailableQwenModels.First();
         }
 
-        // Load all LoRA models (all are potentially compatible with Qwen)
-        var allLoras = modelIndexService
-            .FindByModelType(SharedFolderType.Lora | SharedFolderType.LyCORIS)
-            .Select(HybridModelFile.FromLocal)
-            .ToList();
+        // Load LoRA models - prioritize Qwen, then untagged
+        var (qwenLoras, _, untaggedLoras) = CategorizeModelsByTerms(
+            SharedFolderType.Lora | SharedFolderType.LyCORIS,
+            ["Qwen"]
+        );
 
-        PopulateModelCollection(AvailableQwenLoras, allLoras);
+        PopulateModelCollection(AvailableQwenLoras, qwenLoras, untaggedLoras);
 
         logger.LogInformation(
             "Loaded {ModelCount} Qwen models and {LoraCount} LoRAs from local index",

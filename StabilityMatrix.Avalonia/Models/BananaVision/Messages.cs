@@ -7,6 +7,19 @@ public abstract class MessageBase(bool isMyMessage)
 {
     public bool IsMyMessage { get; } = isMyMessage;
     public string Time { get; } = DateTime.Now.ToString("HH:mm");
+
+    /// <summary>
+    /// Optional database message ID backing this UI message.
+    /// When set, the UI can support actions like delete.
+    /// </summary>
+    public Guid? DatabaseMessageId { get; init; }
+
+    /// <summary>
+    /// Optional file path for image messages (when backed by a stored image on disk).
+    /// </summary>
+    public string? FilePath { get; init; }
+
+    public bool CanDelete => DatabaseMessageId.HasValue;
 }
 
 /// <summary>
@@ -23,6 +36,15 @@ public class TextMessage(string text, bool isMyMessage) : MessageBase(isMyMessag
 public class ImageMessage(Bitmap image, bool isMyMessage) : MessageBase(isMyMessage)
 {
     public Bitmap? Image { get; } = image;
+}
+
+/// <summary>
+/// Loading placeholder message shown while image is being generated
+/// </summary>
+public class LoadingImageMessage() : MessageBase(false)
+{
+    public int TargetWidth { get; init; } = 350;
+    public int TargetHeight { get; init; } = 350;
 }
 
 /// <summary>
@@ -59,6 +81,13 @@ public partial class ThinkingMessage : ObservableObject
     /// Time the message was created
     /// </summary>
     public string Time { get; }
+
+    /// <summary>
+    /// Optional database message ID backing this thinking block.
+    /// </summary>
+    public Guid? DatabaseMessageId { get; init; }
+
+    public bool CanDelete => DatabaseMessageId.HasValue;
 
     /// <summary>
     /// Toggle the expanded state

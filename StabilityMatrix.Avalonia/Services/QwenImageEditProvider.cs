@@ -1,6 +1,9 @@
+using AsyncAwaitBestPractices;
 using Microsoft.Extensions.Logging;
+using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Models.BananaVision;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Api.Comfy;
 using StabilityMatrix.Core.Services.ImageGeneration;
 
 namespace StabilityMatrix.Avalonia.Services;
@@ -17,6 +20,7 @@ public class QwenImageEditProvider(
     public string ProviderName => "Qwen Image Edit (Local)";
     public bool SupportsImageInput => true;
     public bool SupportsMultiTurn => true;
+    public bool RequiresThoughtSignatures => false;
 
     public async Task<ImageGenerationResponse> GenerateAsync(
         ImageGenerationRequest request,
@@ -33,7 +37,7 @@ public class QwenImageEditProvider(
                 {
                     IsSuccess = false,
                     ErrorMessage =
-                        "ComfyUI is not connected. Please start a ComfyUI package and connect in the Inference tab.",
+                        "ComfyUI is not connected. Use the Launch button in the header to start and connect to ComfyUI.",
                 };
             }
 
@@ -52,80 +56,15 @@ public class QwenImageEditProvider(
                 };
             }
 
-            // Upload input images if provided (Qwen supports up to 3 images natively)
-            if (request.InputImages is { Count: > 0 })
-            {
-                logger.LogInformation("Uploading {Count} input images", request.InputImages.Count);
-
-                for (var i = 0; i < Math.Min(request.InputImages.Count, 3); i++) // Max 3 images for Qwen
-                {
-                    var image = request.InputImages[i];
-                    var inputImageBytes = Convert.FromBase64String(image.Base64Data);
-                    using var inputStream = new MemoryStream(inputImageBytes);
-                    var fileName = $"qwen_image_edit_input_{i}.png";
-
-                    await clientManager.Client.UploadImageAsync(inputStream, fileName, cancellationToken);
-                }
-            }
-
-            // Upload most recent conversation history image for reference (if not already providing 3 input images)
-            if ((request.InputImages?.Count ?? 0) < 3 && request.ConversationHistory != null)
-            {
-                // Find the last assistant message with an image
-                var lastAssistantImage = request.ConversationHistory.LastOrDefault(m =>
-                    m is { Role: MessageRole.Assistant, ImageContent: not null }
-                );
-
-                if (lastAssistantImage?.ImageContent != null)
-                {
-                    var fileName = "qwen_image_edit_history_latest.png";
-
-                    // Prefer uploading directly from file path if available (more efficient)
-                    if (
-                        !string.IsNullOrEmpty(lastAssistantImage.ImageContent.FilePath)
-                        && File.Exists(lastAssistantImage.ImageContent.FilePath)
-                    )
-                    {
-                        logger.LogInformation(
-                            "Uploading conversation history image from file: {FilePath}",
-                            lastAssistantImage.ImageContent.FilePath
-                        );
-
-                        await using var fileStream = File.OpenRead(lastAssistantImage.ImageContent.FilePath);
-                        await clientManager.Client.UploadImageAsync(fileStream, fileName, cancellationToken);
-
-                        logger.LogInformation("Successfully uploaded history image: {FileName}", fileName);
-                    }
-                    else
-                    {
-                        // Fallback to base64 data
-                        logger.LogInformation("Uploading conversation history image from base64 data");
-
-                        var historyImageBytes = Convert.FromBase64String(
-                            lastAssistantImage.ImageContent.Base64Data
-                        );
-                        using var historyStream = new MemoryStream(historyImageBytes);
-                        await clientManager.Client.UploadImageAsync(
-                            historyStream,
-                            fileName,
-                            cancellationToken
-                        );
-
-                        logger.LogInformation(
-                            "Successfully uploaded history image: {FileName} (Size: {Size} bytes)",
-                            fileName,
-                            historyImageBytes.Length
-                        );
-                    }
-                }
-                else
-                {
-                    logger.LogDebug(
-                        "No conversation history image found to upload (InputImages count: {Count})",
-                        request.InputImages?.Count ?? 0
-                    );
-                }
-            }
+            // Upload images using helper
+            await ComfyImageUploadHelper.UploadImagesAsync(
+                clientManager,
+                request,
+                maxInputImages: 3,
+                providerPrefix: "qwen_image_edit",
+                logger,
+                cancellationToken
+            );
 
             // Extract custom model, LoRA selections, and resolution from provider options
             HybridModelFile? customUnetModel = null;
@@ -184,9 +123,84 @@ public class QwenImageEditProvider(
             logger.LogInformation("Queuing prompt to ComfyUI");
             var task = await clientManager.Client.QueuePromptAsync(nodes, cancellationToken);
 
-            // Wait for completion
-            logger.LogInformation("Waiting for generation to complete (Prompt ID: {PromptId})", task.Id);
-            await task.Task.WaitAsync(cancellationToken);
+            request.Progress?.Report(
+                new ImageGenerationProgress(
+                    ProviderId,
+                    task.Id,
+                    Value: null,
+                    Maximum: null,
+                    RunningNode: null,
+                    Stage: "Queued"
+                )
+            );
+
+            int? lastPercent = null;
+            string? lastRunningNode = null;
+
+            void ReportProgress(int? value, int? maximum, string? runningNode, string? stage)
+            {
+                int? percent = value is >= 0 && maximum is > 0 ? (value.Value * 100) / maximum.Value : null;
+
+                if (
+                    percent == lastPercent
+                    && string.Equals(lastRunningNode, runningNode, StringComparison.Ordinal)
+                )
+                {
+                    return;
+                }
+
+                lastPercent = percent;
+                lastRunningNode = runningNode;
+
+                request.Progress?.Report(
+                    new ImageGenerationProgress(ProviderId, task.Id, value, maximum, runningNode, stage)
+                );
+            }
+
+            void OnProgressUpdate(
+                object? sender,
+                StabilityMatrix.Core.Inference.ComfyProgressUpdateEventArgs args
+            )
+            {
+                ReportProgress(args.Value, args.Maximum, args.RunningNode, "Generating");
+            }
+
+            void OnRunningNodeChanged(object? sender, string? node)
+            {
+                ReportProgress(
+                    task.LastProgressUpdate?.Value,
+                    task.LastProgressUpdate?.Maximum,
+                    node,
+                    "Generating"
+                );
+            }
+
+            task.ProgressUpdate += OnProgressUpdate;
+            task.RunningNodeChanged += OnRunningNodeChanged;
+
+            // Register cancellation to interrupt ComfyUI if the user cancels
+            await using var promptInterrupt = cancellationToken.Register(() =>
+            {
+                logger.LogInformation(
+                    "Cancellation requested, interrupting ComfyUI prompt {PromptId}",
+                    task.Id
+                );
+                clientManager
+                    .Client.InterruptPromptAsync(new CancellationTokenSource(5000).Token)
+                    .SafeFireAndForget();
+            });
+
+            try
+            {
+                // Wait for completion
+                logger.LogInformation("Waiting for generation to complete (Prompt ID: {PromptId})", task.Id);
+                await task.Task.WaitAsync(cancellationToken);
+            }
+            finally
+            {
+                task.ProgressUpdate -= OnProgressUpdate;
+                task.RunningNodeChanged -= OnRunningNodeChanged;
+            }
 
             // Get the output images
             var outputImages = await clientManager.Client.GetImagesForExecutedPromptAsync(
@@ -194,10 +208,30 @@ public class QwenImageEditProvider(
                 cancellationToken
             );
 
-            // Find the SaveImage node output
-            var saveImageOutput = outputImages.FirstOrDefault(x => x.Value?.Count > 0);
+            // Prefer the "SaveImage" output node deterministically.
+            var preferredOutputKey = "SaveImage";
+            string? selectedOutputKey = null;
+            List<ComfyImage>? candidateImages = null;
 
-            if (saveImageOutput.Value == null || saveImageOutput.Value.Count == 0)
+            if (
+                outputImages.TryGetValue(preferredOutputKey, out var preferredImages)
+                && preferredImages is { Count: > 0 }
+            )
+            {
+                selectedOutputKey = preferredOutputKey;
+                candidateImages = preferredImages;
+            }
+            else
+            {
+                var selected = outputImages
+                    .OrderBy(kvp => kvp.Key, StringComparer.Ordinal)
+                    .FirstOrDefault(kvp => kvp.Value is { Count: > 0 });
+
+                selectedOutputKey = string.IsNullOrEmpty(selected.Key) ? null : selected.Key;
+                candidateImages = selected.Value;
+            }
+
+            if (candidateImages is null || candidateImages.Count == 0)
             {
                 logger.LogWarning("No output images found from generation");
                 return new ImageGenerationResponse
@@ -207,46 +241,53 @@ public class QwenImageEditProvider(
                 };
             }
 
-            // Download the first image
-            var comfyImage = saveImageOutput.Value[0];
-            logger.LogInformation("Downloading generated image: {FileName}", comfyImage.FileName);
+            var generatedImages = new List<GeneratedImage>();
 
-            await using var imageStream = await clientManager.Client.GetImageStreamAsync(
-                comfyImage,
-                cancellationToken
+            foreach (var comfyImage in candidateImages)
+            {
+                logger.LogInformation("Downloading generated image: {FileName}", comfyImage.FileName);
+
+                await using var imageStream = await clientManager.Client.GetImageStreamAsync(
+                    comfyImage,
+                    cancellationToken
+                );
+                using var memoryStream = new MemoryStream();
+                await imageStream.CopyToAsync(memoryStream, cancellationToken);
+                var imageBytes = memoryStream.ToArray();
+                var base64Image = Convert.ToBase64String(imageBytes);
+
+                var mimeType =
+                    comfyImage.FileName.EndsWith(".png", StringComparison.OrdinalIgnoreCase) ? "image/png"
+                    : comfyImage.FileName.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase)
+                    || comfyImage.FileName.EndsWith(".jpeg", StringComparison.OrdinalIgnoreCase)
+                        ? "image/jpeg"
+                    : comfyImage.FileName.EndsWith(".webp", StringComparison.OrdinalIgnoreCase) ? "image/webp"
+                    : "image/png";
+
+                generatedImages.Add(new GeneratedImage { Base64Data = base64Image, MimeType = mimeType });
+            }
+
+            logger.LogInformation(
+                "Successfully generated {Count} image(s) with Qwen Image Edit",
+                generatedImages.Count
             );
-            using var memoryStream = new MemoryStream();
-            await imageStream.CopyToAsync(memoryStream, cancellationToken);
-            var imageBytes = memoryStream.ToArray();
-            var base64Image = Convert.ToBase64String(imageBytes);
-
-            var mimeType =
-                comfyImage.FileName.EndsWith(".png") ? "image/png"
-                : comfyImage.FileName.EndsWith(".jpg") || comfyImage.FileName.EndsWith(".jpeg") ? "image/jpeg"
-                : "image/png";
-
-            logger.LogInformation("Successfully generated image with Qwen Image Edit");
 
             return new ImageGenerationResponse
             {
                 IsSuccess = true,
-                Images = [new GeneratedImage { Base64Data = base64Image, MimeType = mimeType }],
+                Images = generatedImages,
                 TextResponse = null,
                 Metadata = new Dictionary<string, object>
                 {
                     ["promptId"] = task.Id,
-                    ["fileName"] = comfyImage.FileName,
+                    ["outputNode"] = selectedOutputKey ?? "unknown",
                 },
             };
         }
         catch (OperationCanceledException)
         {
             logger.LogInformation("Image generation was cancelled");
-            return new ImageGenerationResponse
-            {
-                IsSuccess = false,
-                ErrorMessage = "Generation was cancelled",
-            };
+            throw; // Propagate cancellation to ViewModel for proper handling
         }
         catch (Exception ex)
         {

@@ -1,5 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.Net.Http;
+using System.Net.Sockets;
 using System.Reactive.Linq;
 using AsyncAwaitBestPractices;
 using Avalonia.Controls;
@@ -11,17 +13,21 @@ using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
+using FluentAvalonia.UI.Media.Animation;
 using Injectio.Attributes;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.BananaVision;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
+using StabilityMatrix.Avalonia.ViewModels.Settings;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.Packages;
@@ -38,9 +44,10 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
     private readonly IImageGenerationChatService chatService;
     private readonly ISecretsManager secretsManager;
     private readonly INotificationService notificationService;
-    private readonly RunningPackageService runningPackageService;
     private readonly IServiceManager<ViewModelBase> vmFactory;
     private readonly IModelIndexService modelIndexService;
+    private readonly INavigationService<MainWindowViewModel> navigationService;
+    private readonly INavigationService<SettingsViewModel> settingsNavigationService;
 
     public override string Title => "BananaVision";
     public override IconSource IconSource =>
@@ -53,12 +60,77 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(SendMessageCommand))]
+    [NotifyPropertyChangedFor(nameof(IsCurrentConversationGenerating))]
     public partial bool IsGenerating { get; set; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsCurrentConversationGenerating))]
+    public partial Guid? GeneratingConversationId { get; set; }
+
+    /// <summary>
+    /// True if the currently selected conversation is the one that's generating.
+    /// Used to scope the progress indicator to the active conversation.
+    /// </summary>
+    public bool IsCurrentConversationGenerating =>
+        IsGenerating && CurrentConversation != null && GeneratingConversationId == CurrentConversation.Id;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasGenerationProgress))]
+    [NotifyPropertyChangedFor(nameof(GenerationProgressText))]
+    public partial int? GenerationProgressPercent { get; set; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasGenerationProgress))]
+    [NotifyPropertyChangedFor(nameof(GenerationProgressText))]
+    public partial string? GenerationProgressStage { get; set; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasGenerationProgress))]
+    [NotifyPropertyChangedFor(nameof(GenerationProgressText))]
+    public partial string? GenerationProgressRunningNode { get; set; }
+
+    public bool HasGenerationProgress =>
+        RequiresLocalBackend
+        && (
+            GenerationProgressPercent != null
+            || !string.IsNullOrEmpty(GenerationProgressStage)
+            || !string.IsNullOrEmpty(GenerationProgressRunningNode)
+        );
+
+    public string GenerationProgressText
+    {
+        get
+        {
+            if (!IsGenerating)
+                return "Ready";
+
+            if (!RequiresLocalBackend)
+                return "Creating your image...";
+
+            var stage = string.IsNullOrWhiteSpace(GenerationProgressStage)
+                ? "Creating your image..."
+                : GenerationProgressStage;
+            var node = string.IsNullOrWhiteSpace(GenerationProgressRunningNode)
+                ? null
+                : GenerationProgressRunningNode.Replace('_', ' ');
+            var percent = GenerationProgressPercent;
+
+            if (percent is >= 0 and <= 100 && !string.IsNullOrWhiteSpace(node))
+                return $"{stage} ({percent}%) • {node}";
+            if (percent is >= 0 and <= 100)
+                return $"{stage} ({percent}%)";
+            if (!string.IsNullOrWhiteSpace(node))
+                return $"{stage} • {node}";
+
+            return stage;
+        }
+    }
 
     [ObservableProperty]
     public partial string? ErrorMessage { get; set; }
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsCurrentConversationGenerating))]
     public partial ImageGenerationConversation? CurrentConversation { get; set; }
 
     partial void OnCurrentConversationChanged(
@@ -89,7 +161,7 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
             }
 
             // Create new cancellation token for this load operation
-            loadMessagesCts = new CancellationTokenSource();
+            loadMessagesCts = new();
             var token = loadMessagesCts.Token;
 
             // Load messages for the new conversation (fire and forget with error handling)
@@ -106,7 +178,7 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
         else
         {
             logger.LogWarning("Current conversation set to null");
-            Messages.Clear();
+            ClearMessages();
         }
     }
 
@@ -119,7 +191,7 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
     )
     {
         // Clear on UI thread
-        await Dispatcher.UIThread.InvokeAsync(() => Messages.Clear());
+        await Dispatcher.UIThread.InvokeAsync(ClearMessages);
 
         try
         {
@@ -139,26 +211,32 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
             {
                 foreach (var message in messages)
                 {
-                    // Show thinking content first (for assistant messages)
-                    if (
-                        message.Role == MessageRole.Assistant
-                        && ShowThinkingOutput
-                        && !string.IsNullOrEmpty(message.ThinkingContent)
-                    )
-                    {
-                        Messages.Add(new ThinkingMessage(message.ThinkingContent));
-                    }
+                    AddMessageToUI(message);
+                }
 
-                    if (!string.IsNullOrEmpty(message.TextContent))
-                    {
-                        Messages.Add(new TextMessage(message.TextContent, message.Role == MessageRole.User));
-                    }
+                // Notify gallery that images may have changed
+                OnPropertyChanged(nameof(ConversationImages));
+                OnPropertyChanged(nameof(HasConversationImages));
 
-                    if (!string.IsNullOrEmpty(message.ImagePath) && File.Exists(message.ImagePath))
+                // If this conversation is currently generating, re-add the loading placeholder
+                if (GeneratingConversationId == conversation.Id && IsGenerating)
+                {
+                    currentLoadingMessage = new LoadingImageMessage
                     {
-                        var bitmap = new Bitmap(message.ImagePath);
-                        Messages.Add(new ImageMessage(bitmap, message.Role == MessageRole.User));
-                    }
+                        TargetWidth = (SelectedAspectRatio?.Width ?? 300) / 3,
+                        TargetHeight = (SelectedAspectRatio?.Height ?? 300) / 3,
+                    };
+                    Messages.Add(currentLoadingMessage);
+                }
+
+                // Start the view at the bottom when switching to a (potentially long) conversation.
+                // Guard against late completion after the user already switched away.
+                if (CurrentConversation?.Id == conversation.Id)
+                {
+                    Dispatcher.UIThread.Post(
+                        () => ScrollToEndForcedRequested?.Invoke(this, EventArgs.Empty),
+                        DispatcherPriority.Background
+                    );
                 }
             });
         }
@@ -188,6 +266,13 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
 
     [ObservableProperty]
     public partial bool CanRetryLastMessage { get; set; }
+
+    /// <summary>
+    /// Whether we can regenerate the last assistant response (true when there's at least one assistant message)
+    /// </summary>
+    public bool CanRegenerateLastResponse =>
+        Messages.OfType<TextMessage>().Any(m => !m.IsMyMessage)
+        || Messages.OfType<ImageMessage>().Any(m => !m.IsMyMessage);
 
     /// <summary>
     /// Whether to show thinking/reasoning output from Gemini 3 Pro
@@ -274,15 +359,15 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
     /// </summary>
     public ObservableCollection<AspectRatioOption> AvailableAspectRatios { get; } =
         [
-            new AspectRatioOption("1:1", "Square", 1024, 1024),
-            new AspectRatioOption("16:9", "Landscape Wide", 1344, 768),
-            new AspectRatioOption("9:16", "Portrait Tall", 768, 1344),
-            new AspectRatioOption("4:3", "Landscape", 1152, 896),
-            new AspectRatioOption("3:4", "Portrait", 896, 1152),
-            new AspectRatioOption("3:2", "Photo Landscape", 1216, 832),
-            new AspectRatioOption("2:3", "Photo Portrait", 832, 1216),
-            new AspectRatioOption("21:9", "Ultrawide", 1536, 640),
-            new AspectRatioOption("9:21", "Ultra Tall", 640, 1536),
+            new("1:1", "Square", 1024, 1024),
+            new("16:9", "Landscape Wide", 1344, 768),
+            new("9:16", "Portrait Tall", 768, 1344),
+            new("4:3", "Landscape", 1152, 896),
+            new("3:4", "Portrait", 896, 1152),
+            new("3:2", "Photo Landscape", 1216, 832),
+            new("2:3", "Photo Portrait", 832, 1216),
+            new("21:9", "Ultrawide", 1536, 640),
+            new("9:21", "Ultra Tall", 640, 1536),
         ];
 
     /// <summary>
@@ -322,6 +407,23 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
     [ObservableProperty]
     public partial bool IsDragOverImage { get; set; }
 
+    /// <summary>
+    /// Whether the image gallery sidebar is visible
+    /// </summary>
+    [ObservableProperty]
+    public partial bool IsGalleryVisible { get; set; }
+
+    /// <summary>
+    /// Gets all images in the current conversation for the gallery view
+    /// </summary>
+    public IEnumerable<ImageMessage> ConversationImages =>
+        Messages.OfType<ImageMessage>().Where(m => !m.IsMyMessage);
+
+    /// <summary>
+    /// Whether there are any images in the conversation
+    /// </summary>
+    public bool HasConversationImages => ConversationImages.Any();
+
     partial void OnIsWaitingForConnectionChanged(bool value)
     {
         UpdateProviderStatus();
@@ -336,6 +438,11 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
     private CancellationTokenSource? loadMessagesCts;
 
     /// <summary>
+    /// Tracks the current loading message so it can be reliably removed on cancellation.
+    /// </summary>
+    private LoadingImageMessage? currentLoadingMessage;
+
+    /// <summary>
     /// Messages in the current conversation. Can contain MessageBase or ThinkingMessage.
     /// </summary>
     public ObservableCollection<object> Messages { get; }
@@ -344,6 +451,12 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
     /// Event raised when the message list should scroll to the end
     /// </summary>
     public event EventHandler? ScrollToEndRequested;
+
+    /// <summary>
+    /// Event raised when the message list should force-scroll to the end.
+    /// Used after switching conversations so users start at the bottom immediately.
+    /// </summary>
+    public event EventHandler? ScrollToEndForcedRequested;
 
     public ObservableCollection<ImageGenerationConversation> Conversations { get; set; } = [];
     public ObservableCollection<ProviderDisplayItem> AvailableProviders { get; set; } = [];
@@ -364,15 +477,18 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
         IInferenceClientManager inferenceClientManager,
         RunningPackageService runningPackageService,
         IServiceManager<ViewModelBase> vmFactory,
-        IModelIndexService modelIndexService
+        IModelIndexService modelIndexService,
+        INavigationService<MainWindowViewModel> navigationService,
+        INavigationService<SettingsViewModel> settingsNavigationService
     )
     {
         this.logger = logger;
         this.chatService = chatService;
         this.secretsManager = secretsManager;
         this.notificationService = notificationService;
-        this.runningPackageService = runningPackageService;
         this.vmFactory = vmFactory;
+        this.navigationService = navigationService;
+        this.settingsNavigationService = settingsNavigationService;
         this.modelIndexService = modelIndexService;
 
         ClientManager = inferenceClientManager;
@@ -385,7 +501,7 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
         var providers = chatService.GetAvailableProviders();
         foreach (var provider in providers)
         {
-            AvailableProviders.Add(new ProviderDisplayItem(provider.ProviderId, provider.ProviderName));
+            AvailableProviders.Add(new(provider.ProviderId, provider.ProviderName));
         }
 
         // Set default provider (use the first provider's ID)
@@ -410,6 +526,13 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
                     {
                         logger.LogError(ex, "Failed to check for missing models");
                     });
+            }
+
+            // When disconnected during generation, cancel the pending operation
+            if (!ClientManager.IsConnected && IsGenerating && RequiresLocalBackend)
+            {
+                logger.LogWarning("ComfyUI disconnected during generation, cancelling...");
+                CancelGeneration();
             }
         };
 
@@ -488,6 +611,32 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
         }
 
         UpdateProviderStatus();
+    }
+
+    private void ResetGenerationProgress()
+    {
+        GenerationProgressPercent = null;
+        GenerationProgressStage = null;
+        GenerationProgressRunningNode = null;
+        OnPropertyChanged(nameof(GenerationProgressText));
+    }
+
+    private IProgress<ImageGenerationProgress> CreateProgressReporter(string providerId)
+    {
+        return new Progress<ImageGenerationProgress>(progress =>
+        {
+            // Only show progress for the active local generation session/provider.
+            if (!RequiresLocalBackend || SelectedProviderId != providerId)
+                return;
+
+            Dispatcher.UIThread.Post(() =>
+            {
+                GenerationProgressPercent = progress.Percent;
+                GenerationProgressStage = progress.Stage;
+                GenerationProgressRunningNode = progress.RunningNode;
+                OnPropertyChanged(nameof(GenerationProgressText));
+            });
+        });
     }
 
     public override async Task OnLoadedAsync()
@@ -601,7 +750,7 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
 
             if (CurrentConversation?.Id == conversation.Id)
             {
-                Messages.Clear();
+                ClearMessages();
                 CurrentConversation = null;
 
                 // Load first conversation if available
@@ -684,20 +833,61 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
     [RelayCommand]
     private async Task ConnectAsync()
     {
-        try
+        const int maxRetries = 5;
+        const int retryDelayMs = 1000;
+
+        for (var attempt = 1; attempt <= maxRetries; attempt++)
         {
-            logger.LogInformation("Attempting to connect to ComfyUI...");
-            await ClientManager.ConnectAsync();
-            notificationService.Show(
-                "Connected",
-                "Successfully connected to ComfyUI",
-                NotificationType.Success
-            );
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Failed to connect to ComfyUI");
-            notificationService.Show("Connection Failed", ex.Message, NotificationType.Error);
+            try
+            {
+                logger.LogInformation(
+                    "Attempting to connect to ComfyUI (attempt {Attempt}/{MaxRetries})...",
+                    attempt,
+                    maxRetries
+                );
+                await ClientManager.ConnectAsync();
+                notificationService.Show(
+                    "Connected",
+                    "Successfully connected to ComfyUI",
+                    NotificationType.Success
+                );
+                return; // Success - exit the method
+            }
+            catch (HttpRequestException ex)
+                when (ex.InnerException is SocketException { SocketErrorCode: SocketError.ConnectionRefused })
+            {
+                // Connection refused - ComfyUI might still be starting up
+                if (attempt < maxRetries)
+                {
+                    logger.LogDebug(
+                        "Connection refused (attempt {Attempt}/{MaxRetries}), retrying in {Delay}ms...",
+                        attempt,
+                        maxRetries,
+                        retryDelayMs
+                    );
+                    await Task.Delay(retryDelayMs);
+                }
+                else
+                {
+                    logger.LogWarning(
+                        ex,
+                        "Failed to connect to ComfyUI after {MaxRetries} attempts",
+                        maxRetries
+                    );
+                    notificationService.Show(
+                        "Connection Failed",
+                        "Could not connect to ComfyUI. Make sure it's running and try again.",
+                        NotificationType.Warning
+                    );
+                }
+            }
+            catch (Exception ex)
+            {
+                // Other errors - don't retry
+                logger.LogError(ex, "Failed to connect to ComfyUI");
+                notificationService.Show("Connection Failed", ex.Message, NotificationType.Error);
+                return;
+            }
         }
     }
 
@@ -734,22 +924,6 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
             return;
         }
 
-        // Check API key only for Gemini provider
-        if (BananaVisionProviderIds.IsCloudProvider(SelectedProviderId))
-        {
-            var secrets = await secretsManager.SafeLoadAsync();
-            if (string.IsNullOrEmpty(secrets.GeminiApiKey))
-            {
-                ErrorMessage = "Gemini API key not configured. Please add it in Settings.";
-                notificationService.Show(
-                    "API Key Required",
-                    "Please configure your Gemini API key in Settings.",
-                    NotificationType.Warning
-                );
-                return;
-            }
-        }
-
         var messageText = NewMessageText;
         var imagePaths = PendingImages.Select(p => p.FilePath).ToList();
 
@@ -762,26 +936,51 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
         CanRetryLastMessage = false;
 
         // Add user message to UI immediately
+        var provisionalUiItems = new List<object>();
         if (!string.IsNullOrWhiteSpace(messageText))
         {
-            Messages.Add(new TextMessage(messageText, true));
+            var uiText = new TextMessage(messageText, true);
+            provisionalUiItems.Add(uiText);
+            Messages.Add(uiText);
         }
 
-        // Show pending images in chat
+        // Show pending images in chat (provisional; will be replaced by persisted copies after DB save)
         foreach (var pendingImage in PendingImages)
         {
-            Messages.Add(new ImageMessage(pendingImage.Bitmap, true));
+            var uiImage = new ImageMessage(pendingImage.Bitmap, true);
+            provisionalUiItems.Add(uiImage);
+            Messages.Add(uiImage);
         }
 
         // Clear pending images
         PendingImages.Clear();
 
         IsGenerating = true;
+        ResetGenerationProgress();
+        if (RequiresLocalBackend && !string.IsNullOrEmpty(SelectedProviderId))
+        {
+            GenerationProgressStage = "Starting...";
+        }
+
+        // Track which conversation is generating (for restoring placeholder on switch back)
+        GeneratingConversationId = CurrentConversation.Id;
+
+        // Add loading placeholder (scaled to 1/3 of target size for compact display)
+        currentLoadingMessage = new LoadingImageMessage
+        {
+            TargetWidth = (SelectedAspectRatio?.Width ?? 300) / 3,
+            TargetHeight = (SelectedAspectRatio?.Height ?? 300) / 3,
+        };
+        Messages.Add(currentLoadingMessage);
 
         try
         {
             // Build provider options
             var providerOptions = BuildProviderOptions();
+            var progress =
+                RequiresLocalBackend && SelectedProviderId != null
+                    ? CreateProgressReporter(SelectedProviderId)
+                    : null;
 
             var (userMessage, assistantMessage) = await chatService.SendMessageAsync(
                 CurrentConversation.Id,
@@ -789,31 +988,33 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
                 messageText,
                 imagePaths.Count > 0 ? imagePaths : null,
                 providerOptions,
+                progress,
                 cancellationToken
             );
+
+            // Remove loading placeholder
+            if (currentLoadingMessage != null)
+            {
+                Messages.Remove(currentLoadingMessage);
+                currentLoadingMessage = null;
+            }
+
+            // Replace provisional user UI items with canonical DB-backed messages (with IDs and persisted image paths).
+            foreach (var item in provisionalUiItems)
+            {
+                Messages.Remove(item);
+                if (item is ImageMessage imageMessage)
+                {
+                    imageMessage.Image?.Dispose();
+                }
+            }
+
+            AddUserMessageToUI(userMessage);
 
             // Add assistant response to UI
             if (assistantMessage != null)
             {
-                // Show thinking content first if available and user wants it
-                if (ShowThinkingOutput && !string.IsNullOrEmpty(assistantMessage.ThinkingContent))
-                {
-                    Messages.Add(new ThinkingMessage(assistantMessage.ThinkingContent));
-                }
-
-                if (!string.IsNullOrEmpty(assistantMessage.TextContent))
-                {
-                    Messages.Add(new TextMessage(assistantMessage.TextContent, false));
-                }
-
-                if (
-                    !string.IsNullOrEmpty(assistantMessage.ImagePath)
-                    && File.Exists(assistantMessage.ImagePath)
-                )
-                {
-                    var bitmap = new Bitmap(assistantMessage.ImagePath);
-                    Messages.Add(new ImageMessage(bitmap, false));
-                }
+                AddAssistantMessageToUI(assistantMessage);
             }
 
             // Reload conversations to update timestamps and titles
@@ -831,17 +1032,41 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
         }
         catch (OperationCanceledException)
         {
-            logger.LogInformation("Message generation cancelled");
-            notificationService.Show("Cancelled", "Image generation cancelled", NotificationType.Information);
-            CanRetryLastMessage = true; // Enable retry after cancel
+            // Check if cancellation was due to connection loss
+            if (RequiresLocalBackend && !ClientManager.IsConnected)
+            {
+                logger.LogWarning("Message generation cancelled due to connection loss");
+                ErrorMessage = "Connection to ComfyUI was lost during generation.";
+                notificationService.Show(
+                    "Connection Lost",
+                    "ComfyUI disconnected during generation",
+                    NotificationType.Warning
+                );
+            }
+            else
+            {
+                logger.LogInformation("Message generation cancelled");
+                ErrorMessage = "Cancelled";
+            }
+            CanRetryLastMessage = true;
         }
         catch (ImageGenerationException ex)
         {
             // Expected error from generation (provider error, API error, etc.)
             logger.LogWarning("Image generation failed: {Message}", ex.Message);
-            ErrorMessage = ex.Message;
-            notificationService.Show("Generation Failed", ex.Message, NotificationType.Warning);
-            CanRetryLastMessage = true;
+
+            // Check if this is an API key error
+            if (ex.Message.Contains("API key", StringComparison.OrdinalIgnoreCase))
+            {
+                await ShowApiKeyRequiredDialogAsync();
+                CanRetryLastMessage = true;
+            }
+            else
+            {
+                ErrorMessage = ex.Message;
+                notificationService.Show("Generation Failed", ex.Message, NotificationType.Warning);
+                CanRetryLastMessage = true;
+            }
         }
         catch (Exception ex)
         {
@@ -854,11 +1079,47 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
         finally
         {
             IsGenerating = false;
+            GeneratingConversationId = null;
+            ResetGenerationProgress();
+            // Ensure loading placeholder is removed on cancel/error
+            if (currentLoadingMessage != null)
+            {
+                Messages.Remove(currentLoadingMessage);
+                currentLoadingMessage = null;
+            }
         }
     }
 
-    [RelayCommand]
-    private async Task RetryLastMessageAsync()
+    /// <summary>
+    /// Shows a dialog prompting the user to add their Gemini API key in settings
+    /// </summary>
+    private async Task ShowApiKeyRequiredDialogAsync()
+    {
+        var dialog = new ContentDialog
+        {
+            Title = "API Key Required",
+            Content =
+                "Gemini API key not configured. Please add your Gemini API key in Account Settings to use cloud providers.",
+            PrimaryButtonText = "Open Settings",
+            CloseButtonText = "Cancel",
+            DefaultButton = ContentDialogButton.Primary,
+        };
+
+        var result = await dialog.ShowAsync();
+
+        if (result == ContentDialogResult.Primary)
+        {
+            // Navigate to Settings -> Account Settings
+            navigationService.NavigateTo<SettingsViewModel>(new SuppressNavigationTransitionInfo());
+            await Task.Delay(100);
+            settingsNavigationService.NavigateTo<AccountSettingsViewModel>(
+                new SuppressNavigationTransitionInfo()
+            );
+        }
+    }
+
+    [RelayCommand(IncludeCancelCommand = true)]
+    private async Task RetryLastMessageAsync(CancellationToken cancellationToken)
     {
         if (CurrentConversation == null)
             return;
@@ -873,52 +1134,90 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
         ErrorMessage = null;
         CanRetryLastMessage = false;
         IsGenerating = true;
+        ResetGenerationProgress();
+        if (RequiresLocalBackend && !string.IsNullOrEmpty(SelectedProviderId))
+        {
+            GenerationProgressStage = "Starting...";
+        }
+
+        // Track which conversation is generating (for restoring placeholder on switch back)
+        GeneratingConversationId = CurrentConversation.Id;
 
         try
         {
             // Build provider options
             var providerOptions = BuildProviderOptions();
+            var progress =
+                RequiresLocalBackend && SelectedProviderId != null
+                    ? CreateProgressReporter(SelectedProviderId)
+                    : null;
+
+            // Add loading placeholder (scaled to 1/3 of target size for compact display)
+            currentLoadingMessage = new LoadingImageMessage
+            {
+                TargetWidth = (SelectedAspectRatio?.Width ?? 300) / 3,
+                TargetHeight = (SelectedAspectRatio?.Height ?? 300) / 3,
+            };
+            Messages.Add(currentLoadingMessage);
 
             // Retry generation - this doesn't create a new user message
             var assistantMessage = await chatService.RetryGenerationAsync(
                 CurrentConversation.Id,
                 SelectedProviderId,
                 providerOptions,
-                CancellationToken.None
+                progress,
+                cancellationToken
             );
 
+            // Remove loading placeholder
+            if (currentLoadingMessage != null)
+            {
+                Messages.Remove(currentLoadingMessage);
+                currentLoadingMessage = null;
+            }
+
             // Add only the assistant response to UI
-            if (ShowThinkingOutput && !string.IsNullOrEmpty(assistantMessage.ThinkingContent))
-            {
-                Messages.Add(new ThinkingMessage(assistantMessage.ThinkingContent));
-            }
-
-            if (!string.IsNullOrEmpty(assistantMessage.TextContent))
-            {
-                Messages.Add(new TextMessage(assistantMessage.TextContent, false));
-            }
-
-            if (!string.IsNullOrEmpty(assistantMessage.ImagePath) && File.Exists(assistantMessage.ImagePath))
-            {
-                var bitmap = new Bitmap(assistantMessage.ImagePath);
-                Messages.Add(new ImageMessage(bitmap, false));
-            }
+            AddAssistantMessageToUI(assistantMessage, includeDbId: false);
 
             // Reload conversations to update timestamps
             await LoadConversationsAsync();
         }
         catch (OperationCanceledException)
         {
-            logger.LogInformation("Retry generation cancelled");
-            notificationService.Show("Cancelled", "Image generation cancelled", NotificationType.Information);
+            // Check if cancellation was due to connection loss
+            if (RequiresLocalBackend && !ClientManager.IsConnected)
+            {
+                logger.LogWarning("Retry generation cancelled due to connection loss");
+                ErrorMessage = "Connection to ComfyUI was lost during generation.";
+                notificationService.Show(
+                    "Connection Lost",
+                    "ComfyUI disconnected during generation",
+                    NotificationType.Warning
+                );
+            }
+            else
+            {
+                logger.LogInformation("Retry generation cancelled");
+                ErrorMessage = "Cancelled";
+            }
             CanRetryLastMessage = true;
         }
         catch (ImageGenerationException ex)
         {
             logger.LogWarning("Retry generation failed: {Message}", ex.Message);
-            ErrorMessage = ex.Message;
-            notificationService.Show("Generation Failed", ex.Message, NotificationType.Warning);
-            CanRetryLastMessage = true;
+
+            // Check if this is an API key error
+            if (ex.Message.Contains("API key", StringComparison.OrdinalIgnoreCase))
+            {
+                await ShowApiKeyRequiredDialogAsync();
+                CanRetryLastMessage = true;
+            }
+            else
+            {
+                ErrorMessage = ex.Message;
+                notificationService.Show("Generation Failed", ex.Message, NotificationType.Warning);
+                CanRetryLastMessage = true;
+            }
         }
         catch (Exception ex)
         {
@@ -930,6 +1229,14 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
         finally
         {
             IsGenerating = false;
+            GeneratingConversationId = null;
+            ResetGenerationProgress();
+            // Ensure loading placeholder is removed on cancel/error
+            if (currentLoadingMessage != null)
+            {
+                Messages.Remove(currentLoadingMessage);
+                currentLoadingMessage = null;
+            }
         }
     }
 
@@ -941,6 +1248,385 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
     }
 
     /// <summary>
+    /// Regenerates the last assistant response (without an error context)
+    /// </summary>
+    [RelayCommand(IncludeCancelCommand = true)]
+    private async Task RegenerateLastResponseAsync(CancellationToken cancellationToken)
+    {
+        if (CurrentConversation == null)
+            return;
+
+        if (string.IsNullOrEmpty(SelectedProviderId))
+        {
+            notificationService.Show("Error", "Please select a provider", NotificationType.Error);
+            return;
+        }
+
+        // Clear error state
+        ErrorMessage = null;
+        CanRetryLastMessage = false;
+        IsGenerating = true;
+        ResetGenerationProgress();
+        if (RequiresLocalBackend && !string.IsNullOrEmpty(SelectedProviderId))
+        {
+            GenerationProgressStage = "Starting...";
+        }
+
+        // Track which conversation is generating (for restoring placeholder on switch back)
+        GeneratingConversationId = CurrentConversation.Id;
+
+        try
+        {
+            // Remove the last assistant message(s) from UI before regenerating
+            var messagesToRemove = new List<object>();
+            for (var i = Messages.Count - 1; i >= 0; i--)
+            {
+                var message = Messages[i];
+                // Stop when we hit a user message
+                if (message is TextMessage tm && tm.IsMyMessage)
+                    break;
+                if (message is ImageMessage im && im.IsMyMessage)
+                    break;
+
+                messagesToRemove.Add(message);
+            }
+
+            // Remove in reverse order to avoid index issues
+            foreach (var message in messagesToRemove)
+            {
+                Messages.Remove(message);
+                // Dispose image if needed
+                if (message is ImageMessage imageMessage)
+                {
+                    imageMessage.Image?.Dispose();
+                }
+            }
+
+            // Delete old assistant messages from database (but preserve their image files)
+            var dbMessages = await chatService.GetMessagesAsync(CurrentConversation.Id);
+            var lastUserMessage = dbMessages.LastOrDefault(m => m.Role == MessageRole.User);
+            if (lastUserMessage != null)
+            {
+                // Find all assistant messages after the last user message
+                var oldAssistantMessages = dbMessages
+                    .Where(m => m.Role == MessageRole.Assistant && m.Timestamp > lastUserMessage.Timestamp)
+                    .ToList();
+
+                // Delete them from database but preserve image files for the output browser
+                foreach (var oldMsg in oldAssistantMessages)
+                {
+                    await chatService.DeleteMessageAsync(oldMsg.Id, preserveImageFile: true);
+                }
+
+                if (oldAssistantMessages.Count > 0)
+                {
+                    logger.LogInformation(
+                        "Removed {Count} old assistant message(s) from database, preserved image files",
+                        oldAssistantMessages.Count
+                    );
+                }
+            }
+
+            // Build provider options
+            var providerOptions = BuildProviderOptions();
+            var progress =
+                RequiresLocalBackend && SelectedProviderId != null
+                    ? CreateProgressReporter(SelectedProviderId)
+                    : null;
+
+            // Add loading placeholder (scaled to 1/3 of target size for compact display)
+            currentLoadingMessage = new LoadingImageMessage
+            {
+                TargetWidth = (SelectedAspectRatio?.Width ?? 300) / 3,
+                TargetHeight = (SelectedAspectRatio?.Height ?? 300) / 3,
+            };
+            Messages.Add(currentLoadingMessage);
+
+            // Retry generation - this doesn't create a new user message
+            var assistantMessage = await chatService.RetryGenerationAsync(
+                CurrentConversation.Id,
+                SelectedProviderId,
+                providerOptions,
+                progress,
+                cancellationToken
+            );
+
+            // Remove loading placeholder
+            if (currentLoadingMessage != null)
+            {
+                Messages.Remove(currentLoadingMessage);
+                currentLoadingMessage = null;
+            }
+
+            // Add the new assistant response to UI
+            var addedAnyImages = AddAssistantMessageToUI(assistantMessage, includeDbId: false);
+
+            if (addedAnyImages)
+            {
+                // Notify gallery
+                OnPropertyChanged(nameof(ConversationImages));
+                OnPropertyChanged(nameof(HasConversationImages));
+            }
+
+            // Reload conversations to update timestamps
+            await LoadConversationsAsync();
+
+            // Notify property change
+            OnPropertyChanged(nameof(CanRegenerateLastResponse));
+        }
+        catch (OperationCanceledException)
+        {
+            // Check if cancellation was due to connection loss
+            if (RequiresLocalBackend && !ClientManager.IsConnected)
+            {
+                logger.LogWarning("Regenerate cancelled due to connection loss");
+                ErrorMessage = "Connection to ComfyUI was lost during generation.";
+                notificationService.Show(
+                    "Connection Lost",
+                    "ComfyUI disconnected during generation",
+                    NotificationType.Warning
+                );
+            }
+            else
+            {
+                logger.LogInformation("Regenerate cancelled");
+                ErrorMessage = "Cancelled";
+            }
+            CanRetryLastMessage = true;
+        }
+        catch (ImageGenerationException ex)
+        {
+            logger.LogWarning("Regenerate failed: {Message}", ex.Message);
+
+            // Check if this is an API key error
+            if (ex.Message.Contains("API key", StringComparison.OrdinalIgnoreCase))
+            {
+                await ShowApiKeyRequiredDialogAsync();
+                CanRetryLastMessage = true;
+            }
+            else
+            {
+                ErrorMessage = ex.Message;
+                notificationService.Show("Generation Failed", ex.Message, NotificationType.Warning);
+                CanRetryLastMessage = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Unexpected error during regenerate");
+            ErrorMessage = $"Unexpected error: {ex.Message}";
+            notificationService.Show("Error", ex.Message, NotificationType.Error);
+            CanRetryLastMessage = true;
+        }
+        finally
+        {
+            IsGenerating = false;
+            GeneratingConversationId = null;
+            ResetGenerationProgress();
+            // Ensure loading placeholder is removed on cancel/error
+            if (currentLoadingMessage != null)
+            {
+                Messages.Remove(currentLoadingMessage);
+                currentLoadingMessage = null;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Edits a user message and regenerates the conversation from that point
+    /// </summary>
+    [RelayCommand]
+    private async Task EditUserMessageAsync(TextMessage? message)
+    {
+        if (message == null || !message.IsMyMessage || CurrentConversation == null)
+            return;
+
+        try
+        {
+            var existingMessageId = message.DatabaseMessageId;
+
+            // Show edit dialog
+            var textBox = new TextBox
+            {
+                Text = message.Text,
+                Watermark = "Edit your message...",
+                MinWidth = 400,
+                MinHeight = 100,
+                AcceptsReturn = true,
+                TextWrapping = global::Avalonia.Media.TextWrapping.Wrap,
+            };
+
+            var dialog = new ContentDialog
+            {
+                Title = "Edit Message",
+                Content = textBox,
+                PrimaryButtonText = "Save & Regenerate",
+                CloseButtonText = "Cancel",
+                DefaultButton = ContentDialogButton.Primary,
+            };
+
+            var result = await dialog.ShowAsync();
+
+            if (result != ContentDialogResult.Primary || string.IsNullOrWhiteSpace(textBox.Text))
+                return;
+
+            var editedText = textBox.Text.Trim();
+
+            // Get all messages from database
+            var dbMessages = await chatService.GetMessagesAsync(CurrentConversation.Id);
+            var dbMessage =
+                existingMessageId != null
+                    ? dbMessages.FirstOrDefault(m => m.Id == existingMessageId.Value)
+                    : null;
+
+            if (dbMessage == null)
+            {
+                // Backward-compatible fallback if we don't have DB IDs on the UI message.
+                // Find the index of this message in the Messages collection and map it to the Nth user DB message.
+                var messageIndex = Messages.IndexOf(message);
+                if (messageIndex < 0)
+                {
+                    logger.LogWarning("Could not find message in Messages collection");
+                    return;
+                }
+
+                var userMessageCount = 0;
+                for (var i = 0; i <= messageIndex; i++)
+                {
+                    if (Messages[i] is TextMessage tm && tm.IsMyMessage)
+                    {
+                        userMessageCount++;
+                    }
+                }
+
+                var userDbMessages = dbMessages.Where(m => m.Role == MessageRole.User).ToList();
+                if (userMessageCount == 0 || userMessageCount > userDbMessages.Count)
+                {
+                    logger.LogWarning("User message count mismatch");
+                    return;
+                }
+
+                dbMessage = userDbMessages[userMessageCount - 1];
+            }
+
+            // Delete all UI messages from this point onward
+            var firstUiIndexToDelete = -1;
+            for (var i = 0; i < Messages.Count; i++)
+            {
+                if (GetDatabaseMessageId(Messages[i]) == dbMessage.Id)
+                {
+                    firstUiIndexToDelete = i;
+                    break;
+                }
+            }
+
+            if (firstUiIndexToDelete < 0)
+            {
+                // If UI doesn't have IDs (older state), fall back to removing from the edited message index.
+                firstUiIndexToDelete = Messages.IndexOf(message);
+            }
+
+            var messagesToRemove = Messages.Skip(firstUiIndexToDelete).ToList();
+            foreach (var msg in messagesToRemove)
+            {
+                Messages.Remove(msg);
+                // Dispose images if needed
+                if (msg is ImageMessage im)
+                {
+                    im.Image?.Dispose();
+                }
+            }
+
+            // Delete all database messages from this point onward (including the message being edited)
+            var messagesToDelete = dbMessages
+                .Where(m => m.Timestamp >= dbMessage.Timestamp)
+                .OrderBy(m => m.Timestamp)
+                .ToList();
+
+            foreach (var msg in messagesToDelete)
+            {
+                await chatService.DeleteMessageAsync(msg.Id);
+            }
+
+            // Now send the edited message
+            IsGenerating = true;
+            ErrorMessage = null;
+
+            try
+            {
+                // Add edited user message to UI
+                Messages.Add(new TextMessage(editedText, true));
+
+                // Build provider options
+                var providerOptions = BuildProviderOptions();
+
+                // Send the edited message
+                var (userMessage, assistantMessage) = await chatService.SendMessageAsync(
+                    CurrentConversation.Id,
+                    SelectedProviderId!,
+                    editedText,
+                    null, // No images for now (can be extended later)
+                    providerOptions,
+                    progress: null,
+                    CancellationToken.None
+                );
+
+                // Add assistant response to UI
+                if (assistantMessage != null)
+                {
+                    AddAssistantMessageToUI(assistantMessage);
+                }
+
+                // Reload conversations to update timestamps
+                await LoadConversationsAsync();
+
+                notificationService.Show(
+                    "Message Edited",
+                    "Your message has been edited and the conversation regenerated.",
+                    NotificationType.Success
+                );
+            }
+            catch (ImageGenerationException ex)
+            {
+                logger.LogWarning("Failed to regenerate after edit: {Message}", ex.Message);
+
+                // Check if this is an API key error
+                if (ex.Message.Contains("API key", StringComparison.OrdinalIgnoreCase))
+                {
+                    await ShowApiKeyRequiredDialogAsync();
+                    CanRetryLastMessage = true;
+                }
+                else
+                {
+                    ErrorMessage = ex.Message;
+                    notificationService.Show("Generation Failed", ex.Message, NotificationType.Warning);
+                    CanRetryLastMessage = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Unexpected error regenerating after edit");
+                ErrorMessage = $"Unexpected error: {ex.Message}";
+                notificationService.Show("Error", ex.Message, NotificationType.Error);
+                CanRetryLastMessage = true;
+            }
+            finally
+            {
+                IsGenerating = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to edit message");
+            notificationService.Show(
+                "Error",
+                $"Failed to edit message: {ex.Message}",
+                NotificationType.Error
+            );
+        }
+    }
+
+    /// <summary>
     /// Builds the provider options dictionary based on current settings
     /// </summary>
     private Dictionary<string, object> BuildProviderOptions()
@@ -949,16 +1635,12 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
 
         if (SupportsThinking && ShowThinkingOutput)
         {
-            providerOptions = new Dictionary<string, object>
-            {
-                ["enableThinking"] = true,
-                ["thinkingBudget"] = 2048,
-            };
+            providerOptions = new() { ["enableThinking"] = true, ["thinkingBudget"] = 2048 };
         }
 
         if (SelectedProviderId == BananaVisionProviderIds.FluxKontext)
         {
-            providerOptions ??= new Dictionary<string, object>();
+            providerOptions ??= new();
             if (SelectedFluxModel != null)
                 providerOptions["CustomUnetModel"] = SelectedFluxModel;
             if (SelectedLoras.Count > 0)
@@ -967,14 +1649,14 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
 
         if (SelectedProviderId == BananaVisionProviderIds.QwenImageEdit)
         {
-            providerOptions ??= new Dictionary<string, object>();
+            providerOptions ??= new();
             if (SelectedQwenModel != null)
                 providerOptions["CustomUnetModel"] = SelectedQwenModel;
             if (SelectedLoras.Count > 0)
                 providerOptions["SelectedLoras"] = SelectedLoras.ToList();
         }
 
-        providerOptions ??= new Dictionary<string, object>();
+        providerOptions ??= new();
 
         if (UseCustomResolution)
         {
@@ -1033,16 +1715,13 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
         try
         {
             var files = await StorageProvider.OpenFilePickerAsync(
-                new FilePickerOpenOptions
+                new()
                 {
                     Title = "Select Images",
                     AllowMultiple = true,
                     FileTypeFilter =
                     [
-                        new FilePickerFileType("Images")
-                        {
-                            Patterns = ["*.png", "*.jpg", "*.jpeg", "*.webp", "*.gif"],
-                        },
+                        new("Images") { Patterns = ["*.png", "*.jpg", "*.jpeg", "*.webp", "*.gif"] },
                     ],
                 }
             );
@@ -1055,7 +1734,7 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
                 var imagePath = file.Path.LocalPath;
                 var bitmap = new Bitmap(imagePath);
 
-                PendingImages.Add(new PendingImage { FilePath = imagePath, Bitmap = bitmap });
+                PendingImages.Add(new() { FilePath = imagePath, Bitmap = bitmap });
             }
 
             notificationService.Show(
@@ -1081,7 +1760,7 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
     /// <summary>
     /// Adds images from file paths (used by drag and drop)
     /// </summary>
-    public async Task AddImagesFromPathsAsync(IEnumerable<string> imagePaths)
+    public void AddImagesFromPaths(IEnumerable<string> imagePaths)
     {
         try
         {
@@ -1094,7 +1773,7 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
                     continue;
 
                 var bitmap = new Bitmap(imagePath);
-                PendingImages.Add(new PendingImage { FilePath = imagePath, Bitmap = bitmap });
+                PendingImages.Add(new() { FilePath = imagePath, Bitmap = bitmap });
                 addedCount++;
             }
 
@@ -1112,8 +1791,6 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
             logger.LogError(ex, "Failed to add images from drag and drop");
             notificationService.Show("Error", $"Failed to add images: {ex.Message}", NotificationType.Error);
         }
-
-        await Task.CompletedTask;
     }
 
     /// <summary>
@@ -1155,7 +1832,7 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
 
                     if (imagePaths.Count > 0)
                     {
-                        await AddImagesFromPathsAsync(imagePaths);
+                        AddImagesFromPaths(imagePaths);
                         return true;
                     }
                 }
@@ -1171,12 +1848,12 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
                     continue;
 
                 var data = await clipboard.GetDataAsync(format);
-                if (data is byte[] imageBytes && imageBytes.Length > 0)
+                if (data is byte[] { Length: > 0 } imageBytes)
                 {
                     var tempPath = await SaveClipboardImageToTempFileAsync(imageBytes, format);
                     if (tempPath != null)
                     {
-                        await AddImagesFromPathsAsync([tempPath]);
+                        AddImagesFromPaths([tempPath]);
                         return true;
                     }
                 }
@@ -1191,7 +1868,7 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
                         var tempPath = await SaveClipboardImageToTempFileAsync(bytes, format);
                         if (tempPath != null)
                         {
-                            await AddImagesFromPathsAsync([tempPath]);
+                            AddImagesFromPaths([tempPath]);
                             return true;
                         }
                     }
@@ -1252,6 +1929,95 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
     }
 
     [RelayCommand]
+    private async Task CopyMessageAsync(TextMessage message)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(message.Text))
+                return;
+
+            var clipboard = App.Clipboard;
+            if (clipboard != null)
+            {
+                await clipboard.SetTextAsync(message.Text);
+                notificationService.Show("Copied", "Message copied to clipboard", NotificationType.Success);
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to copy message to clipboard");
+            notificationService.Show("Error", "Failed to copy message", NotificationType.Error);
+        }
+    }
+
+    [RelayCommand]
+    private async Task CopyImageToClipboardAsync(Bitmap? image)
+    {
+        if (image == null)
+            return;
+
+        try
+        {
+            if (Compat.IsWindows)
+            {
+                await WindowsClipboard.SetBitmapAsync(image);
+                notificationService.Show("Copied", "Image copied to clipboard", NotificationType.Success);
+            }
+            else
+            {
+                notificationService.Show(
+                    "Not Supported",
+                    "Image clipboard is only supported on Windows",
+                    NotificationType.Warning
+                );
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to copy image to clipboard");
+            notificationService.Show("Error", "Failed to copy image", NotificationType.Error);
+        }
+    }
+
+    /// <summary>
+    /// Unified cancel command that stops any ongoing generation (Send, Retry, or Regenerate)
+    /// </summary>
+    [RelayCommand]
+    private void CancelGeneration()
+    {
+        // Immediately remove loading placeholder for instant UI feedback
+        if (currentLoadingMessage != null)
+        {
+            Messages.Remove(currentLoadingMessage);
+            currentLoadingMessage = null;
+        }
+
+        // Cancel whichever operation is in progress
+        if (SendMessageCancelCommand.CanExecute(null))
+        {
+            SendMessageCancelCommand.Execute(null);
+        }
+        if (RetryLastMessageCancelCommand.CanExecute(null))
+        {
+            RetryLastMessageCancelCommand.Execute(null);
+        }
+        if (RegenerateLastResponseCancelCommand.CanExecute(null))
+        {
+            RegenerateLastResponseCancelCommand.Execute(null);
+        }
+    }
+
+    [RelayCommand]
+    private void ToggleGallery()
+    {
+        IsGalleryVisible = !IsGalleryVisible;
+        if (IsGalleryVisible)
+        {
+            OnPropertyChanged(nameof(ConversationImages));
+        }
+    }
+
+    [RelayCommand]
     private async Task EditPendingImageAsync(PendingImage image)
     {
         try
@@ -1275,11 +2041,7 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
                     {
                         var annotatedBitmap = new Bitmap(annotatedPath);
                         var oldImage = PendingImages[index];
-                        PendingImages[index] = new PendingImage
-                        {
-                            FilePath = annotatedPath,
-                            Bitmap = annotatedBitmap,
-                        };
+                        PendingImages[index] = new() { FilePath = annotatedPath, Bitmap = annotatedBitmap };
                         oldImage.Dispose(); // Dispose the old bitmap
 
                         notificationService.Show(
@@ -1310,7 +2072,7 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
         try
         {
             var viewerVm = vmFactory.Get<ImageViewerViewModel>();
-            viewerVm.ImageSource = new ImageSource(bitmap);
+            viewerVm.ImageSource = new(bitmap);
 
             var dialog = viewerVm.GetDialog();
             await dialog.ShowAsync();
@@ -1442,6 +2204,210 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
     }
 
     /// <summary>
+    /// Gets all valid image paths from a message, handling both ImagePath and ImagePaths properties
+    /// </summary>
+    private static List<string> GetMessageImagePaths(ImageGenerationMessage message)
+    {
+        var paths =
+            message.ImagePaths?.Where(p => !string.IsNullOrWhiteSpace(p)).ToList()
+            ?? (!string.IsNullOrEmpty(message.ImagePath) ? [message.ImagePath] : []);
+
+        return paths.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+    }
+
+    /// <summary>
+    /// Adds a message (user or assistant) to the Messages collection
+    /// </summary>
+    /// <param name="message">The message to add</param>
+    /// <param name="includeDbId">Whether to include the database message ID for tracking</param>
+    /// <returns>True if any images were added</returns>
+    private bool AddMessageToUI(ImageGenerationMessage message, bool includeDbId = true)
+    {
+        var isUserMessage = message.Role == MessageRole.User;
+        var dbId = includeDbId ? message.Id : (Guid?)null;
+
+        // Show thinking content first (only for assistant messages)
+        if (!isUserMessage && ShowThinkingOutput && !string.IsNullOrEmpty(message.ThinkingContent))
+        {
+            Messages.Add(new ThinkingMessage(message.ThinkingContent) { DatabaseMessageId = dbId });
+        }
+
+        if (!string.IsNullOrEmpty(message.TextContent))
+        {
+            Messages.Add(new TextMessage(message.TextContent, isUserMessage) { DatabaseMessageId = dbId });
+        }
+
+        var addedAnyImages = false;
+        foreach (var imagePath in GetMessageImagePaths(message).Where(File.Exists))
+        {
+            var bitmap = new Bitmap(imagePath);
+            Messages.Add(
+                new ImageMessage(bitmap, isUserMessage) { DatabaseMessageId = dbId, FilePath = imagePath }
+            );
+            addedAnyImages = true;
+        }
+
+        return addedAnyImages;
+    }
+
+    /// <summary>
+    /// Adds an assistant message (thinking, text, and images) to the Messages collection
+    /// </summary>
+    private bool AddAssistantMessageToUI(ImageGenerationMessage message, bool includeDbId = true)
+    {
+        return AddMessageToUI(message, includeDbId);
+    }
+
+    /// <summary>
+    /// Adds a user message (text and images) to the Messages collection
+    /// </summary>
+    private void AddUserMessageToUI(ImageGenerationMessage message)
+    {
+        AddMessageToUI(message, includeDbId: true);
+    }
+
+    /// <summary>
+    /// Clears all messages and disposes any image bitmaps to prevent memory leaks
+    /// </summary>
+    private void ClearMessages()
+    {
+        foreach (var message in Messages)
+        {
+            if (message is ImageMessage imageMessage)
+            {
+                imageMessage.Image?.Dispose();
+            }
+        }
+        Messages.Clear();
+    }
+
+    private static Guid? GetDatabaseMessageId(object? message)
+    {
+        return message switch
+        {
+            MessageBase m => m.DatabaseMessageId,
+            ThinkingMessage tm => tm.DatabaseMessageId,
+            _ => null,
+        };
+    }
+
+    private void RemoveUiMessagesForDatabaseMessageId(Guid messageId)
+    {
+        var toRemove = Messages.Where(m => GetDatabaseMessageId(m) == messageId).ToList();
+
+        foreach (var item in toRemove)
+        {
+            Messages.Remove(item);
+            if (item is ImageMessage imageMessage)
+            {
+                imageMessage.Image?.Dispose();
+            }
+        }
+
+        // Notify gallery that images may have changed
+        OnPropertyChanged(nameof(ConversationImages));
+        OnPropertyChanged(nameof(HasConversationImages));
+        OnPropertyChanged(nameof(CanRegenerateLastResponse));
+    }
+
+    [RelayCommand]
+    private async Task DeleteMessageAsync(object? messageItem)
+    {
+        if (CurrentConversation == null)
+            return;
+
+        var messageId = GetDatabaseMessageId(messageItem);
+        if (messageId == null)
+            return;
+
+        try
+        {
+            // Check if this is an image from a multi-image message
+            var isImageMessage =
+                messageItem is ImageMessage imageMsg && !string.IsNullOrEmpty(imageMsg.FilePath);
+            var dbMessage = isImageMessage ? await chatService.GetMessageAsync(messageId.Value) : null;
+            var imageCount =
+                dbMessage != null
+                    ? (dbMessage.ImagePaths?.Count ?? (string.IsNullOrEmpty(dbMessage.ImagePath) ? 0 : 1))
+                    : 0;
+            var isMultiImageMessage = imageCount > 1;
+
+            string dialogContent;
+            if (isMultiImageMessage)
+            {
+                dialogContent =
+                    "Delete this image from the message?\n\n"
+                    + $"The message has {imageCount} images. Only this image will be removed.";
+            }
+            else
+            {
+                dialogContent =
+                    "This will permanently delete the selected message from this conversation.\n\n"
+                    + "Note: deleting a message in the middle of a conversation may change context for future generations.";
+            }
+
+            var dialog = new ContentDialog
+            {
+                Title = isMultiImageMessage ? "Delete image?" : "Delete message?",
+                Content = new TextBlock
+                {
+                    Text = dialogContent,
+                    TextWrapping = global::Avalonia.Media.TextWrapping.Wrap,
+                    MaxWidth = 420,
+                },
+                PrimaryButtonText = "Delete",
+                CloseButtonText = "Cancel",
+                DefaultButton = ContentDialogButton.Close,
+            };
+
+            if (await dialog.ShowAsync() != ContentDialogResult.Primary)
+                return;
+
+            // Handle multi-image message: only remove the specific image
+            if (
+                isMultiImageMessage
+                && messageItem is ImageMessage imgToDelete
+                && !string.IsNullOrEmpty(imgToDelete.FilePath)
+            )
+            {
+                var wasFullyDeleted = await chatService.RemoveImageFromMessageAsync(
+                    messageId.Value,
+                    imgToDelete.FilePath
+                );
+
+                if (wasFullyDeleted)
+                {
+                    // Whole message was deleted (was the last image)
+                    RemoveUiMessagesForDatabaseMessageId(messageId.Value);
+                }
+                else
+                {
+                    // Only remove this specific UI element
+                    Messages.Remove(messageItem);
+                }
+            }
+            else
+            {
+                // Regular deletion - remove entire message
+                await chatService.DeleteMessageAsync(messageId.Value);
+                RemoveUiMessagesForDatabaseMessageId(messageId.Value);
+            }
+
+            // Reload conversations to update timestamps
+            await LoadConversationsAsync();
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to delete message {MessageId}", messageId);
+            notificationService.Show(
+                "Error",
+                $"Failed to delete message: {ex.Message}",
+                NotificationType.Error
+            );
+        }
+    }
+
+    /// <summary>
     /// Handles collection changes to trigger auto-scroll
     /// </summary>
     private void OnMessagesCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
@@ -1457,6 +2423,9 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
                 DispatcherPriority.Background
             );
         }
+
+        // Notify that regenerate availability may have changed
+        OnPropertyChanged(nameof(CanRegenerateLastResponse));
     }
 
     /// <inheritdoc />
@@ -1480,15 +2449,8 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
             }
             PendingImages.Clear();
 
-            // Dispose message bitmaps
-            foreach (var message in Messages)
-            {
-                if (message is ImageMessage imageMessage)
-                {
-                    imageMessage.Image?.Dispose();
-                }
-            }
-            Messages.Clear();
+            // Dispose message bitmaps and clear
+            ClearMessages();
 
             // Unsubscribe from collection changed
             Messages.CollectionChanged -= OnMessagesCollectionChanged;

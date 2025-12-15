@@ -1483,31 +1483,20 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
 
             if (dbMessage == null)
             {
-                // Backward-compatible fallback if we don't have DB IDs on the UI message.
-                var messageIndex = Messages.IndexOf(message);
-                if (messageIndex < 0)
-                {
-                    logger.LogWarning("Could not find message in Messages collection");
-                    return;
-                }
-
-                var userMessageCount = 0;
-                for (var i = 0; i <= messageIndex; i++)
-                {
-                    if (Messages[i] is TextMessage tm && tm.IsMyMessage)
-                    {
-                        userMessageCount++;
-                    }
-                }
-
-                var userDbMessages = dbMessages.Where(m => m.Role == MessageRole.User).ToList();
-                if (userMessageCount == 0 || userMessageCount > userDbMessages.Count)
-                {
-                    logger.LogWarning("User message count mismatch");
-                    return;
-                }
-
-                dbMessage = userDbMessages[userMessageCount - 1];
+                // Message doesn't have a DatabaseMessageId - this is legacy data from before we tracked IDs.
+                // We cannot safely edit these messages because mapping UI messages to database entries
+                // is unreliable (a single database message can contain both text and images, but they
+                // appear as separate UI elements). Refuse to edit to prevent data corruption.
+                logger.LogWarning(
+                    "Cannot edit message without DatabaseMessageId - legacy message from before ID tracking"
+                );
+                notificationService.Show(
+                    "Cannot Edit",
+                    "This message cannot be edited because it was created before message tracking was added. "
+                        + "You can still send new messages normally.",
+                    NotificationType.Warning
+                );
+                return;
             }
 
             if (shouldRegenerate)

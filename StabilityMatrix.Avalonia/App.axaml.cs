@@ -707,7 +707,7 @@ public sealed class App : Application
                 }
             )
             .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false })
-            // .AddPolicyHandler(retryPolicyLonger)
+            .AddPolicyHandler(retryPolicyLonger)
             .AddHttpMessageHandler(serviceProvider => new TokenAuthHeaderHandler(
                 serviceProvider.GetRequiredService<LykosAuthTokenProvider>()
             ));

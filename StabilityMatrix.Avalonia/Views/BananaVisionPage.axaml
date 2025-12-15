@@ -1032,8 +1032,8 @@
                                                 </Style.Animations>
                                             </Style>
                                         </Border.Styles>
-                                        <StackPanel>
-                                            <controls:MarkdownViewer CustomCss=".markdown-body { padding: 0; word-break: break-word; overflow-wrap: break-word; white-space: normal; }" Text="{Binding Text}" />
+                                        <StackPanel MaxWidth="520">
+                                            <controls:MarkdownViewer CustomCss=".markdown-body { padding: 0; word-break: break-word; overflow-wrap: break-word; white-space: normal; max-width: 100%; box-sizing: border-box; }" Text="{Binding Text}" />
                                             <TextBlock
                                                 Margin="0,6,0,0"
                                                 HorizontalAlignment="Right"

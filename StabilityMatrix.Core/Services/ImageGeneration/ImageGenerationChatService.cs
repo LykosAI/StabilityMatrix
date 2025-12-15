@@ -313,6 +313,22 @@ public class ImageGenerationChatService(
         return await database.Messages.FindByIdAsync(messageId).ConfigureAwait(false);
     }
 
+    public async Task<ImageGenerationMessage?> UpdateMessageTextAsync(Guid messageId, string newTextContent)
+    {
+        var message = await database.Messages.FindByIdAsync(messageId).ConfigureAwait(false);
+        if (message == null)
+        {
+            logger.LogWarning("Message {MessageId} not found for text update", messageId);
+            return null;
+        }
+
+        var updatedMessage = message with { TextContent = newTextContent };
+        await database.Messages.UpdateAsync(updatedMessage).ConfigureAwait(false);
+
+        logger.LogDebug("Updated text content for message {MessageId}", messageId);
+        return updatedMessage;
+    }
+
     public async Task<bool> RemoveImageFromMessageAsync(Guid messageId, string imagePath)
     {
         var message = await database.Messages.FindByIdAsync(messageId).ConfigureAwait(false);

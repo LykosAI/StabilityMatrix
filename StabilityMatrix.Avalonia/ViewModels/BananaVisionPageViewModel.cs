@@ -1433,7 +1433,7 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
     }
 
     /// <summary>
-    /// Edits a user message and regenerates the conversation from that point
+    /// Edits a user message with option to save only or save and regenerate
     /// </summary>
     [RelayCommand]
     private async Task EditUserMessageAsync(TextMessage? message)
@@ -1445,7 +1445,7 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
         {
             var existingMessageId = message.DatabaseMessageId;
 
-            // Show edit dialog
+            // Show edit dialog with two action options
             var textBox = new TextBox
             {
                 Text = message.Text,
@@ -1461,16 +1461,18 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
                 Title = "Edit Message",
                 Content = textBox,
                 PrimaryButtonText = "Save & Regenerate",
+                SecondaryButtonText = "Save Only",
                 CloseButtonText = "Cancel",
                 DefaultButton = ContentDialogButton.Primary,
             };
 
             var result = await dialog.ShowAsync();
 
-            if (result != ContentDialogResult.Primary || string.IsNullOrWhiteSpace(textBox.Text))
+            if (result == ContentDialogResult.None || string.IsNullOrWhiteSpace(textBox.Text))
                 return;
 
             var editedText = textBox.Text.Trim();
+            var shouldRegenerate = result == ContentDialogResult.Primary;
 
             // Get all messages from database
             var dbMessages = await chatService.GetMessagesAsync(CurrentConversation.Id);
@@ -1482,7 +1484,6 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
             if (dbMessage == null)
             {
                 // Backward-compatible fallback if we don't have DB IDs on the UI message.
-                // Find the index of this message in the Messages collection and map it to the Nth user DB message.
                 var messageIndex = Messages.IndexOf(message);
                 if (messageIndex < 0)
                 {
@@ -1509,110 +1510,15 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
                 dbMessage = userDbMessages[userMessageCount - 1];
             }
 
-            // Delete all UI messages from this point onward
-            var firstUiIndexToDelete = -1;
-            for (var i = 0; i < Messages.Count; i++)
+            if (shouldRegenerate)
             {
-                if (GetDatabaseMessageId(Messages[i]) == dbMessage.Id)
-                {
-                    firstUiIndexToDelete = i;
-                    break;
-                }
+                // Original behavior: delete from this point and regenerate
+                await EditAndRegenerateAsync(message, dbMessage, dbMessages, editedText);
             }
-
-            if (firstUiIndexToDelete < 0)
+            else
             {
-                // If UI doesn't have IDs (older state), fall back to removing from the edited message index.
-                firstUiIndexToDelete = Messages.IndexOf(message);
-            }
-
-            var messagesToRemove = Messages.Skip(firstUiIndexToDelete).ToList();
-            foreach (var msg in messagesToRemove)
-            {
-                Messages.Remove(msg);
-                // Dispose images if needed
-                if (msg is ImageMessage im)
-                {
-                    im.Image?.Dispose();
-                }
-            }
-
-            // Delete all database messages from this point onward (including the message being edited)
-            var messagesToDelete = dbMessages
-                .Where(m => m.Timestamp >= dbMessage.Timestamp)
-                .OrderBy(m => m.Timestamp)
-                .ToList();
-
-            foreach (var msg in messagesToDelete)
-            {
-                await chatService.DeleteMessageAsync(msg.Id);
-            }
-
-            // Now send the edited message
-            IsGenerating = true;
-            ErrorMessage = null;
-
-            try
-            {
-                // Add edited user message to UI
-                Messages.Add(new TextMessage(editedText, true));
-
-                // Build provider options
-                var providerOptions = BuildProviderOptions();
-
-                // Send the edited message
-                var (userMessage, assistantMessage) = await chatService.SendMessageAsync(
-                    CurrentConversation.Id,
-                    SelectedProviderId!,
-                    editedText,
-                    null, // No images for now (can be extended later)
-                    providerOptions,
-                    progress: null,
-                    CancellationToken.None
-                );
-
-                // Add assistant response to UI
-                if (assistantMessage != null)
-                {
-                    AddAssistantMessageToUI(assistantMessage);
-                }
-
-                // Reload conversations to update timestamps
-                await LoadConversationsAsync();
-
-                notificationService.Show(
-                    "Message Edited",
-                    "Your message has been edited and the conversation regenerated.",
-                    NotificationType.Success
-                );
-            }
-            catch (ImageGenerationException ex)
-            {
-                logger.LogWarning("Failed to regenerate after edit: {Message}", ex.Message);
-
-                // Check if this is an API key error
-                if (ex.Message.Contains("API key", StringComparison.OrdinalIgnoreCase))
-                {
-                    await ShowApiKeyRequiredDialogAsync();
-                    CanRetryLastMessage = true;
-                }
-                else
-                {
-                    ErrorMessage = ex.Message;
-                    notificationService.Show("Generation Failed", ex.Message, NotificationType.Warning);
-                    CanRetryLastMessage = true;
-                }
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Unexpected error regenerating after edit");
-                ErrorMessage = $"Unexpected error: {ex.Message}";
-                notificationService.Show("Error", ex.Message, NotificationType.Error);
-                CanRetryLastMessage = true;
-            }
-            finally
-            {
-                IsGenerating = false;
+                // New behavior: just update the text without regenerating
+                await EditMessageOnlyAsync(message, dbMessage, editedText);
             }
         }
         catch (Exception ex)
@@ -1623,6 +1529,151 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
                 $"Failed to edit message: {ex.Message}",
                 NotificationType.Error
             );
+        }
+    }
+
+    /// <summary>
+    /// Updates a message's text without regenerating subsequent messages
+    /// </summary>
+    private async Task EditMessageOnlyAsync(
+        TextMessage uiMessage,
+        ImageGenerationMessage dbMessage,
+        string newText
+    )
+    {
+        // Update in database
+        var updatedMessage = await chatService.UpdateMessageTextAsync(dbMessage.Id, newText);
+        if (updatedMessage == null)
+        {
+            notificationService.Show("Error", "Failed to update message", NotificationType.Error);
+            return;
+        }
+
+        // Replace the UI message (TextMessage.Text is read-only)
+        var index = Messages.IndexOf(uiMessage);
+        if (index >= 0)
+        {
+            Messages[index] = new TextMessage(newText, uiMessage.IsMyMessage)
+            {
+                DatabaseMessageId = dbMessage.Id,
+            };
+        }
+
+        logger.LogInformation("Updated message {MessageId} text without regeneration", dbMessage.Id);
+        notificationService.Show("Message Updated", "Your message has been saved.", NotificationType.Success);
+    }
+
+    /// <summary>
+    /// Edits a message and regenerates the conversation from that point
+    /// </summary>
+    private async Task EditAndRegenerateAsync(
+        TextMessage uiMessage,
+        ImageGenerationMessage dbMessage,
+        List<ImageGenerationMessage> allDbMessages,
+        string editedText
+    )
+    {
+        // Delete all UI messages from this point onward
+        var firstUiIndexToDelete = -1;
+        for (var i = 0; i < Messages.Count; i++)
+        {
+            if (GetDatabaseMessageId(Messages[i]) == dbMessage.Id)
+            {
+                firstUiIndexToDelete = i;
+                break;
+            }
+        }
+
+        if (firstUiIndexToDelete < 0)
+        {
+            firstUiIndexToDelete = Messages.IndexOf(uiMessage);
+        }
+
+        var messagesToRemove = Messages.Skip(firstUiIndexToDelete).ToList();
+        foreach (var msg in messagesToRemove)
+        {
+            Messages.Remove(msg);
+            if (msg is ImageMessage im)
+            {
+                im.Image?.Dispose();
+            }
+        }
+
+        // Delete all database messages from this point onward
+        var messagesToDelete = allDbMessages
+            .Where(m => m.Timestamp >= dbMessage.Timestamp)
+            .OrderBy(m => m.Timestamp)
+            .ToList();
+
+        foreach (var msg in messagesToDelete)
+        {
+            await chatService.DeleteMessageAsync(msg.Id);
+        }
+
+        // Now send the edited message
+        IsGenerating = true;
+        ErrorMessage = null;
+
+        try
+        {
+            // Add edited user message to UI
+            Messages.Add(new TextMessage(editedText, true));
+
+            // Build provider options
+            var providerOptions = BuildProviderOptions();
+
+            // Send the edited message
+            var (userMessage, assistantMessage) = await chatService.SendMessageAsync(
+                CurrentConversation!.Id,
+                SelectedProviderId!,
+                editedText,
+                null,
+                providerOptions,
+                progress: null,
+                CancellationToken.None
+            );
+
+            // Add assistant response to UI
+            if (assistantMessage != null)
+            {
+                AddAssistantMessageToUI(assistantMessage);
+            }
+
+            // Reload conversations to update timestamps
+            await LoadConversationsAsync();
+
+            notificationService.Show(
+                "Message Edited",
+                "Your message has been edited and the conversation regenerated.",
+                NotificationType.Success
+            );
+        }
+        catch (ImageGenerationException ex)
+        {
+            logger.LogWarning("Failed to regenerate after edit: {Message}", ex.Message);
+
+            if (ex.Message.Contains("API key", StringComparison.OrdinalIgnoreCase))
+            {
+                await ShowApiKeyRequiredDialogAsync();
+                CanRetryLastMessage = true;
+            }
+            else
+            {
+                ErrorMessage = ex.Message;
+                notificationService.Show("Generation Failed", ex.Message, NotificationType.Warning);
+                CanRetryLastMessage = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Unexpected error regenerating after edit");
+            ErrorMessage = $"Unexpected error: {ex.Message}";
+            notificationService.Show("Error", ex.Message, NotificationType.Error);
+            CanRetryLastMessage = true;
+        }
+        finally
+        {
+            IsGenerating = false;
         }
     }
 

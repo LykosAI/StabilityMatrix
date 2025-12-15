@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using Avalonia;
 using Avalonia.Controls.Primitives;
 using Markdig;
@@ -50,7 +50,7 @@ public class MarkdownViewer : TemplatedControlBase
         if (string.IsNullOrWhiteSpace(value))
             return;
 
-        var pipeline = new MarkdownPipelineBuilder().UseAdvancedExtensions().Build();
+        var pipeline = new MarkdownPipelineBuilder().UseAdvancedExtensions().UseEmojiAndSmiley().Build();
         var html =
             $"""<html><body class="markdown-body">{Markdig.Markdown.ToHtml(value, pipeline)}</body></html>""";
         Html = html;

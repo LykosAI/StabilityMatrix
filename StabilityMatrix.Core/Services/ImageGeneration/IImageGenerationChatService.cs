@@ -61,6 +61,14 @@ public interface IImageGenerationChatService
     Task<ImageGenerationMessage?> GetMessageAsync(Guid messageId);
 
     /// <summary>
+    /// Update a message's text content without affecting other messages or triggering regeneration
+    /// </summary>
+    /// <param name="messageId">The message ID to update</param>
+    /// <param name="newTextContent">The new text content</param>
+    /// <returns>The updated message, or null if not found</returns>
+    Task<ImageGenerationMessage?> UpdateMessageTextAsync(Guid messageId, string newTextContent);
+
+    /// <summary>
     /// Send a message and generate a response using the specified provider
     /// </summary>
     /// <param name="conversationId">The conversation ID</param>

@@ -12,7 +12,7 @@ using StabilityMatrix.Core.Services;
 namespace StabilityMatrix.Core.Database;
 
 /// <summary>
-/// Database context for BananaVision conversations and messages.
+/// Database context for Image Lab conversations and messages.
 /// Stored separately from the main StabilityMatrix.db to preserve user data
 /// when the main cache database is deleted.
 /// </summary>
@@ -51,7 +51,7 @@ public class BananaVisionDbContext : IBananaVisionDbContext
     private LiteDatabaseAsync CreateDatabase()
     {
         const int maxAttempts = 2;
-        var dbPath = Path.Combine(settingsManager.LibraryDir, "BananaVision.db");
+        var dbPath = Path.Combine(settingsManager.LibraryDir, "ImageLab.db");
 
         for (var attempt = 0; attempt < maxAttempts; attempt++)
         {
@@ -73,7 +73,7 @@ public class BananaVisionDbContext : IBananaVisionDbContext
                 if (sortOption is not CompareOptions.Ordinal)
                 {
                     logger.LogDebug(
-                        "BananaVision database collation is not Ordinal ({SortOption}), rebuilding...",
+                        "Image Lab database collation is not Ordinal ({SortOption}), rebuilding...",
                         sortOption
                     );
                     var options = new RebuildOptions
@@ -83,7 +83,7 @@ public class BananaVisionDbContext : IBananaVisionDbContext
                     db.RebuildAsync(options).GetAwaiter().GetResult();
                 }
 
-                // Run one-time migration from legacy database
+                // Run one-time migration from legacy databases
                 MigrateLegacyData(db, dbPath);
 
                 return db;
@@ -94,7 +94,7 @@ public class BananaVisionDbContext : IBananaVisionDbContext
                 )
             {
                 logger.LogWarning(
-                    "BananaVision database corruption detected ({Message}), rebuilding...",
+                    "Image Lab database corruption detected ({Message}), rebuilding...",
                     e.Message
                 );
 
@@ -119,14 +119,14 @@ public class BananaVisionDbContext : IBananaVisionDbContext
                 }
                 catch (Exception delEx)
                 {
-                    logger.LogWarning("Failed to delete corrupt BananaVision DB: {Message}", delEx.Message);
+                    logger.LogWarning("Failed to delete corrupt Image Lab DB: {Message}", delEx.Message);
                     break;
                 }
             }
             catch (IOException ioEx)
             {
                 logger.LogWarning(
-                    "BananaVision database in use or not accessible ({Message}), using temporary database",
+                    "Image Lab database in use or not accessible ({Message}), using temporary database",
                     ioEx.Message
                 );
                 break;
@@ -139,7 +139,7 @@ public class BananaVisionDbContext : IBananaVisionDbContext
     }
 
     /// <summary>
-    /// One-time migration from legacy StabilityMatrix.db to BananaVision.db
+    /// One-time migration from legacy databases (StabilityMatrix.db and BananaVision.db) to ImageLab.db
     /// </summary>
     private void MigrateLegacyData(LiteDatabaseAsync newDb, string newDbPath)
     {
@@ -157,13 +157,22 @@ public class BananaVisionDbContext : IBananaVisionDbContext
             if (existingCount > 0)
             {
                 logger.LogDebug(
-                    "BananaVision.db already has {Count} conversations, skipping migration",
+                    "ImageLab.db already has {Count} conversations, skipping migration",
                     existingCount
                 );
                 return;
             }
 
-            // Check for legacy database
+            // Try migrating from BananaVision.db first (most recent legacy DB)
+            var bananaVisionDbPath = Path.Combine(settingsManager.LibraryDir, "BananaVision.db");
+            if (File.Exists(bananaVisionDbPath))
+            {
+                logger.LogInformation("Migrating data from BananaVision.db to ImageLab.db...");
+                MigrateFromDatabase(newDb, bananaVisionDbPath, "BananaVision.db");
+                return;
+            }
+
+            // Check for original legacy database
             var legacyDbPath = Path.Combine(settingsManager.LibraryDir, "StabilityMatrix.db");
             if (!File.Exists(legacyDbPath))
             {
@@ -171,63 +180,83 @@ public class BananaVisionDbContext : IBananaVisionDbContext
                 return;
             }
 
-            logger.LogInformation("Checking legacy database for BananaVision data to migrate...");
+            logger.LogInformation("Checking legacy database for Image Lab data to migrate...");
 
-            using var legacyDb = new LiteDatabaseAsync(
-                new ConnectionString
-                {
-                    Filename = legacyDbPath,
-                    Connection = ConnectionType.Shared,
-                    ReadOnly = true,
-                }
-            );
-
-            var legacyConversations = legacyDb.GetCollection<ImageGenerationConversation>(
-                "ImageGenerationConversations"
-            );
-            var legacyMessages = legacyDb.GetCollection<ImageGenerationMessage>("ImageGenerationMessages");
-
-            var conversationsList = legacyConversations.FindAllAsync().GetAwaiter().GetResult().ToList();
-
-            if (conversationsList.Count == 0)
-            {
-                logger.LogDebug("No legacy conversations found, skipping migration");
-                return;
-            }
-
-            logger.LogInformation(
-                "Migrating {Count} conversations from legacy database...",
-                conversationsList.Count
-            );
-
-            var messages = newDb.GetCollection<ImageGenerationMessage>("Messages");
-
-            // Copy conversations
-            foreach (var conversation in conversationsList)
-            {
-                conversations.InsertAsync(conversation).GetAwaiter().GetResult();
-            }
-
-            // Copy messages
-            var messagesList = legacyMessages.FindAllAsync().GetAwaiter().GetResult().ToList();
-            foreach (var message in messagesList)
-            {
-                messages.InsertAsync(message).GetAwaiter().GetResult();
-            }
-
-            logger.LogInformation(
-                "Successfully migrated {ConvCount} conversations and {MsgCount} messages to BananaVision.db",
-                conversationsList.Count,
-                messagesList.Count
+            MigrateFromDatabase(
+                newDb,
+                legacyDbPath,
+                "StabilityMatrix.db",
+                "ImageGenerationConversations",
+                "ImageGenerationMessages"
             );
         }
         catch (Exception ex)
         {
-            logger.LogWarning(
-                ex,
-                "Failed to migrate legacy BananaVision data (this is fine, starting fresh)"
-            );
+            logger.LogWarning(ex, "Failed to migrate legacy Image Lab data (this is fine, starting fresh)");
         }
+    }
+
+    /// <summary>
+    /// Helper method to migrate data from a legacy database file
+    /// </summary>
+    private void MigrateFromDatabase(
+        LiteDatabaseAsync newDb,
+        string sourceDbPath,
+        string sourceName,
+        string conversationsCollectionName = "Conversations",
+        string messagesCollectionName = "Messages"
+    )
+    {
+        using var sourceDb = new LiteDatabaseAsync(
+            new ConnectionString
+            {
+                Filename = sourceDbPath,
+                Connection = ConnectionType.Shared,
+                ReadOnly = true,
+            }
+        );
+
+        var sourceConversations = sourceDb.GetCollection<ImageGenerationConversation>(
+            conversationsCollectionName
+        );
+        var sourceMessages = sourceDb.GetCollection<ImageGenerationMessage>(messagesCollectionName);
+
+        var conversationsList = sourceConversations.FindAllAsync().GetAwaiter().GetResult().ToList();
+
+        if (conversationsList.Count == 0)
+        {
+            logger.LogDebug("No conversations found in {SourceName}, skipping migration", sourceName);
+            return;
+        }
+
+        logger.LogInformation(
+            "Migrating {Count} conversations from {SourceName}...",
+            conversationsList.Count,
+            sourceName
+        );
+
+        var conversations = newDb.GetCollection<ImageGenerationConversation>("Conversations");
+        var messages = newDb.GetCollection<ImageGenerationMessage>("Messages");
+
+        // Copy conversations
+        foreach (var conversation in conversationsList)
+        {
+            conversations.InsertAsync(conversation).GetAwaiter().GetResult();
+        }
+
+        // Copy messages
+        var messagesList = sourceMessages.FindAllAsync().GetAwaiter().GetResult().ToList();
+        foreach (var message in messagesList)
+        {
+            messages.InsertAsync(message).GetAwaiter().GetResult();
+        }
+
+        logger.LogInformation(
+            "Successfully migrated {ConvCount} conversations and {MsgCount} messages from {SourceName} to ImageLab.db",
+            conversationsList.Count,
+            messagesList.Count,
+            sourceName
+        );
     }
 
     public void Dispose()

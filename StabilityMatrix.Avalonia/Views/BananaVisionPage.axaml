@@ -243,13 +243,21 @@
                 BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
                 BorderThickness="0,0,0,1">
                 <Grid ColumnDefinitions="Auto, Auto, *, Auto">
-                    <TextBlock
+                    <StackPanel
                         Grid.Column="0"
                         Margin="0,0,16,0"
                         VerticalAlignment="Center"
-                        FontSize="20"
-                        FontWeight="Light"
-                        Text="🍌BananaVision🍌" />
+                        Orientation="Horizontal"
+                        Spacing="8">
+                        <avalonia:Icon
+                            FontSize="18"
+                            Foreground="#9D8CFF"
+                            Value="fa-solid fa-flask" />
+                        <TextBlock
+                            FontSize="20"
+                            FontWeight="Light"
+                            Text="Image Lab" />
+                    </StackPanel>
 
                     <ComboBox
                         Grid.Column="1"
@@ -1608,11 +1616,12 @@
                                     <GradientStop Offset="1" Color="#6366F1" />
                                 </LinearGradientBrush>
                             </Border.Background>
-                            <TextBlock
+                            <avalonia:Icon
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Center"
                                 FontSize="36"
-                                Text="🍌" />
+                                Foreground="White"
+                                Value="fa-solid fa-flask" />
                         </Border>
                         <!--  Title  -->
                         <TextBlock
@@ -1620,7 +1629,7 @@
                             FontSize="24"
                             FontWeight="SemiBold"
                             Foreground="White"
-                            Text="Welcome to BananaVision!" />
+                            Text="Welcome to the Image Lab!" />
                         <!--  Description  -->
                         <TextBlock
                             HorizontalAlignment="Center"

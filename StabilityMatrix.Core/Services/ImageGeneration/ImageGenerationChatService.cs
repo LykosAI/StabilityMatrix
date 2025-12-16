@@ -54,7 +54,7 @@ public class ImageGenerationChatService(
     {
         var timestamp = DateTime.UtcNow.ToString("yyyyMMdd_HHmmss_fff");
         var shortGuid = Guid.NewGuid().ToString("N")[..8];
-        return $"banana_{timestamp}_{shortGuid}{extension}";
+        return $"imagelab_{timestamp}_{shortGuid}{extension}";
     }
 
     private static string GenerateConversationTitle(string textPrompt)
@@ -78,7 +78,7 @@ public class ImageGenerationChatService(
 
     private string GetOutputDirectory()
     {
-        return Path.Combine(settingsManager.ImagesDirectory, "BananaVision");
+        return Path.Combine(settingsManager.ImagesDirectory, "ImageLab");
     }
 
     private string GetInputDirectory(Guid conversationId)

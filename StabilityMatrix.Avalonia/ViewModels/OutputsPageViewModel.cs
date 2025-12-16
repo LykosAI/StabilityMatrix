@@ -568,9 +568,9 @@ public partial class OutputsPageViewModel : PageViewModelBase
         if (!settingsManager.IsLibraryDirSet)
             return;
 
-        var bananaVisionInputsRoot = Path.Combine(settingsManager.ImagesDirectory, "BananaVision", "Inputs");
-        var bananaVisionInputsRootFull =
-            Path.GetFullPath(bananaVisionInputsRoot)
+        var imageLabInputsRoot = Path.Combine(settingsManager.ImagesDirectory, "ImageLab", "Inputs");
+        var imageLabInputsRootFull =
+            Path.GetFullPath(imageLabInputsRoot)
                 .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
             + Path.DirectorySeparatorChar;
 
@@ -612,7 +612,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
                 .Where(file =>
                     allowedExtensions.Contains(new FilePath(file).Extension)
                     && !Path.GetFullPath(file)
-                        .StartsWith(bananaVisionInputsRootFull, StringComparison.OrdinalIgnoreCase)
+                        .StartsWith(imageLabInputsRootFull, StringComparison.OrdinalIgnoreCase)
                     && new FilePath(file).Info.DirectoryName?.EndsWith(
                         "thumbnails",
                         StringComparison.OrdinalIgnoreCase

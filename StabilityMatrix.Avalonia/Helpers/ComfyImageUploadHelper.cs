@@ -1,14 +1,12 @@
 using Avalonia.Media.Imaging;
 using Microsoft.Extensions.Logging;
-using StabilityMatrix.Avalonia.Models.BananaVision;
 using StabilityMatrix.Avalonia.Services;
-using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Services.ImageGeneration;
 
 namespace StabilityMatrix.Avalonia.Helpers;
 
 /// <summary>
-/// Helper for uploading images to ComfyUI for BananaVision providers
+/// Helper for uploading images to ComfyUI for Image Lab providers
 /// </summary>
 public static class ComfyImageUploadHelper
 {

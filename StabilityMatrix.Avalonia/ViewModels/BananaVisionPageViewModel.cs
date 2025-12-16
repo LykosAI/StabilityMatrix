@@ -49,9 +49,8 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
     private readonly INavigationService<MainWindowViewModel> navigationService;
     private readonly INavigationService<SettingsViewModel> settingsNavigationService;
 
-    public override string Title => "BananaVision";
-    public override IconSource IconSource =>
-        new FASymbolIconSource { Symbol = "fa-solid fa-wand-magic-sparkles" };
+    public override string Title => "Image Lab";
+    public override IconSource IconSource => new FASymbolIconSource { Symbol = "fa-solid fa-flask" };
 
     public IInferenceClientManager ClientManager { get; }
 

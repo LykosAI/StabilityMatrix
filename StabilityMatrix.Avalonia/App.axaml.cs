@@ -364,11 +364,11 @@ public sealed class App : Application
             {
                 provider.GetRequiredService<PackageManagerViewModel>(),
                 provider.GetRequiredService<InferenceViewModel>(),
+                provider.GetRequiredService<BananaVisionPageViewModel>(),
                 provider.GetRequiredService<CheckpointsPageViewModel>(),
                 provider.GetRequiredService<CheckpointBrowserViewModel>(),
                 provider.GetRequiredService<OutputsPageViewModel>(),
                 provider.GetRequiredService<WorkflowsPageViewModel>(),
-                provider.GetRequiredService<BananaVisionPageViewModel>(),
             },
             FooterPages = { provider.GetRequiredService<SettingsViewModel>() },
         });

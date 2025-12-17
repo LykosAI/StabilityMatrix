@@ -24,6 +24,9 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Updated SageAttention installer to latest v2.2.0-windows.post4 version
 ### Fixed
 - Fixed [#1450](https://github.com/LykosAI/StabilityMatrix/issues/1450) - Older SD.Next not launching due to forced `--uv` argument
+### Supporters
+#### 🌟 Visionaries
+A massive thank you to our esteemed Visionaries: **Waterclouds**, **JungleDragon**, **bluepopsicle**, **Bob S**, and **whudunit**! Your generosity is the powerhouse behind Stability Matrix, enabling us to keep building and refining with confidence. We are truly grateful for your partnership!
 
 ## v2.15.4
 ### Changed

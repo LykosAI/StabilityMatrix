@@ -230,7 +230,7 @@
                 Header="Gemini API"
                 HeaderTargetUri="https://aistudio.google.com/api-keys"
                 IsConnected="{Binding HasGeminiApiKey}"
-                OffDescription="Add your Gemini API key to use Nano Banana in BananaVision for image generation">
+                OffDescription="Add your Gemini API key to use Nano Banana in the Image Lab for image generation">
                 <controls:SettingsAccountLinkExpander.IconSource>
                     <fluentIcons:SymbolIconSource Symbol="Sparkle" />
                 </controls:SettingsAccountLinkExpander.IconSource>

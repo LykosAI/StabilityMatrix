@@ -440,7 +440,7 @@ public partial class AccountSettingsViewModel : PageViewModelBase
             """
             Get your Gemini API key from [Google AI Studio](https://ai.google.dev/)
 
-            This key will be used for BananaVision image generation.
+            This key will be used for Image Lab image generation.
             """,
             null,
             [field]

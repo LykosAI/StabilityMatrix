@@ -1,8 +1,4 @@
-﻿using System;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Web;
+﻿using System.Web;
 using Avalonia.Controls.Notifications;
 using Avalonia.Threading;
 using Injectio.Attributes;
@@ -74,26 +70,24 @@ public class ModelDownloadLinkHandler(
         {
             logger.LogError("ModelDownloadLinkHandler: Invalid query parameters");
 
-            Dispatcher.UIThread.Post(
-                () =>
-                    notificationService.Show(
-                        new Notification(
-                            "Invalid Download Link",
-                            "The download link is invalid",
-                            NotificationType.Error
-                        )
+            Dispatcher.UIThread.Post(() =>
+                notificationService.Show(
+                    new Notification(
+                        "Invalid Download Link",
+                        "The download link is invalid",
+                        NotificationType.Error
                     )
+                )
             );
             return;
         }
 
-        Dispatcher.UIThread.Post(
-            () =>
-                notificationService.Show(
-                    "Link Received",
-                    "Successfully received download link",
-                    NotificationType.Warning
-                )
+        Dispatcher.UIThread.Post(() =>
+            notificationService.Show(
+                "Link Received",
+                "Successfully received download link",
+                NotificationType.Warning
+            )
         );
 
         var modelTask = civitApi.GetModelById(modelId);
@@ -110,27 +104,26 @@ public class ModelDownloadLinkHandler(
         if (modelVersion is null)
         {
             logger.LogError("ModelDownloadLinkHandler: Model version not found");
-            Dispatcher.UIThread.Post(
-                () =>
-                    notificationService.Show(
-                        new Notification(
-                            "Model has no versions available",
-                            "This model has no versions available for download",
-                            NotificationType.Error
-                        )
+            Dispatcher.UIThread.Post(() =>
+                notificationService.Show(
+                    new Notification(
+                        "Model has no versions available",
+                        "This model has no versions available for download",
+                        NotificationType.Error
                     )
+                )
             );
             return;
         }
 
-        var possibleFiles = modelVersion.Files?.Where(
-            x => x.Type == civitFileType && x.Metadata.Format == civitFormat
+        var possibleFiles = modelVersion.Files?.Where(x =>
+            x.Type == civitFileType && x.Metadata.Format == civitFormat
         );
 
         if (!string.IsNullOrWhiteSpace(fp))
         {
-            possibleFiles = possibleFiles?.Where(
-                x => x.Metadata.Fp != null && x.Metadata.Fp.Equals(fp, StringComparison.OrdinalIgnoreCase)
+            possibleFiles = possibleFiles?.Where(x =>
+                x.Metadata.Fp != null && x.Metadata.Fp.Equals(fp, StringComparison.OrdinalIgnoreCase)
             );
         }
 
@@ -143,15 +136,14 @@ public class ModelDownloadLinkHandler(
 
         if (possibleFiles is null)
         {
-            Dispatcher.UIThread.Post(
-                () =>
-                    notificationService.Show(
-                        new Notification(
-                            "Model has no files available",
-                            "This model has no files available for download",
-                            NotificationType.Error
-                        )
+            Dispatcher.UIThread.Post(() =>
+                notificationService.Show(
+                    new Notification(
+                        "Model has no files available",
+                        "This model has no files available for download",
+                        NotificationType.Error
                     )
+                )
             );
             logger.LogError("ModelDownloadLinkHandler: Model file not found");
             return;
@@ -174,8 +166,8 @@ public class ModelDownloadLinkHandler(
         );
         importTask.Wait();
 
-        Dispatcher.UIThread.Post(
-            () => notificationService.Show("Download Started", $"Downloading {selectedFile.Name}")
+        Dispatcher.UIThread.Post(() =>
+            notificationService.Show("Download Started", $"Downloading {selectedFile.Name}")
         );
     }
 }

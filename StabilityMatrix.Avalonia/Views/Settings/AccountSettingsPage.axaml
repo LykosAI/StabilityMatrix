@@ -176,13 +176,13 @@
                     Text="{x:Static lang:Resources.Label_Integrations}" />
 
                 <controls:SettingsAccountLinkExpander
-                    Grid.Row="2"
+                    Grid.Row="1"
                     ConnectCommand="{Binding ConnectCivitCommand}"
                     DisconnectCommand="{Binding DisconnectCivitCommand}"
                     Header="CivitAI"
                     HeaderTargetUri="{x:Static sm:Assets.CivitAIUrl}"
                     IsConnected="{Binding CivitStatus.IsConnected}"
-                    OffDescription="Connect to Download Models that require login"
+                    OffDescription="Connect to download models that require login from CivitAI"
                     OnDescriptionExtra="{Binding CivitStatus.UsernameWithParentheses}">
                     <controls:SettingsAccountLinkExpander.IconSource>
                         <ui:BitmapIconSource UriSource="avares://StabilityMatrix.Avalonia/Assets/brands-civitai.png" />
@@ -196,7 +196,7 @@
                 </controls:SettingsAccountLinkExpander>
 
                 <controls:SettingsAccountLinkExpander
-                    Grid.Row="3"
+                    Grid.Row="2"
                     ConnectCommand="{Binding ConnectHuggingFaceCommand}"
                     DisconnectCommand="{Binding DisconnectHuggingFaceCommand}"
                     Header="Hugging Face"
@@ -216,6 +216,25 @@
                 </controls:SettingsAccountLinkExpander>
 
             </sg:SpacedGrid>
+
+            <!--  Gemini API Section  -->
+            <TextBlock
+                Margin="0,16,0,8"
+                FontSize="16"
+                FontWeight="SemiBold"
+                Text="Image Generation APIs" />
+
+            <controls:SettingsAccountLinkExpander
+                ConnectCommand="{Binding SetGeminiApiKeyCommand}"
+                DisconnectCommand="{Binding RemoveGeminiApiKeyCommand}"
+                Header="Gemini API"
+                HeaderTargetUri="https://aistudio.google.com/api-keys"
+                IsConnected="{Binding HasGeminiApiKey}"
+                OffDescription="Add your Gemini API key to use Nano Banana in the Image Lab for image generation">
+                <controls:SettingsAccountLinkExpander.IconSource>
+                    <fluentIcons:SymbolIconSource Symbol="Sparkle" />
+                </controls:SettingsAccountLinkExpander.IconSource>
+            </controls:SettingsAccountLinkExpander>
 
         </StackPanel>
     </ScrollViewer>

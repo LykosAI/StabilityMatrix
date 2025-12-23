@@ -105,7 +105,7 @@ public partial class ImageGalleryCardViewModel : ViewModelBase
             {
                 if (sources.Count == 0)
                 {
-                    SelectedImageIndex = 0;
+                    SelectedImageIndex = -1;
                 }
                 else if (SelectedImageIndex == -1)
                 {
@@ -159,7 +159,7 @@ public partial class ImageGalleryCardViewModel : ViewModelBase
         var viewerVm = vmFactory.Get<ImageViewerViewModel>();
         viewerVm.ImageSource = new ImageSource((Bitmap)image);
 
-        var dialog = new BetterContentDialog { Content = new ImageViewerDialog { DataContext = viewerVm, } };
+        var dialog = new BetterContentDialog { Content = new ImageViewerDialog { DataContext = viewerVm } };
 
         await dialog.ShowAsync();
     }

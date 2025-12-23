@@ -41,7 +41,7 @@ public class Wan2GP(
         + "Supports Wan 2.1/2.2, Qwen, Hunyuan Video, LTX Video and Flux.";
 
     public override string LicenseType => "Apache-2.0";
-    public override string LicenseUrl => "https://github.com/deepbeepmeep/Wan2GP/blob/main/LICENSE";
+    public override string LicenseUrl => "https://github.com/deepbeepmeep/Wan2GP/blob/main/LICENSE.txt";
     public override string LaunchCommand => "wgp.py";
 
     public override Uri PreviewImageUri => new("https://cdn.lykos.ai/sm/packages/wan2gp/wan2gp.webp");
@@ -381,13 +381,6 @@ public class Wan2GP(
         // Fix for distutils compatibility issue with Python 3.10 and setuptools
         VenvRunner.UpdateEnvironmentVariables(env => env.SetItem("SETUPTOOLS_USE_DISTUTILS", "stdlib"));
 
-        // Set up environment variables for AMD ROCm on Windows
-        var torchIndex = installedPackage.PreferredTorchIndex ?? GetRecommendedTorchVersion();
-        if (torchIndex == TorchIndex.Rocm && Compat.IsWindows)
-        {
-            VenvRunner.UpdateEnvironmentVariables(GetAmdRocmWindowsEnvVars);
-        }
-
         // Notify user that the package is starting (loading can take a while)
         onConsoleOutput?.Invoke(
             new ProcessOutput { Text = "Launching Wan2GP, please wait while the UI initializes...\n" }
@@ -411,37 +404,10 @@ public class Wan2GP(
             var regex = new Regex(@"(https?:\/\/)([^:\s]+):(\d+)");
             var match = regex.Match(s.Text);
             if (match.Success)
+            {
                 WebUrl = match.Value;
-            OnStartupComplete(WebUrl);
+                OnStartupComplete(WebUrl);
+            }
         }
-    }
-
-    private ImmutableDictionary<string, string> GetAmdRocmWindowsEnvVars(
-        ImmutableDictionary<string, string> env
-    )
-    {
-        var portableGitBin = new DirectoryPath(PrerequisiteHelper.GitBinPath);
-        var hipPath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
-            "AMD",
-            "ROCm",
-            "6.4"
-        );
-        var hipBinPath = Path.Combine(hipPath, "bin");
-
-        env = env.SetItem("HIP_PATH", hipPath);
-        env = env.SetItem("HIP_PATH_64", hipPath);
-        env = env.SetItem("GIT", portableGitBin.JoinFile("git.exe"));
-
-        if (env.TryGetValue("PATH", out var pathValue))
-        {
-            env = env.SetItem("PATH", Compat.GetEnvPathWithExtensions(hipBinPath, portableGitBin, pathValue));
-        }
-        else
-        {
-            env = env.SetItem("PATH", Compat.GetEnvPathWithExtensions(hipBinPath, portableGitBin));
-        }
-
-        return env;
     }
 }

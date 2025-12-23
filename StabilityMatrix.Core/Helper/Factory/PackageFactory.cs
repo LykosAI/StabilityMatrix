@@ -236,6 +236,13 @@ public class PackageFactory : IPackageFactory
                 prerequisiteHelper,
                 pyInstallationManager
             ),
+            "Wan2GP" => new Wan2GP(
+                githubApiCache,
+                settingsManager,
+                downloadService,
+                prerequisiteHelper,
+                pyInstallationManager
+            ),
             _ => throw new ArgumentOutOfRangeException(nameof(installedPackage)),
         };
     }

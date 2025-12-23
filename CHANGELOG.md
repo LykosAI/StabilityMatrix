@@ -5,33 +5,9 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
-<<<<<<< HEAD
-=======
-## v2.16.0-dev.1
-### Added
-#### New Feature: 🧪 Image Lab  - Conversational Image Generation for ComfyUI
-- We've added a brand new conversational interface for image generation! Image Lab lets you iterate on images naturally through chat, rather than just one-off prompts.
-  - Local-First Power: Native support for Flux Kontext and Qwen Image Edit running entirely locally via your ComfyUI backend.
-  - Smart Setup: Stability Matrix automatically detects and helps you download the specific models and LoRAs needed for these local workflows.
-  - Interactive Tools: Drag-and-drop image inputs, use the built-in annotation tool to draw on images, and keep persistent conversation history.
-  - Cloud Option: Includes optional support for Nano Banana (Gemini 3 Pro/2.5) for users who want to leverage external reasoning models.
+## v2.15.5
 - Added new package - [Wan2GP](https://github.com/deepbeepmeep/Wan2GP)
-- Added [Stable Diffusion WebUI Forge - Neo](https://github.com/Haoming02/sd-webui-forge-classic/tree/neo) as a separate package for convenience
-- Added Intel GPU support for ComfyUI
-- Added "Run Python Command" option to the package card's 3-dots menu for running arbitrary Python code in the package's virtual environment
-- Added togglable `--uv` argument to the SD.Next launch options
-### Changed
-- Moved the original Stable Diffusion WebUI Forge to the "Legacy" packages tab due to inactivity
-- Updated to cu130 torch index for ComfyUI installs with Nvidia GPUs
-- Consolidated and fixed AMD GPU architecture detection
-- Updated SageAttention installer to latest v2.2.0-windows.post4 version
-### Fixed
-- Fixed [#1450](https://github.com/LykosAI/StabilityMatrix/issues/1450) - Older SD.Next not launching due to forced `--uv` argument
-### Supporters
-#### 🌟 Visionaries
-A massive thank you to our esteemed Visionaries: **Waterclouds**, **JungleDragon**, **bluepopsicle**, **Bob S**, and **whudunit**! Your generosity is the powerhouse behind Stability Matrix, enabling us to keep building and refining with confidence. We are truly grateful for your partnership!
 
->>>>>>> 1a844fe8 (Merge pull request #1180 from ionite34/wan2gp)
 ## v2.15.4
 ### Changed
 - Updated Early Access indicators in the Civitai Details page to be more visible

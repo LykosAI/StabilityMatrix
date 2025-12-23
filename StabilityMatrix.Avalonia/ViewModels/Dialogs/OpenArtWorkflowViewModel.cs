@@ -101,6 +101,7 @@ public partial class OpenArtWorkflowViewModel(
 
         var installedNodesNames = new HashSet<string>();
         var nameToManifestNodes = new Dictionary<string, PackageExtension>();
+        var addedMissingNodes = new HashSet<string>();
 
         var packagePair = SelectedPackagePair;
 
@@ -160,9 +161,11 @@ public partial class OpenArtWorkflowViewModel(
                     IsInstalled = installedNodesNames.Contains(node),
                 };
 
-                // Add missing nodes to the list
+                // Add missing nodes to the list (deduplicate by title)
                 if (
-                    !currentSection.IsInstalled && nameToManifestNodes.TryGetValue(node, out var manifestNode)
+                    !currentSection.IsInstalled
+                    && addedMissingNodes.Add(node)
+                    && nameToManifestNodes.TryGetValue(node, out var manifestNode)
                 )
                 {
                     MissingNodes.Add(manifestNode);

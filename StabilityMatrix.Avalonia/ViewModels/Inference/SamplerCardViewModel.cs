@@ -155,6 +155,7 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
                 typeof(RescaleCfgModule),
                 typeof(PlasmaNoiseModule),
                 typeof(NRSModule),
+                typeof(TiledVAEModule),
             ];
         });
     }

@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added Intel GPU support for ComfyUI
 - Added "Run Python Command" option to the package card's 3-dots menu for running arbitrary Python code in the package's virtual environment
 - Added togglable `--uv` argument to the SD.Next launch options
+- Added Tiled VAE decoding as an Inference addon thanks to @NeuralFault!
 ### Changed
 - Moved the original Stable Diffusion WebUI Forge to the "Legacy" packages tab due to inactivity
 - Updated to cu130 torch index for ComfyUI installs with Nvidia GPUs
@@ -25,9 +26,17 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Updated SageAttention installer to latest v2.2.0-windows.post4 version
 ### Fixed
 - Fixed [#1450](https://github.com/LykosAI/StabilityMatrix/issues/1450) - Older SD.Next not launching due to forced `--uv` argument
+- Fixed duplicate custom node installations when installing workflows from the Workflow Browser - thanks again to @NeuralFault!
 ### Supporters
 #### 🌟 Visionaries
 A massive thank you to our esteemed Visionaries: **Waterclouds**, **JungleDragon**, **bluepopsicle**, **Bob S**, and **whudunit**! Your generosity is the powerhouse behind Stability Matrix, enabling us to keep building and refining with confidence. We are truly grateful for your partnership!
+
+## v2.15.5
+### Added
+- Added new package - [Wan2GP](https://github.com/deepbeepmeep/Wan2GP)
+- Added Tiled VAE decoding as an Inference addon thanks to @NeuralFault!
+### Fixed
+- Fixed duplicate custom node installations when installing workflows from the Workflow Browser - thanks again to @NeuralFault!
 
 ## v2.15.4
 ### Changed

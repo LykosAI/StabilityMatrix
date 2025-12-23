@@ -62,6 +62,25 @@ public class ComfyNodeBuilder
         public required VAENodeConnection Vae { get; init; }
     }
 
+    [TypedNodeOptions(Name = "VAEDecodeTiled")]
+    public record TiledVAEDecode : ComfyTypedNodeBase<ImageNodeConnection>
+    {
+        public required LatentNodeConnection Samples { get; init; }
+        public required VAENodeConnection Vae { get; init; }
+        
+        [Range(64, 4096)]
+        public int TileSize { get; init; } = 512;
+        
+        [Range(0, 4096)]
+        public int Overlap { get; init; } = 64;
+        
+        [Range(8, 4096)]
+        public int TemporalSize { get; init; } = 64;
+        
+        [Range(4, 4096)]
+        public int TemporalOverlap { get; init; } = 8;
+    }
+
     public record KSampler : ComfyTypedNodeBase<LatentNodeConnection>
     {
         public required ModelNodeConnection Model { get; init; }

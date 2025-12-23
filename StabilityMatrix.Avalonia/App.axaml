@@ -95,6 +95,7 @@
         <StyleInclude Source="Controls/Inference/UnetModelCard.axaml" />
         <StyleInclude Source="Controls/Inference/DiscreteModelSamplingCard.axaml" />
         <StyleInclude Source="Controls/Inference/RescaleCfgCard.axaml" />
+        <StyleInclude Source="Controls/Inference/TiledVAECard.axaml" />
         <StyleInclude Source="Controls/Painting/PaintCanvas.axaml" />
         <StyleInclude Source="Controls/MarkdownViewer.axaml" />
         <StyleInclude Source="Controls/Inference/WanModelCard.axaml" />

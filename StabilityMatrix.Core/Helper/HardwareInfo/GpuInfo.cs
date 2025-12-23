@@ -77,42 +77,59 @@ public record GpuInfo
         if (!IsAmd || string.IsNullOrWhiteSpace(Name))
             return null;
 
-        var name = Name.ToLowerInvariant();
+        // Normalize for safer substring checks (handles RX7800 vs RX 7800, etc.)
+        var name = Name;
+        var nameNoSpaces = name.Replace(" ", "", StringComparison.Ordinal);
 
-        if (name.Contains("9070") || name.Contains("R9700"))
-            return "gfx1201";
+        return name switch
+        {
+            // RDNA4
+            _ when Has("R9700") || Has("9070") => "gfx1201",
+            _ when Has("9060") => "gfx1200",
 
-        if (name.Contains("9060"))
-            return "gfx1200";
+            // RDNA3.5 APUs
+            _ when Has("860M") => "gfx1152",
+            _ when Has("890M") => "gfx1150",
+            _ when Has("8040S") || Has("8050S") || Has("8060S") || Has("880M") || Has("Z2 Extreme") =>
+                "gfx1151",
 
-        if (name.Contains("z2") || name.Contains("880m") || name.Contains("8050s") || name.Contains("8060s"))
-            return "gfx1151";
+            // RDNA3 APUs (Phoenix)
+            _ when Has("740M") || Has("760M") || Has("780M") || Has("Z1") || Has("Z2") => "gfx1103",
 
-        if (name.Contains("740m") || name.Contains("760m") || name.Contains("780m") || name.Contains("z1"))
-            return "gfx1103";
+            // RDNA3 dGPU Navi33
+            _ when Has("7400") || Has("7500") || Has("7600") || Has("7650") || Has("7700S") => "gfx1102",
 
-        if (
-            name.Contains("w7400")
-            || name.Contains("w7500")
-            || name.Contains("w7600")
-            || name.Contains("7500 xt")
-            || name.Contains("7600")
-            || name.Contains("7650 gre")
-            || name.Contains("7700s")
-        )
-            return "gfx1102";
+            // RDNA3 dGPU Navi32
+            _ when Has("7700") || Has("RX 7800") || HasNoSpace("RX7800") => "gfx1101",
 
-        if (
-            name.Contains("v710")
-            || name.Contains("7700")
-            || (name.Contains("7800") && !name.Contains("w7800"))
-        )
-            return "gfx1101";
+            // RDNA3 dGPU Navi31 (incl. Pro)
+            _ when Has("W7800") || Has("7900") || Has("7950") || Has("7990") => "gfx1100",
 
-        if (name.Contains("w7800") || name.Contains("7900") || name.Contains("7950") || name.Contains("7990"))
-            return "gfx1100";
+            // RDNA2 APUs (Rembrandt)
+            _ when Has("660M") || Has("680M") => "gfx1035",
 
-        return null;
+            // RDNA2 Navi24 low-end (incl. some mobiles)
+            _ when Has("6300") || Has("6400") || Has("6450") || Has("6500") || Has("6550") || Has("6500M") =>
+                "gfx1034",
+
+            // RDNA2 Navi23
+            _ when Has("6600") || Has("6650") || Has("6700S") || Has("6800S") || Has("6600M") => "gfx1032",
+
+            // RDNA2 Navi22 (note: desktop 6800 is NOT here; that’s Navi21/gfx1030)
+            _ when Has("6700") || Has("6750") || Has("6800M") || Has("6850M") => "gfx1031",
+
+            // RDNA2 Navi21 (big die)
+            _ when Has("6800") || Has("6900") || Has("6950") => "gfx1030",
+
+            _ => null,
+        };
+
+        bool HasNoSpace(string s) =>
+            nameNoSpaces.Contains(
+                s.Replace(" ", "", StringComparison.Ordinal),
+                StringComparison.OrdinalIgnoreCase
+            );
+        bool Has(string s) => name.Contains(s, StringComparison.OrdinalIgnoreCase);
     }
 
     public virtual bool Equals(GpuInfo? other)

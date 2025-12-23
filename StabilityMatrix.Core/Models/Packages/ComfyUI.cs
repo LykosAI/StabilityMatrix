@@ -302,7 +302,14 @@ public class ComfyUI(
     public override string MainBranch => "master";
 
     public override IEnumerable<TorchIndex> AvailableTorchIndices =>
-        [TorchIndex.Cpu, TorchIndex.Cuda, TorchIndex.DirectMl, TorchIndex.Rocm, TorchIndex.Mps];
+        [
+            TorchIndex.Cpu,
+            TorchIndex.Cuda,
+            TorchIndex.DirectMl,
+            TorchIndex.Ipex,
+            TorchIndex.Mps,
+            TorchIndex.Rocm,
+        ];
 
     public override List<ExtraPackageCommand> GetExtraCommands()
     {
@@ -413,8 +420,9 @@ public class ComfyUI(
                 RequirementsFilePaths = ["requirements.txt"],
                 ExtraPipArgs = ["numpy<2"],
                 TorchaudioVersion = " ", // Request torchaudio without a specific version
-                CudaIndex = isLegacyNvidia ? "cu126" : "cu128",
+                CudaIndex = isLegacyNvidia ? "cu126" : "cu130",
                 RocmIndex = "rocm6.4",
+                XpuIndex = "xpu",
                 UpgradePackages = true,
                 PostInstallPipArgs = ["typing-extensions>=4.15.0"],
             };

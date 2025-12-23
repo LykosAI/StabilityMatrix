@@ -51,6 +51,7 @@ using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Progress;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Api;
+using StabilityMatrix.Core.Api.Handlers;
 using StabilityMatrix.Core.Api.LykosAuthApi;
 using StabilityMatrix.Core.Api.PromptGenApi;
 using StabilityMatrix.Core.Attributes;
@@ -65,6 +66,7 @@ using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
+using StabilityMatrix.Core.Services.ImageGeneration;
 using StabilityMatrix.Core.Updater;
 using ApiOptions = StabilityMatrix.Core.Models.Configs.ApiOptions;
 using Application = Avalonia.Application;
@@ -362,6 +364,7 @@ public sealed class App : Application
             {
                 provider.GetRequiredService<PackageManagerViewModel>(),
                 provider.GetRequiredService<InferenceViewModel>(),
+                provider.GetRequiredService<BananaVisionPageViewModel>(),
                 provider.GetRequiredService<CheckpointsPageViewModel>(),
                 provider.GetRequiredService<CheckpointBrowserViewModel>(),
                 provider.GetRequiredService<OutputsPageViewModel>(),
@@ -468,7 +471,18 @@ public sealed class App : Application
         {
             services.AddSingleton<ILiteDbContext, LiteDbContext>();
             services.AddSingleton<IDisposable>(p => p.GetRequiredService<ILiteDbContext>());
+
+            // BananaVision has its own database to preserve conversations when main DB is cleared
+            services.AddSingleton<IBananaVisionDbContext, BananaVisionDbContext>();
+            services.AddSingleton<IDisposable>(p => p.GetRequiredService<IBananaVisionDbContext>());
         }
+
+        // Image generation services
+        services.AddSingleton<IImageGenerationProvider, GeminiImageGenerationProvider>();
+        services.AddSingleton<IImageGenerationProvider, Gemini3ProImageGenerationProvider>();
+        services.AddSingleton<IImageGenerationProvider, FluxKontextProvider>();
+        services.AddSingleton<IImageGenerationProvider, QwenImageEditProvider>();
+        services.AddSingleton<IImageGenerationChatService, ImageGenerationChatService>();
 
         services.AddTransient<IGitHubClient, GitHubClient>(_ =>
         {
@@ -693,7 +707,7 @@ public sealed class App : Application
                 }
             )
             .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false })
-            .AddPolicyHandler(retryPolicy)
+            .AddPolicyHandler(retryPolicyLonger)
             .AddHttpMessageHandler(serviceProvider => new TokenAuthHeaderHandler(
                 serviceProvider.GetRequiredService<LykosAuthTokenProvider>()
             ));
@@ -728,6 +742,19 @@ public sealed class App : Application
                 c.Timeout = TimeSpan.FromHours(1); // Or a more appropriate timeout like 60 seconds, consistent with retry policy
             })
             .AddPolicyHandler(retryPolicy); // Assuming retryPolicy is suitable
+
+        services
+            .AddRefitClient<IGeminiApi>(defaultRefitSettings)
+            .ConfigureHttpClient(c =>
+            {
+                c.BaseAddress = new Uri("https://generativelanguage.googleapis.com");
+                c.Timeout = TimeSpan.FromMinutes(5); // Higher timeout for image generation
+            })
+            .AddHttpMessageHandler<GeminiApiKeyHandler>()
+            .AddPolicyHandler(retryPolicyLonger);
+
+        // Register GeminiApiKeyHandler
+        services.AddTransient<GeminiApiKeyHandler>();
 
         // Apizr clients
         services.AddApizrManagerFor<IOpenModelDbApi, OpenModelDbManager>(options =>

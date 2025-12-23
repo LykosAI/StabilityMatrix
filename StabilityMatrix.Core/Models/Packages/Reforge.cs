@@ -26,4 +26,5 @@ public class Reforge(
     public override Uri PreviewImageUri => new("https://cdn.lykos.ai/sm/packages/reforge/preview.webp");
     public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Recommended;
     public override bool OfferInOneClickInstaller => true;
+    public override PackageType PackageType => PackageType.SdInference;
 }

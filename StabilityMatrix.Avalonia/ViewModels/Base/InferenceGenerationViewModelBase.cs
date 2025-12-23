@@ -60,8 +60,8 @@ public abstract partial class InferenceGenerationViewModelBase
 
     private readonly ISettingsManager settingsManager;
     private readonly RunningPackageService runningPackageService;
-    private readonly INotificationService notificationService;
     private readonly IServiceManager<ViewModelBase> vmFactory;
+    private readonly INotificationService notificationService;
 
     [JsonPropertyName("ImageGallery")]
     public ImageGalleryCardViewModel ImageGalleryCardViewModel { get; }
@@ -143,7 +143,7 @@ public abstract partial class InferenceGenerationViewModelBase
         {
             GenerationParameters = args.Parameters,
             ProjectType = args.Project?.ProjectType,
-            ProjectName = ProjectFile?.NameWithoutExtension
+            ProjectName = ProjectFile?.NameWithoutExtension,
         };
 
         // Parse to format
@@ -260,7 +260,7 @@ public abstract partial class InferenceGenerationViewModelBase
             Project = InferenceProjectDocument.FromLoadable(this),
             FilesToTransfer = args.FilesToTransfer,
             Parameters = new GenerationParameters(),
-            ClearOutputImages = true
+            ClearOutputImages = true,
         };
 
         await RunGeneration(generationArgs, cancellationToken);
@@ -410,7 +410,7 @@ public abstract partial class InferenceGenerationViewModelBase
                 {
                     Title = "Prompt Completed",
                     Body = $"Prompt [{promptTask.Id[..7].ToLower()}] completed successfully",
-                    BodyImagePath = notificationImage?.FullPath
+                    BodyImagePath = notificationImage?.FullPath,
                 }
             );
         }
@@ -521,14 +521,14 @@ public abstract partial class InferenceGenerationViewModelBase
                 var opts = new JsonSerializerOptions
                 {
                     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-                    Converters = { new JsonStringEnumConverter() }
+                    Converters = { new JsonStringEnumConverter() },
                 };
                 var paramsJson = JsonSerializer.Serialize(parameters, opts);
                 var smProject = JsonSerializer.Serialize(project, opts);
                 var metadata = new Dictionary<ExifTag, string>
                 {
                     { ExifTag.ImageDescription, paramsJson },
-                    { ExifTag.Software, smProject }
+                    { ExifTag.Software, smProject },
                 };
 
                 var bytesWithMetadata = ImageMetadata.AddMetadataToWebp(imageArray, metadata);
@@ -779,7 +779,7 @@ public abstract partial class InferenceGenerationViewModelBase
             {
                 ShowDialogOnStart = true,
                 ModificationCompleteTitle = "Extensions Installed",
-                ModificationCompleteMessage = "Finished installing required extensions"
+                ModificationCompleteMessage = "Finished installing required extensions",
             };
             EventManager.Instance.OnPackageInstallProgressAdded(runner);
 
@@ -906,7 +906,7 @@ public abstract partial class InferenceGenerationViewModelBase
             {
                 Builder = Builder,
                 IsEnabledOverrides = overrides,
-                FilesToTransfer = FilesToTransfer
+                FilesToTransfer = FilesToTransfer,
             };
         }
 

@@ -850,8 +850,9 @@ public abstract class BaseGitPackage : BasePackage
         string torchvisionVersion = "",
         string torchaudioVersion = "",
         string xformersVersion = "",
-        string cudaIndex = "cu128",
-        string rocmIndex = "rocm6.4"
+        string cudaIndex = "cu130",
+        string rocmIndex = "rocm6.4",
+        string xpuIndex = "xpu"
     )
     {
         var pipArgs = new PipInstallArgs();
@@ -875,6 +876,7 @@ public abstract class BaseGitPackage : BasePackage
             TorchIndex.Rocm => rocmIndex,
             TorchIndex.Mps => "cpu",
             TorchIndex.Zluda => cudaIndex,
+            TorchIndex.Ipex => xpuIndex,
             _ => "cpu",
         };
 

@@ -42,6 +42,8 @@ public class ForgeAmdGpu(
 
     public override bool IsCompatible => HardwareHelper.PreferDirectMLOrZluda();
 
+    public override PackageType PackageType => PackageType.SdInference;
+
     public override IEnumerable<PackagePrerequisite> Prerequisites =>
         base.Prerequisites.Concat([PackagePrerequisite.HipSdk]);
 

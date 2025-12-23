@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -226,7 +226,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
         var path =
             CanShowOutputTypes && SelectedOutputType != SharedOutputType.All
                 ? Path.Combine(newValue.Path, SelectedOutputType.ToString())
-                : SelectedCategory.Path;
+                : newValue.Path;
         GetOutputs(path);
         lastOutputCategory = newValue;
     }
@@ -568,6 +568,12 @@ public partial class OutputsPageViewModel : PageViewModelBase
         if (!settingsManager.IsLibraryDirSet)
             return;
 
+        var imageLabInputsRoot = Path.Combine(settingsManager.ImagesDirectory, "ImageLab", "Inputs");
+        var imageLabInputsRootFull =
+            Path.GetFullPath(imageLabInputsRoot)
+                .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+            + Path.DirectorySeparatorChar;
+
         if (
             !Directory.Exists(directory)
             && (
@@ -605,6 +611,8 @@ public partial class OutputsPageViewModel : PageViewModelBase
                 .EnumerateFiles(directory, "*", EnumerationOptionConstants.AllDirectories)
                 .Where(file =>
                     allowedExtensions.Contains(new FilePath(file).Extension)
+                    && !Path.GetFullPath(file)
+                        .StartsWith(imageLabInputsRootFull, StringComparison.OrdinalIgnoreCase)
                     && new FilePath(file).Info.DirectoryName?.EndsWith(
                         "thumbnails",
                         StringComparison.OrdinalIgnoreCase

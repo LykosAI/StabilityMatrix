@@ -62,7 +62,7 @@ public class VideoThumbnailService(
             return null;
         }
 
-        var thumbnailsDir = Path.Combine(videoDir, ".sm-video-thumbs");
+        var thumbnailsDir = Path.Combine(videoDir, ".sm-thumbs");
         var thumbnailName = GetThumbnailName(videoPath);
         var thumbnailPath = Path.Combine(thumbnailsDir, thumbnailName);
 
@@ -121,7 +121,7 @@ public class VideoThumbnailService(
         }
 
         // Create thumbnails directory if needed (use distinct name to avoid WebUI conflicts)
-        var thumbnailsDir = Path.Combine(videoDir, ".sm-video-thumbs");
+        var thumbnailsDir = Path.Combine(videoDir, ".sm-thumbs");
         Directory.CreateDirectory(thumbnailsDir);
 
         // Generate a unique thumbnail name based on video filename and size

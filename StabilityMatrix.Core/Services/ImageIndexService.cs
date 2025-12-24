@@ -62,7 +62,7 @@ public class ImageIndexService : IImageIndexService
                 var files = searchDir
                     .EnumerateFiles("*", EnumerationOptionConstants.AllDirectories)
                     .Where(file => LocalImageFile.SupportedImageExtensions.Contains(file.Extension))
-                    .Where(file => !file.FullPath.Contains(".sm-video-thumbs")); // Exclude video thumbnail directories
+                    .Where(file => !file.FullPath.Contains(".sm-thumbs")); // Exclude video thumbnail directories
 
                 Parallel.ForEach(
                     files,

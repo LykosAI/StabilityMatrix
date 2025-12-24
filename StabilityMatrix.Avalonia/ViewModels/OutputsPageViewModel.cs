@@ -664,7 +664,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
                     )
                         is false
                     && new FilePath(file).Info.DirectoryName?.EndsWith(
-                        ".sm-video-thumbs",
+                        ".sm-thumbs",
                         StringComparison.OrdinalIgnoreCase
                     )
                         is false
@@ -766,7 +766,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
         {
             // Skip thumbnail directories
             var dirName = Path.GetFileName(dir);
-            if (dirName.Equals(".sm-video-thumbs", StringComparison.OrdinalIgnoreCase))
+            if (dirName.Equals(".sm-thumbs", StringComparison.OrdinalIgnoreCase))
             {
                 continue;
             }

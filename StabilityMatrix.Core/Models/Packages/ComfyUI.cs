@@ -867,7 +867,19 @@ public class ComfyUI(
 
     private ImmutableDictionary<string, string> GetEnvVars(ImmutableDictionary<string, string> env)
     {
-        // if we're not on windows or we don't have a windows rocm gpu, return original env
+        // Add FFmpeg to PATH if it's installed (optional - for video processing)
+        if (PrerequisiteHelper.IsFfmpegInstalled)
+        {
+            var ffmpegDir = Path.GetDirectoryName(PrerequisiteHelper.FfmpegPath);
+            if (!string.IsNullOrEmpty(ffmpegDir))
+            {
+                var currentPath =
+                    env.GetValueOrDefault("PATH") ?? Environment.GetEnvironmentVariable("PATH") ?? "";
+                env = env.SetItem("PATH", Compat.GetEnvPathWithExtensions(ffmpegDir, currentPath));
+            }
+        }
+
+        // if we're not on windows or we don't have a windows rocm gpu, return env as-is
         var hasRocmGpu =
             SettingsManager.Settings.PreferredGpu?.IsWindowsRocmSupportedGpu()
             ?? HardwareHelper.HasWindowsRocmSupportedGpu();

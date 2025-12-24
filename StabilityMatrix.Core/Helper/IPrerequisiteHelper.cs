@@ -23,6 +23,21 @@ public interface IPrerequisiteHelper
     string UvExePath { get; }
     bool IsUvInstalled { get; }
     DirectoryPath DotnetDir { get; }
+
+    /// <summary>
+    /// Path to ffmpeg executable.
+    /// </summary>
+    string FfmpegPath { get; }
+
+    /// <summary>
+    /// Whether ffmpeg is installed.
+    /// </summary>
+    bool IsFfmpegInstalled { get; }
+
+    /// <summary>
+    /// Install ffmpeg if not already installed.
+    /// </summary>
+    Task InstallFfmpegIfNecessary(IProgress<ProgressReport>? progress = null);
     Task UnpackResourcesIfNecessary(IProgress<ProgressReport>? progress = null);
     Task InstallGitIfNecessary(IProgress<ProgressReport>? progress = null);
     Task InstallPythonIfNecessary(IProgress<ProgressReport>? progress = null);

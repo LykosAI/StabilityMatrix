@@ -175,7 +175,8 @@ public partial class OutputsPageViewModel : PageViewModelBase
                     else
                     {
                         // Kick off async thumbnail generation
-                        _ = GenerateVideoThumbnailAsync(vm);
+                        GenerateVideoThumbnailAsync(vm)
+                            .SafeFireAndForget(ex => logger.LogError(ex, "Error generating video thumbnail"));
                     }
                 }
                 return vm;

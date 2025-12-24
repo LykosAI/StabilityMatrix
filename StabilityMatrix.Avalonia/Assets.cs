@@ -145,6 +145,7 @@ internal static class Assets
                     Url = new Uri(
                         "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-n7.1-latest-win64-lgpl-7.1.zip"
                     ),
+                    HashSha256 = "a77ecdc794d67401f3e4976f8856065f7762d74afd16f9c7b777ff0291a7bcaa",
                 }
             ),
             (
@@ -155,6 +156,7 @@ internal static class Assets
                     Url = new Uri(
                         "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-n7.1-latest-linux64-lgpl-7.1.tar.xz"
                     ),
+                    HashSha256 = "d7d691dfa3a6d0a75362c02274a80a1f9635bd67908561aae31ee538853ab8ce",
                 }
             ),
             (
@@ -163,6 +165,7 @@ internal static class Assets
                 {
                     // evermeet.cx build for macOS arm64
                     Url = new Uri("https://evermeet.cx/ffmpeg/ffmpeg-7.1.1.zip"),
+                    HashSha256 = "8d7917c1cebd7a29e68c0a0a6cc4ecc3fe05c7fffed958636c7018b319afdda4",
                 }
             )
         );

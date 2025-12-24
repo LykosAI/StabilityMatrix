@@ -105,7 +105,7 @@ internal static class Assets
                 new RemoteResource
                 {
                     Url = new Uri("https://www.python.org/ftp/python/3.10.11/python-3.10.11-embed-amd64.zip"),
-                    HashSha256 = "608619f8619075629c9c69f361352a0da6ed7e62f83a0e19c63e0ea32eb7629d"
+                    HashSha256 = "608619f8619075629c9c69f361352a0da6ed7e62f83a0e19c63e0ea32eb7629d",
                 }
             ),
             (
@@ -115,7 +115,7 @@ internal static class Assets
                     Url = new Uri(
                         "https://github.com/indygreg/python-build-standalone/releases/download/20230507/cpython-3.10.11+20230507-x86_64-unknown-linux-gnu-install_only.tar.gz"
                     ),
-                    HashSha256 = "c5bcaac91bc80bfc29cf510669ecad12d506035ecb3ad85ef213416d54aecd79"
+                    HashSha256 = "c5bcaac91bc80bfc29cf510669ecad12d506035ecb3ad85ef213416d54aecd79",
                 }
             ),
             (
@@ -124,7 +124,45 @@ internal static class Assets
                 {
                     // Requires our distribution with signed dylib for gatekeeper
                     Url = new Uri("https://cdn.lykos.ai/cpython-3.10.11-macos-arm64.zip"),
-                    HashSha256 = "83c00486e0af9c460604a425e519d58e4b9604fbe7a4448efda0f648f86fb6e3"
+                    HashSha256 = "83c00486e0af9c460604a425e519d58e4b9604fbe7a4448efda0f648f86fb6e3",
+                }
+            )
+        );
+
+    /// <summary>
+    /// FFmpeg LGPL builds for video thumbnail generation.
+    /// </summary>
+    [SupportedOSPlatform("windows")]
+    [SupportedOSPlatform("linux")]
+    [SupportedOSPlatform("macos")]
+    public static RemoteResource FfmpegDownloadUrl =>
+        Compat.Switch(
+            (
+                PlatformKind.Windows | PlatformKind.X64,
+                new RemoteResource
+                {
+                    // BtbN LGPL build - ffmpeg-n7.1-latest-win64-lgpl-7.1
+                    Url = new Uri(
+                        "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-n7.1-latest-win64-lgpl-7.1.zip"
+                    ),
+                }
+            ),
+            (
+                PlatformKind.Linux | PlatformKind.X64,
+                new RemoteResource
+                {
+                    // BtbN LGPL build - linux
+                    Url = new Uri(
+                        "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-n7.1-latest-linux64-lgpl-7.1.tar.xz"
+                    ),
+                }
+            ),
+            (
+                PlatformKind.MacOS | PlatformKind.Arm,
+                new RemoteResource
+                {
+                    // evermeet.cx build for macOS arm64
+                    Url = new Uri("https://evermeet.cx/ffmpeg/ffmpeg-7.1.1.zip"),
                 }
             )
         );
@@ -135,18 +173,18 @@ internal static class Assets
             new RemoteResource
             {
                 Url = new Uri("https://cdn.lykos.ai/tags/danbooru.csv"),
-                HashSha256 = "b84a879f1d9c47bf4758d66542598faa565b1571122ae12e7b145da8e7a4c1c6"
+                HashSha256 = "b84a879f1d9c47bf4758d66542598faa565b1571122ae12e7b145da8e7a4c1c6",
             },
             new RemoteResource
             {
                 Url = new Uri("https://cdn.lykos.ai/tags/e621.csv"),
-                HashSha256 = "ef7ea148ad865ad936d0c1ee57f0f83de723b43056c70b07fd67dbdbb89cae35"
+                HashSha256 = "ef7ea148ad865ad936d0c1ee57f0f83de723b43056c70b07fd67dbdbb89cae35",
             },
             new RemoteResource
             {
                 Url = new Uri("https://cdn.lykos.ai/tags/danbooru_e621_merged.csv"),
-                HashSha256 = "ac405ebce8b0caae363a7ef91f89beb4b8f60a7e218deb5078833686da6d497d"
-            }
+                HashSha256 = "ac405ebce8b0caae363a7ef91f89beb4b8f60a7e218deb5078833686da6d497d",
+            },
         };
 
     public static Uri DiscordServerUrl { get; } = new("https://discord.com/invite/TUrgfECxHz");

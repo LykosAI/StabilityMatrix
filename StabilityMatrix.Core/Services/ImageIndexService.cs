@@ -27,7 +27,7 @@ public class ImageIndexService : IImageIndexService
 
         InferenceImages = new IndexCollection<LocalImageFile, string>(this, file => file.AbsolutePath)
         {
-            RelativePath = "Inference"
+            RelativePath = "Inference",
         };
 
         EventManager.Instance.ImageFileAdded += OnImageFileAdded;
@@ -61,7 +61,8 @@ public class ImageIndexService : IImageIndexService
             {
                 var files = searchDir
                     .EnumerateFiles("*", EnumerationOptionConstants.AllDirectories)
-                    .Where(file => LocalImageFile.SupportedImageExtensions.Contains(file.Extension));
+                    .Where(file => LocalImageFile.SupportedImageExtensions.Contains(file.Extension))
+                    .Where(file => !file.FullPath.Contains(".sm-video-thumbs")); // Exclude video thumbnail directories
 
                 Parallel.ForEach(
                     files,

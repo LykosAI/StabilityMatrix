@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Updated to cu130 torch index for ComfyUI installs with Nvidia GPUs
 - Consolidated and fixed AMD GPU architecture detection
 - Updated SageAttention installer to latest v2.2.0-windows.post4 version
+- Video files can now be opened directly from the Output browser
 - Videos will now appear with thumbnails in the Output browser
 ### Fixed
 - Fixed [#1450](https://github.com/LykosAI/StabilityMatrix/issues/1450) - Older SD.Next not launching due to forced `--uv` argument

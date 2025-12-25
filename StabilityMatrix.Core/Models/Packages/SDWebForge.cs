@@ -177,16 +177,13 @@ public class SDWebForge(
 
         var isAmd = torchIndex is TorchIndex.Rocm;
 
-        // Use latest PyTorch for Blackwell and AMD ROCm, otherwise use 2.3.1
-        var useLatestPyTorch = isBlackwell || isAmd;
-
         var config = new PipInstallConfig
         {
             PrePipInstallArgs = ["joblib"],
             RequirementsFilePaths = requirementsPaths,
-            TorchVersion = useLatestPyTorch ? "" : "==2.3.1",
-            TorchvisionVersion = useLatestPyTorch ? "" : "==0.18.1",
-            CudaIndex = isBlackwell ? "cu128" : "cu121",
+            TorchVersion = "",
+            TorchvisionVersion = "",
+            CudaIndex = isBlackwell ? "cu128" : "cu126",
             RocmIndex = "rocm6.4",
             ExtraPipArgs =
             [

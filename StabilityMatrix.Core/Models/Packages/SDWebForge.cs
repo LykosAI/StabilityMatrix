@@ -175,14 +175,16 @@ public class SDWebForge(
             torchIndex is TorchIndex.Cuda
             && (SettingsManager.Settings.PreferredGpu?.IsBlackwellGpu() ?? HardwareHelper.HasBlackwellGpu());
 
+        var isAmd = torchIndex is TorchIndex.Rocm;
+
         var config = new PipInstallConfig
         {
             PrePipInstallArgs = ["joblib"],
             RequirementsFilePaths = requirementsPaths,
-            TorchVersion = isBlackwell ? "" : "==2.3.1",
-            TorchvisionVersion = isBlackwell ? "" : "==0.18.1",
-            CudaIndex = isBlackwell ? "cu128" : "cu121",
-            RocmIndex = "rocm5.7",
+            TorchVersion = "",
+            TorchvisionVersion = "",
+            CudaIndex = isBlackwell ? "cu128" : "cu126",
+            RocmIndex = "rocm6.4",
             ExtraPipArgs =
             [
                 "https://github.com/openai/CLIP/archive/d50d76daa670286dd6cacf3bcd80b5e4823fc8e1.zip",

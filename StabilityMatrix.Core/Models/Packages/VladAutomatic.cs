@@ -206,6 +206,13 @@ public class VladAutomatic(
             },
             new()
             {
+                Name = "Use uv",
+                Type = LaunchOptionType.Bool,
+                InitialValue = true,
+                Options = ["--uv"],
+            },
+            new()
+            {
                 Name = "VRAM",
                 Type = LaunchOptionType.Bool,
                 InitialValue = HardwareHelper.IterGpuInfo().Select(gpu => gpu.MemoryLevel).Max() switch
@@ -384,7 +391,7 @@ public class VladAutomatic(
         }
 
         VenvRunner.RunDetached(
-            [Path.Combine(installLocation, options.Command ?? LaunchCommand), "--uv", .. options.Arguments],
+            [Path.Combine(installLocation, options.Command ?? LaunchCommand), .. options.Arguments],
             HandleConsoleOutput,
             OnExit
         );

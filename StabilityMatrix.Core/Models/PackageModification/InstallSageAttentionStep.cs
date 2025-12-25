@@ -52,52 +52,72 @@ public class InstallSageAttentionStep(
 
         var torchInfo = await venvRunner.PipShow("torch").ConfigureAwait(false);
         var sageWheelUrl = string.Empty;
-        var shortPythonVersionString = pyVersion.Minor switch
-        {
-            10 => "cp310",
-            11 => "cp311",
-            12 => "cp312",
-            _ => throw new ArgumentOutOfRangeException("Invalid Python version"),
-        };
 
-        if (torchInfo == null)
+        if (torchInfo != null)
         {
-            sageWheelUrl = string.Empty;
-        }
-        else if (torchInfo.Version.Contains("2.5.1") && torchInfo.Version.Contains("cu124"))
-        {
-            sageWheelUrl =
-                "https://github.com/woct0rdho/SageAttention/releases/download/v2.2.0-windows.post3/sageattention-2.2.0+cu124torch2.5.1.post3-cp39-abi3-win_amd64.whl";
-        }
-        else if (torchInfo.Version.Contains("2.6.0") && torchInfo.Version.Contains("cu126"))
-        {
-            sageWheelUrl =
-                "https://github.com/woct0rdho/SageAttention/releases/download/v2.2.0-windows.post3/sageattention-2.2.0+cu126torch2.6.0.post3-cp39-abi3-win_amd64.whl";
-        }
-        else if (torchInfo.Version.Contains("2.7.0") && torchInfo.Version.Contains("cu128"))
-        {
-            sageWheelUrl =
-                $"https://github.com/woct0rdho/SageAttention/releases/download/v2.1.1-windows/sageattention-2.1.1+cu128torch2.7.0-{shortPythonVersionString}-{shortPythonVersionString}-win_amd64.whl";
-        }
-        else if (torchInfo.Version.Contains("2.7.1") && torchInfo.Version.Contains("cu128"))
-        {
-            sageWheelUrl =
-                "https://github.com/woct0rdho/SageAttention/releases/download/v2.2.0-windows.post3/sageattention-2.2.0+cu128torch2.7.1.post3-cp39-abi3-win_amd64.whl";
-        }
-        else if (torchInfo.Version.Contains("2.8.0") && torchInfo.Version.Contains("cu128"))
-        {
-            sageWheelUrl =
-                "https://github.com/woct0rdho/SageAttention/releases/download/v2.2.0-windows.post3/sageattention-2.2.0+cu128torch2.8.0.post3-cp39-abi3-win_amd64.whl";
-        }
-        else if (torchInfo.Version.Contains("2.9.0") && torchInfo.Version.Contains("cu128"))
-        {
-            sageWheelUrl =
-                "https://github.com/woct0rdho/SageAttention/releases/download/v2.2.0-windows.post3/sageattention-2.2.0+cu128torch2.9.0.post3-cp39-abi3-win_amd64.whl";
-        }
-        else if (torchInfo.Version.Contains("2.9.0") && torchInfo.Version.Contains("cu130"))
-        {
-            sageWheelUrl =
-                "https://github.com/woct0rdho/SageAttention/releases/download/v2.2.0-windows.post3/sageattention-2.2.0+cu130torch2.9.0.post3-cp39-abi3-win_amd64.whl";
+            // Extract base version (before +) and CUDA index
+            var versionString = torchInfo.Version;
+            var plusIndex = versionString.IndexOf('+');
+            var baseVersionString = plusIndex >= 0 ? versionString[..plusIndex] : versionString;
+            var cudaIndex = plusIndex >= 0 ? versionString[(plusIndex + 1)..] : string.Empty;
+
+            // Try to parse base version for comparison
+            if (Version.TryParse(baseVersionString, out var torchVersion))
+            {
+                var minVersion = new Version(2, 9, 0);
+
+                // New wheels work for torch >= 2.9.0 with cu128 or cu130
+                if (torchVersion >= minVersion)
+                {
+                    if (cudaIndex.Contains("cu128"))
+                    {
+                        sageWheelUrl =
+                            "https://github.com/woct0rdho/SageAttention/releases/download/v2.2.0-windows.post4/sageattention-2.2.0+cu128torch2.9.0andhigher.post4-cp39-abi3-win_amd64.whl";
+                    }
+                    else if (cudaIndex.Contains("cu130"))
+                    {
+                        sageWheelUrl =
+                            "https://github.com/woct0rdho/SageAttention/releases/download/v2.2.0-windows.post4/sageattention-2.2.0+cu130torch2.9.0andhigher.post4-cp39-abi3-win_amd64.whl";
+                    }
+                }
+                else
+                {
+                    // Fallback to old wheels for torch < 2.9.0
+                    var shortPythonVersionString = pyVersion.Minor switch
+                    {
+                        10 => "cp310",
+                        11 => "cp311",
+                        12 => "cp312",
+                        _ => throw new ArgumentOutOfRangeException("Invalid Python version"),
+                    };
+
+                    if (versionString.Contains("2.5.1") && versionString.Contains("cu124"))
+                    {
+                        sageWheelUrl =
+                            "https://github.com/woct0rdho/SageAttention/releases/download/v2.2.0-windows.post3/sageattention-2.2.0+cu124torch2.5.1.post3-cp39-abi3-win_amd64.whl";
+                    }
+                    else if (versionString.Contains("2.6.0") && versionString.Contains("cu126"))
+                    {
+                        sageWheelUrl =
+                            "https://github.com/woct0rdho/SageAttention/releases/download/v2.2.0-windows.post3/sageattention-2.2.0+cu126torch2.6.0.post3-cp39-abi3-win_amd64.whl";
+                    }
+                    else if (versionString.Contains("2.7.0") && versionString.Contains("cu128"))
+                    {
+                        sageWheelUrl =
+                            $"https://github.com/woct0rdho/SageAttention/releases/download/v2.1.1-windows/sageattention-2.1.1+cu128torch2.7.0-{shortPythonVersionString}-{shortPythonVersionString}-win_amd64.whl";
+                    }
+                    else if (versionString.Contains("2.7.1") && versionString.Contains("cu128"))
+                    {
+                        sageWheelUrl =
+                            "https://github.com/woct0rdho/SageAttention/releases/download/v2.2.0-windows.post3/sageattention-2.2.0+cu128torch2.7.1.post3-cp39-abi3-win_amd64.whl";
+                    }
+                    else if (versionString.Contains("2.8.0") && versionString.Contains("cu128"))
+                    {
+                        sageWheelUrl =
+                            "https://github.com/woct0rdho/SageAttention/releases/download/v2.2.0-windows.post3/sageattention-2.2.0+cu128torch2.8.0.post3-cp39-abi3-win_amd64.whl";
+                    }
+                }
+            }
         }
 
         var pipArgs = new PipInstallArgs("triton-windows");

@@ -6,7 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
 ## v2.15.5
+### Added
 - Added new package - [Wan2GP](https://github.com/deepbeepmeep/Wan2GP)
+- Added [Stable Diffusion WebUI Forge - Neo](https://github.com/Haoming02/sd-webui-forge-classic/tree/neo) as a separate package for convenience
+- Added Tiled VAE decoding as an Inference addon thanks to @NeuralFault!
+- Added togglable `--uv` argument to the SD.Next launch options
+### Changed
+- Moved the original Stable Diffusion WebUI Forge to the "Legacy" packages tab due to inactivity
+- Updated to cu130 torch index for ComfyUI installs with Nvidia GPUs
+- Consolidated and fixed AMD GPU architecture detection
+- Updated SageAttention installer to latest v2.2.0-windows.post4 version
+### Fixed
+- Fixed [#1450](https://github.com/LykosAI/StabilityMatrix/issues/1450) - Older SD.Next not launching due to forced `--uv` argument
+- Fixed duplicate custom node installations when installing workflows from the Workflow Browser - thanks again to @NeuralFault!
 
 ## v2.15.4
 ### Changed

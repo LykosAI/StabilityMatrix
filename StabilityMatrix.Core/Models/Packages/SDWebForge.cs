@@ -170,30 +170,30 @@ public class SDWebForge(
             );
         }
 
-var torchIndex = options.PythonOptions.TorchIndex ??  GetRecommendedTorchVersion();
-var isBlackwell =
-    torchIndex is TorchIndex.Cuda
-    && (SettingsManager.Settings.PreferredGpu?. IsBlackwellGpu() ??  HardwareHelper.HasBlackwellGpu());
+        var torchIndex = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
+        var isBlackwell =
+            torchIndex is TorchIndex.Cuda
+            && (SettingsManager.Settings.PreferredGpu?.IsBlackwellGpu() ?? HardwareHelper.HasBlackwellGpu());
 
-var isAmd = torchIndex is TorchIndex.Rocm;
+        var isAmd = torchIndex is TorchIndex.Rocm;
 
-// Use latest PyTorch for Blackwell and AMD ROCm, otherwise use 2.3.1
-var useLatestPyTorch = isBlackwell || isAmd;
+        // Use latest PyTorch for Blackwell and AMD ROCm, otherwise use 2.3.1
+        var useLatestPyTorch = isBlackwell || isAmd;
 
-var config = new PipInstallConfig
-{
-    PrePipInstallArgs = ["joblib"],
-    RequirementsFilePaths = requirementsPaths,
-    TorchVersion = useLatestPyTorch ? "" : "==2.3.1",
-    TorchvisionVersion = useLatestPyTorch ? "" : "==0.18.1",
-    CudaIndex = isBlackwell ? "cu128" : "cu121",
-    RocmIndex = "rocm6.4",
-    ExtraPipArgs =
-    [
-        "https://github.com/openai/CLIP/archive/d50d76daa670286dd6cacf3bcd80b5e4823fc8e1.zip",
-    ],
-    PostInstallPipArgs = ["numpy==1.26.4"],
-};
+        var config = new PipInstallConfig
+        {
+            PrePipInstallArgs = ["joblib"],
+            RequirementsFilePaths = requirementsPaths,
+            TorchVersion = useLatestPyTorch ? "" : "==2.3.1",
+            TorchvisionVersion = useLatestPyTorch ? "" : "==0.18.1",
+            CudaIndex = isBlackwell ? "cu128" : "cu121",
+            RocmIndex = "rocm6.4",
+            ExtraPipArgs =
+            [
+                "https://github.com/openai/CLIP/archive/d50d76daa670286dd6cacf3bcd80b5e4823fc8e1.zip",
+            ],
+            PostInstallPipArgs = ["numpy==1.26.4"],
+        };
 
         await StandardPipInstallProcessAsync(
                 venvRunner,

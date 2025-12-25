@@ -19,6 +19,10 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Fixed
 - Fixed [#1450](https://github.com/LykosAI/StabilityMatrix/issues/1450) - Older SD.Next not launching due to forced `--uv` argument
 - Fixed duplicate custom node installations when installing workflows from the Workflow Browser - thanks again to @NeuralFault!
+#### 🌟 Visionaries
+To our incredible Visionaries: **Waterclouds**, **JungleDragon**, **bluepopsicle**, **Bob S**, and **whudunit**! Your generosity drives this project forward and helps us turn ideas into reality. Thank you for being such a vital part of Stability Matrix!
+#### 🚀 Pioneers
+A massive thank you to our Pioneer crew! Your support keeps the lights on and the updates flowing. Shoutout to: **Szir777**, **Noah M**, **[USA]TechDude**, **Thom**, **SeraphOfSalem**, **Desert Viber**, **Adam**, **Droolguy**, **ACTUALLY_the_Real_Willem_Dafoe**, **takyamtom**, **robek**, **Phil R**, **Tundra Everquill**, **TheTekknician**, and a warm welcome to our new Pioneers, **Benjamin M** and **Ghislain G**!
 
 ## v2.15.4
 ### Changed

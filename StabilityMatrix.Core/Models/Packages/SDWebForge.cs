@@ -182,7 +182,7 @@ public class SDWebForge(
             TorchVersion = isBlackwell ? "" : "==2.3.1",
             TorchvisionVersion = isBlackwell ? "" : "==0.18.1",
             CudaIndex = isBlackwell ? "cu128" : "cu121",
-            RocmIndex = "rocm5.7",
+            RocmIndex = "rocm6.4",
             ExtraPipArgs =
             [
                 "https://github.com/openai/CLIP/archive/d50d76daa670286dd6cacf3bcd80b5e4823fc8e1.zip",

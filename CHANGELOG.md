@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Updated to cu130 torch index for ComfyUI installs with Nvidia GPUs
 - Consolidated and fixed AMD GPU architecture detection
 - Updated SageAttention installer to latest v2.2.0-windows.post4 version
+- Updated torch index for Forge-based UIs to rocm6.4 / cu128 depending on GPU - thanks to @NeuralFault!
 ### Fixed
 - Fixed [#1450](https://github.com/LykosAI/StabilityMatrix/issues/1450) - Older SD.Next not launching due to forced `--uv` argument
 - Fixed duplicate custom node installations when installing workflows from the Workflow Browser - thanks again to @NeuralFault!

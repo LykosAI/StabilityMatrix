@@ -850,7 +850,7 @@ public abstract class BaseGitPackage : BasePackage
         string torchvisionVersion = "",
         string torchaudioVersion = "",
         string xformersVersion = "",
-        string cudaIndex = "cu128",
+        string cudaIndex = "cu130",
         string rocmIndex = "rocm6.4"
     )
     {

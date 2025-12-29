@@ -602,6 +602,7 @@ public partial class PackageCardViewModel(
 
             viewModel.SelectedBasePackage = basePackage;
             viewModel.CanSelectBasePackage = false;
+            viewModel.ShowPythonVersionSelection = false;
             viewModel.IsReleaseMode = Package.Version?.IsReleaseMode ?? false;
 
             var dialog = new TaskDialog

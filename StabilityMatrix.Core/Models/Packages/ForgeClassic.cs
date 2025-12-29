@@ -36,6 +36,7 @@ public class ForgeClassic(
     public override IEnumerable<TorchIndex> AvailableTorchIndices => [TorchIndex.Cuda];
     public override bool IsCompatible => HardwareHelper.HasNvidiaGpu();
     public override PyVersion RecommendedPythonVersion => Python.PyInstallationManager.Python_3_11_13;
+    public override PackageType PackageType => PackageType.SdInference;
 
     public override List<LaunchOptionDefinition> LaunchOptions =>
         [
@@ -169,13 +170,15 @@ public class ForgeClassic(
         var config = new PipInstallConfig
         {
             RequirementsFilePaths = requirementsPaths,
-            TorchaudioVersion = " ", // Request torchaudio installation
+            TorchVersion = "<2.9.0",
+            TorchvisionVersion = "<0.24.0",
             CudaIndex = isLegacyNvidia ? "cu126" : "cu128",
             UpgradePackages = true,
             ExtraPipArgs =
             [
                 "https://github.com/openai/CLIP/archive/d50d76daa670286dd6cacf3bcd80b5e4823fc8e1.zip",
             ],
+            PostInstallPipArgs = ["numpy==1.26.4"],
         };
 
         await StandardPipInstallProcessAsync(

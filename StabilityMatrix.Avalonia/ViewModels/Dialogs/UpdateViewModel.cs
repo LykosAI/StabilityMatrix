@@ -162,6 +162,51 @@ public partial class UpdateViewModel : ContentDialogViewModelBase
             );
         }
 
+        // Handle Linux AppImage update
+        if (Compat.IsLinux && Environment.GetEnvironmentVariable("APPIMAGE") is { } appImage)
+        {
+            var updateScriptPath = UpdateHelper.UpdateFolder.JoinFile("update_script.sh").FullPath;
+            var newAppImage = UpdateHelper.ExecutablePath.FullPath;
+
+            var scriptContent = $"""
+#!/bin/bash
+PID={Environment.ProcessId}
+NEW_APPIMAGE="{newAppImage.Replace("\"", "\\\"")}"
+OLD_APPIMAGE="{appImage.Replace("\"", "\\\"")}"
+
+# Wait for the process to exit
+while kill -0 "$PID" 2>/dev/null; do
+    sleep 0.5
+done
+
+# Move the new AppImage over the old one
+mv -f "$NEW_APPIMAGE" "$OLD_APPIMAGE"
+chmod +x "$OLD_APPIMAGE"
+
+# Launch the new AppImage
+"$OLD_APPIMAGE" &
+""";
+            await File.WriteAllTextAsync(updateScriptPath, scriptContent);
+
+            File.SetUnixFileMode(
+                updateScriptPath,
+                UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute
+            );
+
+            System.Diagnostics.Process.Start(
+                new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = "/bin/bash",
+                    Arguments = updateScriptPath,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                }
+            );
+
+            App.Shutdown();
+            return;
+        }
+
         // Set current version for update messages
         settingsManager.Transaction(
             s => s.UpdatingFromVersion = Compat.AppVersion,

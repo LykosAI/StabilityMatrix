@@ -165,10 +165,12 @@ public partial class UpdateViewModel : ContentDialogViewModelBase
         // Handle Linux AppImage update
         if (Compat.IsLinux && Environment.GetEnvironmentVariable("APPIMAGE") is { } appImage)
         {
-            var updateScriptPath = UpdateHelper.UpdateFolder.JoinFile("update_script.sh").FullPath;
-            var newAppImage = UpdateHelper.ExecutablePath.FullPath;
+            try
+            {
+                var updateScriptPath = UpdateHelper.UpdateFolder.JoinFile("update_script.sh").FullPath;
+                var newAppImage = UpdateHelper.ExecutablePath.FullPath;
 
-            var scriptContent = $"""
+                var scriptContent = $"""
 #!/bin/bash
 PID={Environment.ProcessId}
 NEW_APPIMAGE="{newAppImage.Replace("\"", "\\\"")}"
@@ -183,28 +185,41 @@ done
 mv -f "$NEW_APPIMAGE" "$OLD_APPIMAGE"
 chmod +x "$OLD_APPIMAGE"
 
-# Launch the new AppImage
-"$OLD_APPIMAGE" &
+# Launch the new AppImage detached
+"$OLD_APPIMAGE" > /dev/null 2>&1 &
+disown
 """;
-            await File.WriteAllTextAsync(updateScriptPath, scriptContent);
+                await File.WriteAllTextAsync(updateScriptPath, scriptContent);
 
-            File.SetUnixFileMode(
-                updateScriptPath,
-                UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute
-            );
+                File.SetUnixFileMode(
+                    updateScriptPath,
+                    UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute
+                );
 
-            System.Diagnostics.Process.Start(
-                new System.Diagnostics.ProcessStartInfo
-                {
-                    FileName = "/bin/bash",
-                    Arguments = updateScriptPath,
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                }
-            );
+                System.Diagnostics.Process.Start(
+                    new System.Diagnostics.ProcessStartInfo
+                    {
+                        FileName = "/usr/bin/env",
+                        Arguments = $"bash \"{updateScriptPath}\"",
+                        UseShellExecute = false,
+                        CreateNoWindow = true,
+                    }
+                );
 
-            App.Shutdown();
-            return;
+                App.Shutdown();
+                return;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Failed to execute AppImage update script");
+
+                var dialog = DialogHelper.CreateMarkdownDialog(
+                    "AppImage update script failed. \nCould not replace old AppImage with new version. Please check directory permissions. \nFalling back to standard update process. User intervention required: After program closes, \nplease move the new AppImage extracted in the '.StabilityMatrixUpdate' hidden directory to the old AppImage overwriting it. \n\nClose this dialog to continue with standard update process.",
+                    Resources.Label_UnexpectedErrorOccurred
+                );
+
+                await dialog.ShowAsync();
+            }
         }
 
         // Set current version for update messages

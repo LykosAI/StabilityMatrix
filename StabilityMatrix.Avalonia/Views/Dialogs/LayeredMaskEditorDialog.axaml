@@ -1,0 +1,280 @@
+﻿<controls:UserControlBase
+    x:Class="StabilityMatrix.Avalonia.Views.Dialogs.LayeredMaskEditorDialog"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:fluentIcons="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
+    xmlns:inference="clr-namespace:StabilityMatrix.Avalonia.Models.Inference"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
+    xmlns:ui="using:FluentAvalonia.UI.Controls"
+    xmlns:vmDialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
+    d:DataContext="{x:Static mocks:DesignData.LayeredMaskEditorViewModel}"
+    d:DesignHeight="1200"
+    d:DesignWidth="1200"
+    x:DataType="vmDialogs:LayeredMaskEditorViewModel"
+    mc:Ignorable="d">
+
+    <sg:SpacedGrid
+        Margin="0,8"
+        ColumnDefinitions="*,420"
+        ColumnSpacing="12"
+        RowDefinitions="Auto,*">
+
+        <!--  Top toolbar spanning both columns  -->
+        <controls:Card Grid.ColumnSpan="2" Padding="12,8">
+            <Grid ColumnDefinitions="Auto,*,Auto">
+                <!--  Left: Layer add/remove buttons  -->
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Button
+                        Classes="transparent"
+                        Command="{Binding AddLayerCommand}"
+                        ToolTip.Tip="Add Layer">
+                        <fluentIcons:SymbolIcon FontSize="18" Symbol="Add" />
+                    </Button>
+                    <Button
+                        Classes="transparent"
+                        Command="{Binding DeleteLayerCommand}"
+                        ToolTip.Tip="Delete Layer">
+                        <fluentIcons:SymbolIcon FontSize="18" Symbol="Delete" />
+                    </Button>
+                    <Rectangle
+                        Width="1"
+                        Margin="4,4"
+                        VerticalAlignment="Stretch"
+                        Fill="{DynamicResource DividerStrokeColorDefaultBrush}" />
+                    <Button
+                        Classes="transparent"
+                        Command="{Binding MoveLayerUpCommand}"
+                        ToolTip.Tip="Move Layer Up">
+                        <fluentIcons:SymbolIcon FontSize="18" Symbol="ArrowUp" />
+                    </Button>
+                    <Button
+                        Classes="transparent"
+                        Command="{Binding MoveLayerDownCommand}"
+                        ToolTip.Tip="Move Layer Down">
+                        <fluentIcons:SymbolIcon FontSize="18" Symbol="ArrowDown" />
+                    </Button>
+                </StackPanel>
+
+                <!--  Center: Info  -->
+                <TextBlock
+                    Grid.Column="1"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                    Text="{Binding Layers.Count, StringFormat='Total Layers: {0}'}" />
+
+                <!--  Right: Canvas size  -->
+                <StackPanel
+                    Grid.Column="2"
+                    Orientation="Horizontal"
+                    Spacing="8">
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                        Text="{Binding CanvasSize, StringFormat='{}{0}'}" />
+                </StackPanel>
+            </Grid>
+        </controls:Card>
+
+        <!--  Paint Canvas (left side)  -->
+        <controls:Card
+            Grid.Row="1"
+            Grid.Column="0"
+            Margin="0,16,0,0"
+            Padding="8,4,8,8"
+            VerticalAlignment="Top">
+            <controls:PaintCanvas DataContext="{Binding PaintCanvasViewModel, Mode=OneWay}" />
+        </controls:Card>
+
+        <!--  Layer Panel (right side)  -->
+        <controls:Card
+            Grid.Row="1"
+            Grid.Column="1"
+            Margin="0,16,0,0"
+            Padding="8"
+            VerticalAlignment="Top">
+            <Grid RowDefinitions="Auto,*">
+                <TextBlock
+                    Margin="4,0,0,8"
+                    FontSize="12"
+                    FontWeight="SemiBold"
+                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                    Text="LAYERS" />
+
+                <!--  Layer list - using ListBox for proper selection  -->
+                <ListBox
+                    x:Name="LayerItemsControl"
+                    Grid.Row="1"
+                    VerticalAlignment="Top"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    ItemsSource="{Binding Layers}"
+                    SelectedItem="{Binding SelectedLayer}"
+                    SelectionMode="AlwaysSelected">
+                    <ListBox.Styles>
+                        <Style Selector="ListBoxItem">
+                            <Setter Property="Padding" Value="0" />
+                            <Setter Property="Margin" Value="0,4" />
+                            <Setter Property="Background" Value="Transparent" />
+                        </Style>
+                        <!--  Selection Highlight for the Border inside ListBoxItem  -->
+                        <Style Selector="ListBoxItem:selected Border#LayerItemBorder">
+                            <Setter Property="BorderBrush" Value="{DynamicResource AccentFillColorDefaultBrush}" />
+                            <Setter Property="BorderThickness" Value="2" />
+                        </Style>
+                    </ListBox.Styles>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate DataType="inference:MaskLayer">
+                            <Border
+                                x:Name="LayerItemBorder"
+                                Padding="10"
+                                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                                BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                                BorderThickness="1"
+                                CornerRadius="6">
+                                <Border.Styles>
+                                    <Style Selector="Border:pointerover">
+                                        <Setter Property="Background" Value="{DynamicResource CardBackgroundFillColorSecondaryBrush}" />
+                                    </Style>
+                                </Border.Styles>
+
+                                <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="8">
+                                    <!--  Row 0: Header with all controls  -->
+                                    <Grid Grid.Row="0" ColumnDefinitions="Auto,Auto,*,Auto,Auto">
+                                        <!--  Reordering  -->
+                                        <StackPanel
+                                            Grid.Column="0"
+                                            Margin="0,0,8,0"
+                                            Orientation="Horizontal"
+                                            Spacing="0">
+                                            <Button
+                                                Padding="4"
+                                                Classes="transparent"
+                                                Command="{Binding $parent[ListBox].((vmDialogs:LayeredMaskEditorViewModel)DataContext).MoveLayerUpCommand}"
+                                                CommandParameter="{Binding .}"
+                                                ToolTip.Tip="Move layer up">
+                                                <fluentIcons:SymbolIcon FontSize="16" Symbol="ArrowUp" />
+                                            </Button>
+                                            <Button
+                                                Padding="4"
+                                                Classes="transparent"
+                                                Command="{Binding $parent[ListBox].((vmDialogs:LayeredMaskEditorViewModel)DataContext).MoveLayerDownCommand}"
+                                                CommandParameter="{Binding .}"
+                                                ToolTip.Tip="Move layer down">
+                                                <fluentIcons:SymbolIcon FontSize="16" Symbol="ArrowDown" />
+                                            </Button>
+                                        </StackPanel>
+
+                                        <!--  Visibility & Enable  -->
+                                        <StackPanel
+                                            Grid.Column="1"
+                                            Margin="0,0,8,0"
+                                            Orientation="Horizontal"
+                                            Spacing="4">
+                                            <ToggleButton
+                                                Padding="4"
+                                                Classes="transparent"
+                                                IsChecked="{Binding IsVisible}"
+                                                ToolTip.Tip="Toggle visibility">
+                                                <Panel>
+                                                    <fluentIcons:SymbolIcon
+                                                        FontSize="18"
+                                                        IsVisible="{Binding IsVisible}"
+                                                        Symbol="Eye" />
+                                                    <fluentIcons:SymbolIcon
+                                                        FontSize="18"
+                                                        IsVisible="{Binding !IsVisible}"
+                                                        Symbol="EyeOff" />
+                                                </Panel>
+                                            </ToggleButton>
+                                            <CheckBox
+                                                Margin="4,0,0,0"
+                                                IsChecked="{Binding IsEnabled}"
+                                                ToolTip.Tip="Enable for generation" />
+                                        </StackPanel>
+
+                                        <!--  Name  -->
+                                        <TextBox
+                                            Grid.Column="2"
+                                            MinHeight="0"
+                                            Padding="8,4"
+                                            VerticalAlignment="Center"
+                                            Text="{Binding Name}"
+                                            Watermark="Layer name" />
+
+                                        <!--  Color  -->
+                                        <Border
+                                            Grid.Column="3"
+                                            Width="20"
+                                            Height="20"
+                                            Margin="8,0"
+                                            VerticalAlignment="Center"
+                                            Background="{Binding DisplayColorHex}"
+                                            CornerRadius="10"
+                                            ToolTip.Tip="Layer color marker" />
+
+                                        <!--  Editing Badge  -->
+                                        <Border
+                                            Grid.Column="4"
+                                            Padding="6,2"
+                                            VerticalAlignment="Center"
+                                            Background="{DynamicResource AccentFillColorDefaultBrush}"
+                                            CornerRadius="4"
+                                            IsVisible="{Binding $parent[ListBoxItem].IsSelected}">
+                                            <TextBlock FontSize="12" Text="✏️" />
+                                        </Border>
+                                    </Grid>
+
+                                    <!--  Row 1: Prompt  -->
+                                    <TextBox
+                                        Grid.Row="1"
+                                        MinHeight="60"
+                                        MaxHeight="120"
+                                        AcceptsReturn="True"
+                                        Text="{Binding Prompt}"
+                                        TextWrapping="Wrap"
+                                        Watermark="Enter prompt for this layer..." />
+
+                                    <!--  Row 2: Strength + Opacity  -->
+                                    <sg:SpacedGrid
+                                        Grid.Row="2"
+                                        ColumnDefinitions="*,*"
+                                        ColumnSpacing="12">
+                                        <StackPanel Spacing="2">
+                                            <TextBlock
+                                                FontSize="11"
+                                                Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                                Text="Strength" />
+                                            <ui:NumberBox
+                                                Maximum="10"
+                                                Minimum="0"
+                                                SmallChange="0.1"
+                                                SpinButtonPlacementMode="Compact"
+                                                Value="{Binding Strength}" />
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="1" Spacing="2">
+                                            <TextBlock
+                                                FontSize="11"
+                                                Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                                Text="Opacity" />
+                                            <ui:NumberBox
+                                                Maximum="1"
+                                                Minimum="0"
+                                                SmallChange="0.1"
+                                                SpinButtonPlacementMode="Compact"
+                                                Value="{Binding Opacity}" />
+                                        </StackPanel>
+                                    </sg:SpacedGrid>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Grid>
+        </controls:Card>
+    </sg:SpacedGrid>
+</controls:UserControlBase>

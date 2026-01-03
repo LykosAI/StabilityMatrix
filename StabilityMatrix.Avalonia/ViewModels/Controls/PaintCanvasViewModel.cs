@@ -106,6 +106,24 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger) 
     [JsonIgnore]
     public Action? RefreshCanvas { get; set; }
 
+    /// <summary>
+    /// Sets or clears a bitmap for the Images layer.
+    /// Used for displaying other layers as a background when compositing.
+    /// </summary>
+    /// <param name="name">Identifier for the bitmap (currently ignored, single bitmap only)</param>
+    /// <param name="bitmap">The bitmap to set, or null to clear</param>
+    public void SetLayerBitmap(string name, SKBitmap? bitmap)
+    {
+        if (bitmap is not null)
+        {
+            Layers["Images"].Bitmaps = [bitmap];
+        }
+        else
+        {
+            Layers["Images"].Bitmaps = [];
+        }
+    }
+
     public void SetSourceCanvas(SKCanvas canvas)
     {
         ArgumentNullException.ThrowIfNull(canvas, nameof(canvas));
@@ -191,6 +209,209 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger) 
         RenderToSurface(surface);
 
         return surface.Snapshot();
+    }
+
+    /// <summary>
+    /// Extracts masks for multiple colors in a single render pass.
+    /// More efficient than calling ExtractMaskByColor multiple times.
+    /// </summary>
+    /// <param name="targetColors">The colors to extract masks for.</param>
+    /// <param name="tolerance">RGB tolerance for color matching (0-255). Default 10.</param>
+    /// <returns>A dictionary mapping each color to its mask image.</returns>
+    public Dictionary<SKColor, SKImage> ExtractMasksByColors(
+        IReadOnlyList<SKColor> targetColors,
+        int tolerance = 10
+    )
+    {
+        using var _ = CodeTimer.StartDebug();
+
+        var results = new Dictionary<SKColor, SKImage>();
+
+        if (CanvasSize == Size.Empty || targetColors.Count == 0)
+            return results;
+
+        // Render canvas once
+        using var renderedImage = RenderToImage();
+        if (renderedImage is null)
+            return results;
+
+        using var sourceBitmap = SKBitmap.FromImage(renderedImage);
+        var srcPixels = sourceBitmap.Pixels; // SKColor[] array - fast direct access
+        var pixelCount = srcPixels.Length;
+
+        // Create result bitmaps for each color
+        var resultBitmaps = new Dictionary<SKColor, SKBitmap>();
+        var resultPixels = new Dictionary<SKColor, SKColor[]>();
+        foreach (var color in targetColors)
+        {
+            var bitmap = new SKBitmap(
+                sourceBitmap.Width,
+                sourceBitmap.Height,
+                SKColorType.Rgba8888,
+                SKAlphaType.Premul
+            );
+            resultBitmaps[color] = bitmap;
+            resultPixels[color] = new SKColor[pixelCount];
+        }
+
+        // Single pass through pixels, check all colors
+        for (var i = 0; i < pixelCount; i++)
+        {
+            var pixel = srcPixels[i];
+
+            foreach (var targetColor in targetColors)
+            {
+                var matches =
+                    Math.Abs(pixel.Red - targetColor.Red) <= tolerance
+                    && Math.Abs(pixel.Green - targetColor.Green) <= tolerance
+                    && Math.Abs(pixel.Blue - targetColor.Blue) <= tolerance
+                    && pixel.Alpha > 0;
+
+                resultPixels[targetColor][i] = matches ? SKColors.White : SKColors.Transparent;
+            }
+        }
+
+        // Set pixels and convert bitmaps to images
+        foreach (var (color, bitmap) in resultBitmaps)
+        {
+            bitmap.Pixels = resultPixels[color];
+            results[color] = SKImage.FromBitmap(bitmap);
+            bitmap.Dispose();
+        }
+
+        return results;
+    }
+
+    /// <summary>
+    /// Extracts a mask from the canvas where pixels match the target color.
+    /// Returns a grayscale mask where white = match, transparent = no match.
+    /// Used for regional prompting to separate painted regions by color.
+    /// </summary>
+    /// <param name="targetColor">The color to extract.</param>
+    /// <param name="tolerance">RGB tolerance for color matching (0-255). Default 10.</param>
+    /// <returns>A mask image, or null if canvas is empty.</returns>
+    public SKImage? ExtractMaskByColor(SKColor targetColor, int tolerance = 10)
+    {
+        using var _ = CodeTimer.StartDebug();
+
+        if (CanvasSize == Size.Empty)
+        {
+            logger.LogWarning($"ExtractMaskByColor: {nameof(CanvasSize)} is not set, returning null.");
+            return null;
+        }
+
+        // First render the canvas to get the painted image
+        using var renderedImage = RenderToImage();
+        if (renderedImage is null)
+            return null;
+
+        using var bitmap = SKBitmap.FromImage(renderedImage);
+        var resultBitmap = new SKBitmap(
+            bitmap.Width,
+            bitmap.Height,
+            SKColorType.Rgba8888,
+            SKAlphaType.Premul
+        );
+
+        // Use Pixels array for fast direct access
+        var srcPixels = bitmap.Pixels;
+        var dstPixels = new SKColor[srcPixels.Length];
+
+        for (var i = 0; i < srcPixels.Length; i++)
+        {
+            var pixel = srcPixels[i];
+
+            // Check if pixel matches target color within tolerance
+            var matches =
+                Math.Abs(pixel.Red - targetColor.Red) <= tolerance
+                && Math.Abs(pixel.Green - targetColor.Green) <= tolerance
+                && Math.Abs(pixel.Blue - targetColor.Blue) <= tolerance
+                && pixel.Alpha > 0;
+
+            dstPixels[i] = matches ? SKColors.White : SKColors.Transparent;
+        }
+
+        resultBitmap.Pixels = dstPixels;
+        return SKImage.FromBitmap(resultBitmap);
+    }
+
+    /// <summary>
+    /// Gets all unique colors present in the painted canvas (excluding transparent).
+    /// Used for regional prompting to detect which colors the user has painted.
+    /// </summary>
+    /// <returns>A list of unique colors found in the canvas.</returns>
+    public IReadOnlyList<SKColor> GetPaintedColors()
+    {
+        // Default palette colors to match against
+        return GetPaintedColors(
+            [
+                new SKColor(255, 0, 0), // Red
+                new SKColor(255, 128, 0), // Orange
+                new SKColor(255, 255, 0), // Yellow
+                new SKColor(0, 255, 0), // Green
+                new SKColor(0, 128, 255), // Blue
+                new SKColor(128, 0, 255), // Purple
+            ]
+        );
+    }
+
+    /// <summary>
+    /// Gets a list of palette colors that have been painted on the canvas.
+    /// Uses tolerance matching to handle anti-aliased edges.
+    /// </summary>
+    /// <param name="paletteColors">The palette colors to match against.</param>
+    /// <param name="tolerance">RGB tolerance for color matching (default 40 to handle anti-aliasing).</param>
+    /// <returns>A list of palette colors that were found in the canvas.</returns>
+    public IReadOnlyList<SKColor> GetPaintedColors(IReadOnlyList<SKColor> paletteColors, int tolerance = 40)
+    {
+        if (CanvasSize == Size.Empty)
+            return [];
+
+        using var renderedImage = RenderToImage();
+        if (renderedImage is null)
+            return [];
+
+        using var bitmap = SKBitmap.FromImage(renderedImage);
+        var foundPaletteColors = new HashSet<SKColor>();
+
+        // Use Pixels array for fast direct access
+        var pixels = bitmap.Pixels;
+        var paletteCount = paletteColors.Count;
+
+        for (var i = 0; i < pixels.Length; i++)
+        {
+            var pixel = pixels[i];
+            if (pixel.Alpha < 128) // Skip mostly transparent pixels
+                continue;
+
+            // Find the closest palette color
+            for (var p = 0; p < paletteCount; p++)
+            {
+                var paletteColor = paletteColors[p];
+                if (ColorMatchesWithTolerance(pixel, paletteColor, tolerance))
+                {
+                    foundPaletteColors.Add(paletteColor);
+
+                    // Early exit if we've found all palette colors
+                    if (foundPaletteColors.Count == paletteCount)
+                        return foundPaletteColors.ToList();
+
+                    break;
+                }
+            }
+        }
+
+        return foundPaletteColors.ToList();
+    }
+
+    /// <summary>
+    /// Checks if two colors match within the specified RGB tolerance.
+    /// </summary>
+    private static bool ColorMatchesWithTolerance(SKColor a, SKColor b, int tolerance)
+    {
+        return Math.Abs(a.Red - b.Red) <= tolerance
+            && Math.Abs(a.Green - b.Green) <= tolerance
+            && Math.Abs(a.Blue - b.Blue) <= tolerance;
     }
 
     public void RenderToSurface(

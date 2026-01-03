@@ -13,8 +13,10 @@ using DynamicData.Binding;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
 using Semver;
+using SkiaSharp;
 using StabilityMatrix.Avalonia.Controls.CodeCompletion;
 using StabilityMatrix.Avalonia.Models;
+using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Models.TagCompletion;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels;
@@ -553,6 +555,46 @@ public static class DesignData
                 ]
             );
         });
+
+    public static LayeredMaskEditorViewModel LayeredMaskEditorViewModel =>
+        DialogFactory.Get<LayeredMaskEditorViewModel>(vm =>
+        {
+            vm.CanvasSize = new System.Drawing.Size(1024, 1024);
+            vm.Layers.Clear();
+            vm.Layers.Add(
+                new MaskLayer
+                {
+                    Name = "Background",
+                    Prompt = "A beautiful sunset, coastal landscape, high quality",
+                    DisplayColor = MaskLayerColors.Red,
+                    Strength = 1.0f,
+                    Opacity = 0.5f,
+                }
+            );
+            vm.Layers.Add(
+                new MaskLayer
+                {
+                    Name = "Subject",
+                    Prompt = "A lonely person sitting on a rock, silhouette, detailed",
+                    DisplayColor = MaskLayerColors.Green,
+                    Strength = 1.0f,
+                    Opacity = 1.0f,
+                }
+            );
+            vm.Layers.Add(
+                new MaskLayer
+                {
+                    Name = "Extra Detail",
+                    Prompt = "Lens flare, atmospheric lighting",
+                    DisplayColor = MaskLayerColors.Blue,
+                    Strength = 0.5f,
+                    Opacity = 0.8f,
+                    IsVisible = false,
+                }
+            );
+            vm.SelectedLayer = vm.Layers[1];
+        });
+
     public static OutputsPageViewModel OutputsPageViewModel
     {
         get

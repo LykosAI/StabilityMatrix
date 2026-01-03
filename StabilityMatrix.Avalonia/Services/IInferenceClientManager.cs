@@ -55,6 +55,19 @@ public interface IInferenceClientManager : IDisposable, INotifyPropertyChanged, 
 
     Task UploadInputImageAsync(ImageSource image, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Uploads a mask image (SKImage) to ComfyUI's input directory.
+    /// Used for regional prompting and other mask-based operations.
+    /// </summary>
+    /// <param name="maskImage">The mask image to upload.</param>
+    /// <param name="fileName">The filename to use for the uploaded mask.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    Task UploadMaskImageAsync(
+        SkiaSharp.SKImage maskImage,
+        string fileName,
+        CancellationToken cancellationToken = default
+    );
+
     Task WriteImageToInputAsync(ImageSource imageSource, CancellationToken cancellationToken = default);
 
     Task ConnectAsync(CancellationToken cancellationToken = default);

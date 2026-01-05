@@ -2,19 +2,19 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
+    xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
+    xmlns:faIcons="https://github.com/projektanker/icons.avalonia"
     xmlns:fluentIcons="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
     xmlns:input="clr-namespace:FluentAvalonia.UI.Input;assembly=FluentAvalonia"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:models="clr-namespace:StabilityMatrix.Avalonia.Models"
     xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
     xmlns:vmControls="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Controls"
-    xmlns:faIcons="https://github.com/projektanker/icons.avalonia"
-    xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
-    xmlns:models="clr-namespace:StabilityMatrix.Avalonia.Models"
     x:DataType="vmControls:PaintCanvasViewModel">
     <Design.PreviewWith>
         <controls:PaintCanvas DataContext="{x:Static mocks:DesignData.PaintCanvasViewModel}" />
     </Design.PreviewWith>
-    
+
     <Styles.Resources>
         <converters:EnumToBooleanConverter x:Key="EnumBoolConverter" />
     </Styles.Resources>
@@ -27,7 +27,7 @@
                     <Grid.Resources>
                         <input:StandardUICommand
                             x:Key="ClearCanvasCommand"
-                            Command="{Binding ClearCanvasCommand, RelativeSource={RelativeSource TemplatedParent}}"
+                            Command="{Binding ClearCanvasCommand}"
                             IconSource="Clear"
                             Label="Clear" />
                         <input:StandardUICommand
@@ -46,29 +46,29 @@
                             <Setter Property="Cursor" Value="Arrow"/>
                         </Style>-->
                     </Grid.Styles>
-                    
-                    <!-- Top bar -->
-                    <StackPanel
-                        Orientation="Horizontal"
-                        Spacing="6">
-                        
-                        <!-- Tools -->
+
+                    <!--  Top bar  -->
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+
+                        <!--  Tools  -->
                         <controls:Card Padding="4">
                             <StackPanel Orientation="Horizontal" Spacing="6">
-                                <ToggleButton IsChecked="{Binding SelectedTool, Converter={StaticResource EnumBoolConverter}, ConverterParameter={x:Static models:PaintCanvasTool.PaintBrush}}">
-                                    <faIcons:Icon
-                                        FontSize="18"
-                                        Value="fa-solid fa-paintbrush" />
+                                <ToggleButton IsChecked="{Binding SelectedTool, Converter={StaticResource EnumBoolConverter}, ConverterParameter={x:Static models:PaintCanvasTool.PaintBrush}}" ToolTip.Tip="Brush (B)">
+                                    <faIcons:Icon FontSize="18" Value="fa-solid fa-paintbrush" />
                                 </ToggleButton>
-                                <ToggleButton IsChecked="{Binding SelectedTool, Converter={StaticResource EnumBoolConverter}, ConverterParameter={x:Static models:PaintCanvasTool.Eraser}}">
-                                    <faIcons:Icon
-                                        FontSize="18"
-                                        Value="fa-solid fa-eraser" />
+                                <ToggleButton IsChecked="{Binding SelectedTool, Converter={StaticResource EnumBoolConverter}, ConverterParameter={x:Static models:PaintCanvasTool.Eraser}}" ToolTip.Tip="Eraser (E)">
+                                    <faIcons:Icon FontSize="18" Value="fa-solid fa-eraser" />
+                                </ToggleButton>
+                                <ToggleButton IsChecked="{Binding SelectedTool, Converter={StaticResource EnumBoolConverter}, ConverterParameter={x:Static models:PaintCanvasTool.Rectangle}}" ToolTip.Tip="Rectangle (R)">
+                                    <faIcons:Icon FontSize="18" Value="fa-regular fa-square" />
+                                </ToggleButton>
+                                <ToggleButton IsChecked="{Binding SelectedTool, Converter={StaticResource EnumBoolConverter}, ConverterParameter={x:Static models:PaintCanvasTool.Ellipse}}" ToolTip.Tip="Ellipse (O)">
+                                    <faIcons:Icon FontSize="18" Value="fa-regular fa-circle" />
                                 </ToggleButton>
                             </StackPanel>
                         </controls:Card>
-                        
-                        <GridSplitter BorderThickness="1" Margin="0,16"/>
+
+                        <GridSplitter Margin="0,16" BorderThickness="1" />
 
                         <ui:ColorPickerButton VerticalAlignment="Center" Color="{Binding PaintBrushColor}" />
                         <Label
@@ -127,6 +127,11 @@
 
                                 <ui:CommandBarButton Command="{Binding UndoCommand}" IconSource="Undo" />
                                 <ui:CommandBarButton Command="{StaticResource ClearCanvasCommand}" />
+                                <ui:CommandBarToggleButton IsChecked="{Binding ShowGridOverlay}" ToolTip.Tip="Toggle Grid Overlay">
+                                    <ui:CommandBarToggleButton.IconSource>
+                                        <fluentIcons:SymbolIconSource Symbol="Grid" />
+                                    </ui:CommandBarToggleButton.IconSource>
+                                </ui:CommandBarToggleButton>
 
                             </ui:CommandBar.PrimaryCommands>
 
@@ -136,7 +141,7 @@
                             </ui:CommandBar.SecondaryCommands>-->
                         </ui:CommandBar>
                     </StackPanel>
-                    
+
                     <ZoomBorder
                         x:Name="PART_ZoomBorder"
                         Grid.Row="1"

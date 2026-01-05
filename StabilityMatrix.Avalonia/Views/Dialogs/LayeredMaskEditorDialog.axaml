@@ -3,19 +3,26 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+    xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:database="clr-namespace:StabilityMatrix.Core.Models.Database;assembly=StabilityMatrix.Core"
     xmlns:fluentIcons="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
     xmlns:inference="clr-namespace:StabilityMatrix.Avalonia.Models.Inference"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
     xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
     xmlns:ui="using:FluentAvalonia.UI.Controls"
+    xmlns:vendorLabs="clr-namespace:StabilityMatrix.Avalonia.Controls.VendorLabs"
     xmlns:vmDialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
     d:DataContext="{x:Static mocks:DesignData.LayeredMaskEditorViewModel}"
     d:DesignHeight="1200"
     d:DesignWidth="1200"
     x:DataType="vmDialogs:LayeredMaskEditorViewModel"
     mc:Ignorable="d">
+
+    <controls:UserControlBase.Resources>
+        <converters:FileUriConverter x:Key="FileUriConverter" />
+    </controls:UserControlBase.Resources>
 
     <sg:SpacedGrid
         Margin="0,8"
@@ -31,8 +38,20 @@
                     <Button
                         Classes="transparent"
                         Command="{Binding AddLayerCommand}"
-                        ToolTip.Tip="Add Layer">
+                        ToolTip.Tip="Add Paint Layer">
                         <fluentIcons:SymbolIcon FontSize="18" Symbol="Add" />
+                    </Button>
+                    <Button
+                        Classes="transparent"
+                        Command="{Binding AddImageLayerCommand}"
+                        ToolTip.Tip="Add Image Layer">
+                        <fluentIcons:SymbolIcon FontSize="18" Symbol="Image" />
+                    </Button>
+                    <Button
+                        Classes="transparent"
+                        Command="{Binding BrowseImageForLayerCommand}"
+                        ToolTip.Tip="Browse for Image...">
+                        <fluentIcons:SymbolIcon FontSize="18" Symbol="FolderOpen" />
                     </Button>
                     <Button
                         Classes="transparent"
@@ -56,6 +75,23 @@
                         Command="{Binding MoveLayerDownCommand}"
                         ToolTip.Tip="Move Layer Down">
                         <fluentIcons:SymbolIcon FontSize="18" Symbol="ArrowDown" />
+                    </Button>
+                    <Rectangle
+                        Width="1"
+                        Margin="4,4"
+                        VerticalAlignment="Stretch"
+                        Fill="{DynamicResource DividerStrokeColorDefaultBrush}" />
+                    <Button
+                        Classes="transparent"
+                        Command="{Binding FillLayerCommand}"
+                        ToolTip.Tip="Fill Layer">
+                        <fluentIcons:SymbolIcon FontSize="18" Symbol="PaintBucket" />
+                    </Button>
+                    <Button
+                        Classes="transparent"
+                        Command="{Binding DuplicateLayerCommand}"
+                        ToolTip.Tip="Duplicate Layer">
+                        <fluentIcons:SymbolIcon FontSize="18" Symbol="Copy" />
                     </Button>
                 </StackPanel>
 
@@ -97,184 +133,278 @@
             Margin="0,16,0,0"
             Padding="8"
             VerticalAlignment="Top">
-            <Grid RowDefinitions="Auto,*">
-                <TextBlock
-                    Margin="4,0,0,8"
-                    FontSize="12"
-                    FontWeight="SemiBold"
-                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                    Text="LAYERS" />
+            <StackPanel>
+                <Grid RowDefinitions="Auto,*">
+                    <TextBlock
+                        Margin="4,0,0,8"
+                        FontSize="12"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                        Text="LAYERS" />
 
-                <!--  Layer list - using ListBox for proper selection  -->
-                <ListBox
-                    x:Name="LayerItemsControl"
-                    Grid.Row="1"
-                    VerticalAlignment="Top"
-                    Background="Transparent"
-                    BorderThickness="0"
-                    ItemsSource="{Binding Layers}"
-                    SelectedItem="{Binding SelectedLayer}"
-                    SelectionMode="AlwaysSelected">
-                    <ListBox.Styles>
-                        <Style Selector="ListBoxItem">
-                            <Setter Property="Padding" Value="0" />
-                            <Setter Property="Margin" Value="0,4" />
-                            <Setter Property="Background" Value="Transparent" />
-                        </Style>
-                        <!--  Selection Highlight for the Border inside ListBoxItem  -->
-                        <Style Selector="ListBoxItem:selected Border#LayerItemBorder">
-                            <Setter Property="BorderBrush" Value="{DynamicResource AccentFillColorDefaultBrush}" />
-                            <Setter Property="BorderThickness" Value="2" />
-                        </Style>
-                    </ListBox.Styles>
-                    <ListBox.ItemTemplate>
-                        <DataTemplate DataType="inference:MaskLayer">
-                            <Border
-                                x:Name="LayerItemBorder"
-                                Padding="10"
-                                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-                                BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
-                                BorderThickness="1"
-                                CornerRadius="6">
-                                <Border.Styles>
-                                    <Style Selector="Border:pointerover">
-                                        <Setter Property="Background" Value="{DynamicResource CardBackgroundFillColorSecondaryBrush}" />
-                                    </Style>
-                                </Border.Styles>
+                    <!--  Layer list - using ListBox for proper selection  -->
+                    <ListBox
+                        x:Name="LayerItemsControl"
+                        Grid.Row="1"
+                        VerticalAlignment="Top"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        ItemsSource="{Binding Layers}"
+                        SelectedItem="{Binding SelectedLayer}"
+                        SelectionMode="AlwaysSelected">
+                        <ListBox.Styles>
+                            <Style Selector="ListBoxItem">
+                                <Setter Property="Padding" Value="0" />
+                                <Setter Property="Margin" Value="0,4" />
+                                <Setter Property="Background" Value="Transparent" />
+                            </Style>
+                            <!--  Selection Highlight for the Border inside ListBoxItem  -->
+                            <Style Selector="ListBoxItem:selected Border#LayerItemBorder">
+                                <Setter Property="BorderBrush" Value="{DynamicResource AccentFillColorDefaultBrush}" />
+                                <Setter Property="BorderThickness" Value="2" />
+                            </Style>
+                        </ListBox.Styles>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate DataType="inference:MaskLayer">
+                                <Border
+                                    x:Name="LayerItemBorder"
+                                    Padding="10"
+                                    Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                                    BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="6">
+                                    <Border.Styles>
+                                        <Style Selector="Border:pointerover">
+                                            <Setter Property="Background" Value="{DynamicResource CardBackgroundFillColorSecondaryBrush}" />
+                                        </Style>
+                                    </Border.Styles>
 
-                                <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="8">
-                                    <!--  Row 0: Header with all controls  -->
-                                    <Grid Grid.Row="0" ColumnDefinitions="Auto,Auto,*,Auto,Auto">
-                                        <!--  Reordering  -->
-                                        <StackPanel
-                                            Grid.Column="0"
-                                            Margin="0,0,8,0"
-                                            Orientation="Horizontal"
-                                            Spacing="0">
-                                            <Button
-                                                Padding="4"
-                                                Classes="transparent"
-                                                Command="{Binding $parent[ListBox].((vmDialogs:LayeredMaskEditorViewModel)DataContext).MoveLayerUpCommand}"
-                                                CommandParameter="{Binding .}"
-                                                ToolTip.Tip="Move layer up">
-                                                <fluentIcons:SymbolIcon FontSize="16" Symbol="ArrowUp" />
-                                            </Button>
-                                            <Button
-                                                Padding="4"
-                                                Classes="transparent"
-                                                Command="{Binding $parent[ListBox].((vmDialogs:LayeredMaskEditorViewModel)DataContext).MoveLayerDownCommand}"
-                                                CommandParameter="{Binding .}"
-                                                ToolTip.Tip="Move layer down">
-                                                <fluentIcons:SymbolIcon FontSize="16" Symbol="ArrowDown" />
-                                            </Button>
-                                        </StackPanel>
+                                    <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="8">
+                                        <!--  Row 0: Header with all controls  -->
+                                        <Grid Grid.Row="0" ColumnDefinitions="Auto,Auto,*,Auto,Auto">
+                                            <!--  Reordering  -->
+                                            <StackPanel
+                                                Grid.Column="0"
+                                                Margin="0,0,8,0"
+                                                Orientation="Horizontal"
+                                                Spacing="0">
+                                                <Button
+                                                    Padding="4"
+                                                    Classes="transparent"
+                                                    Command="{Binding $parent[ListBox].((vmDialogs:LayeredMaskEditorViewModel)DataContext).MoveLayerUpCommand}"
+                                                    CommandParameter="{Binding .}"
+                                                    ToolTip.Tip="Move layer up">
+                                                    <fluentIcons:SymbolIcon FontSize="16" Symbol="ArrowUp" />
+                                                </Button>
+                                                <Button
+                                                    Padding="4"
+                                                    Classes="transparent"
+                                                    Command="{Binding $parent[ListBox].((vmDialogs:LayeredMaskEditorViewModel)DataContext).MoveLayerDownCommand}"
+                                                    CommandParameter="{Binding .}"
+                                                    ToolTip.Tip="Move layer down">
+                                                    <fluentIcons:SymbolIcon FontSize="16" Symbol="ArrowDown" />
+                                                </Button>
+                                            </StackPanel>
 
-                                        <!--  Visibility & Enable  -->
-                                        <StackPanel
-                                            Grid.Column="1"
-                                            Margin="0,0,8,0"
-                                            Orientation="Horizontal"
-                                            Spacing="4">
-                                            <ToggleButton
-                                                Padding="4"
-                                                Classes="transparent"
-                                                IsChecked="{Binding IsVisible}"
-                                                ToolTip.Tip="Toggle visibility">
-                                                <Panel>
-                                                    <fluentIcons:SymbolIcon
-                                                        FontSize="18"
-                                                        IsVisible="{Binding IsVisible}"
-                                                        Symbol="Eye" />
-                                                    <fluentIcons:SymbolIcon
-                                                        FontSize="18"
-                                                        IsVisible="{Binding !IsVisible}"
-                                                        Symbol="EyeOff" />
-                                                </Panel>
-                                            </ToggleButton>
-                                            <CheckBox
-                                                Margin="4,0,0,0"
-                                                IsChecked="{Binding IsEnabled}"
-                                                ToolTip.Tip="Enable for generation" />
-                                        </StackPanel>
+                                            <!--  Visibility & Enable  -->
+                                            <StackPanel
+                                                Grid.Column="1"
+                                                Margin="0,0,8,0"
+                                                Orientation="Horizontal"
+                                                Spacing="4">
+                                                <ToggleButton
+                                                    Padding="4"
+                                                    Classes="transparent"
+                                                    IsChecked="{Binding IsVisible}"
+                                                    ToolTip.Tip="Toggle visibility">
+                                                    <Panel>
+                                                        <fluentIcons:SymbolIcon
+                                                            FontSize="18"
+                                                            IsVisible="{Binding IsVisible}"
+                                                            Symbol="Eye" />
+                                                        <fluentIcons:SymbolIcon
+                                                            FontSize="18"
+                                                            IsVisible="{Binding !IsVisible}"
+                                                            Symbol="EyeOff" />
+                                                    </Panel>
+                                                </ToggleButton>
+                                                <CheckBox
+                                                    Margin="4,0,0,0"
+                                                    IsChecked="{Binding IsEnabled}"
+                                                    ToolTip.Tip="Enable for generation" />
+                                            </StackPanel>
 
-                                        <!--  Name  -->
+                                            <!--  Name  -->
+                                            <TextBox
+                                                Grid.Column="2"
+                                                MinHeight="0"
+                                                Padding="8,4"
+                                                VerticalAlignment="Center"
+                                                Text="{Binding Name}"
+                                                Watermark="Layer name" />
+
+                                            <!--  Color  -->
+                                            <Border
+                                                Grid.Column="3"
+                                                Width="20"
+                                                Height="20"
+                                                Margin="8,0"
+                                                VerticalAlignment="Center"
+                                                Background="{Binding DisplayColorHex}"
+                                                CornerRadius="10"
+                                                ToolTip.Tip="Layer color marker" />
+
+                                            <!--  Editing Badge  -->
+                                            <Border
+                                                Grid.Column="4"
+                                                Padding="6,2"
+                                                VerticalAlignment="Center"
+                                                Background="{DynamicResource AccentFillColorDefaultBrush}"
+                                                CornerRadius="4"
+                                                IsVisible="{Binding $parent[ListBoxItem].IsSelected}">
+                                                <TextBlock FontSize="12" Text="✏️" />
+                                            </Border>
+                                        </Grid>
+
+                                        <!--  Row 1: Layer-type-specific content  -->
+                                        <!--  Paint layer: Prompt textbox  -->
                                         <TextBox
-                                            Grid.Column="2"
-                                            MinHeight="0"
-                                            Padding="8,4"
-                                            VerticalAlignment="Center"
-                                            Text="{Binding Name}"
-                                            Watermark="Layer name" />
+                                            Grid.Row="1"
+                                            MinHeight="60"
+                                            MaxHeight="120"
+                                            AcceptsReturn="True"
+                                            IsVisible="{Binding LayerType, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static inference:MaskLayerType.Paint}}"
+                                            Text="{Binding Prompt}"
+                                            TextWrapping="Wrap"
+                                            Watermark="Enter prompt for this layer..." />
 
-                                        <!--  Color  -->
-                                        <Border
-                                            Grid.Column="3"
-                                            Width="20"
-                                            Height="20"
-                                            Margin="8,0"
-                                            VerticalAlignment="Center"
-                                            Background="{Binding DisplayColorHex}"
-                                            CornerRadius="10"
-                                            ToolTip.Tip="Layer color marker" />
+                                        <!--  Image layer: Image info and controls  -->
+                                        <StackPanel
+                                            Grid.Row="1"
+                                            IsVisible="{Binding LayerType, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static inference:MaskLayerType.Image}}"
+                                            Spacing="8">
+                                            <TextBlock
+                                                FontSize="12"
+                                                Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                IsVisible="{Binding !HasImage}"
+                                                Text="No image selected. Click an image below or use Browse." />
+                                            <TextBlock
+                                                FontSize="12"
+                                                Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                IsVisible="{Binding HasImage}"
+                                                Text="{Binding SourceImagePath}"
+                                                TextTrimming="CharacterEllipsis"
+                                                ToolTip.Tip="{Binding SourceImagePath}" />
+                                        </StackPanel>
 
-                                        <!--  Editing Badge  -->
-                                        <Border
-                                            Grid.Column="4"
-                                            Padding="6,2"
-                                            VerticalAlignment="Center"
-                                            Background="{DynamicResource AccentFillColorDefaultBrush}"
-                                            CornerRadius="4"
-                                            IsVisible="{Binding $parent[ListBoxItem].IsSelected}">
-                                            <TextBlock FontSize="12" Text="✏️" />
-                                        </Border>
+                                        <!--  Row 2: Controls (different based on type)  -->
+                                        <!--  Paint layer: Strength + Opacity  -->
+                                        <sg:SpacedGrid
+                                            Grid.Row="2"
+                                            ColumnDefinitions="*,*"
+                                            ColumnSpacing="12"
+                                            IsVisible="{Binding LayerType, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static inference:MaskLayerType.Paint}}">
+                                            <StackPanel Spacing="2">
+                                                <TextBlock
+                                                    FontSize="11"
+                                                    Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                                    Text="Strength" />
+                                                <ui:NumberBox
+                                                    Maximum="10"
+                                                    Minimum="0"
+                                                    SmallChange="0.1"
+                                                    SpinButtonPlacementMode="Compact"
+                                                    Value="{Binding Strength}" />
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="1" Spacing="2">
+                                                <TextBlock
+                                                    FontSize="11"
+                                                    Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                                    Text="Opacity" />
+                                                <ui:NumberBox
+                                                    Maximum="1"
+                                                    Minimum="0"
+                                                    SmallChange="0.1"
+                                                    SpinButtonPlacementMode="Compact"
+                                                    Value="{Binding Opacity}" />
+                                            </StackPanel>
+                                        </sg:SpacedGrid>
+
+                                        <!--  Image layer: Scale + Opacity  -->
+                                        <sg:SpacedGrid
+                                            Grid.Row="2"
+                                            ColumnDefinitions="*,*"
+                                            ColumnSpacing="12"
+                                            IsVisible="{Binding LayerType, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static inference:MaskLayerType.Image}}">
+                                            <StackPanel Spacing="2">
+                                                <TextBlock
+                                                    FontSize="11"
+                                                    Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                                    Text="Scale" />
+                                                <ui:NumberBox
+                                                    Maximum="3"
+                                                    Minimum="0.1"
+                                                    SmallChange="0.1"
+                                                    SpinButtonPlacementMode="Compact"
+                                                    Value="{Binding ImageScale}" />
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="1" Spacing="2">
+                                                <TextBlock
+                                                    FontSize="11"
+                                                    Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                                    Text="Opacity" />
+                                                <ui:NumberBox
+                                                    Maximum="1"
+                                                    Minimum="0"
+                                                    SmallChange="0.1"
+                                                    SpinButtonPlacementMode="Compact"
+                                                    Value="{Binding Opacity}" />
+                                            </StackPanel>
+                                        </sg:SpacedGrid>
                                     </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Grid>
 
-                                    <!--  Row 1: Prompt  -->
-                                    <TextBox
-                                        Grid.Row="1"
-                                        MinHeight="60"
-                                        MaxHeight="120"
-                                        AcceptsReturn="True"
-                                        Text="{Binding Prompt}"
-                                        TextWrapping="Wrap"
-                                        Watermark="Enter prompt for this layer..." />
-
-                                    <!--  Row 2: Strength + Opacity  -->
-                                    <sg:SpacedGrid
-                                        Grid.Row="2"
-                                        ColumnDefinitions="*,*"
-                                        ColumnSpacing="12">
-                                        <StackPanel Spacing="2">
-                                            <TextBlock
-                                                FontSize="11"
-                                                Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                                                Text="Strength" />
-                                            <ui:NumberBox
-                                                Maximum="10"
-                                                Minimum="0"
-                                                SmallChange="0.1"
-                                                SpinButtonPlacementMode="Compact"
-                                                Value="{Binding Strength}" />
-                                        </StackPanel>
-                                        <StackPanel Grid.Column="1" Spacing="2">
-                                            <TextBlock
-                                                FontSize="11"
-                                                Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                                                Text="Opacity" />
-                                            <ui:NumberBox
-                                                Maximum="1"
-                                                Minimum="0"
-                                                SmallChange="0.1"
-                                                SpinButtonPlacementMode="Compact"
-                                                Value="{Binding Opacity}" />
-                                        </StackPanel>
-                                    </sg:SpacedGrid>
-                                </Grid>
-                            </Border>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
-            </Grid>
+                <!--  Recent Images Section (inside right panel)  -->
+                <Expander
+                    Margin="0,8,0,0"
+                    Header="Recent Images"
+                    IsExpanded="{Binding IsRecentImagesPanelExpanded}">
+                    <ScrollViewer
+                        MaxHeight="180"
+                        HorizontalScrollBarVisibility="Disabled"
+                        VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding LocalImages}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel Orientation="Horizontal" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="database:LocalImageFile">
+                                    <Button
+                                        Margin="2"
+                                        Padding="2"
+                                        Classes="transparent"
+                                        Command="{Binding $parent[controls:UserControlBase].((vmDialogs:LayeredMaskEditorViewModel)DataContext).SelectImageFromRecentCommand}"
+                                        CommandParameter="{Binding .}"
+                                        ToolTip.Tip="{Binding FileName}">
+                                        <vendorLabs:BetterAsyncImage
+                                            Width="60"
+                                            Height="60"
+                                            CornerRadius="4"
+                                            Source="{Binding AbsolutePath, Converter={StaticResource FileUriConverter}}"
+                                            Stretch="UniformToFill" />
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Expander>
+            </StackPanel>
         </controls:Card>
     </sg:SpacedGrid>
 </controls:UserControlBase>

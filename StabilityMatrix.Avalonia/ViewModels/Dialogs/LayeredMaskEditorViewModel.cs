@@ -4,9 +4,12 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using Avalonia;
 using Avalonia.Controls.Primitives;
+using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using DynamicData;
+using DynamicData.Binding;
 using Injectio.Attributes;
 using SkiaSharp;
 using StabilityMatrix.Avalonia.Controls;
@@ -19,6 +22,8 @@ using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Controls;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Models.Database;
+using StabilityMatrix.Core.Services;
 using ContentDialogButton = FluentAvalonia.UI.Controls.ContentDialogButton;
 using Size = System.Drawing.Size;
 
@@ -34,7 +39,9 @@ namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDisposable
 {
     private readonly IServiceManager<ViewModelBase> vmFactory;
+    private readonly IImageIndexService imageIndexService;
     private int layerCounter;
+    private int imageLayerCounter;
 
     /// <summary>
     /// The collection of layers in the editor (ordered from bottom to top).
@@ -66,13 +73,47 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
     /// </summary>
     public PaintCanvasViewModel PaintCanvasViewModel { get; }
 
-    public LayeredMaskEditorViewModel(IServiceManager<ViewModelBase> vmFactory)
+    /// <summary>
+    /// Whether the recent images panel is expanded.
+    /// </summary>
+    [ObservableProperty]
+    private bool isRecentImagesPanelExpanded;
+
+    /// <summary>
+    /// Collection of recent inference images for quick selection.
+    /// </summary>
+    public IObservableCollection<LocalImageFile> LocalImages { get; } =
+        new ObservableCollectionExtended<LocalImageFile>();
+
+    public LayeredMaskEditorViewModel(
+        IServiceManager<ViewModelBase> vmFactory,
+        IImageIndexService imageIndexService
+    )
     {
         this.vmFactory = vmFactory;
+        this.imageIndexService = imageIndexService;
         PaintCanvasViewModel = vmFactory.Get<PaintCanvasViewModel>();
+
+        // Subscribe to recent images
+        imageIndexService
+            .InferenceImages.ItemsSource.Connect()
+            .DeferUntilLoaded()
+            .SortBy(file => file.LastModifiedAt, SortDirection.Descending)
+            .Top(50) // Limit to 50 most recent
+            .Bind(LocalImages)
+            .Subscribe();
 
         // Initialize with one layer
         AddLayer();
+    }
+
+    /// <inheritdoc />
+    public override async Task OnLoadedAsync()
+    {
+        await base.OnLoadedAsync();
+
+        // Refresh the image index to populate recent images
+        await imageIndexService.RefreshIndexForAllCollections();
     }
 
     /// <summary>
@@ -96,11 +137,149 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
         SyncSelectedLayerToCanvas();
     }
 
+    /// <summary>
+    /// Adds a new image layer on top of the stack.
+    /// </summary>
+    [RelayCommand]
+    private void AddImageLayer()
+    {
+        imageLayerCounter++;
+        var layer = new MaskLayer
+        {
+            Name = $"Image {imageLayerCounter}",
+            LayerType = MaskLayerType.Image,
+            DisplayColor = new SKColor(128, 128, 128), // Gray for image layers
+        };
+
+        // Subscribe to layer property changes to refresh canvas
+        layer.PropertyChanged += Layer_PropertyChanged;
+
+        Layers.Add(layer);
+        SelectedLayer = layer;
+
+        // Expand the recent images panel when adding an image layer
+        IsRecentImagesPanelExpanded = true;
+
+        SyncSelectedLayerToCanvas();
+    }
+
+    /// <summary>
+    /// Selects an image from the recent images panel for the current image layer.
+    /// </summary>
+    [RelayCommand]
+    private async Task SelectImageFromRecent(LocalImageFile? imageFile)
+    {
+        if (imageFile is null || SelectedLayer is null)
+            return;
+
+        // If selected layer is not an image layer, create a new one
+        if (SelectedLayer.LayerType != MaskLayerType.Image)
+        {
+            AddImageLayer();
+        }
+
+        await LoadImageIntoLayerAsync(SelectedLayer!, imageFile.AbsolutePath);
+    }
+
+    /// <summary>
+    /// Opens a file picker to select an image for the current image layer.
+    /// </summary>
+    [RelayCommand]
+    private async Task BrowseImageForLayer()
+    {
+        var files = await App.StorageProvider.OpenFilePickerAsync(
+            new FilePickerOpenOptions
+            {
+                Title = "Select Reference Image",
+                AllowMultiple = false,
+                FileTypeFilter =
+                [
+                    new FilePickerFileType("Images")
+                    {
+                        Patterns = ["*.png", "*.jpg", "*.jpeg", "*.webp", "*.bmp"],
+                    },
+                ],
+            }
+        );
+
+        if (files.Count == 0 || files[0].TryGetLocalPath() is not { } path)
+            return;
+
+        // If no layer selected or current layer is paint, create a new image layer
+        if (SelectedLayer is null || SelectedLayer.LayerType != MaskLayerType.Image)
+        {
+            AddImageLayer();
+        }
+
+        await LoadImageIntoLayerAsync(SelectedLayer!, path);
+    }
+
+    /// <summary>
+    /// Loads an image from the given path into the specified layer.
+    /// </summary>
+    private async Task LoadImageIntoLayerAsync(MaskLayer layer, string imagePath)
+    {
+        if (layer.LayerType != MaskLayerType.Image)
+            return;
+
+        try
+        {
+            // Load bitmap on background thread
+            var bitmap = await Task.Run(() =>
+            {
+                using var stream = File.OpenRead(imagePath);
+                return SKBitmap.Decode(stream);
+            });
+
+            if (bitmap is null)
+                return;
+
+            // Dispose old bitmap
+            layer.SourceImage?.Dispose();
+
+            // Store the path and bitmap
+            layer.SourceImagePath = imagePath;
+            layer.SourceImage = bitmap;
+
+            // Refresh canvas (SourceImage property change also triggers Layer_PropertyChanged)
+            SyncSelectedLayerToCanvas();
+        }
+        catch (Exception)
+        {
+            // Silently fail - could add notification here
+        }
+    }
+
     private void Layer_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
-        // Refresh canvas when visibility changes
-        if (e.PropertyName == nameof(MaskLayer.IsVisible))
+        // Refresh canvas when visibility, opacity, or image scale changes
+        if (
+            e.PropertyName
+            is nameof(MaskLayer.IsVisible)
+                or nameof(MaskLayer.Opacity)
+                or nameof(MaskLayer.ImageScale)
+                or nameof(MaskLayer.SourceImage)
+        )
         {
+            var changedLayer = sender as MaskLayer;
+
+            // Save paths before sync, but handle visibility toggle specially:
+            // - When toggling OFF (IsVisible is now false): canvas has paths, SAVE them
+            // - When toggling ON (IsVisible is now true): canvas was empty, DON'T save
+            if (
+                changedLayer == SelectedLayer
+                && e.PropertyName == nameof(MaskLayer.IsVisible)
+                && changedLayer.IsVisible
+            )
+            {
+                // Toggling ON - skip save (canvas was empty while hidden)
+            }
+            else
+            {
+                // All other cases: save paths
+                SaveCurrentLayerPaths();
+            }
+
             SyncSelectedLayerToCanvas();
         }
     }
@@ -181,16 +360,73 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
     }
 
     /// <summary>
+    /// Fills the selected layer with a rectangle covering the entire canvas.
+    /// </summary>
+    [RelayCommand]
+    private void FillLayer()
+    {
+        if (SelectedLayer is null || SelectedLayer.LayerType != MaskLayerType.Paint)
+            return;
+
+        // Create a rectangle path covering the entire canvas
+        var fillPath = new PenPath
+        {
+            PathType = PenPathType.Rectangle,
+            FillColor = SelectedLayer.DisplayColor,
+            Bounds = new SKRect(0, 0, CanvasSize.Width, CanvasSize.Height),
+        };
+
+        // Add to current paths
+        SelectedLayer.Paths = SelectedLayer.Paths.Add(fillPath);
+        SyncSelectedLayerToCanvas();
+    }
+
+    /// <summary>
+    /// Duplicates the selected layer with all its content and settings.
+    /// </summary>
+    [RelayCommand]
+    private void DuplicateLayer()
+    {
+        if (SelectedLayer is null)
+            return;
+
+        // Save current layer paths first
+        SaveCurrentLayerPaths();
+
+        layerCounter++;
+        var clone = new MaskLayer
+        {
+            Name = $"{SelectedLayer.Name} Copy",
+            LayerType = SelectedLayer.LayerType,
+            DisplayColor = SelectedLayer.DisplayColor,
+            Prompt = SelectedLayer.Prompt,
+            Strength = SelectedLayer.Strength,
+            Opacity = SelectedLayer.Opacity,
+            IsVisible = SelectedLayer.IsVisible,
+            IsEnabled = SelectedLayer.IsEnabled,
+            Paths = SelectedLayer.Paths, // ImmutableList, safe to share
+            SourceImagePath = SelectedLayer.SourceImagePath,
+            ImageScale = SelectedLayer.ImageScale,
+        };
+
+        // Subscribe to layer property changes
+        clone.PropertyChanged += Layer_PropertyChanged;
+
+        // Insert after current layer
+        var index = Layers.IndexOf(SelectedLayer);
+        Layers.Insert(index + 1, clone);
+        SelectedLayer = clone;
+        SyncSelectedLayerToCanvas();
+    }
+
+    /// <summary>
     /// Called when the selected layer changes.
     /// Saves the current layer's paths and loads the new layer's paths.
     /// </summary>
     partial void OnSelectedLayerChanging(MaskLayer? oldValue, MaskLayer? newValue)
     {
-        // Save paths from old layer
-        if (oldValue is not null)
-        {
-            oldValue.Paths = PaintCanvasViewModel.Paths;
-        }
+        // Save paths from old layer before switching
+        SaveCurrentLayerPaths();
     }
 
     partial void OnSelectedLayerChanged(MaskLayer? value)
@@ -210,13 +446,15 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
 
     /// <summary>
     /// Syncs the selected layer's paths and brush color to the paint canvas.
-    /// Other visible layers are rendered as a background image.
+    /// Other visible layers are rendered to their correct z-order positions.
     /// </summary>
     private void SyncSelectedLayerToCanvas()
     {
         if (SelectedLayer is null)
         {
             PaintCanvasViewModel.Paths = [];
+            PaintCanvasViewModel.SetLayerBitmap("LayersBelow", null);
+            PaintCanvasViewModel.SetLayerBitmap("LayersAbove", null);
             PaintCanvasViewModel.RefreshCanvas?.Invoke();
             return;
         }
@@ -225,30 +463,62 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
         PaintCanvasViewModel.PaintBrushColor = SelectedLayer.AvaloniaDisplayColor;
         PaintCanvasViewModel.CanvasSize = CanvasSize;
 
-        // Always load only the selected layer's paths for active drawing
-        PaintCanvasViewModel.Paths = SelectedLayer.Paths;
-
-        if (ShowAllLayers && CanvasSize != Size.Empty)
+        // Handle different layer types
+        if (SelectedLayer.LayerType == MaskLayerType.Image)
         {
-            // Render other visible layers as a background image
-            var otherLayersBitmap = RenderOtherLayersToBackground();
-            PaintCanvasViewModel.SetLayerBitmap("OtherLayers", otherLayersBitmap);
+            // Image layers are reference-only, disable drawing
+            PaintCanvasViewModel.IsDrawingEnabled = false;
+            PaintCanvasViewModel.Paths = [];
+
+            // Render the selected image layer's bitmap directly if visible and has content
+            if (SelectedLayer.IsVisible && SelectedLayer.SourceImage != null && CanvasSize != Size.Empty)
+            {
+                var selectedImageBitmap = RenderSingleImageLayer(SelectedLayer);
+                PaintCanvasViewModel.SetLayerBitmap("CurrentImage", selectedImageBitmap);
+            }
+            else
+            {
+                PaintCanvasViewModel.SetLayerBitmap("CurrentImage", null);
+            }
+        }
+        else if (SelectedLayer.IsVisible)
+        {
+            // Paint layer - enable drawing and show paths if visible
+            PaintCanvasViewModel.IsDrawingEnabled = true;
+            PaintCanvasViewModel.Paths = SelectedLayer.Paths;
+            PaintCanvasViewModel.SetLayerBitmap("CurrentImage", null);
         }
         else
         {
-            // Clear the other layers background
-            PaintCanvasViewModel.SetLayerBitmap("OtherLayers", null);
+            // Layer is hidden - still allow drawing but don't render its paths until shown
+            PaintCanvasViewModel.IsDrawingEnabled = true;
+            PaintCanvasViewModel.Paths = [];
+            PaintCanvasViewModel.SetLayerBitmap("CurrentImage", null);
+        }
+
+        if (ShowAllLayers && CanvasSize != Size.Empty)
+        {
+            // Render layers to their correct z-order positions
+            var (belowBitmap, aboveBitmap) = RenderLayersByPosition();
+            PaintCanvasViewModel.SetLayerBitmap("LayersBelow", belowBitmap);
+            PaintCanvasViewModel.SetLayerBitmap("LayersAbove", aboveBitmap);
+        }
+        else
+        {
+            // Clear other layer bitmaps
+            PaintCanvasViewModel.SetLayerBitmap("LayersBelow", null);
+            PaintCanvasViewModel.SetLayerBitmap("LayersAbove", null);
         }
 
         PaintCanvasViewModel.RefreshCanvas?.Invoke();
     }
 
     /// <summary>
-    /// Renders all visible layers EXCEPT the selected layer to a bitmap for background display.
+    /// Renders a single image layer's bitmap at the canvas size with scaling.
     /// </summary>
-    private SKBitmap? RenderOtherLayersToBackground()
+    private SKBitmap? RenderSingleImageLayer(MaskLayer layer)
     {
-        if (CanvasSize == Size.Empty)
+        if (layer.SourceImage is null || CanvasSize == Size.Empty)
             return null;
 
         var bitmap = new SKBitmap(
@@ -260,18 +530,134 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
         using var canvas = new SKCanvas(bitmap);
         canvas.Clear(SKColors.Transparent);
 
-        // Draw layers in order (bottom to top), skipping selected layer
-        foreach (var layer in Layers)
-        {
-            if (!layer.IsVisible || layer == SelectedLayer || layer.Paths.Count == 0)
-                continue;
+        var alpha = (byte)(layer.Opacity * 255);
+        RenderImageLayer(canvas, layer, alpha);
 
+        return bitmap;
+    }
+
+    /// <summary>
+    /// Renders visible layers split into two bitmaps: layers below and above the selected layer.
+    /// This enables proper z-ordering where the selected layer maintains its correct position.
+    /// Note: In this layer system, LOWER index = drawn on TOP (like Photoshop's layer panel).
+    /// </summary>
+    /// <returns>A tuple of (layersBelow, layersAbove) bitmaps. Either may be null if empty.</returns>
+    private (SKBitmap? LayersBelow, SKBitmap? LayersAbove) RenderLayersByPosition()
+    {
+        if (CanvasSize == Size.Empty || SelectedLayer is null)
+            return (null, null);
+
+        var selectedIndex = Layers.IndexOf(SelectedLayer);
+        if (selectedIndex < 0)
+            return (null, null);
+
+        SKBitmap? belowBitmap = null;
+        SKBitmap? aboveBitmap = null;
+
+        // Layers with LOWER index than selected = drawn on TOP (rendered to Overlay layer)
+        // These are visually "above" the selected layer
+        var hasLayersAbove = false;
+        for (var i = 0; i < selectedIndex; i++)
+        {
+            var layer = Layers[i];
+            if (layer.IsVisible && LayerHasContent(layer))
+            {
+                hasLayersAbove = true;
+                break;
+            }
+        }
+
+        if (hasLayersAbove)
+        {
+            aboveBitmap = new SKBitmap(
+                CanvasSize.Width,
+                CanvasSize.Height,
+                SKColorType.Rgba8888,
+                SKAlphaType.Premul
+            );
+            using var aboveCanvas = new SKCanvas(aboveBitmap);
+            aboveCanvas.Clear(SKColors.Transparent);
+
+            // Render in reverse order so that lower index (top layer) is drawn last (on top)
+            for (var i = selectedIndex - 1; i >= 0; i--)
+            {
+                var layer = Layers[i];
+                if (!layer.IsVisible || !LayerHasContent(layer))
+                    continue;
+
+                RenderLayerToCanvas(aboveCanvas, layer);
+            }
+        }
+
+        // Layers with HIGHER index than selected = drawn BELOW (rendered to Images layer)
+        // These are visually "behind" the selected layer
+        var hasLayersBelow = false;
+        for (var i = selectedIndex + 1; i < Layers.Count; i++)
+        {
+            var layer = Layers[i];
+            if (layer.IsVisible && LayerHasContent(layer))
+            {
+                hasLayersBelow = true;
+                break;
+            }
+        }
+
+        if (hasLayersBelow)
+        {
+            belowBitmap = new SKBitmap(
+                CanvasSize.Width,
+                CanvasSize.Height,
+                SKColorType.Rgba8888,
+                SKAlphaType.Premul
+            );
+            using var belowCanvas = new SKCanvas(belowBitmap);
+            belowCanvas.Clear(SKColors.Transparent);
+
+            // Render from bottom to top (highest index first, as it's the bottom-most)
+            for (var i = Layers.Count - 1; i > selectedIndex; i--)
+            {
+                var layer = Layers[i];
+                if (!layer.IsVisible || !LayerHasContent(layer))
+                    continue;
+
+                RenderLayerToCanvas(belowCanvas, layer);
+            }
+        }
+
+        return (belowBitmap, aboveBitmap);
+    }
+
+    /// <summary>
+    /// Checks if a layer has any renderable content.
+    /// </summary>
+    private static bool LayerHasContent(MaskLayer layer)
+    {
+        return layer.LayerType == MaskLayerType.Image ? layer.SourceImage != null : layer.Paths.Count > 0;
+    }
+
+    /// <summary>
+    /// Renders a single layer to a canvas with the layer's settings and opacity.
+    /// Handles both paint layers (paths) and image layers (bitmaps).
+    /// </summary>
+    private void RenderLayerToCanvas(SKCanvas canvas, MaskLayer layer)
+    {
+        var alpha = (byte)(layer.Opacity * 255);
+
+        if (layer.LayerType == MaskLayerType.Image && layer.SourceImage != null)
+        {
+            // Render image layer with scaling
+            RenderImageLayer(canvas, layer, alpha);
+        }
+        else
+        {
+            // Render paint layer paths
             using var paint = new SKPaint
             {
                 Color = new SKColor(
                     layer.DisplayColor.Red,
                     layer.DisplayColor.Green,
-                    layer.DisplayColor.Blue
+                    layer.DisplayColor.Blue,
+                    alpha
                 ),
                 IsAntialias = true,
                 Style = SKPaintStyle.Fill,
@@ -282,16 +668,47 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
                 RenderPenPathToCanvas(canvas, penPath, paint);
             }
         }
+    }
 
-        return bitmap;
+    /// <summary>
+    /// Renders an image layer with scaling and centering.
+    /// </summary>
+    private void RenderImageLayer(SKCanvas canvas, MaskLayer layer, byte alpha)
+    {
+        if (layer.SourceImage is null)
+            return;
+
+        var bitmap = layer.SourceImage;
+        var scale = (float)layer.ImageScale;
+
+        // Calculate scaled dimensions
+        var scaledWidth = bitmap.Width * scale;
+        var scaledHeight = bitmap.Height * scale;
+
+        // Center the image on the canvas
+        var offsetX = (CanvasSize.Width - scaledWidth) / 2f;
+        var offsetY = (CanvasSize.Height - scaledHeight) / 2f;
+
+        var destRect = new SKRect(offsetX, offsetY, offsetX + scaledWidth, offsetY + scaledHeight);
+
+        using var paint = new SKPaint
+        {
+            Color = new SKColor(255, 255, 255, alpha),
+            IsAntialias = true,
+            FilterQuality = SKFilterQuality.High,
+        };
+
+        canvas.DrawBitmap(bitmap, destRect, paint);
     }
 
     /// <summary>
     /// Saves the current canvas paths back to the selected layer.
+    /// Only saves for paint layers that could have been edited.
     /// </summary>
     public void SaveCurrentLayerPaths()
     {
-        if (SelectedLayer is not null)
+        // Only save for paint layers (image layers don't have editable paths)
+        if (SelectedLayer is not null && SelectedLayer.LayerType == MaskLayerType.Paint)
         {
             SelectedLayer.Paths = PaintCanvasViewModel.Paths;
         }
@@ -323,72 +740,44 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
         var canvas = surface.Canvas;
         canvas.Clear(SKColors.Transparent);
 
-        // Draw paths in white
-        using var paint = new SKPaint
-        {
-            Color = SKColors.White,
-            IsAntialias = true,
-            Style = SKPaintStyle.Fill,
-        };
+        // Draw paths - RenderPenPath will use penPath.FillColor, so we render first
+        using var paint = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Fill };
 
         foreach (var penPath in layer.Paths)
         {
             RenderPenPathToCanvas(canvas, penPath, paint);
         }
 
+        // Now convert all colors to white, keeping alpha
+        // This ensures the mask is white regardless of display color
+        using var originalImage = surface.Snapshot();
+        // csharpier-ignore
+        using var colorFilter = SKColorFilter.CreateColorMatrix(
+            [
+                // R, G, B, A, Bias
+                // Convert any color to white (255, 255, 255), keep original alpha
+                0, 0, 0, 0, 255,  // R = 255
+                0, 0, 0, 0, 255,  // G = 255
+                0, 0, 0, 0, 255,  // B = 255
+                0, 0, 0, 1, 0     // A = original alpha
+            ]
+        );
+
+        using var filterPaint = new SKPaint();
+        filterPaint.ColorFilter = colorFilter;
+
+        canvas.Clear(SKColors.Transparent);
+        canvas.DrawImage(originalImage, originalImage.Info.Rect, filterPaint);
+
         return surface.Snapshot();
     }
 
+    /// <summary>
+    /// Renders a pen path to a canvas. Delegates to PaintCanvasViewModel's shared implementation.
+    /// </summary>
     private static void RenderPenPathToCanvas(SKCanvas canvas, PenPath penPath, SKPaint paint)
     {
-        if (penPath.Points.Count == 0)
-            return;
-
-        // Track if we have any pen points
-        var hasPenPoints = false;
-
-        for (var i = 0; i < penPath.Points.Count; i++)
-        {
-            var penPoint = penPath.Points[i];
-            if (!penPoint.IsPen)
-                continue;
-
-            hasPenPoints = true;
-            var radius = penPoint.Radius;
-            var pressure = penPoint.Pressure ?? 1;
-            var thickness = pressure * radius * 2.5;
-
-            // Draw path segments
-            if (i < penPath.Points.Count - 1)
-            {
-                paint.Style = SKPaintStyle.Stroke;
-                paint.StrokeWidth = (float)thickness;
-                paint.StrokeCap = SKStrokeCap.Round;
-                paint.StrokeJoin = SKStrokeJoin.Round;
-
-                var nextPoint = penPath.Points[i + 1];
-                canvas.DrawLine(penPoint.X, penPoint.Y, nextPoint.X, nextPoint.Y, paint);
-            }
-
-            // Draw circles for pen points
-            paint.Style = SKPaintStyle.Fill;
-            canvas.DrawCircle(penPoint.X, penPoint.Y, (float)thickness / 2, paint);
-        }
-
-        // Draw paths directly if no pen points
-        if (!hasPenPoints && penPath.Points.Count > 0)
-        {
-            var point = penPath.Points[0];
-            var thickness = point.Radius * 2;
-
-            paint.Style = SKPaintStyle.Stroke;
-            paint.StrokeWidth = (float)thickness;
-            paint.StrokeCap = SKStrokeCap.Round;
-            paint.StrokeJoin = SKStrokeJoin.Round;
-
-            var skPath = penPath.ToSKPath();
-            canvas.DrawPath(skPath, paint);
-        }
+        PaintCanvasViewModel.RenderPenPath(canvas, penPath, paint);
     }
 
     /// <summary>

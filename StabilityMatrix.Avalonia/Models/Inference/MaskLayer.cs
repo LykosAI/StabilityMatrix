@@ -42,6 +42,22 @@ public static class MaskLayerColors
 }
 
 /// <summary>
+/// Type of mask layer - determines how the layer content is rendered and edited.
+/// </summary>
+public enum MaskLayerType
+{
+    /// <summary>
+    /// A painted mask layer with brush strokes. This is the default type.
+    /// </summary>
+    Paint,
+
+    /// <summary>
+    /// An image layer that displays a bitmap. Future feature for painting over images.
+    /// </summary>
+    Image,
+}
+
+/// <summary>
 /// Represents a single layer in the layered mask editor.
 /// Each layer has its own painted mask, prompt, and compositing settings.
 /// </summary>
@@ -52,6 +68,32 @@ public partial class MaskLayer : ObservableObject, IJsonLoadableState
     /// </summary>
     [ObservableProperty]
     private string name = string.Empty;
+
+    /// <summary>
+    /// The type of this layer (Paint or Image).
+    /// </summary>
+    [ObservableProperty]
+    private MaskLayerType layerType = MaskLayerType.Paint;
+
+    /// <summary>
+    /// Path to the source image for Image layers. Null for Paint layers.
+    /// </summary>
+    [ObservableProperty]
+    private string? sourceImagePath;
+
+    /// <summary>
+    /// The loaded source image bitmap for Image layers. Runtime only, not serialized.
+    /// </summary>
+    [ObservableProperty]
+    [property: JsonIgnore]
+    private SKBitmap? sourceImage;
+
+    /// <summary>
+    /// Scale factor for image layers (0.1 to 3.0, default 1.0).
+    /// Allows user to resize the reference image.
+    /// </summary>
+    [ObservableProperty]
+    private double imageScale = 1.0;
 
     /// <summary>
     /// The prompt text for this layer's region.
@@ -131,11 +173,17 @@ public partial class MaskLayer : ObservableObject, IJsonLoadableState
         AvaloniaColor.FromRgb(DisplayColor.Red, DisplayColor.Green, DisplayColor.Blue);
 
     /// <summary>
-    /// Whether this layer has any painted content.
+    /// Whether this layer has any content (paint strokes or image).
     /// Empty layers are skipped during generation.
     /// </summary>
     [JsonIgnore]
-    public bool HasContent => Paths.Count > 0;
+    public bool HasContent => LayerType == MaskLayerType.Paint ? Paths.Count > 0 : HasImage;
+
+    /// <summary>
+    /// Whether this image layer has a loaded source image.
+    /// </summary>
+    [JsonIgnore]
+    public bool HasImage => SourceImage != null || !string.IsNullOrEmpty(SourceImagePath);
 
     /// <summary>
     /// Serialized paths for JSON persistence.
@@ -158,6 +206,20 @@ public partial class MaskLayer : ObservableObject, IJsonLoadableState
     {
         if (state.TryGetPropertyValue("name", out var nameNode))
             Name = nameNode?.GetValue<string>() ?? string.Empty;
+
+        if (state.TryGetPropertyValue("layerType", out var layerTypeNode))
+        {
+            var layerTypeStr = layerTypeNode?.GetValue<string>() ?? "Paint";
+            LayerType = Enum.TryParse<MaskLayerType>(layerTypeStr, out var parsedType)
+                ? parsedType
+                : MaskLayerType.Paint;
+        }
+
+        if (state.TryGetPropertyValue("sourceImagePath", out var imagePathNode))
+            SourceImagePath = imagePathNode?.GetValue<string>();
+
+        if (state.TryGetPropertyValue("imageScale", out var scaleNode))
+            ImageScale = scaleNode?.GetValue<double>() ?? 1.0;
 
         if (state.TryGetPropertyValue("prompt", out var promptNode))
             Prompt = promptNode?.GetValue<string>() ?? string.Empty;
@@ -193,6 +255,7 @@ public partial class MaskLayer : ObservableObject, IJsonLoadableState
         var state = new System.Text.Json.Nodes.JsonObject
         {
             ["name"] = Name,
+            ["layerType"] = LayerType.ToString(),
             ["prompt"] = Prompt,
             ["strength"] = Strength,
             ["opacity"] = Opacity,
@@ -200,6 +263,13 @@ public partial class MaskLayer : ObservableObject, IJsonLoadableState
             ["isEnabled"] = IsEnabled,
             ["displayColor"] = DisplayColorHex,
         };
+
+        // Save image layer properties
+        if (LayerType == MaskLayerType.Image && !string.IsNullOrEmpty(SourceImagePath))
+        {
+            state["sourceImagePath"] = SourceImagePath;
+            state["imageScale"] = ImageScale;
+        }
 
         if (Paths.Count > 0)
         {

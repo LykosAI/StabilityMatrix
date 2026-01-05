@@ -43,6 +43,14 @@ public class RegionalPromptModule : ModuleBase
         var card = GetCard<RegionalPromptCardViewModel>();
         maskCounter = 0;
 
+        // Sync canvas size from the generation resolution
+        // This ensures masks are rendered at the correct size even if user changed dimensions
+        var primarySize = e.Builder.Connections.PrimarySize;
+        if (primarySize is { Width: > 0, Height: > 0 })
+        {
+            card.SetCanvasSize(primarySize.Width, primarySize.Height);
+        }
+
         // Get enabled layers with content
         var enabledLayers = card.GetEnabledLayersWithContent();
 

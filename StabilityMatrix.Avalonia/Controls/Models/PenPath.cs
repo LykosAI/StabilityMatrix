@@ -5,12 +5,45 @@ using StabilityMatrix.Core.Converters.Json;
 
 namespace StabilityMatrix.Avalonia.Controls.Models;
 
+/// <summary>
+/// Type of path - determines how the path is rendered.
+/// </summary>
+public enum PenPathType
+{
+    /// <summary>
+    /// Freehand brush strokes (default).
+    /// </summary>
+    Freehand,
+
+    /// <summary>
+    /// Filled rectangle shape.
+    /// </summary>
+    Rectangle,
+
+    /// <summary>
+    /// Filled ellipse/oval shape.
+    /// </summary>
+    Ellipse,
+}
+
 public readonly record struct PenPath()
 {
     [JsonConverter(typeof(SKColorJsonConverter))]
     public SKColor FillColor { get; init; }
 
     public bool IsErase { get; init; }
+
+    /// <summary>
+    /// Type of path (Freehand, Rectangle, or Ellipse).
+    /// </summary>
+    public PenPathType PathType { get; init; } = PenPathType.Freehand;
+
+    /// <summary>
+    /// Bounding rectangle for shape paths (Rectangle, Ellipse).
+    /// For Freehand paths, this is ignored.
+    /// </summary>
+    [JsonConverter(typeof(SKRectJsonConverter))]
+    public SKRect Bounds { get; init; }
 
     public List<PenPoint> Points { get; init; } = [];
 

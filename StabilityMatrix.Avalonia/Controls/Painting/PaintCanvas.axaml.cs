@@ -35,8 +35,6 @@ public class PaintCanvas : TemplatedControlBase
 
     private IDisposable? viewModelSubscription;
 
-    private bool isPenDown;
-
     private PaintCanvasViewModel? ViewModel { get; set; }
 
     private SkiaCustomCanvas? MainCanvas { get; set; }
@@ -134,9 +132,9 @@ public class PaintCanvas : TemplatedControlBase
         {
             var newIsEnabled = change.GetNewValue<bool>();
 
-            if (!newIsEnabled)
+            if (!newIsEnabled && ViewModel is { } vm)
             {
-                isPenDown = false;
+                vm.IsPenDown = false;
             }
 
             // On any enabled change, flush temporary paths
@@ -164,9 +162,15 @@ public class PaintCanvas : TemplatedControlBase
             return;
         }
 
+        if (ViewModel is not { IsDrawingEnabled: true } vm)
+        {
+            return;
+        }
+
         if (e.RoutedEvent == PointerReleasedEvent && e.Pointer.Type == PointerType.Touch)
         {
             TemporaryPaths.TryRemove(e.Pointer.Id, out _);
+            vm.CancelShapeDrawing();
             return;
         }
 
@@ -175,11 +179,6 @@ public class PaintCanvas : TemplatedControlBase
         // Must have this or stylus inputs lost after a while
         // https://github.com/AvaloniaUI/Avalonia/issues/12289#issuecomment-1695620412
         e.PreventGestureRecognition();
-
-        if (DataContext is not PaintCanvasViewModel viewModel)
-        {
-            return;
-        }
 
         var currentPoint = e.GetCurrentPoint(this);
 
@@ -191,35 +190,62 @@ public class PaintCanvas : TemplatedControlBase
                 return;
             }
 
-            isPenDown = true;
+            vm.IsPenDown = true;
 
-            HandlePointerMoved(e);
+            if (vm.IsShapeTool)
+            {
+                var position = e.GetPosition(MainCanvas);
+                vm.StartShapeDrawing(new SKPoint((float)position.X, (float)position.Y), e.Pointer.Id);
+            }
+            else
+            {
+                HandlePointerMoved(e);
+            }
         }
         else if (e.RoutedEvent == PointerReleasedEvent)
         {
-            if (isPenDown)
+            if (vm.IsPenDown)
             {
-                HandlePointerMoved(e);
+                if (vm.IsShapeTool && vm.ShapeStartPoint.HasValue)
+                {
+                    var endPoint = e.GetPosition(MainCanvas);
+                    vm.FinalizeShape(new SKPoint((float)endPoint.X, (float)endPoint.Y));
+                }
+                else
+                {
+                    HandlePointerMoved(e);
+                }
 
-                isPenDown = false;
+                vm.IsPenDown = false;
             }
 
-            if (TemporaryPaths.TryGetValue(e.Pointer.Id, out var path))
+            if (!vm.IsShapeTool && TemporaryPaths.TryGetValue(e.Pointer.Id, out var path))
             {
                 Paths = Paths.Add(path);
             }
 
-            TemporaryPaths.TryRemove(e.Pointer.Id, out _);
+            if (!vm.IsShapeTool)
+            {
+                TemporaryPaths.TryRemove(e.Pointer.Id, out _);
+            }
         }
         else
         {
             // Moved event
-            if (!isPenDown || currentPoint.Properties.Pressure == 0)
+            if (!vm.IsPenDown)
             {
                 return;
             }
 
-            HandlePointerMoved(e);
+            if (vm.IsShapeTool && vm.ShapeStartPoint.HasValue)
+            {
+                var endPoint = e.GetPosition(MainCanvas);
+                vm.UpdateShapePreview(new SKPoint((float)endPoint.X, (float)endPoint.Y));
+            }
+            else if (currentPoint.Properties.Pressure != 0)
+            {
+                HandlePointerMoved(e);
+            }
         }
 
         Dispatcher.UIThread.Post(() => MainCanvas?.InvalidateVisual(), DispatcherPriority.Render);
@@ -235,8 +261,6 @@ public class PaintCanvas : TemplatedControlBase
         // Use intermediate points to include past events we missed
         var points = e.GetIntermediatePoints(MainCanvas);
 
-        Debug.WriteLine($"Points: {string.Join(",", points.Select(p => p.Position.ToString()))}");
-
         if (points.Count == 0)
         {
             return;
@@ -250,7 +274,7 @@ public class PaintCanvas : TemplatedControlBase
             penPath = new PenPath
             {
                 FillColor = viewModel.PaintBrushSKColor.WithAlpha((byte)(viewModel.PaintBrushAlpha * 255)),
-                IsErase = viewModel.SelectedTool == PaintCanvasTool.Eraser
+                IsErase = viewModel.SelectedTool == PaintCanvasTool.Eraser,
             };
             TemporaryPaths[e.Pointer.Id] = penPath;
         }
@@ -275,7 +299,7 @@ public class PaintCanvas : TemplatedControlBase
             {
                 Pressure = point.Pointer.Type == PointerType.Mouse ? null : point.Properties.Pressure,
                 Radius = viewModel.PaintBrushSize,
-                IsPen = point.Pointer.Type == PointerType.Pen
+                IsPen = point.Pointer.Type == PointerType.Pen,
             };
 
             penPath.Points.Add(penPoint);
@@ -311,7 +335,57 @@ public class PaintCanvas : TemplatedControlBase
         if (e.Key == Key.Escape)
         {
             e.Handled = true;
+            return;
         }
+
+        // Keyboard shortcuts for paint canvas
+        if (ViewModel is not { } vm)
+            return;
+
+        // Check for modifier keys
+        var isCtrl = e.KeyModifiers.HasFlag(KeyModifiers.Control);
+
+        // Ctrl+Z: Undo
+        if (isCtrl && e.Key == Key.Z)
+        {
+            if (vm.UndoCommand.CanExecute(null))
+            {
+                vm.UndoCommand.Execute(null);
+                RefreshCanvas();
+            }
+            e.Handled = true;
+            return;
+        }
+
+        // Skip tool shortcuts if modifiers are held (to not interfere with other shortcuts)
+        if (e.KeyModifiers != KeyModifiers.None)
+            return;
+
+        switch (e.Key)
+        {
+            case Key.B:
+                vm.SelectBrushToolCommand.Execute(null);
+                break;
+            case Key.E:
+                vm.SelectEraserToolCommand.Execute(null);
+                break;
+            case Key.R:
+                vm.SelectRectangleToolCommand.Execute(null);
+                break;
+            case Key.O:
+                vm.SelectEllipseToolCommand.Execute(null);
+                break;
+            case Key.OemOpenBrackets:
+                vm.DecreaseBrushSizeCommand.Execute(null);
+                break;
+            case Key.OemCloseBrackets:
+                vm.IncreaseBrushSizeCommand.Execute(null);
+                break;
+            default:
+                return;
+        }
+        UpdateCanvasCursor();
+        e.Handled = true;
     }
 
     /// <summary>
@@ -340,11 +414,27 @@ public class PaintCanvas : TemplatedControlBase
 
     private int lastCanvasCursorRadius;
     private Cursor? lastCanvasCursor;
+    private PaintCanvasTool? lastCanvasCursorTool;
 
     private void UpdateCanvasCursor()
     {
         if (MainCanvas is not { } canvas)
         {
+            return;
+        }
+
+        var selectedTool = ViewModel?.SelectedTool ?? PaintCanvasTool.PaintBrush;
+
+        // Use crosshair for shape tools
+        if (selectedTool is PaintCanvasTool.Rectangle or PaintCanvasTool.Ellipse)
+        {
+            if (lastCanvasCursorTool != selectedTool)
+            {
+                lastCanvasCursor?.Dispose();
+                lastCanvasCursor = new Cursor(StandardCursorType.Cross);
+                lastCanvasCursorTool = selectedTool;
+            }
+            canvas.Cursor = lastCanvasCursor;
             return;
         }
 
@@ -355,13 +445,14 @@ public class PaintCanvas : TemplatedControlBase
         var brushRadius = (int)Math.Ceiling(currentBrushSize * 2 * currentZoom);
 
         // Only update cursor if brush size has changed
-        if (brushRadius == lastCanvasCursorRadius)
+        if (brushRadius == lastCanvasCursorRadius && lastCanvasCursorTool == selectedTool)
         {
             canvas.Cursor = lastCanvasCursor;
             return;
         }
 
         lastCanvasCursorRadius = brushRadius;
+        lastCanvasCursorTool = selectedTool;
 
         var brushDiameter = brushRadius * 2;
 
@@ -386,7 +477,7 @@ public class PaintCanvas : TemplatedControlBase
                 StrokeCap = SKStrokeCap.Round,
                 StrokeJoin = SKStrokeJoin.Round,
                 IsDither = true,
-                IsAntialias = true
+                IsAntialias = true,
             }
         );
         cursorCanvas.Flush();
@@ -413,26 +504,6 @@ public class PaintCanvas : TemplatedControlBase
         {
             canvas.Cursor = new Cursor(StandardCursorType.Arrow);
         }
-    }
-
-    private Point GetRelativePosition(Point pt, Visual? relativeTo)
-    {
-        if (VisualRoot is not Visual visualRoot)
-            return default;
-        if (relativeTo == null)
-            return pt;
-
-        return pt * visualRoot.TransformToVisual(relativeTo) ?? default;
-    }
-
-    public AsyncRelayCommand ClearCanvasCommand => new(ClearCanvasAsync);
-
-    public async Task ClearCanvasAsync()
-    {
-        Paths = ImmutableList<PenPath>.Empty;
-        TemporaryPaths.Clear();
-
-        await Dispatcher.UIThread.InvokeAsync(() => MainCanvas?.InvalidateVisual());
     }
 
     private void OnRenderSkia(SKSurface surface)

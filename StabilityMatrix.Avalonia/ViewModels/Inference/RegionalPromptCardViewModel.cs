@@ -23,6 +23,7 @@ public partial class RegionalPromptCardViewModel : LoadableViewModelBase
     public const string ModuleKey = "RegionalPrompt";
 
     private readonly IServiceManager<ViewModelBase> vmFactory;
+    private readonly TabContext tabContext;
 
     /// <summary>
     /// The layered mask editor for painting regions.
@@ -37,9 +38,10 @@ public partial class RegionalPromptCardViewModel : LoadableViewModelBase
     [JsonIgnore]
     public ObservableCollection<MaskLayer> Layers => LayeredMaskEditor.Layers;
 
-    public RegionalPromptCardViewModel(IServiceManager<ViewModelBase> vmFactory)
+    public RegionalPromptCardViewModel(IServiceManager<ViewModelBase> vmFactory, TabContext tabContext)
     {
         this.vmFactory = vmFactory;
+        this.tabContext = tabContext;
         LayeredMaskEditor = vmFactory.Get<LayeredMaskEditorViewModel>();
     }
 
@@ -58,8 +60,16 @@ public partial class RegionalPromptCardViewModel : LoadableViewModelBase
     [RelayCommand]
     private async Task OpenMaskEditorAsync()
     {
-        // Ensure canvas size is set
-        if (LayeredMaskEditor.CanvasSize == System.Drawing.Size.Empty)
+        // Get canvas size from TabContext (synced from SamplerCardViewModel)
+        var width = tabContext.SamplerWidth;
+        var height = tabContext.SamplerHeight;
+
+        // Use the sampler dimensions, or fallback to 1024x1024
+        if (width > 0 && height > 0)
+        {
+            LayeredMaskEditor.CanvasSize = new System.Drawing.Size(width, height);
+        }
+        else if (LayeredMaskEditor.CanvasSize == System.Drawing.Size.Empty)
         {
             LayeredMaskEditor.CanvasSize = new System.Drawing.Size(1024, 1024);
         }

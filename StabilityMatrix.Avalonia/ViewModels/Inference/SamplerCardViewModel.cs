@@ -193,6 +193,18 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
         SelectedScheduler = defaults.Scheduler;
     }
 
+    partial void OnWidthChanged(int value)
+    {
+        // Sync width to TabContext so other components can access it
+        tabContext.SamplerWidth = value;
+    }
+
+    partial void OnHeightChanged(int value)
+    {
+        // Sync height to TabContext so other components can access it
+        tabContext.SamplerHeight = value;
+    }
+
     [RelayCommand]
     private void SwapDimensions()
     {

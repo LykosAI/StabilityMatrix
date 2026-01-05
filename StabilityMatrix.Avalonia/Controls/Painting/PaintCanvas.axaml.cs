@@ -192,7 +192,15 @@ public class PaintCanvas : TemplatedControlBase
 
             vm.IsPenDown = true;
 
-            if (vm.IsShapeTool)
+            if (vm.SelectedTool == PaintCanvasTool.PaintBucket)
+            {
+                // Paint bucket: perform flood fill on click
+                var position = e.GetPosition(MainCanvas);
+                var fillColor = vm.PaintBrushSKColor.WithAlpha((byte)(vm.PaintBrushAlpha * 255));
+                vm.FloodFillAt(new SKPoint((float)position.X, (float)position.Y), fillColor);
+                vm.IsPenDown = false;
+            }
+            else if (vm.IsShapeTool)
             {
                 var position = e.GetPosition(MainCanvas);
                 vm.StartShapeDrawing(new SKPoint((float)position.X, (float)position.Y), e.Pointer.Id);
@@ -381,6 +389,9 @@ public class PaintCanvas : TemplatedControlBase
             case Key.OemCloseBrackets:
                 vm.IncreaseBrushSizeCommand.Execute(null);
                 break;
+            case Key.G:
+                vm.SelectPaintBucketToolCommand.Execute(null);
+                break;
             default:
                 return;
         }
@@ -425,8 +436,13 @@ public class PaintCanvas : TemplatedControlBase
 
         var selectedTool = ViewModel?.SelectedTool ?? PaintCanvasTool.PaintBrush;
 
-        // Use crosshair for shape tools
-        if (selectedTool is PaintCanvasTool.Rectangle or PaintCanvasTool.Ellipse)
+        // Use crosshair for shape tools and paint bucket
+        if (
+            selectedTool
+            is PaintCanvasTool.Rectangle
+                or PaintCanvasTool.Ellipse
+                or PaintCanvasTool.PaintBucket
+        )
         {
             if (lastCanvasCursorTool != selectedTool)
             {

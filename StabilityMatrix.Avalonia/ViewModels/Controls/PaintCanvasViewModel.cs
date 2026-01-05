@@ -473,6 +473,281 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger) 
 
     #endregion
 
+    #region Paint Bucket / Flood Fill
+
+    [RelayCommand]
+    public void SelectPaintBucketTool() => SelectedTool = PaintCanvasTool.PaintBucket;
+
+    /// <summary>
+    /// Performs a flood fill at the specified point.
+    /// Returns the created path, or null if fill wasn't possible.
+    /// </summary>
+    public PenPath? FloodFillAt(SKPoint clickPoint, SKColor fillColor)
+    {
+        if (CanvasSize == Size.Empty)
+            return null;
+
+        var x = (int)clickPoint.X;
+        var y = (int)clickPoint.Y;
+
+        // Bounds check
+        if (x < 0 || x >= CanvasSize.Width || y < 0 || y >= CanvasSize.Height)
+            return null;
+
+        // Get the current state of the canvas on CPU to avoid GPU context threading issues ("Could not allocate vertices")
+        // and to ensure we don't accidentally fill the checkerboard pattern.
+        using var sourceBitmap = GetFlattenedContentBitmap();
+        var targetColor = sourceBitmap.GetPixel(x, y);
+
+        // Don't fill if clicking on the same color (with some tolerance for anti-aliasing)
+        if (ColorsAreSimilar(targetColor, fillColor, tolerance: 30))
+            return null;
+
+        // Create a bitmap and surface for drawing the fill result
+        var fillBitmap = new SKBitmap(
+            CanvasSize.Width,
+            CanvasSize.Height,
+            SKColorType.Rgba8888,
+            SKAlphaType.Premul
+        );
+        using var surface = SKSurface.Create(
+            new SKImageInfo(CanvasSize.Width, CanvasSize.Height, SKColorType.Rgba8888, SKAlphaType.Premul)
+        );
+        var canvas = surface.Canvas;
+        canvas.Clear(SKColors.Transparent);
+
+        // Perform flood fill and draw horizontal spans
+        var hasContent = ScanlineFillWithCanvas(sourceBitmap, canvas, x, y, targetColor, fillColor);
+
+        if (!hasContent)
+        {
+            fillBitmap.Dispose();
+            return null;
+        }
+
+        // Copy the surface to the bitmap
+        canvas.Flush();
+        using var filledImage = surface.Snapshot();
+
+        // Create a new bitmap with the filled content
+        var resultBitmap = new SKBitmap(
+            CanvasSize.Width,
+            CanvasSize.Height,
+            SKColorType.Rgba8888,
+            SKAlphaType.Premul
+        );
+        using var resultCanvas = new SKCanvas(resultBitmap);
+        resultCanvas.DrawImage(filledImage, 0, 0);
+        resultCanvas.Flush();
+
+        // Create a bitmap path with the fill result
+        var fillPath = new PenPath
+        {
+            PathType = PenPathType.Bitmap,
+            FillColor = fillColor,
+            BitmapData = resultBitmap,
+            Bounds = new SKRect(0, 0, CanvasSize.Width, CanvasSize.Height),
+        };
+
+        Paths = Paths.Add(fillPath);
+        InvalidatePathCache();
+        RefreshCanvas?.Invoke();
+
+        return fillPath;
+    }
+
+    /// <summary>
+    /// Generates a flattened bitmap of the current canvas content (Layers + Paths).
+    /// Runs strictly on CPU to avoid GPU threading/context issues during Flood Fill.
+    /// Ignores checkerboard background to ensure correct filling of transparent areas.
+    /// </summary>
+    private SKBitmap GetFlattenedContentBitmap()
+    {
+        var width = (int)CanvasSize.Width;
+        var height = (int)CanvasSize.Height;
+        var bitmap = new SKBitmap(width, height, SKColorType.Rgba8888, SKAlphaType.Premul);
+
+        using var canvas = new SKCanvas(bitmap);
+        canvas.Clear(SKColors.Transparent);
+
+        // Draw all layers in order
+        foreach (var (name, layer) in Layers)
+        {
+            lock (layer)
+            {
+                foreach (var layerBitmap in layer.Bitmaps)
+                {
+                    canvas.DrawBitmap(layerBitmap, 0, 0);
+                }
+
+                // If this is the active brush layer, also render the active vector paths
+                // We render them freshly here on CPU to avoid using the GPU-backed cache from a different thread
+                if (name == "Brush")
+                {
+                    using var paint = new SKPaint();
+                    foreach (var path in Paths)
+                    {
+                        RenderPenPath(canvas, path, paint);
+                    }
+                }
+            }
+        }
+
+        canvas.Flush();
+        return bitmap;
+    }
+
+    /// <summary>
+    /// Scanline flood fill that draws horizontal spans to an SKCanvas.
+    /// Returns true if any pixels were filled.
+    /// </summary>
+    private static bool ScanlineFillWithCanvas(
+        SKBitmap source,
+        SKCanvas canvas,
+        int startX,
+        int startY,
+        SKColor targetColor,
+        SKColor fillColor
+    )
+    {
+        var width = source.Width;
+        var height = source.Height;
+
+        // Use SKBitmap.Pixels which is platform-agnostic (returns SKColor[])
+        var sourcePixels = source.Pixels;
+
+        var visited = new bool[width * height];
+        var queue = new Queue<(int x, int y)>();
+        queue.Enqueue((startX, startY));
+
+        // Collect horizontal spans to draw
+        var spans = new List<(int y, int left, int right)>();
+
+        // Increased tolerance to better catch anti-aliased edges
+        const int Tolerance = 50;
+        // Increased expansion to ensuring we fully cover the semi-transparent border pixels
+        const float Expand = 1.5f;
+
+        using var paint = new SKPaint
+        {
+            Color = fillColor,
+            Style = SKPaintStyle.Fill,
+            IsAntialias = true, // Smooth edges for the dilated rects
+            BlendMode = SKBlendMode.Src, // Replace mode prevents alpha buildup on overlapping dilated scanlines
+        };
+
+        while (queue.Count > 0)
+        {
+            var (x, y) = queue.Dequeue();
+
+            // Bounds check
+            if (x < 0 || x >= width || y < 0 || y >= height)
+                continue;
+
+            var index = y * width + x;
+            if (visited[index])
+                continue;
+
+            var pixel = sourcePixels[index];
+            if (!ColorsAreSimilar(pixel, targetColor, tolerance: Tolerance))
+                continue;
+
+            // Mark as visited
+            visited[index] = true;
+
+            // Scanline approach: find the entire horizontal span
+            var left = x;
+            var right = x;
+
+            // Extend left
+            while (left > 0)
+            {
+                var leftIndex = y * width + (left - 1);
+                if (visited[leftIndex])
+                    break;
+                var leftPixel = sourcePixels[leftIndex];
+                if (!ColorsAreSimilar(leftPixel, targetColor, tolerance: Tolerance))
+                    break;
+                left--;
+                visited[leftIndex] = true;
+            }
+
+            // Extend right
+            while (right < width - 1)
+            {
+                var rightIndex = y * width + (right + 1);
+                if (visited[rightIndex])
+                    break;
+                var rightPixel = sourcePixels[rightIndex];
+                if (!ColorsAreSimilar(rightPixel, targetColor, tolerance: Tolerance))
+                    break;
+                right++;
+                visited[rightIndex] = true;
+            }
+
+            // Draw this span as a filled rectangle with slight expansion
+            // Using DrawRect with float coordinates allows sub-pixel expansion
+            canvas.DrawRect(
+                left - Expand,
+                y - Expand,
+                (right - left + 1) + (Expand * 2),
+                1 + (Expand * 2),
+                paint
+            );
+
+            // Queue pixels above and below the span
+            for (var i = left; i <= right; i++)
+            {
+                if (y > 0)
+                {
+                    var aboveIndex = (y - 1) * width + i;
+                    if (!visited[aboveIndex])
+                    {
+                        var abovePixel = sourcePixels[aboveIndex];
+                        if (ColorsAreSimilar(abovePixel, targetColor, tolerance: Tolerance))
+                            queue.Enqueue((i, y - 1));
+                    }
+                }
+
+                if (y < height - 1)
+                {
+                    var belowIndex = (y + 1) * width + i;
+                    if (!visited[belowIndex])
+                    {
+                        var belowPixel = sourcePixels[belowIndex];
+                        if (ColorsAreSimilar(belowPixel, targetColor, tolerance: Tolerance))
+                            queue.Enqueue((i, y + 1));
+                    }
+                }
+            }
+        }
+
+        // Check if anything was filled (at least one visited pixel)
+        foreach (var v in visited)
+        {
+            if (v)
+                return true;
+        }
+
+        return false;
+    }
+
+    private static bool ColorsAreSimilar(SKColor a, SKColor b, int tolerance)
+    {
+        // Handle transparent pixels specially
+        if (a.Alpha < 10 && b.Alpha < 10)
+            return true;
+        if (a.Alpha < 10 || b.Alpha < 10)
+            return Math.Abs(a.Alpha - b.Alpha) <= tolerance;
+
+        return Math.Abs(a.Red - b.Red) <= tolerance
+            && Math.Abs(a.Green - b.Green) <= tolerance
+            && Math.Abs(a.Blue - b.Blue) <= tolerance
+            && Math.Abs(a.Alpha - b.Alpha) <= tolerance;
+    }
+
+    #endregion
+
     public SKImage? RenderToWhiteChannelImage()
     {
         using var _ = CodeTimer.StartDebug();
@@ -824,7 +1099,9 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger) 
         RenderPathsWithCaching(BrushLayer.Surface!.Canvas);
 
         // Draw background - either checkerboard for transparency or clear
-        if (ShowCheckerboardBackground)
+        // Draw background - either checkerboard for transparency or clear
+        // Include check for renderBackgroundFill so snapshots (like FloodFill analysis) can skip the checkerboard pattern
+        if (ShowCheckerboardBackground && renderBackgroundFill)
         {
             RenderCheckerboardBackground(surface.Canvas);
         }
@@ -1298,7 +1575,7 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger) 
         paint.IsDither = true;
         paint.IsAntialias = true;
 
-        // Handle shape path types (Rectangle, Ellipse)
+        // Handle shape path types (Rectangle, Ellipse, Bitmap)
         switch (penPath.PathType)
         {
             case PenPathType.Rectangle:
@@ -1309,6 +1586,13 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger) 
             case PenPathType.Ellipse:
                 paint.Style = SKPaintStyle.Fill;
                 canvas.DrawOval(penPath.Bounds, paint);
+                return;
+
+            case PenPathType.Bitmap:
+                if (penPath.BitmapData != null)
+                {
+                    canvas.DrawBitmap(penPath.BitmapData, penPath.Bounds.Left, penPath.Bounds.Top);
+                }
                 return;
 
             case PenPathType.Freehand:

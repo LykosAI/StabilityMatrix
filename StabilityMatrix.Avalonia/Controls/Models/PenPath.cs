@@ -24,6 +24,11 @@ public enum PenPathType
     /// Filled ellipse/oval shape.
     /// </summary>
     Ellipse,
+
+    /// <summary>
+    /// Bitmap image (used for flood fill results).
+    /// </summary>
+    Bitmap,
 }
 
 public readonly record struct PenPath()
@@ -46,6 +51,12 @@ public readonly record struct PenPath()
     public SKRect Bounds { get; init; }
 
     public List<PenPoint> Points { get; init; } = [];
+
+    /// <summary>
+    /// Bitmap data for flood fill paths. Stored as PNG bytes for serialization.
+    /// </summary>
+    [JsonIgnore]
+    public SKBitmap? BitmapData { get; init; }
 
     public SKPath ToSKPath()
     {

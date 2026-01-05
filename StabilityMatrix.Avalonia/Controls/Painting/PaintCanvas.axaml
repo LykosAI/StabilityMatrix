@@ -65,6 +65,9 @@
                                 <ToggleButton IsChecked="{Binding SelectedTool, Converter={StaticResource EnumBoolConverter}, ConverterParameter={x:Static models:PaintCanvasTool.Ellipse}}" ToolTip.Tip="Ellipse (O)">
                                     <faIcons:Icon FontSize="18" Value="fa-regular fa-circle" />
                                 </ToggleButton>
+                                <ToggleButton IsChecked="{Binding SelectedTool, Converter={StaticResource EnumBoolConverter}, ConverterParameter={x:Static models:PaintCanvasTool.PaintBucket}}" ToolTip.Tip="Paint Bucket / Flood Fill (G)">
+                                    <faIcons:Icon FontSize="18" Value="fa-solid fa-fill-drip" />
+                                </ToggleButton>
                             </StackPanel>
                         </controls:Card>
 

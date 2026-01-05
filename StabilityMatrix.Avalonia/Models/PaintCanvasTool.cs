@@ -7,4 +7,5 @@ public enum PaintCanvasTool
     Eraser,
     Rectangle,
     Ellipse,
+    PaintBucket,
 }

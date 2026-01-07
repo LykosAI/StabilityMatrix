@@ -32,6 +32,12 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger) 
     [NotifyCanExecuteChangedFor(nameof(UndoCommand))]
     private ImmutableList<PenPath> paths = [];
 
+    /// <summary>
+    /// Stack of undone paths for redo functionality.
+    /// </summary>
+    [JsonIgnore]
+    private readonly Stack<PenPath> redoStack = new();
+
     [ObservableProperty]
     private Color? paintBrushColor = Colors.White;
 
@@ -63,6 +69,12 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger) 
     /// </summary>
     [ObservableProperty]
     private bool isDrawingEnabled = true;
+
+    /// <summary>
+    /// Whether to draw shapes (Rectangle/Ellipse) as strokes only instead of filled.
+    /// </summary>
+    [ObservableProperty]
+    private bool isShapeStrokeOnly;
 
     [JsonIgnore]
     private SKCanvas? SourceCanvas { set; get; }
@@ -281,7 +293,30 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger) 
             return;
         }
 
+        // Push the removed path to redo stack
+        var removedPath = currentPaths[^1];
+        redoStack.Push(removedPath);
+        RedoCommand.NotifyCanExecuteChanged();
+
         Paths = currentPaths.RemoveAt(currentPaths.Count - 1);
+
+        // Invalidate cache since paths changed
+        InvalidatePathCache();
+
+        RefreshCanvas?.Invoke();
+    }
+
+    [RelayCommand(CanExecute = nameof(CanExecuteRedo))]
+    public void Redo()
+    {
+        if (redoStack.Count == 0)
+        {
+            return;
+        }
+
+        var pathToRestore = redoStack.Pop();
+        Paths = Paths.Add(pathToRestore);
+        RedoCommand.NotifyCanExecuteChanged();
 
         // Invalidate cache since paths changed
         InvalidatePathCache();
@@ -313,6 +348,23 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger) 
     private bool CanExecuteUndo()
     {
         return Paths.Count > 0;
+    }
+
+    private bool CanExecuteRedo()
+    {
+        return redoStack.Count > 0;
+    }
+
+    /// <summary>
+    /// Clears the redo stack. Call when new paths are added (not via redo).
+    /// </summary>
+    public void ClearRedoStack()
+    {
+        if (redoStack.Count > 0)
+        {
+            redoStack.Clear();
+            RedoCommand.NotifyCanExecuteChanged();
+        }
     }
 
     #region Shape Tool State
@@ -349,6 +401,8 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger) 
     {
         Paths = ImmutableList<PenPath>.Empty;
         TemporaryPaths.Clear();
+        redoStack.Clear();
+        RedoCommand.NotifyCanExecuteChanged();
         InvalidatePathCache();
         RefreshCanvas?.Invoke();
     }
@@ -413,6 +467,8 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger) 
             PathType =
                 SelectedTool == PaintCanvasTool.Rectangle ? PenPathType.Rectangle : PenPathType.Ellipse,
             Bounds = bounds,
+            IsStrokeOnly = IsShapeStrokeOnly,
+            StrokeWidth = (float)PaintBrushSize,
         };
         TemporaryPaths[ShapePointerId] = previewPath;
     }
@@ -443,9 +499,12 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger) 
             PathType =
                 SelectedTool == PaintCanvasTool.Rectangle ? PenPathType.Rectangle : PenPathType.Ellipse,
             Bounds = bounds,
+            IsStrokeOnly = IsShapeStrokeOnly,
+            StrokeWidth = (float)PaintBrushSize,
         };
 
         Paths = Paths.Add(shapePath);
+        ClearRedoStack(); // New path added, clear redo history
         ShapeStartPoint = null;
         TemporaryPaths.TryRemove(ShapePointerId, out _);
 
@@ -550,6 +609,7 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger) 
         };
 
         Paths = Paths.Add(fillPath);
+        ClearRedoStack(); // New path added, clear redo history
         InvalidatePathCache();
         RefreshCanvas?.Invoke();
 
@@ -1558,7 +1618,13 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger) 
     /// with other ViewModels like LayeredMaskEditorViewModel.
     /// Optimized to batch draw calls into a single SKPath for performance.
     /// </summary>
-    public static void RenderPenPath(SKCanvas canvas, PenPath penPath, SKPaint paint)
+    /// <param name="overrideColor">If provided, uses this color instead of the path's FillColor. Useful for mask export.</param>
+    public static void RenderPenPath(
+        SKCanvas canvas,
+        PenPath penPath,
+        SKPaint paint,
+        SKColor? overrideColor = null
+    )
     {
         // Apply Color and blend mode
         if (penPath.IsErase)
@@ -1569,7 +1635,7 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger) 
         else
         {
             paint.BlendMode = SKBlendMode.SrcOver;
-            paint.Color = penPath.FillColor;
+            paint.Color = overrideColor ?? penPath.FillColor;
         }
 
         paint.IsDither = true;
@@ -1579,19 +1645,59 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger) 
         switch (penPath.PathType)
         {
             case PenPathType.Rectangle:
-                paint.Style = SKPaintStyle.Fill;
+                if (penPath.IsStrokeOnly)
+                {
+                    paint.Style = SKPaintStyle.Stroke;
+                    paint.StrokeWidth = penPath.StrokeWidth;
+                }
+                else
+                {
+                    paint.Style = SKPaintStyle.Fill;
+                }
                 canvas.DrawRect(penPath.Bounds, paint);
                 return;
 
             case PenPathType.Ellipse:
-                paint.Style = SKPaintStyle.Fill;
+                if (penPath.IsStrokeOnly)
+                {
+                    paint.Style = SKPaintStyle.Stroke;
+                    paint.StrokeWidth = penPath.StrokeWidth;
+                }
+                else
+                {
+                    paint.Style = SKPaintStyle.Fill;
+                }
                 canvas.DrawOval(penPath.Bounds, paint);
                 return;
 
             case PenPathType.Bitmap:
                 if (penPath.BitmapData != null)
                 {
-                    canvas.DrawBitmap(penPath.BitmapData, penPath.Bounds.Left, penPath.Bounds.Top);
+                    if (overrideColor.HasValue)
+                    {
+                        // Apply color filter to replace colors with override while keeping alpha
+                        var color = overrideColor.Value;
+                        using var colorPaint = new SKPaint();
+                        // Color matrix that replaces RGB with override color, preserves alpha
+                        // csharpier-ignore
+                        colorPaint.ColorFilter = SKColorFilter.CreateColorMatrix(
+                        [
+                            0, 0, 0, 0, color.Red / 255f,
+                            0, 0, 0, 0, color.Green / 255f,
+                            0, 0, 0, 0, color.Blue / 255f,
+                            0, 0, 0, 1, 0
+                        ]);
+                        canvas.DrawBitmap(
+                            penPath.BitmapData,
+                            penPath.Bounds.Left,
+                            penPath.Bounds.Top,
+                            colorPaint
+                        );
+                    }
+                    else
+                    {
+                        canvas.DrawBitmap(penPath.BitmapData, penPath.Bounds.Left, penPath.Bounds.Top);
+                    }
                 }
                 return;
 
@@ -1616,7 +1722,7 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger) 
         else
         {
             paint.BlendMode = SKBlendMode.SrcOver;
-            paint.Color = penPath.FillColor;
+            paint.Color = overrideColor ?? penPath.FillColor;
         }
 
         // Setup paint for strokes

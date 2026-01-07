@@ -230,6 +230,7 @@ public class PaintCanvas : TemplatedControlBase
             if (!vm.IsShapeTool && TemporaryPaths.TryGetValue(e.Pointer.Id, out var path))
             {
                 Paths = Paths.Add(path);
+                vm.ClearRedoStack(); // New path added, clear redo history
             }
 
             if (!vm.IsShapeTool)
@@ -354,11 +355,26 @@ public class PaintCanvas : TemplatedControlBase
         var isCtrl = e.KeyModifiers.HasFlag(KeyModifiers.Control);
 
         // Ctrl+Z: Undo
-        if (isCtrl && e.Key == Key.Z)
+        if (isCtrl && e.Key == Key.Z && !e.KeyModifiers.HasFlag(KeyModifiers.Shift))
         {
             if (vm.UndoCommand.CanExecute(null))
             {
                 vm.UndoCommand.Execute(null);
+                RefreshCanvas();
+            }
+            e.Handled = true;
+            return;
+        }
+
+        // Ctrl+Y or Ctrl+Shift+Z: Redo
+        if (
+            (isCtrl && e.Key == Key.Y)
+            || (isCtrl && e.KeyModifiers.HasFlag(KeyModifiers.Shift) && e.Key == Key.Z)
+        )
+        {
+            if (vm.RedoCommand.CanExecute(null))
+            {
+                vm.RedoCommand.Execute(null);
                 RefreshCanvas();
             }
             e.Handled = true;

@@ -102,6 +102,12 @@ public partial class MaskLayer : ObservableObject, IJsonLoadableState
     private string prompt = string.Empty;
 
     /// <summary>
+    /// Negative prompt text for this layer's region.
+    /// </summary>
+    [ObservableProperty]
+    private string negativePrompt = string.Empty;
+
+    /// <summary>
     /// Conditioning strength for this region (0.0 - 10.0, default 1.0).
     /// </summary>
     [ObservableProperty]
@@ -126,6 +132,12 @@ public partial class MaskLayer : ObservableObject, IJsonLoadableState
     /// </summary>
     [ObservableProperty]
     private bool isEnabled = true;
+
+    /// <summary>
+    /// Whether this layer is locked (prevents drawing).
+    /// </summary>
+    [ObservableProperty]
+    private bool isLocked;
 
     /// <summary>
     /// Display color for this layer in the editor (for visual distinction).
@@ -166,11 +178,34 @@ public partial class MaskLayer : ObservableObject, IJsonLoadableState
     }
 
     /// <summary>
-    /// Gets the display color as an Avalonia Color for UI binding.
+    /// Gets or sets the display color as an Avalonia Color for UI binding.
+    /// Setting this property updates the underlying SKColor.
     /// </summary>
-    [JsonIgnore]
-    public AvaloniaColor AvaloniaDisplayColor =>
-        AvaloniaColor.FromRgb(DisplayColor.Red, DisplayColor.Green, DisplayColor.Blue);
+    [ObservableProperty]
+    [property: JsonIgnore]
+    private AvaloniaColor avaloniaDisplayColor = AvaloniaColor.FromRgb(255, 100, 100);
+
+    partial void OnAvaloniaDisplayColorChanged(AvaloniaColor value)
+    {
+        // Sync to SKColor without triggering infinite loop
+        var newSkColor = new SKColor(value.R, value.G, value.B);
+        if (DisplayColor != newSkColor)
+        {
+            DisplayColor = newSkColor;
+        }
+    }
+
+    partial void OnDisplayColorChanged(SKColor value)
+    {
+        // Sync to Avalonia color without triggering infinite loop
+        var newAvaloniaColor = AvaloniaColor.FromRgb(value.Red, value.Green, value.Blue);
+        if (AvaloniaDisplayColor != newAvaloniaColor)
+        {
+            AvaloniaDisplayColor = newAvaloniaColor;
+        }
+        // Note: Path recoloring is handled by LayeredMaskEditorViewModel
+        // which saves canvas paths first before recoloring
+    }
 
     /// <summary>
     /// Whether this layer has any content (paint strokes or image).
@@ -236,8 +271,14 @@ public partial class MaskLayer : ObservableObject, IJsonLoadableState
         if (state.TryGetPropertyValue("isEnabled", out var enabledNode))
             IsEnabled = enabledNode?.GetValue<bool>() ?? true;
 
+        if (state.TryGetPropertyValue("isLocked", out var lockedNode))
+            IsLocked = lockedNode?.GetValue<bool>() ?? false;
+
         if (state.TryGetPropertyValue("displayColor", out var colorNode))
             DisplayColorHex = colorNode?.GetValue<string>() ?? "#FF6464";
+
+        if (state.TryGetPropertyValue("negativePrompt", out var negPromptNode))
+            NegativePrompt = negPromptNode?.GetValue<string>() ?? string.Empty;
 
         if (
             state.TryGetPropertyValue("paths", out var pathsNode)
@@ -257,10 +298,12 @@ public partial class MaskLayer : ObservableObject, IJsonLoadableState
             ["name"] = Name,
             ["layerType"] = LayerType.ToString(),
             ["prompt"] = Prompt,
+            ["negativePrompt"] = NegativePrompt,
             ["strength"] = Strength,
             ["opacity"] = Opacity,
             ["isVisible"] = IsVisible,
             ["isEnabled"] = IsEnabled,
+            ["isLocked"] = IsLocked,
             ["displayColor"] = DisplayColorHex,
         };
 

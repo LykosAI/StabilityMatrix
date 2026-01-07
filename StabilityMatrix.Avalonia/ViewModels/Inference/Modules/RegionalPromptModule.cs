@@ -60,9 +60,9 @@ public class RegionalPromptModule : ModuleBase
             return;
         }
 
-        // Start with the base positive conditioning
+        // Start with the base positive and negative conditioning
         var currentPositive = e.Temp.Base.Conditioning!.Unwrap().Positive;
-        var baseNegative = e.Temp.Base.Conditioning.Negative;
+        var currentNegative = e.Temp.Base.Conditioning.Negative;
 
         // Process each layer
         foreach (var layer in enabledLayers)
@@ -111,7 +111,7 @@ public class RegionalPromptModule : ModuleBase
                 }
             );
 
-            // Combine with the current conditioning
+            // Combine with the current positive conditioning
             var combined = e.Nodes.AddTypedNode(
                 new ComfyNodeBuilder.ConditioningCombine
                 {
@@ -122,11 +122,47 @@ public class RegionalPromptModule : ModuleBase
             );
 
             currentPositive = combined.Output;
+
+            // Handle per-layer negative prompt if specified
+            if (!string.IsNullOrWhiteSpace(layer.NegativePrompt))
+            {
+                var layerNegClip = e.Nodes.AddTypedNode(
+                    new ComfyNodeBuilder.CLIPTextEncode
+                    {
+                        Name = e.Nodes.GetUniqueName($"RegionalPrompt_NegCLIP_{maskCounter}"),
+                        Clip = e.Builder.Connections.Base.Clip!,
+                        Text = layer.NegativePrompt,
+                    }
+                );
+
+                var maskedNegConditioning = e.Nodes.AddTypedNode(
+                    new ComfyNodeBuilder.ConditioningSetMask
+                    {
+                        Name = e.Nodes.GetUniqueName($"RegionalPrompt_NegSetMask_{maskCounter}"),
+                        Conditioning = layerNegClip.Output,
+                        Mask = loadedMask.Output,
+                        Strength = layer.Strength,
+                        SetCondArea = "mask bounds",
+                    }
+                );
+
+                var combinedNeg = e.Nodes.AddTypedNode(
+                    new ComfyNodeBuilder.ConditioningCombine
+                    {
+                        Name = e.Nodes.GetUniqueName($"RegionalPrompt_NegCombine_{maskCounter}"),
+                        Conditioning1 = currentNegative,
+                        Conditioning2 = maskedNegConditioning.Output,
+                    }
+                );
+
+                currentNegative = combinedNeg.Output;
+            }
+
             maskCounter++;
         }
 
         // Update the base conditioning with our combined regional conditioning
-        e.Temp.Base.Conditioning = (currentPositive, baseNegative);
+        e.Temp.Base.Conditioning = (currentPositive, currentNegative);
 
         // Apply to refiner if available
         if (e.Temp.Refiner.Conditioning is not null)

@@ -50,6 +50,17 @@ public readonly record struct PenPath()
     [JsonConverter(typeof(SKRectJsonConverter))]
     public SKRect Bounds { get; init; }
 
+    /// <summary>
+    /// If true, draws shape outline only (stroke). If false, fills the shape.
+    /// Only applies to Rectangle and Ellipse path types.
+    /// </summary>
+    public bool IsStrokeOnly { get; init; }
+
+    /// <summary>
+    /// Stroke width for stroke-only shapes. Only used when IsStrokeOnly is true.
+    /// </summary>
+    public float StrokeWidth { get; init; } = 5f;
+
     public List<PenPoint> Points { get; init; } = [];
 
     /// <summary>

@@ -252,27 +252,60 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
 
     private void Layer_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
-        // Refresh canvas when visibility, opacity, or image scale changes
+        var changedLayer = sender as MaskLayer;
+
+        // Handle color change: save canvas paths first, recolor them, update brush
+        if (e.PropertyName == nameof(MaskLayer.DisplayColor) && changedLayer == SelectedLayer)
+        {
+            // Save current canvas paths to layer first (so we don't lose any strokes)
+            SaveCurrentLayerPaths();
+
+            // Recolor the saved paths with the new color
+            if (changedLayer.Paths.Count > 0)
+            {
+                var newColor = changedLayer.DisplayColor;
+                var recoloredPaths = changedLayer
+                    .Paths.Select(p =>
+                        p.IsErase ? p : p with { FillColor = newColor.WithAlpha(p.FillColor.Alpha) }
+                    )
+                    .ToImmutableList();
+                changedLayer.Paths = recoloredPaths;
+            }
+
+            // Update brush color for new strokes
+            PaintCanvasViewModel.PaintBrushColor = changedLayer.AvaloniaDisplayColor;
+
+            // Sync the recolored paths back to canvas
+            SyncSelectedLayerToCanvas();
+            return;
+        }
+
+        // Refresh canvas when visibility, opacity, paths, lock, or image scale changes
         if (
             e.PropertyName
             is nameof(MaskLayer.IsVisible)
                 or nameof(MaskLayer.Opacity)
                 or nameof(MaskLayer.ImageScale)
                 or nameof(MaskLayer.SourceImage)
+                or nameof(MaskLayer.Paths)
+                or nameof(MaskLayer.IsLocked)
         )
         {
-            var changedLayer = sender as MaskLayer;
-
             // Save paths before sync, but handle visibility toggle specially:
             // - When toggling OFF (IsVisible is now false): canvas has paths, SAVE them
             // - When toggling ON (IsVisible is now true): canvas was empty, DON'T save
+            // - For color changes: skip save since MaskLayer itself updates Paths
             if (
                 changedLayer == SelectedLayer
                 && e.PropertyName == nameof(MaskLayer.IsVisible)
-                && changedLayer.IsVisible
+                && changedLayer!.IsVisible
             )
             {
                 // Toggling ON - skip save (canvas was empty while hidden)
+            }
+            else if (e.PropertyName == nameof(MaskLayer.Paths))
+            {
+                // Paths change from layer update (e.g., other layer's color change), just refresh
             }
             else
             {
@@ -293,6 +326,26 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
     }
 
     /// <summary>
+    /// Clears the content (paths) of the specified layer without deleting it.
+    /// </summary>
+    [RelayCommand]
+    private void ClearLayerContent(MaskLayer? layer)
+    {
+        layer ??= SelectedLayer;
+        if (layer is null || layer.LayerType == MaskLayerType.Image)
+            return;
+
+        // If this is the selected layer, clear the canvas paths too
+        if (layer == SelectedLayer)
+        {
+            PaintCanvasViewModel.Paths = [];
+        }
+
+        layer.Paths = [];
+        SyncSelectedLayerToCanvas();
+    }
+
+    /// <summary>
     /// Deletes the selected layer.
     /// </summary>
     [RelayCommand(CanExecute = nameof(CanDeleteLayer))]
@@ -304,8 +357,12 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
         // Save current layer before removing
         SaveCurrentLayerPaths();
 
-        var index = Layers.IndexOf(SelectedLayer);
-        Layers.Remove(SelectedLayer);
+        var layerToRemove = SelectedLayer;
+        var index = Layers.IndexOf(layerToRemove);
+
+        // Unsubscribe and dispose before removing
+        CleanupLayer(layerToRemove);
+        Layers.Remove(layerToRemove);
 
         // Select adjacent layer
         if (Layers.Count > 0)
@@ -319,6 +376,15 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
             PaintCanvasViewModel.Paths = [];
             PaintCanvasViewModel.RefreshCanvas?.Invoke();
         }
+    }
+
+    /// <summary>
+    /// Unsubscribes event handlers and disposes resources for a layer.
+    /// </summary>
+    private void CleanupLayer(MaskLayer layer)
+    {
+        layer.PropertyChanged -= Layer_PropertyChanged;
+        layer.SourceImage?.Dispose();
     }
 
     private bool CanDeleteLayer() => SelectedLayer is not null && Layers.Count > 1;
@@ -420,6 +486,138 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
     }
 
     /// <summary>
+    /// Exports the selected layer as a white-on-black mask PNG.
+    /// </summary>
+    [RelayCommand]
+    private async Task ExportLayerAsMaskAsync(MaskLayer? layer)
+    {
+        layer ??= SelectedLayer;
+        if (layer is null || layer.LayerType != MaskLayerType.Paint || CanvasSize == Size.Empty)
+            return;
+
+        // Save current layer paths before rendering
+        if (layer == SelectedLayer)
+            SaveCurrentLayerPaths();
+
+        var storageProvider = App.StorageProvider;
+
+        var file = await storageProvider.SaveFilePickerAsync(
+            new FilePickerSaveOptions
+            {
+                Title = "Export Mask as PNG",
+                SuggestedFileName = $"{layer.Name}_mask.png",
+                FileTypeChoices = [new FilePickerFileType("PNG Image") { Patterns = ["*.png"] }],
+            }
+        );
+
+        if (file is null)
+            return;
+
+        // Render layer to white-on-black mask
+        using var bitmap = new SKBitmap(
+            CanvasSize.Width,
+            CanvasSize.Height,
+            SKColorType.Rgba8888,
+            SKAlphaType.Premul
+        );
+        using var canvas = new SKCanvas(bitmap);
+        canvas.Clear(SKColors.Black);
+
+        // Render paths as white
+        using var paint = new SKPaint
+        {
+            Color = SKColors.White,
+            IsAntialias = true,
+            Style = SKPaintStyle.Fill,
+        };
+
+        foreach (var penPath in layer.Paths)
+        {
+            RenderPenPathToCanvas(canvas, penPath, paint, SKColors.White);
+        }
+
+        // Save to file
+        await using var stream = await file.OpenWriteAsync();
+        using var image = SKImage.FromBitmap(bitmap);
+        using var data = image.Encode(SKEncodedImageFormat.Png, 100);
+        data.SaveTo(stream);
+    }
+
+    /// <summary>
+    /// Imports a mask image as a new layer, converting white areas to the new layer's color.
+    /// </summary>
+    [RelayCommand]
+    private async Task ImportMaskAsLayerAsync()
+    {
+        if (CanvasSize == Size.Empty)
+            return;
+
+        var storageProvider = App.StorageProvider;
+
+        var files = await storageProvider.OpenFilePickerAsync(
+            new FilePickerOpenOptions
+            {
+                Title = "Import Mask Image",
+                AllowMultiple = false,
+                FileTypeFilter =
+                [
+                    new FilePickerFileType("Image Files")
+                    {
+                        Patterns = ["*.png", "*.jpg", "*.jpeg", "*.bmp"],
+                    },
+                ],
+            }
+        );
+
+        if (files.Count == 0)
+            return;
+
+        var file = files[0];
+        await using var stream = await file.OpenReadAsync();
+        using var bitmap = SKBitmap.Decode(stream);
+        if (bitmap is null)
+            return;
+
+        // Create new paint layer
+        var newLayer = new MaskLayer
+        {
+            Name = $"Imported Mask {Layers.Count + 1}",
+            LayerType = MaskLayerType.Paint,
+            DisplayColor = MaskLayerColors.GetByIndex(Layers.Count),
+        };
+        newLayer.PropertyChanged += Layer_PropertyChanged;
+
+        // Scale bitmap to canvas size and create a fill path
+        // For mask import, we create a bitmap path that covers the canvas
+        var scaledBitmap = new SKBitmap(
+            CanvasSize.Width,
+            CanvasSize.Height,
+            SKColorType.Rgba8888,
+            SKAlphaType.Premul
+        );
+        using var scaleCanvas = new SKCanvas(scaledBitmap);
+        scaleCanvas.Clear(SKColors.Transparent);
+
+        var srcRect = new SKRect(0, 0, bitmap.Width, bitmap.Height);
+        var destRect = new SKRect(0, 0, CanvasSize.Width, CanvasSize.Height);
+        scaleCanvas.DrawBitmap(bitmap, srcRect, destRect);
+
+        // Convert white areas to layer color using the mask as a bitmap path
+        var maskPath = new PenPath
+        {
+            PathType = PenPathType.Bitmap,
+            FillColor = newLayer.DisplayColor,
+            Bounds = destRect,
+            BitmapData = scaledBitmap,
+        };
+
+        newLayer.Paths = [maskPath];
+        Layers.Insert(0, newLayer);
+        SelectedLayer = newLayer;
+        SyncSelectedLayerToCanvas();
+    }
+
+    /// <summary>
     /// Called when the selected layer changes.
     /// Saves the current layer's paths and loads the new layer's paths.
     /// </summary>
@@ -483,15 +681,15 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
         }
         else if (SelectedLayer.IsVisible)
         {
-            // Paint layer - enable drawing and show paths if visible
-            PaintCanvasViewModel.IsDrawingEnabled = true;
+            // Paint layer - enable drawing if not locked, show paths if visible
+            PaintCanvasViewModel.IsDrawingEnabled = !SelectedLayer.IsLocked;
             PaintCanvasViewModel.Paths = SelectedLayer.Paths;
             PaintCanvasViewModel.SetLayerBitmap("CurrentImage", null);
         }
         else
         {
-            // Layer is hidden - still allow drawing but don't render its paths until shown
-            PaintCanvasViewModel.IsDrawingEnabled = true;
+            // Layer is hidden - still allow drawing if not locked but don't render its paths until shown
+            PaintCanvasViewModel.IsDrawingEnabled = !SelectedLayer.IsLocked;
             PaintCanvasViewModel.Paths = [];
             PaintCanvasViewModel.SetLayerBitmap("CurrentImage", null);
         }
@@ -775,9 +973,15 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
     /// <summary>
     /// Renders a pen path to a canvas. Delegates to PaintCanvasViewModel's shared implementation.
     /// </summary>
-    private static void RenderPenPathToCanvas(SKCanvas canvas, PenPath penPath, SKPaint paint)
+    /// <param name="overrideColor">If provided, uses this color instead of the path's color.</param>
+    private static void RenderPenPathToCanvas(
+        SKCanvas canvas,
+        PenPath penPath,
+        SKPaint paint,
+        SKColor? overrideColor = null
+    )
     {
-        PaintCanvasViewModel.RenderPenPath(canvas, penPath, paint);
+        PaintCanvasViewModel.RenderPenPath(canvas, penPath, paint, overrideColor);
     }
 
     /// <summary>
@@ -876,6 +1080,13 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
     /// <inheritdoc />
     public void Dispose()
     {
+        // Clean up all layers
+        foreach (var layer in Layers)
+        {
+            CleanupLayer(layer);
+        }
+        Layers.Clear();
+
         GC.SuppressFinalize(this);
     }
 }

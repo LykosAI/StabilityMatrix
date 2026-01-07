@@ -93,6 +93,19 @@
                         ToolTip.Tip="Duplicate Layer">
                         <fluentIcons:SymbolIcon FontSize="18" Symbol="Copy" />
                     </Button>
+                    <GridSplitter Margin="4,12" BorderThickness="1" />
+                    <Button
+                        Classes="transparent"
+                        Command="{Binding ExportLayerAsMaskCommand}"
+                        ToolTip.Tip="Export layer as mask PNG">
+                        <fluentIcons:SymbolIcon FontSize="18" Symbol="ArrowExportUp" />
+                    </Button>
+                    <Button
+                        Classes="transparent"
+                        Command="{Binding ImportMaskAsLayerCommand}"
+                        ToolTip.Tip="Import mask image as new layer">
+                        <fluentIcons:SymbolIcon FontSize="18" Symbol="ArrowDownload" />
+                    </Button>
                 </StackPanel>
 
                 <!--  Center: Info  -->
@@ -206,7 +219,7 @@
                                                 </Button>
                                             </StackPanel>
 
-                                            <!--  Visibility & Enable  -->
+                                            <!--  Visibility, Enable & Lock  -->
                                             <StackPanel
                                                 Grid.Column="1"
                                                 Margin="0,0,8,0"
@@ -232,6 +245,22 @@
                                                     Margin="4,0,0,0"
                                                     IsChecked="{Binding IsEnabled}"
                                                     ToolTip.Tip="Enable for generation" />
+                                                <ToggleButton
+                                                    Padding="4"
+                                                    Classes="transparent"
+                                                    IsChecked="{Binding IsLocked}"
+                                                    ToolTip.Tip="Lock layer (prevent drawing)">
+                                                    <Panel>
+                                                        <fluentIcons:SymbolIcon
+                                                            FontSize="16"
+                                                            IsVisible="{Binding IsLocked}"
+                                                            Symbol="LockClosed" />
+                                                        <fluentIcons:SymbolIcon
+                                                            FontSize="16"
+                                                            IsVisible="{Binding !IsLocked}"
+                                                            Symbol="LockOpen" />
+                                                    </Panel>
+                                                </ToggleButton>
                                             </StackPanel>
 
                                             <!--  Name  -->
@@ -243,16 +272,15 @@
                                                 Text="{Binding Name}"
                                                 Watermark="Layer name" />
 
-                                            <!--  Color  -->
-                                            <Border
+                                            <!--  Color Picker  -->
+                                            <ui:ColorPickerButton
                                                 Grid.Column="3"
-                                                Width="20"
-                                                Height="20"
+                                                Width="28"
+                                                Height="28"
                                                 Margin="8,0"
                                                 VerticalAlignment="Center"
-                                                Background="{Binding DisplayColorHex}"
-                                                CornerRadius="10"
-                                                ToolTip.Tip="Layer color marker" />
+                                                ToolTip.Tip="Choose layer color"
+                                                Color="{Binding AvaloniaDisplayColor}" />
 
                                             <!--  Editing Badge  -->
                                             <Border
@@ -268,15 +296,25 @@
 
                                         <!--  Row 1: Layer-type-specific content  -->
                                         <!--  Paint layer: Prompt textbox  -->
-                                        <TextBox
+                                        <StackPanel
                                             Grid.Row="1"
-                                            MinHeight="60"
-                                            MaxHeight="120"
-                                            AcceptsReturn="True"
                                             IsVisible="{Binding LayerType, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static inference:MaskLayerType.Paint}}"
-                                            Text="{Binding Prompt}"
-                                            TextWrapping="Wrap"
-                                            Watermark="Enter prompt for this layer..." />
+                                            Spacing="8">
+                                            <TextBox
+                                                MinHeight="50"
+                                                MaxHeight="100"
+                                                AcceptsReturn="True"
+                                                Text="{Binding Prompt}"
+                                                TextWrapping="Wrap"
+                                                Watermark="Prompt for this region..." />
+                                            <TextBox
+                                                MinHeight="32"
+                                                MaxHeight="60"
+                                                AcceptsReturn="True"
+                                                Text="{Binding NegativePrompt}"
+                                                TextWrapping="Wrap"
+                                                Watermark="Negative prompt (optional)..." />
+                                        </StackPanel>
 
                                         <!--  Image layer: Image info and controls  -->
                                         <StackPanel

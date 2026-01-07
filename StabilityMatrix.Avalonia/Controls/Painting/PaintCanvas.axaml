@@ -68,6 +68,13 @@
                                 <ToggleButton IsChecked="{Binding SelectedTool, Converter={StaticResource EnumBoolConverter}, ConverterParameter={x:Static models:PaintCanvasTool.PaintBucket}}" ToolTip.Tip="Paint Bucket / Flood Fill (G)">
                                     <faIcons:Icon FontSize="18" Value="fa-solid fa-fill-drip" />
                                 </ToggleButton>
+                                <GridSplitter Margin="4,12" BorderThickness="1" />
+                                <CheckBox
+                                    VerticalAlignment="Center"
+                                    IsChecked="{Binding IsShapeStrokeOnly}"
+                                    ToolTip.Tip="Draw shape outlines only (stroke mode)">
+                                    <TextBlock Text="Stroke" />
+                                </CheckBox>
                             </StackPanel>
                         </controls:Card>
 
@@ -83,29 +90,27 @@
                             VerticalAlignment="Center"
                             Content="{Binding CurrentPenPressure}" />
 
+                        <!--  Brush Size Slider  -->
+                        <StackPanel
+                            Margin="8,0"
+                            VerticalAlignment="Center"
+                            Orientation="Horizontal"
+                            Spacing="4">
+                            <TextBlock VerticalAlignment="Center" Text="Size:" />
+                            <Slider
+                                Width="80"
+                                Maximum="100"
+                                Minimum="1"
+                                ToolTip.Tip="Brush size ([ and ] to adjust)"
+                                Value="{Binding PaintBrushSize}" />
+                            <TextBlock
+                                Width="24"
+                                VerticalAlignment="Center"
+                                Text="{Binding PaintBrushSize, StringFormat={}{0:F0}}" />
+                        </StackPanel>
+
                         <ui:CommandBar Margin="0,4" HorizontalAlignment="Right">
                             <ui:CommandBar.PrimaryCommands>
-                                <!--  Brush Size  -->
-                                <ui:CommandBarButton>
-                                    <ui:CommandBarButton.IconSource>
-                                        <fluentIcons:SymbolIconSource FontSize="12" Symbol="ArrowAutofitWidth" />
-                                    </ui:CommandBarButton.IconSource>
-                                    <ui:CommandBarButton.Flyout>
-                                        <Flyout>
-                                            <StackPanel>
-                                                <Label Content="Brush Size" />
-                                                <ui:NumberBox
-                                                    MinWidth="120"
-                                                    LargeChange="1"
-                                                    Maximum="100"
-                                                    Minimum="0"
-                                                    SmallChange="1"
-                                                    SpinButtonPlacementMode="Inline"
-                                                    Value="{Binding PaintBrushSize}" />
-                                            </StackPanel>
-                                        </Flyout>
-                                    </ui:CommandBarButton.Flyout>
-                                </ui:CommandBarButton>
                                 <!--  Opacity  -->
                                 <ui:CommandBarButton>
                                     <ui:CommandBarButton.IconSource>
@@ -128,7 +133,14 @@
                                     </ui:CommandBarButton.Flyout>
                                 </ui:CommandBarButton>
 
-                                <ui:CommandBarButton Command="{Binding UndoCommand}" IconSource="Undo" />
+                                <ui:CommandBarButton
+                                    Command="{Binding UndoCommand}"
+                                    IconSource="Undo"
+                                    ToolTip.Tip="Undo (Ctrl+Z)" />
+                                <ui:CommandBarButton
+                                    Command="{Binding RedoCommand}"
+                                    IconSource="Redo"
+                                    ToolTip.Tip="Redo (Ctrl+Y)" />
                                 <ui:CommandBarButton Command="{StaticResource ClearCanvasCommand}" />
                                 <ui:CommandBarToggleButton IsChecked="{Binding ShowGridOverlay}" ToolTip.Tip="Toggle Grid Overlay">
                                     <ui:CommandBarToggleButton.IconSource>

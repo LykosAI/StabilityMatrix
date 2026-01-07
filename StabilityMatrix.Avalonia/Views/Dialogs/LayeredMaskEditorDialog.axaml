@@ -66,23 +66,6 @@
                         Fill="{DynamicResource DividerStrokeColorDefaultBrush}" />
                     <Button
                         Classes="transparent"
-                        Command="{Binding MoveLayerUpCommand}"
-                        ToolTip.Tip="Move Layer Up">
-                        <fluentIcons:SymbolIcon FontSize="18" Symbol="ArrowUp" />
-                    </Button>
-                    <Button
-                        Classes="transparent"
-                        Command="{Binding MoveLayerDownCommand}"
-                        ToolTip.Tip="Move Layer Down">
-                        <fluentIcons:SymbolIcon FontSize="18" Symbol="ArrowDown" />
-                    </Button>
-                    <Rectangle
-                        Width="1"
-                        Margin="4,4"
-                        VerticalAlignment="Stretch"
-                        Fill="{DynamicResource DividerStrokeColorDefaultBrush}" />
-                    <Button
-                        Classes="transparent"
                         Command="{Binding FillLayerCommand}"
                         ToolTip.Tip="Fill Layer">
                         <fluentIcons:SymbolIcon FontSize="18" Symbol="PaintBucket" />
@@ -107,14 +90,6 @@
                         <fluentIcons:SymbolIcon FontSize="18" Symbol="ArrowDownload" />
                     </Button>
                 </StackPanel>
-
-                <!--  Center: Info  -->
-                <TextBlock
-                    Grid.Column="1"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
-                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                    Text="{Binding Layers.Count, StringFormat='Total Layers: {0}'}" />
 
                 <!--  Right: Canvas size  -->
                 <StackPanel
@@ -348,8 +323,11 @@
                                                     Foreground="{DynamicResource TextFillColorTertiaryBrush}"
                                                     Text="Strength" />
                                                 <ui:NumberBox
+                                                    Margin="0,0,16,0"
+                                                    HorizontalAlignment="Stretch"
                                                     Maximum="10"
                                                     Minimum="0"
+                                                    SimpleNumberFormat="F2"
                                                     SmallChange="0.1"
                                                     SpinButtonPlacementMode="Compact"
                                                     Value="{Binding Strength}" />
@@ -360,8 +338,11 @@
                                                     Foreground="{DynamicResource TextFillColorTertiaryBrush}"
                                                     Text="Opacity" />
                                                 <ui:NumberBox
+                                                    Margin="0,0,16,0"
+                                                    HorizontalAlignment="Stretch"
                                                     Maximum="1"
                                                     Minimum="0"
+                                                    SimpleNumberFormat="F2"
                                                     SmallChange="0.1"
                                                     SpinButtonPlacementMode="Compact"
                                                     Value="{Binding Opacity}" />
@@ -380,8 +361,11 @@
                                                     Foreground="{DynamicResource TextFillColorTertiaryBrush}"
                                                     Text="Scale" />
                                                 <ui:NumberBox
+                                                    Margin="0,0,16,0"
+                                                    HorizontalAlignment="Stretch"
                                                     Maximum="3"
                                                     Minimum="0.1"
+                                                    SimpleNumberFormat="F2"
                                                     SmallChange="0.1"
                                                     SpinButtonPlacementMode="Compact"
                                                     Value="{Binding ImageScale}" />
@@ -392,8 +376,11 @@
                                                     Foreground="{DynamicResource TextFillColorTertiaryBrush}"
                                                     Text="Opacity" />
                                                 <ui:NumberBox
+                                                    Margin="0,0,16,0"
+                                                    HorizontalAlignment="Stretch"
                                                     Maximum="1"
                                                     Minimum="0"
+                                                    SimpleNumberFormat="F2"
                                                     SmallChange="0.1"
                                                     SpinButtonPlacementMode="Compact"
                                                     Value="{Binding Opacity}" />

@@ -79,12 +79,16 @@ public partial class MaskLayer : ObservableObject, IJsonLoadableState
     /// Path to the source image for Image layers. Null for Paint layers.
     /// </summary>
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasImage))]
+    [NotifyPropertyChangedFor(nameof(HasContent))]
     private string? sourceImagePath;
 
     /// <summary>
     /// The loaded source image bitmap for Image layers. Runtime only, not serialized.
     /// </summary>
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasImage))]
+    [NotifyPropertyChangedFor(nameof(HasContent))]
     [property: JsonIgnore]
     private SKBitmap? sourceImage;
 

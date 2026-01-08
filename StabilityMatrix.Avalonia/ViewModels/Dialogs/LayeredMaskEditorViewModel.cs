@@ -57,6 +57,17 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
     private int layerCounter;
 
     /// <summary>
+    ///     Cached bitmap for the currently selected image layer.
+    ///     Invalidated when source image, scale, opacity, or canvas size changes.
+    /// </summary>
+    private SKBitmap? _cachedImageLayerBitmap;
+    private MaskLayer? _cachedImageLayerSource;
+    private SKBitmap? _cachedImageLayerSourceImage;
+    private double _cachedImageLayerScale;
+    private double _cachedImageLayerOpacity;
+    private Size _cachedImageLayerCanvasSize;
+
+    /// <summary>
     ///     The currently selected layer for editing.
     /// </summary>
     [ObservableProperty]
@@ -115,6 +126,15 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
         foreach (var layer in Layers)
             CleanupLayer(layer);
         Layers.Clear();
+
+        // Dispose cached image layer bitmap
+        _cachedImageLayerBitmap?.Dispose();
+        _cachedImageLayerBitmap = null;
+        _cachedImageLayerSource = null;
+        _cachedImageLayerSourceImage = null;
+
+        // Dispose the paint canvas view model
+        PaintCanvasViewModel.Dispose();
 
         GC.SuppressFinalize(this);
     }
@@ -643,6 +663,10 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
     partial void OnCanvasSizeChanged(Size value)
     {
         PaintCanvasViewModel.CanvasSize = value;
+
+        // Invalidate cached image layer bitmap since canvas size changed
+        _cachedImageLayerBitmap?.Dispose();
+        _cachedImageLayerBitmap = null;
     }
 
     partial void OnShowAllLayersChanged(bool value)
@@ -680,7 +704,9 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
             if (SelectedLayer.IsVisible && SelectedLayer.SourceImage != null && CanvasSize != Size.Empty)
             {
                 var selectedImageBitmap = RenderSingleImageLayer(SelectedLayer);
-                PaintCanvasViewModel.SetLayerBitmap("CurrentImage", selectedImageBitmap);
+                // Clone the cached bitmap since SetLayerBitmap will dispose it later
+                var bitmapToSet = selectedImageBitmap?.Copy();
+                PaintCanvasViewModel.SetLayerBitmap("CurrentImage", bitmapToSet);
             }
             else
             {
@@ -721,12 +747,34 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
 
     /// <summary>
     ///     Renders a single image layer's bitmap at the canvas size with scaling.
+    ///     Uses caching to avoid re-rendering on every sync when the image hasn't changed.
     /// </summary>
+    /// <returns>
+    ///     The cached or newly rendered bitmap. Note: The caller should NOT dispose this bitmap
+    ///     as it is managed by the cache. Returns null if no image is available.
+    /// </returns>
     private SKBitmap? RenderSingleImageLayer(MaskLayer layer)
     {
         if (layer.SourceImage is null || CanvasSize == Size.Empty)
             return null;
 
+        // Check if we can use the cached bitmap
+        if (
+            _cachedImageLayerBitmap is not null
+            && _cachedImageLayerSource == layer
+            && _cachedImageLayerSourceImage == layer.SourceImage
+            && Math.Abs(_cachedImageLayerScale - layer.ImageScale) < 0.001
+            && Math.Abs(_cachedImageLayerOpacity - layer.Opacity) < 0.001
+            && _cachedImageLayerCanvasSize == CanvasSize
+        )
+        {
+            return _cachedImageLayerBitmap;
+        }
+
+        // Dispose old cached bitmap
+        _cachedImageLayerBitmap?.Dispose();
+
+        // Create new bitmap
         var bitmap = new SKBitmap(
             CanvasSize.Width,
             CanvasSize.Height,
@@ -738,6 +786,14 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
 
         var alpha = (byte)(layer.Opacity * 255);
         RenderImageLayer(canvas, layer, alpha);
+
+        // Update cache
+        _cachedImageLayerBitmap = bitmap;
+        _cachedImageLayerSource = layer;
+        _cachedImageLayerSourceImage = layer.SourceImage;
+        _cachedImageLayerScale = layer.ImageScale;
+        _cachedImageLayerOpacity = layer.Opacity;
+        _cachedImageLayerCanvasSize = CanvasSize;
 
         return bitmap;
     }
@@ -895,12 +951,10 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
 
         var destRect = new SKRect(offsetX, offsetY, offsetX + scaledWidth, offsetY + scaledHeight);
 
-        using var paint = new SKPaint
-        {
-            Color = new SKColor(255, 255, 255, alpha),
-            IsAntialias = true,
-            FilterQuality = SKFilterQuality.High,
-        };
+        using var paint = new SKPaint();
+        paint.Color = new SKColor(255, 255, 255, alpha);
+        paint.IsAntialias = true;
+        paint.FilterQuality = SKFilterQuality.High;
 
         canvas.DrawBitmap(bitmap, destRect, paint);
     }
@@ -942,32 +996,14 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
         var canvas = surface.Canvas;
         canvas.Clear(SKColors.Transparent);
 
-        // Draw paths - RenderPenPath will use penPath.FillColor, so we render first
-        using var paint = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Fill };
+        // Draw paths in white directly
+        // We pass White as overrideColor, which RenderPenPath uses for non-erase paths
+        using var paint = new SKPaint();
+        paint.IsAntialias = true;
+        paint.Style = SKPaintStyle.Fill;
 
         foreach (var penPath in layer.Paths)
-            RenderPenPathToCanvas(canvas, penPath, paint);
-
-        // Now convert all colors to white, keeping alpha
-        // This ensures the mask is white regardless of display color
-        using var originalImage = surface.Snapshot();
-        // csharpier-ignore
-        using var colorFilter = SKColorFilter.CreateColorMatrix(
-            [
-                // R, G, B, A, Bias
-                // Convert any color to white (255, 255, 255), keep original alpha
-                0, 0, 0, 0, 255, // R = 255
-                0, 0, 0, 0, 255, // G = 255
-                0, 0, 0, 0, 255, // B = 255
-                0, 0, 0, 1, 0 // A = original alpha
-            ]
-        );
-
-        using var filterPaint = new SKPaint();
-        filterPaint.ColorFilter = colorFilter;
-
-        canvas.Clear(SKColors.Transparent);
-        canvas.DrawImage(originalImage, originalImage.Info.Rect, filterPaint);
+            RenderPenPathToCanvas(canvas, penPath, paint, SKColors.White);
 
         return surface.Snapshot();
     }

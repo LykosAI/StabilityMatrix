@@ -24,8 +24,11 @@ namespace StabilityMatrix.Avalonia.ViewModels.Controls;
 
 [RegisterTransient<PaintCanvasViewModel>]
 [ManagedService]
-public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger) : LoadableViewModelBase
+public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
+    : LoadableViewModelBase,
+        IDisposable
 {
+    private bool _disposed;
     public ConcurrentDictionary<long, PenPath> TemporaryPaths { get; set; } = new();
 
     [ObservableProperty]
@@ -259,13 +262,15 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger) 
             return;
         }
 
-        if (bitmap is not null)
+        // Dispose old bitmaps before replacing to prevent memory leaks
+        lock (layer)
         {
-            layer.Bitmaps = [bitmap];
-        }
-        else
-        {
-            layer.Bitmaps = [];
+            foreach (var oldBitmap in layer.Bitmaps)
+            {
+                oldBitmap.Dispose();
+            }
+
+            layer.Bitmaps = bitmap is not null ? [bitmap] : [];
         }
     }
 
@@ -277,8 +282,17 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger) 
 
     public void LoadCanvasFromBitmap(SKBitmap bitmap)
     {
-        ImagesLayer.Bitmaps = [bitmap];
+        // Dispose old bitmaps and invalidate cache
+        lock (ImagesLayer)
+        {
+            foreach (var oldBitmap in ImagesLayer.Bitmaps)
+            {
+                oldBitmap.Dispose();
+            }
+            ImagesLayer.Bitmaps = [bitmap];
+        }
 
+        InvalidatePathCache();
         RefreshCanvas?.Invoke();
     }
 
@@ -562,13 +576,7 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger) 
         if (ColorsAreSimilar(targetColor, fillColor, tolerance: 30))
             return null;
 
-        // Create a bitmap and surface for drawing the fill result
-        var fillBitmap = new SKBitmap(
-            CanvasSize.Width,
-            CanvasSize.Height,
-            SKColorType.Rgba8888,
-            SKAlphaType.Premul
-        );
+        // Create a surface for drawing the fill result
         using var surface = SKSurface.Create(
             new SKImageInfo(CanvasSize.Width, CanvasSize.Height, SKColorType.Rgba8888, SKAlphaType.Premul)
         );
@@ -580,7 +588,6 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger) 
 
         if (!hasContent)
         {
-            fillBitmap.Dispose();
             return null;
         }
 
@@ -1792,8 +1799,12 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger) 
             using var path = new SKPath();
             var started = false;
 
-            foreach (var p in penPath.Points.Where(p => p.IsPen))
+            // Use plain loop instead of LINQ to avoid iterator allocation in hot path
+            foreach (var p in penPath.Points)
             {
+                if (!p.IsPen)
+                    continue;
+
                 if (!started)
                 {
                     path.MoveTo(p.X, p.Y);
@@ -1860,5 +1871,50 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger) 
                 canvas.DrawPath(path, paint);
             }
         }
+    }
+
+    /// <summary>
+    /// Disposes all cached resources to free memory.
+    /// </summary>
+    public void Dispose()
+    {
+        if (_disposed)
+            return;
+
+        _disposed = true;
+
+        // Dispose cached path image
+        cachedPathsImage?.Dispose();
+        cachedPathsImage = null;
+
+        // Dispose temporary path surface
+        tempPathSurface?.Dispose();
+        tempPathSurface = null;
+        tempPathRenderedPoints.Clear();
+
+        // Dispose checkerboard shader
+        cachedCheckerboardShader?.Dispose();
+        cachedCheckerboardShader = null;
+
+        // Dispose layer surfaces and bitmaps
+        foreach (var layer in Layers.Values)
+        {
+            lock (layer)
+            {
+                layer.Surface?.Dispose();
+                layer.Surface = null;
+
+                foreach (var bitmap in layer.Bitmaps)
+                {
+                    bitmap.Dispose();
+                }
+                layer.Bitmaps = [];
+            }
+        }
+
+        // Clear paths
+        TemporaryPaths.Clear();
+
+        GC.SuppressFinalize(this);
     }
 }

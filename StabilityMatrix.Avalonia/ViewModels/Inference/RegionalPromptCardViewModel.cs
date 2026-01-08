@@ -18,32 +18,28 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 [View(typeof(RegionalPromptCard))]
 [ManagedService]
 [RegisterTransient<RegionalPromptCardViewModel>]
-public partial class RegionalPromptCardViewModel : LoadableViewModelBase
+public partial class RegionalPromptCardViewModel(
+    IServiceManager<ViewModelBase> vmFactory,
+    TabContext tabContext
+) : LoadableViewModelBase
 {
     public const string ModuleKey = "RegionalPrompt";
 
-    private readonly IServiceManager<ViewModelBase> vmFactory;
-    private readonly TabContext tabContext;
+    private readonly IServiceManager<ViewModelBase> vmFactory = vmFactory;
 
     /// <summary>
     /// The layered mask editor for painting regions.
     /// Each layer = one prompt with its own mask.
     /// </summary>
     [JsonIgnore]
-    public LayeredMaskEditorViewModel LayeredMaskEditor { get; }
+    public LayeredMaskEditorViewModel LayeredMaskEditor { get; } =
+        vmFactory.Get<LayeredMaskEditorViewModel>();
 
     /// <summary>
     /// Convenience accessor for layers (for UI binding).
     /// </summary>
     [JsonIgnore]
     public ObservableCollection<MaskLayer> Layers => LayeredMaskEditor.Layers;
-
-    public RegionalPromptCardViewModel(IServiceManager<ViewModelBase> vmFactory, TabContext tabContext)
-    {
-        this.vmFactory = vmFactory;
-        this.tabContext = tabContext;
-        LayeredMaskEditor = vmFactory.Get<LayeredMaskEditorViewModel>();
-    }
 
     /// <summary>
     /// Sets the canvas size for the mask editor.

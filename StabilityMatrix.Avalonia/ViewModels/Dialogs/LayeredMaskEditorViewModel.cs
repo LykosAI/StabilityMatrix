@@ -1,6 +1,6 @@
 using System.Collections.Immutable;
 using System.Collections.ObjectModel;
-using System.Text.Json;
+using System.ComponentModel;
 using System.Text.Json.Nodes;
 using Avalonia;
 using Avalonia.Controls.Primitives;
@@ -15,7 +15,6 @@ using SkiaSharp;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Controls.Models;
 using StabilityMatrix.Avalonia.Languages;
-using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -30,60 +29,46 @@ using Size = System.Drawing.Size;
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
 /// <summary>
-/// ViewModel for the layered mask editor dialog.
-/// Manages multiple layers with independent masks, prompts, and opacity settings.
+///     ViewModel for the layered mask editor dialog.
+///     Manages multiple layers with independent masks, prompts, and opacity settings.
 /// </summary>
 [RegisterTransient<LayeredMaskEditorViewModel>]
 [ManagedService]
 [View(typeof(LayeredMaskEditorDialog))]
 public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDisposable
 {
-    private readonly IServiceManager<ViewModelBase> vmFactory;
     private readonly IImageIndexService imageIndexService;
-    private int layerCounter;
+    private readonly IServiceManager<ViewModelBase> vmFactory;
+
+    /// <summary>
+    ///     Canvas size for all layers.
+    /// </summary>
+    [ObservableProperty]
+    private Size canvasSize = new(1024, 1024);
+
     private int imageLayerCounter;
 
     /// <summary>
-    /// The collection of layers in the editor (ordered from bottom to top).
+    ///     Whether the recent images panel is expanded.
     /// </summary>
-    public ObservableCollection<MaskLayer> Layers { get; } = [];
+    [ObservableProperty]
+    private bool isRecentImagesPanelExpanded;
+
+    private int layerCounter;
 
     /// <summary>
-    /// The currently selected layer for editing.
+    ///     The currently selected layer for editing.
     /// </summary>
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(DeleteLayerCommand))]
     private MaskLayer? selectedLayer;
 
     /// <summary>
-    /// Canvas size for all layers.
-    /// </summary>
-    [ObservableProperty]
-    private Size canvasSize = new(1024, 1024);
-
-    /// <summary>
-    /// When true, shows all layers composited on the canvas.
-    /// When false, shows only the selected layer.
+    ///     When true, shows all layers composited on the canvas.
+    ///     When false, shows only the selected layer.
     /// </summary>
     [ObservableProperty]
     private bool showAllLayers = true;
-
-    /// <summary>
-    /// The paint canvas view model for the currently selected layer.
-    /// </summary>
-    public PaintCanvasViewModel PaintCanvasViewModel { get; }
-
-    /// <summary>
-    /// Whether the recent images panel is expanded.
-    /// </summary>
-    [ObservableProperty]
-    private bool isRecentImagesPanelExpanded;
-
-    /// <summary>
-    /// Collection of recent inference images for quick selection.
-    /// </summary>
-    public IObservableCollection<LocalImageFile> LocalImages { get; } =
-        new ObservableCollectionExtended<LocalImageFile>();
 
     public LayeredMaskEditorViewModel(
         IServiceManager<ViewModelBase> vmFactory,
@@ -107,6 +92,33 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
         AddLayer();
     }
 
+    /// <summary>
+    ///     The collection of layers in the editor (ordered from bottom to top).
+    /// </summary>
+    public ObservableCollection<MaskLayer> Layers { get; } = [];
+
+    /// <summary>
+    ///     The paint canvas view model for the currently selected layer.
+    /// </summary>
+    public PaintCanvasViewModel PaintCanvasViewModel { get; }
+
+    /// <summary>
+    ///     Collection of recent inference images for quick selection.
+    /// </summary>
+    public IObservableCollection<LocalImageFile> LocalImages { get; } =
+        new ObservableCollectionExtended<LocalImageFile>();
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        // Clean up all layers
+        foreach (var layer in Layers)
+            CleanupLayer(layer);
+        Layers.Clear();
+
+        GC.SuppressFinalize(this);
+    }
+
     /// <inheritdoc />
     public override async Task OnLoadedAsync()
     {
@@ -117,7 +129,7 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
     }
 
     /// <summary>
-    /// Adds a new layer on top of the stack.
+    ///     Adds a new layer on top of the stack.
     /// </summary>
     [RelayCommand]
     private void AddLayer()
@@ -138,7 +150,7 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
     }
 
     /// <summary>
-    /// Adds a new image layer on top of the stack.
+    ///     Adds a new image layer on top of the stack.
     /// </summary>
     [RelayCommand]
     private void AddImageLayer()
@@ -164,7 +176,7 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
     }
 
     /// <summary>
-    /// Selects an image from the recent images panel for the current image layer.
+    ///     Selects an image from the recent images panel for the current image layer.
     /// </summary>
     [RelayCommand]
     private async Task SelectImageFromRecent(LocalImageFile? imageFile)
@@ -174,15 +186,13 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
 
         // If selected layer is not an image layer, create a new one
         if (SelectedLayer.LayerType != MaskLayerType.Image)
-        {
             AddImageLayer();
-        }
 
         await LoadImageIntoLayerAsync(SelectedLayer!, imageFile.AbsolutePath);
     }
 
     /// <summary>
-    /// Opens a file picker to select an image for the current image layer.
+    ///     Opens a file picker to select an image for the current image layer.
     /// </summary>
     [RelayCommand]
     private async Task BrowseImageForLayer()
@@ -207,15 +217,13 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
 
         // If no layer selected or current layer is paint, create a new image layer
         if (SelectedLayer is null || SelectedLayer.LayerType != MaskLayerType.Image)
-        {
             AddImageLayer();
-        }
 
         await LoadImageIntoLayerAsync(SelectedLayer!, path);
     }
 
     /// <summary>
-    /// Loads an image from the given path into the specified layer.
+    ///     Loads an image from the given path into the specified layer.
     /// </summary>
     private async Task LoadImageIntoLayerAsync(MaskLayer layer, string imagePath)
     {
@@ -250,7 +258,7 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
         }
     }
 
-    private void Layer_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    private void Layer_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         var changedLayer = sender as MaskLayer;
 
@@ -261,7 +269,7 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
             SaveCurrentLayerPaths();
 
             // Recolor the saved paths with the new color
-            if (changedLayer.Paths.Count > 0)
+            if (changedLayer?.Paths.Count > 0)
             {
                 var newColor = changedLayer.DisplayColor;
                 var recoloredPaths = changedLayer
@@ -273,7 +281,7 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
             }
 
             // Update brush color for new strokes
-            PaintCanvasViewModel.PaintBrushColor = changedLayer.AvaloniaDisplayColor;
+            PaintCanvasViewModel.PaintBrushColor = changedLayer?.AvaloniaDisplayColor;
 
             // Sync the recolored paths back to canvas
             SyncSelectedLayerToCanvas();
@@ -318,7 +326,7 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
     }
 
     /// <summary>
-    /// Refreshes the canvas composite. Call after drawing to update layer order.
+    ///     Refreshes the canvas composite. Call after drawing to update layer order.
     /// </summary>
     public void RefreshComposite()
     {
@@ -326,7 +334,7 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
     }
 
     /// <summary>
-    /// Clears the content (paths) of the specified layer without deleting it.
+    ///     Clears the content (paths) of the specified layer without deleting it.
     /// </summary>
     [RelayCommand]
     private void ClearLayerContent(MaskLayer? layer)
@@ -337,16 +345,14 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
 
         // If this is the selected layer, clear the canvas paths too
         if (layer == SelectedLayer)
-        {
             PaintCanvasViewModel.Paths = [];
-        }
 
         layer.Paths = [];
         SyncSelectedLayerToCanvas();
     }
 
     /// <summary>
-    /// Deletes the selected layer.
+    ///     Deletes the selected layer.
     /// </summary>
     [RelayCommand(CanExecute = nameof(CanDeleteLayer))]
     private void DeleteLayer()
@@ -379,7 +385,7 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
     }
 
     /// <summary>
-    /// Unsubscribes event handlers and disposes resources for a layer.
+    ///     Unsubscribes event handlers and disposes resources for a layer.
     /// </summary>
     private void CleanupLayer(MaskLayer layer)
     {
@@ -387,10 +393,13 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
         layer.SourceImage?.Dispose();
     }
 
-    private bool CanDeleteLayer() => SelectedLayer is not null && Layers.Count > 1;
+    private bool CanDeleteLayer()
+    {
+        return SelectedLayer is not null && Layers.Count > 1;
+    }
 
     /// <summary>
-    /// Moves the specified layer (or selected layer if null) up in the list (toward top of list = drawn on TOP).
+    ///     Moves the specified layer (or selected layer if null) up in the list (toward top of list = drawn on TOP).
     /// </summary>
     [RelayCommand]
     private void MoveLayerUp(MaskLayer? layer)
@@ -408,7 +417,8 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
     }
 
     /// <summary>
-    /// Moves the specified layer (or selected layer if null) down in the list (toward bottom of list = drawn UNDER others).
+    ///     Moves the specified layer (or selected layer if null) down in the list (toward bottom of list = drawn UNDER
+    ///     others).
     /// </summary>
     [RelayCommand]
     private void MoveLayerDown(MaskLayer? layer)
@@ -426,7 +436,7 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
     }
 
     /// <summary>
-    /// Fills the selected layer with a rectangle covering the entire canvas.
+    ///     Fills the selected layer with a rectangle covering the entire canvas.
     /// </summary>
     [RelayCommand]
     private void FillLayer()
@@ -448,7 +458,7 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
     }
 
     /// <summary>
-    /// Duplicates the selected layer with all its content and settings.
+    ///     Duplicates the selected layer with all its content and settings.
     /// </summary>
     [RelayCommand]
     private void DuplicateLayer()
@@ -486,7 +496,7 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
     }
 
     /// <summary>
-    /// Exports the selected layer as a white-on-black mask PNG.
+    ///     Exports the selected layer as a white-on-black mask PNG.
     /// </summary>
     [RelayCommand]
     private async Task ExportLayerAsMaskAsync(MaskLayer? layer)
@@ -532,9 +542,7 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
         };
 
         foreach (var penPath in layer.Paths)
-        {
             RenderPenPathToCanvas(canvas, penPath, paint, SKColors.White);
-        }
 
         // Save to file
         await using var stream = await file.OpenWriteAsync();
@@ -544,7 +552,7 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
     }
 
     /// <summary>
-    /// Imports a mask image as a new layer, converting white areas to the new layer's color.
+    ///     Imports a mask image as a new layer, converting white areas to the new layer's color.
     /// </summary>
     [RelayCommand]
     private async Task ImportMaskAsLayerAsync()
@@ -618,8 +626,8 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
     }
 
     /// <summary>
-    /// Called when the selected layer changes.
-    /// Saves the current layer's paths and loads the new layer's paths.
+    ///     Called when the selected layer changes.
+    ///     Saves the current layer's paths and loads the new layer's paths.
     /// </summary>
     partial void OnSelectedLayerChanging(MaskLayer? oldValue, MaskLayer? newValue)
     {
@@ -643,8 +651,8 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
     }
 
     /// <summary>
-    /// Syncs the selected layer's paths and brush color to the paint canvas.
-    /// Other visible layers are rendered to their correct z-order positions.
+    ///     Syncs the selected layer's paths and brush color to the paint canvas.
+    ///     Other visible layers are rendered to their correct z-order positions.
     /// </summary>
     private void SyncSelectedLayerToCanvas()
     {
@@ -712,7 +720,7 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
     }
 
     /// <summary>
-    /// Renders a single image layer's bitmap at the canvas size with scaling.
+    ///     Renders a single image layer's bitmap at the canvas size with scaling.
     /// </summary>
     private SKBitmap? RenderSingleImageLayer(MaskLayer layer)
     {
@@ -735,9 +743,9 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
     }
 
     /// <summary>
-    /// Renders visible layers split into two bitmaps: layers below and above the selected layer.
-    /// This enables proper z-ordering where the selected layer maintains its correct position.
-    /// Note: In this layer system, LOWER index = drawn on TOP (like Photoshop's layer panel).
+    ///     Renders visible layers split into two bitmaps: layers below and above the selected layer.
+    ///     This enables proper z-ordering where the selected layer maintains its correct position.
+    ///     Note: In this layer system, LOWER index = drawn on TOP (like Photoshop's layer panel).
     /// </summary>
     /// <returns>A tuple of (layersBelow, layersAbove) bitmaps. Either may be null if empty.</returns>
     private (SKBitmap? LayersBelow, SKBitmap? LayersAbove) RenderLayersByPosition()
@@ -826,7 +834,7 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
     }
 
     /// <summary>
-    /// Checks if a layer has any renderable content.
+    ///     Checks if a layer has any renderable content.
     /// </summary>
     private static bool LayerHasContent(MaskLayer layer)
     {
@@ -834,8 +842,8 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
     }
 
     /// <summary>
-    /// Renders a single layer to a canvas with the layer's settings and opacity.
-    /// Handles both paint layers (paths) and image layers (bitmaps).
+    ///     Renders a single layer to a canvas with the layer's settings and opacity.
+    ///     Handles both paint layers (paths) and image layers (bitmaps).
     /// </summary>
     private void RenderLayerToCanvas(SKCanvas canvas, MaskLayer layer)
     {
@@ -862,14 +870,12 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
             };
 
             foreach (var penPath in layer.Paths)
-            {
                 RenderPenPathToCanvas(canvas, penPath, paint);
-            }
         }
     }
 
     /// <summary>
-    /// Renders an image layer with scaling and centering.
+    ///     Renders an image layer with scaling and centering.
     /// </summary>
     private void RenderImageLayer(SKCanvas canvas, MaskLayer layer, byte alpha)
     {
@@ -900,20 +906,18 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
     }
 
     /// <summary>
-    /// Saves the current canvas paths back to the selected layer.
-    /// Only saves for paint layers that could have been edited.
+    ///     Saves the current canvas paths back to the selected layer.
+    ///     Only saves for paint layers that could have been edited.
     /// </summary>
     public void SaveCurrentLayerPaths()
     {
         // Only save for paint layers (image layers don't have editable paths)
         if (SelectedLayer is not null && SelectedLayer.LayerType == MaskLayerType.Paint)
-        {
             SelectedLayer.Paths = PaintCanvasViewModel.Paths;
-        }
     }
 
     /// <summary>
-    /// Gets enabled layers with content (for generation).
+    ///     Gets enabled layers with content (for generation).
     /// </summary>
     public IReadOnlyList<MaskLayer> GetEnabledLayersWithContent()
     {
@@ -926,7 +930,7 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
     }
 
     /// <summary>
-    /// Renders a specific layer's paths to a white mask image.
+    ///     Renders a specific layer's paths to a white mask image.
     /// </summary>
     public SKImage? RenderLayerToMask(MaskLayer layer)
     {
@@ -942,9 +946,7 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
         using var paint = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Fill };
 
         foreach (var penPath in layer.Paths)
-        {
             RenderPenPathToCanvas(canvas, penPath, paint);
-        }
 
         // Now convert all colors to white, keeping alpha
         // This ensures the mask is white regardless of display color
@@ -954,10 +956,10 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
             [
                 // R, G, B, A, Bias
                 // Convert any color to white (255, 255, 255), keep original alpha
-                0, 0, 0, 0, 255,  // R = 255
-                0, 0, 0, 0, 255,  // G = 255
-                0, 0, 0, 0, 255,  // B = 255
-                0, 0, 0, 1, 0     // A = original alpha
+                0, 0, 0, 0, 255, // R = 255
+                0, 0, 0, 0, 255, // G = 255
+                0, 0, 0, 0, 255, // B = 255
+                0, 0, 0, 1, 0 // A = original alpha
             ]
         );
 
@@ -971,7 +973,7 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
     }
 
     /// <summary>
-    /// Renders a pen path to a canvas. Delegates to PaintCanvasViewModel's shared implementation.
+    ///     Renders a pen path to a canvas. Delegates to PaintCanvasViewModel's shared implementation.
     /// </summary>
     /// <param name="overrideColor">If provided, uses this color instead of the path's color.</param>
     private static void RenderPenPathToCanvas(
@@ -985,7 +987,7 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
     }
 
     /// <summary>
-    /// Gets the dialog for this view model.
+    ///     Gets the dialog for this view model.
     /// </summary>
     public BetterContentDialog GetDialog()
     {
@@ -1026,32 +1028,37 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
         // Load layers
         if (state.TryGetPropertyValue("layers", out var layersNode) && layersNode is JsonArray layersArray)
         {
+            // Clear existing layers and selection
+            SelectedLayer = null;
+            foreach (var layer in Layers)
+                CleanupLayer(layer);
             Layers.Clear();
             layerCounter = 0;
 
             foreach (var layerNode in layersArray)
-            {
                 if (layerNode is JsonObject layerObj)
                 {
                     var layer = new MaskLayer();
                     layer.LoadStateFromJsonObject(layerObj);
+
+                    // Subscribe to layer property changes (same as AddLayer)
+                    layer.PropertyChanged += Layer_PropertyChanged;
+
                     Layers.Add(layer);
                     layerCounter++;
                 }
-            }
 
             // Select first layer
             if (Layers.Count > 0)
-            {
                 SelectedLayer = Layers[0];
-            }
         }
 
         // Ensure at least one layer exists
         if (Layers.Count == 0)
-        {
             AddLayer();
-        }
+
+        // Always sync to canvas after loading to ensure paths are displayed
+        SyncSelectedLayerToCanvas();
     }
 
     /// <inheritdoc />
@@ -1069,24 +1076,9 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
         // Save layers
         var layersArray = new JsonArray();
         foreach (var layer in Layers)
-        {
             layersArray.Add(layer.SaveStateToJsonObject());
-        }
         state["layers"] = layersArray;
 
         return state;
-    }
-
-    /// <inheritdoc />
-    public void Dispose()
-    {
-        // Clean up all layers
-        foreach (var layer in Layers)
-        {
-            CleanupLayer(layer);
-        }
-        Layers.Clear();
-
-        GC.SuppressFinalize(this);
     }
 }

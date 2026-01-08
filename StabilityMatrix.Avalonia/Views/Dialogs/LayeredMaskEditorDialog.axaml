@@ -22,6 +22,7 @@
 
     <controls:UserControlBase.Resources>
         <converters:FileUriConverter x:Key="FileUriConverter" />
+        <converters:EnumToIntConverter x:Key="ConditioningAreaModeConverter" x:TypeArguments="inference:ConditioningAreaMode" />
     </controls:UserControlBase.Resources>
 
     <sg:SpacedGrid
@@ -151,6 +152,7 @@
                                 <Setter Property="BorderBrush" Value="{DynamicResource AccentFillColorDefaultBrush}" />
                                 <Setter Property="BorderThickness" Value="2" />
                             </Style>
+
                         </ListBox.Styles>
                         <ListBox.ItemTemplate>
                             <DataTemplate DataType="inference:MaskLayer">
@@ -162,7 +164,7 @@
                                     BorderThickness="1"
                                     CornerRadius="6">
                                     <Border.Styles>
-                                        <Style Selector="Border:pointerover">
+                                        <Style Selector="Border#LayerItemBorder:pointerover">
                                             <Setter Property="Background" Value="{DynamicResource CardBackgroundFillColorSecondaryBrush}" />
                                         </Style>
                                     </Border.Styles>
@@ -310,12 +312,11 @@
                                                 ToolTip.Tip="{Binding SourceImagePath}" />
                                         </StackPanel>
 
-                                        <!--  Row 2: Controls (different based on type)  -->
-                                        <!--  Paint layer: Strength + Opacity  -->
+                                        <!--  Paint layer: Strength + Opacity + Cond Area  -->
                                         <sg:SpacedGrid
                                             Grid.Row="2"
-                                            ColumnDefinitions="*,*"
-                                            ColumnSpacing="12"
+                                            ColumnDefinitions="*,*,Auto"
+                                            ColumnSpacing="8"
                                             IsVisible="{Binding LayerType, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static inference:MaskLayerType.Paint}}">
                                             <StackPanel Spacing="2">
                                                 <TextBlock
@@ -323,7 +324,6 @@
                                                     Foreground="{DynamicResource TextFillColorTertiaryBrush}"
                                                     Text="Strength" />
                                                 <ui:NumberBox
-                                                    Margin="0,0,16,0"
                                                     HorizontalAlignment="Stretch"
                                                     Maximum="10"
                                                     Minimum="0"
@@ -338,7 +338,6 @@
                                                     Foreground="{DynamicResource TextFillColorTertiaryBrush}"
                                                     Text="Opacity" />
                                                 <ui:NumberBox
-                                                    Margin="0,0,16,0"
                                                     HorizontalAlignment="Stretch"
                                                     Maximum="1"
                                                     Minimum="0"
@@ -346,6 +345,29 @@
                                                     SmallChange="0.1"
                                                     SpinButtonPlacementMode="Compact"
                                                     Value="{Binding Opacity}" />
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="2" Spacing="2">
+                                                <TextBlock
+                                                    FontSize="11"
+                                                    Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                                    Text="Cond. Area"
+                                                    ToolTip.Tip="Conditioning Area Mode: How the prompt is applied to the region" />
+                                                <ComboBox
+                                                    MinWidth="90"
+                                                    Padding="8,5,4,5"
+                                                    SelectedIndex="{Binding ConditioningArea, Converter={StaticResource ConditioningAreaModeConverter}}"
+                                                    ToolTip.Tip="Bounds: Apply to bounding box of mask (sharper control)&#x0a;Full: Apply to entire image (softer transitions)">
+                                                    <ComboBox.Styles>
+                                                        <Style Selector="ComboBoxItem">
+                                                            <Setter Property="Background" Value="{DynamicResource ComboBoxDropDownBackground}" />
+                                                        </Style>
+                                                        <Style Selector="ComboBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+                                                            <Setter Property="Background" Value="{DynamicResource ControlFillColorSecondaryBrush}" />
+                                                        </Style>
+                                                    </ComboBox.Styles>
+                                                    <ComboBoxItem Content="Bounds" ToolTip.Tip="Apply to mask bounding box - sharper regional control" />
+                                                    <ComboBoxItem Content="Full" ToolTip.Tip="Apply to entire image - softer transitions" />
+                                                </ComboBox>
                                             </StackPanel>
                                         </sg:SpacedGrid>
 

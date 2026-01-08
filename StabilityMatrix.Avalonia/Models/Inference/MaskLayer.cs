@@ -58,6 +58,25 @@ public enum MaskLayerType
 }
 
 /// <summary>
+/// Controls how the conditioning area is applied for regional prompting.
+/// This affects how the model interprets the masked region.
+/// </summary>
+public enum ConditioningAreaMode
+{
+    /// <summary>
+    /// Apply conditioning only to the bounding box of the mask.
+    /// This is more precise and typically gives sharper regional control.
+    /// </summary>
+    MaskBounds,
+
+    /// <summary>
+    /// Apply conditioning to the entire image area.
+    /// This can provide softer transitions and more global influence.
+    /// </summary>
+    Default,
+}
+
+/// <summary>
 /// Represents a single layer in the layered mask editor.
 /// Each layer has its own painted mask, prompt, and compositing settings.
 /// </summary>
@@ -116,6 +135,21 @@ public partial class MaskLayer : ObservableObject, IJsonLoadableState
     /// </summary>
     [ObservableProperty]
     private double strength = 1.0;
+
+    /// <summary>
+    /// Controls how the conditioning area is applied.
+    /// MaskBounds: Apply to bounding box of mask (sharper control).
+    /// Default: Apply to entire image (softer transitions).
+    /// </summary>
+    [ObservableProperty]
+    private ConditioningAreaMode conditioningArea = ConditioningAreaMode.MaskBounds;
+
+    /// <summary>
+    /// Gets the SetCondArea value for ComfyUI nodes.
+    /// </summary>
+    [JsonIgnore]
+    public string ConditioningAreaValue =>
+        ConditioningArea == ConditioningAreaMode.MaskBounds ? "mask bounds" : "default";
 
     /// <summary>
     /// Compositing opacity for editor preview (0.0 - 1.0, default 1.0).
@@ -266,6 +300,14 @@ public partial class MaskLayer : ObservableObject, IJsonLoadableState
         if (state.TryGetPropertyValue("strength", out var strengthNode))
             Strength = strengthNode?.GetValue<double>() ?? 1.0;
 
+        if (state.TryGetPropertyValue("conditioningArea", out var condAreaNode))
+        {
+            var condAreaStr = condAreaNode?.GetValue<string>() ?? "MaskBounds";
+            ConditioningArea = Enum.TryParse<ConditioningAreaMode>(condAreaStr, out var parsedCondArea)
+                ? parsedCondArea
+                : ConditioningAreaMode.MaskBounds;
+        }
+
         if (state.TryGetPropertyValue("opacity", out var opacityNode))
             Opacity = opacityNode?.GetValue<double>() ?? 1.0;
 
@@ -304,6 +346,7 @@ public partial class MaskLayer : ObservableObject, IJsonLoadableState
             ["prompt"] = Prompt,
             ["negativePrompt"] = NegativePrompt,
             ["strength"] = Strength,
+            ["conditioningArea"] = ConditioningArea.ToString(),
             ["opacity"] = Opacity,
             ["isVisible"] = IsVisible,
             ["isEnabled"] = IsEnabled,

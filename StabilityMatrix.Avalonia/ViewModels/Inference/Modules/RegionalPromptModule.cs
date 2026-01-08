@@ -85,7 +85,7 @@ public class RegionalPromptModule : ModuleBase
                 {
                     Name = e.Nodes.GetUniqueName($"RegionalPrompt_LoadMask_{maskCounter}"),
                     Image = $"Inference/{maskFileName}",
-                    Channel = "alpha",
+                    Channel = "red",
                 }
             );
 
@@ -107,7 +107,7 @@ public class RegionalPromptModule : ModuleBase
                     Conditioning = layerClip.Output,
                     Mask = loadedMask.Output,
                     Strength = layer.Strength,
-                    SetCondArea = "mask bounds",
+                    SetCondArea = layer.ConditioningAreaValue,
                 }
             );
 
@@ -142,7 +142,7 @@ public class RegionalPromptModule : ModuleBase
                         Conditioning = layerNegClip.Output,
                         Mask = loadedMask.Output,
                         Strength = layer.Strength,
-                        SetCondArea = "mask bounds",
+                        SetCondArea = layer.ConditioningAreaValue,
                     }
                 );
 
@@ -191,7 +191,7 @@ public class RegionalPromptModule : ModuleBase
                 {
                     Name = e.Nodes.GetUniqueName($"Refiner_RegionalPrompt_LoadMask_{refinerMaskCounter}"),
                     Image = $"Inference/{maskFileName}",
-                    Channel = "alpha",
+                    Channel = "red",
                 }
             );
 
@@ -211,7 +211,7 @@ public class RegionalPromptModule : ModuleBase
                     Conditioning = layerClip.Output,
                     Mask = loadedMask.Output,
                     Strength = layer.Strength,
-                    SetCondArea = "mask bounds",
+                    SetCondArea = layer.ConditioningAreaValue,
                 }
             );
 

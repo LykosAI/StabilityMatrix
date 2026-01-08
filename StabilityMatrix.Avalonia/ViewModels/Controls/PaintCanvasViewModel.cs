@@ -254,24 +254,24 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger) 
             _ => name,
         };
 
-        if (!Layers.ContainsKey(layerName))
+        if (!Layers.TryGetValue(layerName, out var layer))
         {
             return;
         }
 
         if (bitmap is not null)
         {
-            Layers[layerName].Bitmaps = [bitmap];
+            layer.Bitmaps = [bitmap];
         }
         else
         {
-            Layers[layerName].Bitmaps = [];
+            layer.Bitmaps = [];
         }
     }
 
     public void SetSourceCanvas(SKCanvas canvas)
     {
-        ArgumentNullException.ThrowIfNull(canvas, nameof(canvas));
+        ArgumentNullException.ThrowIfNull(canvas);
         SourceCanvas = canvas;
     }
 
@@ -623,8 +623,8 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger) 
     /// </summary>
     private SKBitmap GetFlattenedContentBitmap()
     {
-        var width = (int)CanvasSize.Width;
-        var height = (int)CanvasSize.Height;
+        var width = CanvasSize.Width;
+        var height = CanvasSize.Height;
         var bitmap = new SKBitmap(width, height, SKColorType.Rgba8888, SKAlphaType.Premul);
 
         using var canvas = new SKCanvas(bitmap);
@@ -1028,9 +1028,8 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger) 
         var pixels = bitmap.Pixels;
         var paletteCount = paletteColors.Count;
 
-        for (var i = 0; i < pixels.Length; i++)
+        foreach (var pixel in pixels)
         {
-            var pixel = pixels[i];
             if (pixel.Alpha < 128) // Skip mostly transparent pixels
                 continue;
 
@@ -1038,16 +1037,16 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger) 
             for (var p = 0; p < paletteCount; p++)
             {
                 var paletteColor = paletteColors[p];
-                if (ColorMatchesWithTolerance(pixel, paletteColor, tolerance))
-                {
-                    foundPaletteColors.Add(paletteColor);
+                if (!ColorMatchesWithTolerance(pixel, paletteColor, tolerance))
+                    continue;
 
-                    // Early exit if we've found all palette colors
-                    if (foundPaletteColors.Count == paletteCount)
-                        return foundPaletteColors.ToList();
+                foundPaletteColors.Add(paletteColor);
 
-                    break;
-                }
+                // Early exit if we've found all palette colors
+                if (foundPaletteColors.Count == paletteCount)
+                    return foundPaletteColors.ToList();
+
+                break;
             }
         }
 
@@ -1203,7 +1202,9 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger) 
             cachedCheckerboardSize = CanvasSize;
         }
 
-        using var paint = new SKPaint { Shader = cachedCheckerboardShader, IsAntialias = false };
+        using var paint = new SKPaint();
+        paint.Shader = cachedCheckerboardShader;
+        paint.IsAntialias = false;
 
         canvas.DrawRect(0, 0, CanvasSize.Width, CanvasSize.Height, paint);
     }
@@ -1488,11 +1489,11 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger) 
         using var path = new SKPath();
         var started = false;
         var currentThickness = 0f;
-        var prevX = 0f;
-        var prevY = 0f;
 
         // Start from one point before to ensure continuity
         var actualStart = Math.Max(0, startIndex - 1);
+
+        var effectiveRadius = penPath.GetEffectiveRadius();
 
         for (var i = actualStart; i < endIndex && i < penPath.Points.Count; i++)
         {
@@ -1500,7 +1501,7 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger) 
             if (!point.IsPen)
                 continue;
 
-            var thickness = (float)((point.Pressure ?? 1) * point.Radius * 2.5);
+            var thickness = (float)((point.Pressure ?? 1) * effectiveRadius * 2.5);
 
             if (!started)
             {
@@ -1513,9 +1514,6 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger) 
                 path.LineTo(point.X, point.Y);
                 currentThickness = (currentThickness + thickness) / 2;
             }
-
-            prevX = point.X;
-            prevY = point.Y;
         }
 
         if (started)
@@ -1739,6 +1737,9 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger) 
         var totalThickness = 0.0;
         var firstPenPointIndex = -1;
 
+        // Get effective radius (path-level or backward-compat from first point)
+        var effectiveRadius = penPath.GetEffectiveRadius();
+
         for (var i = 0; i < penPath.Points.Count; i++)
         {
             var p = penPath.Points[i];
@@ -1746,7 +1747,7 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger) 
                 continue;
 
             var pressure = p.Pressure ?? 1;
-            var thickness = pressure * p.Radius * 2.5;
+            var thickness = pressure * effectiveRadius * 2.5;
 
             if (penPointCount == 0)
             {
@@ -1765,8 +1766,7 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger) 
         if (penPointCount == 0)
         {
             // No pen points - use the ToSKPath method for mouse-based paths
-            var point = penPath.Points[0];
-            paint.StrokeWidth = (float)(point.Radius * 2);
+            paint.StrokeWidth = effectiveRadius * 2;
             var skPath = penPath.ToSKPath();
             canvas.DrawPath(skPath, paint);
             return;
@@ -1777,7 +1777,7 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger) 
         {
             // Single point - draw a circle
             var point = penPath.Points[firstPenPointIndex];
-            var thickness = (point.Pressure ?? 1) * point.Radius * 2.5;
+            var thickness = (point.Pressure ?? 1) * effectiveRadius * 2.5;
             paint.Style = SKPaintStyle.Fill;
             canvas.DrawCircle(point.X, point.Y, (float)(thickness / 2), paint);
             return;
@@ -1792,12 +1792,8 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger) 
             using var path = new SKPath();
             var started = false;
 
-            for (var i = 0; i < penPath.Points.Count; i++)
+            foreach (var p in penPath.Points.Where(p => p.IsPen))
             {
-                var p = penPath.Points[i];
-                if (!p.IsPen)
-                    continue;
-
                 if (!started)
                 {
                     path.MoveTo(p.X, p.Y);
@@ -1821,13 +1817,12 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger) 
             var lastPenX = 0f;
             var lastPenY = 0f;
 
-            for (var i = 0; i < penPath.Points.Count; i++)
+            foreach (var point in penPath.Points)
             {
-                var point = penPath.Points[i];
                 if (!point.IsPen)
                     continue;
 
-                var thickness = (float)((point.Pressure ?? 1) * point.Radius * 2.5);
+                var thickness = (float)((point.Pressure ?? 1) * effectiveRadius * 2.5);
 
                 // If thickness changed significantly, draw current path and start new one
                 if (pathStarted && Math.Abs(thickness - currentThickness) > currentThickness * 0.2f)

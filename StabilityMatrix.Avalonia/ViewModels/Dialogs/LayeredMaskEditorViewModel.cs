@@ -456,6 +456,28 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
     }
 
     /// <summary>
+    ///     Handles layer index changes from drag-drop reordering in the UI.
+    ///     Called by the View when a layer is dropped at a new position.
+    /// </summary>
+    /// <param name="layer">The layer that was moved.</param>
+    /// <param name="newIndex">The new index where the layer was dropped.</param>
+    public void OnLayerIndexChanged(MaskLayer layer, int newIndex)
+    {
+        var currentIndex = Layers.IndexOf(layer);
+        if (currentIndex < 0 || currentIndex == newIndex)
+            return;
+
+        // Save current layer paths before moving
+        SaveCurrentLayerPaths();
+
+        // Move the layer to the new position
+        Layers.Move(currentIndex, newIndex);
+
+        // Refresh the canvas to reflect the new layer order
+        SyncSelectedLayerToCanvas();
+    }
+
+    /// <summary>
     ///     Fills the selected layer with a rectangle covering the entire canvas.
     /// </summary>
     [RelayCommand]

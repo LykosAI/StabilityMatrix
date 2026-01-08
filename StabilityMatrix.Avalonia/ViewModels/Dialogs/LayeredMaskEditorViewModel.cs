@@ -338,7 +338,9 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
             else
             {
                 // All other cases: save paths
-                SaveCurrentLayerPaths();
+                // Force save if we are toggling off the selected layer (it's hidden now, but canvas has valid paths)
+                var force = changedLayer == SelectedLayer && e.PropertyName == nameof(MaskLayer.IsVisible);
+                SaveCurrentLayerPaths(force);
             }
 
             SyncSelectedLayerToCanvas();
@@ -985,11 +987,19 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
     ///     Saves the current canvas paths back to the selected layer.
     ///     Only saves for paint layers that could have been edited.
     /// </summary>
-    public void SaveCurrentLayerPaths()
+    public void SaveCurrentLayerPaths(bool force = false)
     {
         // Only save for paint layers (image layers don't have editable paths)
-        if (SelectedLayer is not null && SelectedLayer.LayerType == MaskLayerType.Paint)
-            SelectedLayer.Paths = PaintCanvasViewModel.Paths;
+        if (SelectedLayer is null || SelectedLayer.LayerType != MaskLayerType.Paint)
+            return;
+
+        // If the layer is hidden, PaintCanvasViewModel.Paths is cleared (visually hidden)
+        // by SyncSelectedLayerToCanvas. We should not overwrite the layer's actual paths
+        // with this empty list. This prevents data loss when moving/updating hidden layers.
+        if (!force && !SelectedLayer.IsVisible)
+            return;
+
+        SelectedLayer.Paths = PaintCanvasViewModel.Paths;
     }
 
     /// <summary>

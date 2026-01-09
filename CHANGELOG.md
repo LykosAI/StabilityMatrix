@@ -5,6 +5,17 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.16.0-dev.2
+### Added
+- Added Regional Prompting addon to Inference - paint detailed masks to apply different prompts, strengths, and settings to specific regions of your image
+  - Multi-layer mask editor with Photoshop-style interface for managing layers with independent masks, prompts, colors, and opacity
+  - Professional brush tools: freehand brush/eraser with pressure sensitivity, rectangle/ellipse shapes with fill/stroke modes, paint bucket flood fill
+  - **NEW: Brush feathering/softness control** for smooth, blended mask edges (0 = hard edge, 1 = soft/blurred)
+  - Per-layer prompt and strength controls, export/import masks as PNG, duplicate layers, image reference layers for tracing
+  - GPU-accelerated rendering with compact gzip-compressed metadata serialization 
+### Fixed
+- Fixed parsing of escape sequences in Inference such as `\\` 
+
 ## v2.16.0-dev.1
 ### Added
 #### New Feature: 🧪 Image Lab  - Conversational Image Generation for ComfyUI

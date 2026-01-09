@@ -285,6 +285,7 @@ public class PaintCanvas : TemplatedControlBase
                 FillColor = viewModel.PaintBrushSKColor.WithAlpha((byte)(viewModel.PaintBrushAlpha * 255)),
                 IsErase = viewModel.SelectedTool == PaintCanvasTool.Eraser,
                 Radius = (float)viewModel.PaintBrushSize,
+                Feathering = (float)viewModel.PaintBrushFeathering,
             };
             TemporaryPaths[e.Pointer.Id] = penPath;
         }

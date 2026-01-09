@@ -52,6 +52,13 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
     [ObservableProperty]
     private double paintBrushAlpha = 1;
 
+    /// <summary>
+    /// Feathering amount for soft brush edges. 0 = hard edge, 1 = fully soft/blurred.
+    /// UI typically shows this inverted as "Hardness" (100% = no feathering).
+    /// </summary>
+    [ObservableProperty]
+    private double paintBrushFeathering = 0;
+
     [ObservableProperty]
     private double currentPenPressure;
 
@@ -1493,6 +1500,21 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
         paint.StrokeCap = SKStrokeCap.Round;
         paint.StrokeJoin = SKStrokeJoin.Round;
 
+        // Apply feathering (soft brush edge) using blur mask filter
+        if (penPath.Feathering > 0)
+        {
+            var effectiveRadiusForBlur = penPath.GetEffectiveRadius();
+            var blurSigma = effectiveRadiusForBlur * penPath.Feathering * 0.5f;
+            if (blurSigma > 0.1f)
+            {
+                paint.MaskFilter = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, blurSigma);
+            }
+        }
+        else
+        {
+            paint.MaskFilter = null;
+        }
+
         using var path = new SKPath();
         var started = false;
         var currentThickness = 0f;
@@ -1736,6 +1758,22 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
         paint.Style = SKPaintStyle.Stroke;
         paint.StrokeCap = SKStrokeCap.Round; // Round caps handle endpoints
         paint.StrokeJoin = SKStrokeJoin.Round;
+
+        // Apply feathering (soft brush edge) using blur mask filter
+        if (penPath.Feathering > 0)
+        {
+            // Calculate blur sigma based on the effective radius and feathering amount
+            var effectiveRadiusForBlur = penPath.GetEffectiveRadius();
+            var blurSigma = effectiveRadiusForBlur * penPath.Feathering * 0.5f;
+            if (blurSigma > 0.1f)
+            {
+                paint.MaskFilter = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, blurSigma);
+            }
+        }
+        else
+        {
+            paint.MaskFilter = null;
+        }
 
         // Count pen points and check pressure uniformity in a single pass (avoids LINQ allocations)
         var penPointCount = 0;

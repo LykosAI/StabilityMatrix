@@ -202,6 +202,25 @@
                                     Minimum="0"
                                     ToolTip.Tip="Brush opacity"
                                     Value="{Binding PaintBrushAlpha}" />
+
+                                <Rectangle
+                                    Width="1"
+                                    Margin="6,4"
+                                    VerticalAlignment="Stretch"
+                                    Fill="{DynamicResource DividerStrokeColorDefaultBrush}" />
+
+                                <!--  Feathering (Softness)  -->
+                                <TextBlock
+                                    VerticalAlignment="Center"
+                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                    Text="Softness" />
+                                <Slider
+                                    Width="80"
+                                    VerticalAlignment="Center"
+                                    Maximum="1"
+                                    Minimum="0"
+                                    ToolTip.Tip="Brush softness/feathering (0 = hard edge, 1 = soft edge)"
+                                    Value="{Binding PaintBrushFeathering}" />
                             </StackPanel>
 
                             <!--  Spacer  -->

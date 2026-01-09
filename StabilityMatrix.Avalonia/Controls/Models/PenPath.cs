@@ -138,6 +138,10 @@ public class PenPathJsonConverter : JsonConverter<PenPath>
                     penPath = penPath with { Radius = (float)reader.GetDouble() };
                     break;
 
+                case "feathering":
+                    penPath = penPath with { Feathering = (float)reader.GetDouble() };
+                    break;
+
                 default:
                     reader.Skip();
                     break;
@@ -167,6 +171,7 @@ public class PenPathJsonConverter : JsonConverter<PenPath>
         writer.WriteBoolean("isStrokeOnly", value.IsStrokeOnly);
         writer.WriteNumber("strokeWidth", value.StrokeWidth);
         writer.WriteNumber("radius", value.Radius);
+        writer.WriteNumber("feathering", value.Feathering);
 
         // Write points in compressed format
         var compressedPoints = PenPath.CompressPointsPublic(value.Points);
@@ -212,6 +217,12 @@ public readonly record struct PenPath()
     /// Brush radius for this stroke. All points in the stroke share this radius.
     /// </summary>
     public float Radius { get; init; }
+
+    /// <summary>
+    /// Feathering amount for soft brush edges. 0 = hard edge, 1 = fully soft/blurred.
+    /// The blur radius is calculated as: effectiveRadius * feathering.
+    /// </summary>
+    public float Feathering { get; init; }
 
     /// <summary>
     /// Points for rendering. Serialization is handled by the custom JsonConverter.

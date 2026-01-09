@@ -6,6 +6,7 @@ using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.HardwareInfo;
+using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
@@ -42,6 +43,49 @@ public class ComfyZluda(
         + "Visual Studio Build Tools for C++ Desktop Development will be installed automatically. "
         + "AMD GPUs under the RX 6800 may require additional manual setup.";
     public override string LaunchCommand => Path.Combine("zluda", "zluda.exe");
+
+    public override List<LaunchOptionDefinition> LaunchOptions
+    {
+        get
+        {
+            var options = base.LaunchOptions;
+
+            // Update Cross Attention Method default
+            var crossAttentionIndex = options.FindIndex(o => o.Name == "Cross Attention Method");
+            if (crossAttentionIndex != -1)
+            {
+                options[crossAttentionIndex] = options[crossAttentionIndex] with
+                {
+                    InitialValue = "--use-quad-cross-attention"
+                };
+            }
+
+            // Add new options before Extras (which is usually last)
+            var extrasIndex = options.FindIndex(o => o.Name == "Extra Launch Arguments");
+            var insertIndex = extrasIndex != -1 ? extrasIndex : options.Count;
+
+            options.Insert(insertIndex, new LaunchOptionDefinition
+            {
+                Name = "Disable Async Offload",
+                Type = LaunchOptionType.Bool,
+                InitialValue = true,
+                Options = ["--disable-async-offload"],
+                Description = "Disable async weight offloading. Recommended for ZLUDA stability.",
+            });
+
+            options.Insert(insertIndex + 1, new LaunchOptionDefinition
+            {
+                Name = "Disable Pinned Memory",
+                Type = LaunchOptionType.Bool,
+                InitialValue = true,
+                Options = ["--disable-pinned-memory"],
+                Description = "Disable pinned memory. Recommended for ZLUDA stability.",
+            });
+
+            return options;
+        }
+    }
+
     public override IEnumerable<TorchIndex> AvailableTorchIndices => [TorchIndex.Zluda];
 
     public override TorchIndex GetRecommendedTorchVersion() => TorchIndex.Zluda;

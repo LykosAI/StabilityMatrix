@@ -1,12 +1,8 @@
-﻿using System.Diagnostics;
-using System.Text.RegularExpressions;
-using Injectio.Attributes;
-using StabilityMatrix.Core.Exceptions;
+﻿using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.HardwareInfo;
-using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
@@ -41,7 +37,7 @@ public class ComfyZluda(
     public override string Disclaimer =>
         "Prerequisite install may require admin privileges and a reboot. "
         + "Visual Studio Build Tools for C++ Desktop Development will be installed automatically. "
-        + "AMD GPUs under the RX 6800 may require additional manual setup.";
+        + "AMD GPUs under the RX 6800 may require additional manual setup. ";
     public override string LaunchCommand => Path.Combine("zluda", "zluda.exe");
 
     public override List<LaunchOptionDefinition> LaunchOptions
@@ -56,7 +52,7 @@ public class ComfyZluda(
             {
                 options[crossAttentionIndex] = options[crossAttentionIndex] with
                 {
-                    InitialValue = "--use-quad-cross-attention"
+                    InitialValue = "--use-quad-cross-attention",
                 };
             }
 
@@ -64,23 +60,47 @@ public class ComfyZluda(
             var extrasIndex = options.FindIndex(o => o.Name == "Extra Launch Arguments");
             var insertIndex = extrasIndex != -1 ? extrasIndex : options.Count;
 
-            options.Insert(insertIndex, new LaunchOptionDefinition
-            {
-                Name = "Disable Async Offload",
-                Type = LaunchOptionType.Bool,
-                InitialValue = true,
-                Options = ["--disable-async-offload"],
-                Description = "Disable async weight offloading. Recommended for ZLUDA stability.",
-            });
+            options.Insert(
+                insertIndex,
+                new LaunchOptionDefinition
+                {
+                    Name = "Disable Async Offload",
+                    Type = LaunchOptionType.Bool,
+                    InitialValue = true,
+                    Options = ["--disable-async-offload"],
+                }
+            );
 
-            options.Insert(insertIndex + 1, new LaunchOptionDefinition
-            {
-                Name = "Disable Pinned Memory",
-                Type = LaunchOptionType.Bool,
-                InitialValue = true,
-                Options = ["--disable-pinned-memory"],
-                Description = "Disable pinned memory. Recommended for ZLUDA stability.",
-            });
+            options.Insert(
+                insertIndex + 1,
+                new LaunchOptionDefinition
+                {
+                    Name = "Disable Pinned Memory",
+                    Type = LaunchOptionType.Bool,
+                    InitialValue = true,
+                    Options = ["--disable-pinned-memory"],
+                }
+            );
+            options.Insert(
+                insertIndex + 2,
+                new LaunchOptionDefinition
+                {
+                    Name = "Disable Smart Memory",
+                    Type = LaunchOptionType.Bool,
+                    InitialValue = false,
+                    Options = ["--disable-smart-memory"],
+                }
+            );
+            options.Insert(
+                insertIndex + 3,
+                new LaunchOptionDefinition
+                {
+                    Name = "Disable Model/Node Caching",
+                    Type = LaunchOptionType.Bool,
+                    InitialValue = false,
+                    Options = ["--cache-none"],
+                }
+            );
 
             return options;
         }

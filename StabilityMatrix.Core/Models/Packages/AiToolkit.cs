@@ -35,10 +35,7 @@ public class AiToolkit(
     public override string LicenseUrl => "https://github.com/ostris/ai-toolkit/blob/main/LICENSE";
     public override string LaunchCommand => string.Empty;
 
-    public override Uri PreviewImageUri =>
-        new(
-            "https://camo.githubusercontent.com/ea35b399e0d659f9f2ee09cbedb58e1a3ec7a0eab763e8ae8d11d076aad5be40/68747470733a2f2f6f73747269732e636f6d2f77702d636f6e74656e742f75706c6f6164732f323032352f30322f746f6f6c6b69742d75692e6a7067"
-        );
+    public override Uri PreviewImageUri => new("https://cdn.lykos.ai/sm/packages/aitoolkit/preview.webp");
 
     public override string OutputFolderName => "output";
     public override IEnumerable<TorchIndex> AvailableTorchIndices => [TorchIndex.Cuda];

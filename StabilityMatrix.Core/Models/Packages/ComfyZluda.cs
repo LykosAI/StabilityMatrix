@@ -1,11 +1,15 @@
 ﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;
+using Injectio.Attributes;
 using Injectio.Attributes;
 using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.HardwareInfo;
+using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
@@ -47,64 +51,54 @@ public class ComfyZluda(
     {
         get
         {
-            var options = base.LaunchOptions;
-
-            // Update Cross Attention Method default
-            var crossAttentionIndex = options.FindIndex(o => o.Name == "Cross Attention Method");
-            if (crossAttentionIndex != -1)
+            var options = new List<LaunchOptionDefinition>
             {
-                options[crossAttentionIndex] = options[crossAttentionIndex] with
+                new()
                 {
+                    Name = "Cross Attention Method",
+                    Type = LaunchOptionType.Bool,
                     InitialValue = "--use-quad-cross-attention",
-                };
-            }
-
-            // Add new options before Extras (which is usually last)
-            var extrasIndex = options.FindIndex(o => o.Name == "Extra Launch Arguments");
-            var insertIndex = extrasIndex != -1 ? extrasIndex : options.Count;
-
-            options.Insert(
-                insertIndex,
-                new LaunchOptionDefinition
+                    Options =
+                    [
+                        "--use-split-cross-attention",
+                        "--use-quad-cross-attention",
+                        "--use-pytorch-cross-attention",
+                        "--use-sage-attention",
+                    ],
+                },
+                new()
                 {
                     Name = "Disable Async Offload",
                     Type = LaunchOptionType.Bool,
                     InitialValue = true,
                     Options = ["--disable-async-offload"],
-                }
-            );
-
-            options.Insert(
-                insertIndex + 1,
-                new LaunchOptionDefinition
+                },
+                new()
                 {
                     Name = "Disable Pinned Memory",
                     Type = LaunchOptionType.Bool,
                     InitialValue = true,
                     Options = ["--disable-pinned-memory"],
-                }
-            );
-            options.Insert(
-                insertIndex + 2,
-                new LaunchOptionDefinition
+                },
+                new()
                 {
                     Name = "Disable Smart Memory",
                     Type = LaunchOptionType.Bool,
                     InitialValue = false,
                     Options = ["--disable-smart-memory"],
-                }
-            );
-            options.Insert(
-                insertIndex + 3,
-                new LaunchOptionDefinition
+                },
+                new()
                 {
                     Name = "Disable Model/Node Caching",
                     Type = LaunchOptionType.Bool,
                     InitialValue = false,
                     Options = ["--cache-none"],
-                }
-            );
+                },
+            };
 
+            options.AddRange(
+                base.LaunchOptions.Except(base.LaunchOptions.Where(x => x.Name == "Cross Attention Method"))
+            );
             return options;
         }
     }

@@ -2,6 +2,7 @@
 using System.Text.RegularExpressions;
 using Injectio.Attributes;
 using StabilityMatrix.Core.Exceptions;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.HardwareInfo;

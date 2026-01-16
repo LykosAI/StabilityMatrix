@@ -94,6 +94,99 @@
                         ToolTip.Tip="Import mask image as new layer">
                         <fluentIcons:SymbolIcon FontSize="18" Symbol="ArrowDownload" />
                     </Button>
+                    <Rectangle
+                        Width="1"
+                        Margin="4,4"
+                        VerticalAlignment="Stretch"
+                        Fill="{DynamicResource DividerStrokeColorDefaultBrush}" />
+                    <!--  Quick Divisions Button with Flyout  -->
+                    <Button Classes="transparent" ToolTip.Tip="Quick Divisions - Preset region layouts">
+                        <Button.Flyout>
+                            <ui:FAMenuFlyout Placement="BottomEdgeAlignedLeft">
+                                <!--  Horizontal Splits  -->
+                                <ui:MenuFlyoutSubItem Text="Horizontal Splits">
+                                    <ui:MenuFlyoutSubItem.IconSource>
+                                        <fluentIcons:SymbolIconSource Symbol="SplitHorizontal" />
+                                    </ui:MenuFlyoutSubItem.IconSource>
+                                    <ui:MenuFlyoutItem Command="{Binding QuickDivisionHorizontal5050Command}" Text="50/50 (Left | Right)">
+                                        <ui:MenuFlyoutItem.IconSource>
+                                            <fluentIcons:SymbolIconSource Symbol="LayoutColumnTwoSplitLeft" />
+                                        </ui:MenuFlyoutItem.IconSource>
+                                    </ui:MenuFlyoutItem>
+                                    <ui:MenuFlyoutItem Command="{Binding QuickDivisionHorizontal333333Command}" Text="33/33/33 (Thirds)">
+                                        <ui:MenuFlyoutItem.IconSource>
+                                            <fluentIcons:SymbolIconSource Symbol="LayoutColumnThree" />
+                                        </ui:MenuFlyoutItem.IconSource>
+                                    </ui:MenuFlyoutItem>
+                                </ui:MenuFlyoutSubItem>
+                                <!--  Vertical Splits  -->
+                                <ui:MenuFlyoutSubItem Text="Vertical Splits">
+                                    <ui:MenuFlyoutSubItem.IconSource>
+                                        <fluentIcons:SymbolIconSource Symbol="SplitVertical" />
+                                    </ui:MenuFlyoutSubItem.IconSource>
+                                    <ui:MenuFlyoutItem Command="{Binding QuickDivisionVertical5050Command}" Text="50/50 (Top | Bottom)">
+                                        <ui:MenuFlyoutItem.IconSource>
+                                            <fluentIcons:SymbolIconSource Symbol="LayoutRowTwoSplitTop" />
+                                        </ui:MenuFlyoutItem.IconSource>
+                                    </ui:MenuFlyoutItem>
+                                    <ui:MenuFlyoutItem Command="{Binding QuickDivisionVertical333333Command}" Text="33/33/33 (Thirds)">
+                                        <ui:MenuFlyoutItem.IconSource>
+                                            <fluentIcons:SymbolIconSource Symbol="LayoutRowThree" />
+                                        </ui:MenuFlyoutItem.IconSource>
+                                    </ui:MenuFlyoutItem>
+                                </ui:MenuFlyoutSubItem>
+                                <!--  Grids  -->
+                                <ui:MenuFlyoutSubItem Text="Grid Layouts">
+                                    <ui:MenuFlyoutSubItem.IconSource>
+                                        <fluentIcons:SymbolIconSource Symbol="Grid" />
+                                    </ui:MenuFlyoutSubItem.IconSource>
+                                    <ui:MenuFlyoutItem Command="{Binding QuickDivisionQuadrantsCommand}" Text="2×2 Quadrants">
+                                        <ui:MenuFlyoutItem.IconSource>
+                                            <fluentIcons:SymbolIconSource Symbol="LayoutCellFour" />
+                                        </ui:MenuFlyoutItem.IconSource>
+                                    </ui:MenuFlyoutItem>
+                                    <ui:MenuFlyoutItem Command="{Binding QuickDivision3x3GridCommand}" Text="3×3 Grid">
+                                        <ui:MenuFlyoutItem.IconSource>
+                                            <fluentIcons:SymbolIconSource Symbol="TableSimple" />
+                                        </ui:MenuFlyoutItem.IconSource>
+                                    </ui:MenuFlyoutItem>
+                                </ui:MenuFlyoutSubItem>
+                                <ui:MenuFlyoutSeparator />
+                                <!--  Composition Presets  -->
+                                <ui:MenuFlyoutSubItem Text="Compositions">
+                                    <ui:MenuFlyoutSubItem.IconSource>
+                                        <fluentIcons:SymbolIconSource Symbol="ImageMultiple" />
+                                    </ui:MenuFlyoutSubItem.IconSource>
+                                    <ui:MenuFlyoutItem Command="{Binding QuickDivisionCenterFocusCommand}" Text="Center Focus">
+                                        <ui:MenuFlyoutItem.IconSource>
+                                            <fluentIcons:SymbolIconSource Symbol="CenterHorizontal" />
+                                        </ui:MenuFlyoutItem.IconSource>
+                                    </ui:MenuFlyoutItem>
+                                    <ui:MenuFlyoutItem Command="{Binding QuickDivisionPortraitCommand}" Text="Portrait (Subject + Background)">
+                                        <ui:MenuFlyoutItem.IconSource>
+                                            <fluentIcons:SymbolIconSource Symbol="Person" />
+                                        </ui:MenuFlyoutItem.IconSource>
+                                    </ui:MenuFlyoutItem>
+                                    <ui:MenuFlyoutItem Command="{Binding QuickDivisionLandscapeCommand}" Text="Landscape (Sky, Horizon, Ground)">
+                                        <ui:MenuFlyoutItem.IconSource>
+                                            <fluentIcons:SymbolIconSource Symbol="ImageAltText" />
+                                        </ui:MenuFlyoutItem.IconSource>
+                                    </ui:MenuFlyoutItem>
+                                </ui:MenuFlyoutSubItem>
+                            </ui:FAMenuFlyout>
+                        </Button.Flyout>
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <fluentIcons:SymbolIcon FontSize="18" Symbol="GridKanban" />
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                FontSize="12"
+                                Text="Quick Divisions" />
+                            <fluentIcons:SymbolIcon
+                                FontSize="10"
+                                Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                Symbol="ChevronDown" />
+                        </StackPanel>
+                    </Button>
                 </StackPanel>
 
                 <!--  Right: Canvas size  -->
@@ -125,20 +218,23 @@
             Grid.Column="1"
             Margin="0,16,0,0"
             Padding="8"
-            VerticalAlignment="Top">
-            <StackPanel>
-                <Grid RowDefinitions="Auto,*">
-                    <TextBlock
-                        Margin="4,0,0,8"
-                        FontSize="12"
-                        FontWeight="SemiBold"
-                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                        Text="LAYERS" />
+            VerticalAlignment="Stretch"
+            VerticalContentAlignment="Stretch">
+            <Grid RowDefinitions="Auto,*,Auto">
+                <TextBlock
+                    Margin="4,0,0,8"
+                    FontSize="12"
+                    FontWeight="SemiBold"
+                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                    Text="LAYERS" />
 
-                    <!--  Layer list - using ListBox for proper selection with drag reordering  -->
+                <!--  Layer list - ScrollViewer fills available space dynamically  -->
+                <ScrollViewer
+                    Grid.Row="1"
+                    HorizontalScrollBarVisibility="Disabled"
+                    VerticalScrollBarVisibility="Auto">
                     <ListBox
                         x:Name="LayerItemsControl"
-                        Grid.Row="1"
                         VerticalAlignment="Top"
                         Background="Transparent"
                         BorderThickness="0"
@@ -452,10 +548,11 @@
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>
-                </Grid>
+                </ScrollViewer>
 
                 <!--  Recent Images Section (inside right panel)  -->
                 <Expander
+                    Grid.Row="2"
                     Margin="0,8,0,0"
                     Header="Recent Images"
                     IsExpanded="{Binding IsRecentImagesPanelExpanded}">
@@ -490,7 +587,7 @@
                         </ItemsControl>
                     </ScrollViewer>
                 </Expander>
-            </StackPanel>
+            </Grid>
         </controls:Card>
     </sg:SpacedGrid>
 </controls:UserControlBase>

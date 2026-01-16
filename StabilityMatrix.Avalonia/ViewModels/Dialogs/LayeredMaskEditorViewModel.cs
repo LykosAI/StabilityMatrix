@@ -46,6 +46,11 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
     [ObservableProperty]
     private Size canvasSize = new(1024, 1024);
 
+    /// <summary>
+    ///     Previous canvas size, used for rescaling layers when dimensions change.
+    /// </summary>
+    private Size _previousCanvasSize = new(1024, 1024);
+
     private int imageLayerCounter;
 
     /// <summary>
@@ -501,6 +506,340 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
         SyncSelectedLayerToCanvas();
     }
 
+    #region Quick Division Presets
+
+    /// <summary>
+    ///     Creates layers for a quick division preset.
+    ///     Preserves prompts and settings from existing layers where possible.
+    /// </summary>
+    /// <param name="divisions">Array of (left, top, right, bottom) fractions (0.0-1.0) for each region.</param>
+    /// <param name="names">Optional names for each region layer.</param>
+    private void CreateQuickDivisionLayers(SKRect[] divisions, string[]? names = null)
+    {
+        if (CanvasSize == Size.Empty)
+            return;
+
+        // Save current layer paths before modifying
+        SaveCurrentLayerPaths();
+
+        // Always capture existing layer settings so we can preserve them
+        // This preserves prompts when going to more layers, equal layers, or fewer layers
+        var existingSettings = Layers
+            .Select(l => (l.Prompt, l.NegativePrompt, l.Strength, l.ConditioningArea, l.Opacity, l.IsEnabled))
+            .ToList();
+
+        // Clear existing layers
+        SelectedLayer = null;
+        foreach (var layer in Layers)
+            CleanupLayer(layer);
+        Layers.Clear();
+        layerCounter = 0;
+
+        // Create new layers for each division
+        for (var i = 0; i < divisions.Length; i++)
+        {
+            layerCounter++;
+            var layer = new MaskLayer
+            {
+                Name = names != null && i < names.Length ? names[i] : $"Region {layerCounter}",
+                DisplayColor = MaskLayerColors.GetByIndex(layerCounter - 1),
+            };
+
+            // Restore settings from existing layers if available
+            // This preserves prompts from the first N existing layers
+            if (i < existingSettings.Count)
+            {
+                var settings = existingSettings[i];
+                layer.Prompt = settings.Prompt;
+                layer.NegativePrompt = settings.NegativePrompt;
+                layer.Strength = settings.Strength;
+                layer.ConditioningArea = settings.ConditioningArea;
+                layer.Opacity = settings.Opacity;
+                layer.IsEnabled = settings.IsEnabled;
+            }
+
+            // Calculate the actual pixel bounds from fractions
+            var fractionalRect = divisions[i];
+            var pixelRect = new SKRect(
+                fractionalRect.Left * CanvasSize.Width,
+                fractionalRect.Top * CanvasSize.Height,
+                fractionalRect.Right * CanvasSize.Width,
+                fractionalRect.Bottom * CanvasSize.Height
+            );
+
+            // Create a filled rectangle for this region
+            var fillPath = new PenPath
+            {
+                PathType = PenPathType.Rectangle,
+                FillColor = layer.DisplayColor,
+                Bounds = pixelRect,
+            };
+            layer.Paths = layer.Paths.Add(fillPath);
+
+            // Subscribe to layer property changes
+            layer.PropertyChanged += Layer_PropertyChanged;
+
+            Layers.Add(layer);
+        }
+
+        // Select the first layer
+        if (Layers.Count > 0)
+            SelectedLayer = Layers[0];
+
+        SyncSelectedLayerToCanvas();
+    }
+
+    /// <summary>
+    ///     Rescales all layer paths from oldSize to newSize coordinates.
+    /// </summary>
+    private void RescaleAllLayersInternal(Size oldSize, Size newSize)
+    {
+        if (oldSize == newSize || oldSize.Width <= 0 || oldSize.Height <= 0)
+            return;
+
+        // Save current layer before rescaling
+        SaveCurrentLayerPaths();
+
+        var scaleX = (float)newSize.Width / oldSize.Width;
+        var scaleY = (float)newSize.Height / oldSize.Height;
+
+        foreach (var layer in Layers)
+        {
+            if (layer.LayerType != MaskLayerType.Paint || layer.Paths.Count == 0)
+                continue;
+
+            var scaledPaths = layer
+                .Paths.Select(path => ScalePenPath(path, scaleX, scaleY))
+                .ToImmutableList();
+            layer.Paths = scaledPaths;
+        }
+
+        // Refresh the canvas to show rescaled paths
+        SyncSelectedLayerToCanvas();
+    }
+
+    /// <summary>
+    ///     Scales a PenPath by the given factors.
+    /// </summary>
+    private static PenPath ScalePenPath(PenPath path, float scaleX, float scaleY)
+    {
+        // Scale the bounds
+        var scaledBounds = new SKRect(
+            path.Bounds.Left * scaleX,
+            path.Bounds.Top * scaleY,
+            path.Bounds.Right * scaleX,
+            path.Bounds.Bottom * scaleY
+        );
+
+        // Scale points if present (for freehand paths)
+        var scaledPoints =
+            path.Points.Count > 0
+                ? path
+                    .Points.Select(p => new PenPoint(p.X * scaleX, p.Y * scaleY)
+                    {
+                        Pressure = p.Pressure,
+                        IsPen = p.IsPen,
+                        Radius = p.Radius * Math.Max(scaleX, scaleY), // Scale radius too
+                    })
+                    .ToList()
+                : path.Points;
+
+        // Scale the stroke radius proportionally
+        var scaledRadius = path.Radius * Math.Max(scaleX, scaleY);
+        var scaledStrokeWidth = path.StrokeWidth * Math.Max(scaleX, scaleY);
+
+        return path with
+        {
+            Bounds = scaledBounds,
+            Points = scaledPoints,
+            Radius = (float)scaledRadius,
+            StrokeWidth = (float)scaledStrokeWidth,
+        };
+    }
+
+    /// <summary>
+    ///     Manually rescales all layers to fit the current canvas size.
+    ///     Useful when layers were created at a different resolution.
+    /// </summary>
+    [RelayCommand]
+    private void RescaleAllLayers()
+    {
+        if (
+            _previousCanvasSize != CanvasSize
+            && _previousCanvasSize.Width > 0
+            && _previousCanvasSize.Height > 0
+        )
+        {
+            RescaleAllLayersInternal(_previousCanvasSize, CanvasSize);
+            _previousCanvasSize = CanvasSize;
+        }
+    }
+
+    /// <summary>
+    ///     Quick preset: 50/50 horizontal split (left and right halves).
+    /// </summary>
+    [RelayCommand]
+    private void QuickDivisionHorizontal5050()
+    {
+        CreateQuickDivisionLayers(
+            [
+                new SKRect(0f, 0f, 0.5f, 1f), // Left half
+                new SKRect(0.5f, 0f, 1f, 1f), // Right half
+            ],
+            ["Left", "Right"]
+        );
+    }
+
+    /// <summary>
+    ///     Quick preset: 33/33/33 horizontal split (thirds).
+    /// </summary>
+    [RelayCommand]
+    private void QuickDivisionHorizontal333333()
+    {
+        CreateQuickDivisionLayers(
+            [
+                new SKRect(0f, 0f, 0.333f, 1f), // Left third
+                new SKRect(0.333f, 0f, 0.666f, 1f), // Middle third
+                new SKRect(0.666f, 0f, 1f, 1f), // Right third
+            ],
+            ["Left", "Center", "Right"]
+        );
+    }
+
+    /// <summary>
+    ///     Quick preset: 50/50 vertical split (top and bottom halves).
+    /// </summary>
+    [RelayCommand]
+    private void QuickDivisionVertical5050()
+    {
+        CreateQuickDivisionLayers(
+            [
+                new SKRect(0f, 0f, 1f, 0.5f), // Top half
+                new SKRect(0f, 0.5f, 1f, 1f), // Bottom half
+            ],
+            ["Top", "Bottom"]
+        );
+    }
+
+    /// <summary>
+    ///     Quick preset: 33/33/33 vertical split (thirds).
+    /// </summary>
+    [RelayCommand]
+    private void QuickDivisionVertical333333()
+    {
+        CreateQuickDivisionLayers(
+            [
+                new SKRect(0f, 0f, 1f, 0.333f), // Top third
+                new SKRect(0f, 0.333f, 1f, 0.666f), // Middle third
+                new SKRect(0f, 0.666f, 1f, 1f), // Bottom third
+            ],
+            ["Top", "Middle", "Bottom"]
+        );
+    }
+
+    /// <summary>
+    ///     Quick preset: 2x2 quadrants.
+    /// </summary>
+    [RelayCommand]
+    private void QuickDivisionQuadrants()
+    {
+        CreateQuickDivisionLayers(
+            [
+                new SKRect(0f, 0f, 0.5f, 0.5f), // Top-left
+                new SKRect(0.5f, 0f, 1f, 0.5f), // Top-right
+                new SKRect(0f, 0.5f, 0.5f, 1f), // Bottom-left
+                new SKRect(0.5f, 0.5f, 1f, 1f), // Bottom-right
+            ],
+            ["Top-Left", "Top-Right", "Bottom-Left", "Bottom-Right"]
+        );
+    }
+
+    /// <summary>
+    ///     Quick preset: 3x3 grid (9 regions).
+    /// </summary>
+    [RelayCommand]
+    private void QuickDivision3x3Grid()
+    {
+        CreateQuickDivisionLayers(
+            [
+                new SKRect(0f, 0f, 0.333f, 0.333f), // Top-left
+                new SKRect(0.333f, 0f, 0.666f, 0.333f), // Top-center
+                new SKRect(0.666f, 0f, 1f, 0.333f), // Top-right
+                new SKRect(0f, 0.333f, 0.333f, 0.666f), // Middle-left
+                new SKRect(0.333f, 0.333f, 0.666f, 0.666f), // Center
+                new SKRect(0.666f, 0.333f, 1f, 0.666f), // Middle-right
+                new SKRect(0f, 0.666f, 0.333f, 1f), // Bottom-left
+                new SKRect(0.333f, 0.666f, 0.666f, 1f), // Bottom-center
+                new SKRect(0.666f, 0.666f, 1f, 1f), // Bottom-right
+            ],
+            [
+                "Top-Left",
+                "Top-Center",
+                "Top-Right",
+                "Middle-Left",
+                "Center",
+                "Middle-Right",
+                "Bottom-Left",
+                "Bottom-Center",
+                "Bottom-Right",
+            ]
+        );
+    }
+
+    /// <summary>
+    ///     Quick preset: Center focus (center region with surrounding frame).
+    /// </summary>
+    [RelayCommand]
+    private void QuickDivisionCenterFocus()
+    {
+        CreateQuickDivisionLayers(
+            [
+                new SKRect(0.25f, 0.25f, 0.75f, 0.75f), // Center (50% of canvas)
+                new SKRect(0f, 0f, 1f, 0.25f), // Top strip
+                new SKRect(0f, 0.75f, 1f, 1f), // Bottom strip
+                new SKRect(0f, 0.25f, 0.25f, 0.75f), // Left strip
+                new SKRect(0.75f, 0.25f, 1f, 0.75f), // Right strip
+            ],
+            ["Center", "Top", "Bottom", "Left", "Right"]
+        );
+    }
+
+    /// <summary>
+    ///     Quick preset: Portrait mode (foreground subject with background).
+    ///     Creates a large center oval-ish region and a background region.
+    /// </summary>
+    [RelayCommand]
+    private void QuickDivisionPortrait()
+    {
+        // For portrait, we create a center region (roughly where a person would be)
+        // and a background region
+        CreateQuickDivisionLayers(
+            [
+                new SKRect(0.15f, 0.05f, 0.85f, 0.95f), // Foreground (subject area)
+                new SKRect(0f, 0f, 1f, 1f), // Background (full canvas, will be behind)
+            ],
+            ["Subject", "Background"]
+        );
+    }
+
+    /// <summary>
+    ///     Quick preset: Landscape scene (sky, horizon, ground).
+    /// </summary>
+    [RelayCommand]
+    private void QuickDivisionLandscape()
+    {
+        CreateQuickDivisionLayers(
+            [
+                new SKRect(0f, 0f, 1f, 0.35f), // Sky
+                new SKRect(0f, 0.35f, 1f, 0.65f), // Horizon/middle ground
+                new SKRect(0f, 0.65f, 1f, 1f), // Foreground
+            ],
+            ["Sky", "Horizon", "Foreground"]
+        );
+    }
+
+    #endregion
+
     /// <summary>
     ///     Duplicates the selected layer with all its content and settings.
     /// </summary>
@@ -684,13 +1023,21 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
         SyncSelectedLayerToCanvas();
     }
 
-    partial void OnCanvasSizeChanged(Size value)
+    partial void OnCanvasSizeChanged(Size oldValue, Size newValue)
     {
-        PaintCanvasViewModel.CanvasSize = value;
+        PaintCanvasViewModel.CanvasSize = newValue;
 
         // Invalidate cached image layer bitmap since canvas size changed
         _cachedImageLayerBitmap?.Dispose();
         _cachedImageLayerBitmap = null;
+
+        // Rescale all layers if we have a valid previous size and new size
+        if (oldValue.Width > 0 && oldValue.Height > 0 && newValue.Width > 0 && newValue.Height > 0)
+        {
+            RescaleAllLayersInternal(oldValue, newValue);
+        }
+
+        _previousCanvasSize = newValue;
     }
 
     partial void OnShowAllLayersChanged(bool value)

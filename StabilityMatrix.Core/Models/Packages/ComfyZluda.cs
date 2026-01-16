@@ -1,8 +1,5 @@
 ﻿using System.Diagnostics;
-using System.Diagnostics;
 using System.Text.RegularExpressions;
-using System.Text.RegularExpressions;
-using Injectio.Attributes;
 using Injectio.Attributes;
 using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Extensions;
@@ -97,7 +94,7 @@ public class ComfyZluda(
             };
 
             options.AddRange(
-                base.LaunchOptions.Except(base.LaunchOptions.Where(x => x.Name == "Cross Attention Method"))
+                base.LaunchOptions.Where(x => x.Name != "Cross Attention Method")
             );
             return options;
         }

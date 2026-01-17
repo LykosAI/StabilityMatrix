@@ -333,33 +333,6 @@ public async Task<ComfyTask> QueuePromptAsync(
 {
     var request = new ComfyPromptRequest { ClientId = ClientId, Prompt = nodes };
 
-    // DEBUG: dump final workflow JSON
-    try
-    {
-        var json = JsonSerializer.Serialize(request, jsonSerializerOptions);
-
-        var debugDir = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "StabilityMatrix",
-            "Debug"
-        );
-
-        Directory.CreateDirectory(debugDir);
-
-        var path = Path.Combine(
-            debugDir,
-            $"wan_workflow_debug_request.json"
-        );
-
-        File.WriteAllText(path, json);
-
-        Logger.Warn("WAN DEBUG: Dumped final request JSON to {0}", path);
-    }
-    catch (Exception ex)
-    {
-        Logger.Error(ex, "WAN DEBUG: Failed to dump final request JSON");
-    }
-
     var result = await comfyApi.PostPrompt(request, cancellationToken).ConfigureAwait(false);
 
     var task = new ComfyTask(result.PromptId);
@@ -368,7 +341,6 @@ public async Task<ComfyTask> QueuePromptAsync(
 
     return task;
 }
-
     public async Task InterruptPromptAsync(CancellationToken cancellationToken = default)
     {
         await comfyApi.PostInterrupt(cancellationToken).ConfigureAwait(false);

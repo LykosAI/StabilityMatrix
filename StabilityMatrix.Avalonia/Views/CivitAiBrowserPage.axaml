@@ -351,8 +351,8 @@
                                     <Grid ColumnDefinitions="*, Auto">
                                         <StackPanel
                                             Grid.Row="0"
-                                            Grid.Column="0"
-                                            IsVisible="{Binding !!CivitModel.ModelVersionStats.RatingCount, FallbackValue=False, TargetNullValue=False}"
+                                            Grid.Column="1"
+                                            IsVisible="{Binding CivitModel.ModelVersionStats.RatingCount, FallbackValue=False, TargetNullValue=False}"
                                             Orientation="Horizontal">
                                             <controls:StarsRating
                                                 Margin="8,8,0,8"

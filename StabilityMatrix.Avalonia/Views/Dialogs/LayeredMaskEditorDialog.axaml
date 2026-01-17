@@ -34,8 +34,9 @@
         <!--  Top toolbar spanning both columns  -->
         <controls:Card Grid.ColumnSpan="2" Padding="12,8">
             <Grid ColumnDefinitions="Auto,*,Auto">
-                <!--  Left: Layer add/remove buttons  -->
+                <!--  Left: Global action buttons  -->
                 <StackPanel Orientation="Horizontal" Spacing="8">
+                    <!--  Create group  -->
                     <Button
                         Classes="transparent"
                         Command="{Binding AddLayerCommand}"
@@ -54,46 +55,35 @@
                         ToolTip.Tip="Browse for Image...">
                         <fluentIcons:SymbolIcon FontSize="18" Symbol="FolderOpen" />
                     </Button>
-                    <Button
-                        Classes="transparent"
-                        Command="{Binding DeleteLayerCommand}"
-                        ToolTip.Tip="Delete Layer">
-                        <fluentIcons:SymbolIcon FontSize="18" Symbol="Delete" />
-                    </Button>
+
                     <Rectangle
                         Width="1"
                         Margin="4,4"
                         VerticalAlignment="Stretch"
                         Fill="{DynamicResource DividerStrokeColorDefaultBrush}" />
+
+                    <!--  Global operations  -->
                     <Button
                         Classes="transparent"
-                        Command="{Binding FillLayerCommand}"
-                        ToolTip.Tip="Fill Layer">
-                        <fluentIcons:SymbolIcon FontSize="18" Symbol="PaintBucket" />
+                        Command="{Binding ClearAllLayersCommand}"
+                        ToolTip.Tip="Clear All Layers (Ctrl+Shift+Delete)">
+                        <fluentIcons:SymbolIcon FontSize="18" Symbol="DeleteDismiss" />
                     </Button>
-                    <Button
-                        Classes="transparent"
-                        Command="{Binding DuplicateLayerCommand}"
-                        ToolTip.Tip="Duplicate Layer">
-                        <fluentIcons:SymbolIcon FontSize="18" Symbol="Copy" />
-                    </Button>
+
                     <Rectangle
                         Width="1"
                         Margin="4,4"
                         VerticalAlignment="Stretch"
                         Fill="{DynamicResource DividerStrokeColorDefaultBrush}" />
-                    <Button
-                        Classes="transparent"
-                        Command="{Binding ExportLayerAsMaskCommand}"
-                        ToolTip.Tip="Export layer as mask PNG">
-                        <fluentIcons:SymbolIcon FontSize="18" Symbol="ArrowExportUp" />
-                    </Button>
+
+                    <!--  Import/Export  -->
                     <Button
                         Classes="transparent"
                         Command="{Binding ImportMaskAsLayerCommand}"
                         ToolTip.Tip="Import mask image as new layer">
                         <fluentIcons:SymbolIcon FontSize="18" Symbol="ArrowDownload" />
                     </Button>
+
                     <Rectangle
                         Width="1"
                         Margin="4,4"
@@ -104,32 +94,32 @@
                         <Button.Flyout>
                             <ui:FAMenuFlyout Placement="BottomEdgeAlignedLeft">
                                 <!--  Horizontal Splits  -->
-                                <ui:MenuFlyoutSubItem Text="Horizontal Splits">
+                                <ui:MenuFlyoutSubItem Text="Columns">
                                     <ui:MenuFlyoutSubItem.IconSource>
-                                        <fluentIcons:SymbolIconSource Symbol="SplitHorizontal" />
+                                        <fluentIcons:SymbolIconSource Symbol="SplitVertical" />
                                     </ui:MenuFlyoutSubItem.IconSource>
-                                    <ui:MenuFlyoutItem Command="{Binding QuickDivisionHorizontal5050Command}" Text="50/50 (Left | Right)">
+                                    <ui:MenuFlyoutItem Command="{Binding QuickDivisionHorizontal5050Command}" Text="2 Columns (Left | Right)">
                                         <ui:MenuFlyoutItem.IconSource>
                                             <fluentIcons:SymbolIconSource Symbol="LayoutColumnTwoSplitLeft" />
                                         </ui:MenuFlyoutItem.IconSource>
                                     </ui:MenuFlyoutItem>
-                                    <ui:MenuFlyoutItem Command="{Binding QuickDivisionHorizontal333333Command}" Text="33/33/33 (Thirds)">
+                                    <ui:MenuFlyoutItem Command="{Binding QuickDivisionHorizontal333333Command}" Text="3 Columns (Thirds)">
                                         <ui:MenuFlyoutItem.IconSource>
                                             <fluentIcons:SymbolIconSource Symbol="LayoutColumnThree" />
                                         </ui:MenuFlyoutItem.IconSource>
                                     </ui:MenuFlyoutItem>
                                 </ui:MenuFlyoutSubItem>
                                 <!--  Vertical Splits  -->
-                                <ui:MenuFlyoutSubItem Text="Vertical Splits">
+                                <ui:MenuFlyoutSubItem Text="Rows">
                                     <ui:MenuFlyoutSubItem.IconSource>
-                                        <fluentIcons:SymbolIconSource Symbol="SplitVertical" />
+                                        <fluentIcons:SymbolIconSource Symbol="SplitHorizontal" />
                                     </ui:MenuFlyoutSubItem.IconSource>
-                                    <ui:MenuFlyoutItem Command="{Binding QuickDivisionVertical5050Command}" Text="50/50 (Top | Bottom)">
+                                    <ui:MenuFlyoutItem Command="{Binding QuickDivisionVertical5050Command}" Text="2 Rows (Top | Bottom)">
                                         <ui:MenuFlyoutItem.IconSource>
                                             <fluentIcons:SymbolIconSource Symbol="LayoutRowTwoSplitTop" />
                                         </ui:MenuFlyoutItem.IconSource>
                                     </ui:MenuFlyoutItem>
-                                    <ui:MenuFlyoutItem Command="{Binding QuickDivisionVertical333333Command}" Text="33/33/33 (Thirds)">
+                                    <ui:MenuFlyoutItem Command="{Binding QuickDivisionVertical333333Command}" Text="3 Rows (Thirds)">
                                         <ui:MenuFlyoutItem.IconSource>
                                             <fluentIcons:SymbolIconSource Symbol="LayoutRowThree" />
                                         </ui:MenuFlyoutItem.IconSource>
@@ -221,12 +211,35 @@
             VerticalAlignment="Stretch"
             VerticalContentAlignment="Stretch">
             <Grid RowDefinitions="Auto,*,Auto">
-                <TextBlock
-                    Margin="4,0,0,8"
-                    FontSize="12"
-                    FontWeight="SemiBold"
-                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                    Text="LAYERS" />
+                <!--  Header with Expand/Collapse All buttons  -->
+                <Grid ColumnDefinitions="*,Auto,Auto">
+                    <TextBlock
+                        Margin="4,0,0,8"
+                        VerticalAlignment="Center"
+                        FontSize="12"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                        Text="LAYERS" />
+                    <Button
+                        Grid.Column="1"
+                        Margin="0,0,4,0"
+                        Padding="4"
+                        VerticalAlignment="Center"
+                        Classes="transparent"
+                        Command="{Binding ExpandAllLayersCommand}"
+                        ToolTip.Tip="Expand all layers">
+                        <fluentIcons:SymbolIcon FontSize="14" Symbol="ChevronDoubleDown" />
+                    </Button>
+                    <Button
+                        Grid.Column="2"
+                        Padding="4"
+                        VerticalAlignment="Center"
+                        Classes="transparent"
+                        Command="{Binding CollapseAllLayersCommand}"
+                        ToolTip.Tip="Collapse all layers">
+                        <fluentIcons:SymbolIcon FontSize="14" Symbol="ChevronDoubleUp" />
+                    </Button>
+                </Grid>
 
                 <!--  Layer list - ScrollViewer fills available space dynamically  -->
                 <ScrollViewer
@@ -238,7 +251,7 @@
                         VerticalAlignment="Top"
                         Background="Transparent"
                         BorderThickness="0"
-                        Classes="draggableVirtualizing"
+                        Classes="draggable"
                         ItemsSource="{Binding Layers}"
                         SelectedItem="{Binding SelectedLayer}"
                         SelectionMode="AlwaysSelected"
@@ -271,6 +284,51 @@
                                         </Style>
                                     </Border.Styles>
 
+                                    <!--  Right-click context menu  -->
+                                    <Border.ContextFlyout>
+                                        <ui:FAMenuFlyout Placement="BottomEdgeAlignedLeft">
+                                            <ui:MenuFlyoutItem
+                                                Command="{Binding $parent[controls:UserControlBase].((vmDialogs:LayeredMaskEditorViewModel)DataContext).DuplicateLayerCommand}"
+                                                InputGesture="Ctrl+D"
+                                                Text="Duplicate">
+                                                <ui:MenuFlyoutItem.IconSource>
+                                                    <fluentIcons:SymbolIconSource Symbol="Copy" />
+                                                </ui:MenuFlyoutItem.IconSource>
+                                            </ui:MenuFlyoutItem>
+                                            <ui:MenuFlyoutItem
+                                                Command="{Binding $parent[controls:UserControlBase].((vmDialogs:LayeredMaskEditorViewModel)DataContext).FillLayerCommand}"
+                                                InputGesture="Ctrl+F"
+                                                Text="Fill Layer">
+                                                <ui:MenuFlyoutItem.IconSource>
+                                                    <fluentIcons:SymbolIconSource Symbol="PaintBucket" />
+                                                </ui:MenuFlyoutItem.IconSource>
+                                            </ui:MenuFlyoutItem>
+                                            <ui:MenuFlyoutItem
+                                                Command="{Binding $parent[controls:UserControlBase].((vmDialogs:LayeredMaskEditorViewModel)DataContext).InvertLayerCommand}"
+                                                InputGesture="Ctrl+I"
+                                                Text="Invert Mask">
+                                                <ui:MenuFlyoutItem.IconSource>
+                                                    <fluentIcons:SymbolIconSource Symbol="SelectAllOn" />
+                                                </ui:MenuFlyoutItem.IconSource>
+                                            </ui:MenuFlyoutItem>
+                                            <ui:MenuFlyoutSeparator />
+                                            <ui:MenuFlyoutItem Command="{Binding $parent[controls:UserControlBase].((vmDialogs:LayeredMaskEditorViewModel)DataContext).ExportLayerAsMaskCommand}" Text="Export as Mask">
+                                                <ui:MenuFlyoutItem.IconSource>
+                                                    <fluentIcons:SymbolIconSource Symbol="ArrowExportUp" />
+                                                </ui:MenuFlyoutItem.IconSource>
+                                            </ui:MenuFlyoutItem>
+                                            <ui:MenuFlyoutSeparator />
+                                            <ui:MenuFlyoutItem
+                                                Command="{Binding $parent[controls:UserControlBase].((vmDialogs:LayeredMaskEditorViewModel)DataContext).DeleteLayerCommand}"
+                                                InputGesture="Delete"
+                                                Text="Delete">
+                                                <ui:MenuFlyoutItem.IconSource>
+                                                    <fluentIcons:SymbolIconSource Symbol="Delete" />
+                                                </ui:MenuFlyoutItem.IconSource>
+                                            </ui:MenuFlyoutItem>
+                                        </ui:FAMenuFlyout>
+                                    </Border.ContextFlyout>
+
                                     <Panel>
                                         <!--  Editing Badge - corner overlay  -->
                                         <Border
@@ -287,121 +345,213 @@
 
                                         <Grid RowDefinitions="Auto,Auto">
                                             <!--  Row 0: Title bar with drag handle and controls  -->
+                                            <!--  Layer header with two rows for better spacing  -->
                                             <Border
-                                                Padding="4,4"
+                                                x:Name="LayerHeaderBorder"
+                                                Padding="4"
                                                 Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}"
                                                 CornerRadius="6,6,0,0"
                                                 Cursor="SizeAll"
                                                 ToolTip.Tip="Drag to reorder">
-                                                <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,*,Auto,Auto">
-                                                    <!--  Drag grip icon  -->
-                                                    <fluentIcons:SymbolIcon
-                                                        Margin="4,0,4,0"
-                                                        VerticalAlignment="Center"
-                                                        FontSize="16"
-                                                        Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                                                        Symbol="ReOrder" />
+                                                <Grid RowDefinitions="Auto,Auto" RowSpacing="6">
+                                                    <!--  Row 0: Core controls and name  -->
+                                                    <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,*,Auto">
+                                                        <!--  Drag grip icon  -->
+                                                        <fluentIcons:SymbolIcon
+                                                            Margin="4,0,4,0"
+                                                            VerticalAlignment="Center"
+                                                            FontSize="16"
+                                                            Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                                            Symbol="ReOrder" />
 
-                                                    <!--  Enable for generation  -->
-                                                    <ToggleButton
-                                                        Grid.Column="1"
+                                                        <!--  Enable for generation  -->
+                                                        <ToggleButton
+                                                            Grid.Column="1"
+                                                            Margin="4,0,0,0"
+                                                            Padding="4"
+                                                            Classes="transparent"
+                                                            IsChecked="{Binding IsEnabled}"
+                                                            ToolTip.Tip="Enable for generation">
+                                                            <Panel>
+                                                                <fluentIcons:SymbolIcon
+                                                                    FontSize="16"
+                                                                    IsVisible="{Binding IsEnabled}"
+                                                                    Symbol="CheckmarkCircle" />
+                                                                <fluentIcons:SymbolIcon
+                                                                    FontSize="16"
+                                                                    Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                                                    IsVisible="{Binding !IsEnabled}"
+                                                                    Symbol="DismissCircle" />
+                                                            </Panel>
+                                                        </ToggleButton>
+
+                                                        <!--  Visibility toggle  -->
+                                                        <ToggleButton
+                                                            Grid.Column="2"
+                                                            Margin="4,0"
+                                                            Padding="4"
+                                                            Classes="transparent"
+                                                            IsChecked="{Binding IsVisible}"
+                                                            ToolTip.Tip="Toggle visibility">
+                                                            <Panel>
+                                                                <fluentIcons:SymbolIcon
+                                                                    FontSize="16"
+                                                                    IsVisible="{Binding IsVisible}"
+                                                                    Symbol="Eye" />
+                                                                <fluentIcons:SymbolIcon
+                                                                    FontSize="16"
+                                                                    IsVisible="{Binding !IsVisible}"
+                                                                    Symbol="EyeOff" />
+                                                            </Panel>
+                                                        </ToggleButton>
+
+                                                        <!--  Lock toggle  -->
+                                                        <ToggleButton
+                                                            Grid.Column="3"
+                                                            Margin="0,0,4,0"
+                                                            Padding="4"
+                                                            Classes="transparent"
+                                                            IsChecked="{Binding IsLocked}"
+                                                            ToolTip.Tip="Lock layer (prevent drawing)">
+                                                            <Panel>
+                                                                <fluentIcons:SymbolIcon
+                                                                    FontSize="16"
+                                                                    IsVisible="{Binding IsLocked}"
+                                                                    Symbol="LockClosed" />
+                                                                <fluentIcons:SymbolIcon
+                                                                    FontSize="16"
+                                                                    IsVisible="{Binding !IsLocked}"
+                                                                    Symbol="LockOpen" />
+                                                            </Panel>
+                                                        </ToggleButton>
+
+                                                        <!--  Layer name - now gets full remaining width  -->
+                                                        <TextBox
+                                                            Grid.Column="4"
+                                                            MinHeight="0"
+                                                            Margin="4,0"
+                                                            Padding="9,3"
+                                                            VerticalAlignment="Center"
+                                                            Text="{Binding Name}"
+                                                            Watermark="Layer name" />
+
+                                                        <!--  Expand/Collapse toggle  -->
+                                                        <ToggleButton
+                                                            Grid.Column="5"
+                                                            Margin="4,0,0,0"
+                                                            Padding="4"
+                                                            Classes="transparent"
+                                                            IsChecked="{Binding IsExpanded}"
+                                                            ToolTip.Tip="Expand/Collapse layer details">
+                                                            <Panel>
+                                                                <fluentIcons:SymbolIcon
+                                                                    FontSize="14"
+                                                                    IsVisible="{Binding IsExpanded}"
+                                                                    Symbol="ChevronUp" />
+                                                                <fluentIcons:SymbolIcon
+                                                                    FontSize="14"
+                                                                    IsVisible="{Binding !IsExpanded}"
+                                                                    Symbol="ChevronDown" />
+                                                            </Panel>
+                                                        </ToggleButton>
+                                                    </Grid>
+
+                                                    <!--  Row 1: Badge, quick actions, color picker, and overflow  -->
+                                                    <Grid
+                                                        Grid.Row="1"
                                                         Margin="4,0,0,0"
-                                                        Padding="4"
-                                                        Classes="transparent"
-                                                        IsChecked="{Binding IsEnabled}"
-                                                        ToolTip.Tip="Enable for generation">
-                                                        <Panel>
-                                                            <fluentIcons:SymbolIcon
-                                                                FontSize="16"
-                                                                IsVisible="{Binding IsEnabled}"
-                                                                Symbol="CheckmarkCircle" />
-                                                            <fluentIcons:SymbolIcon
-                                                                FontSize="16"
-                                                                Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                                                                IsVisible="{Binding !IsEnabled}"
-                                                                Symbol="DismissCircle" />
-                                                        </Panel>
-                                                    </ToggleButton>
+                                                        ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,*,Auto"
+                                                        Cursor="Arrow">
+                                                        <!--  Layer type badge  -->
+                                                        <Border
+                                                            Padding="8,4"
+                                                            VerticalAlignment="Center"
+                                                            Background="{DynamicResource ControlFillColorSecondaryBrush}"
+                                                            CornerRadius="4"
+                                                            IsVisible="{Binding LayerType, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static inference:MaskLayerType.Image}}">
+                                                            <TextBlock
+                                                                FontSize="12"
+                                                                Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                                Text="Image" />
+                                                        </Border>
 
-                                                    <!--  Visibility toggle  -->
-                                                    <ToggleButton
-                                                        Grid.Column="2"
-                                                        Margin="7,0,8,0"
-                                                        Padding="4"
-                                                        Classes="transparent"
-                                                        IsChecked="{Binding IsVisible}"
-                                                        ToolTip.Tip="Toggle visibility">
-                                                        <Panel>
-                                                            <fluentIcons:SymbolIcon
-                                                                FontSize="16"
-                                                                IsVisible="{Binding IsVisible}"
-                                                                Symbol="Eye" />
-                                                            <fluentIcons:SymbolIcon
-                                                                FontSize="16"
-                                                                IsVisible="{Binding !IsVisible}"
-                                                                Symbol="EyeOff" />
-                                                        </Panel>
-                                                    </ToggleButton>
+                                                        <!--  Fill button  -->
+                                                        <Button
+                                                            Grid.Column="1"
+                                                            Margin="8,0,0,0"
+                                                            Padding="8,6"
+                                                            Classes="transparent"
+                                                            Command="{Binding $parent[controls:UserControlBase].((vmDialogs:LayeredMaskEditorViewModel)DataContext).FillLayerCommand}"
+                                                            Cursor="Arrow"
+                                                            ToolTip.Tip="Fill Layer (Ctrl+F)">
+                                                            <fluentIcons:SymbolIcon FontSize="16" Symbol="PaintBucket" />
+                                                        </Button>
 
-                                                    <!--  Lock toggle  -->
-                                                    <ToggleButton
-                                                        Grid.Column="3"
-                                                        Margin="0,0,5,0"
-                                                        Padding="4"
-                                                        Classes="transparent"
-                                                        IsChecked="{Binding IsLocked}"
-                                                        ToolTip.Tip="Lock layer (prevent drawing)">
-                                                        <Panel>
-                                                            <fluentIcons:SymbolIcon
-                                                                FontSize="16"
-                                                                IsVisible="{Binding IsLocked}"
-                                                                Symbol="LockClosed" />
-                                                            <fluentIcons:SymbolIcon
-                                                                FontSize="16"
-                                                                IsVisible="{Binding !IsLocked}"
-                                                                Symbol="LockOpen" />
-                                                        </Panel>
-                                                    </ToggleButton>
+                                                        <!--  Invert button  -->
+                                                        <Button
+                                                            Grid.Column="2"
+                                                            Margin="4,0,0,0"
+                                                            Padding="8,6"
+                                                            Classes="transparent"
+                                                            Command="{Binding $parent[controls:UserControlBase].((vmDialogs:LayeredMaskEditorViewModel)DataContext).InvertLayerCommand}"
+                                                            Cursor="Arrow"
+                                                            ToolTip.Tip="Invert Mask (Ctrl+I)">
+                                                            <fluentIcons:SymbolIcon FontSize="16" Symbol="SelectAllOn" />
+                                                        </Button>
 
-                                                    <!--  Layer name  -->
-                                                    <TextBox
-                                                        Grid.Column="4"
-                                                        MinHeight="0"
-                                                        Margin="4,0"
-                                                        Padding="9,3"
-                                                        VerticalAlignment="Center"
-                                                        Text="{Binding Name}"
-                                                        Watermark="Layer name" />
+                                                        <!--  Duplicate button  -->
+                                                        <Button
+                                                            Grid.Column="3"
+                                                            Margin="4,0,0,0"
+                                                            Padding="8,6"
+                                                            Classes="transparent"
+                                                            Command="{Binding $parent[controls:UserControlBase].((vmDialogs:LayeredMaskEditorViewModel)DataContext).DuplicateLayerCommand}"
+                                                            Cursor="Arrow"
+                                                            ToolTip.Tip="Duplicate Layer (Ctrl+D)">
+                                                            <fluentIcons:SymbolIcon FontSize="16" Symbol="Copy" />
+                                                        </Button>
 
-                                                    <!--  Color Picker  -->
-                                                    <ui:ColorPickerButton
-                                                        Grid.Column="5"
-                                                        Margin="5,0"
-                                                        VerticalAlignment="Center"
-                                                        ToolTip.Tip="Choose layer color"
-                                                        Color="{Binding AvaloniaDisplayColor}" />
+                                                        <!--  Export as Mask button  -->
+                                                        <Button
+                                                            Grid.Column="4"
+                                                            Margin="4,0,0,0"
+                                                            Padding="8,6"
+                                                            Classes="transparent"
+                                                            Command="{Binding $parent[controls:UserControlBase].((vmDialogs:LayeredMaskEditorViewModel)DataContext).ExportLayerAsMaskCommand}"
+                                                            Cursor="Arrow"
+                                                            ToolTip.Tip="Export as Mask">
+                                                            <fluentIcons:SymbolIcon FontSize="16" Symbol="ArrowExportUp" />
+                                                        </Button>
 
-                                                    <!--  Layer type badge  -->
-                                                    <Border
-                                                        Grid.Column="6"
-                                                        Margin="4,0,0,0"
-                                                        Padding="5,2"
-                                                        VerticalAlignment="Center"
-                                                        Background="{DynamicResource ControlFillColorSecondaryBrush}"
-                                                        CornerRadius="4"
-                                                        IsVisible="{Binding LayerType, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static inference:MaskLayerType.Image}}">
-                                                        <TextBlock
-                                                            FontSize="10"
-                                                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                                                            Text="Image" />
-                                                    </Border>
+                                                        <!--  Delete Button  -->
+                                                        <Button
+                                                            Grid.Column="5"
+                                                            Margin="4,0,0,0"
+                                                            Padding="8,6"
+                                                            Classes="transparent"
+                                                            Command="{Binding $parent[controls:UserControlBase].((vmDialogs:LayeredMaskEditorViewModel)DataContext).DeleteLayerCommand}"
+                                                            Cursor="Arrow"
+                                                            ToolTip.Tip="Delete Layer (Del)">
+                                                            <fluentIcons:SymbolIcon FontSize="16" Symbol="Delete" />
+                                                        </Button>
+
+                                                        <!--  Color Picker  -->
+                                                        <ui:ColorPickerButton
+                                                            Grid.Column="7"
+                                                            Margin="0,0,8,0"
+                                                            VerticalAlignment="Center"
+                                                            Cursor="Arrow"
+                                                            ToolTip.Tip="Choose layer color"
+                                                            Color="{Binding AvaloniaDisplayColor}" />
+                                                    </Grid>
                                                 </Grid>
                                             </Border>
 
-                                            <!--  Row 1: Layer content  -->
+                                            <!--  Row 1: Layer content (collapsible)  -->
                                             <Grid
                                                 Grid.Row="1"
                                                 Margin="10,8,10,10"
+                                                IsVisible="{Binding IsExpanded}"
                                                 RowDefinitions="Auto,Auto"
                                                 RowSpacing="8">
                                                 <!--  Row 0: Layer-type-specific content  -->

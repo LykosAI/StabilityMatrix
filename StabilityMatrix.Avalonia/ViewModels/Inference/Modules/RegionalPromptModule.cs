@@ -43,6 +43,9 @@ public class RegionalPromptModule : ModuleBase
         var card = GetCard<RegionalPromptCardViewModel>();
         maskCounter = 0;
 
+        // Clean up old mask files from previous generations
+        CleanupOldMaskFiles();
+
         // Sync canvas size from the generation resolution
         // This ensures masks are rendered at the correct size even if user changed dimensions
         var primarySize = e.Builder.Connections.PrimarySize;
@@ -229,6 +232,36 @@ public class RegionalPromptModule : ModuleBase
         }
 
         e.Temp.Refiner.Conditioning = (refinerPositive, refinerNegative);
+    }
+
+    /// <summary>
+    /// Cleans up old mask files from previous generations to prevent temp directory accumulation.
+    /// </summary>
+    private static void CleanupOldMaskFiles()
+    {
+        var tempPath = Path.Combine(Path.GetTempPath(), "StabilityMatrix", "RegionalPrompts");
+        if (!Directory.Exists(tempPath))
+            return;
+
+        try
+        {
+            // Delete all regional mask files from previous sessions
+            foreach (var file in Directory.GetFiles(tempPath, "regional_mask_*.png"))
+            {
+                try
+                {
+                    File.Delete(file);
+                }
+                catch
+                {
+                    // Ignore individual file deletion errors - file may be in use
+                }
+            }
+        }
+        catch
+        {
+            // Ignore cleanup errors - not critical to generation
+        }
     }
 
     /// <summary>

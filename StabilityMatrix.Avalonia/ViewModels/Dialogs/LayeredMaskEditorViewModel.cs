@@ -59,6 +59,12 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
     [ObservableProperty]
     private bool isRecentImagesPanelExpanded;
 
+    /// <summary>
+    ///     Counter to suppress layer index change callbacks from programmatic list updates.
+    ///     This keeps drag-drop callbacks from fighting keyboard and button reorders.
+    /// </summary>
+    private int layerIndexChangeSuppressionCount;
+
     private int layerCounter;
 
     /// <summary>
@@ -390,25 +396,28 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
         // Save current layer before removing
         SaveCurrentLayerPaths();
 
-        var layerToRemove = SelectedLayer;
-        var index = Layers.IndexOf(layerToRemove);
-
-        // Unsubscribe and dispose before removing
-        CleanupLayer(layerToRemove);
-        Layers.Remove(layerToRemove);
-
-        // Select adjacent layer
-        if (Layers.Count > 0)
+        RunWithLayerIndexChangeSuppressed(() =>
         {
-            SelectedLayer = Layers[Math.Min(index, Layers.Count - 1)];
-            SyncSelectedLayerToCanvas();
-        }
-        else
-        {
-            SelectedLayer = null;
-            PaintCanvasViewModel.Paths = [];
-            PaintCanvasViewModel.RefreshCanvas?.Invoke();
-        }
+            var layerToRemove = SelectedLayer;
+            var index = Layers.IndexOf(layerToRemove);
+
+            // Unsubscribe and dispose before removing
+            CleanupLayer(layerToRemove);
+            Layers.Remove(layerToRemove);
+
+            // Select adjacent layer
+            if (Layers.Count > 0)
+            {
+                SelectedLayer = Layers[Math.Min(index, Layers.Count - 1)];
+                SyncSelectedLayerToCanvas();
+            }
+            else
+            {
+                SelectedLayer = null;
+                PaintCanvasViewModel.Paths = [];
+                PaintCanvasViewModel.RefreshCanvas?.Invoke();
+            }
+        });
     }
 
     /// <summary>
@@ -426,20 +435,26 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
     }
 
     /// <summary>
-    ///     Moves the specified layer (or selected layer if null) up in the list (toward top of list = drawn on TOP).
+    ///     Moves the specified layer (or selected layer if null) up in the list (toward top of list = drawn ON TOP of
+    ///     others).
     /// </summary>
     [RelayCommand]
     private void MoveLayerUp(MaskLayer? layer)
     {
         layer ??= SelectedLayer;
-        if (layer is null)
+        if (layer is null || Layers.Count <= 1)
             return;
 
         var index = Layers.IndexOf(layer);
         if (index > 0)
         {
-            Layers.Move(index, index - 1);
-            SyncSelectedLayerToCanvas();
+            SaveCurrentLayerPaths();
+            RunWithLayerIndexChangeSuppressed(() =>
+            {
+                Layers.Move(index, index - 1);
+                SelectedLayer = layer;
+                SyncSelectedLayerToCanvas();
+            });
         }
     }
 
@@ -451,14 +466,32 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
     private void MoveLayerDown(MaskLayer? layer)
     {
         layer ??= SelectedLayer;
-        if (layer is null)
+        if (layer is null || Layers.Count <= 1)
             return;
 
         var index = Layers.IndexOf(layer);
-        if (index < Layers.Count - 1)
+        if (index >= 0 && index < Layers.Count - 1)
         {
-            Layers.Move(index, index + 1);
-            SyncSelectedLayerToCanvas();
+            SaveCurrentLayerPaths();
+            RunWithLayerIndexChangeSuppressed(() =>
+            {
+                Layers.Move(index, index + 1);
+                SelectedLayer = layer;
+                SyncSelectedLayerToCanvas();
+            });
+        }
+    }
+
+    private void RunWithLayerIndexChangeSuppressed(Action action)
+    {
+        layerIndexChangeSuppressionCount++;
+        try
+        {
+            action();
+        }
+        finally
+        {
+            layerIndexChangeSuppressionCount = Math.Max(0, layerIndexChangeSuppressionCount - 1);
         }
     }
 
@@ -470,18 +503,27 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
     /// <param name="newIndex">The new index where the layer was dropped.</param>
     public void OnLayerIndexChanged(MaskLayer layer, int newIndex)
     {
+        if (layerIndexChangeSuppressionCount > 0)
+            return;
+
         var currentIndex = Layers.IndexOf(layer);
         if (currentIndex < 0 || currentIndex == newIndex)
+            return;
+
+        if (newIndex < 0 || newIndex >= Layers.Count)
             return;
 
         // Save current layer paths before moving
         SaveCurrentLayerPaths();
 
-        // Move the layer to the new position
-        Layers.Move(currentIndex, newIndex);
+        RunWithLayerIndexChangeSuppressed(() =>
+        {
+            // Move the layer to the new position
+            Layers.Move(currentIndex, newIndex);
 
-        // Refresh the canvas to reflect the new layer order
-        SyncSelectedLayerToCanvas();
+            // Refresh the canvas to reflect the new layer order
+            SyncSelectedLayerToCanvas();
+        });
     }
 
     /// <summary>
@@ -506,6 +548,89 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
         SyncSelectedLayerToCanvas();
     }
 
+    /// <summary>
+    ///     Clears all layers and creates a fresh empty layer.
+    /// </summary>
+    [RelayCommand]
+    private void ClearAllLayers()
+    {
+        // Save current layer before clearing
+        SaveCurrentLayerPaths();
+
+        RunWithLayerIndexChangeSuppressed(() =>
+        {
+            // Clear all layers
+            SelectedLayer = null;
+            foreach (var layer in Layers)
+                CleanupLayer(layer);
+            Layers.Clear();
+            layerCounter = 0;
+
+            // Add a fresh layer
+            AddLayer();
+        });
+    }
+
+    /// <summary>
+    ///     Inverts the selected layer's mask by creating a full-canvas fill
+    ///     and setting the existing paths to erase mode.
+    /// </summary>
+    [RelayCommand]
+    private void InvertLayer()
+    {
+        if (SelectedLayer is null || SelectedLayer.LayerType != MaskLayerType.Paint)
+            return;
+
+        // Save current paths
+        SaveCurrentLayerPaths();
+
+        var currentPaths = SelectedLayer.Paths;
+
+        // If no paths, fill the entire canvas
+        if (currentPaths.Count == 0)
+        {
+            FillLayer();
+            return;
+        }
+
+        // Create a full canvas fill as the base
+        var fullFill = new PenPath
+        {
+            PathType = PenPathType.Rectangle,
+            FillColor = SelectedLayer.DisplayColor,
+            Bounds = new SKRect(0, 0, CanvasSize.Width, CanvasSize.Height),
+        };
+
+        // Convert existing paths to erase mode
+        var erasePaths = currentPaths.Select(p => p with { IsErase = !p.IsErase }).ToList();
+
+        // Rebuild paths: full fill first, then inverted paths
+        var newPaths = ImmutableList.Create(fullFill).AddRange(erasePaths);
+        SelectedLayer.Paths = newPaths;
+
+        SyncSelectedLayerToCanvas();
+    }
+
+    /// <summary>
+    ///     Expands all layer details.
+    /// </summary>
+    [RelayCommand]
+    private void ExpandAllLayers()
+    {
+        foreach (var layer in Layers)
+            layer.IsExpanded = true;
+    }
+
+    /// <summary>
+    ///     Collapses all layer details.
+    /// </summary>
+    [RelayCommand]
+    private void CollapseAllLayers()
+    {
+        foreach (var layer in Layers)
+            layer.IsExpanded = false;
+    }
+
     #region Quick Division Presets
 
     /// <summary>
@@ -528,65 +653,68 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
             .Select(l => (l.Prompt, l.NegativePrompt, l.Strength, l.ConditioningArea, l.Opacity, l.IsEnabled))
             .ToList();
 
-        // Clear existing layers
-        SelectedLayer = null;
-        foreach (var layer in Layers)
-            CleanupLayer(layer);
-        Layers.Clear();
-        layerCounter = 0;
-
-        // Create new layers for each division
-        for (var i = 0; i < divisions.Length; i++)
+        RunWithLayerIndexChangeSuppressed(() =>
         {
-            layerCounter++;
-            var layer = new MaskLayer
-            {
-                Name = names != null && i < names.Length ? names[i] : $"Region {layerCounter}",
-                DisplayColor = MaskLayerColors.GetByIndex(layerCounter - 1),
-            };
+            // Clear existing layers
+            SelectedLayer = null;
+            foreach (var layer in Layers)
+                CleanupLayer(layer);
+            Layers.Clear();
+            layerCounter = 0;
 
-            // Restore settings from existing layers if available
-            // This preserves prompts from the first N existing layers
-            if (i < existingSettings.Count)
+            // Create new layers for each division
+            for (var i = 0; i < divisions.Length; i++)
             {
-                var settings = existingSettings[i];
-                layer.Prompt = settings.Prompt;
-                layer.NegativePrompt = settings.NegativePrompt;
-                layer.Strength = settings.Strength;
-                layer.ConditioningArea = settings.ConditioningArea;
-                layer.Opacity = settings.Opacity;
-                layer.IsEnabled = settings.IsEnabled;
+                layerCounter++;
+                var layer = new MaskLayer
+                {
+                    Name = names != null && i < names.Length ? names[i] : $"Region {layerCounter}",
+                    DisplayColor = MaskLayerColors.GetByIndex(layerCounter - 1),
+                };
+
+                // Restore settings from existing layers if available
+                // This preserves prompts from the first N existing layers
+                if (i < existingSettings.Count)
+                {
+                    var settings = existingSettings[i];
+                    layer.Prompt = settings.Prompt;
+                    layer.NegativePrompt = settings.NegativePrompt;
+                    layer.Strength = settings.Strength;
+                    layer.ConditioningArea = settings.ConditioningArea;
+                    layer.Opacity = settings.Opacity;
+                    layer.IsEnabled = settings.IsEnabled;
+                }
+
+                // Calculate the actual pixel bounds from fractions
+                var fractionalRect = divisions[i];
+                var pixelRect = new SKRect(
+                    fractionalRect.Left * CanvasSize.Width,
+                    fractionalRect.Top * CanvasSize.Height,
+                    fractionalRect.Right * CanvasSize.Width,
+                    fractionalRect.Bottom * CanvasSize.Height
+                );
+
+                // Create a filled rectangle for this region
+                var fillPath = new PenPath
+                {
+                    PathType = PenPathType.Rectangle,
+                    FillColor = layer.DisplayColor,
+                    Bounds = pixelRect,
+                };
+                layer.Paths = layer.Paths.Add(fillPath);
+
+                // Subscribe to layer property changes
+                layer.PropertyChanged += Layer_PropertyChanged;
+
+                Layers.Add(layer);
             }
 
-            // Calculate the actual pixel bounds from fractions
-            var fractionalRect = divisions[i];
-            var pixelRect = new SKRect(
-                fractionalRect.Left * CanvasSize.Width,
-                fractionalRect.Top * CanvasSize.Height,
-                fractionalRect.Right * CanvasSize.Width,
-                fractionalRect.Bottom * CanvasSize.Height
-            );
+            // Select the first layer
+            if (Layers.Count > 0)
+                SelectedLayer = Layers[0];
 
-            // Create a filled rectangle for this region
-            var fillPath = new PenPath
-            {
-                PathType = PenPathType.Rectangle,
-                FillColor = layer.DisplayColor,
-                Bounds = pixelRect,
-            };
-            layer.Paths = layer.Paths.Add(fillPath);
-
-            // Subscribe to layer property changes
-            layer.PropertyChanged += Layer_PropertyChanged;
-
-            Layers.Add(layer);
-        }
-
-        // Select the first layer
-        if (Layers.Count > 0)
-            SelectedLayer = Layers[0];
-
-        SyncSelectedLayerToCanvas();
+            SyncSelectedLayerToCanvas();
+        });
     }
 
     /// <summary>
@@ -873,9 +1001,12 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
 
         // Insert after current layer
         var index = Layers.IndexOf(SelectedLayer);
-        Layers.Insert(index + 1, clone);
-        SelectedLayer = clone;
-        SyncSelectedLayerToCanvas();
+        RunWithLayerIndexChangeSuppressed(() =>
+        {
+            Layers.Insert(index + 1, clone);
+            SelectedLayer = clone;
+            SyncSelectedLayerToCanvas();
+        });
     }
 
     /// <summary>
@@ -1003,9 +1134,12 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
         };
 
         newLayer.Paths = [maskPath];
-        Layers.Insert(0, newLayer);
-        SelectedLayer = newLayer;
-        SyncSelectedLayerToCanvas();
+        RunWithLayerIndexChangeSuppressed(() =>
+        {
+            Layers.Insert(0, newLayer);
+            SelectedLayer = newLayer;
+            SyncSelectedLayerToCanvas();
+        });
     }
 
     /// <summary>

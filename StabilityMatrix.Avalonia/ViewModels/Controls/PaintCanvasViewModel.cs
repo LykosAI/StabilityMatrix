@@ -139,13 +139,6 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
     private readonly ConcurrentDictionary<long, int> tempPathRenderedPoints = new();
 
     /// <summary>
-    /// Stored GPU context for creating GPU-backed surfaces.
-    /// Updated each render frame from the main surface.
-    /// </summary>
-    [JsonIgnore]
-    private GRRecordingContext? currentGrContext;
-
-    /// <summary>
     /// Whether to use GPU-accelerated surfaces when available.
     /// </summary>
     [JsonIgnore]
@@ -1087,9 +1080,6 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
         var useGpu = UseGpuAcceleration && grContext != null;
         IsUsingGpu = useGpu;
 
-        // Store the context for use in cache creation
-        currentGrContext = grContext;
-
         // Initialize canvas layers
         foreach (var layer in Layers.Values)
         {
@@ -1399,12 +1389,8 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
             tempPathSurface?.Dispose();
             var imageInfo = new SKImageInfo(CanvasSize.Width, CanvasSize.Height);
 
-            // Try GPU surface first
-            if (IsUsingGpu && currentGrContext != null)
-            {
-                tempPathSurface = SKSurface.Create(currentGrContext, budgeted: true, imageInfo);
-            }
-            tempPathSurface ??= SKSurface.Create(imageInfo);
+            // Use CPU surface for temp paths to avoid GPU context threading issues
+            tempPathSurface = SKSurface.Create(imageInfo);
             tempPathSurface?.Canvas.Clear(SKColors.Transparent);
             tempPathRenderedPoints.Clear();
         }
@@ -1564,7 +1550,7 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
 
     /// <summary>
     /// Updates the path cache with all current completed paths.
-    /// Uses GPU-backed surface if GPU acceleration is active.
+    /// Uses CPU-only surfaces to avoid GPU context threading issues.
     /// </summary>
     private void UpdatePathCache()
     {
@@ -1577,41 +1563,14 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
         }
 
         var imageInfo = new SKImageInfo(CanvasSize.Width, CanvasSize.Height);
-        SKSurface? cacheSurface = null;
 
-        // Try to create GPU-backed surface if GPU is active
-        if (IsUsingGpu && currentGrContext != null)
-        {
-            try
-            {
-                cacheSurface = SKSurface.Create(currentGrContext, budgeted: true, imageInfo);
-                if (cacheSurface != null && LogRenderingMode)
-                {
-                    logger.LogDebug("Created GPU-backed cache surface");
-                }
-            }
-            catch (Exception ex)
-            {
-                if (LogRenderingMode)
-                {
-                    logger.LogWarning(ex, "Failed to create GPU cache surface, falling back to CPU");
-                }
-            }
-        }
-
-        // Fallback to CPU surface if GPU failed or not available
-        if (cacheSurface == null)
-        {
-            cacheSurface = SKSurface.Create(imageInfo);
-            if (LogRenderingMode && IsUsingGpu)
-            {
-                logger.LogDebug("Created CPU cache surface (GPU context was unavailable)");
-            }
-        }
+        // Always use CPU surface for cache to avoid GPU context threading issues
+        // The cache is created once per set of completed paths, so CPU performance is acceptable
+        var cacheSurface = SKSurface.Create(imageInfo);
 
         if (cacheSurface == null)
         {
-            logger.LogWarning("Failed to create any cache surface");
+            logger.LogWarning("Failed to create cache surface");
             return;
         }
 
@@ -1635,7 +1594,7 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
 
             if (LogRenderingMode)
             {
-                logger.LogDebug("Updated path cache with {Count} paths", cachedPathsCount);
+                logger.LogDebug("Updated path cache with {Count} paths (CPU surface)", cachedPathsCount);
             }
         }
     }
@@ -1653,7 +1612,37 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
         SKColor? overrideColor = null
     )
     {
-        // Apply Color and blend mode
+        // Handle shape path types (Rectangle, Ellipse, Bitmap)
+        switch (penPath.PathType)
+        {
+            case PenPathType.Rectangle:
+            case PenPathType.Ellipse:
+                RenderShapePath(canvas, penPath, paint, overrideColor);
+                return;
+
+            case PenPathType.Bitmap:
+                RenderBitmapPath(canvas, penPath, paint, overrideColor);
+                return;
+
+            case PenPathType.Freehand:
+            default:
+                // Continue with freehand rendering below
+                RenderFreehandPath(canvas, penPath, paint, overrideColor);
+                return;
+        }
+    }
+
+    /// <summary>
+    /// Renders shape paths (Rectangle and Ellipse) to the canvas.
+    /// </summary>
+    private static void RenderShapePath(
+        SKCanvas canvas,
+        PenPath penPath,
+        SKPaint paint,
+        SKColor? overrideColor
+    )
+    {
+        // Apply color and blend mode
         if (penPath.IsErase)
         {
             paint.BlendMode = SKBlendMode.Clear;
@@ -1668,72 +1657,71 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
         paint.IsDither = true;
         paint.IsAntialias = true;
 
-        // Handle shape path types (Rectangle, Ellipse, Bitmap)
-        switch (penPath.PathType)
+        if (penPath.IsStrokeOnly)
         {
-            case PenPathType.Rectangle:
-                if (penPath.IsStrokeOnly)
-                {
-                    paint.Style = SKPaintStyle.Stroke;
-                    paint.StrokeWidth = penPath.StrokeWidth;
-                }
-                else
-                {
-                    paint.Style = SKPaintStyle.Fill;
-                }
-                canvas.DrawRect(penPath.Bounds, paint);
-                return;
-
-            case PenPathType.Ellipse:
-                if (penPath.IsStrokeOnly)
-                {
-                    paint.Style = SKPaintStyle.Stroke;
-                    paint.StrokeWidth = penPath.StrokeWidth;
-                }
-                else
-                {
-                    paint.Style = SKPaintStyle.Fill;
-                }
-                canvas.DrawOval(penPath.Bounds, paint);
-                return;
-
-            case PenPathType.Bitmap:
-                if (penPath.BitmapData != null)
-                {
-                    if (overrideColor.HasValue)
-                    {
-                        // Apply color filter to replace colors with override while keeping alpha
-                        var color = overrideColor.Value;
-                        using var colorPaint = new SKPaint();
-                        // Color matrix that replaces RGB with override color, preserves alpha
-                        // csharpier-ignore
-                        colorPaint.ColorFilter = SKColorFilter.CreateColorMatrix(
-                        [
-                            0, 0, 0, 0, color.Red / 255f,
-                            0, 0, 0, 0, color.Green / 255f,
-                            0, 0, 0, 0, color.Blue / 255f,
-                            0, 0, 0, 1, 0
-                        ]);
-                        canvas.DrawBitmap(
-                            penPath.BitmapData,
-                            penPath.Bounds.Left,
-                            penPath.Bounds.Top,
-                            colorPaint
-                        );
-                    }
-                    else
-                    {
-                        canvas.DrawBitmap(penPath.BitmapData, penPath.Bounds.Left, penPath.Bounds.Top);
-                    }
-                }
-                return;
-
-            case PenPathType.Freehand:
-            default:
-                // Continue with freehand rendering below
-                break;
+            paint.Style = SKPaintStyle.Stroke;
+            paint.StrokeWidth = penPath.StrokeWidth;
+        }
+        else
+        {
+            paint.Style = SKPaintStyle.Fill;
         }
 
+        if (penPath.PathType == PenPathType.Rectangle)
+        {
+            canvas.DrawRect(penPath.Bounds, paint);
+        }
+        else // Ellipse
+        {
+            canvas.DrawOval(penPath.Bounds, paint);
+        }
+    }
+
+    /// <summary>
+    /// Renders bitmap paths to the canvas with optional color override.
+    /// </summary>
+    private static void RenderBitmapPath(
+        SKCanvas canvas,
+        PenPath penPath,
+        SKPaint paint,
+        SKColor? overrideColor
+    )
+    {
+        if (penPath.BitmapData == null)
+            return;
+
+        if (overrideColor.HasValue)
+        {
+            // Apply color filter to replace colors with override while keeping alpha
+            var color = overrideColor.Value;
+            using var colorPaint = new SKPaint();
+            // Color matrix that replaces RGB with override color, preserves alpha
+            // csharpier-ignore
+            colorPaint.ColorFilter = SKColorFilter.CreateColorMatrix(
+            [
+                0, 0, 0, 0, color.Red / 255f,
+                0, 0, 0, 0, color.Green / 255f,
+                0, 0, 0, 0, color.Blue / 255f,
+                0, 0, 0, 1, 0
+            ]);
+            canvas.DrawBitmap(penPath.BitmapData, penPath.Bounds.Left, penPath.Bounds.Top, colorPaint);
+        }
+        else
+        {
+            canvas.DrawBitmap(penPath.BitmapData, penPath.Bounds.Left, penPath.Bounds.Top);
+        }
+    }
+
+    /// <summary>
+    /// Renders freehand paths with pressure-sensitive strokes to the canvas.
+    /// </summary>
+    private static void RenderFreehandPath(
+        SKCanvas canvas,
+        PenPath penPath,
+        SKPaint paint,
+        SKColor? overrideColor = null
+    )
+    {
         // Freehand path rendering
         if (penPath.Points.Count == 0)
         {

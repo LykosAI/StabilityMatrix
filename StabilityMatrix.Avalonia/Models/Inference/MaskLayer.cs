@@ -178,6 +178,14 @@ public partial class MaskLayer : ObservableObject, IJsonLoadableState
     private bool isLocked;
 
     /// <summary>
+    /// Whether this layer's details are expanded in the UI.
+    /// Collapsed layers show only the header for compact view.
+    /// </summary>
+    [ObservableProperty]
+    [property: JsonIgnore]
+    private bool isExpanded = true;
+
+    /// <summary>
     /// Display color for this layer in the editor (for visual distinction).
     /// Stored internally but serialized via ColorHex.
     /// </summary>

@@ -5,10 +5,7 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
-<<<<<<< HEAD
-## v2.15.5
-=======
-## v2.16.0-dev.2
+## v2.15.6
 ### Added
 - Added NVIDIA driver version warning when launching ComfyUI with CUDA 13.0 (cu130) and driver versions below 580.x
 - Added legacy Python warning when launching InvokeAI installations using Python 3.10.11
@@ -17,8 +14,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Fixed
 - Hide rating stars in the Civitai browser page if no rating is available
 
-## v2.16.0-dev.1
->>>>>>> 0c792e7c (Merge pull request #1189 from ionite34/old-stuff-notifications)
+## v2.15.5
 ### Added
 - Added new package - [Wan2GP](https://github.com/deepbeepmeep/Wan2GP)
 - Added [Stable Diffusion WebUI Forge - Neo](https://github.com/Haoming02/sd-webui-forge-classic/tree/neo) as a separate package for convenience

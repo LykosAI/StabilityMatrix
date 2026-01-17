@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+﻿﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
@@ -1097,7 +1097,34 @@ public class ComfyNodeBuilder
         public required double Squash { get; set; }
     }
 
-    public ImageNodeConnection Lambda_LatentToImage(LatentNodeConnection latent, VAENodeConnection vae)
+   public ImageNodeConnection Lambda_LatentToImage(
+    LatentNodeConnection latent, 
+    VAENodeConnection vae,
+    bool useTiledVAE = false,
+    int tileSize = 512,
+    int overlap = 64,
+    int temporalSize = 64,
+    int temporalOverlap = 8)
+{
+    if (useTiledVAE)
+    {
+        var name = GetUniqueName("VAEDecodeTiled");
+        return Nodes
+            .AddTypedNode(
+                new TiledVAEDecode
+                {
+                    Name = name,
+                    Samples = latent,
+                    Vae = vae,
+                    TileSize = tileSize,
+                    Overlap = overlap,
+                    TemporalSize = temporalSize,
+                    TemporalOverlap = temporalOverlap
+                }
+            )
+            .Output;
+    }
+    else
     {
         var name = GetUniqueName("VAEDecode");
         return Nodes
@@ -1111,6 +1138,7 @@ public class ComfyNodeBuilder
             )
             .Output;
     }
+}
 
     public LatentNodeConnection Lambda_ImageToLatent(ImageNodeConnection pixels, VAENodeConnection vae)
     {
@@ -1519,11 +1547,28 @@ public class ComfyNodeBuilder
     /// <summary>
     /// Get or convert latest primary connection to image
     /// </summary>
+<<<<<<< HEAD
     public ImageNodeConnection GetPrimaryAsImage(PrimaryNodeConnection primary, VAENodeConnection vae)
     {
         return primary.Match(latent => Lambda_LatentToImage(latent, vae), image => image);
     }
 
+=======
+    public ImageNodeConnection GetPrimaryAsImage(
+    PrimaryNodeConnection primary, 
+    VAENodeConnection vae,
+    bool useTiledVAE = false,
+    int tileSize = 512,
+    int overlap = 64,
+    int temporalSize = 64,
+    int temporalOverlap = 8)
+{
+    return primary.Match(
+        latent => Lambda_LatentToImage(latent, vae, useTiledVAE, tileSize, overlap, temporalSize, temporalOverlap), 
+        image => image
+    );
+    }
+>>>>>>> 27accf16 (Update ComfyNodeBuilder.cs)
     /// <summary>
     /// Get or convert latest primary connection to image
     /// </summary>

@@ -44,12 +44,19 @@ public sealed class PackageLinkTests
             await HttpClient.SendAsync(new HttpRequestMessage(HttpMethod.Head, imageUri))
         );
 
-        Assert.IsTrue(
-            response.IsSuccessStatusCode,
-            "Failed to get PreviewImageUri at {0}: {1}",
-            imageUri,
-            response
-        );
+        if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+{
+    Assert.Inconclusive(
+        $"PreviewImageUri blocked by host (403): {imageUri}"
+    );
+}
+
+Assert.IsTrue(
+    response.IsSuccessStatusCode,
+    "Failed to get PreviewImageUri at {0}: {1}",
+    imageUri,
+    response
+);
     }
 
     [TestMethod]

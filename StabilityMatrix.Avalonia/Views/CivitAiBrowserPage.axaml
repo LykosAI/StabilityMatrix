@@ -351,7 +351,8 @@
                                     <Grid ColumnDefinitions="*, Auto">
                                         <StackPanel
                                             Grid.Row="0"
-                                            Grid.Column="0"
+                                            Grid.Column="1"
+                                            IsVisible="{Binding CivitModel.ModelVersionStats.RatingCount, FallbackValue=False, TargetNullValue=False}"
                                             Orientation="Horizontal">
                                             <controls:StarsRating
                                                 Margin="8,8,0,8"
@@ -368,9 +369,9 @@
 
                                         <StackPanel
                                             Grid.Row="0"
-                                            Grid.Column="1"
-                                            Margin="0,0,8,0"
-                                            HorizontalAlignment="Right"
+                                            Grid.Column="0"
+                                            Margin="8"
+                                            HorizontalAlignment="Left"
                                             Orientation="Horizontal">
                                             <fa:Icon Value="fa-solid fa-heart" />
                                             <TextBlock

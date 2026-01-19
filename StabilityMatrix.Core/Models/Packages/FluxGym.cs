@@ -30,8 +30,7 @@ public class FluxGym(
     public override string LicenseUrl => "";
     public override string LaunchCommand => "app.py";
 
-    public override Uri PreviewImageUri =>
-        new("https://raw.githubusercontent.com/cocktailpeanut/fluxgym/main/screenshot.png");
+    public override Uri PreviewImageUri => new("https://cdn.lykos.ai/sm/packages/fluxgym/fluxgym.webp");
 
     public override List<LaunchOptionDefinition> LaunchOptions => [LaunchOptionDefinition.Extras];
 

@@ -10,10 +10,15 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added Regional Prompting addon to Inference - paint detailed masks to apply different prompts, strengths, and settings to specific regions of your image
   - Multi-layer mask editor with Photoshop-style interface for managing layers with independent masks, prompts, colors, and opacity
   - Professional brush tools: freehand brush/eraser with pressure sensitivity, rectangle/ellipse shapes with fill/stroke modes, paint bucket flood fill
-  - **NEW: Brush feathering/softness control** for smooth, blended mask edges (0 = hard edge, 1 = soft/blurred)
+  - Brush feathering/softness control for smooth, blended mask edges (0 = hard edge, 1 = soft/blurred)
   - Per-layer prompt and strength controls, export/import masks as PNG, duplicate layers, image reference layers for tracing
   - GPU-accelerated rendering with compact gzip-compressed metadata serialization 
+- Added NVIDIA driver version warning when launching ComfyUI with CUDA 13.0 (cu130) and driver versions below 580.x
+- Added legacy Python warning when launching InvokeAI installations using Python 3.10.11
+### Changed
+- Disabled update checking for legacy InvokeAI installations using Python 3.10.11
 ### Fixed
+- Hide rating stars in the Civitai browser page if no rating is available
 - Fixed parsing of escape sequences in Inference such as `\\` 
 
 ## v2.16.0-dev.1

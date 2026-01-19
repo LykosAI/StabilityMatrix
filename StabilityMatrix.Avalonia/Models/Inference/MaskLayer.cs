@@ -119,6 +119,20 @@ public partial class MaskLayer : ObservableObject, IJsonLoadableState
     private double imageScale = 1.0;
 
     /// <summary>
+    /// Horizontal offset from canvas center for image layers.
+    /// Positive values move right, negative values move left.
+    /// </summary>
+    [ObservableProperty]
+    private double imageOffsetX;
+
+    /// <summary>
+    /// Vertical offset from canvas center for image layers.
+    /// Positive values move down, negative values move up.
+    /// </summary>
+    [ObservableProperty]
+    private double imageOffsetY;
+
+    /// <summary>
     /// The prompt text for this layer's region.
     /// </summary>
     [ObservableProperty]
@@ -302,6 +316,12 @@ public partial class MaskLayer : ObservableObject, IJsonLoadableState
         if (state.TryGetPropertyValue("imageScale", out var scaleNode))
             ImageScale = scaleNode?.GetValue<double>() ?? 1.0;
 
+        if (state.TryGetPropertyValue("imageOffsetX", out var offsetXNode))
+            ImageOffsetX = offsetXNode?.GetValue<double>() ?? 0.0;
+
+        if (state.TryGetPropertyValue("imageOffsetY", out var offsetYNode))
+            ImageOffsetY = offsetYNode?.GetValue<double>() ?? 0.0;
+
         if (state.TryGetPropertyValue("prompt", out var promptNode))
             Prompt = promptNode?.GetValue<string>() ?? string.Empty;
 
@@ -367,6 +387,8 @@ public partial class MaskLayer : ObservableObject, IJsonLoadableState
         {
             state["sourceImagePath"] = SourceImagePath;
             state["imageScale"] = ImageScale;
+            state["imageOffsetX"] = ImageOffsetX;
+            state["imageOffsetY"] = ImageOffsetY;
         }
 
         if (Paths.Count > 0)

@@ -111,6 +111,16 @@
                                 <fluentIcons:SymbolIcon FontSize="18" Symbol="PaintBucket" />
                             </ToggleButton>
 
+                            <!--  Move Tool  -->
+                            <ToggleButton
+                                Width="36"
+                                Height="36"
+                                Padding="0"
+                                IsChecked="{Binding SelectedTool, Converter={StaticResource EnumBoolConverter}, ConverterParameter={x:Static models:PaintCanvasTool.Move}}"
+                                ToolTip.Tip="Move Image Layer (V)">
+                                <fluentIcons:SymbolIcon FontSize="18" Symbol="ArrowMove" />
+                            </ToggleButton>
+
                             <Rectangle
                                 Height="1"
                                 Margin="4,8"
@@ -276,7 +286,7 @@
                         Grid.Row="1"
                         Grid.Column="1"
                         HorizontalAlignment="Stretch"
-                        VerticalAlignment="Stretch"
+                        VerticalAlignment="Top"
                         Background="SlateBlue"
                         ClipToBounds="True"
                         Focusable="True"

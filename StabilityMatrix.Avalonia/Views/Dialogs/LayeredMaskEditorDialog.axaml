@@ -581,18 +581,34 @@
                                                     Grid.Row="0"
                                                     IsVisible="{Binding LayerType, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static inference:MaskLayerType.Image}}"
                                                     Spacing="8">
-                                                    <TextBlock
-                                                        FontSize="12"
-                                                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                                                        IsVisible="{Binding !HasImage}"
-                                                        Text="No image selected. Click an image below or use Browse." />
-                                                    <TextBlock
-                                                        FontSize="12"
-                                                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                                                        IsVisible="{Binding HasImage}"
-                                                        Text="{Binding SourceImagePath}"
-                                                        TextTrimming="CharacterEllipsis"
-                                                        ToolTip.Tip="{Binding SourceImagePath}" />
+                                                    <Grid ColumnDefinitions="*,Auto">
+                                                        <TextBlock
+                                                            VerticalAlignment="Center"
+                                                            FontSize="12"
+                                                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                            IsVisible="{Binding !HasImage}"
+                                                            Text="No image selected. Click an image below or use Browse." />
+                                                        <TextBlock
+                                                            VerticalAlignment="Center"
+                                                            FontSize="12"
+                                                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                            IsVisible="{Binding HasImage}"
+                                                            Text="{Binding SourceImagePath}"
+                                                            TextTrimming="CharacterEllipsis"
+                                                            ToolTip.Tip="{Binding SourceImagePath}" />
+                                                        <Button
+                                                            Grid.Column="1"
+                                                            Padding="8,4"
+                                                            Classes="transparent"
+                                                            Command="{Binding $parent[controls:UserControlBase].((vmDialogs:LayeredMaskEditorViewModel)DataContext).CenterImageLayerCommand}"
+                                                            IsVisible="{Binding HasImage}"
+                                                            ToolTip.Tip="Center image (reset position)">
+                                                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                                                <fluentIcons:SymbolIcon FontSize="14" Symbol="ArrowMinimize" />
+                                                                <TextBlock FontSize="11" Text="Center" />
+                                                            </StackPanel>
+                                                        </Button>
+                                                    </Grid>
                                                 </StackPanel>
 
                                                 <!--  Row 1: Paint layer: Strength + Opacity + Cond Area  -->
@@ -654,11 +670,11 @@
                                                     </StackPanel>
                                                 </sg:SpacedGrid>
 
-                                                <!--  Row 1: Image layer: Scale + Opacity  -->
+                                                <!--  Row 1: Image layer: Scale + Offset X/Y + Opacity  -->
                                                 <sg:SpacedGrid
                                                     Grid.Row="1"
-                                                    ColumnDefinitions="*,*"
-                                                    ColumnSpacing="12"
+                                                    ColumnDefinitions="*,*,*,*"
+                                                    ColumnSpacing="8"
                                                     IsVisible="{Binding LayerType, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static inference:MaskLayerType.Image}}">
                                                     <StackPanel Spacing="2">
                                                         <TextBlock
@@ -666,7 +682,6 @@
                                                             Foreground="{DynamicResource TextFillColorTertiaryBrush}"
                                                             Text="Scale" />
                                                         <ui:NumberBox
-                                                            Margin="0,0,16,0"
                                                             HorizontalAlignment="Stretch"
                                                             Maximum="3"
                                                             Minimum="0.1"
@@ -679,9 +694,38 @@
                                                         <TextBlock
                                                             FontSize="11"
                                                             Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                                            Text="Offset X"
+                                                            ToolTip.Tip="Horizontal offset from center (positive = right)" />
+                                                        <ui:NumberBox
+                                                            HorizontalAlignment="Stretch"
+                                                            Maximum="2000"
+                                                            Minimum="-2000"
+                                                            SimpleNumberFormat="F0"
+                                                            SmallChange="10"
+                                                            SpinButtonPlacementMode="Compact"
+                                                            Value="{Binding ImageOffsetX}" />
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Column="2" Spacing="2">
+                                                        <TextBlock
+                                                            FontSize="11"
+                                                            Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                                            Text="Offset Y"
+                                                            ToolTip.Tip="Vertical offset from center (positive = down)" />
+                                                        <ui:NumberBox
+                                                            HorizontalAlignment="Stretch"
+                                                            Maximum="2000"
+                                                            Minimum="-2000"
+                                                            SimpleNumberFormat="F0"
+                                                            SmallChange="10"
+                                                            SpinButtonPlacementMode="Compact"
+                                                            Value="{Binding ImageOffsetY}" />
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Column="3" Spacing="2">
+                                                        <TextBlock
+                                                            FontSize="11"
+                                                            Foreground="{DynamicResource TextFillColorTertiaryBrush}"
                                                             Text="Opacity" />
                                                         <ui:NumberBox
-                                                            Margin="0,0,16,0"
                                                             HorizontalAlignment="Stretch"
                                                             Maximum="1"
                                                             Minimum="0"

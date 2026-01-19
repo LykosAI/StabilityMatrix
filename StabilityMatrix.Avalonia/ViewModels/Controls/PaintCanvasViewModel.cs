@@ -405,6 +405,76 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
 
     #endregion
 
+    #region Move Tool State
+
+    /// <summary>
+    /// Starting point for move operations.
+    /// </summary>
+    [ObservableProperty]
+    [property: JsonIgnore]
+    private SKPoint? moveStartPoint;
+
+    /// <summary>
+    /// Layer offset at the start of a move operation.
+    /// </summary>
+    [ObservableProperty]
+    [property: JsonIgnore]
+    private SKPoint moveStartOffset;
+
+    /// <summary>
+    /// Returns true if the currently selected tool is the move tool.
+    /// </summary>
+    [JsonIgnore]
+    public bool IsMoveTool => SelectedTool == PaintCanvasTool.Move;
+
+    /// <summary>
+    /// Callback invoked when the move tool adjusts the image layer position.
+    /// Parameters: (newOffsetX, newOffsetY) - the new absolute offset position.
+    /// </summary>
+    [JsonIgnore]
+    public Action<double, double>? OnMoveToolDrag { get; set; }
+
+    /// <summary>
+    /// Callback to get the current image layer offset when starting a move.
+    /// Returns (currentOffsetX, currentOffsetY).
+    /// </summary>
+    [JsonIgnore]
+    public Func<(double X, double Y)>? GetCurrentMoveOffset { get; set; }
+
+    /// <summary>
+    /// Starts a move operation at the given position.
+    /// </summary>
+    public void StartMove(SKPoint position, double currentOffsetX, double currentOffsetY)
+    {
+        MoveStartPoint = position;
+        MoveStartOffset = new SKPoint((float)currentOffsetX, (float)currentOffsetY);
+    }
+
+    /// <summary>
+    /// Updates the move during drag, calculating delta from start position.
+    /// </summary>
+    public void UpdateMove(SKPoint currentPoint)
+    {
+        if (!MoveStartPoint.HasValue)
+            return;
+
+        var deltaX = currentPoint.X - MoveStartPoint.Value.X;
+        var deltaY = currentPoint.Y - MoveStartPoint.Value.Y;
+
+        // Invoke callback with new absolute offset
+        OnMoveToolDrag?.Invoke(MoveStartOffset.X + deltaX, MoveStartOffset.Y + deltaY);
+    }
+
+    /// <summary>
+    /// Ends the current move operation.
+    /// </summary>
+    public void EndMove()
+    {
+        MoveStartPoint = null;
+    }
+
+    #endregion
+
     #region Canvas Commands
 
     /// <summary>
@@ -436,6 +506,9 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
 
     [RelayCommand]
     public void SelectEllipseTool() => SelectedTool = PaintCanvasTool.Ellipse;
+
+    [RelayCommand]
+    public void SelectMoveTool() => SelectedTool = PaintCanvasTool.Move;
 
     #endregion
 

@@ -162,7 +162,19 @@ public class PaintCanvas : TemplatedControlBase
             return;
         }
 
-        if (ViewModel is not { IsDrawingEnabled: true } vm)
+        if (ViewModel is not { } vm)
+        {
+            return;
+        }
+
+        // Handle Move tool separately - it doesn't require drawing to be enabled
+        if (vm.IsMoveTool)
+        {
+            HandleMoveToolEvent(e, vm);
+            return;
+        }
+
+        if (!vm.IsDrawingEnabled)
         {
             return;
         }
@@ -255,6 +267,50 @@ public class PaintCanvas : TemplatedControlBase
             {
                 HandlePointerMoved(e);
             }
+        }
+
+        Dispatcher.UIThread.Post(() => MainCanvas?.InvalidateVisual(), DispatcherPriority.Render);
+    }
+
+    private void HandleMoveToolEvent(PointerEventArgs e, PaintCanvasViewModel vm)
+    {
+        e.Handled = true;
+        e.PreventGestureRecognition();
+
+        var currentPoint = e.GetCurrentPoint(this);
+
+        if (e.RoutedEvent == PointerPressedEvent)
+        {
+            // Ignore if mouse and not left button
+            if (e.Pointer.Type == PointerType.Mouse && !currentPoint.Properties.IsLeftButtonPressed)
+            {
+                return;
+            }
+
+            vm.IsPenDown = true;
+            var position = e.GetPosition(MainCanvas);
+            // Get current offsets from the callback, or use (0, 0) if not set
+            var currentOffset = vm.GetCurrentMoveOffset?.Invoke() ?? (0, 0);
+            vm.StartMove(new SKPoint((float)position.X, (float)position.Y), currentOffset.X, currentOffset.Y);
+        }
+        else if (e.RoutedEvent == PointerReleasedEvent)
+        {
+            if (vm.IsPenDown)
+            {
+                vm.EndMove();
+                vm.IsPenDown = false;
+            }
+        }
+        else
+        {
+            // Moved event
+            if (!vm.IsPenDown || !vm.MoveStartPoint.HasValue)
+            {
+                return;
+            }
+
+            var position = e.GetPosition(MainCanvas);
+            vm.UpdateMove(new SKPoint((float)position.X, (float)position.Y));
         }
 
         Dispatcher.UIThread.Post(() => MainCanvas?.InvalidateVisual(), DispatcherPriority.Render);
@@ -410,6 +466,9 @@ public class PaintCanvas : TemplatedControlBase
             case Key.G:
                 vm.SelectPaintBucketToolCommand.Execute(null);
                 break;
+            case Key.V:
+                vm.SelectMoveToolCommand.Execute(null);
+                break;
             default:
                 return;
         }
@@ -466,6 +525,19 @@ public class PaintCanvas : TemplatedControlBase
             {
                 lastCanvasCursor?.Dispose();
                 lastCanvasCursor = new Cursor(StandardCursorType.Cross);
+                lastCanvasCursorTool = selectedTool;
+            }
+            canvas.Cursor = lastCanvasCursor;
+            return;
+        }
+
+        // Use SizeAll (move) cursor for Move tool
+        if (selectedTool == PaintCanvasTool.Move)
+        {
+            if (lastCanvasCursorTool != selectedTool)
+            {
+                lastCanvasCursor?.Dispose();
+                lastCanvasCursor = new Cursor(StandardCursorType.SizeAll);
                 lastCanvasCursorTool = selectedTool;
             }
             canvas.Cursor = lastCanvasCursor;

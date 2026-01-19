@@ -69,13 +69,15 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
 
     /// <summary>
     ///     Cached bitmap for the currently selected image layer.
-    ///     Invalidated when source image, scale, opacity, or canvas size changes.
+    ///     Invalidated when source image, scale, opacity, offset, or canvas size changes.
     /// </summary>
     private SKBitmap? _cachedImageLayerBitmap;
     private MaskLayer? _cachedImageLayerSource;
     private SKBitmap? _cachedImageLayerSourceImage;
     private double _cachedImageLayerScale;
     private double _cachedImageLayerOpacity;
+    private double _cachedImageLayerOffsetX;
+    private double _cachedImageLayerOffsetY;
     private Size _cachedImageLayerCanvasSize;
 
     /// <summary>
@@ -100,6 +102,27 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
         this.vmFactory = vmFactory;
         this.imageIndexService = imageIndexService;
         PaintCanvasViewModel = vmFactory.Get<PaintCanvasViewModel>();
+
+        // Set up Move tool callback to update image layer offsets
+        PaintCanvasViewModel.OnMoveToolDrag = (newOffsetX, newOffsetY) =>
+        {
+            if (SelectedLayer is { LayerType: MaskLayerType.Image })
+            {
+                SelectedLayer.ImageOffsetX = newOffsetX;
+                SelectedLayer.ImageOffsetY = newOffsetY;
+                SyncSelectedLayerToCanvas();
+            }
+        };
+
+        // Provide current offset when starting a move
+        PaintCanvasViewModel.GetCurrentMoveOffset = () =>
+        {
+            if (SelectedLayer is { LayerType: MaskLayerType.Image })
+            {
+                return (SelectedLayer.ImageOffsetX, SelectedLayer.ImageOffsetY);
+            }
+            return (0, 0);
+        };
 
         // Subscribe to recent images
         imageIndexService
@@ -203,6 +226,20 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
         // Expand the recent images panel when adding an image layer
         IsRecentImagesPanelExpanded = true;
 
+        SyncSelectedLayerToCanvas();
+    }
+
+    /// <summary>
+    ///     Centers the selected image layer by resetting its offset to (0, 0).
+    /// </summary>
+    [RelayCommand]
+    private void CenterImageLayer()
+    {
+        if (SelectedLayer is not { LayerType: MaskLayerType.Image })
+            return;
+
+        SelectedLayer.ImageOffsetX = 0;
+        SelectedLayer.ImageOffsetY = 0;
         SyncSelectedLayerToCanvas();
     }
 
@@ -994,6 +1031,8 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
             Paths = SelectedLayer.Paths, // ImmutableList, safe to share
             SourceImagePath = SelectedLayer.SourceImagePath,
             ImageScale = SelectedLayer.ImageScale,
+            ImageOffsetX = SelectedLayer.ImageOffsetX,
+            ImageOffsetY = SelectedLayer.ImageOffsetY,
         };
 
         // Subscribe to layer property changes
@@ -1270,6 +1309,8 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
             && _cachedImageLayerSourceImage == layer.SourceImage
             && Math.Abs(_cachedImageLayerScale - layer.ImageScale) < 0.001
             && Math.Abs(_cachedImageLayerOpacity - layer.Opacity) < 0.001
+            && Math.Abs(_cachedImageLayerOffsetX - layer.ImageOffsetX) < 0.001
+            && Math.Abs(_cachedImageLayerOffsetY - layer.ImageOffsetY) < 0.001
             && _cachedImageLayerCanvasSize == CanvasSize
         )
         {
@@ -1298,6 +1339,8 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
         _cachedImageLayerSourceImage = layer.SourceImage;
         _cachedImageLayerScale = layer.ImageScale;
         _cachedImageLayerOpacity = layer.Opacity;
+        _cachedImageLayerOffsetX = layer.ImageOffsetX;
+        _cachedImageLayerOffsetY = layer.ImageOffsetY;
         _cachedImageLayerCanvasSize = CanvasSize;
 
         return bitmap;
@@ -1436,7 +1479,7 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
     }
 
     /// <summary>
-    ///     Renders an image layer with scaling and centering.
+    ///     Renders an image layer with scaling and positioning.
     /// </summary>
     private void RenderImageLayer(SKCanvas canvas, MaskLayer layer, byte alpha)
     {
@@ -1450,9 +1493,11 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
         var scaledWidth = bitmap.Width * scale;
         var scaledHeight = bitmap.Height * scale;
 
-        // Center the image on the canvas
-        var offsetX = (CanvasSize.Width - scaledWidth) / 2f;
-        var offsetY = (CanvasSize.Height - scaledHeight) / 2f;
+        // Center the image on the canvas, then apply user offset
+        var centerOffsetX = (CanvasSize.Width - scaledWidth) / 2f;
+        var centerOffsetY = (CanvasSize.Height - scaledHeight) / 2f;
+        var offsetX = centerOffsetX + (float)layer.ImageOffsetX;
+        var offsetY = centerOffsetY + (float)layer.ImageOffsetY;
 
         var destRect = new SKRect(offsetX, offsetY, offsetX + scaledWidth, offsetY + scaledHeight);
 

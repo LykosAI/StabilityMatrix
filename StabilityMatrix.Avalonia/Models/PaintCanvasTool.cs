@@ -8,4 +8,5 @@ public enum PaintCanvasTool
     Rectangle,
     Ellipse,
     PaintBucket,
+    Move,
 }

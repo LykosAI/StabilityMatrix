@@ -5,15 +5,16 @@
     xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
     xmlns:vmInference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
     x:DataType="vmInference:TiledVAECardViewModel">
+
     <Design.PreviewWith>
         <controls:TiledVAECard />
     </Design.PreviewWith>
 
     <Style Selector="controls|TiledVAECard">
-        <!--  Set Defaults  -->
         <Setter Property="Template">
             <ControlTemplate>
                 <controls:Card x:Name="PART_Card">
+
                     <controls:Card.Styles>
                         <Style Selector="ui|NumberBox">
                             <Setter Property="Margin" Value="12,0,0,0" />
@@ -25,8 +26,10 @@
                             <Setter Property="SpinButtonPlacementMode" Value="Inline" />
                         </Style>
                     </controls:Card.Styles>
+
                     <StackPanel Spacing="8">
-                        <!--  Tile Size  -->
+
+                        <!-- Tile Size -->
                         <Grid ColumnDefinitions="Auto,*">
                             <TextBlock
                                 Grid.Column="0"
@@ -37,7 +40,7 @@
                                 Value="{Binding TileSize, Mode=TwoWay}" />
                         </Grid>
 
-                        <!--  Overlap  -->
+                        <!-- Overlap -->
                         <Grid ColumnDefinitions="Auto,*">
                             <TextBlock
                                 Grid.Column="0"
@@ -48,29 +51,40 @@
                                 Value="{Binding Overlap, Mode=TwoWay}" />
                         </Grid>
 
-                        <!--  Temporal Size (for Video VAEs)  -->
-                        <Grid ColumnDefinitions="Auto,*">
-                            <TextBlock
-                                Grid.Column="0"
-                                VerticalAlignment="Center"
-                                Text="Temporal Size" />
-                            <ui:NumberBox
-                                Grid.Column="1"
-                                Value="{Binding TemporalSize, Mode=TwoWay}" />
-                        </Grid>
+                        <!-- Enable Temporal Tiling -->
+                        <ToggleSwitch
+                            Header="Enable Temporal Tiling"
+                            IsChecked="{Binding UseTemporalTiling}" />
 
-                        <!--  Temporal Overlap (for Video VAEs)  -->
-                        <Grid ColumnDefinitions="Auto,*">
-                            <TextBlock
-                                Grid.Column="0"
-                                VerticalAlignment="Center"
-                                Text="Temporal Overlap" />
-                            <ui:NumberBox
-                                Grid.Column="1"
-                                Value="{Binding TemporalOverlap, Mode=TwoWay}"
-                                SmallChange="4"
-                                LargeChange="16" />
-                        </Grid>
+                        <!-- Temporal Controls (Visible only when enabled) -->
+                        <StackPanel IsVisible="{Binding UseTemporalTiling}" Spacing="8">
+
+                            <!-- Temporal Size -->
+                            <Grid ColumnDefinitions="Auto,*">
+                                <TextBlock
+                                    Grid.Column="0"
+                                    VerticalAlignment="Center"
+                                    Text="Temporal Size" />
+                                <ui:NumberBox
+                                    Grid.Column="1"
+                                    Value="{Binding TemporalSize, Mode=TwoWay}" />
+                            </Grid>
+
+                            <!-- Temporal Overlap -->
+                            <Grid ColumnDefinitions="Auto,*">
+                                <TextBlock
+                                    Grid.Column="0"
+                                    VerticalAlignment="Center"
+                                    Text="Temporal Overlap" />
+                                <ui:NumberBox
+                                    Grid.Column="1"
+                                    Value="{Binding TemporalOverlap, Mode=TwoWay}"
+                                    SmallChange="4"
+                                    LargeChange="16" />
+                            </Grid>
+
+                        </StackPanel>
+
                     </StackPanel>
                 </controls:Card>
             </ControlTemplate>

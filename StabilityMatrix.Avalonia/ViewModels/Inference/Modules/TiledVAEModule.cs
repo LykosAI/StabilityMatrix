@@ -34,8 +34,14 @@ public class TiledVAEModule : ModuleBase
             var latent = builder.Connections.Primary.AsT0;
             var vae = builder.Connections.GetDefaultVAE();
 
-            // Use tiled VAE decode instead of standard decode
-            var tiledDecode = builder.Nodes.AddTypedNode(
+            logger.LogWarning("TiledVAE: Injecting TiledVAEDecode");
+            logger.LogWarning("UseCustomTemporalTiling value at runtime: {Value}", card.UseCustomTemporalTiling);
+
+            // Always valid values (Wan requires temporal tiling)
+            int temporalSize = card.UseCustomTemporalTiling ? card.TemporalSize : 64;
+            int temporalOverlap = card.UseCustomTemporalTiling ? card.TemporalOverlap : 8;
+
+            var node = builder.Nodes.AddTypedNode(
                 new ComfyNodeBuilder.TiledVAEDecode
                 {
                     Name = builder.Nodes.GetUniqueName("TiledVAEDecode"),

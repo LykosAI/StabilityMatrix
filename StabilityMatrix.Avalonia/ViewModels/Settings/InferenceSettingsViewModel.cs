@@ -69,6 +69,8 @@ public partial class InferenceSettingsViewModel : PageViewModelBase
     [ObservableProperty]
     private bool filterExtraNetworksByBaseModel;
 
+    [ObservableProperty] private bool enableTiledVae;
+
     private List<string> ignoredFileNameFormatVars =
     [
         "author",
@@ -189,6 +191,12 @@ public partial class InferenceSettingsViewModel : PageViewModelBase
             this,
             vm => vm.InferenceDimensionStepChange,
             settings => settings.InferenceDimensionStepChange,
+            true
+        );
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.EnableTiledVae,
+            settings => settings.EnableTiledVae,
             true
         );
 

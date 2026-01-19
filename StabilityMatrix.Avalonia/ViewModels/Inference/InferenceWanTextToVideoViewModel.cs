@@ -10,6 +10,7 @@ using StabilityMatrix.Avalonia.Views.Inference;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Services;
+git status
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
@@ -115,8 +116,14 @@ public class InferenceWanTextToVideoViewModel : InferenceGenerationViewModelBase
 
         SamplerCardViewModel.ApplyStep(args);
 
-        // Animated webp output
+        // ADD THIS - Apply TiledVAE module
+        TiledVAEModule.ApplyStep(args);
+
+        // ADD THIS LINE - Invoke pre-output actions BEFORE video output!
+        args.Builder.InvokeAllPreOutputActions();
+
         VideoOutputSettingsCardViewModel.ApplyStep(args);
+
     }
 
     /// <inheritdoc />

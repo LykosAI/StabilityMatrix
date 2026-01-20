@@ -69,7 +69,9 @@ public partial class InferenceSettingsViewModel : PageViewModelBase
     [ObservableProperty]
     private bool filterExtraNetworksByBaseModel;
 
-    [ObservableProperty] private bool enableTiledVae;
+    [ObservableProperty] 
+    private bool enableTiledVae;
+
 
     private List<string> ignoredFileNameFormatVars =
     [

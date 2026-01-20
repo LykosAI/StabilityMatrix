@@ -34,8 +34,11 @@ public class TiledVAEModule : ModuleBase
             var latent = builder.Connections.Primary.AsT0;
             var vae = builder.Connections.GetDefaultVAE();
 
-            logger.LogWarning("TiledVAE: Injecting TiledVAEDecode");
-            logger.LogWarning("UseCustomTemporalTiling value at runtime: {Value}", card.UseCustomTemporalTiling);
+            logger.LogDebug("TiledVAE: Injecting TiledVAEDecode");
+            logger.LogDebug(
+                "UseCustomTemporalTiling value at runtime: {value}",
+                card.UseCustomTemporalTiling
+            );
 
             // Always valid values (Wan requires temporal tiling)
             int temporalSize = card.UseCustomTemporalTiling ? card.TemporalSize : 64;
@@ -50,7 +53,7 @@ public class TiledVAEModule : ModuleBase
                     TileSize = card.TileSize,
                     Overlap = card.Overlap,
                     TemporalSize = card.TemporalSize,
-                    TemporalOverlap = card.TemporalOverlap
+                    TemporalOverlap = card.TemporalOverlap,
                 }
             );
 

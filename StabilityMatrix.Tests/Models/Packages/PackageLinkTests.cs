@@ -25,7 +25,6 @@ public sealed class PackageLinkTests
             Backoff.DecorrelatedJitterBackoffV2(TimeSpan.FromMilliseconds(200), 3),
             onRetry: (outcome, timespan, retryAttempt, context) =>
             {
-                // Log retry attempt if needed
                 Console.WriteLine($"Retry attempt {retryAttempt}, waiting {timespan.TotalSeconds} seconds");
             }
         );
@@ -36,27 +35,24 @@ public sealed class PackageLinkTests
     {
         var imageUri = package.PreviewImageUri;
 
-        // If is GitHub Uri, use jsdelivr instead due to rate limiting
+        // If GitHub URL, use jsDelivr to avoid rate limiting
         imageUri = GitHubToJsDelivr(imageUri);
 
-        // Test http head is successful with retry policy
         var response = await RetryPolicy.ExecuteAsync(async () =>
             await HttpClient.SendAsync(new HttpRequestMessage(HttpMethod.Head, imageUri))
         );
 
-        if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
-{
-    Assert.Inconclusive(
-        $"PreviewImageUri blocked by host (403): {imageUri}"
-    );
-}
+        // 403 should fail — URL is invalid or blocked
+        Assert.AreNotEqual(
+            System.Net.HttpStatusCode.Forbidden,
+            response.StatusCode,
+            $"PreviewImageUri returned 403 Forbidden: {imageUri}"
+        );
 
-Assert.IsTrue(
-    response.IsSuccessStatusCode,
-    "Failed to get PreviewImageUri at {0}: {1}",
-    imageUri,
-    response
-);
+        Assert.IsTrue(
+            response.IsSuccessStatusCode,
+            $"Failed to get PreviewImageUri at {imageUri}: {response}"
+        );
     }
 
     [TestMethod]
@@ -70,34 +66,32 @@ Assert.IsTrue(
 
         var licenseUri = new Uri(package.LicenseUrl);
 
-        // If is GitHub Uri, use jsdelivr instead due to rate limiting
+        // If GitHub URL, use jsDelivr to avoid rate limiting
         licenseUri = GitHubToJsDelivr(licenseUri);
 
-        // Test http head is successful with retry policy
         var response = await RetryPolicy.ExecuteAsync(async () =>
             await HttpClient.SendAsync(new HttpRequestMessage(HttpMethod.Head, licenseUri))
         );
 
-        Assert.IsTrue(
-            response.IsSuccessStatusCode,
-            "Failed to get LicenseUrl at {0}: {1}",
-            licenseUri,
-            response
-        );
+        Assert.IsTrue(response.IsSuccessStatusCode, $"Failed to get LicenseUrl at {licenseUri}: {response}");
     }
 
     private static Uri GitHubToJsDelivr(Uri uri)
     {
-        // Like https://github.com/user/Repo/blob/main/LICENSE
-        // becomes: https://cdn.jsdelivr.net/gh/user/Repo@main/LICENSE
-        if (uri.Host.Equals("github.com", StringComparison.OrdinalIgnoreCase))
+        // Example:
+        // https://github.com/user/Repo/blob/main/LICENSE
+        // becomes:
+        // https://cdn.jsdelivr.net/gh/user/Repo@main/LICENSE
+
+        if (!uri.Host.Equals("github.com", StringComparison.OrdinalIgnoreCase))
+            return uri;
+
+        var segments = uri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
+
+        if (segments is [var user, var repo, "blob", var branch, ..])
         {
-            var segments = uri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
-            if (segments is [var user, var repo, "blob", var branch, ..])
-            {
-                var path = string.Join("/", segments.Skip(4));
-                return new Uri($"https://cdn.jsdelivr.net/gh/{user}/{repo}@{branch}/{path}");
-            }
+            var path = string.Join("/", segments.Skip(4));
+            return new Uri($"https://cdn.jsdelivr.net/gh/{user}/{repo}@{branch}/{path}");
         }
 
         return uri;

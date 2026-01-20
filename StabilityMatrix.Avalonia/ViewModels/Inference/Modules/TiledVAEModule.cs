@@ -22,7 +22,6 @@ public class TiledVAEModule : ModuleBase
     {
         var card = GetCard<TiledVAECardViewModel>();
 
-        // Register a pre-output action that replaces standard VAE decode with tiled decode
         e.PreOutputActions.Add(args =>
         {
             var builder = args.Builder;
@@ -40,10 +39,6 @@ public class TiledVAEModule : ModuleBase
                 card.UseCustomTemporalTiling
             );
 
-            // Always valid values (Wan requires temporal tiling)
-            int temporalSize = card.UseCustomTemporalTiling ? card.TemporalSize : 64;
-            int temporalOverlap = card.UseCustomTemporalTiling ? card.TemporalOverlap : 8;
-
             var node = builder.Nodes.AddTypedNode(
                 new ComfyNodeBuilder.TiledVAEDecode
                 {
@@ -52,13 +47,15 @@ public class TiledVAEModule : ModuleBase
                     Vae = vae,
                     TileSize = card.TileSize,
                     Overlap = card.Overlap,
-                    TemporalSize = card.TemporalSize,
-                    TemporalOverlap = card.TemporalOverlap,
+
+                    // Temporal tiling (WAN requires temporal tiling)
+                    TemporalSize = card.UseCustomTemporalTiling ? card.TemporalSize : 64,
+                    TemporalOverlap = card.UseCustomTemporalTiling ? card.TemporalOverlap : 8,
                 }
             );
 
             // Update primary connection to the decoded image
-            builder.Connections.Primary = tiledDecode.Output;
+            builder.Connections.Primary = node.Output;
         });
     }
 }

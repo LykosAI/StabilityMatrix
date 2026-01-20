@@ -1,9 +1,0 @@
-"tiled_decode_video": {
-  "class_type": "TiledVAEDecodeVideo",
-  "inputs": {
-    "vae": ["vae_loader", 0],
-    "video_latent": ["video_latent", 0],
-    "tile_size": 256,
-    "overlap": 32
-  }
-}

@@ -54,10 +54,10 @@
                         <!-- Enable Temporal Tiling -->
                         <ToggleSwitch
                             Header="Enable Temporal Tiling"
-                            IsChecked="{Binding UseTemporalTiling}" />
+                            IsChecked="{Binding UseCustomTemporalTiling}" />
 
                         <!-- Temporal Controls (Visible only when enabled) -->
-                        <StackPanel IsVisible="{Binding UseTemporalTiling}" Spacing="8">
+                        <StackPanel IsVisible="{Binding UseCustomTemporalTiling}" Spacing="8">
 
                             <!-- Temporal Size -->
                             <Grid ColumnDefinitions="Auto,*">

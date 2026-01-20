@@ -28,14 +28,11 @@ public partial class TiledVAECardViewModel : LoadableViewModelBase
     [Range(0, 4096)]
     private int overlap = 64;
 
-    // NEW: Toggle now means "Use custom temporal tiling settings"
+    // Toggle: Use custom temporal tiling settings
     [ObservableProperty]
     private bool useCustomTemporalTiling = false;
 
     // Temporal tile size (must be >= 8)
-    [ObservableProperty]
-    private bool useTemporalTiling = true;
-
     [ObservableProperty]
     [NotifyDataErrorInfo]
     [Required]

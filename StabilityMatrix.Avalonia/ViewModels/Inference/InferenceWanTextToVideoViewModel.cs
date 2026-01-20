@@ -70,8 +70,8 @@ public class InferenceWanTextToVideoViewModel : InferenceGenerationViewModelBase
 
         BatchSizeCardViewModel = vmFactory.Get<BatchSizeCardViewModel>();
 
-        VideoOutputSettingsCardViewModel = vmFactory.Get<VideoOutputSettingsCardViewModel>(
-            vm => vm.Fps = 16.0d
+        VideoOutputSettingsCardViewModel = vmFactory.Get<VideoOutputSettingsCardViewModel>(vm =>
+            vm.Fps = 16.0d
         );
 
         StackCardViewModel = vmFactory.Get<StackCardViewModel>();
@@ -94,7 +94,7 @@ public class InferenceWanTextToVideoViewModel : InferenceGenerationViewModelBase
         builder.Connections.Seed = args.SeedOverride switch
         {
             { } seed => Convert.ToUInt64(seed),
-            _ => Convert.ToUInt64(SeedCardViewModel.Seed)
+            _ => Convert.ToUInt64(SeedCardViewModel.Seed),
         };
 
         // Load models
@@ -115,14 +115,13 @@ public class InferenceWanTextToVideoViewModel : InferenceGenerationViewModelBase
 
         SamplerCardViewModel.ApplyStep(args);
 
-        // ADD THIS - Apply TiledVAE module
+        // Apply TiledVAE module
         TiledVAEModule.ApplyStep(args);
 
-        // ADD THIS LINE - Invoke pre-output actions BEFORE video output!
+        // Invoke pre-output actions BEFORE video output!
         args.Builder.InvokeAllPreOutputActions();
 
         VideoOutputSettingsCardViewModel.ApplyStep(args);
-
     }
 
     /// <inheritdoc />
@@ -171,13 +170,13 @@ public class InferenceWanTextToVideoViewModel : InferenceGenerationViewModelBase
                 OutputNodeNames = buildPromptArgs.Builder.Connections.OutputNodeNames.ToArray(),
                 Parameters = SaveStateToParameters(new GenerationParameters()) with
                 {
-                    Seed = Convert.ToUInt64(seed)
+                    Seed = Convert.ToUInt64(seed),
                 },
                 Project = inferenceProject,
                 FilesToTransfer = buildPromptArgs.FilesToTransfer,
                 BatchIndex = i,
                 // Only clear output images on the first batch
-                ClearOutputImages = i == 0
+                ClearOutputImages = i == 0,
             };
 
             batchArgs.Add(generationArgs);

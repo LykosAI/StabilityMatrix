@@ -36,7 +36,7 @@ public class VladAutomatic(
     public override string Blurb => "SD.Next: All-in-one WebUI for AI generative image and video creation";
     public override string LaunchCommand => "launch.py";
 
-    public override Uri PreviewImageUri => new("https://github.com/user-attachments/assets/d6119a63-6ee5-4597-95f6-29ed0701d3b5");
+    public override Uri PreviewImageUri => new("https://cdn.lykos.ai/sm/packages/vladautomatic/preview.webp");
     public override bool ShouldIgnoreReleases => true;
 
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Symlink;

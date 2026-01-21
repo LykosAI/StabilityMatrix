@@ -16,6 +16,7 @@ public class TiledVAEModule : ModuleBase
     public TiledVAEModule(IServiceManager<ViewModelBase> vmFactory)
         : base(vmFactory)
     {
+        this.logger = logger;
         Title = "Tiled VAE Decode";
         AddCards(vmFactory.Get<TiledVAECardViewModel>());
     }

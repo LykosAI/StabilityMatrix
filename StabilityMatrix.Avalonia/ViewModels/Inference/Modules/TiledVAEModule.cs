@@ -4,6 +4,8 @@ using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
+using NLog;
+
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 

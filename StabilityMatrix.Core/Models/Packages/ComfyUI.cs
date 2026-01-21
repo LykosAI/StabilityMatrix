@@ -382,7 +382,7 @@ public class ComfyUI(
             var indexUrl = gfxArch switch
             {
                 "gfx1151" => "https://rocm.nightlies.amd.com/v2/gfx1151",
-                _ when gfxArch.StartsWith("gfx110") => "https://rocm.nightlies.amd.com/v2/gfx110X-dgpu",
+                _ when gfxArch.StartsWith("gfx110") => "https://rocm.nightlies.amd.com/v2/gfx110X-all",
                 _ when gfxArch.StartsWith("gfx120") => "https://rocm.nightlies.amd.com/v2/gfx120X-all",
                 _ => throw new ArgumentOutOfRangeException(
                     nameof(gfxArch),
@@ -413,7 +413,7 @@ public class ComfyUI(
                 RequirementsFilePaths = ["requirements.txt"],
                 ExtraPipArgs = ["numpy<2"],
                 TorchaudioVersion = " ", // Request torchaudio without a specific version
-                CudaIndex = isLegacyNvidia ? "cu126" : "cu128",
+                CudaIndex = isLegacyNvidia ? "cu126" : "cu130",
                 RocmIndex = "rocm6.4",
                 UpgradePackages = true,
                 PostInstallPipArgs = ["typing-extensions>=4.15.0"],
@@ -429,6 +429,49 @@ public class ComfyUI(
                     cancellationToken
                 )
                 .ConfigureAwait(false);
+        }
+
+        try
+        {
+            var sageVersion = await venvRunner.PipShow("sageattention").ConfigureAwait(false);
+            var torchVersion = await venvRunner.PipShow("torch").ConfigureAwait(false);
+
+            if (torchVersion is not null && sageVersion is not null)
+            {
+                var version = torchVersion.Version;
+                var plusPos = version.IndexOf('+');
+                var index = plusPos >= 0 ? version[(plusPos + 1)..] : string.Empty;
+                var versionWithoutIndex = plusPos >= 0 ? version[..plusPos] : version;
+
+                if (
+                    !sageVersion.Version.Contains(index) || !sageVersion.Version.Contains(versionWithoutIndex)
+                )
+                {
+                    progress?.Report(
+                        new ProgressReport(-1f, "Updating SageAttention...", isIndeterminate: true)
+                    );
+
+                    var step = new InstallSageAttentionStep(
+                        downloadService,
+                        prerequisiteHelper,
+                        pyInstallationManager
+                    )
+                    {
+                        InstalledPackage = installedPackage,
+                        IsBlackwellGpu =
+                            SettingsManager.Settings.PreferredGpu?.IsBlackwellGpu()
+                            ?? HardwareHelper.HasBlackwellGpu(),
+                        WorkingDirectory = installLocation,
+                        EnvironmentVariables = GetEnvVars(venvRunner.EnvironmentVariables),
+                    };
+
+                    await step.ExecuteAsync(progress).ConfigureAwait(false);
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            Logger.Error(e, "Failed to verify/update SageAttention after installation");
         }
 
         progress?.Report(new ProgressReport(1, "Install complete", isIndeterminate: false));
@@ -827,6 +870,8 @@ public class ComfyUI(
         // set some experimental speed improving env vars for Windows ROCm
         return env.SetItem("PYTORCH_TUNABLEOP_ENABLED", "1")
             .SetItem("MIOPEN_FIND_MODE", "2")
-            .SetItem("TORCH_ROCM_AOTRITON_ENABLE_EXPERIMENTAL", "1");
+            .SetItem("TORCH_ROCM_AOTRITON_ENABLE_EXPERIMENTAL", "1")
+            .SetItem("PYTORCH_ALLOC_CONF", "max_split_size_mb:6144,garbage_collection_threshold:0.8") // greatly helps prevent GPU OOM and instability/driver timeouts/OS hard locks and decreases dependency on Tiled VAE at standard res's
+            .SetItem("COMFYUI_USE_MIOPEN", "1"); // re-enables "cudnn" in ComfyUI as it's needed for MiOpen to function properly
     }
 }

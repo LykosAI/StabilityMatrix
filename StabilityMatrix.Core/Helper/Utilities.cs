@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using StabilityMatrix.Core.Python;
 
 namespace StabilityMatrix.Core.Helper;
 
@@ -104,6 +105,86 @@ public static partial class Utilities
                 .Replace("</h6>", $"{Environment.NewLine}{Environment.NewLine}") ?? string.Empty;
         pruned = HtmlRegex().Replace(pruned, string.Empty);
         return pruned;
+    }
+
+    /// <summary>
+    /// Try to find pyvenv.cfg in common locations and parse its version into PyVersion.
+    /// </summary>
+    public static bool TryGetPyVenvVersion(string packageLocation, out PyVersion version)
+    {
+        version = default;
+
+        if (string.IsNullOrWhiteSpace(packageLocation))
+            return false;
+
+        // Common placements
+        var candidates = new[]
+        {
+            Path.Combine(packageLocation, "pyvenv.cfg"),
+            Path.Combine(packageLocation, "venv", "pyvenv.cfg"),
+            Path.Combine(packageLocation, ".venv", "pyvenv.cfg"),
+        };
+
+        foreach (var candidate in candidates)
+        {
+            if (!File.Exists(candidate))
+                continue;
+
+            if (!TryReadVersionFromCfg(candidate, out var pyv))
+                continue;
+
+            version = pyv;
+            return true;
+        }
+
+        return false;
+    }
+
+    private static bool TryReadVersionFromCfg(string cfgFile, out PyVersion version)
+    {
+        version = default;
+
+        var kv = ReadKeyValues(cfgFile);
+
+        // Prefer version_info (e.g., "3.10.11.final.0"), fall back to version (e.g., "3.12.0")
+        if (!kv.TryGetValue("version_info", out var raw) || string.IsNullOrWhiteSpace(raw))
+            kv.TryGetValue("version", out raw);
+
+        if (string.IsNullOrWhiteSpace(raw))
+            return false;
+
+        // Grab the first 1–3 dot-separated integers and ignore anything after (e.g., ".final.0", ".rc1")
+        // Examples matched: "3", "3.12", "3.10.11" (from "3.10.11.final.0")
+        var m = Regex.Match(raw, @"(?<!\d)(\d+)(?:\.(\d+))?(?:\.(\d+))?");
+        if (!m.Success)
+            return false;
+
+        var major = int.Parse(m.Groups[1].Value);
+        var minor = m.Groups[2].Success ? int.Parse(m.Groups[2].Value) : 0;
+        var micro = m.Groups[3].Success ? int.Parse(m.Groups[3].Value) : 0;
+
+        version = new PyVersion(major, minor, micro);
+        return true;
+    }
+
+    private static Dictionary<string, string> ReadKeyValues(string path)
+    {
+        var dict = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var line in File.ReadAllLines(path))
+        {
+            var trimmed = line.Trim();
+            if (trimmed.Length == 0 || trimmed.StartsWith("#"))
+                continue;
+
+            var idx = trimmed.IndexOf('=');
+            if (idx <= 0)
+                continue;
+
+            var key = trimmed[..idx].Trim();
+            var val = trimmed[(idx + 1)..].Trim();
+            dict[key] = val;
+        }
+        return dict;
     }
 
     /// <summary>

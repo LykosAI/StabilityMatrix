@@ -62,6 +62,25 @@ public class ComfyNodeBuilder
         public required VAENodeConnection Vae { get; init; }
     }
 
+    [TypedNodeOptions(Name = "VAEDecodeTiled")]
+    public record TiledVAEDecode : ComfyTypedNodeBase<ImageNodeConnection>
+    {
+        public required LatentNodeConnection Samples { get; init; }
+        public required VAENodeConnection Vae { get; init; }
+        
+        [Range(64, 4096)]
+        public int TileSize { get; init; } = 512;
+        
+        [Range(0, 4096)]
+        public int Overlap { get; init; } = 64;
+        
+        [Range(8, 4096)]
+        public int TemporalSize { get; init; } = 64;
+        
+        [Range(4, 4096)]
+        public int TemporalOverlap { get; init; } = 8;
+    }
+
     public record KSampler : ComfyTypedNodeBase<LatentNodeConnection>
     {
         public required ModelNodeConnection Model { get; init; }
@@ -995,6 +1014,20 @@ public class ComfyNodeBuilder
 
         [Range(0UL, ulong.MaxValue)]
         public required ulong Seed { get; init; } = 0;
+    }
+
+    /// <summary>
+    /// CUDNN Toggle node for controlling CUDA Deep Neural Network library settings (CUDNNToggleAutoPassthrough)
+    /// </summary>
+    [TypedNodeOptions(Name = "CUDNNToggleAutoPassthrough")]
+    public record CUDNNToggleAutoPassthrough
+        : ComfyTypedNodeBase<ModelNodeConnection, ConditioningNodeConnection, LatentNodeConnection>
+    {
+        public ModelNodeConnection? Model { get; init; }
+        public ConditioningNodeConnection? Conditioning { get; init; }
+        public LatentNodeConnection? Latent { get; init; }
+        public required bool EnableCudnn { get; init; } = false;
+        public required bool CudnnBenchmark { get; init; } = false;
     }
 
     /// <summary>

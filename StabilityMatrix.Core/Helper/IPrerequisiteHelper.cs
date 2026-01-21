@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Runtime.Versioning;
 using StabilityMatrix.Core.Exceptions;
+using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Packages;
@@ -22,6 +23,7 @@ public interface IPrerequisiteHelper
     Task InstallUvIfNecessary(IProgress<ProgressReport>? progress = null);
     string UvExePath { get; }
     bool IsUvInstalled { get; }
+    DirectoryPath DotnetDir { get; }
     Task UnpackResourcesIfNecessary(IProgress<ProgressReport>? progress = null);
     Task InstallGitIfNecessary(IProgress<ProgressReport>? progress = null);
     Task InstallPythonIfNecessary(IProgress<ProgressReport>? progress = null);
@@ -297,4 +299,5 @@ public interface IPrerequisiteHelper
     Task InstallPythonIfNecessary(PyVersion version, IProgress<ProgressReport>? progress = null);
     Task InstallVirtualenvIfNecessary(PyVersion version, IProgress<ProgressReport>? progress = null);
     Task InstallTkinterIfNecessary(PyVersion version, IProgress<ProgressReport>? progress = null);
+    string? GetGfxArchFromAmdGpuName(GpuInfo? gpu = null);
 }

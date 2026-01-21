@@ -215,6 +215,13 @@ public class PackageFactory : IPackageFactory
                 prerequisiteHelper,
                 pyInstallationManager
             ),
+            "forge-neo" => new ForgeNeo(
+                githubApiCache,
+                settingsManager,
+                downloadService,
+                prerequisiteHelper,
+                pyInstallationManager
+            ),
             "framepack" => new FramePack(
                 githubApiCache,
                 settingsManager,
@@ -230,6 +237,13 @@ public class PackageFactory : IPackageFactory
                 pyInstallationManager
             ),
             "ai-toolkit" => new AiToolkit(
+                githubApiCache,
+                settingsManager,
+                downloadService,
+                prerequisiteHelper,
+                pyInstallationManager
+            ),
+            "Wan2GP" => new Wan2GP(
                 githubApiCache,
                 settingsManager,
                 downloadService,

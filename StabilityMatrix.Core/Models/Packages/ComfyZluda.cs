@@ -6,6 +6,7 @@ using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.HardwareInfo;
+using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
@@ -27,6 +28,7 @@ public class ComfyZluda(
         "https://github.com/lshqqytiger/ZLUDA/releases/download/rel.5e717459179dc272b7d7d23391f0fad66c7459cf/ZLUDA-nightly-windows-rocm6-amd64.zip";
 
     private const string HipSdkExtensionDownloadUrl = "https://cdn.lykos.ai/HIP-SDK-extension.7z";
+    private const string VenvDirectoryName = "venv";
 
     private Process? zludaProcess;
 
@@ -38,8 +40,66 @@ public class ComfyZluda(
         "Windows-only version of ComfyUI which uses ZLUDA to get better performance with AMD GPUs.";
     public override string Disclaimer =>
         "Prerequisite install may require admin privileges and a reboot. "
-        + "AMD GPUs under the RX 6800 may require additional manual setup.";
+        + "Visual Studio Build Tools for C++ Desktop Development will be installed automatically. "
+        + "AMD GPUs under the RX 6800 may require additional manual setup. ";
     public override string LaunchCommand => Path.Combine("zluda", "zluda.exe");
+
+    public override List<LaunchOptionDefinition> LaunchOptions
+    {
+        get
+        {
+            var options = new List<LaunchOptionDefinition>
+            {
+                new()
+                {
+                    Name = "Cross Attention Method",
+                    Type = LaunchOptionType.Bool,
+                    InitialValue = "--use-quad-cross-attention",
+                    Options =
+                    [
+                        "--use-split-cross-attention",
+                        "--use-quad-cross-attention",
+                        "--use-pytorch-cross-attention",
+                        "--use-sage-attention",
+                    ],
+                },
+                new()
+                {
+                    Name = "Disable Async Offload",
+                    Type = LaunchOptionType.Bool,
+                    InitialValue = true,
+                    Options = ["--disable-async-offload"],
+                },
+                new()
+                {
+                    Name = "Disable Pinned Memory",
+                    Type = LaunchOptionType.Bool,
+                    InitialValue = true,
+                    Options = ["--disable-pinned-memory"],
+                },
+                new()
+                {
+                    Name = "Disable Smart Memory",
+                    Type = LaunchOptionType.Bool,
+                    InitialValue = false,
+                    Options = ["--disable-smart-memory"],
+                },
+                new()
+                {
+                    Name = "Disable Model/Node Caching",
+                    Type = LaunchOptionType.Bool,
+                    InitialValue = false,
+                    Options = ["--cache-none"],
+                },
+            };
+
+            options.AddRange(
+                base.LaunchOptions.Where(x => x.Name != "Cross Attention Method")
+            );
+            return options;
+        }
+    }
+
     public override IEnumerable<TorchIndex> AvailableTorchIndices => [TorchIndex.Zluda];
 
     public override TorchIndex GetRecommendedTorchVersion() => TorchIndex.Zluda;
@@ -51,11 +111,11 @@ public class ComfyZluda(
     public override bool ShouldIgnoreReleases => true;
 
     public override IEnumerable<PackagePrerequisite> Prerequisites =>
-        base.Prerequisites.Concat([PackagePrerequisite.HipSdk]);
+        base.Prerequisites.Concat([PackagePrerequisite.HipSdk, PackagePrerequisite.VcBuildTools]);
 
     public override bool InstallRequiresAdmin => true;
     public override string AdminRequiredReason =>
-        "HIP SDK installation and (if applicable) ROCmLibs patching requires admin privileges for accessing the HIP SDK files in the Program Files directory.";
+        "HIP SDK and Visual Studio Build Tools installation, as well as (if applicable) ROCmLibs patching, require admin privileges for accessing files in the Program Files directory. This may take several minutes to complete.";
 
     public override async Task InstallPackage(
         string installLocation,
@@ -201,7 +261,11 @@ public class ComfyZluda(
             ["HIP_PATH_64"] = hipPath,
             ["GIT"] = portableGitBin.JoinFile("git.exe"),
         };
-        envVars.Update(settingsManager.Settings.EnvironmentVariables);
+
+        if (isInstall)
+        {
+            envVars["VIRTUAL_ENV"] = VenvDirectoryName;
+        }
 
         if (envVars.TryGetValue("PATH", out var pathValue))
         {
@@ -218,6 +282,14 @@ public class ComfyZluda(
         envVars["FLASH_ATTENTION_TRITON_AMD_ENABLE"] = "TRUE";
         envVars["MIOPEN_FIND_MODE"] = "2";
         envVars["MIOPEN_LOG_LEVEL"] = "3";
+
+        var gfxArch = PrerequisiteHelper.GetGfxArchFromAmdGpuName();
+        if (!string.IsNullOrWhiteSpace(gfxArch))
+        {
+            envVars["TRITON_OVERRIDE_ARCH"] = gfxArch;
+        }
+
+        envVars.Update(settingsManager.Settings.EnvironmentVariables);
 
         return envVars;
     }

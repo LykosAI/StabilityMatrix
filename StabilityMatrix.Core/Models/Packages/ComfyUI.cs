@@ -872,6 +872,6 @@ public class ComfyUI(
             .SetItem("MIOPEN_FIND_MODE", "2")
             .SetItem("TORCH_ROCM_AOTRITON_ENABLE_EXPERIMENTAL", "1")
             .SetItem("PYTORCH_ALLOC_CONF", "max_split_size_mb:6144,garbage_collection_threshold:0.8") // greatly helps prevent GPU OOM and instability/driver timeouts/OS hard locks and decreases dependency on Tiled VAE at standard res's
-            .SetItem("COMFYUI_USE_MIOPEN", "1"); // re-enables "cudnn" in ComfyUI as it's needed for MiOpen to function properly
+            .SetItem("COMFYUI_ENABLE_MIOPEN", "1"); // re-enables "cudnn" in ComfyUI as it's needed for MiOpen to function properly
     }
 }

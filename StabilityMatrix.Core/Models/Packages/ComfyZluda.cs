@@ -6,6 +6,7 @@ using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.HardwareInfo;
+using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
@@ -40,8 +41,65 @@ public class ComfyZluda(
     public override string Disclaimer =>
         "Prerequisite install may require admin privileges and a reboot. "
         + "Visual Studio Build Tools for C++ Desktop Development will be installed automatically. "
-        + "AMD GPUs under the RX 6800 may require additional manual setup.";
+        + "AMD GPUs under the RX 6800 may require additional manual setup. ";
     public override string LaunchCommand => Path.Combine("zluda", "zluda.exe");
+
+    public override List<LaunchOptionDefinition> LaunchOptions
+    {
+        get
+        {
+            var options = new List<LaunchOptionDefinition>
+            {
+                new()
+                {
+                    Name = "Cross Attention Method",
+                    Type = LaunchOptionType.Bool,
+                    InitialValue = "--use-quad-cross-attention",
+                    Options =
+                    [
+                        "--use-split-cross-attention",
+                        "--use-quad-cross-attention",
+                        "--use-pytorch-cross-attention",
+                        "--use-sage-attention",
+                    ],
+                },
+                new()
+                {
+                    Name = "Disable Async Offload",
+                    Type = LaunchOptionType.Bool,
+                    InitialValue = true,
+                    Options = ["--disable-async-offload"],
+                },
+                new()
+                {
+                    Name = "Disable Pinned Memory",
+                    Type = LaunchOptionType.Bool,
+                    InitialValue = true,
+                    Options = ["--disable-pinned-memory"],
+                },
+                new()
+                {
+                    Name = "Disable Smart Memory",
+                    Type = LaunchOptionType.Bool,
+                    InitialValue = false,
+                    Options = ["--disable-smart-memory"],
+                },
+                new()
+                {
+                    Name = "Disable Model/Node Caching",
+                    Type = LaunchOptionType.Bool,
+                    InitialValue = false,
+                    Options = ["--cache-none"],
+                },
+            };
+
+            options.AddRange(
+                base.LaunchOptions.Where(x => x.Name != "Cross Attention Method")
+            );
+            return options;
+        }
+    }
+
     public override IEnumerable<TorchIndex> AvailableTorchIndices => [TorchIndex.Zluda];
 
     public override TorchIndex GetRecommendedTorchVersion() => TorchIndex.Zluda;

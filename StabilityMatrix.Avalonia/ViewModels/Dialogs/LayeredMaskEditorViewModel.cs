@@ -69,7 +69,7 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
 
     /// <summary>
     ///     Cached bitmap for the currently selected image layer.
-    ///     Invalidated when source image, scale, opacity, offset, or canvas size changes.
+    ///     Invalidated when source image, scale, opacity, offset, flip, or canvas size changes.
     /// </summary>
     private SKBitmap? _cachedImageLayerBitmap;
     private MaskLayer? _cachedImageLayerSource;
@@ -78,6 +78,8 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
     private double _cachedImageLayerOpacity;
     private double _cachedImageLayerOffsetX;
     private double _cachedImageLayerOffsetY;
+    private bool _cachedImageLayerFlipH;
+    private bool _cachedImageLayerFlipV;
     private Size _cachedImageLayerCanvasSize;
 
     /// <summary>
@@ -238,6 +240,58 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
         if (SelectedLayer is not { LayerType: MaskLayerType.Image })
             return;
 
+        SelectedLayer.ImageOffsetX = 0;
+        SelectedLayer.ImageOffsetY = 0;
+        SyncSelectedLayerToCanvas();
+    }
+
+    /// <summary>
+    ///     Toggles horizontal flip for the selected image layer.
+    /// </summary>
+    [RelayCommand]
+    private void FlipImageHorizontally()
+    {
+        if (SelectedLayer is not { LayerType: MaskLayerType.Image })
+            return;
+
+        SelectedLayer.IsFlippedHorizontally = !SelectedLayer.IsFlippedHorizontally;
+        SyncSelectedLayerToCanvas();
+    }
+
+    /// <summary>
+    ///     Toggles vertical flip for the selected image layer.
+    /// </summary>
+    [RelayCommand]
+    private void FlipImageVertically()
+    {
+        if (SelectedLayer is not { LayerType: MaskLayerType.Image })
+            return;
+
+        SelectedLayer.IsFlippedVertically = !SelectedLayer.IsFlippedVertically;
+        SyncSelectedLayerToCanvas();
+    }
+
+    /// <summary>
+    ///     Scales the selected image layer to fit within the canvas bounds while maintaining aspect ratio.
+    /// </summary>
+    [RelayCommand]
+    private void FitImageToCanvas()
+    {
+        if (SelectedLayer is not { LayerType: MaskLayerType.Image, SourceImage: { } sourceImage })
+            return;
+
+        if (CanvasSize == Size.Empty)
+            return;
+
+        // Calculate scale to fit image within canvas (maintaining aspect ratio)
+        var scaleX = (double)CanvasSize.Width / sourceImage.Width;
+        var scaleY = (double)CanvasSize.Height / sourceImage.Height;
+        var fitScale = Math.Min(scaleX, scaleY);
+
+        // Clamp to valid range (0.1 to 3.0)
+        fitScale = Math.Clamp(fitScale, 0.1, 3.0);
+
+        SelectedLayer.ImageScale = fitScale;
         SelectedLayer.ImageOffsetX = 0;
         SelectedLayer.ImageOffsetY = 0;
         SyncSelectedLayerToCanvas();
@@ -1033,6 +1087,8 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
             ImageScale = SelectedLayer.ImageScale,
             ImageOffsetX = SelectedLayer.ImageOffsetX,
             ImageOffsetY = SelectedLayer.ImageOffsetY,
+            IsFlippedHorizontally = SelectedLayer.IsFlippedHorizontally,
+            IsFlippedVertically = SelectedLayer.IsFlippedVertically,
         };
 
         // Subscribe to layer property changes
@@ -1311,6 +1367,8 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
             && Math.Abs(_cachedImageLayerOpacity - layer.Opacity) < 0.001
             && Math.Abs(_cachedImageLayerOffsetX - layer.ImageOffsetX) < 0.001
             && Math.Abs(_cachedImageLayerOffsetY - layer.ImageOffsetY) < 0.001
+            && _cachedImageLayerFlipH == layer.IsFlippedHorizontally
+            && _cachedImageLayerFlipV == layer.IsFlippedVertically
             && _cachedImageLayerCanvasSize == CanvasSize
         )
         {
@@ -1341,6 +1399,8 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
         _cachedImageLayerOpacity = layer.Opacity;
         _cachedImageLayerOffsetX = layer.ImageOffsetX;
         _cachedImageLayerOffsetY = layer.ImageOffsetY;
+        _cachedImageLayerFlipH = layer.IsFlippedHorizontally;
+        _cachedImageLayerFlipV = layer.IsFlippedVertically;
         _cachedImageLayerCanvasSize = CanvasSize;
 
         return bitmap;
@@ -1479,7 +1539,7 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
     }
 
     /// <summary>
-    ///     Renders an image layer with scaling and positioning.
+    ///     Renders an image layer with scaling, positioning, and optional flipping.
     /// </summary>
     private void RenderImageLayer(SKCanvas canvas, MaskLayer layer, byte alpha)
     {
@@ -1506,7 +1566,27 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
         paint.IsAntialias = true;
         paint.FilterQuality = SKFilterQuality.High;
 
-        canvas.DrawBitmap(bitmap, destRect, paint);
+        // Apply flip transforms if needed
+        if (layer.IsFlippedHorizontally || layer.IsFlippedVertically)
+        {
+            canvas.Save();
+
+            // Calculate center of the image for flip transformation
+            var centerX = offsetX + scaledWidth / 2f;
+            var centerY = offsetY + scaledHeight / 2f;
+
+            // Translate to center, scale (flip), translate back
+            canvas.Translate(centerX, centerY);
+            canvas.Scale(layer.IsFlippedHorizontally ? -1 : 1, layer.IsFlippedVertically ? -1 : 1);
+            canvas.Translate(-centerX, -centerY);
+
+            canvas.DrawBitmap(bitmap, destRect, paint);
+            canvas.Restore();
+        }
+        else
+        {
+            canvas.DrawBitmap(bitmap, destRect, paint);
+        }
     }
 
     /// <summary>

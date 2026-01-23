@@ -609,6 +609,42 @@
                                                             </StackPanel>
                                                         </Button>
                                                     </Grid>
+                                                    <!--  Flip and Fit buttons row  -->
+                                                    <StackPanel
+                                                        IsVisible="{Binding HasImage}"
+                                                        Orientation="Horizontal"
+                                                        Spacing="4">
+                                                        <Button
+                                                            Padding="8,4"
+                                                            Classes="transparent"
+                                                            Command="{Binding $parent[controls:UserControlBase].((vmDialogs:LayeredMaskEditorViewModel)DataContext).FlipImageHorizontallyCommand}"
+                                                            ToolTip.Tip="Flip horizontally (mirror)">
+                                                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                                                <fluentIcons:SymbolIcon FontSize="14" Symbol="FlipHorizontal" />
+                                                                <TextBlock FontSize="11" Text="Flip H" />
+                                                            </StackPanel>
+                                                        </Button>
+                                                        <Button
+                                                            Padding="8,4"
+                                                            Classes="transparent"
+                                                            Command="{Binding $parent[controls:UserControlBase].((vmDialogs:LayeredMaskEditorViewModel)DataContext).FlipImageVerticallyCommand}"
+                                                            ToolTip.Tip="Flip vertically">
+                                                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                                                <fluentIcons:SymbolIcon FontSize="14" Symbol="FlipVertical" />
+                                                                <TextBlock FontSize="11" Text="Flip V" />
+                                                            </StackPanel>
+                                                        </Button>
+                                                        <Button
+                                                            Padding="8,4"
+                                                            Classes="transparent"
+                                                            Command="{Binding $parent[controls:UserControlBase].((vmDialogs:LayeredMaskEditorViewModel)DataContext).FitImageToCanvasCommand}"
+                                                            ToolTip.Tip="Fit image to canvas size">
+                                                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                                                <fluentIcons:SymbolIcon FontSize="14" Symbol="FullScreenMaximize" />
+                                                                <TextBlock FontSize="11" Text="Fit" />
+                                                            </StackPanel>
+                                                        </Button>
+                                                    </StackPanel>
                                                 </StackPanel>
 
                                                 <!--  Row 1: Paint layer: Strength + Opacity + Cond Area  -->

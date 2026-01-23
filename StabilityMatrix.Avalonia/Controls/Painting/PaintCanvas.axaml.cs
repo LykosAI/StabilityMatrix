@@ -439,8 +439,43 @@ public class PaintCanvas : TemplatedControlBase
             return;
         }
 
+        // Arrow key nudging when Move tool is selected
+        if (vm.IsMoveTool)
+        {
+            var nudgeAmount = e.KeyModifiers.HasFlag(KeyModifiers.Shift) ? 10.0 : 1.0;
+            double deltaX = 0,
+                deltaY = 0;
+
+            switch (e.Key)
+            {
+                case Key.Left:
+                    deltaX = -nudgeAmount;
+                    break;
+                case Key.Right:
+                    deltaX = nudgeAmount;
+                    break;
+                case Key.Up:
+                    deltaY = -nudgeAmount;
+                    break;
+                case Key.Down:
+                    deltaY = nudgeAmount;
+                    break;
+            }
+
+            if (deltaX != 0 || deltaY != 0)
+            {
+                // Get current offset, apply delta, and invoke callback
+                var currentOffset = vm.GetCurrentMoveOffset?.Invoke() ?? (0, 0);
+                vm.OnMoveToolDrag?.Invoke(currentOffset.X + deltaX, currentOffset.Y + deltaY);
+                RefreshCanvas();
+                e.Handled = true;
+                return;
+            }
+        }
+
         // Skip tool shortcuts if modifiers are held (to not interfere with other shortcuts)
-        if (e.KeyModifiers != KeyModifiers.None)
+        // But allow Shift for arrow key nudging (handled above)
+        if (e.KeyModifiers != KeyModifiers.None && e.KeyModifiers != KeyModifiers.Shift)
             return;
 
         switch (e.Key)

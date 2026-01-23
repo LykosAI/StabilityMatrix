@@ -133,6 +133,18 @@ public partial class MaskLayer : ObservableObject, IJsonLoadableState
     private double imageOffsetY;
 
     /// <summary>
+    /// Whether the image layer is flipped horizontally (mirrored).
+    /// </summary>
+    [ObservableProperty]
+    private bool isFlippedHorizontally;
+
+    /// <summary>
+    /// Whether the image layer is flipped vertically.
+    /// </summary>
+    [ObservableProperty]
+    private bool isFlippedVertically;
+
+    /// <summary>
     /// The prompt text for this layer's region.
     /// </summary>
     [ObservableProperty]
@@ -322,6 +334,12 @@ public partial class MaskLayer : ObservableObject, IJsonLoadableState
         if (state.TryGetPropertyValue("imageOffsetY", out var offsetYNode))
             ImageOffsetY = offsetYNode?.GetValue<double>() ?? 0.0;
 
+        if (state.TryGetPropertyValue("isFlippedHorizontally", out var flipHNode))
+            IsFlippedHorizontally = flipHNode?.GetValue<bool>() ?? false;
+
+        if (state.TryGetPropertyValue("isFlippedVertically", out var flipVNode))
+            IsFlippedVertically = flipVNode?.GetValue<bool>() ?? false;
+
         if (state.TryGetPropertyValue("prompt", out var promptNode))
             Prompt = promptNode?.GetValue<string>() ?? string.Empty;
 
@@ -389,6 +407,8 @@ public partial class MaskLayer : ObservableObject, IJsonLoadableState
             state["imageScale"] = ImageScale;
             state["imageOffsetX"] = ImageOffsetX;
             state["imageOffsetY"] = ImageOffsetY;
+            state["isFlippedHorizontally"] = IsFlippedHorizontally;
+            state["isFlippedVertically"] = IsFlippedVertically;
         }
 
         if (Paths.Count > 0)

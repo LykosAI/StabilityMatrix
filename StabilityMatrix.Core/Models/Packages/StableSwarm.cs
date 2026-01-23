@@ -384,18 +384,20 @@ public class StableSwarm(
             ["DOTNET_ROOT"] = dotnetDir.FullPath,
         };
 
-        if (aspEnvVars.TryGetValue("PATH", out var pathValue))
+        // Build PATH with required directories
+        var pathDirs = new List<string> { dotnetDir.FullPath, portableGitBin };
+
+        // Add FFmpeg to PATH if it's installed (optional - for video processing)
+        if (PrerequisiteHelper.IsFfmpegInstalled)
         {
-            aspEnvVars["PATH"] = Compat.GetEnvPathWithExtensions(
-                dotnetDir.FullPath,
-                portableGitBin,
-                pathValue
-            );
+            var ffmpegDir = Path.GetDirectoryName(PrerequisiteHelper.FfmpegPath);
+            if (!string.IsNullOrEmpty(ffmpegDir))
+            {
+                pathDirs.Add(ffmpegDir);
+            }
         }
-        else
-        {
-            aspEnvVars["PATH"] = Compat.GetEnvPathWithExtensions(dotnetDir.FullPath, portableGitBin);
-        }
+
+        aspEnvVars["PATH"] = Compat.GetEnvPathWithExtensions([.. pathDirs]);
 
         aspEnvVars.Update(settingsManager.Settings.EnvironmentVariables);
 

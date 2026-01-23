@@ -955,6 +955,9 @@ The gallery images are often inpainted, but you will get something very similar 
 
     public static MaskEditorViewModel MaskEditorViewModel => DialogFactory.Get<MaskEditorViewModel>();
 
+    public static ImageAnnotationEditorViewModel ImageAnnotationEditorViewModel =>
+        DialogFactory.Get<ImageAnnotationEditorViewModel>();
+
     public static InferenceTextToImageViewModel InferenceTextToImageViewModel =>
         DialogFactory.Get<InferenceTextToImageViewModel>(vm =>
         {

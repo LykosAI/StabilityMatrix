@@ -302,7 +302,14 @@ public class ComfyUI(
     public override string MainBranch => "master";
 
     public override IEnumerable<TorchIndex> AvailableTorchIndices =>
-        [TorchIndex.Cpu, TorchIndex.Cuda, TorchIndex.DirectMl, TorchIndex.Rocm, TorchIndex.Mps];
+        [
+            TorchIndex.Cpu,
+            TorchIndex.Cuda,
+            TorchIndex.DirectMl,
+            TorchIndex.Ipex,
+            TorchIndex.Mps,
+            TorchIndex.Rocm,
+        ];
 
     public override List<ExtraPackageCommand> GetExtraCommands()
     {
@@ -415,6 +422,7 @@ public class ComfyUI(
                 TorchaudioVersion = " ", // Request torchaudio without a specific version
                 CudaIndex = isLegacyNvidia ? "cu126" : "cu130",
                 RocmIndex = "rocm6.4",
+                XpuIndex = "xpu",
                 UpgradePackages = true,
                 PostInstallPipArgs = ["typing-extensions>=4.15.0"],
             };
@@ -490,6 +498,59 @@ public class ComfyUI(
             .ConfigureAwait(false);
 
         VenvRunner.UpdateEnvironmentVariables(GetEnvVars);
+
+        // Check for old NVIDIA driver version with cu130 installations
+        var isNvidia = SettingsManager.Settings.PreferredGpu?.IsNvidia ?? HardwareHelper.HasNvidiaGpu();
+        var isLegacyNvidia =
+            SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu() ?? HardwareHelper.HasLegacyNvidiaGpu();
+
+        if (isNvidia && !isLegacyNvidia)
+        {
+            var driverVersion = HardwareHelper.GetNvidiaDriverVersion();
+            if (driverVersion is not null && driverVersion.Major < 580)
+            {
+                // Check if torch is installed with cu130 index
+                var torchInfo = await VenvRunner.PipShow("torch").ConfigureAwait(false);
+                if (torchInfo is not null)
+                {
+                    var version = torchInfo.Version;
+                    var plusPos = version.IndexOf('+');
+                    var torchIndex = plusPos >= 0 ? version[(plusPos + 1)..] : string.Empty;
+
+                    // Only warn if using cu130 (which requires driver 580+)
+                    if (torchIndex.Equals("cu130", StringComparison.OrdinalIgnoreCase))
+                    {
+                        var warningMessage = $"""
+
+                            ============================================================
+                                            NVIDIA DRIVER WARNING
+                            ============================================================
+
+                            Your NVIDIA driver version ({driverVersion}) is older than
+                            the minimum required version (580.x) for CUDA 13.0 (cu130).
+
+                            This may cause ComfyUI to fail to start or experience issues.
+
+                            Recommended actions:
+                              1. Update your NVIDIA driver to version 580 or newer
+                              2. Or manually downgrade your torch version to use an
+                                 older torch index (e.g. cu128)
+
+                            ============================================================
+
+                            """;
+
+                        Logger.Warn(
+                            "NVIDIA driver version {DriverVersion} is below 580.x minimum for cu130 (torch index: {TorchIndex})",
+                            driverVersion,
+                            torchIndex
+                        );
+                        onConsoleOutput?.Invoke(ProcessOutput.FromStdErrLine(warningMessage));
+                        return;
+                    }
+                }
+            }
+        }
 
         VenvRunner.RunDetached(
             [Path.Combine(installLocation, options.Command ?? LaunchCommand), .. options.Arguments],
@@ -859,7 +920,19 @@ public class ComfyUI(
 
     private ImmutableDictionary<string, string> GetEnvVars(ImmutableDictionary<string, string> env)
     {
-        // if we're not on windows or we don't have a windows rocm gpu, return original env
+        // Add FFmpeg to PATH if it's installed (optional - for video processing)
+        if (PrerequisiteHelper.IsFfmpegInstalled)
+        {
+            var ffmpegDir = Path.GetDirectoryName(PrerequisiteHelper.FfmpegPath);
+            if (!string.IsNullOrEmpty(ffmpegDir))
+            {
+                var currentPath =
+                    env.GetValueOrDefault("PATH") ?? Environment.GetEnvironmentVariable("PATH") ?? "";
+                env = env.SetItem("PATH", Compat.GetEnvPathWithExtensions(ffmpegDir, currentPath));
+            }
+        }
+
+        // if we're not on windows or we don't have a windows rocm gpu, return env as-is
         var hasRocmGpu =
             SettingsManager.Settings.PreferredGpu?.IsWindowsRocmSupportedGpu()
             ?? HardwareHelper.HasWindowsRocmSupportedGpu();

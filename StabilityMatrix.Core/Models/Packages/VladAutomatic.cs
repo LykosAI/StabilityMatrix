@@ -323,7 +323,7 @@ public class VladAutomatic(
             // Run initial install
             case TorchIndex.Cuda:
                 await venvRunner
-                    .CustomInstall("launch.py --use-cuda --debug --test --uv", onConsoleOutput)
+                    .CustomInstall(["launch.py", "--use-cuda", "--debug", "--test", "--uv"], onConsoleOutput)
                     .ConfigureAwait(false);
                 break;
             case TorchIndex.Rocm:

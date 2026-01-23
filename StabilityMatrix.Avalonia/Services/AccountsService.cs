@@ -1,24 +1,15 @@
-﻿using System;
-using System.Net;
+﻿using System.Net;
 using System.Security.Claims;
-using System.Threading;
-using System.Threading.Tasks;
 using Injectio.Attributes;
 using Microsoft.Extensions.Logging;
-using Microsoft.IdentityModel.JsonWebTokens;
-using Microsoft.IdentityModel.Tokens;
-using OpenIddict.Abstractions;
 using OpenIddict.Client;
-using OpenIddict.Client.SystemNetHttp;
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Api.LykosAuthApi;
-using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Api.CivitTRPC;
 using StabilityMatrix.Core.Models.Api.Lykos;
 using StabilityMatrix.Core.Services;
-using static OpenIddict.Client.OpenIddictClientModels;
 using ApiException = Refit.ApiException;
 
 namespace StabilityMatrix.Avalonia.Services;
@@ -31,7 +22,7 @@ public class AccountsService : IAccountsService
     private readonly ILykosAuthApiV1 lykosAuthApi;
     private readonly ILykosAuthApiV2 lykosAuthApiV2;
     private readonly ICivitTRPCApi civitTRPCApi;
-    private readonly IHuggingFaceApi huggingFaceApi; // Added
+    private readonly IHuggingFaceApi huggingFaceApi;
     private readonly OpenIddictClientService openIdClient;
 
     /// <inheritdoc />
@@ -43,11 +34,16 @@ public class AccountsService : IAccountsService
     /// <inheritdoc />
     public event EventHandler<HuggingFaceAccountStatusUpdateEventArgs>? HuggingFaceAccountStatusUpdate;
 
+    /// <inheritdoc />
+    public event EventHandler<GeminiAccountStatusUpdateEventArgs>? GeminiAccountStatusUpdate;
+
     public LykosAccountStatusUpdateEventArgs? LykosStatus { get; private set; }
 
     public CivitAccountStatusUpdateEventArgs? CivitStatus { get; private set; }
 
     public HuggingFaceAccountStatusUpdateEventArgs? HuggingFaceStatus { get; private set; }
+
+    public GeminiAccountStatusUpdateEventArgs? GeminiStatus { get; private set; }
 
     public AccountsService(
         ILogger<AccountsService> logger,
@@ -55,7 +51,7 @@ public class AccountsService : IAccountsService
         ILykosAuthApiV1 lykosAuthApi,
         ILykosAuthApiV2 lykosAuthApiV2,
         ICivitTRPCApi civitTRPCApi,
-        IHuggingFaceApi huggingFaceApi, // Added
+        IHuggingFaceApi huggingFaceApi,
         OpenIddictClientService openIdClient
     )
     {
@@ -64,13 +60,14 @@ public class AccountsService : IAccountsService
         this.lykosAuthApi = lykosAuthApi;
         this.lykosAuthApiV2 = lykosAuthApiV2;
         this.civitTRPCApi = civitTRPCApi;
-        this.huggingFaceApi = huggingFaceApi; // Added
+        this.huggingFaceApi = huggingFaceApi;
         this.openIdClient = openIdClient;
 
-        // Update our own status when the Lykos account status changes
+        // Update our own status when the account status changes
         LykosAccountStatusUpdate += (_, args) => LykosStatus = args;
-        CivitAccountStatusUpdate += (_, args) => CivitStatus = args; // Assuming this was intended
+        CivitAccountStatusUpdate += (_, args) => CivitStatus = args;
         HuggingFaceAccountStatusUpdate += (_, args) => HuggingFaceStatus = args;
+        GeminiAccountStatusUpdate += (_, args) => GeminiStatus = args;
     }
 
     public async Task<bool> HasStoredLykosAccountAsync()
@@ -204,6 +201,7 @@ public class AccountsService : IAccountsService
         await RefreshLykosAsync(secrets);
         await RefreshCivitAsync(secrets);
         await RefreshHuggingFaceAsync(secrets);
+        await RefreshGeminiAsync(secrets);
     }
 
     public async Task RefreshLykosAsync()
@@ -445,5 +443,56 @@ public class AccountsService : IAccountsService
         var secrets = await secretsManager.SafeLoadAsync();
         await secretsManager.SaveAsync(secrets with { HuggingFaceToken = null });
         OnHuggingFaceAccountStatusUpdate(HuggingFaceAccountStatusUpdateEventArgs.Disconnected);
+    }
+
+    public async Task GeminiLoginAsync(string apiKey)
+    {
+        var secrets = await secretsManager.SafeLoadAsync();
+        secrets = secrets with { GeminiApiKey = apiKey };
+        await secretsManager.SaveAsync(secrets);
+        await RefreshGeminiAsync(secrets);
+    }
+
+    public async Task GeminiLogoutAsync()
+    {
+        var secrets = await secretsManager.SafeLoadAsync();
+        await secretsManager.SaveAsync(secrets with { GeminiApiKey = null });
+        OnGeminiAccountStatusUpdate(GeminiAccountStatusUpdateEventArgs.Disconnected);
+    }
+
+    public async Task RefreshGeminiAsync()
+    {
+        var secrets = await secretsManager.SafeLoadAsync();
+        await RefreshGeminiAsync(secrets);
+    }
+
+    private Task RefreshGeminiAsync(Secrets secrets)
+    {
+        // Gemini API key validation is simple - we just check if it exists
+        // No API call needed to validate since Gemini doesn't have a "whoami" endpoint
+        if (!string.IsNullOrWhiteSpace(secrets.GeminiApiKey))
+        {
+            OnGeminiAccountStatusUpdate(new GeminiAccountStatusUpdateEventArgs(true));
+        }
+        else
+        {
+            OnGeminiAccountStatusUpdate(GeminiAccountStatusUpdateEventArgs.Disconnected);
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private void OnGeminiAccountStatusUpdate(GeminiAccountStatusUpdateEventArgs e)
+    {
+        if (!e.IsConnected && GeminiStatus?.IsConnected == true)
+        {
+            logger.LogInformation("Gemini API key removed");
+        }
+        else if (e.IsConnected && GeminiStatus?.IsConnected == false)
+        {
+            logger.LogInformation("Gemini API key configured");
+        }
+
+        GeminiAccountStatusUpdate?.Invoke(this, e);
     }
 }

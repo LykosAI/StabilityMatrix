@@ -83,6 +83,17 @@ public class UnixPrerequisiteHelper(
     private string UvExtractPath => Path.Combine(AssetsDir, "uv");
     public string UvExePath => Path.Combine(UvExtractPath, "uv");
     public bool IsUvInstalled => File.Exists(UvExePath);
+
+    // FFmpeg paths
+    private string FfmpegDownloadPath =>
+        Path.Combine(AssetsDir, Compat.IsMacOS ? "ffmpeg.zip" : "ffmpeg.tar.xz");
+    private DirectoryPath FfmpegExtractPath => AssetsDir.JoinDir("ffmpeg");
+    public string FfmpegPath =>
+        Compat.IsMacOS
+            ? Path.Combine(FfmpegExtractPath, "ffmpeg")
+            : Path.Combine(FfmpegExtractPath, "bin", "ffmpeg");
+    public bool IsFfmpegInstalled => File.Exists(FfmpegPath);
+
     public DirectoryPath DotnetDir => AssetsDir.JoinDir("dotnet");
 
     // Helper method to get Python download URL for a specific version
@@ -550,6 +561,93 @@ public class UnixPrerequisiteHelper(
 
     [SupportedOSPlatform("Linux")]
     [SupportedOSPlatform("macOS")]
+    public async Task InstallFfmpegIfNecessary(IProgress<ProgressReport>? progress = null)
+    {
+        if (IsFfmpegInstalled)
+        {
+            Logger.Debug("FFmpeg already installed at {FfmpegPath}", FfmpegPath);
+            return;
+        }
+
+        Logger.Info("FFmpeg not found at {FfmpegPath}, downloading...", FfmpegPath);
+
+        Directory.CreateDirectory(AssetsDir);
+
+        var downloadUrl = Assets.FfmpegDownloadUrl.Url.ToString();
+
+        progress?.Report(
+            new ProgressReport(
+                progress: 0f,
+                isIndeterminate: false,
+                type: ProgressType.Download,
+                message: "Downloading FFmpeg..."
+            )
+        );
+
+        await downloadService.DownloadToFileAsync(downloadUrl, FfmpegDownloadPath, progress: progress);
+
+        progress?.Report(
+            new ProgressReport(
+                progress: 0.5f,
+                isIndeterminate: true,
+                type: ProgressType.Generic,
+                message: "Installing FFmpeg..."
+            )
+        );
+
+        // Extract to temp location first since archive has nested folder
+        var tempExtractPath = AssetsDir.JoinDir("ffmpeg-temp");
+        Directory.CreateDirectory(tempExtractPath);
+
+        await ArchiveHelper.Extract7ZAuto(FfmpegDownloadPath, tempExtractPath);
+
+        // Find the extracted directory (e.g., ffmpeg-n7.1-latest-linux64-lgpl-7.1)
+        var extractedDirs = Directory.GetDirectories(tempExtractPath);
+        if (extractedDirs.Length > 0)
+        {
+            var extractedDir = extractedDirs[0];
+
+            // Move to final location
+            if (FfmpegExtractPath.Exists)
+            {
+                await FfmpegExtractPath.DeleteAsync(true);
+            }
+            Directory.Move(extractedDir, FfmpegExtractPath);
+        }
+        else if (Compat.IsMacOS)
+        {
+            // macOS build might be a single file, not in a subdirectory
+            var ffmpegFile = Path.Combine(tempExtractPath, "ffmpeg");
+            if (File.Exists(ffmpegFile))
+            {
+                Directory.CreateDirectory(FfmpegExtractPath);
+                File.Move(ffmpegFile, FfmpegPath);
+            }
+        }
+
+        // Make executable
+        if (File.Exists(FfmpegPath))
+        {
+            var process = ProcessRunner.StartAnsiProcess("chmod", ["+x", FfmpegPath]);
+            await process.WaitForExitAsync();
+        }
+
+        // Cleanup
+        if (Directory.Exists(tempExtractPath))
+        {
+            Directory.Delete(tempExtractPath, true);
+        }
+        File.Delete(FfmpegDownloadPath);
+
+        progress?.Report(
+            new ProgressReport(progress: 1f, message: "FFmpeg install complete", type: ProgressType.Generic)
+        );
+
+        Logger.Info("FFmpeg installed successfully at {FfmpegPath}", FfmpegPath);
+    }
+
+    [SupportedOSPlatform("Linux")]
+    [SupportedOSPlatform("macOS")]
     public async Task InstallVirtualenvIfNecessary(
         PyVersion version,
         IProgress<ProgressReport>? progress = null
@@ -705,10 +803,6 @@ public class UnixPrerequisiteHelper(
 
         if (gpu?.Name is null || !gpu.IsAmd)
             return null;
-
-        // Normalize for safer substring checks (handles RX7800 vs RX 7800, etc.)
-        var name = gpu.Name;
-        var nameNoSpaces = name.Replace(" ", "", StringComparison.Ordinal);
 
         return gpu.GetAmdGfxArch();
     }

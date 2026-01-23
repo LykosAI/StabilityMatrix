@@ -1,4 +1,5 @@
 ﻿using System.Text.Json.Serialization;
+using DesktopNotifications;
 using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Models;
@@ -9,6 +10,7 @@ using StabilityMatrix.Avalonia.ViewModels.Inference.Video;
 using StabilityMatrix.Avalonia.Views.Inference;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
@@ -17,6 +19,8 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 [RegisterScoped<InferenceWanTextToVideoViewModel>, ManagedService]
 public class InferenceWanTextToVideoViewModel : InferenceGenerationViewModelBase, IParametersLoadableState
 {
+    private readonly INotificationService notificationService;
+
     [JsonIgnore]
     public StackCardViewModel StackCardViewModel { get; }
 
@@ -47,6 +51,7 @@ public class InferenceWanTextToVideoViewModel : InferenceGenerationViewModelBase
     )
         : base(vmFactory, inferenceClientManager, notificationService, settingsManager, runningPackageService)
     {
+        this.notificationService = notificationService;
         SeedCardViewModel = vmFactory.Get<SeedCardViewModel>();
         SeedCardViewModel.GenerateNewSeed();
 
@@ -70,8 +75,8 @@ public class InferenceWanTextToVideoViewModel : InferenceGenerationViewModelBase
 
         BatchSizeCardViewModel = vmFactory.Get<BatchSizeCardViewModel>();
 
-        VideoOutputSettingsCardViewModel = vmFactory.Get<VideoOutputSettingsCardViewModel>(
-            vm => vm.Fps = 16.0d
+        VideoOutputSettingsCardViewModel = vmFactory.Get<VideoOutputSettingsCardViewModel>(vm =>
+            vm.Fps = 16.0d
         );
 
         StackCardViewModel = vmFactory.Get<StackCardViewModel>();
@@ -94,7 +99,7 @@ public class InferenceWanTextToVideoViewModel : InferenceGenerationViewModelBase
         builder.Connections.Seed = args.SeedOverride switch
         {
             { } seed => Convert.ToUInt64(seed),
-            _ => Convert.ToUInt64(SeedCardViewModel.Seed)
+            _ => Convert.ToUInt64(SeedCardViewModel.Seed),
         };
 
         // Load models
@@ -165,13 +170,13 @@ public class InferenceWanTextToVideoViewModel : InferenceGenerationViewModelBase
                 OutputNodeNames = buildPromptArgs.Builder.Connections.OutputNodeNames.ToArray(),
                 Parameters = SaveStateToParameters(new GenerationParameters()) with
                 {
-                    Seed = Convert.ToUInt64(seed)
+                    Seed = Convert.ToUInt64(seed),
                 },
                 Project = inferenceProject,
                 FilesToTransfer = buildPromptArgs.FilesToTransfer,
                 BatchIndex = i,
                 // Only clear output images on the first batch
-                ClearOutputImages = i == 0
+                ClearOutputImages = i == 0,
             };
 
             batchArgs.Add(generationArgs);
@@ -182,6 +187,17 @@ public class InferenceWanTextToVideoViewModel : InferenceGenerationViewModelBase
         {
             await RunGeneration(args, cancellationToken);
         }
+
+        await notificationService.ShowAsync(
+            NotificationKey.Inference_BatchCompleted,
+            new Notification
+            {
+                Title = "Batch Completed",
+                Body =
+                    $"Batch of {batches} items [{Guid.NewGuid().ToString()[..7].ToLower()}] completed successfully",
+                BodyImagePath = ImageGalleryCardViewModel.ImageSources.LastOrDefault()?.LocalFile?.FullPath,
+            }
+        );
     }
 
     /// <inheritdoc />

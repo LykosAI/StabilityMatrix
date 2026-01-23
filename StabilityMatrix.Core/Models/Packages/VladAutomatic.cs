@@ -31,9 +31,9 @@ public class VladAutomatic(
     public override string Name => "automatic";
     public override string DisplayName { get; set; } = "SD.Next";
     public override string Author => "vladmandic";
-    public override string LicenseType => "AGPL-3.0";
-    public override string LicenseUrl => "https://github.com/vladmandic/automatic/blob/master/LICENSE.txt";
-    public override string Blurb => "Stable Diffusion implementation with advanced features and modern UI";
+    public override string LicenseType => "Apache License 2.0";
+    public override string LicenseUrl => "https://github.com/vladmandic/sdnext/blob/master/LICENSE.txt";
+    public override string Blurb => "SD.Next: All-in-one WebUI for AI generative image and video creation";
     public override string LaunchCommand => "launch.py";
 
     public override Uri PreviewImageUri => new("https://cdn.lykos.ai/sm/packages/vladautomatic/preview.webp");

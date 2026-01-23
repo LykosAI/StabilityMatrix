@@ -484,7 +484,11 @@ public partial class PackageCardViewModel(
                 new UpdatePackageOptions
                 {
                     VersionOptions = versionOptions,
-                    PythonOptions = { TorchIndex = Package.PreferredTorchIndex },
+                    PythonOptions =
+                    {
+                        TorchIndex = Package.PreferredTorchIndex,
+                        PythonVersion = PyVersion.TryParse(Package.PythonVersion, out var pv) ? pv : null,
+                    },
                 }
             );
             var steps = new List<IPackageStep> { updatePackageStep };
@@ -653,7 +657,13 @@ public partial class PackageCardViewModel(
                 new UpdatePackageOptions
                 {
                     VersionOptions = versionOptions,
-                    PythonOptions = { TorchIndex = Package.PreferredTorchIndex },
+                    PythonOptions =
+                    {
+                        TorchIndex = Package.PreferredTorchIndex,
+                        PythonVersion = PyVersion.TryParse(Package.PythonVersion, out var pyVer)
+                            ? pyVer
+                            : null,
+                    },
                 }
             );
             var steps = new List<IPackageStep> { updatePackageStep };

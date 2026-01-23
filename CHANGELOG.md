@@ -11,8 +11,12 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added legacy Python warning when launching InvokeAI installations using Python 3.10.11
 ### Changed
 - Disabled update checking for legacy InvokeAI installations using Python 3.10.11
-### Fixed
 - Hide rating stars in the Civitai browser page if no rating is available
+### Fixed
+- Fixed [#1513](https://github.com/LykosAI/StabilityMatrix/issues/1513), [#1518](https://github.com/LykosAI/StabilityMatrix/issues/1518) - Forge Neo update breaking things\
+- Fixed [#1505](https://github.com/LykosAI/StabilityMatrix/issues/1505) - incorrect port argument for Wan2GP
+- Possibly fix [#1502](https://github.com/LykosAI/StabilityMatrix/issues/1502) - English fonts not displaying correctly on Linux in Chinese environments
+- Fixed [#1499](https://github.com/LykosAI/StabilityMatrix/issues/1499), [#1494](https://github.com/LykosAI/StabilityMatrix/issues/1494) - Automatic1111 using old stable diffusion repo
 
 ## v2.16.0-dev.1
 ### Added

@@ -23,8 +23,17 @@ public class VladAutomatic(
     ISettingsManager settingsManager,
     IDownloadService downloadService,
     IPrerequisiteHelper prerequisiteHelper,
-    IPyInstallationManager pyInstallationManager
-) : BaseGitPackage(githubApi, settingsManager, downloadService, prerequisiteHelper, pyInstallationManager)
+    IPyInstallationManager pyInstallationManager,
+    IPipWheelService pipWheelService
+)
+    : BaseGitPackage(
+        githubApi,
+        settingsManager,
+        downloadService,
+        prerequisiteHelper,
+        pyInstallationManager,
+        pipWheelService
+    )
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -40,7 +49,7 @@ public class VladAutomatic(
     public override bool ShouldIgnoreReleases => true;
 
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Symlink;
-    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Expert;
+    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Advanced;
     public override PyVersion RecommendedPythonVersion => Python.PyInstallationManager.Python_3_12_10;
 
     public override IEnumerable<TorchIndex> AvailableTorchIndices =>

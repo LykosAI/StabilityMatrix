@@ -161,6 +161,10 @@ public class WindowsPrerequisiteHelper(
             {
                 { "PATH", Compat.GetEnvPathWithExtensions(GitBinPath) },
                 { "GIT_TERMINAL_PROMPT", "0" },
+                // Set UTF-8 locale to handle Unicode characters in paths
+                // This helps Git load libcurl-4.dll when paths contain non-ASCII characters
+                { "LC_ALL", "C.UTF-8" },
+                { "LANG", "C.UTF-8" },
             }
         );
         await process.WaitForExitAsync().ConfigureAwait(false);
@@ -179,6 +183,10 @@ public class WindowsPrerequisiteHelper(
             environmentVariables: new Dictionary<string, string>
             {
                 { "PATH", Compat.GetEnvPathWithExtensions(GitBinPath) },
+                // Set UTF-8 locale to handle Unicode characters in paths
+                // This helps Git load libcurl-4.dll when paths contain non-ASCII characters
+                { "LC_ALL", "C.UTF-8" },
+                { "LANG", "C.UTF-8" },
             }
         );
     }

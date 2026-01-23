@@ -15,9 +15,17 @@ public class DankDiffusion : BaseGitPackage
         ISettingsManager settingsManager,
         IDownloadService downloadService,
         IPrerequisiteHelper prerequisiteHelper,
-        IPyInstallationManager pyInstallationManager
+        IPyInstallationManager pyInstallationManager,
+        IPipWheelService pipWheelService
     )
-        : base(githubApi, settingsManager, downloadService, prerequisiteHelper, pyInstallationManager) { }
+        : base(
+            githubApi,
+            settingsManager,
+            downloadService,
+            prerequisiteHelper,
+            pyInstallationManager,
+            pipWheelService
+        ) { }
 
     public override string Name => "dank-diffusion";
     public override string DisplayName { get; set; } = "Dank Diffusion";

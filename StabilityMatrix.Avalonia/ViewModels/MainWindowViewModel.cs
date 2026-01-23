@@ -179,6 +179,10 @@ public partial class MainWindowViewModel : ViewModelBase
         // Initialize Discord Rich Presence (this needs LibraryDir so is set here)
         discordRichPresenceService.UpdateState();
 
+        // Ensure GPU compute capability is populated before other components check it
+        // This must run early and be awaited to prevent race conditions with package initialization
+        await Task.Run(AddComputeCapabilityIfNecessary);
+
         // Load in-progress downloads
         ProgressManagerViewModel.AddDownloads(trackedDownloadService.Downloads);
 
@@ -274,8 +278,6 @@ public partial class MainWindowViewModel : ViewModelBase
                 )
                 .SafeFireAndForget();
         }
-
-        Task.Run(AddComputeCapabilityIfNecessary).SafeFireAndForget();
 
         // Show what's new for updates
         if (settingsManager.Settings.UpdatingFromVersion is { } updatingFromVersion)

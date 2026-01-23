@@ -29,6 +29,7 @@ public abstract class BaseGitPackage : BasePackage
     protected readonly IDownloadService DownloadService;
     protected readonly IPrerequisiteHelper PrerequisiteHelper;
     protected readonly IPyInstallationManager PyInstallationManager;
+    protected readonly IPipWheelService PipWheelService;
     public IPyVenvRunner? VenvRunner;
 
     public virtual string RepositoryName => Name;
@@ -68,7 +69,8 @@ public abstract class BaseGitPackage : BasePackage
         ISettingsManager settingsManager,
         IDownloadService downloadService,
         IPrerequisiteHelper prerequisiteHelper,
-        IPyInstallationManager pyInstallationManager
+        IPyInstallationManager pyInstallationManager,
+        IPipWheelService pipWheelService
     )
         : base(settingsManager)
     {
@@ -76,6 +78,7 @@ public abstract class BaseGitPackage : BasePackage
         DownloadService = downloadService;
         PrerequisiteHelper = prerequisiteHelper;
         PyInstallationManager = pyInstallationManager;
+        PipWheelService = pipWheelService;
     }
 
     public override async Task<DownloadPackageVersionOptions?> GetLatestVersion(

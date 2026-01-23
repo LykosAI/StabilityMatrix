@@ -283,7 +283,13 @@ public class UnixPrerequisiteHelper(
         var result = await ProcessRunner.RunBashCommand(
             command,
             workingDirectory ?? string.Empty,
-            new Dictionary<string, string> { { "GIT_TERMINAL_PROMPT", "0" } }
+            new Dictionary<string, string>
+            {
+                { "GIT_TERMINAL_PROMPT", "0" },
+                // Set UTF-8 locale to handle Unicode characters in paths
+                { "LC_ALL", "C.UTF-8" },
+                { "LANG", "C.UTF-8" },
+            }
         );
         if (result.ExitCode != 0)
         {
@@ -386,7 +392,16 @@ public class UnixPrerequisiteHelper(
 
     public Task<ProcessResult> GetGitOutput(ProcessArgs args, string? workingDirectory = null)
     {
-        return ProcessRunner.RunBashCommand(args.Prepend("git"), workingDirectory ?? "");
+        return ProcessRunner.RunBashCommand(
+            args.Prepend("git"),
+            workingDirectory ?? "",
+            new Dictionary<string, string>
+            {
+                // Set UTF-8 locale to handle Unicode characters in paths
+                { "LC_ALL", "C.UTF-8" },
+                { "LANG", "C.UTF-8" },
+            }
+        );
     }
 
     private async Task<string> RunNode(

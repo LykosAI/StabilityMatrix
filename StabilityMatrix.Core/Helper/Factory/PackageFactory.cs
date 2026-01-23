@@ -17,6 +17,7 @@ public class PackageFactory : IPackageFactory
     private readonly IPyRunner pyRunner;
     private readonly IUvManager uvManager;
     private readonly IPyInstallationManager pyInstallationManager;
+    private readonly IPipWheelService pipWheelService;
 
     /// <summary>
     /// Mapping of package.Name to package
@@ -30,7 +31,8 @@ public class PackageFactory : IPackageFactory
         IDownloadService downloadService,
         IPrerequisiteHelper prerequisiteHelper,
         IPyInstallationManager pyInstallationManager,
-        IPyRunner pyRunner
+        IPyRunner pyRunner,
+        IPipWheelService pipWheelService
     )
     {
         this.githubApiCache = githubApiCache;
@@ -39,6 +41,7 @@ public class PackageFactory : IPackageFactory
         this.prerequisiteHelper = prerequisiteHelper;
         this.pyRunner = pyRunner;
         this.pyInstallationManager = pyInstallationManager;
+        this.pipWheelService = pipWheelService;
         this.basePackages = basePackages.ToDictionary(x => x.Name);
     }
 
@@ -51,42 +54,48 @@ public class PackageFactory : IPackageFactory
                 settingsManager,
                 downloadService,
                 prerequisiteHelper,
-                pyInstallationManager
+                pyInstallationManager,
+                pipWheelService
             ),
             "Fooocus" => new Fooocus(
                 githubApiCache,
                 settingsManager,
                 downloadService,
                 prerequisiteHelper,
-                pyInstallationManager
+                pyInstallationManager,
+                pipWheelService
             ),
             "stable-diffusion-webui" => new A3WebUI(
                 githubApiCache,
                 settingsManager,
                 downloadService,
                 prerequisiteHelper,
-                pyInstallationManager
+                pyInstallationManager,
+                pipWheelService
             ),
             "Fooocus-ControlNet-SDXL" => new FocusControlNet(
                 githubApiCache,
                 settingsManager,
                 downloadService,
                 prerequisiteHelper,
-                pyInstallationManager
+                pyInstallationManager,
+                pipWheelService
             ),
             "Fooocus-MRE" => new FooocusMre(
                 githubApiCache,
                 settingsManager,
                 downloadService,
                 prerequisiteHelper,
-                pyInstallationManager
+                pyInstallationManager,
+                pipWheelService
             ),
             "InvokeAI" => new InvokeAI(
                 githubApiCache,
                 settingsManager,
                 downloadService,
                 prerequisiteHelper,
-                pyInstallationManager
+                pyInstallationManager,
+                pipWheelService
             ),
             "kohya_ss" => new KohyaSs(
                 githubApiCache,
@@ -94,161 +103,184 @@ public class PackageFactory : IPackageFactory
                 downloadService,
                 prerequisiteHelper,
                 pyRunner,
-                pyInstallationManager
+                pyInstallationManager,
+                pipWheelService
             ),
             "OneTrainer" => new OneTrainer(
                 githubApiCache,
                 settingsManager,
                 downloadService,
                 prerequisiteHelper,
-                pyInstallationManager
+                pyInstallationManager,
+                pipWheelService
             ),
             "RuinedFooocus" => new RuinedFooocus(
                 githubApiCache,
                 settingsManager,
                 downloadService,
                 prerequisiteHelper,
-                pyInstallationManager
+                pyInstallationManager,
+                pipWheelService
             ),
             "stable-diffusion-webui-forge" => new SDWebForge(
                 githubApiCache,
                 settingsManager,
                 downloadService,
                 prerequisiteHelper,
-                pyInstallationManager
+                pyInstallationManager,
+                pipWheelService
             ),
             "stable-diffusion-webui-directml" => new StableDiffusionDirectMl(
                 githubApiCache,
                 settingsManager,
                 downloadService,
                 prerequisiteHelper,
-                pyInstallationManager
+                pyInstallationManager,
+                pipWheelService
             ),
             "stable-diffusion-webui-ux" => new StableDiffusionUx(
                 githubApiCache,
                 settingsManager,
                 downloadService,
                 prerequisiteHelper,
-                pyInstallationManager
+                pyInstallationManager,
+                pipWheelService
             ),
             "StableSwarmUI" => new StableSwarm(
                 githubApiCache,
                 settingsManager,
                 downloadService,
                 prerequisiteHelper,
-                pyInstallationManager
+                pyInstallationManager,
+                pipWheelService
             ),
             "automatic" => new VladAutomatic(
                 githubApiCache,
                 settingsManager,
                 downloadService,
                 prerequisiteHelper,
-                pyInstallationManager
+                pyInstallationManager,
+                pipWheelService
             ),
             "voltaML-fast-stable-diffusion" => new VoltaML(
                 githubApiCache,
                 settingsManager,
                 downloadService,
                 prerequisiteHelper,
-                pyInstallationManager
+                pyInstallationManager,
+                pipWheelService
             ),
             "sdfx" => new Sdfx(
                 githubApiCache,
                 settingsManager,
                 downloadService,
                 prerequisiteHelper,
-                pyInstallationManager
+                pyInstallationManager,
+                pipWheelService
             ),
             "mashb1t-fooocus" => new Mashb1tFooocus(
                 githubApiCache,
                 settingsManager,
                 downloadService,
                 prerequisiteHelper,
-                pyInstallationManager
+                pyInstallationManager,
+                pipWheelService
             ),
             "reforge" => new Reforge(
                 githubApiCache,
                 settingsManager,
                 downloadService,
                 prerequisiteHelper,
-                pyInstallationManager
+                pyInstallationManager,
+                pipWheelService
             ),
             "FluxGym" => new FluxGym(
                 githubApiCache,
                 settingsManager,
                 downloadService,
                 prerequisiteHelper,
-                pyInstallationManager
+                pyInstallationManager,
+                pipWheelService
             ),
             "SimpleSDXL" => new SimpleSDXL(
                 githubApiCache,
                 settingsManager,
                 downloadService,
                 prerequisiteHelper,
-                pyInstallationManager
+                pyInstallationManager,
+                pipWheelService
             ),
             "Cogstudio" => new Cogstudio(
                 githubApiCache,
                 settingsManager,
                 downloadService,
                 prerequisiteHelper,
-                pyInstallationManager
+                pyInstallationManager,
+                pipWheelService
             ),
             "ComfyUI-Zluda" => new ComfyZluda(
                 githubApiCache,
                 settingsManager,
                 downloadService,
                 prerequisiteHelper,
-                pyInstallationManager
+                pyInstallationManager,
+                pipWheelService
             ),
             "stable-diffusion-webui-amdgpu-forge" => new ForgeAmdGpu(
                 githubApiCache,
                 settingsManager,
                 downloadService,
                 prerequisiteHelper,
-                pyInstallationManager
+                pyInstallationManager,
+                pipWheelService
             ),
             "forge-classic" => new ForgeClassic(
                 githubApiCache,
                 settingsManager,
                 downloadService,
                 prerequisiteHelper,
-                pyInstallationManager
+                pyInstallationManager,
+                pipWheelService
             ),
             "forge-neo" => new ForgeNeo(
                 githubApiCache,
                 settingsManager,
                 downloadService,
                 prerequisiteHelper,
-                pyInstallationManager
+                pyInstallationManager,
+                pipWheelService
             ),
             "framepack" => new FramePack(
                 githubApiCache,
                 settingsManager,
                 downloadService,
                 prerequisiteHelper,
-                pyInstallationManager
+                pyInstallationManager,
+                pipWheelService
             ),
             "framepack-studio" => new FramePackStudio(
                 githubApiCache,
                 settingsManager,
                 downloadService,
                 prerequisiteHelper,
-                pyInstallationManager
+                pyInstallationManager,
+                pipWheelService
             ),
             "ai-toolkit" => new AiToolkit(
                 githubApiCache,
                 settingsManager,
                 downloadService,
                 prerequisiteHelper,
-                pyInstallationManager
+                pyInstallationManager,
+                pipWheelService
             ),
             "Wan2GP" => new Wan2GP(
                 githubApiCache,
                 settingsManager,
                 downloadService,
                 prerequisiteHelper,
-                pyInstallationManager
+                pyInstallationManager,
+                pipWheelService
             ),
             _ => throw new ArgumentOutOfRangeException(nameof(installedPackage)),
         };

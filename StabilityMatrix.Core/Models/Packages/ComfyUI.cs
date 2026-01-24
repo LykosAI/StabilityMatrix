@@ -305,6 +305,13 @@ public class ComfyUI(
                 Type = LaunchOptionType.Bool,
                 Options = ["--auto-launch"],
             },
+            new()
+            {
+                Name = "Enable Manager",
+                Type = LaunchOptionType.Bool,
+                InitialValue = true,
+                Options = ["--enable-manager"],
+            },
             LaunchOptionDefinition.Extras,
         ];
 
@@ -489,6 +496,29 @@ public class ComfyUI(
         catch (Exception e)
         {
             Logger.Error(e, "Failed to verify/update SageAttention after installation");
+        }
+
+        // Install Comfy Manager (built-in to ComfyUI)
+        try
+        {
+            var managerRequirementsFile = Path.Combine(installLocation, "manager_requirements.txt");
+            if (File.Exists(managerRequirementsFile))
+            {
+                progress?.Report(
+                    new ProgressReport(-1f, "Installing Comfy Manager requirements...", isIndeterminate: true)
+                );
+
+                var pipArgs = new PipInstallArgs().AddArg("-r").AddArg(managerRequirementsFile);
+                await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
+
+                progress?.Report(
+                    new ProgressReport(-1f, "Comfy Manager installed successfully", isIndeterminate: true)
+                );
+            }
+        }
+        catch (Exception e)
+        {
+            Logger.Error(e, "Failed to install Comfy Manager requirements");
         }
 
         progress?.Report(new ProgressReport(1, "Install complete", isIndeterminate: false));

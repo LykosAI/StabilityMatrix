@@ -237,25 +237,40 @@ public partial class PackageInstallDetailViewModel(
         var installedVersion = new InstalledPackageVersion();
         if (IsReleaseMode)
         {
-            downloadOptions.VersionTag =
-                SelectedVersion?.TagName ?? throw new NullReferenceException("Selected version is null");
-            downloadOptions.IsLatest = AvailableVersions?.First().TagName == downloadOptions.VersionTag;
-            downloadOptions.IsPrerelease = SelectedVersion.IsPrerelease;
+            if (SelectedVersion is not null)
+            {
+                downloadOptions.VersionTag = SelectedVersion.TagName;
+                downloadOptions.IsLatest =
+                    AvailableVersions?.FirstOrDefault()?.TagName == downloadOptions.VersionTag;
+                downloadOptions.IsPrerelease = SelectedVersion.IsPrerelease;
 
-            installedVersion.InstalledReleaseVersion = downloadOptions.VersionTag;
-            installedVersion.IsPrerelease = SelectedVersion.IsPrerelease;
+                installedVersion.InstalledReleaseVersion = downloadOptions.VersionTag;
+                installedVersion.IsPrerelease = SelectedVersion.IsPrerelease;
+            }
+            else
+            {
+                downloadOptions.IsLatest = true;
+                downloadOptions.BranchName = SelectedPackage.MainBranch;
+                installedVersion.InstalledBranch = SelectedPackage.MainBranch;
+            }
         }
         else
         {
-            downloadOptions.CommitHash =
-                SelectedCommit?.Sha ?? throw new NullReferenceException("Selected commit is null");
-            downloadOptions.BranchName =
-                SelectedVersion?.TagName ?? throw new NullReferenceException("Selected version is null");
-            downloadOptions.IsLatest = AvailableCommits?.First().Sha == SelectedCommit.Sha;
+            if (SelectedCommit is not null && SelectedVersion is not null)
+            {
+                downloadOptions.CommitHash = SelectedCommit.Sha;
+                downloadOptions.BranchName = SelectedVersion.TagName;
+                downloadOptions.IsLatest = AvailableCommits?.FirstOrDefault()?.Sha == SelectedCommit.Sha;
 
-            installedVersion.InstalledBranch =
-                SelectedVersion?.TagName ?? throw new NullReferenceException("Selected version is null");
-            installedVersion.InstalledCommitSha = downloadOptions.CommitHash;
+                installedVersion.InstalledBranch = SelectedVersion.TagName;
+                installedVersion.InstalledCommitSha = downloadOptions.CommitHash;
+            }
+            else
+            {
+                downloadOptions.IsLatest = true;
+                downloadOptions.BranchName = SelectedPackage.MainBranch;
+                installedVersion.InstalledBranch = SelectedPackage.MainBranch;
+            }
         }
 
         var pipOverrides = PythonPackageSpecifiersViewModel.GetSpecifiers().ToList();

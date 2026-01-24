@@ -47,6 +47,18 @@ public class ForgeClassic(
     public override PyVersion RecommendedPythonVersion => Python.PyInstallationManager.Python_3_11_13;
     public override PackageType PackageType => PackageType.Legacy;
 
+    public override Dictionary<SharedOutputType, IReadOnlyList<string>> SharedOutputFolders =>
+        new()
+        {
+            [SharedOutputType.Extras] = ["output/extras-images"],
+            [SharedOutputType.Saved] = ["output/images"],
+            [SharedOutputType.Img2Img] = ["output/img2img-images"],
+            [SharedOutputType.Text2Img] = ["output/txt2img-images"],
+            [SharedOutputType.Img2ImgGrids] = ["output/img2img-grids"],
+            [SharedOutputType.Text2ImgGrids] = ["output/txt2img-grids"],
+            [SharedOutputType.SVD] = ["output/videos"],
+        };
+
     public override List<LaunchOptionDefinition> LaunchOptions =>
         [
             new()

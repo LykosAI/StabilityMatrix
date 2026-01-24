@@ -59,7 +59,7 @@ public class InferenceWanTextToVideoViewModel : InferenceGenerationViewModelBase
             samplerCard.IsSamplerSelectionEnabled = true;
             samplerCard.IsSchedulerSelectionEnabled = true;
             samplerCard.DenoiseStrength = 1.0d;
-            samplerCard.EnableAddons = false;
+            samplerCard.EnableAddons = true;
             samplerCard.IsLengthEnabled = true;
             samplerCard.Width = 832;
             samplerCard.Height = 480;
@@ -70,8 +70,8 @@ public class InferenceWanTextToVideoViewModel : InferenceGenerationViewModelBase
 
         BatchSizeCardViewModel = vmFactory.Get<BatchSizeCardViewModel>();
 
-        VideoOutputSettingsCardViewModel = vmFactory.Get<VideoOutputSettingsCardViewModel>(
-            vm => vm.Fps = 16.0d
+        VideoOutputSettingsCardViewModel = vmFactory.Get<VideoOutputSettingsCardViewModel>(vm =>
+            vm.Fps = 16.0d
         );
 
         StackCardViewModel = vmFactory.Get<StackCardViewModel>();
@@ -89,16 +89,17 @@ public class InferenceWanTextToVideoViewModel : InferenceGenerationViewModelBase
     {
         base.BuildPrompt(args);
 
+        var applyArgs = args.ToModuleApplyStepEventArgs();
         var builder = args.Builder;
 
         builder.Connections.Seed = args.SeedOverride switch
         {
             { } seed => Convert.ToUInt64(seed),
-            _ => Convert.ToUInt64(SeedCardViewModel.Seed)
+            _ => Convert.ToUInt64(SeedCardViewModel.Seed),
         };
 
         // Load models
-        ModelCardViewModel.ApplyStep(args);
+        ModelCardViewModel.ApplyStep(applyArgs);
 
         builder.SetupEmptyLatentSource(
             SamplerCardViewModel.Width,
@@ -109,14 +110,16 @@ public class InferenceWanTextToVideoViewModel : InferenceGenerationViewModelBase
             LatentType.Hunyuan
         );
 
-        BatchSizeCardViewModel.ApplyStep(args);
+        BatchSizeCardViewModel.ApplyStep(applyArgs);
 
-        PromptCardViewModel.ApplyStep(args);
+        PromptCardViewModel.ApplyStep(applyArgs);
 
-        SamplerCardViewModel.ApplyStep(args);
+        SamplerCardViewModel.ApplyStep(applyArgs);
+
+        applyArgs.InvokeAllPreOutputActions();
 
         // Animated webp output
-        VideoOutputSettingsCardViewModel.ApplyStep(args);
+        VideoOutputSettingsCardViewModel.ApplyStep(applyArgs);
     }
 
     /// <inheritdoc />
@@ -165,13 +168,13 @@ public class InferenceWanTextToVideoViewModel : InferenceGenerationViewModelBase
                 OutputNodeNames = buildPromptArgs.Builder.Connections.OutputNodeNames.ToArray(),
                 Parameters = SaveStateToParameters(new GenerationParameters()) with
                 {
-                    Seed = Convert.ToUInt64(seed)
+                    Seed = Convert.ToUInt64(seed),
                 },
                 Project = inferenceProject,
                 FilesToTransfer = buildPromptArgs.FilesToTransfer,
                 BatchIndex = i,
                 // Only clear output images on the first batch
-                ClearOutputImages = i == 0
+                ClearOutputImages = i == 0,
             };
 
             batchArgs.Add(generationArgs);

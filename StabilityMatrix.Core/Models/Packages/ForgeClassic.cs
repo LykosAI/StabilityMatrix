@@ -30,6 +30,8 @@ public class ForgeClassic(
         pipWheelService
     )
 {
+    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
     public override string Name => "forge-classic";
     public override string Author => "Haoming02";
     public override string RepositoryName => "sd-webui-forge-classic";
@@ -248,6 +250,42 @@ public class ForgeClassic(
         await PipWheelService
             .InstallNunchakuAsync(venvRunner, gpuInfo, progress, "1.1.0")
             .ConfigureAwait(false);
+
+        // Update Triton and SageAttention only if they're already installed
+        // This keeps them compatible when torch updates, without forcing installation for new users
+        // (disabled by default due to https://github.com/Haoming02/sd-webui-forge-classic/issues/612)
+        try
+        {
+            var tritonInfo = await venvRunner.PipShow("triton").ConfigureAwait(false);
+            var sageInfo = await venvRunner.PipShow("sageattention").ConfigureAwait(false);
+
+            if (tritonInfo is not null || sageInfo is not null)
+            {
+                var tritonVersion = Compat.IsWindows ? "3.5.1.post22" : "3.5.1";
+
+                if (tritonInfo is not null)
+                {
+                    progress?.Report(new ProgressReport(-1f, "Updating Triton...", isIndeterminate: true));
+                    await PipWheelService
+                        .InstallTritonAsync(venvRunner, progress, tritonVersion)
+                        .ConfigureAwait(false);
+                }
+
+                if (sageInfo is not null)
+                {
+                    progress?.Report(
+                        new ProgressReport(-1f, "Updating SageAttention...", isIndeterminate: true)
+                    );
+                    await PipWheelService
+                        .InstallSageAttentionAsync(venvRunner, gpuInfo, progress, "2.2.0")
+                        .ConfigureAwait(false);
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            Logger.Error(e, "Failed to verify/update Triton and SageAttention after installation");
+        }
 
         progress?.Report(new ProgressReport(1f, "Install complete", isIndeterminate: false));
     }

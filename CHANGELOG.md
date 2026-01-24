@@ -20,10 +20,12 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Updated gfx110X Windows ROCm nightly index - thanks to @NeuralFault!
 - Updated ComfyUI-Zluda install to more closely match the author's intended installation method - thanks to @NeuralFault!
 ### Fixed
-- Fixed [#1513](https://github.com/LykosAI/StabilityMatrix/issues/1513), [#1518](https://github.com/LykosAI/StabilityMatrix/issues/1518), [#1488](https://github.com/LykosAI/StabilityMatrix/issues/1488) - Forge Neo update breaking things\
+- Fixed [#1529](https://github.com/LykosAI/StabilityMatrix/issues/1529) - "Selected commit is null" error when installing packages and rate limited by GitHub
+- Fixed [#1525](https://github.com/LykosAI/StabilityMatrix/issues/1525) - Crash after downloading a model
+- Fixed [#1523](https://github.com/LykosAI/StabilityMatrix/issues/1523), [#1499](https://github.com/LykosAI/StabilityMatrix/issues/1499), [#1494](https://github.com/LykosAI/StabilityMatrix/issues/1494) - Automatic1111 using old stable diffusion repo
+- Fixed [#1518](https://github.com/LykosAI/StabilityMatrix/issues/1518), [#1513](https://github.com/LykosAI/StabilityMatrix/issues/1513), [#1488](https://github.com/LykosAI/StabilityMatrix/issues/1488) - Forge Neo update breaking things
 - Fixed [#1505](https://github.com/LykosAI/StabilityMatrix/issues/1505) - incorrect port argument for Wan2GP
 - Possibly fix [#1502](https://github.com/LykosAI/StabilityMatrix/issues/1502) - English fonts not displaying correctly on Linux in Chinese environments
-- Fixed [#1499](https://github.com/LykosAI/StabilityMatrix/issues/1499), [#1494](https://github.com/LykosAI/StabilityMatrix/issues/1494) - Automatic1111 using old stable diffusion repo
 - Fixed [#1476](https://github.com/LykosAI/StabilityMatrix/issues/1476) - Incorrect shared output folder for Forge Classic/Neo
 - Fixed [#1466](https://github.com/LykosAI/StabilityMatrix/issues/1466) - crash after moving portable install
 - Fixed [#1445](https://github.com/LykosAI/StabilityMatrix/issues/1445) - Linux app updates not actually updating - thanks to @NeuralFault!

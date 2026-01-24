@@ -52,9 +52,22 @@ A massive thank you to our esteemed Visionaries: **Waterclouds**, **JungleDragon
 ## v2.15.5
 ### Added
 - Added new package - [Wan2GP](https://github.com/deepbeepmeep/Wan2GP)
+- Added [Stable Diffusion WebUI Forge - Neo](https://github.com/Haoming02/sd-webui-forge-classic/tree/neo) as a separate package for convenience
 - Added Tiled VAE decoding as an Inference addon thanks to @NeuralFault!
+- Added togglable `--uv` argument to the SD.Next launch options
+### Changed
+- Moved the original Stable Diffusion WebUI Forge to the "Legacy" packages tab due to inactivity
+- Updated to cu130 torch index for ComfyUI installs with Nvidia GPUs
+- Consolidated and fixed AMD GPU architecture detection
+- Updated SageAttention installer to latest v2.2.0-windows.post4 version
+- Updated torch index for Forge-based UIs to rocm6.4 / cu128 depending on GPU - thanks to @NeuralFault!
 ### Fixed
+- Fixed [#1450](https://github.com/LykosAI/StabilityMatrix/issues/1450) - Older SD.Next not launching due to forced `--uv` argument
 - Fixed duplicate custom node installations when installing workflows from the Workflow Browser - thanks again to @NeuralFault!
+#### 🌟 Visionaries
+To our incredible Visionaries: **Waterclouds**, **JungleDragon**, **bluepopsicle**, **Bob S**, and **whudunit**! Your generosity drives this project forward and helps us turn ideas into reality. Thank you for being such a vital part of Stability Matrix!
+#### 🚀 Pioneers
+A massive thank you to our Pioneer crew! Your support keeps the lights on and the updates flowing. Shoutout to: **Szir777**, **Noah M**, **[USA]TechDude**, **Thom**, **SeraphOfSalem**, **Desert Viber**, **Adam**, **Droolguy**, **ACTUALLY_the_Real_Willem_Dafoe**, **takyamtom**, **robek**, **Phil R**, **Tundra Everquill**, **TheTekknician**, and a warm welcome to our new Pioneers, **Benjamin M** and **Ghislain G**!
 
 ## v2.15.4
 ### Changed

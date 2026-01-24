@@ -382,7 +382,7 @@ public class ComfyUI(
             var indexUrl = gfxArch switch
             {
                 "gfx1151" => "https://rocm.nightlies.amd.com/v2/gfx1151",
-                _ when gfxArch.StartsWith("gfx110") => "https://rocm.nightlies.amd.com/v2/gfx110X-dgpu",
+                _ when gfxArch.StartsWith("gfx110") => "https://rocm.nightlies.amd.com/v2/gfx110X-all",
                 _ when gfxArch.StartsWith("gfx120") => "https://rocm.nightlies.amd.com/v2/gfx120X-all",
                 _ => throw new ArgumentOutOfRangeException(
                     nameof(gfxArch),
@@ -870,6 +870,8 @@ public class ComfyUI(
         // set some experimental speed improving env vars for Windows ROCm
         return env.SetItem("PYTORCH_TUNABLEOP_ENABLED", "1")
             .SetItem("MIOPEN_FIND_MODE", "2")
-            .SetItem("TORCH_ROCM_AOTRITON_ENABLE_EXPERIMENTAL", "1");
+            .SetItem("TORCH_ROCM_AOTRITON_ENABLE_EXPERIMENTAL", "1")
+            .SetItem("PYTORCH_ALLOC_CONF", "max_split_size_mb:6144,garbage_collection_threshold:0.8") // greatly helps prevent GPU OOM and instability/driver timeouts/OS hard locks and decreases dependency on Tiled VAE at standard res's
+            .SetItem("COMFYUI_ENABLE_MIOPEN", "1"); // re-enables "cudnn" in ComfyUI as it's needed for MiOpen to function properly
     }
 }

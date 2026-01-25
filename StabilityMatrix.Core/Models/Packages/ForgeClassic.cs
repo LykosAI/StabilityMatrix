@@ -1,5 +1,4 @@
 ﻿using Injectio.Attributes;
-using NLog;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.HardwareInfo;
@@ -30,8 +29,6 @@ public class ForgeClassic(
         pipWheelService
     )
 {
-    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-
     public override string Name => "forge-classic";
     public override string Author => "Haoming02";
     public override string RepositoryName => "sd-webui-forge-classic";
@@ -193,98 +190,34 @@ public class ForgeClassic(
             )
             .ConfigureAwait(false);
 
-        // Dynamically discover all requirements files
-        var requirementsPaths = new List<string> { "requirements.txt" };
-        var extensionsBuiltinDir = new DirectoryPath(installLocation, "extensions-builtin");
-        if (extensionsBuiltinDir.Exists)
+        progress?.Report(new ProgressReport(-1f, "Running install script...", isIndeterminate: true));
+
+        // Build args for their launch.py - use --uv for fast installs, --exit to quit after setup
+        var launchArgs = new List<string> { "launch.py", "--uv", "--exit" };
+
+        // For Ampere or newer GPUs, enable sage attention, flash attention, and nunchaku
+        var isAmpereOrNewer =
+            SettingsManager.Settings.PreferredGpu?.IsAmpereOrNewerGpu()
+            ?? HardwareHelper.IterGpuInfo().Any(x => x.IsNvidia && x.IsAmpereOrNewerGpu());
+
+        if (isAmpereOrNewer)
         {
-            requirementsPaths.AddRange(
-                extensionsBuiltinDir
-                    .EnumerateFiles("requirements.txt", EnumerationOptionConstants.AllDirectories)
-                    .Select(f => Path.GetRelativePath(installLocation, f.ToString()))
+            launchArgs.Add("--sage");
+            launchArgs.Add("--flash");
+            launchArgs.Add("--nunchaku");
+        }
+
+        // Run their install script with our venv Python
+        venvRunner.WorkingDirectory = new DirectoryPath(installLocation);
+        venvRunner.RunDetached([.. launchArgs], onConsoleOutput);
+
+        await venvRunner.Process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
+
+        if (venvRunner.Process.ExitCode != 0)
+        {
+            throw new InvalidOperationException(
+                $"Install script failed with exit code {venvRunner.Process.ExitCode}"
             );
-        }
-
-        var isLegacyNvidia =
-            SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu() ?? HardwareHelper.HasLegacyNvidiaGpu();
-
-        var config = new PipInstallConfig
-        {
-            RequirementsFilePaths = requirementsPaths,
-            TorchVersion = "==2.9.1",
-            TorchvisionVersion = "==0.24.1",
-            XformersVersion = "==0.0.33.post2",
-            CudaIndex = isLegacyNvidia ? "cu126" : "cu130",
-            UpgradePackages = true,
-            ExtraPipArgs =
-            [
-                "https://github.com/openai/CLIP/archive/d50d76daa670286dd6cacf3bcd80b5e4823fc8e1.zip",
-                "packaging==25.0",
-                "bitsandbytes==0.48.2",
-            ],
-            PostInstallPipArgs = ["numpy==1.26.4"],
-        };
-
-        await StandardPipInstallProcessAsync(
-                venvRunner,
-                options,
-                installedPackage,
-                config,
-                onConsoleOutput,
-                progress,
-                cancellationToken
-            )
-            .ConfigureAwait(false);
-
-        var gpuInfo =
-            SettingsManager.Settings.PreferredGpu
-            ?? HardwareHelper.IterGpuInfo().FirstOrDefault(x => x.IsNvidia);
-
-        // triton / sage disabled by default due to https://github.com/Haoming02/sd-webui-forge-classic/issues/612
-
-        // var tritonVersion = Compat.IsWindows ? "3.5.1.post22" : "3.5.1";
-        //
-        // await PipWheelService.InstallTritonAsync(venvRunner, progress, tritonVersion).ConfigureAwait(false);
-        // await PipWheelService.InstallSageAttentionAsync(venvRunner, gpuInfo, progress, "2.2.0").ConfigureAwait(false);
-        await PipWheelService.InstallFlashAttentionAsync(venvRunner, progress, "2.8.3").ConfigureAwait(false);
-        await PipWheelService
-            .InstallNunchakuAsync(venvRunner, gpuInfo, progress, "1.1.0")
-            .ConfigureAwait(false);
-
-        // Update Triton and SageAttention only if they're already installed
-        // This keeps them compatible when torch updates, without forcing installation for new users
-        // (disabled by default due to https://github.com/Haoming02/sd-webui-forge-classic/issues/612)
-        try
-        {
-            var tritonInfo = await venvRunner.PipShow("triton").ConfigureAwait(false);
-            var sageInfo = await venvRunner.PipShow("sageattention").ConfigureAwait(false);
-
-            if (tritonInfo is not null || sageInfo is not null)
-            {
-                var tritonVersion = Compat.IsWindows ? "3.5.1.post22" : "3.5.1";
-
-                if (tritonInfo is not null)
-                {
-                    progress?.Report(new ProgressReport(-1f, "Updating Triton...", isIndeterminate: true));
-                    await PipWheelService
-                        .InstallTritonAsync(venvRunner, progress, tritonVersion)
-                        .ConfigureAwait(false);
-                }
-
-                if (sageInfo is not null)
-                {
-                    progress?.Report(
-                        new ProgressReport(-1f, "Updating SageAttention...", isIndeterminate: true)
-                    );
-                    await PipWheelService
-                        .InstallSageAttentionAsync(venvRunner, gpuInfo, progress, "2.2.0")
-                        .ConfigureAwait(false);
-                }
-            }
-        }
-        catch (Exception e)
-        {
-            Logger.Error(e, "Failed to verify/update Triton and SageAttention after installation");
         }
 
         progress?.Report(new ProgressReport(1f, "Install complete", isIndeterminate: false));

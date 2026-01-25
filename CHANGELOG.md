@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Updated ComfyUI installations and updates to automatically install ComfyUI Manager
 - Updated gfx110X Windows ROCm nightly index - thanks to @NeuralFault!
 - Updated ComfyUI-Zluda install to more closely match the author's intended installation method - thanks to @NeuralFault!
+- Updated Forge Classic installs/updates to use the upstream install script for better version compatibility with torch/sage/triton/nunchaku
 ### Fixed
 - Fixed [#1529](https://github.com/LykosAI/StabilityMatrix/issues/1529) - "Selected commit is null" error when installing packages and rate limited by GitHub
 - Fixed [#1525](https://github.com/LykosAI/StabilityMatrix/issues/1525) - Crash after downloading a model

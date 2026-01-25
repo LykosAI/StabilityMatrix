@@ -270,9 +270,16 @@ public class ForgeClassic(
             return;
 
         await using var transaction = settingsManager.BeginTransaction();
-        var attentionOptions = transaction
-            .Settings.InstalledPackages.First(x => x.Id == installedPackage.Id)
-            .LaunchArgs?.Where(opt => opt.Name.Contains("attention", StringComparison.OrdinalIgnoreCase));
+        var packageInSettings = transaction.Settings.InstalledPackages.FirstOrDefault(x =>
+            x.Id == installedPackage.Id
+        );
+
+        if (packageInSettings is null)
+            return;
+
+        var attentionOptions = packageInSettings.LaunchArgs?.Where(opt =>
+            opt.Name.Contains("attention", StringComparison.OrdinalIgnoreCase)
+        );
 
         if (attentionOptions is not null)
         {
@@ -282,9 +289,9 @@ public class ForgeClassic(
             }
         }
 
-        var sageAttention = transaction
-            .Settings.InstalledPackages.First(x => x.Id == installedPackage.Id)
-            .LaunchArgs?.FirstOrDefault(opt => opt.Name.Contains("sage", StringComparison.OrdinalIgnoreCase));
+        var sageAttention = packageInSettings.LaunchArgs?.FirstOrDefault(opt =>
+            opt.Name.Contains("sage", StringComparison.OrdinalIgnoreCase)
+        );
 
         if (sageAttention is not null)
         {
@@ -292,16 +299,14 @@ public class ForgeClassic(
         }
         else
         {
-            transaction
-                .Settings.InstalledPackages.First(x => x.Id == installedPackage.Id)
-                .LaunchArgs?.Add(
-                    new LaunchOption
-                    {
-                        Name = "--sage",
-                        Type = LaunchOptionType.Bool,
-                        OptionValue = true,
-                    }
-                );
+            packageInSettings.LaunchArgs?.Add(
+                new LaunchOption
+                {
+                    Name = "--sage",
+                    Type = LaunchOptionType.Bool,
+                    OptionValue = true,
+                }
+            );
         }
     }
 }

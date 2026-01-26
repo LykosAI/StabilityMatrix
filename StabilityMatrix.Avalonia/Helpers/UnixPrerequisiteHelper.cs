@@ -35,9 +35,9 @@ public class UnixPrerequisiteHelper(
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
     private const string UvMacDownloadUrl =
-        "https://github.com/astral-sh/uv/releases/download/0.8.4/uv-aarch64-apple-darwin.tar.gz";
+        "https://github.com/astral-sh/uv/releases/download/0.9.26/uv-aarch64-apple-darwin.tar.gz";
     private const string UvLinuxDownloadUrl =
-        "https://github.com/astral-sh/uv/releases/download/0.8.4/uv-x86_64-unknown-linux-gnu.tar.gz";
+        "https://github.com/astral-sh/uv/releases/download/0.9.26/uv-x86_64-unknown-linux-gnu.tar.gz";
 
     private DirectoryPath HomeDir => settingsManager.LibraryDir;
     private DirectoryPath AssetsDir => HomeDir.JoinDir("Assets");
@@ -75,7 +75,7 @@ public class UnixPrerequisiteHelper(
     // Cached store of whether or not git is installed
     private bool? isGitInstalled;
 
-    private string ExpectedUvVersion => "0.8.4";
+    private string ExpectedUvVersion => "0.9.26";
 
     public bool IsVcBuildToolsInstalled => false;
     public bool IsHipSdkInstalled => false;
@@ -272,7 +272,13 @@ public class UnixPrerequisiteHelper(
         var result = await ProcessRunner.RunBashCommand(
             command,
             workingDirectory ?? string.Empty,
-            new Dictionary<string, string> { { "GIT_TERMINAL_PROMPT", "0" } }
+            new Dictionary<string, string>
+            {
+                { "GIT_TERMINAL_PROMPT", "0" },
+                // Set UTF-8 locale to handle Unicode characters in paths
+                { "LC_ALL", "C.UTF-8" },
+                { "LANG", "C.UTF-8" },
+            }
         );
         if (result.ExitCode != 0)
         {
@@ -375,7 +381,16 @@ public class UnixPrerequisiteHelper(
 
     public Task<ProcessResult> GetGitOutput(ProcessArgs args, string? workingDirectory = null)
     {
-        return ProcessRunner.RunBashCommand(args.Prepend("git"), workingDirectory ?? "");
+        return ProcessRunner.RunBashCommand(
+            args.Prepend("git"),
+            workingDirectory ?? "",
+            new Dictionary<string, string>
+            {
+                // Set UTF-8 locale to handle Unicode characters in paths
+                { "LC_ALL", "C.UTF-8" },
+                { "LANG", "C.UTF-8" },
+            }
+        );
     }
 
     private async Task<string> RunNode(

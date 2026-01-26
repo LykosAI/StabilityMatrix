@@ -321,41 +321,35 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
     [RelayCommand]
     private async Task OpenSafetensorMetadataViewer()
     {
-        if (!CheckpointFile.SafetensorMetadataParsed)
+        if (
+            !settingsManager.IsLibraryDirSet
+            || new DirectoryPath(settingsManager.ModelsDirectory) is not { Exists: true } modelsDir
+        )
         {
-            if (
-                !settingsManager.IsLibraryDirSet
-                || new DirectoryPath(settingsManager.ModelsDirectory) is not { Exists: true } modelsDir
-            )
-            {
-                return;
-            }
-
-            try
-            {
-                var safetensorPath = CheckpointFile.GetFullPath(modelsDir);
-
-                var metadata = await SafetensorMetadata.ParseAsync(safetensorPath);
-
-                CheckpointFile.SafetensorMetadataParsed = true;
-                CheckpointFile.SafetensorMetadata = metadata;
-            }
-            catch (Exception ex)
-            {
-                logger.LogWarning(ex, "Failed to parse safetensor metadata");
-                return;
-            }
+            return;
         }
 
-        if (!CheckpointFile.SafetensorMetadataParsed)
+        SafetensorMetadata? metadata;
+        try
         {
+            var safetensorPath = CheckpointFile.GetFullPath(modelsDir);
+            metadata = await SafetensorMetadata.ParseAsync(safetensorPath);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Failed to parse safetensor metadata");
+            notificationService.Show(
+                "No Metadata Found",
+                "This safetensor file does not contain any embedded metadata.",
+                NotificationType.Warning
+            );
             return;
         }
 
         var vm = vmFactory.Get<SafetensorMetadataViewModel>(vm =>
         {
             vm.ModelName = CheckpointFile.DisplayModelName;
-            vm.Metadata = CheckpointFile.SafetensorMetadata;
+            vm.Metadata = metadata;
         });
 
         var dialog = vm.GetDialog();

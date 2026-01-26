@@ -29,6 +29,7 @@ public abstract class BaseGitPackage : BasePackage
     protected readonly IDownloadService DownloadService;
     protected readonly IPrerequisiteHelper PrerequisiteHelper;
     protected readonly IPyInstallationManager PyInstallationManager;
+    protected readonly IPipWheelService PipWheelService;
     public IPyVenvRunner? VenvRunner;
 
     public virtual string RepositoryName => Name;
@@ -68,7 +69,8 @@ public abstract class BaseGitPackage : BasePackage
         ISettingsManager settingsManager,
         IDownloadService downloadService,
         IPrerequisiteHelper prerequisiteHelper,
-        IPyInstallationManager pyInstallationManager
+        IPyInstallationManager pyInstallationManager,
+        IPipWheelService pipWheelService
     )
         : base(settingsManager)
     {
@@ -76,6 +78,7 @@ public abstract class BaseGitPackage : BasePackage
         DownloadService = downloadService;
         PrerequisiteHelper = prerequisiteHelper;
         PyInstallationManager = pyInstallationManager;
+        PipWheelService = pipWheelService;
     }
 
     public override async Task<DownloadPackageVersionOptions?> GetLatestVersion(
@@ -278,27 +281,30 @@ public abstract class BaseGitPackage : BasePackage
             );
         }
 
+        var gitArgs = new List<string> { "clone" };
+
+        var branchArg = !string.IsNullOrWhiteSpace(versionOptions.VersionTag)
+            ? versionOptions.VersionTag
+            : versionOptions.BranchName;
+
+        if (!string.IsNullOrWhiteSpace(branchArg))
+        {
+            gitArgs.Add("--branch");
+            gitArgs.Add(branchArg);
+        }
+
+        gitArgs.Add(GithubUrl);
+        gitArgs.Add(installLocation);
+
         await PrerequisiteHelper
-            .RunGit(
-                new[]
-                {
-                    "clone",
-                    "--branch",
-                    !string.IsNullOrWhiteSpace(versionOptions.VersionTag)
-                        ? versionOptions.VersionTag
-                        : versionOptions.BranchName ?? MainBranch,
-                    GithubUrl,
-                    installLocation,
-                },
-                progress?.AsProcessOutputHandler()
-            )
+            .RunGit(gitArgs.ToArray(), progress?.AsProcessOutputHandler())
             .ConfigureAwait(false);
 
         if (!versionOptions.IsLatest && !string.IsNullOrWhiteSpace(versionOptions.CommitHash))
         {
             await PrerequisiteHelper
                 .RunGit(
-                    new[] { "checkout", versionOptions.CommitHash },
+                    ["checkout", versionOptions.CommitHash],
                     progress?.AsProcessOutputHandler(),
                     installLocation
                 )

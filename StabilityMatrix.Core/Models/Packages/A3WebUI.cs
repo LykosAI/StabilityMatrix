@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
@@ -23,8 +24,17 @@ public class A3WebUI(
     ISettingsManager settingsManager,
     IDownloadService downloadService,
     IPrerequisiteHelper prerequisiteHelper,
-    IPyInstallationManager pyInstallationManager
-) : BaseGitPackage(githubApi, settingsManager, downloadService, prerequisiteHelper, pyInstallationManager)
+    IPyInstallationManager pyInstallationManager,
+    IPipWheelService pipWheelService
+)
+    : BaseGitPackage(
+        githubApi,
+        settingsManager,
+        downloadService,
+        prerequisiteHelper,
+        pyInstallationManager,
+        pipWheelService
+    )
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -38,11 +48,9 @@ public class A3WebUI(
     public override string LaunchCommand => "launch.py";
     public override Uri PreviewImageUri =>
         new("https://github.com/AUTOMATIC1111/stable-diffusion-webui/raw/master/screenshot.png");
-    public string RelativeArgsDefinitionScriptPath => "modules.cmd_args";
-
     public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Simple;
-
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Symlink;
+    public override PackageType PackageType => PackageType.SdInference;
 
     // From https://github.com/AUTOMATIC1111/stable-diffusion-webui/tree/master/models
     public override Dictionary<SharedFolderType, IReadOnlyList<string>> SharedFolders =>
@@ -188,7 +196,7 @@ public class A3WebUI(
     public override IEnumerable<TorchIndex> AvailableTorchIndices =>
         [TorchIndex.Cpu, TorchIndex.Cuda, TorchIndex.Rocm, TorchIndex.Mps];
 
-    public override string MainBranch => "master";
+    public override string MainBranch => "dev";
 
     public override string OutputFolderName => "outputs";
 
@@ -266,6 +274,8 @@ public class A3WebUI(
         await SetupVenv(installLocation, pythonVersion: PyVersion.Parse(installedPackage.PythonVersion))
             .ConfigureAwait(false);
 
+        VenvRunner.UpdateEnvironmentVariables(GetEnvVars);
+
         void HandleConsoleOutput(ProcessOutput s)
         {
             onConsoleOutput?.Invoke(s);
@@ -295,6 +305,16 @@ public class A3WebUI(
 
     public override IReadOnlyList<string> ExtraLaunchArguments =>
         settingsManager.IsLibraryDirSet ? ["--gradio-allowed-path", settingsManager.ImagesDirectory] : [];
+
+    private ImmutableDictionary<string, string> GetEnvVars(ImmutableDictionary<string, string> env)
+    {
+        // Set the Stable Diffusion repository URL to a working fork
+        // This is required because the original Stability-AI/stablediffusion repo was removed
+        // See: https://github.com/AUTOMATIC1111/stable-diffusion-webui/discussions/17212
+        env = env.SetItem("STABLE_DIFFUSION_REPO", "https://github.com/w-e-w/stablediffusion.git");
+
+        return env;
+    }
 
     private class A3WebUiExtensionManager(A3WebUI package)
         : GitPackageExtensionManager(package.PrerequisiteHelper)

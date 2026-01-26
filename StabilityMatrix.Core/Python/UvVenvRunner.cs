@@ -243,6 +243,8 @@ public class UvVenvRunner : IPyVenvRunner
             throw new FileNotFoundException("uv not found", UvExecutablePath);
         }
 
+        SetPyvenvCfg(BaseInstall.RootPath);
+
         // Record output for errors
         var output = new StringBuilder();
 
@@ -282,6 +284,8 @@ public class UvVenvRunner : IPyVenvRunner
             throw new FileNotFoundException("uv not found", UvExecutablePath);
         }
 
+        SetPyvenvCfg(BaseInstall.RootPath);
+
         // Record output for errors
         var output = new StringBuilder();
 
@@ -318,6 +322,8 @@ public class UvVenvRunner : IPyVenvRunner
         {
             throw new FileNotFoundException("uv not found", UvExecutablePath);
         }
+
+        SetPyvenvCfg(BaseInstall.RootPath);
 
         var result = await ProcessRunner
             .GetProcessResultAsync(
@@ -368,6 +374,8 @@ public class UvVenvRunner : IPyVenvRunner
         {
             throw new FileNotFoundException("uv not found", UvExecutablePath);
         }
+
+        SetPyvenvCfg(BaseInstall.RootPath);
 
         var result = await ProcessRunner
             .GetProcessResultAsync(

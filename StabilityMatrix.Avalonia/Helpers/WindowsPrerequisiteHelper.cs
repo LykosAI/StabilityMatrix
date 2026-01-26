@@ -27,7 +27,8 @@ public class WindowsPrerequisiteHelper(
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
     private const string PortableGitDownloadUrl =
-        "https://github.com/git-for-windows/git/releases/download/v2.41.0.windows.1/PortableGit-2.41.0-64-bit.7z.exe";
+        "https://github.com/git-for-windows/git/releases/download/v2.52.0.windows.1/PortableGit-2.52.0-64-bit.7z.exe";
+    private const string ExpectedGitVersion = "2.52.0";
 
     private const string VcRedistDownloadUrl = "https://aka.ms/vs/16/release/vc_redist.x64.exe";
 
@@ -49,7 +50,7 @@ public class WindowsPrerequisiteHelper(
     private const string PythonLibsDownloadUrl = "https://cdn.lykos.ai/python_libs_for_sage.zip";
 
     private const string UvWindowsDownloadUrl =
-        "https://github.com/astral-sh/uv/releases/download/0.8.4/uv-x86_64-pc-windows-msvc.zip";
+        "https://github.com/astral-sh/uv/releases/download/0.9.26/uv-x86_64-pc-windows-msvc.zip";
 
     private string HomeDir => settingsManager.LibraryDir;
 
@@ -115,7 +116,7 @@ public class WindowsPrerequisiteHelper(
     private string UvExtractPath => Path.Combine(AssetsDir, "uv");
     public string UvExePath => Path.Combine(UvExtractPath, "uv.exe");
     public bool IsUvInstalled => File.Exists(UvExePath);
-    private string ExpectedUvVersion => "0.8.4";
+    private string ExpectedUvVersion => "0.9.26";
 
     public string GitBinPath => Path.Combine(PortableGitInstallDir, "bin");
     public bool IsVcBuildToolsInstalled => Directory.Exists(VcBuildToolsExistsPath);
@@ -155,6 +156,10 @@ public class WindowsPrerequisiteHelper(
             {
                 { "PATH", Compat.GetEnvPathWithExtensions(GitBinPath) },
                 { "GIT_TERMINAL_PROMPT", "0" },
+                // Set UTF-8 locale to handle Unicode characters in paths
+                // This helps Git load libcurl-4.dll when paths contain non-ASCII characters
+                { "LC_ALL", "C.UTF-8" },
+                { "LANG", "C.UTF-8" },
             }
         );
         await process.WaitForExitAsync().ConfigureAwait(false);
@@ -173,6 +178,10 @@ public class WindowsPrerequisiteHelper(
             environmentVariables: new Dictionary<string, string>
             {
                 { "PATH", Compat.GetEnvPathWithExtensions(GitBinPath) },
+                // Set UTF-8 locale to handle Unicode characters in paths
+                // This helps Git load libcurl-4.dll when paths contain non-ASCII characters
+                { "LC_ALL", "C.UTF-8" },
+                { "LANG", "C.UTF-8" },
             }
         );
     }
@@ -605,11 +614,31 @@ public class WindowsPrerequisiteHelper(
     {
         if (File.Exists(GitExePath))
         {
-            Logger.Debug("Git already installed at {GitExePath}", GitExePath);
-            return;
+            var installedVersion = await GetInstalledGitVersionAsync();
+            if (installedVersion.Contains(ExpectedGitVersion))
+            {
+                Logger.Debug(
+                    "Git {Version} already installed at {GitExePath}",
+                    ExpectedGitVersion,
+                    GitExePath
+                );
+                return;
+            }
+
+            Logger.Info(
+                "Git version mismatch. Installed: {Installed}, Expected: {Expected}. Upgrading...",
+                installedVersion.Trim(),
+                ExpectedGitVersion
+            );
+
+            // Delete existing installation to upgrade
+            if (Directory.Exists(PortableGitInstallDir))
+            {
+                await new DirectoryPath(PortableGitInstallDir).DeleteAsync(true);
+            }
         }
 
-        Logger.Info("Git not found at {GitExePath}, downloading...", GitExePath);
+        Logger.Info("Git not found or outdated at {GitExePath}, downloading...", GitExePath);
 
         // Download
         if (!File.Exists(PortableGitDownloadPath))
@@ -1135,6 +1164,20 @@ public class WindowsPrerequisiteHelper(
         catch (Exception e)
         {
             Logger.Warn(e, "Failed to get UV version from {UvExePath}", UvExePath);
+            return string.Empty;
+        }
+    }
+
+    private async Task<string> GetInstalledGitVersionAsync()
+    {
+        try
+        {
+            var result = await GetGitOutput(["--version"]);
+            return result.StandardOutput ?? string.Empty;
+        }
+        catch (Exception e)
+        {
+            Logger.Warn(e, "Failed to get Git version");
             return string.Empty;
         }
     }

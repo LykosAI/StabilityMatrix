@@ -248,6 +248,41 @@ public static partial class HardwareHelper
     }
 
     /// <summary>
+    /// Gets the NVIDIA driver version using nvidia-smi.
+    /// Returns null if nvidia-smi is not available or fails.
+    /// </summary>
+    public static Version? GetNvidiaDriverVersion()
+    {
+        try
+        {
+            var psi = new ProcessStartInfo
+            {
+                FileName = "nvidia-smi",
+                UseShellExecute = false,
+                Arguments = "--query-gpu=driver_version --format=csv,noheader",
+                RedirectStandardOutput = true,
+                CreateNoWindow = true,
+            };
+
+            var process = Process.Start(psi);
+            process?.WaitForExit();
+            var stdout = process?.StandardOutput.ReadToEnd()?.Trim();
+
+            if (string.IsNullOrEmpty(stdout))
+                return null;
+
+            // Driver version is typically in the format "xxx.xx" (e.g., "591.59")
+            // We'll parse it as a Version object
+            return Version.TryParse(stdout, out var version) ? version : null;
+        }
+        catch (Exception e)
+        {
+            Logger.Warn(e, "Failed to get NVIDIA driver version from nvidia-smi");
+            return null;
+        }
+    }
+
+    /// <summary>
     /// Return true if the system has at least one Nvidia GPU.
     /// </summary>
     public static bool HasNvidiaGpu()

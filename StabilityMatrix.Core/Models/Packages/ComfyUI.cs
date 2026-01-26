@@ -491,6 +491,59 @@ public class ComfyUI(
 
         VenvRunner.UpdateEnvironmentVariables(GetEnvVars);
 
+        // Check for old NVIDIA driver version with cu130 installations
+        var isNvidia = SettingsManager.Settings.PreferredGpu?.IsNvidia ?? HardwareHelper.HasNvidiaGpu();
+        var isLegacyNvidia =
+            SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu() ?? HardwareHelper.HasLegacyNvidiaGpu();
+
+        if (isNvidia && !isLegacyNvidia)
+        {
+            var driverVersion = HardwareHelper.GetNvidiaDriverVersion();
+            if (driverVersion is not null && driverVersion.Major < 580)
+            {
+                // Check if torch is installed with cu130 index
+                var torchInfo = await VenvRunner.PipShow("torch").ConfigureAwait(false);
+                if (torchInfo is not null)
+                {
+                    var version = torchInfo.Version;
+                    var plusPos = version.IndexOf('+');
+                    var torchIndex = plusPos >= 0 ? version[(plusPos + 1)..] : string.Empty;
+
+                    // Only warn if using cu130 (which requires driver 580+)
+                    if (torchIndex.Equals("cu130", StringComparison.OrdinalIgnoreCase))
+                    {
+                        var warningMessage = $"""
+
+                            ============================================================
+                                            NVIDIA DRIVER WARNING
+                            ============================================================
+
+                            Your NVIDIA driver version ({driverVersion}) is older than
+                            the minimum required version (580.x) for CUDA 13.0 (cu130).
+
+                            This may cause ComfyUI to fail to start or experience issues.
+
+                            Recommended actions:
+                              1. Update your NVIDIA driver to version 580 or newer
+                              2. Or manually downgrade your torch version to use an
+                                 older torch index (e.g. cu128)
+
+                            ============================================================
+
+                            """;
+
+                        Logger.Warn(
+                            "NVIDIA driver version {DriverVersion} is below 580.x minimum for cu130 (torch index: {TorchIndex})",
+                            driverVersion,
+                            torchIndex
+                        );
+                        onConsoleOutput?.Invoke(ProcessOutput.FromStdErrLine(warningMessage));
+                        return;
+                    }
+                }
+            }
+        }
+
         VenvRunner.RunDetached(
             [Path.Combine(installLocation, options.Command ?? LaunchCommand), .. options.Arguments],
             HandleConsoleOutput,

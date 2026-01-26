@@ -78,11 +78,7 @@ public class Wan2GP(
 
     public override string Disclaimer =>
         IsAmdRocm && Compat.IsWindows
-<<<<<<< HEAD
-            ? "AMD GPU support on Windows is experimental. Supported GPUs: 7900(XT), 7800(XT), 7600(XT), Phoenix, 9070(XT) and Strix Halo."
-=======
             ? "AMD GPU support on Windows requires RX 7000 series or newer GPU"
->>>>>>> 1c542602 (Merge pull request #1193 from ionite34/fix-bugs-n-stuff)
             : string.Empty;
 
     /// <summary>

@@ -88,7 +88,8 @@ public partial class OneClickInstallViewModel : ContentDialogViewModelBase
         SubHeaderText = Resources.Text_OneClickInstaller_SubHeader;
         ShowInstallButton = true;
 
-        var filteredPackages = this.packageFactory.GetAllAvailablePackages()
+        var filteredPackages = this
+            .packageFactory.GetAllAvailablePackages()
             .Where(p => p is { OfferInOneClickInstaller: true, IsCompatible: true })
             .ToList();
 
@@ -134,7 +135,7 @@ public partial class OneClickInstallViewModel : ContentDialogViewModelBase
                 prerequisiteHelper,
                 SelectedPackage,
                 PyInstallationManager.Python_3_10_17
-            )
+            ),
         };
 
         // get latest version & download & install
@@ -160,6 +161,7 @@ public partial class OneClickInstallViewModel : ContentDialogViewModelBase
 
         var torchVersion = SelectedPackage.GetRecommendedTorchVersion();
         var recommendedSharedFolderMethod = SelectedPackage.RecommendedSharedFolderMethod;
+        var recommendedPython = SelectedPackage.RecommendedPythonVersion;
 
         var downloadStep = new DownloadPackageVersionStep(
             SelectedPackage,
@@ -179,7 +181,7 @@ public partial class OneClickInstallViewModel : ContentDialogViewModelBase
             LastUpdateCheck = DateTimeOffset.Now,
             PreferredTorchIndex = torchVersion,
             PreferredSharedFolderMethod = recommendedSharedFolderMethod,
-            PythonVersion = PyInstallationManager.Python_3_10_17.StringValue
+            PythonVersion = recommendedPython.StringValue,
         };
 
         var installStep = new InstallPackageStep(
@@ -190,7 +192,7 @@ public partial class OneClickInstallViewModel : ContentDialogViewModelBase
             {
                 SharedFolderMethod = recommendedSharedFolderMethod,
                 VersionOptions = downloadVersion,
-                PythonOptions = { TorchIndex = torchVersion }
+                PythonOptions = { TorchIndex = torchVersion, PythonVersion = recommendedPython },
             }
         );
         steps.Add(installStep);
@@ -209,7 +211,7 @@ public partial class OneClickInstallViewModel : ContentDialogViewModelBase
         {
             ShowDialogOnStart = true,
             HideCloseButton = true,
-            ModificationCompleteMessage = $"{SelectedPackage.DisplayName} installed successfully"
+            ModificationCompleteMessage = $"{SelectedPackage.DisplayName} installed successfully",
         };
         EventManager.Instance.OnPackageInstallProgressAdded(runner);
         await runner.ExecuteSteps(steps);

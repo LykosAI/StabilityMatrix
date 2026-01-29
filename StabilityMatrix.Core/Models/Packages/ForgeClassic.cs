@@ -1,9 +1,9 @@
-﻿using System.Text;
-using Injectio.Attributes;
+﻿using Injectio.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
@@ -17,8 +17,17 @@ public class ForgeClassic(
     ISettingsManager settingsManager,
     IDownloadService downloadService,
     IPrerequisiteHelper prerequisiteHelper,
-    IPyInstallationManager pyInstallationManager
-) : SDWebForge(githubApi, settingsManager, downloadService, prerequisiteHelper, pyInstallationManager)
+    IPyInstallationManager pyInstallationManager,
+    IPipWheelService pipWheelService
+)
+    : SDWebForge(
+        githubApi,
+        settingsManager,
+        downloadService,
+        prerequisiteHelper,
+        pyInstallationManager,
+        pipWheelService
+    )
 {
     public override string Name => "forge-classic";
     public override string Author => "Haoming02";
@@ -32,11 +41,23 @@ public class ForgeClassic(
         "https://github.com/Haoming02/sd-webui-forge-classic/blob/classic/LICENSE";
     public override Uri PreviewImageUri =>
         new("https://github.com/Haoming02/sd-webui-forge-classic/raw/classic/html/ui.webp");
-    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Recommended;
+    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.ReallyRecommended;
     public override IEnumerable<TorchIndex> AvailableTorchIndices => [TorchIndex.Cuda];
     public override bool IsCompatible => HardwareHelper.HasNvidiaGpu();
     public override PyVersion RecommendedPythonVersion => Python.PyInstallationManager.Python_3_11_13;
-    public override PackageType PackageType => PackageType.SdInference;
+    public override PackageType PackageType => PackageType.Legacy;
+
+    public override Dictionary<SharedOutputType, IReadOnlyList<string>> SharedOutputFolders =>
+        new()
+        {
+            [SharedOutputType.Extras] = ["output/extras-images"],
+            [SharedOutputType.Saved] = ["output/images"],
+            [SharedOutputType.Img2Img] = ["output/img2img-images"],
+            [SharedOutputType.Text2Img] = ["output/txt2img-images"],
+            [SharedOutputType.Img2ImgGrids] = ["output/img2img-grids"],
+            [SharedOutputType.Text2ImgGrids] = ["output/txt2img-grids"],
+            [SharedOutputType.SVD] = ["output/videos"],
+        };
 
     public override List<LaunchOptionDefinition> LaunchOptions =>
         [
@@ -101,7 +122,7 @@ public class ForgeClassic(
                 Name = "Auto Launch",
                 Type = LaunchOptionType.Bool,
                 Description = "Set whether to auto launch the webui",
-                Options = { "--auto-launch" },
+                Options = { "--autolaunch" },
             },
             new()
             {
@@ -136,6 +157,24 @@ public class ForgeClassic(
             [SharedFolderType.DiffusionModels] = ["models/Stable-diffusion/unet"],
         };
 
+    public override List<ExtraPackageCommand> GetExtraCommands()
+    {
+        var commands = new List<ExtraPackageCommand>();
+
+        if (Compat.IsWindows && SettingsManager.Settings.PreferredGpu?.IsAmpereOrNewerGpu() is true)
+        {
+            commands.Add(
+                new ExtraPackageCommand
+                {
+                    CommandName = "Install Triton and SageAttention",
+                    Command = InstallTritonAndSageAttention,
+                }
+            );
+        }
+
+        return commands;
+    }
+
     public override async Task InstallPackage(
         string installLocation,
         InstalledPackage installedPackage,
@@ -152,46 +191,123 @@ public class ForgeClassic(
             )
             .ConfigureAwait(false);
 
-        // Dynamically discover all requirements files
-        var requirementsPaths = new List<string> { "requirements.txt" };
-        var extensionsBuiltinDir = new DirectoryPath(installLocation, "extensions-builtin");
-        if (extensionsBuiltinDir.Exists)
+        progress?.Report(new ProgressReport(-1f, "Running install script...", isIndeterminate: true));
+
+        // Build args for their launch.py - use --uv for fast installs, --exit to quit after setup
+        var launchArgs = new List<string> { "launch.py", "--uv", "--exit" };
+
+        // For Ampere or newer GPUs, enable sage attention, flash attention, and nunchaku
+        var isAmpereOrNewer =
+            SettingsManager.Settings.PreferredGpu?.IsAmpereOrNewerGpu()
+            ?? HardwareHelper.IterGpuInfo().Any(x => x.IsNvidia && x.IsAmpereOrNewerGpu());
+
+        if (isAmpereOrNewer)
         {
-            requirementsPaths.AddRange(
-                extensionsBuiltinDir
-                    .EnumerateFiles("requirements.txt", EnumerationOptionConstants.AllDirectories)
-                    .Select(f => Path.GetRelativePath(installLocation, f.ToString()))
+            launchArgs.Add("--sage");
+            launchArgs.Add("--flash");
+            launchArgs.Add("--nunchaku");
+        }
+
+        // Run their install script with our venv Python
+        venvRunner.WorkingDirectory = new DirectoryPath(installLocation);
+        venvRunner.RunDetached([.. launchArgs], onConsoleOutput);
+
+        await venvRunner.Process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
+
+        if (venvRunner.Process.ExitCode != 0)
+        {
+            throw new InvalidOperationException(
+                $"Install script failed with exit code {venvRunner.Process.ExitCode}"
             );
         }
 
-        var isLegacyNvidia =
-            SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu() ?? HardwareHelper.HasLegacyNvidiaGpu();
+        progress?.Report(new ProgressReport(1f, "Install complete", isIndeterminate: false));
+    }
 
-        var config = new PipInstallConfig
+    private async Task InstallTritonAndSageAttention(InstalledPackage? installedPackage)
+    {
+        if (installedPackage?.FullPath is null)
+            return;
+
+        var runner = new PackageModificationRunner
         {
-            RequirementsFilePaths = requirementsPaths,
-            TorchVersion = "<2.9.0",
-            TorchvisionVersion = "<0.24.0",
-            CudaIndex = isLegacyNvidia ? "cu126" : "cu128",
-            UpgradePackages = true,
-            ExtraPipArgs =
-            [
-                "https://github.com/openai/CLIP/archive/d50d76daa670286dd6cacf3bcd80b5e4823fc8e1.zip",
-            ],
-            PostInstallPipArgs = ["numpy==1.26.4"],
+            ShowDialogOnStart = true,
+            ModificationCompleteMessage = "Triton and SageAttention installed successfully",
         };
+        EventManager.Instance.OnPackageInstallProgressAdded(runner);
 
-        await StandardPipInstallProcessAsync(
-                venvRunner,
-                options,
-                installedPackage,
-                config,
-                onConsoleOutput,
-                progress,
-                cancellationToken
+        await runner
+            .ExecuteSteps(
+                [
+                    new ActionPackageStep(
+                        async progress =>
+                        {
+                            await using var venvRunner = await SetupVenvPure(
+                                    installedPackage.FullPath,
+                                    pythonVersion: PyVersion.Parse(installedPackage.PythonVersion)
+                                )
+                                .ConfigureAwait(false);
+
+                            var gpuInfo =
+                                SettingsManager.Settings.PreferredGpu
+                                ?? HardwareHelper.IterGpuInfo().FirstOrDefault(x => x.IsNvidia);
+
+                            var tritonVersion = Compat.IsWindows ? "3.5.1.post22" : "3.5.1";
+
+                            await PipWheelService
+                                .InstallTritonAsync(venvRunner, progress, tritonVersion)
+                                .ConfigureAwait(false);
+                            await PipWheelService
+                                .InstallSageAttentionAsync(venvRunner, gpuInfo, progress, "2.2.0")
+                                .ConfigureAwait(false);
+                        },
+                        "Installing Triton and SageAttention"
+                    ),
+                ]
             )
             .ConfigureAwait(false);
 
-        progress?.Report(new ProgressReport(1f, "Install complete", isIndeterminate: false));
+        if (runner.Failed)
+            return;
+
+        await using var transaction = settingsManager.BeginTransaction();
+        var packageInSettings = transaction.Settings.InstalledPackages.FirstOrDefault(x =>
+            x.Id == installedPackage.Id
+        );
+
+        if (packageInSettings is null)
+            return;
+
+        var attentionOptions = packageInSettings.LaunchArgs?.Where(opt =>
+            opt.Name.Contains("attention", StringComparison.OrdinalIgnoreCase)
+        );
+
+        if (attentionOptions is not null)
+        {
+            foreach (var option in attentionOptions)
+            {
+                option.OptionValue = false;
+            }
+        }
+
+        var sageAttention = packageInSettings.LaunchArgs?.FirstOrDefault(opt =>
+            opt.Name.Contains("sage", StringComparison.OrdinalIgnoreCase)
+        );
+
+        if (sageAttention is not null)
+        {
+            sageAttention.OptionValue = true;
+        }
+        else
+        {
+            packageInSettings.LaunchArgs?.Add(
+                new LaunchOption
+                {
+                    Name = "--sage",
+                    Type = LaunchOptionType.Bool,
+                    OptionValue = true,
+                }
+            );
+        }
     }
 }

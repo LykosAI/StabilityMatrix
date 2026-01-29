@@ -16,8 +16,17 @@ public class SimpleSDXL(
     ISettingsManager settingsManager,
     IDownloadService downloadService,
     IPrerequisiteHelper prerequisiteHelper,
-    IPyInstallationManager pyInstallationManager
-) : Fooocus(githubApi, settingsManager, downloadService, prerequisiteHelper, pyInstallationManager)
+    IPyInstallationManager pyInstallationManager,
+    IPipWheelService pipWheelService
+)
+    : Fooocus(
+        githubApi,
+        settingsManager,
+        downloadService,
+        prerequisiteHelper,
+        pyInstallationManager,
+        pipWheelService
+    )
 {
     public override string Name => "SimpleSDXL";
     public override string DisplayName { get; set; } = "SimpleSDXL";
@@ -52,7 +61,7 @@ public class SimpleSDXL(
                 PublishedDate = DateTimeOffset.Parse("2025-01-11"),
                 InfoUrl = new Uri("https://github.com/metercai/SimpleSDXL/issues/97"),
                 AffectedVersions = ["*"], // Affects all versions
-            }
+            },
         ];
 
     public override List<LaunchOptionDefinition> LaunchOptions =>
@@ -68,7 +77,7 @@ public class SimpleSDXL(
                     "--preset realistic",
                     "--preset Flux",
                     "--preset Kolors",
-                    "--preset pony_v6"
+                    "--preset pony_v6",
                 },
             },
             new()
@@ -77,28 +86,28 @@ public class SimpleSDXL(
                 Type = LaunchOptionType.String,
                 Description = "Translate UI using json files in [language] folder.",
                 InitialValue = "en",
-                Options = { "--language" }
+                Options = { "--language" },
             },
             new()
             {
                 Name = "Port",
                 Type = LaunchOptionType.String,
                 Description = "Sets the listen port",
-                Options = { "--port" }
+                Options = { "--port" },
             },
             new()
             {
                 Name = "Share",
                 Type = LaunchOptionType.Bool,
                 Description = "Set whether to share on Gradio",
-                Options = { "--share" }
+                Options = { "--share" },
             },
             new()
             {
                 Name = "Listen",
                 Type = LaunchOptionType.String,
                 Description = "Set the listen interface",
-                Options = { "--listen" }
+                Options = { "--listen" },
             },
             new()
             {
@@ -106,7 +115,7 @@ public class SimpleSDXL(
                 Description = "Disables downloading models for presets",
                 DefaultValue = false,
                 Type = LaunchOptionType.Bool,
-                Options = { "--disable-preset-download" }
+                Options = { "--disable-preset-download" },
             },
             new()
             {
@@ -114,7 +123,7 @@ public class SimpleSDXL(
                 Description = "Launches the UI with light or dark theme",
                 Type = LaunchOptionType.String,
                 DefaultValue = "dark",
-                Options = { "--theme" }
+                Options = { "--theme" },
             },
             new()
             {
@@ -123,28 +132,28 @@ public class SimpleSDXL(
                     "Force loading models to vram when the unload can be avoided. Some Mac users may need this.",
                 Type = LaunchOptionType.Bool,
                 InitialValue = Compat.IsMacOS,
-                Options = { "--disable-offload-from-vram" }
+                Options = { "--disable-offload-from-vram" },
             },
             new()
             {
                 Name = "Disable image log",
                 Description = "Prevent writing images and logs to the outputs folder.",
                 Type = LaunchOptionType.Bool,
-                Options = { "--disable-image-log" }
+                Options = { "--disable-image-log" },
             },
             new()
             {
                 Name = "Disable metadata",
                 Description = "Disables saving metadata to images.",
                 Type = LaunchOptionType.Bool,
-                Options = { "--disable-metadata" }
+                Options = { "--disable-metadata" },
             },
             new()
             {
                 Name = "Disable enhance output sorting",
                 Description = "Disables enhance output sorting for final image gallery.",
                 Type = LaunchOptionType.Bool,
-                Options = { "--disable-enhance-output-sorting" }
+                Options = { "--disable-enhance-output-sorting" },
             },
             new()
             {
@@ -152,7 +161,7 @@ public class SimpleSDXL(
                 Description = "Enables automatic description of uov and enhance image when prompt is empty",
                 DefaultValue = true,
                 Type = LaunchOptionType.Bool,
-                Options = { "--enable-auto-describe-image" }
+                Options = { "--enable-auto-describe-image" },
             },
             new()
             {
@@ -160,16 +169,16 @@ public class SimpleSDXL(
                 Description = "Always download newer models.",
                 DefaultValue = false,
                 Type = LaunchOptionType.Bool,
-                Options = { "--always-download-new-model" }
+                Options = { "--always-download-new-model" },
             },
             new()
             {
                 Name = "Disable comfyd",
                 Description = "Disable auto start comfyd server at launch",
                 Type = LaunchOptionType.Bool,
-                Options = { "--disable-comfyd" }
+                Options = { "--disable-comfyd" },
             },
-            LaunchOptionDefinition.Extras
+            LaunchOptionDefinition.Extras,
         ];
 
     public override async Task InstallPackage(

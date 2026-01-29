@@ -25,8 +25,17 @@ public class ComfyUI(
     ISettingsManager settingsManager,
     IDownloadService downloadService,
     IPrerequisiteHelper prerequisiteHelper,
-    IPyInstallationManager pyInstallationManager
-) : BaseGitPackage(githubApi, settingsManager, downloadService, prerequisiteHelper, pyInstallationManager)
+    IPyInstallationManager pyInstallationManager,
+    IPipWheelService pipWheelService
+)
+    : BaseGitPackage(
+        githubApi,
+        settingsManager,
+        downloadService,
+        prerequisiteHelper,
+        pyInstallationManager,
+        pipWheelService
+    )
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     public override string Name => "ComfyUI";
@@ -296,6 +305,13 @@ public class ComfyUI(
                 Type = LaunchOptionType.Bool,
                 Options = ["--auto-launch"],
             },
+            new()
+            {
+                Name = "Enable Manager",
+                Type = LaunchOptionType.Bool,
+                InitialValue = true,
+                Options = ["--enable-manager"],
+            },
             LaunchOptionDefinition.Extras,
         ];
 
@@ -472,6 +488,29 @@ public class ComfyUI(
         catch (Exception e)
         {
             Logger.Error(e, "Failed to verify/update SageAttention after installation");
+        }
+
+        // Install Comfy Manager (built-in to ComfyUI)
+        try
+        {
+            var managerRequirementsFile = Path.Combine(installLocation, "manager_requirements.txt");
+            if (File.Exists(managerRequirementsFile))
+            {
+                progress?.Report(
+                    new ProgressReport(-1f, "Installing Comfy Manager requirements...", isIndeterminate: true)
+                );
+
+                var pipArgs = new PipInstallArgs().AddArg("-r").AddArg(managerRequirementsFile);
+                await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
+
+                progress?.Report(
+                    new ProgressReport(-1f, "Comfy Manager installed successfully", isIndeterminate: true)
+                );
+            }
+        }
+        catch (Exception e)
+        {
+            Logger.Error(e, "Failed to install Comfy Manager requirements");
         }
 
         progress?.Report(new ProgressReport(1, "Install complete", isIndeterminate: false));
@@ -825,26 +864,41 @@ public class ComfyUI(
         if (installedPackage?.FullPath is null)
             return;
 
-        var installSageStep = new InstallSageAttentionStep(
-            DownloadService,
-            PrerequisiteHelper,
-            PyInstallationManager
-        )
-        {
-            InstalledPackage = installedPackage,
-            WorkingDirectory = new DirectoryPath(installedPackage.FullPath),
-            EnvironmentVariables = SettingsManager.Settings.EnvironmentVariables,
-            IsBlackwellGpu =
-                SettingsManager.Settings.PreferredGpu?.IsBlackwellGpu() ?? HardwareHelper.HasBlackwellGpu(),
-        };
-
         var runner = new PackageModificationRunner
         {
             ShowDialogOnStart = true,
             ModificationCompleteMessage = "Triton and SageAttention installed successfully",
         };
         EventManager.Instance.OnPackageInstallProgressAdded(runner);
-        await runner.ExecuteSteps([installSageStep]).ConfigureAwait(false);
+
+        await runner
+            .ExecuteSteps(
+                [
+                    new ActionPackageStep(
+                        async progress =>
+                        {
+                            await using var venvRunner = await SetupVenvPure(
+                                    installedPackage.FullPath,
+                                    pythonVersion: PyVersion.Parse(installedPackage.PythonVersion)
+                                )
+                                .ConfigureAwait(false);
+
+                            var gpuInfo =
+                                SettingsManager.Settings.PreferredGpu
+                                ?? HardwareHelper.IterGpuInfo().FirstOrDefault(x => x.IsNvidia);
+
+                            await PipWheelService
+                                .InstallTritonAsync(venvRunner, progress)
+                                .ConfigureAwait(false);
+                            await PipWheelService
+                                .InstallSageAttentionAsync(venvRunner, gpuInfo, progress)
+                                .ConfigureAwait(false);
+                        },
+                        "Installing Triton and SageAttention"
+                    ),
+                ]
+            )
+            .ConfigureAwait(false);
 
         if (runner.Failed)
             return;
@@ -890,24 +944,38 @@ public class ComfyUI(
         if (installedPackage?.FullPath is null)
             return;
 
-        var installNunchaku = new InstallNunchakuStep(PyInstallationManager)
-        {
-            InstalledPackage = installedPackage,
-            WorkingDirectory = new DirectoryPath(installedPackage.FullPath),
-            EnvironmentVariables = SettingsManager.Settings.EnvironmentVariables,
-            PreferredGpu =
-                SettingsManager.Settings.PreferredGpu
-                ?? HardwareHelper.IterGpuInfo().FirstOrDefault(x => x.IsNvidia || x.IsAmd),
-            ComfyExtensionManager = ExtensionManager,
-        };
-
         var runner = new PackageModificationRunner
         {
             ShowDialogOnStart = true,
             ModificationCompleteMessage = "Nunchaku installed successfully",
         };
         EventManager.Instance.OnPackageInstallProgressAdded(runner);
-        await runner.ExecuteSteps([installNunchaku]).ConfigureAwait(false);
+
+        await runner
+            .ExecuteSteps(
+                [
+                    new ActionPackageStep(
+                        async progress =>
+                        {
+                            await using var venvRunner = await SetupVenvPure(
+                                    installedPackage.FullPath,
+                                    pythonVersion: PyVersion.Parse(installedPackage.PythonVersion)
+                                )
+                                .ConfigureAwait(false);
+
+                            var gpuInfo =
+                                SettingsManager.Settings.PreferredGpu
+                                ?? HardwareHelper.IterGpuInfo().FirstOrDefault(x => x.IsNvidia || x.IsAmd);
+
+                            await PipWheelService
+                                .InstallNunchakuAsync(venvRunner, gpuInfo, progress)
+                                .ConfigureAwait(false);
+                        },
+                        "Installing Nunchaku"
+                    ),
+                ]
+            )
+            .ConfigureAwait(false);
     }
 
     private ImmutableDictionary<string, string> GetEnvVars(ImmutableDictionary<string, string> env)

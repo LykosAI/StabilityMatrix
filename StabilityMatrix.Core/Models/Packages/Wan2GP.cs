@@ -29,13 +29,21 @@ public class Wan2GP(
     ISettingsManager settingsManager,
     IDownloadService downloadService,
     IPrerequisiteHelper prerequisiteHelper,
-    IPyInstallationManager pyInstallationManager
-) : BaseGitPackage(githubApi, settingsManager, downloadService, prerequisiteHelper, pyInstallationManager)
+    IPyInstallationManager pyInstallationManager,
+    IPipWheelService pipWheelService
+)
+    : BaseGitPackage(
+        githubApi,
+        settingsManager,
+        downloadService,
+        prerequisiteHelper,
+        pyInstallationManager,
+        pipWheelService
+    )
 {
     public override string Name => "Wan2GP";
     public override string DisplayName { get; set; } = "Wan2GP";
     public override string Author => "deepbeepmeep";
-
     public override string Blurb =>
         "Super Optimized Gradio UI for AI video creation for GPU poor machines (6GB+ VRAM). "
         + "Supports Wan 2.1/2.2, Qwen, Hunyuan Video, LTX Video and Flux.";
@@ -54,12 +62,14 @@ public class Wan2GP(
 
     public override IEnumerable<TorchIndex> AvailableTorchIndices => [TorchIndex.Cuda, TorchIndex.Rocm];
 
-    public override bool IsCompatible => HardwareHelper.HasNvidiaGpu() || HardwareHelper.HasAmdGpu();
+    public override bool IsCompatible =>
+        HardwareHelper.HasNvidiaGpu()
+        || (Compat.IsWindows ? HardwareHelper.HasWindowsRocmSupportedGpu() : HardwareHelper.HasAmdGpu());
 
     public override string MainBranch => "main";
     public override bool ShouldIgnoreReleases => true;
 
-    public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>
+    public override Dictionary<SharedOutputType, IReadOnlyList<string>> SharedOutputFolders =>
         new() { [SharedOutputType.Img2Vid] = ["outputs"] };
 
     // AMD ROCm requires Python 3.11, NVIDIA uses 3.10
@@ -68,7 +78,7 @@ public class Wan2GP(
 
     public override string Disclaimer =>
         IsAmdRocm && Compat.IsWindows
-            ? "AMD GPU support on Windows is experimental. Supported GPUs: 7900(XT), 7800(XT), 7600(XT), Phoenix, 9070(XT) and Strix Halo."
+            ? "AMD GPU support on Windows requires RX 7000 series or newer GPU"
             : string.Empty;
 
     /// <summary>
@@ -83,14 +93,14 @@ public class Wan2GP(
                 Name = "Host",
                 Type = LaunchOptionType.String,
                 DefaultValue = "127.0.0.1",
-                Options = ["--server"],
+                Options = ["--server-name"],
             },
             new()
             {
                 Name = "Port",
                 Type = LaunchOptionType.String,
                 DefaultValue = "7860",
-                Options = ["--port"],
+                Options = ["--server-port"],
             },
             new()
             {
@@ -98,6 +108,13 @@ public class Wan2GP(
                 Type = LaunchOptionType.Bool,
                 Description = "Set whether to share on Gradio",
                 Options = ["--share"],
+            },
+            new()
+            {
+                Name = "Listen",
+                Type = LaunchOptionType.Bool,
+                Description = "Make server accessible on network",
+                Options = ["--listen"],
             },
             new()
             {
@@ -167,27 +184,11 @@ public class Wan2GP(
 
         if (torchIndex == TorchIndex.Rocm)
         {
-            await InstallAmdRocmAsync(
-                    venvRunner,
-                    installedPackage,
-                    options,
-                    progress,
-                    onConsoleOutput,
-                    cancellationToken
-                )
-                .ConfigureAwait(false);
+            await InstallAmdRocmAsync(venvRunner, progress, onConsoleOutput).ConfigureAwait(false);
         }
         else
         {
-            await InstallNvidiaAsync(
-                    venvRunner,
-                    installedPackage,
-                    options,
-                    progress,
-                    onConsoleOutput,
-                    cancellationToken
-                )
-                .ConfigureAwait(false);
+            await InstallNvidiaAsync(venvRunner, progress, onConsoleOutput).ConfigureAwait(false);
         }
 
         progress?.Report(new ProgressReport(1, "Install complete", isIndeterminate: false));
@@ -195,11 +196,8 @@ public class Wan2GP(
 
     private async Task InstallNvidiaAsync(
         IPyVenvRunner venvRunner,
-        InstalledPackage installedPackage,
-        InstallPackageOptions options,
         IProgress<ProgressReport>? progress,
-        Action<ProcessOutput>? onConsoleOutput,
-        CancellationToken cancellationToken
+        Action<ProcessOutput>? onConsoleOutput
     )
     {
         var isLegacyNvidia =
@@ -238,18 +236,17 @@ public class Wan2GP(
         // Install hf-xet and pin setuptools to avoid distutils compatibility issues with Python 3.10
         await venvRunner.PipInstall("hf-xet \"setuptools<70.0.0\"", onConsoleOutput).ConfigureAwait(false);
 
-        // Install triton-windows for newer NVIDIA GPUs on Windows
-        if (Compat.IsWindows && isNewerNvidia)
+        if (!isNewerNvidia)
+            return;
+
+        // Install triton n stuff for newer NVIDIA GPUs
+        if (Compat.IsWindows)
         {
             progress?.Report(new ProgressReport(-1f, "Installing triton-windows...", isIndeterminate: true));
             await venvRunner
                 .PipInstall("triton-windows==3.3.1.post19", onConsoleOutput)
                 .ConfigureAwait(false);
-        }
 
-        // Install SageAttention and Flash Attention
-        if (Compat.IsWindows)
-        {
             progress?.Report(new ProgressReport(-1f, "Installing SageAttention...", isIndeterminate: true));
             await venvRunner
                 .PipInstall(
@@ -279,7 +276,7 @@ public class Wan2GP(
             progress?.Report(new ProgressReport(-1f, "Installing Flash Attention...", isIndeterminate: true));
             await venvRunner
                 .PipInstall(
-                    "https://github.com/kingbri1/flash-attention/releases/download/v2.7.4.post1/flash_attn-2.7.4.post1+cu128torch2.7.0cxx11abiFALSE-cp310-cp310-linux_x86_64.whl",
+                    "https://huggingface.co/cocktailpeanut/wheels/resolve/main/flash_attn-2.8.3%2Bcu128torch2.7-cp310-cp310-linux_x86_64.whl",
                     onConsoleOutput
                 )
                 .ConfigureAwait(false);
@@ -290,11 +287,8 @@ public class Wan2GP(
 
     private async Task InstallAmdRocmAsync(
         IPyVenvRunner venvRunner,
-        InstalledPackage installedPackage,
-        InstallPackageOptions options,
         IProgress<ProgressReport>? progress,
-        Action<ProcessOutput>? onConsoleOutput,
-        CancellationToken cancellationToken
+        Action<ProcessOutput>? onConsoleOutput
     )
     {
         progress?.Report(new ProgressReport(-1f, "Upgrading pip...", isIndeterminate: true));
@@ -335,11 +329,6 @@ public class Wan2GP(
             // Install requirements directly using -r flag (handles @ URL syntax properly)
             progress?.Report(new ProgressReport(-1f, "Installing requirements...", isIndeterminate: true));
             await venvRunner.PipInstall("-r requirements.txt", onConsoleOutput).ConfigureAwait(false);
-
-            // Install additional packages
-            await venvRunner
-                .PipInstall("hf-xet setuptools numpy==1.26.4", onConsoleOutput)
-                .ConfigureAwait(false);
         }
         else
         {
@@ -359,12 +348,10 @@ public class Wan2GP(
                 .AddArg("--no-deps");
 
             await venvRunner.PipInstall(torchArgs, onConsoleOutput).ConfigureAwait(false);
-
-            // Install additional packages
-            await venvRunner
-                .PipInstall("hf-xet setuptools numpy==1.26.4", onConsoleOutput)
-                .ConfigureAwait(false);
         }
+
+        // Install additional packages
+        await venvRunner.PipInstall("hf-xet setuptools numpy==1.26.4", onConsoleOutput).ConfigureAwait(false);
     }
 
     public override async Task RunPackage(

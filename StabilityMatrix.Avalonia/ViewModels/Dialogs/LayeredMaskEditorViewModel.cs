@@ -1708,6 +1708,7 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
                 CleanupLayer(layer);
             Layers.Clear();
             layerCounter = 0;
+            imageLayerCounter = 0;
 
             foreach (var layerNode in layersArray)
                 if (layerNode is JsonObject layerObj)
@@ -1719,7 +1720,12 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
                     layer.PropertyChanged += Layer_PropertyChanged;
 
                     Layers.Add(layer);
-                    layerCounter++;
+
+                    // Update counters based on layer type
+                    if (layer.LayerType == MaskLayerType.Image)
+                        imageLayerCounter++;
+                    else
+                        layerCounter++;
                 }
 
             // Select first layer
@@ -1731,8 +1737,33 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
         if (Layers.Count == 0)
             AddLayer();
 
+        // Reload image layer bitmaps from their saved paths
+        // This must happen after layers are loaded since SourceImage is not serialized
+        ReloadImageLayersFromPaths();
+
         // Always sync to canvas after loading to ensure paths are displayed
         SyncSelectedLayerToCanvas();
+    }
+
+    /// <summary>
+    /// Reloads image layer bitmaps from their saved SourceImagePath.
+    /// Called after loading state since the actual SKBitmap is not serialized.
+    /// </summary>
+    private void ReloadImageLayersFromPaths()
+    {
+        foreach (var layer in Layers)
+        {
+            if (
+                layer.LayerType == MaskLayerType.Image
+                && !string.IsNullOrEmpty(layer.SourceImagePath)
+                && layer.SourceImage == null
+                && File.Exists(layer.SourceImagePath)
+            )
+            {
+                // Fire and forget - LoadImageIntoLayerAsync will update UI when done
+                _ = LoadImageIntoLayerAsync(layer, layer.SourceImagePath);
+            }
+        }
     }
 
     /// <inheritdoc />

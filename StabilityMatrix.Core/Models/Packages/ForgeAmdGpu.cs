@@ -20,8 +20,17 @@ public class ForgeAmdGpu(
     ISettingsManager settingsManager,
     IDownloadService downloadService,
     IPrerequisiteHelper prerequisiteHelper,
-    IPyInstallationManager pyInstallationManager
-) : SDWebForge(githubApi, settingsManager, downloadService, prerequisiteHelper, pyInstallationManager)
+    IPyInstallationManager pyInstallationManager,
+    IPipWheelService pipWheelService
+)
+    : SDWebForge(
+        githubApi,
+        settingsManager,
+        downloadService,
+        prerequisiteHelper,
+        pyInstallationManager,
+        pipWheelService
+    )
 {
     public override string Name => "stable-diffusion-webui-amdgpu-forge";
     public override string DisplayName => "Stable Diffusion WebUI AMDGPU Forge";
@@ -42,7 +51,7 @@ public class ForgeAmdGpu(
 
     public override bool IsCompatible => HardwareHelper.PreferDirectMLOrZluda();
 
-    public override PackageType PackageType => PackageType.SdInference;
+    public override PackageType PackageType => PackageType.Legacy;
 
     public override IEnumerable<PackagePrerequisite> Prerequisites =>
         base.Prerequisites.Concat([PackagePrerequisite.HipSdk]);

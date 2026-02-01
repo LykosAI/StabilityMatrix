@@ -17,8 +17,17 @@ public class StableDiffusionDirectMl(
     ISettingsManager settingsManager,
     IDownloadService downloadService,
     IPrerequisiteHelper prerequisiteHelper,
-    IPyInstallationManager pyInstallationManager
-) : A3WebUI(githubApi, settingsManager, downloadService, prerequisiteHelper, pyInstallationManager)
+    IPyInstallationManager pyInstallationManager,
+    IPipWheelService pipWheelService
+)
+    : A3WebUI(
+        githubApi,
+        settingsManager,
+        downloadService,
+        prerequisiteHelper,
+        pyInstallationManager,
+        pipWheelService
+    )
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -51,7 +60,7 @@ public class StableDiffusionDirectMl(
                     Name = "Use DirectML",
                     Type = LaunchOptionType.Bool,
                     InitialValue = HardwareHelper.PreferDirectMLOrZluda(),
-                    Options = ["--use-directml"]
+                    Options = ["--use-directml"],
                 }
             );
 

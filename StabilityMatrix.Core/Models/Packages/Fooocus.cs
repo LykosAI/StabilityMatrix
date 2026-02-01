@@ -18,8 +18,17 @@ public class Fooocus(
     ISettingsManager settingsManager,
     IDownloadService downloadService,
     IPrerequisiteHelper prerequisiteHelper,
-    IPyInstallationManager pyInstallationManager
-) : BaseGitPackage(githubApi, settingsManager, downloadService, prerequisiteHelper, pyInstallationManager)
+    IPyInstallationManager pyInstallationManager,
+    IPipWheelService pipWheelService
+)
+    : BaseGitPackage(
+        githubApi,
+        settingsManager,
+        downloadService,
+        prerequisiteHelper,
+        pyInstallationManager,
+        pipWheelService
+    )
 {
     public override string Name => "Fooocus";
     public override string DisplayName { get; set; } = "Fooocus";
@@ -29,6 +38,7 @@ public class Fooocus(
     public override string LicenseType => "GPL-3.0";
     public override string LicenseUrl => "https://github.com/lllyasviel/Fooocus/blob/main/LICENSE";
     public override string LaunchCommand => "launch.py";
+    public override PackageType PackageType => PackageType.Legacy;
 
     public override Uri PreviewImageUri =>
         new(

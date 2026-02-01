@@ -19,7 +19,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Disabled update checking for legacy InvokeAI installations using Python 3.10.11
 ### Fixed
 - Hide rating stars in the Civitai browser page if no rating is available
-- Fixed parsing of escape sequences in Inference such as `\\` 
+- Fixed parsing of escape sequences in Inference such as `\\`
+- Fixed batch notification firing when only one image is generated
 
 ## v2.16.0-dev.1
 ### Added

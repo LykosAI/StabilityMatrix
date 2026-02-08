@@ -142,6 +142,19 @@ public class PenPathJsonConverter : JsonConverter<PenPath>
                     penPath = penPath with { Feathering = (float)reader.GetDouble() };
                     break;
 
+                case "bitmapdata":
+                    var base64 = reader.GetString();
+                    if (!string.IsNullOrEmpty(base64))
+                    {
+                        var bytes = Convert.FromBase64String(base64);
+                        var bmp = SKBitmap.Decode(bytes);
+                        if (bmp is not null)
+                        {
+                            penPath = penPath with { BitmapData = bmp };
+                        }
+                    }
+                    break;
+
                 default:
                     reader.Skip();
                     break;
@@ -178,6 +191,14 @@ public class PenPathJsonConverter : JsonConverter<PenPath>
         if (compressedPoints != null)
         {
             writer.WriteString("points", compressedPoints);
+        }
+
+        // Write bitmap data (for flood fill paths) as PNG base64
+        if (value.BitmapData is { } bitmap)
+        {
+            using var image = SKImage.FromBitmap(bitmap);
+            using var data = image.Encode(SKEncodedImageFormat.Png, 100);
+            writer.WriteString("bitmapData", Convert.ToBase64String(data.AsSpan()));
         }
 
         writer.WriteEndObject();

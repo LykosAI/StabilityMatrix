@@ -56,15 +56,27 @@
                                                     Background="{Binding DisplayColorHex}"
                                                     CornerRadius="4" />
 
-                                                <!--  Prompt preview  -->
+                                                <!--  Prompt preview (paint layers only)  -->
                                                 <TextBox
                                                     Grid.Column="2"
+                                                    IsVisible="{Binding LayerType, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static inference:MaskLayerType.Paint}}"
                                                     Text="{Binding Prompt}"
                                                     Watermark="Enter prompt for this layer..." />
 
-                                                <!--  Strength  -->
+                                                <!--  Reference label (image layers only)  -->
+                                                <TextBlock
+                                                    Grid.Column="2"
+                                                    VerticalAlignment="Center"
+                                                    FontSize="12"
+                                                    FontStyle="Italic"
+                                                    Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                                    IsVisible="{Binding LayerType, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static inference:MaskLayerType.Image}}"
+                                                    Text="Reference layer" />
+
+                                                <!--  Strength (paint layers only)  -->
                                                 <ui:NumberBox
                                                     Grid.Column="3"
+                                                    IsVisible="{Binding LayerType, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static inference:MaskLayerType.Paint}}"
                                                     Maximum="10"
                                                     Minimum="0"
                                                     SimpleNumberFormat="F1"

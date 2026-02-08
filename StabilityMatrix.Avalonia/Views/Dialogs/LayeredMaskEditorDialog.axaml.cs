@@ -160,6 +160,15 @@ public partial class LayeredMaskEditorDialog : UserControlBase
                 e.Handled = true;
                 break;
 
+            // Ctrl+Shift+Z - Undo layer operation
+            case Key.Z when ctrl && shift:
+                if (vm.UndoLayerOperationCommand.CanExecute(null))
+                {
+                    vm.UndoLayerOperationCommand.Execute(null);
+                    e.Handled = true;
+                }
+                break;
+
             // Ctrl+Up - Move layer up
             case Key.Up when ctrl:
                 if (vm.MoveLayerUpCommand.CanExecute(null))

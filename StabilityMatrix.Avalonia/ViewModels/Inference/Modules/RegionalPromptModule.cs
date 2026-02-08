@@ -20,8 +20,6 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 [RegisterTransient<RegionalPromptModule>]
 public class RegionalPromptModule : ModuleBase
 {
-    private int maskCounter;
-
     /// <inheritdoc />
     public RegionalPromptModule(IServiceManager<ViewModelBase> vmFactory)
         : base(vmFactory)
@@ -41,7 +39,8 @@ public class RegionalPromptModule : ModuleBase
     protected override void OnApplyStep(ModuleApplyStepEventArgs e)
     {
         var card = GetCard<RegionalPromptCardViewModel>();
-        maskCounter = 0;
+        var maskCounter = 0;
+        var maskFileNames = new List<string>();
 
         // Clean up old mask files from previous generations
         CleanupOldMaskFiles();
@@ -76,7 +75,8 @@ public class RegionalPromptModule : ModuleBase
                 continue;
 
             // Save mask to temp file and add to file transfers
-            var maskFileName = GetMaskFileName(layer);
+            var maskFileName = GetMaskFileName(layer, maskCounter);
+            maskFileNames.Add(maskFileName);
             var tempPath = SaveMaskToTempFile(maskImage, maskFileName);
 
             // Add to file transfers so it gets uploaded to ComfyUI's input/Inference folder
@@ -170,13 +170,14 @@ public class RegionalPromptModule : ModuleBase
         // Apply to refiner if available
         if (e.Temp.Refiner.Conditioning is not null)
         {
-            ApplyToRefiner(e, enabledLayers, card);
+            ApplyToRefiner(e, enabledLayers, maskFileNames, card);
         }
     }
 
     private void ApplyToRefiner(
         ModuleApplyStepEventArgs e,
         IReadOnlyList<MaskLayer> enabledLayers,
+        IReadOnlyList<string> maskFileNames,
         RegionalPromptCardViewModel card
     )
     {
@@ -186,8 +187,8 @@ public class RegionalPromptModule : ModuleBase
 
         foreach (var layer in enabledLayers)
         {
-            // Reuse the same mask filename from base model (already uploaded)
-            var maskFileName = GetMaskFileName(layer);
+            // Reuse the same mask filename from base pass (already uploaded)
+            var maskFileName = maskFileNames[refinerMaskCounter];
 
             var loadedMask = e.Nodes.AddTypedNode(
                 new ComfyNodeBuilder.LoadImageMask
@@ -267,11 +268,11 @@ public class RegionalPromptModule : ModuleBase
     /// <summary>
     /// Generates a unique filename for a layer mask.
     /// </summary>
-    private string GetMaskFileName(MaskLayer layer)
+    private static string GetMaskFileName(MaskLayer layer, int index)
     {
-        // Use layer name sanitized + counter for uniqueness
+        // Use layer name sanitized + index for uniqueness
         var safeName = layer.Name.Replace(" ", "_").Replace("/", "_").Replace("\\", "_");
-        return $"regional_mask_{safeName}_{maskCounter}.png";
+        return $"regional_mask_{safeName}_{index}.png";
     }
 
     /// <summary>

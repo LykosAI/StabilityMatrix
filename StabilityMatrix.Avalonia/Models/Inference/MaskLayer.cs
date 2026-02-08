@@ -216,6 +216,7 @@ public partial class MaskLayer : ObservableObject, IJsonLoadableState
     /// Stored internally but serialized via ColorHex.
     /// </summary>
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(DisplayColorHex))]
     [property: JsonIgnore]
     private SKColor displayColor = MaskLayerColors.Red;
 

@@ -11,6 +11,7 @@ using CommunityToolkit.Mvvm.Input;
 using DynamicData;
 using DynamicData.Binding;
 using Injectio.Attributes;
+using Microsoft.Extensions.Logging;
 using SkiaSharp;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Controls.Models;
@@ -38,6 +39,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDisposable
 {
     private readonly IImageIndexService imageIndexService;
+    private readonly ILogger<LayeredMaskEditorViewModel> logger;
     private readonly IServiceManager<ViewModelBase> vmFactory;
 
     /// <summary>
@@ -52,6 +54,17 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
     private Size _previousCanvasSize = new(1024, 1024);
 
     private int imageLayerCounter;
+
+    /// <summary>
+    ///     Stack of layer snapshots for undo support.
+    ///     Each entry captures the full layer state before a destructive operation.
+    /// </summary>
+    private readonly Stack<LayerSnapshot> layerUndoStack = new();
+
+    /// <summary>
+    ///     Maximum number of undo snapshots to keep.
+    /// </summary>
+    private const int MaxUndoSnapshots = 20;
 
     /// <summary>
     ///     Whether the recent images panel is expanded.
@@ -98,11 +111,13 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
 
     public LayeredMaskEditorViewModel(
         IServiceManager<ViewModelBase> vmFactory,
-        IImageIndexService imageIndexService
+        IImageIndexService imageIndexService,
+        ILogger<LayeredMaskEditorViewModel> logger
     )
     {
         this.vmFactory = vmFactory;
         this.imageIndexService = imageIndexService;
+        this.logger = logger;
         PaintCanvasViewModel = vmFactory.Get<PaintCanvasViewModel>();
 
         // Set up Move tool callback to update image layer offsets
@@ -175,6 +190,94 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
         GC.SuppressFinalize(this);
     }
 
+    /// <summary>
+    ///     Captures a snapshot of the current layer state for undo.
+    ///     Call this before any destructive layer operation.
+    /// </summary>
+    private void PushLayerUndoSnapshot()
+    {
+        // Save current canvas paths to the layer first
+        SaveCurrentLayerPaths();
+
+        // Serialize each layer's state
+        var layerStates = Layers.Select(l => l.SaveStateToJsonObject()).ToList();
+        var selectedIndex = SelectedLayer is not null ? Layers.IndexOf(SelectedLayer) : -1;
+
+        layerUndoStack.Push(new LayerSnapshot(layerStates, selectedIndex, layerCounter, imageLayerCounter));
+
+        // Trim to max size
+        if (layerUndoStack.Count > MaxUndoSnapshots)
+        {
+            // Rebuild stack without the oldest entry
+            var items = layerUndoStack.ToArray();
+            layerUndoStack.Clear();
+            for (var i = items.Length - 2; i >= 0; i--)
+                layerUndoStack.Push(items[i]);
+        }
+
+        UndoLayerOperationCommand.NotifyCanExecuteChanged();
+    }
+
+    /// <summary>
+    ///     Undoes the last destructive layer operation by restoring a snapshot.
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(CanUndoLayerOperation))]
+    private void UndoLayerOperation()
+    {
+        if (layerUndoStack.Count == 0)
+            return;
+
+        var snapshot = layerUndoStack.Pop();
+
+        RunWithLayerIndexChangeSuppressed(() =>
+        {
+            // Clear current layers
+            SelectedLayer = null;
+            foreach (var layer in Layers)
+                CleanupLayer(layer);
+            Layers.Clear();
+
+            // Restore counters
+            layerCounter = snapshot.LayerCounter;
+            imageLayerCounter = snapshot.ImageLayerCounter;
+
+            // Restore layers from snapshot
+            foreach (var layerState in snapshot.LayerStates)
+            {
+                var layer = new MaskLayer();
+                layer.LoadStateFromJsonObject(layerState);
+                layer.PropertyChanged += Layer_PropertyChanged;
+                Layers.Add(layer);
+            }
+
+            // Restore selection
+            if (snapshot.SelectedLayerIndex >= 0 && snapshot.SelectedLayerIndex < Layers.Count)
+                SelectedLayer = Layers[snapshot.SelectedLayerIndex];
+            else if (Layers.Count > 0)
+                SelectedLayer = Layers[0];
+
+            // Reload image layer bitmaps from paths
+            ReloadImageLayersFromPaths();
+
+            SyncSelectedLayerToCanvas();
+        });
+
+        UndoLayerOperationCommand.NotifyCanExecuteChanged();
+        DeleteLayerCommand.NotifyCanExecuteChanged();
+    }
+
+    private bool CanUndoLayerOperation() => layerUndoStack.Count > 0;
+
+    /// <summary>
+    ///     Snapshot of the full layer state for undo support.
+    /// </summary>
+    private sealed record LayerSnapshot(
+        List<JsonObject> LayerStates,
+        int SelectedLayerIndex,
+        int LayerCounter,
+        int ImageLayerCounter
+    );
+
     /// <inheritdoc />
     public override async Task OnLoadedAsync()
     {
@@ -235,13 +338,14 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
     ///     Centers the selected image layer by resetting its offset to (0, 0).
     /// </summary>
     [RelayCommand]
-    private void CenterImageLayer()
+    private void CenterImageLayer(MaskLayer? target = null)
     {
-        if (SelectedLayer is not { LayerType: MaskLayerType.Image })
+        var layer = target ?? SelectedLayer;
+        if (layer is not { LayerType: MaskLayerType.Image })
             return;
 
-        SelectedLayer.ImageOffsetX = 0;
-        SelectedLayer.ImageOffsetY = 0;
+        layer.ImageOffsetX = 0;
+        layer.ImageOffsetY = 0;
         SyncSelectedLayerToCanvas();
     }
 
@@ -249,12 +353,13 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
     ///     Toggles horizontal flip for the selected image layer.
     /// </summary>
     [RelayCommand]
-    private void FlipImageHorizontally()
+    private void FlipImageHorizontally(MaskLayer? target = null)
     {
-        if (SelectedLayer is not { LayerType: MaskLayerType.Image })
+        var layer = target ?? SelectedLayer;
+        if (layer is not { LayerType: MaskLayerType.Image })
             return;
 
-        SelectedLayer.IsFlippedHorizontally = !SelectedLayer.IsFlippedHorizontally;
+        layer.IsFlippedHorizontally = !layer.IsFlippedHorizontally;
         SyncSelectedLayerToCanvas();
     }
 
@@ -262,12 +367,13 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
     ///     Toggles vertical flip for the selected image layer.
     /// </summary>
     [RelayCommand]
-    private void FlipImageVertically()
+    private void FlipImageVertically(MaskLayer? target = null)
     {
-        if (SelectedLayer is not { LayerType: MaskLayerType.Image })
+        var layer = target ?? SelectedLayer;
+        if (layer is not { LayerType: MaskLayerType.Image })
             return;
 
-        SelectedLayer.IsFlippedVertically = !SelectedLayer.IsFlippedVertically;
+        layer.IsFlippedVertically = !layer.IsFlippedVertically;
         SyncSelectedLayerToCanvas();
     }
 
@@ -275,9 +381,10 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
     ///     Scales the selected image layer to fit within the canvas bounds while maintaining aspect ratio.
     /// </summary>
     [RelayCommand]
-    private void FitImageToCanvas()
+    private void FitImageToCanvas(MaskLayer? target = null)
     {
-        if (SelectedLayer is not { LayerType: MaskLayerType.Image, SourceImage: { } sourceImage })
+        var layer = target ?? SelectedLayer;
+        if (layer is not { LayerType: MaskLayerType.Image, SourceImage: { } sourceImage })
             return;
 
         if (CanvasSize == Size.Empty)
@@ -291,9 +398,9 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
         // Clamp to valid range (0.1 to 3.0)
         fitScale = Math.Clamp(fitScale, 0.1, 3.0);
 
-        SelectedLayer.ImageScale = fitScale;
-        SelectedLayer.ImageOffsetX = 0;
-        SelectedLayer.ImageOffsetY = 0;
+        layer.ImageScale = fitScale;
+        layer.ImageOffsetX = 0;
+        layer.ImageOffsetY = 0;
         SyncSelectedLayerToCanvas();
     }
 
@@ -374,9 +481,9 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
             // Refresh canvas (SourceImage property change also triggers Layer_PropertyChanged)
             SyncSelectedLayerToCanvas();
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            // Silently fail - could add notification here
+            logger.LogWarning(ex, "Failed to load image into layer from path {ImagePath}", imagePath);
         }
     }
 
@@ -467,6 +574,8 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
         if (layer is null || layer.LayerType == MaskLayerType.Image)
             return;
 
+        PushLayerUndoSnapshot();
+
         // If this is the selected layer, clear the canvas paths too
         if (layer == SelectedLayer)
             PaintCanvasViewModel.Paths = [];
@@ -476,38 +585,41 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
     }
 
     /// <summary>
-    ///     Deletes the selected layer.
+    ///     Deletes the specified layer, or the selected layer if none specified.
     /// </summary>
     [RelayCommand(CanExecute = nameof(CanDeleteLayer))]
-    private void DeleteLayer()
+    private void DeleteLayer(MaskLayer? target = null)
     {
-        if (SelectedLayer is null)
+        var layerToRemove = target ?? SelectedLayer;
+        if (layerToRemove is null || Layers.Count <= 1)
             return;
 
-        // Save current layer before removing
-        SaveCurrentLayerPaths();
+        PushLayerUndoSnapshot();
 
         RunWithLayerIndexChangeSuppressed(() =>
         {
-            var layerToRemove = SelectedLayer;
             var index = Layers.IndexOf(layerToRemove);
 
             // Unsubscribe and dispose before removing
             CleanupLayer(layerToRemove);
             Layers.Remove(layerToRemove);
 
-            // Select adjacent layer
-            if (Layers.Count > 0)
+            // Select adjacent layer if we removed the selected one
+            if (SelectedLayer is null || !Layers.Contains(SelectedLayer))
             {
-                SelectedLayer = Layers[Math.Min(index, Layers.Count - 1)];
-                SyncSelectedLayerToCanvas();
+                if (Layers.Count > 0)
+                {
+                    SelectedLayer = Layers[Math.Min(index, Layers.Count - 1)];
+                }
+                else
+                {
+                    SelectedLayer = null;
+                    PaintCanvasViewModel.Paths = [];
+                }
             }
-            else
-            {
-                SelectedLayer = null;
-                PaintCanvasViewModel.Paths = [];
-                PaintCanvasViewModel.RefreshCanvas?.Invoke();
-            }
+
+            SyncSelectedLayerToCanvas();
+            PaintCanvasViewModel.RefreshCanvas?.Invoke();
         });
     }
 
@@ -621,21 +733,22 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
     ///     Fills the selected layer with a rectangle covering the entire canvas.
     /// </summary>
     [RelayCommand]
-    private void FillLayer()
+    private void FillLayer(MaskLayer? target = null)
     {
-        if (SelectedLayer is null || SelectedLayer.LayerType != MaskLayerType.Paint)
+        var layer = target ?? SelectedLayer;
+        if (layer is null || layer.LayerType != MaskLayerType.Paint)
             return;
 
         // Create a rectangle path covering the entire canvas
         var fillPath = new PenPath
         {
             PathType = PenPathType.Rectangle,
-            FillColor = SelectedLayer.DisplayColor,
+            FillColor = layer.DisplayColor,
             Bounds = new SKRect(0, 0, CanvasSize.Width, CanvasSize.Height),
         };
 
         // Add to current paths
-        SelectedLayer.Paths = SelectedLayer.Paths.Add(fillPath);
+        layer.Paths = layer.Paths.Add(fillPath);
         SyncSelectedLayerToCanvas();
     }
 
@@ -645,8 +758,7 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
     [RelayCommand]
     private void ClearAllLayers()
     {
-        // Save current layer before clearing
-        SaveCurrentLayerPaths();
+        PushLayerUndoSnapshot();
 
         RunWithLayerIndexChangeSuppressed(() =>
         {
@@ -667,20 +779,20 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
     ///     and setting the existing paths to erase mode.
     /// </summary>
     [RelayCommand]
-    private void InvertLayer()
+    private void InvertLayer(MaskLayer? target = null)
     {
-        if (SelectedLayer is null || SelectedLayer.LayerType != MaskLayerType.Paint)
+        var layer = target ?? SelectedLayer;
+        if (layer is null || layer.LayerType != MaskLayerType.Paint)
             return;
 
-        // Save current paths
-        SaveCurrentLayerPaths();
+        PushLayerUndoSnapshot();
 
-        var currentPaths = SelectedLayer.Paths;
+        var currentPaths = layer.Paths;
 
         // If no paths, fill the entire canvas
         if (currentPaths.Count == 0)
         {
-            FillLayer();
+            FillLayer(layer);
             return;
         }
 
@@ -688,7 +800,7 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
         var fullFill = new PenPath
         {
             PathType = PenPathType.Rectangle,
-            FillColor = SelectedLayer.DisplayColor,
+            FillColor = layer.DisplayColor,
             Bounds = new SKRect(0, 0, CanvasSize.Width, CanvasSize.Height),
         };
 
@@ -697,7 +809,7 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
 
         // Rebuild paths: full fill first, then inverted paths
         var newPaths = ImmutableList.Create(fullFill).AddRange(erasePaths);
-        SelectedLayer.Paths = newPaths;
+        layer.Paths = newPaths;
 
         SyncSelectedLayerToCanvas();
     }
@@ -734,6 +846,8 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
     {
         if (CanvasSize == Size.Empty)
             return;
+
+        PushLayerUndoSnapshot();
 
         // Save current layer paths before modifying
         SaveCurrentLayerPaths();
@@ -1063,39 +1177,44 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
     ///     Duplicates the selected layer with all its content and settings.
     /// </summary>
     [RelayCommand]
-    private void DuplicateLayer()
+    private void DuplicateLayer(MaskLayer? target = null)
     {
-        if (SelectedLayer is null)
+        var source = target ?? SelectedLayer;
+        if (source is null)
             return;
 
         // Save current layer paths first
         SaveCurrentLayerPaths();
 
-        layerCounter++;
+        if (source.LayerType == MaskLayerType.Image)
+            imageLayerCounter++;
+        else
+            layerCounter++;
+
         var clone = new MaskLayer
         {
-            Name = $"{SelectedLayer.Name} Copy",
-            LayerType = SelectedLayer.LayerType,
-            DisplayColor = SelectedLayer.DisplayColor,
-            Prompt = SelectedLayer.Prompt,
-            Strength = SelectedLayer.Strength,
-            Opacity = SelectedLayer.Opacity,
-            IsVisible = SelectedLayer.IsVisible,
-            IsEnabled = SelectedLayer.IsEnabled,
-            Paths = SelectedLayer.Paths, // ImmutableList, safe to share
-            SourceImagePath = SelectedLayer.SourceImagePath,
-            ImageScale = SelectedLayer.ImageScale,
-            ImageOffsetX = SelectedLayer.ImageOffsetX,
-            ImageOffsetY = SelectedLayer.ImageOffsetY,
-            IsFlippedHorizontally = SelectedLayer.IsFlippedHorizontally,
-            IsFlippedVertically = SelectedLayer.IsFlippedVertically,
+            Name = $"{source.Name} Copy",
+            LayerType = source.LayerType,
+            DisplayColor = source.DisplayColor,
+            Prompt = source.Prompt,
+            Strength = source.Strength,
+            Opacity = source.Opacity,
+            IsVisible = source.IsVisible,
+            IsEnabled = source.IsEnabled,
+            Paths = source.Paths, // ImmutableList, safe to share
+            SourceImagePath = source.SourceImagePath,
+            ImageScale = source.ImageScale,
+            ImageOffsetX = source.ImageOffsetX,
+            ImageOffsetY = source.ImageOffsetY,
+            IsFlippedHorizontally = source.IsFlippedHorizontally,
+            IsFlippedVertically = source.IsFlippedVertically,
         };
 
         // Subscribe to layer property changes
         clone.PropertyChanged += Layer_PropertyChanged;
 
-        // Insert after current layer
-        var index = Layers.IndexOf(SelectedLayer);
+        // Insert after source layer
+        var index = Layers.IndexOf(source);
         RunWithLayerIndexChangeSuppressed(() =>
         {
             Layers.Insert(index + 1, clone);
@@ -1675,9 +1794,8 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
             MaxDialogWidth = 2500,
             ContentMargin = new Thickness(16),
             FullSizeDesired = true,
-            PrimaryButtonText = Resources.Action_Save,
-            CloseButtonText = Resources.Action_Cancel,
-            DefaultButton = ContentDialogButton.Primary,
+            CloseButtonText = Resources.Action_Close,
+            DefaultButton = ContentDialogButton.Close,
         };
 
         return dialog;

@@ -174,28 +174,17 @@ public class BetterComboBox : ComboBox
 
         object? found = null;
 
-        if (Items.OfType<Enum>().ToList() is { Count: > 0 } enumItems)
+        var enumBestMatch = FindBestMatch(input, Items.OfType<Enum>(), e => e.GetStringValue());
+        if (enumBestMatch.Score > 50)
         {
-            var bestMatch = enumItems
-                .Select(e => (Item: e, Score: Fuzz.WeightedRatio(input, e.GetStringValue())))
-                .OrderByDescending(x => x.Score)
-                .FirstOrDefault();
-
-            if (bestMatch.Score > 50)
-            {
-                found = bestMatch.Item;
-            }
+            found = enumBestMatch.Item;
         }
-        else if (Items.OfType<ISearchText>().ToList() is { Count: > 0 } modelFiles)
+        else
         {
-            var bestMatch = modelFiles
-                .Select(m => (Item: m, Score: Fuzz.WeightedRatio(input, GetItemSearchText(m))))
-                .OrderByDescending(x => x.Score)
-                .FirstOrDefault();
-
-            if (bestMatch.Score > 50)
+            var modelBestMatch = FindBestMatch(input, Items.OfType<ISearchText>(), m => GetItemSearchText(m));
+            if (modelBestMatch.Score > 50)
             {
-                found = bestMatch.Item;
+                found = modelBestMatch.Item;
             }
         }
 
@@ -239,6 +228,28 @@ public class BetterComboBox : ComboBox
             ISearchText searchable => searchable.SearchText,
             _ => item.ToString() ?? string.Empty,
         };
+    }
+
+    private static (TItem? Item, int Score) FindBestMatch<TItem>(
+        string input,
+        IEnumerable<TItem> items,
+        Func<TItem, string> getSearchText
+    )
+    {
+        TItem? bestItem = default;
+        var bestScore = 0;
+
+        foreach (var item in items)
+        {
+            var score = Fuzz.WeightedRatio(input, getSearchText(item));
+            if (score <= bestScore)
+                continue;
+
+            bestScore = score;
+            bestItem = item;
+        }
+
+        return (bestItem, bestScore);
     }
 
     private void OnContainerPrepared(object? sender, ContainerPreparedEventArgs e)

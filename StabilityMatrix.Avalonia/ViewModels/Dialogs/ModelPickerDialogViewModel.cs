@@ -493,8 +493,12 @@ public partial class ModelPickerDialogViewModel : ContentDialogViewModelBase
         if (!string.IsNullOrWhiteSpace(query))
         {
             // Check cache
+            var selectedBaseModelsKey = string.Join(
+                ",",
+                selectedBaseModels.OrderBy(x => x, StringComparer.Ordinal)
+            );
             var cacheKey =
-                $"{refreshRequestId}|{query}|{string.Join(",", selectedBaseModels)}|{ShowCheckpointsOnly}|{ShowUnetsOnly}";
+                $"{refreshRequestId}|{query}|{selectedBaseModelsKey}|{ShowCheckpointsOnly}|{ShowUnetsOnly}";
             if (searchCache.Get(cacheKey, out var cachedResults))
             {
                 FilteredModels = cachedResults!;

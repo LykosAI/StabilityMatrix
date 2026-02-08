@@ -1,15 +1,12 @@
 ﻿<Styles
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
     xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
     xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
     xmlns:fluent="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
     xmlns:inference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
-    xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
-    xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
     xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
     x:DataType="inference:ModelCardViewModel">
     <Design.PreviewWith>
@@ -44,359 +41,307 @@
         <Setter Property="Template">
             <ControlTemplate>
                 <controls:Card Padding="12">
-                    <sg:SpacedGrid
-                        ColumnDefinitions="Auto,*,Auto"
-                        ColumnSpacing="8"
-                        RowDefinitions="*,*,*,*,*,*,*,*,*,*,*,*,*"
-                        RowSpacing="0">
-                        <!--  Model  -->
-                        <TextBlock
-                            Grid.Column="0"
-                            VerticalAlignment="Center"
-                            Text="{x:Static lang:Resources.Label_Model}"
-                            TextAlignment="Left" />
+                    <StackPanel Spacing="0">
+                        <!--  Model Row  -->
+                        <Grid ColumnDefinitions="60,*,Auto">
+                            <TextBlock
+                                Grid.Column="0"
+                                VerticalAlignment="Center"
+                                Text="{x:Static lang:Resources.Label_Model}"
+                                TextAlignment="Left" />
 
-                        <controls:BetterComboBox
-                            Name="PART_ModelComboBox"
-                            Grid.Row="0"
-                            Grid.Column="1"
-                            Padding="8,6,4,6"
-                            HorizontalAlignment="Stretch"
-                            IsVisible="{Binding !IsStandaloneModelLoader}"
-                            ItemsSource="{Binding ClientManager.Models}"
-                            SelectedItem="{Binding SelectedModel}"
-                            Theme="{StaticResource BetterComboBoxHybridModelTheme}" />
+                            <!--  Unified Model Dropdown (Checkpoints + UNet models with auto-detection)  -->
+                            <controls:BetterComboBox
+                                Name="PART_ModelComboBox"
+                                Grid.Column="1"
+                                Padding="8,6,4,6"
+                                HorizontalAlignment="Stretch"
+                                ItemsSource="{Binding ClientManager.AllModels}"
+                                SelectedItem="{Binding SelectedUnifiedModel}"
+                                Theme="{StaticResource BetterComboBoxHybridModelTheme}" />
 
-                        <controls:BetterComboBox
-                            Grid.Row="0"
-                            Grid.Column="1"
-                            Padding="8,6,4,6"
-                            HorizontalAlignment="Stretch"
-                            IsVisible="{Binding IsStandaloneModelLoader}"
-                            ItemsSource="{Binding ClientManager.UnetModels}"
-                            SelectedItem="{Binding SelectedUnetModel}"
-                            Theme="{StaticResource BetterComboBoxHybridModelTheme}" />
+                            <StackPanel
+                                Grid.Column="2"
+                                Margin="4,0,0,0"
+                                VerticalAlignment="Stretch"
+                                Orientation="Horizontal"
+                                Spacing="4">
+                                <!--  Browse Button  -->
+                                <Button
+                                    VerticalAlignment="Stretch"
+                                    Command="{Binding OpenModelPickerCommand}"
+                                    ToolTip.Tip="Browse all models">
+                                    <fluent:SymbolIcon FontSize="16" Symbol="Search" />
+                                </Button>
+                                <!--  Settings Button  -->
+                                <Button VerticalAlignment="Stretch">
+                                    <ui:SymbolIcon FontSize="16" Symbol="Setting" />
+                                    <Button.Flyout>
+                                        <ui:FAMenuFlyout Placement="BottomEdgeAlignedLeft">
+                                            <ui:ToggleMenuFlyoutItem
+                                                IconSource="{StaticResource IconCube}"
+                                                IsChecked="{Binding IsRefinerSelectionEnabled}"
+                                                IsVisible="{Binding ShowRefinerOption}"
+                                                Text="{x:Static lang:Resources.Label_Refiner}" />
+                                            <ui:ToggleMenuFlyoutItem
+                                                IconSource="{StaticResource IconCube}"
+                                                IsChecked="{Binding IsVaeSelectionEnabled}"
+                                                Text="{x:Static lang:Resources.Label_VAE}" />
+                                            <ui:ToggleMenuFlyoutItem
+                                                IconSource="{StaticResource IconCube}"
+                                                IsChecked="{Binding IsExtraNetworksEnabled}"
+                                                Text="{x:Static lang:Resources.Label_ExtraNetworks}" />
+                                            <ui:ToggleMenuFlyoutItem
+                                                IconSource="{StaticResource IconTableCellEdit}"
+                                                IsChecked="{Binding IsClipSkipEnabled}"
+                                                Text="{x:Static lang:Resources.Label_CLIPSkip}" />
+                                            <ui:ToggleMenuFlyoutItem
+                                                IconSource="{StaticResource IconTableCellEdit}"
+                                                IsChecked="{Binding IsClipModelSelectionEnabled}"
+                                                IsVisible="{Binding IsStandaloneModelLoader}"
+                                                Text="Text Encoders" />
+                                            <ui:MenuFlyoutSeparator />
+                                            <ui:MenuFlyoutItem
+                                                Command="{Binding ConfigClickCommand}"
+                                                IconSource="{StaticResource IconQuestionCircle}"
+                                                Text="{x:Static lang:Resources.Label_Config}" />
+                                        </ui:FAMenuFlyout>
+                                    </Button.Flyout>
+                                </Button>
+                            </StackPanel>
+                        </Grid>
 
-                        <Button
-                            Grid.Row="0"
-                            Grid.Column="2"
-                            Margin="0,0,0,0"
-                            HorizontalAlignment="Stretch"
-                            VerticalAlignment="Stretch">
-                            <ui:SymbolIcon FontSize="16" Symbol="Setting" />
-                            <Button.Flyout>
-                                <ui:FAMenuFlyout Placement="BottomEdgeAlignedLeft">
-                                    <ui:ToggleMenuFlyoutItem
-                                        IconSource="{StaticResource IconCube}"
-                                        IsChecked="{Binding IsRefinerSelectionEnabled}"
-                                        IsVisible="{Binding ShowRefinerOption}"
-                                        Text="{x:Static lang:Resources.Label_Refiner}" />
-                                    <ui:ToggleMenuFlyoutItem
-                                        IconSource="{StaticResource IconCube}"
-                                        IsChecked="{Binding IsVaeSelectionEnabled}"
-                                        Text="{x:Static lang:Resources.Label_VAE}" />
-                                    <ui:ToggleMenuFlyoutItem
-                                        IconSource="{StaticResource IconCube}"
-                                        IsChecked="{Binding IsExtraNetworksEnabled}"
-                                        Text="{x:Static lang:Resources.Label_ExtraNetworks}" />
-                                    <ui:ToggleMenuFlyoutItem
-                                        IconSource="{StaticResource IconTableCellEdit}"
-                                        IsChecked="{Binding IsClipSkipEnabled}"
-                                        Text="{x:Static lang:Resources.Label_CLIPSkip}" />
-                                    <ui:ToggleMenuFlyoutItem
-                                        IconSource="{StaticResource IconTableCellEdit}"
-                                        IsChecked="{Binding IsClipModelSelectionEnabled}"
-                                        Text="Text Encoders" />
-                                    <ui:ToggleMenuFlyoutItem
-                                        IconSource="{StaticResource IconCube}"
-                                        IsChecked="{Binding IsModelLoaderSelectionEnabled}"
-                                        IsVisible="{Binding EnableModelLoaderSelection}"
-                                        Text="Model Loader" />
-                                    <ui:MenuFlyoutSeparator />
-                                    <ui:MenuFlyoutItem
-                                        Command="{Binding ConfigClickCommand}"
-                                        IconSource="{StaticResource IconQuestionCircle}"
-                                        Text="{x:Static lang:Resources.Label_Config}" />
-                                </ui:FAMenuFlyout>
-                            </Button.Flyout>
-                        </Button>
-
-                        <!--  Refiner  -->
-                        <TextBlock
-                            Grid.Row="1"
-                            Grid.Column="0"
+                        <!--  Refiner (below Model, when enabled)  -->
+                        <Grid
                             Margin="0,8,0,0"
-                            VerticalAlignment="Center"
-                            IsVisible="{Binding IsRefinerSelectionEnabled}"
-                            Text="{x:Static lang:Resources.Label_Refiner}"
-                            TextAlignment="Left" />
+                            ColumnDefinitions="60,*,Auto"
+                            IsVisible="{Binding IsRefinerSelectionEnabled}">
+                            <TextBlock
+                                Grid.Column="0"
+                                VerticalAlignment="Center"
+                                Text="{x:Static lang:Resources.Label_Refiner}"
+                                TextAlignment="Left" />
+                            <controls:BetterComboBox
+                                Grid.Column="1"
+                                Padding="8,6,4,6"
+                                HorizontalAlignment="Stretch"
+                                ItemsSource="{Binding ClientManager.Models}"
+                                SelectedItem="{Binding SelectedRefiner}"
+                                Theme="{StaticResource BetterComboBoxHybridModelTheme}" />
+                            <Button
+                                Grid.Column="2"
+                                Margin="4,0,0,0"
+                                VerticalAlignment="Stretch"
+                                Command="{Binding OpenRefinerPickerCommand}"
+                                ToolTip.Tip="Browse all refiner models">
+                                <fluent:SymbolIcon FontSize="16" Symbol="Search" />
+                            </Button>
+                        </Grid>
 
-                        <controls:BetterComboBox
-                            Grid.Row="1"
-                            Grid.Column="1"
-                            Grid.ColumnSpan="2"
-                            Margin="0,8,0,0"
-                            Padding="8,6,4,6"
-                            HorizontalAlignment="Stretch"
-                            IsVisible="{Binding IsRefinerSelectionEnabled}"
-                            ItemsSource="{Binding ClientManager.Models}"
-                            SelectedItem="{Binding SelectedRefiner}"
-                            Theme="{StaticResource BetterComboBoxHybridModelTheme}" />
-
-                        <!--  model precision  -->
-                        <TextBlock
-                            Grid.Row="2"
-                            Grid.Column="0"
-                            Margin="0,8,0,0"
-                            VerticalAlignment="Center"
-                            IsVisible="{Binding ShowPrecisionSelection}"
-                            Text="Precision"
-                            TextAlignment="Left" />
-
-                        <ui:FAComboBox
-                            Grid.Row="2"
-                            Grid.Column="1"
-                            Grid.ColumnSpan="2"
+                        <!--  Advanced Options Expander (Precision, VAE, CLIP Skip)  -->
+                        <Expander
                             Margin="0,8,0,0"
                             HorizontalAlignment="Stretch"
-                            IsTextSearchEnabled="True"
-                            IsVisible="{Binding ShowPrecisionSelection}"
-                            ItemsSource="{Binding WeightDTypes}"
-                            SelectedItem="{Binding SelectedDType}" />
+                            Header="{Binding AdvancedOptionsHeader}"
+                            IsExpanded="{Binding IsAdvancedOptionsExpanded}"
+                            IsVisible="{Binding HasActiveAdvancedOptions}">
+                            <StackPanel Margin="0,4,0,0" Spacing="8">
+                                <!--  Model Precision (UNet only)  -->
+                                <Grid ColumnDefinitions="90,*" IsVisible="{Binding ShowPrecisionSelection}">
+                                    <TextBlock
+                                        Grid.Column="0"
+                                        VerticalAlignment="Center"
+                                        Text="Precision"
+                                        TextAlignment="Left" />
+                                    <ui:FAComboBox
+                                        Grid.Column="1"
+                                        HorizontalAlignment="Stretch"
+                                        IsTextSearchEnabled="True"
+                                        ItemsSource="{Binding WeightDTypes}"
+                                        SelectedItem="{Binding SelectedDType}" />
+                                </Grid>
 
-                        <!--  VAE  -->
-                        <TextBlock
-                            Grid.Row="3"
-                            Grid.Column="0"
-                            Margin="0,8,0,0"
-                            VerticalAlignment="Center"
-                            IsVisible="{Binding IsVaeSelectionEnabled}"
-                            Text="{x:Static lang:Resources.Label_VAE}"
-                            TextAlignment="Left" />
+                                <!--  VAE  -->
+                                <Grid ColumnDefinitions="90,*,Auto" IsVisible="{Binding IsVaeSelectionEnabled}">
+                                    <TextBlock
+                                        Grid.Column="0"
+                                        VerticalAlignment="Center"
+                                        Text="{x:Static lang:Resources.Label_VAE}"
+                                        TextAlignment="Left" />
+                                    <ui:FAComboBox
+                                        Grid.Column="1"
+                                        HorizontalAlignment="Stretch"
+                                        DisplayMemberBinding="{Binding ShortDisplayName}"
+                                        IsTextSearchEnabled="True"
+                                        ItemsSource="{Binding ClientManager.VaeModels}"
+                                        SelectedItem="{Binding SelectedVae}" />
+                                    <Button
+                                        Grid.Column="2"
+                                        Margin="4,0,0,0"
+                                        VerticalAlignment="Stretch"
+                                        Command="{Binding OpenVaePickerCommand}"
+                                        ToolTip.Tip="Browse all VAE models">
+                                        <fluent:SymbolIcon FontSize="16" Symbol="Search" />
+                                    </Button>
+                                </Grid>
 
-                        <ui:FAComboBox
-                            Grid.Row="3"
-                            Grid.Column="1"
-                            Grid.ColumnSpan="2"
+                                <!--  CLIP Skip  -->
+                                <Grid ColumnDefinitions="90,*" IsVisible="{Binding IsClipSkipEnabled}">
+                                    <TextBlock
+                                        Grid.Column="0"
+                                        VerticalAlignment="Center"
+                                        Text="{x:Static lang:Resources.Label_CLIPSkip}"
+                                        TextAlignment="Left" />
+                                    <NumericUpDown
+                                        Grid.Column="1"
+                                        HorizontalAlignment="Stretch"
+                                        ClipValueToMinMax="True"
+                                        Increment="1"
+                                        Maximum="24"
+                                        Minimum="1"
+                                        ParsingNumberStyle="Integer"
+                                        Watermark="1"
+                                        Value="{Binding ClipSkip, Converter={x:Static converters:NullableDefaultNumericConverters.IntToDecimal}}" />
+                                </Grid>
+                            </StackPanel>
+                        </Expander>
+
+                        <!--  Text Encoders Expander (UNet models only)  -->
+                        <Expander
                             Margin="0,8,0,0"
                             HorizontalAlignment="Stretch"
-                            DisplayMemberBinding="{Binding ShortDisplayName}"
-                            IsTextSearchEnabled="True"
-                            IsVisible="{Binding IsVaeSelectionEnabled}"
-                            ItemsSource="{Binding ClientManager.VaeModels}"
-                            SelectedItem="{Binding SelectedVae}" />
+                            IsExpanded="{Binding IsTextEncodersExpanded}"
+                            IsVisible="{Binding ShowEncoderSection}">
+                            <Expander.Header>
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock
+                                        Grid.Column="0"
+                                        VerticalAlignment="Center"
+                                        Text="{Binding TextEncodersHeader}" />
+                                    <StackPanel
+                                        Grid.Column="1"
+                                        Orientation="Horizontal"
+                                        Spacing="4">
+                                        <Button
+                                            Padding="4,2"
+                                            Command="{Binding RemoveEncoderCommand}"
+                                            IsEnabled="{Binding CanRemoveEncoder}"
+                                            ToolTip.Tip="Remove last encoder">
+                                            <fluent:SymbolIcon FontSize="12" Symbol="Subtract" />
+                                        </Button>
+                                        <Button
+                                            Padding="4,2"
+                                            Command="{Binding AddEncoderCommand}"
+                                            ToolTip.Tip="Add encoder">
+                                            <fluent:SymbolIcon FontSize="12" Symbol="Add" />
+                                        </Button>
+                                    </StackPanel>
+                                </Grid>
+                            </Expander.Header>
+                            <StackPanel Margin="0,4,0,0" Spacing="8">
+                                <!--  Encoder Type  -->
+                                <Grid ColumnDefinitions="90,*">
+                                    <TextBlock
+                                        Grid.Column="0"
+                                        VerticalAlignment="Center"
+                                        Text="Encoder Type"
+                                        TextAlignment="Left" />
+                                    <ui:FAComboBox
+                                        Grid.Column="1"
+                                        HorizontalAlignment="Stretch"
+                                        IsTextSearchEnabled="True"
+                                        ItemsSource="{Binding ClipTypes}"
+                                        SelectedItem="{Binding SelectedClipType}" />
+                                </Grid>
 
-                        <!--  CLIP Skip  -->
-                        <TextBlock
-                            Grid.Row="4"
-                            Grid.Column="0"
-                            Margin="0,8,0,0"
-                            VerticalAlignment="Center"
-                            IsVisible="{Binding IsClipSkipEnabled}"
-                            Text="{x:Static lang:Resources.Label_CLIPSkip}"
-                            TextAlignment="Left" />
+                                <!--  Dynamic Text Encoders  -->
+                                <ItemsControl ItemsSource="{Binding TextEncoders}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="inference:TextEncoderSlotViewModel">
+                                            <Grid Margin="0,0,0,8" ColumnDefinitions="90,*,Auto">
+                                                <TextBlock
+                                                    Grid.Column="0"
+                                                    VerticalAlignment="Center"
+                                                    Text="{Binding Label}"
+                                                    TextAlignment="Left" />
+                                                <controls:BetterDownloadableComboBox
+                                                    Grid.Column="1"
+                                                    Padding="8,6,4,6"
+                                                    HorizontalAlignment="Stretch"
+                                                    ItemsSource="{Binding $parent[controls:ModelCard].((inference:ModelCardViewModel)DataContext).ClientManager.ClipModels}"
+                                                    SelectedItem="{Binding SelectedModel}"
+                                                    Theme="{StaticResource BetterComboBoxHybridModelTheme}" />
+                                                <Button
+                                                    Grid.Column="2"
+                                                    Margin="4,0,0,0"
+                                                    VerticalAlignment="Stretch"
+                                                    Command="{Binding $parent[controls:ModelCard].((inference:ModelCardViewModel)DataContext).OpenClipPickerCommand}"
+                                                    CommandParameter="{Binding}"
+                                                    ToolTip.Tip="Browse all CLIP models">
+                                                    <fluent:SymbolIcon FontSize="16" Symbol="Search" />
+                                                </Button>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
 
-                        <NumericUpDown
-                            Grid.Row="4"
-                            Grid.Column="1"
-                            Grid.ColumnSpan="2"
-                            Margin="0,8,0,0"
-                            HorizontalAlignment="Stretch"
-                            ClipValueToMinMax="True"
-                            Increment="1"
-                            IsVisible="{Binding IsClipSkipEnabled}"
-                            Maximum="24"
-                            Minimum="1"
-                            ParsingNumberStyle="Integer"
-                            Watermark="1"
-                            Value="{Binding ClipSkip, Converter={x:Static converters:NullableDefaultNumericConverters.IntToDecimal}}" />
+                                <!--  Shift (HiDream only)  -->
+                                <Grid ColumnDefinitions="90,*" IsVisible="{Binding ShowShift}">
+                                    <TextBlock
+                                        Grid.Column="0"
+                                        VerticalAlignment="Center"
+                                        Text="Shift" />
+                                    <ui:NumberBox
+                                        Grid.Column="1"
+                                        HorizontalAlignment="Stretch"
+                                        SelectionHighlightColor="Transparent"
+                                        SimpleNumberFormat="F2"
+                                        SmallChange="0.25"
+                                        SpinButtonPlacementMode="Inline"
+                                        Value="{Binding Shift}" />
+                                </Grid>
+                            </StackPanel>
+                        </Expander>
 
-                        <!--  Model Loader Selection  -->
-                        <TextBlock
-                            Grid.Row="5"
-                            Grid.Column="0"
+                        <!--  Model Loader Selection (hidden by default, only shown when explicitly enabled)  -->
+                        <Grid
                             Margin="0,8,0,0"
-                            VerticalAlignment="Center"
-                            IsVisible="{Binding IsModelLoaderSelectionEnabled}"
-                            Text="Model Loader"
-                            TextAlignment="Left" />
-
-                        <controls:BetterComboBox
-                            Name="PART_ModelLoaderComboBox"
-                            Grid.Row="5"
-                            Grid.Column="1"
-                            Grid.ColumnSpan="2"
-                            Margin="0,8,0,0"
-                            Padding="8,6,4,6"
-                            HorizontalAlignment="Stretch"
-                            IsVisible="{Binding IsModelLoaderSelectionEnabled}"
-                            ItemsSource="{Binding ModelLoaders}"
-                            SelectedItem="{Binding SelectedModelLoader}">
-                            <controls:BetterComboBox.Resources>
-                                <converters:EnumStringConverter x:Key="EnumStringConverter" />
-                            </controls:BetterComboBox.Resources>
-                            <controls:BetterComboBox.ItemTemplate>
-                                <DataTemplate>
-                                    <TextBlock Text="{Binding ., Converter={StaticResource EnumStringConverter}}" />
-                                </DataTemplate>
-                            </controls:BetterComboBox.ItemTemplate>
-                            <controls:BetterComboBox.SelectionBoxItemTemplate>
-                                <DataTemplate>
-                                    <TextBlock Text="{Binding ., Converter={StaticResource EnumStringConverter}}" />
-                                </DataTemplate>
-                            </controls:BetterComboBox.SelectionBoxItemTemplate>
-                        </controls:BetterComboBox>
-
-                        <!--  Encooder Type  -->
-                        <TextBlock
-                            Grid.Row="6"
-                            Grid.Column="0"
-                            Margin="0,8,0,0"
-                            VerticalAlignment="Center"
-                            IsVisible="{Binding IsClipModelSelectionEnabled}"
-                            Text="Encoder Type"
-                            TextAlignment="Left" />
-                        <ui:FAComboBox
-                            Grid.Row="6"
-                            Grid.Column="1"
-                            Grid.ColumnSpan="2"
-                            Margin="0,8,0,0"
-                            HorizontalAlignment="Stretch"
-                            IsTextSearchEnabled="True"
-                            IsVisible="{Binding IsClipModelSelectionEnabled}"
-                            ItemsSource="{Binding ClipTypes}"
-                            SelectedItem="{Binding SelectedClipType}" />
-
-                        <!--  CLIP 1  -->
-                        <TextBlock
-                            Grid.Row="7"
-                            Grid.Column="0"
-                            Margin="0,8,0,0"
-                            VerticalAlignment="Center"
-                            IsVisible="{Binding IsClipModelSelectionEnabled}"
-                            Text="Encoder 1"
-                            TextAlignment="Left" />
-
-                        <controls:BetterDownloadableComboBox
-                            Grid.Row="7"
-                            Grid.Column="1"
-                            Grid.ColumnSpan="2"
-                            Margin="0,8,0,0"
-                            Padding="8,6,4,6"
-                            HorizontalAlignment="Stretch"
-                            IsVisible="{Binding IsClipModelSelectionEnabled}"
-                            ItemsSource="{Binding ClientManager.ClipModels}"
-                            SelectedItem="{Binding SelectedClip1}"
-                            Theme="{StaticResource BetterComboBoxHybridModelTheme}" />
-
-                        <!--  CLIP 2  -->
-                        <TextBlock
-                            Grid.Row="8"
-                            Grid.Column="0"
-                            Margin="0,8,0,0"
-                            VerticalAlignment="Center"
-                            IsVisible="{Binding IsClipModelSelectionEnabled}"
-                            Text="Encoder 2"
-                            TextAlignment="Left" />
-
-                        <controls:BetterDownloadableComboBox
-                            Grid.Row="8"
-                            Grid.Column="1"
-                            Grid.ColumnSpan="2"
-                            Margin="0,8,0,0"
-                            Padding="8,6,4,6"
-                            HorizontalAlignment="Stretch"
-                            IsVisible="{Binding IsClipModelSelectionEnabled}"
-                            ItemsSource="{Binding ClientManager.ClipModels}"
-                            SelectedItem="{Binding SelectedClip2}"
-                            Theme="{StaticResource BetterComboBoxHybridModelTheme}" />
-
-                        <!--  CLIP 3  -->
-                        <TextBlock
-                            Grid.Row="9"
-                            Grid.Column="0"
-                            Margin="0,8,0,0"
-                            VerticalAlignment="Center"
-                            Text="Encoder 3"
-                            TextAlignment="Left">
-                            <TextBlock.IsVisible>
-                                <MultiBinding Converter="{x:Static BoolConverters.Or}">
-                                    <Binding Path="IsSd3Clip" />
-                                    <Binding Path="IsHiDreamClip" />
-                                </MultiBinding>
-                            </TextBlock.IsVisible>
-                        </TextBlock>
-
-                        <controls:BetterDownloadableComboBox
-                            Grid.Row="9"
-                            Grid.Column="1"
-                            Grid.ColumnSpan="2"
-                            Margin="0,8,0,0"
-                            Padding="8,6,4,6"
-                            HorizontalAlignment="Stretch"
-                            ItemsSource="{Binding ClientManager.ClipModels}"
-                            SelectedItem="{Binding SelectedClip3}"
-                            Theme="{StaticResource BetterComboBoxHybridModelTheme}">
-                            <controls:BetterDownloadableComboBox.IsVisible>
-                                <MultiBinding Converter="{x:Static BoolConverters.Or}">
-                                    <Binding Path="IsSd3Clip" />
-                                    <Binding Path="IsHiDreamClip" />
-                                </MultiBinding>
-                            </controls:BetterDownloadableComboBox.IsVisible>
-                        </controls:BetterDownloadableComboBox>
-
-                        <!--  CLIP 4  -->
-                        <TextBlock
-                            Grid.Row="10"
-                            Grid.Column="0"
-                            Margin="0,8,0,0"
-                            VerticalAlignment="Center"
-                            IsVisible="{Binding IsHiDreamClip}"
-                            Text="Encoder 4"
-                            TextAlignment="Left" />
-
-                        <controls:BetterDownloadableComboBox
-                            Grid.Row="10"
-                            Grid.Column="1"
-                            Grid.ColumnSpan="2"
-                            Margin="0,8,0,0"
-                            Padding="8,6,4,6"
-                            HorizontalAlignment="Stretch"
-                            IsVisible="{Binding IsHiDreamClip}"
-                            ItemsSource="{Binding ClientManager.ClipModels}"
-                            SelectedItem="{Binding SelectedClip4}"
-                            Theme="{StaticResource BetterComboBoxHybridModelTheme}" />
-
-                        <TextBlock
-                            Grid.Row="11"
-                            Grid.Column="0"
-                            Margin="0,8,0,0"
-                            VerticalAlignment="Center"
-                            IsVisible="{Binding IsHiDreamClip}"
-                            Text="Shift" />
-                        <ui:NumberBox
-                            Grid.Row="11"
-                            Grid.Column="1"
-                            Grid.ColumnSpan="2"
-                            Margin="0,8,0,0"
-                            HorizontalAlignment="Stretch"
-                            IsVisible="{Binding IsHiDreamClip}"
-                            SelectionHighlightColor="Transparent"
-                            SimpleNumberFormat="F2"
-                            SmallChange="0.25"
-                            SpinButtonPlacementMode="Inline"
-                            Value="{Binding Shift}" />
+                            ColumnDefinitions="90,*"
+                            IsVisible="{Binding IsModelLoaderSelectionEnabled}">
+                            <TextBlock
+                                Grid.Column="0"
+                                VerticalAlignment="Center"
+                                Text="Model Loader"
+                                TextAlignment="Left" />
+                            <controls:BetterComboBox
+                                Name="PART_ModelLoaderComboBox"
+                                Grid.Column="1"
+                                Padding="8,6,4,6"
+                                HorizontalAlignment="Stretch"
+                                ItemsSource="{Binding ModelLoaders}"
+                                SelectedItem="{Binding SelectedModelLoader}">
+                                <controls:BetterComboBox.Resources>
+                                    <converters:EnumStringConverter x:Key="EnumStringConverter" />
+                                </controls:BetterComboBox.Resources>
+                                <controls:BetterComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding ., Converter={StaticResource EnumStringConverter}}" />
+                                    </DataTemplate>
+                                </controls:BetterComboBox.ItemTemplate>
+                                <controls:BetterComboBox.SelectionBoxItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding ., Converter={StaticResource EnumStringConverter}}" />
+                                    </DataTemplate>
+                                </controls:BetterComboBox.SelectionBoxItemTemplate>
+                            </controls:BetterComboBox>
+                        </Grid>
 
                         <!--  Extra Networks  -->
-                        <Panel
-                            Grid.Row="12"
-                            Grid.Column="0"
-                            Grid.ColumnSpan="3"
-                            IsVisible="{Binding IsExtraNetworksEnabled}">
-                            <controls:StackEditableCard Margin="0,8,0,0" DataContext="{Binding ExtraNetworksStackCardViewModel}" />
+                        <Panel Margin="0,8,0,0" IsVisible="{Binding IsExtraNetworksEnabled}">
+                            <controls:StackEditableCard DataContext="{Binding ExtraNetworksStackCardViewModel}" />
                         </Panel>
 
-                    </sg:SpacedGrid>
+                    </StackPanel>
                 </controls:Card>
             </ControlTemplate>
         </Setter>

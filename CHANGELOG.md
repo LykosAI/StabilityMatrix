@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 
 ## v2.16.0-dev.2
 ### Added
+- Added new Model Picker dialog for Inference with grid/list views, search, filtering, and NSFW overlay
+- Added browse buttons to all model dropdowns in Inference (Model, Refiner, VAE, Text Encoders, CLIP Vision)
+- Added inline search box to model combo box dropdowns with fuzzy matching
 - Added NVIDIA driver version warning when launching ComfyUI with CUDA 13.0 (cu130) and driver versions below 580.x
 - Added legacy Python warning when launching InvokeAI installations using Python 3.10.11
 - Added Tiled VAE Decode to the Inference video workflows - thanks to @NeuralFault!

@@ -36,6 +36,13 @@ public interface IInferenceClientManager : IDisposable, INotifyPropertyChanged, 
     bool CanUserDisconnect { get; }
 
     IObservableCollection<HybridModelFile> Models { get; }
+
+    /// <summary>
+    /// Unified collection of all models (Checkpoints + UNet/Diffusion models).
+    /// Use this for unified model selection with auto-detection.
+    /// </summary>
+    IObservableCollection<HybridModelFile> AllModels { get; }
+
     IObservableCollection<HybridModelFile> VaeModels { get; }
     IObservableCollection<HybridModelFile> ControlNetModels { get; }
     IObservableCollection<HybridModelFile> LoraModels { get; }

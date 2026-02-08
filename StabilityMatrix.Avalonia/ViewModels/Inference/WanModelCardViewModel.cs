@@ -1,5 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using FluentAvalonia.UI.Controls;
 using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Languages;
@@ -7,6 +9,7 @@ using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models;
@@ -50,6 +53,76 @@ public partial class WanModelCardViewModel(
         new(vmFactory) { Title = Resources.Label_ExtraNetworks, AvailableModules = [typeof(LoraModule)] };
 
     public List<string> WeightDTypes { get; set; } = ["default", "fp8_e4m3fn", "fp8_e4m3fn_fast", "fp8_e5m2"];
+
+    [RelayCommand]
+    private async Task OpenModelPickerAsync()
+    {
+        using var pickerScope = vmFactory.CreateScope();
+        var pickerVm = pickerScope.ServiceManager.Get<ModelPickerDialogViewModel>();
+        pickerVm.Title = "Select Model";
+        // WanModelCard only uses UNet models
+        pickerVm.Source = ModelPickerSource.CheckpointAndUnet;
+        pickerVm.ShowUnetsOnly = true;
+
+        if (await pickerVm.GetDialog().ShowAsync() == ContentDialogResult.Primary)
+        {
+            if (pickerVm.SelectedModel is { } selected)
+            {
+                SelectedModel = selected;
+            }
+        }
+    }
+
+    [RelayCommand]
+    private async Task OpenVaePickerAsync()
+    {
+        using var pickerScope = vmFactory.CreateScope();
+        var pickerVm = pickerScope.ServiceManager.Get<ModelPickerDialogViewModel>();
+        pickerVm.Title = "Select VAE";
+        pickerVm.Source = ModelPickerSource.Vae;
+
+        if (await pickerVm.GetDialog().ShowAsync() == ContentDialogResult.Primary)
+        {
+            if (pickerVm.SelectedModel is { } selected)
+            {
+                SelectedVae = selected;
+            }
+        }
+    }
+
+    [RelayCommand]
+    private async Task OpenClipPickerAsync()
+    {
+        using var pickerScope = vmFactory.CreateScope();
+        var pickerVm = pickerScope.ServiceManager.Get<ModelPickerDialogViewModel>();
+        pickerVm.Title = "Select Text Encoder";
+        pickerVm.Source = ModelPickerSource.Clip;
+
+        if (await pickerVm.GetDialog().ShowAsync() == ContentDialogResult.Primary)
+        {
+            if (pickerVm.SelectedModel is { } selected)
+            {
+                SelectedClipModel = selected;
+            }
+        }
+    }
+
+    [RelayCommand]
+    private async Task OpenClipVisionPickerAsync()
+    {
+        using var pickerScope = vmFactory.CreateScope();
+        var pickerVm = pickerScope.ServiceManager.Get<ModelPickerDialogViewModel>();
+        pickerVm.Title = "Select CLIP Vision";
+        pickerVm.Source = ModelPickerSource.ClipVision;
+
+        if (await pickerVm.GetDialog().ShowAsync() == ContentDialogResult.Primary)
+        {
+            if (pickerVm.SelectedModel is { } selected)
+            {
+                SelectedClipVisionModel = selected;
+            }
+        }
+    }
 
     public async Task<bool> ValidateModel()
     {
@@ -106,7 +179,7 @@ public partial class WanModelCardViewModel(
                 {
                     Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.UnetLoaderGGUF)),
                     UnetName =
-                        SelectedModel?.RelativePath ?? throw new ValidationException("Model not selected")
+                        SelectedModel?.RelativePath ?? throw new ValidationException("Model not selected"),
                 }
             );
         }
@@ -118,7 +191,7 @@ public partial class WanModelCardViewModel(
                     Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.UNETLoader)),
                     UnetName =
                         SelectedModel?.RelativePath ?? throw new ValidationException("Model not selected"),
-                    WeightDtype = SelectedDType ?? "fp8_e4m3fn_fast"
+                    WeightDtype = SelectedDType ?? "fp8_e4m3fn_fast",
                 }
             );
         }
@@ -128,7 +201,7 @@ public partial class WanModelCardViewModel(
             {
                 Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.ModelSamplingSD3)),
                 Model = modelLoader.Output,
-                Shift = Shift
+                Shift = Shift,
             }
         );
 
@@ -141,7 +214,7 @@ public partial class WanModelCardViewModel(
                 ClipName =
                     SelectedClipModel?.RelativePath
                     ?? throw new ValidationException("No Clip Model Selected"),
-                Type = "wan"
+                Type = "wan",
             }
         );
 
@@ -151,7 +224,7 @@ public partial class WanModelCardViewModel(
             new ComfyNodeBuilder.VAELoader
             {
                 Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.VAELoader)),
-                VaeName = SelectedVae?.RelativePath ?? throw new ValidationException("No VAE Selected")
+                VaeName = SelectedVae?.RelativePath ?? throw new ValidationException("No VAE Selected"),
             }
         );
         e.Builder.Connections.Base.VAE = vaeLoader.Output;
@@ -171,7 +244,7 @@ public partial class WanModelCardViewModel(
                 Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.CLIPVisionLoader)),
                 ClipName =
                     SelectedClipVisionModel?.RelativePath
-                    ?? throw new ValidationException("No Clip Vision Model Selected")
+                    ?? throw new ValidationException("No Clip Vision Model Selected"),
             }
         );
 
@@ -191,10 +264,9 @@ public partial class WanModelCardViewModel(
         // First try hash match
         if (parameters.ModelHash is not null)
         {
-            model = currentModels.FirstOrDefault(
-                m =>
-                    m.Local?.ConnectedModelInfo?.Hashes.SHA256 is { } sha256
-                    && sha256.StartsWith(parameters.ModelHash, StringComparison.InvariantCultureIgnoreCase)
+            model = currentModels.FirstOrDefault(m =>
+                m.Local?.ConnectedModelInfo?.Hashes.SHA256 is { } sha256
+                && sha256.StartsWith(parameters.ModelHash, StringComparison.InvariantCultureIgnoreCase)
             );
         }
         else
@@ -215,7 +287,7 @@ public partial class WanModelCardViewModel(
         return parameters with
         {
             ModelName = SelectedModel?.FileName,
-            ModelHash = SelectedModel?.Local?.ConnectedModelInfo?.Hashes.SHA256
+            ModelHash = SelectedModel?.Local?.ConnectedModelInfo?.Hashes.SHA256,
         };
     }
 }

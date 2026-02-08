@@ -22,7 +22,8 @@ public class MockModelIndexService : IModelIndexService
                         "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/dd9b038c-bd15-43ab-86ab-66e145ad7ff2/width=512/img.jpeg",
                     ConnectedModelInfo = new ConnectedModelInfo
                     {
-                        ModelName = "Art Shaper (very long name example)",
+                        ModelName =
+                            "Art Shaper (very long name example) (very long name example) (very long name example) (very long name example)",
                         VersionName = "Style v8 (very long name)",
                         ModelId = 0,
                         VersionId = 0,

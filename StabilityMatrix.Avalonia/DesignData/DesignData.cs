@@ -1281,7 +1281,8 @@ The gallery images are often inpainted, but you will get something very similar 
                         "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/dd9b038c-bd15-43ab-86ab-66e145ad7ff2/width=512",
                     ConnectedModelInfo = new ConnectedModelInfo
                     {
-                        ModelName = "Art Shaper (very long name example)",
+                        ModelName =
+                            "Art Shaper (very long name example) (very long name example) (very long name example)",
                         VersionName = "Style v8 (very long name)",
                         ModelId = 0,
                         VersionId = 0,
@@ -1542,6 +1543,9 @@ The gallery images are often inpainted, but you will get something very similar 
             vm.ModelType = CivitModelType.Checkpoint;
             vm.BaseModelType = "Pony";
         });
+
+    public static ModelPickerDialogViewModel ModelPickerDialogViewModel =>
+        DialogFactory.Get<ModelPickerDialogViewModel>();
 
     public static PackageInstallProgressItemViewModel PackageInstallProgressItemViewModel =>
         new(

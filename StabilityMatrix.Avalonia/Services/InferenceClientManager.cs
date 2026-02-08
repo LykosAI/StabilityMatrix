@@ -58,6 +58,12 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
     public IObservableCollection<HybridModelFile> Models { get; } =
         new ObservableCollectionExtended<HybridModelFile>();
 
+    /// <summary>
+    /// Unified collection of all models (Checkpoints + UNet/Diffusion models).
+    /// </summary>
+    public IObservableCollection<HybridModelFile> AllModels { get; } =
+        new ObservableCollectionExtended<HybridModelFile>();
+
     private readonly SourceCache<HybridModelFile, string> vaeModelsSource = new(p => p.GetId());
 
     private readonly SourceCache<HybridModelFile, string> vaeModelsDefaults = new(p => p.GetId());
@@ -167,6 +173,18 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             .Connect()
             .DeferUntilLoaded()
             .SortAndBind(Models, SortExpressionComparer<HybridModelFile>.Ascending(f => f.ShortDisplayName))
+            .ObserveOn(SynchronizationContext.Current)
+            .Subscribe();
+
+        // AllModels: merge checkpoints and unet models into unified collection
+        modelsSource
+            .Connect()
+            .Or(unetModelsSource.Connect())
+            .DeferUntilLoaded()
+            .SortAndBind(
+                AllModels,
+                SortExpressionComparer<HybridModelFile>.Ascending(f => f.ShortDisplayName)
+            )
             .ObserveOn(SynchronizationContext.Current)
             .Subscribe();
 

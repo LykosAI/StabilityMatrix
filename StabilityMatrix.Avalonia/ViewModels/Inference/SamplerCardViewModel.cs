@@ -149,6 +149,7 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
             [
                 typeof(FreeUModule),
                 typeof(ControlNetModule),
+                typeof(RegionalPromptModule),
                 typeof(LayerDiffuseModule),
                 typeof(FluxGuidanceModule),
                 typeof(DiscreteModelSamplingModule),
@@ -190,6 +191,18 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
         CfgScale = defaults.CfgScale;
         SelectedSampler = defaults.Sampler;
         SelectedScheduler = defaults.Scheduler;
+    }
+
+    partial void OnWidthChanged(int value)
+    {
+        // Sync width to TabContext so other components can access it
+        tabContext.SamplerWidth = value;
+    }
+
+    partial void OnHeightChanged(int value)
+    {
+        // Sync height to TabContext so other components can access it
+        tabContext.SamplerHeight = value;
     }
 
     [RelayCommand]

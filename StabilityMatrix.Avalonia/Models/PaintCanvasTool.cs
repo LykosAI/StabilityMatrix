@@ -4,5 +4,9 @@ public enum PaintCanvasTool
 {
     None,
     PaintBrush,
-    Eraser
+    Eraser,
+    Rectangle,
+    Ellipse,
+    PaintBucket,
+    Move,
 }

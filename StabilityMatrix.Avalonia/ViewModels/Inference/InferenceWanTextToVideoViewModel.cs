@@ -188,16 +188,23 @@ public class InferenceWanTextToVideoViewModel : InferenceGenerationViewModelBase
             await RunGeneration(args, cancellationToken);
         }
 
-        await notificationService.ShowAsync(
-            NotificationKey.Inference_BatchCompleted,
-            new Notification
-            {
-                Title = "Batch Completed",
-                Body =
-                    $"Batch of {batches} items [{Guid.NewGuid().ToString()[..7].ToLower()}] completed successfully",
-                BodyImagePath = ImageGalleryCardViewModel.ImageSources.LastOrDefault()?.LocalFile?.FullPath,
-            }
-        );
+        // Only show batch notification when there's more than one item
+        // (single items already get a "Prompt Completed" notification)
+        if (batches > 1)
+        {
+            await notificationService.ShowAsync(
+                NotificationKey.Inference_BatchCompleted,
+                new Notification
+                {
+                    Title = "Batch Completed",
+                    Body =
+                        $"Batch of {batches} items [{Guid.NewGuid().ToString()[..7].ToLower()}] completed successfully",
+                    BodyImagePath = ImageGalleryCardViewModel
+                        .ImageSources.LastOrDefault()
+                        ?.LocalFile?.FullPath,
+                }
+            );
+        }
     }
 
     /// <inheritdoc />

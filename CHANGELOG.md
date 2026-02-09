@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 
 ## v2.16.0-dev.2
 ### Added
+- Added Regional Prompting addon to Inference - paint detailed masks to apply different prompts, strengths, and settings to specific regions of your image
+  - Multi-layer mask editor with Photoshop-style interface for managing layers with independent masks, prompts, colors, and opacity
+  - Professional brush tools: freehand brush/eraser with pressure sensitivity, rectangle/ellipse shapes with fill/stroke modes, paint bucket flood fill
+  - Brush feathering/softness control for smooth, blended mask edges (0 = hard edge, 1 = soft/blurred)
+  - Per-layer prompt and strength controls, export/import masks as PNG, duplicate layers, image reference layers for tracing
+  - GPU-accelerated rendering with compact gzip-compressed metadata serialization 
 - Added NVIDIA driver version warning when launching ComfyUI with CUDA 13.0 (cu130) and driver versions below 580.x
 - Added legacy Python warning when launching InvokeAI installations using Python 3.10.11
 - Added Tiled VAE Decode to the Inference video workflows - thanks to @NeuralFault!
@@ -21,6 +27,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Updated ComfyUI-Zluda install to more closely match the author's intended installation method - thanks to @NeuralFault!
 - Updated Forge Classic installs/updates to use the upstream install script for better version compatibility with torch/sage/triton/nunchaku
 ### Fixed
+- Fixed parsing of escape sequences in Inference such as `\\`
+- Fixed batch notification firing when only one image is generated
 - Fixed [#1529](https://github.com/LykosAI/StabilityMatrix/issues/1529) - "Selected commit is null" error when installing packages and rate limited by GitHub
 - Fixed [#1525](https://github.com/LykosAI/StabilityMatrix/issues/1525) - Crash after downloading a model
 - Fixed [#1523](https://github.com/LykosAI/StabilityMatrix/issues/1523), [#1499](https://github.com/LykosAI/StabilityMatrix/issues/1499), [#1494](https://github.com/LykosAI/StabilityMatrix/issues/1494) - Automatic1111 using old stable diffusion repo

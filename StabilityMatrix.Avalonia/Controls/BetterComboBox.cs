@@ -199,14 +199,29 @@ public class BetterComboBox : ComboBox
     {
         var query = input.Trim();
         var hasQuery = !string.IsNullOrWhiteSpace(query);
+        object? firstMatch = null;
 
         foreach (var item in Items.Cast<object>())
         {
+            var isMatch = !hasQuery || IsItemMatch(item, query);
+            if (isMatch && firstMatch is null)
+            {
+                firstMatch = item;
+            }
+
             if (ContainerFromItem(item) is not Control container)
                 continue;
 
-            container.IsVisible = !hasQuery || IsItemMatch(item, query);
+            container.IsVisible = isMatch;
         }
+
+        if (!IsDropDownOpen || firstMatch is null)
+        {
+            return;
+        }
+
+        // Keep the first matching result pinned near the top when virtualizing.
+        Dispatcher.UIThread.Post(() => ScrollIntoView(firstMatch), DispatcherPriority.Background);
     }
 
     private bool IsItemMatch(object item, string query)

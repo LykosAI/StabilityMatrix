@@ -12,7 +12,10 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
   - Professional brush tools: freehand brush/eraser with pressure sensitivity, rectangle/ellipse shapes with fill/stroke modes, paint bucket flood fill
   - Brush feathering/softness control for smooth, blended mask edges (0 = hard edge, 1 = soft/blurred)
   - Per-layer prompt and strength controls, export/import masks as PNG, duplicate layers, image reference layers for tracing
-  - GPU-accelerated rendering with compact gzip-compressed metadata serialization 
+  - GPU-accelerated rendering with compact gzip-compressed metadata serialization
+- Added new Model Picker dialog for Inference with grid/list views, search, filtering, and NSFW overlay
+- Added browse buttons to all model dropdowns in Inference (Model, Refiner, VAE, Text Encoders, CLIP Vision)
+- Added inline search box to model combo box dropdowns with fuzzy matching 
 - Added NVIDIA driver version warning when launching ComfyUI with CUDA 13.0 (cu130) and driver versions below 580.x
 - Added legacy Python warning when launching InvokeAI installations using Python 3.10.11
 - Added Tiled VAE Decode to the Inference video workflows - thanks to @NeuralFault!
@@ -38,6 +41,9 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed [#1476](https://github.com/LykosAI/StabilityMatrix/issues/1476) - Incorrect shared output folder for Forge Classic/Neo
 - Fixed [#1466](https://github.com/LykosAI/StabilityMatrix/issues/1466) - crash after moving portable install
 - Fixed [#1445](https://github.com/LykosAI/StabilityMatrix/issues/1445) - Linux app updates not actually updating - thanks to @NeuralFault!
+### Supporters
+#### 🌟 Visionaries
+Huge shoutout to our amazing Visionaries: **Waterclouds**, **JungleDragon**, **bluepopsicle**, **Bob S**, and **whudunit**! Your continued support fuels every new feature and improvement in Stability Matrix. We couldn't do it without you - thank you for believing in what we're building!
 
 ## v2.16.0-dev.1
 ### Added

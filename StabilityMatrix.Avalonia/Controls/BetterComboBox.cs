@@ -1,59 +1,54 @@
-﻿using System.Reactive.Linq;
+using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using Avalonia;
+using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Controls.Presenters;
 using Avalonia.Controls.Primitives;
-using Avalonia.Controls.Primitives.PopupPositioning;
 using Avalonia.Input;
-using Avalonia.Media;
 using Avalonia.Threading;
+using FuzzySharp;
 using StabilityMatrix.Core.Extensions;
+using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Models;
 
 namespace StabilityMatrix.Avalonia.Controls;
 
 public class BetterComboBox : ComboBox
 {
+    public static readonly StyledProperty<string> SearchWatermarkProperty = AvaloniaProperty.Register<
+        BetterComboBox,
+        string
+    >(nameof(SearchWatermark), defaultValue: "Search...");
+
+    public string SearchWatermark
+    {
+        get => GetValue(SearchWatermarkProperty);
+        set => SetValue(SearchWatermarkProperty, value);
+    }
+
     private readonly Subject<string> inputSubject = new();
     private readonly IDisposable subscription;
-    private readonly Popup inputPopup;
-    private readonly TextBlock inputTextBlock;
-    private string currentInput = string.Empty;
+    private readonly LRUCache<string, object?> searchCache = new(50);
+    private TextBox? searchTextBox;
+    private string keyboardSearchText = string.Empty;
+    private bool isUpdatingSearchText;
 
     public BetterComboBox()
     {
-        // Create an observable that buffers input over a short period
-        var inputObservable = inputSubject
-            .Do(text => currentInput += text)
-            .Throttle(TimeSpan.FromMilliseconds(500))
-            .Where(_ => !string.IsNullOrEmpty(currentInput))
-            .Select(_ => currentInput);
+        DropDownOpened += OnDropDownOpened;
+        DropDownClosed += OnDropDownClosed;
+        ContainerPrepared += OnContainerPrepared;
+        ContainerIndexChanged += OnContainerIndexChanged;
 
-        // Subscribe to the observable to filter the ComboBox items
+        var inputObservable = inputSubject
+            .Select(text => text.Trim())
+            .Throttle(TimeSpan.FromMilliseconds(200))
+            .DistinctUntilChanged();
+
         subscription = inputObservable
             .ObserveOn(SynchronizationContext.Current)
-            .Subscribe(OnInputReceived, _ => ResetPopupText());
-
-        // Initialize the popup
-        inputPopup = new Popup
-        {
-            IsLightDismissEnabled = true,
-            Placement = PlacementMode.AnchorAndGravity,
-            PlacementAnchor = PopupAnchor.Bottom,
-            PlacementGravity = PopupGravity.Top,
-        };
-
-        // Initialize the TextBlock with custom styling
-        inputTextBlock = new TextBlock
-        {
-            Foreground = Brushes.White, // White text color
-            Background = Brush.Parse("#333333"), // Dark gray background
-            Padding = new Thickness(8), // Add padding
-            FontSize = 14 // Optional: adjust font size
-        };
-
-        inputPopup.Child = inputTextBlock;
+            .Subscribe(OnInputReceived, _ => ResetSearchText());
     }
 
     /// <inheritdoc/>
@@ -61,15 +56,26 @@ public class BetterComboBox : ComboBox
     {
         base.OnApplyTemplate(e);
 
-        // Set the Popup's anchor to the ComboBox itself
-        inputPopup.PlacementTarget = this;
-
-        if (e.NameScope.Find<ContentPresenter>("ContentPresenter") is { } contentPresenter)
+        if (e.NameScope.Find<ContentControl>("ContentPresenter") is { } contentPresenter)
         {
             if (SelectionBoxItemTemplate is { } template)
             {
                 contentPresenter.ContentTemplate = template;
             }
+        }
+
+        if (searchTextBox is not null)
+        {
+            searchTextBox.TextChanged -= SearchTextBoxOnTextChanged;
+            searchTextBox.KeyDown -= SearchTextBoxOnKeyDown;
+        }
+
+        searchTextBox = e.NameScope.Find<TextBox>("PART_SearchTextBox");
+        if (searchTextBox is not null)
+        {
+            AutomationProperties.SetName(searchTextBox, "Search models");
+            searchTextBox.TextChanged += SearchTextBoxOnTextChanged;
+            searchTextBox.KeyDown += SearchTextBoxOnKeyDown;
         }
     }
 
@@ -78,72 +84,250 @@ public class BetterComboBox : ComboBox
         if (e.Handled)
             return;
 
+        if (searchTextBox?.IsFocused == true)
+        {
+            base.OnTextInput(e);
+            return;
+        }
+
         if (!string.IsNullOrWhiteSpace(e.Text))
         {
-            // Push the input text to the subject
-            inputSubject.OnNext(e.Text);
-            UpdatePopupText(e.Text);
+            keyboardSearchText += e.Text;
+            inputSubject.OnNext(keyboardSearchText);
+
+            if (IsDropDownOpen)
+            {
+                UpdateSearchTextBoxText(keyboardSearchText);
+                Dispatcher.UIThread.Post(() => searchTextBox?.Focus(), DispatcherPriority.Input);
+            }
+
             e.Handled = true;
         }
 
         base.OnTextInput(e);
     }
 
+    private void SearchTextBoxOnTextChanged(object? sender, TextChangedEventArgs e)
+    {
+        if (isUpdatingSearchText || sender is not TextBox textBox)
+            return;
+
+        keyboardSearchText = textBox.Text ?? string.Empty;
+        inputSubject.OnNext(keyboardSearchText);
+    }
+
+    private void SearchTextBoxOnKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key != Key.Escape)
+            return;
+
+        IsDropDownOpen = false;
+        e.Handled = true;
+    }
+
+    private void OnDropDownOpened(object? sender, EventArgs e)
+    {
+        ResetSearchText();
+        ApplyFilter(string.Empty);
+        Dispatcher.UIThread.Post(() => searchTextBox?.Focus(), DispatcherPriority.Input);
+    }
+
+    private void OnDropDownClosed(object? sender, EventArgs e)
+    {
+        ResetSearchText();
+        ApplyFilter(string.Empty);
+    }
+
+    private void UpdateSearchTextBoxText(string text)
+    {
+        if (searchTextBox is null)
+            return;
+
+        isUpdatingSearchText = true;
+        searchTextBox.Text = text;
+        searchTextBox.CaretIndex = searchTextBox.Text?.Length ?? 0;
+        isUpdatingSearchText = false;
+    }
+
+    private void ResetSearchText()
+    {
+        keyboardSearchText = string.Empty;
+        UpdateSearchTextBoxText(string.Empty);
+    }
+
     private void OnInputReceived(string input)
     {
-        if (Items.OfType<Enum>().ToList() is { Count: > 0 } enumItems)
+        if (IsDropDownOpen)
         {
-            var foundEnum = enumItems.FirstOrDefault(
-                x => x.GetStringValue().StartsWith(input, StringComparison.OrdinalIgnoreCase)
-            );
+            Dispatcher.UIThread.Post(() => ApplyFilter(input));
+            return;
+        }
 
-            if (foundEnum is not null)
+        if (string.IsNullOrWhiteSpace(input))
+            return;
+
+        if (searchCache.Get(input, out var cachedResult) && cachedResult is not null)
+        {
+            Dispatcher.UIThread.Post(() => SelectedItem = cachedResult);
+            return;
+        }
+
+        object? found = null;
+
+        var enumBestMatch = FindBestMatch(input, Items.OfType<Enum>(), e => e.GetStringValue());
+        if (enumBestMatch.Score > 50)
+        {
+            found = enumBestMatch.Item;
+        }
+        else
+        {
+            var modelBestMatch = FindBestMatch(input, Items.OfType<ISearchText>(), m => GetItemSearchText(m));
+            if (modelBestMatch.Score > 50)
             {
-                Dispatcher.UIThread.Post(() =>
-                {
-                    SelectedItem = foundEnum;
-                });
+                found = modelBestMatch.Item;
             }
         }
-        else if (Items.OfType<ISearchText>().ToList() is { } modelFiles)
-        {
-            var found = modelFiles.FirstOrDefault(
-                x => x.SearchText.StartsWith(input, StringComparison.OrdinalIgnoreCase)
-            );
 
-            if (found is not null)
+        if (found is not null)
+        {
+            searchCache.Add(input, found);
+            Dispatcher.UIThread.Post(() => SelectedItem = found);
+        }
+    }
+
+    private void ApplyFilter(string input)
+    {
+        var query = input.Trim();
+        var hasQuery = !string.IsNullOrWhiteSpace(query);
+        object? firstMatch = null;
+
+        foreach (var item in Items.Cast<object>())
+        {
+            var isMatch = !hasQuery || IsItemMatch(item, query);
+            if (isMatch && firstMatch is null)
             {
-                Dispatcher.UIThread.Post(() =>
-                {
-                    SelectedItem = found;
-                });
+                firstMatch = item;
             }
+
+            if (ContainerFromItem(item) is not Control container)
+                continue;
+
+            container.IsVisible = isMatch;
         }
 
-        Dispatcher.UIThread.Post(ResetPopupText);
-    }
-
-    private void UpdatePopupText(string text)
-    {
-        inputTextBlock.Text += text; // Accumulate text in the popup
-
-        if (!inputPopup.IsOpen)
+        if (!IsDropDownOpen || firstMatch is null)
         {
-            inputPopup.IsOpen = true;
+            return;
+        }
+
+        // Keep the first matching result pinned near the top when virtualizing.
+        Dispatcher.UIThread.Post(() => ScrollIntoView(firstMatch), DispatcherPriority.Background);
+    }
+
+    private bool IsItemMatch(object item, string query)
+    {
+        var itemText = GetItemSearchText(item);
+        if (itemText.Contains(query, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        // Allow approximate matching for typos while filtering.
+        return Fuzz.PartialRatio(query, itemText) >= 70;
+    }
+
+    private static string GetItemSearchText(object item)
+    {
+        return item switch
+        {
+            HybridModelFile hybridModel => hybridModel.DetailedSearchText,
+            Enum enumItem => enumItem.GetStringValue(),
+            ISearchText searchable => searchable.SearchText,
+            _ => item.ToString() ?? string.Empty,
+        };
+    }
+
+    private static (TItem? Item, int Score) FindBestMatch<TItem>(
+        string input,
+        IEnumerable<TItem> items,
+        Func<TItem, string> getSearchText
+    )
+    {
+        TItem? bestItem = default;
+        var bestScore = 0;
+
+        foreach (var item in items)
+        {
+            var score = Fuzz.WeightedRatio(input, getSearchText(item));
+            if (score <= bestScore)
+                continue;
+
+            bestScore = score;
+            bestItem = item;
+        }
+
+        return (bestItem, bestScore);
+    }
+
+    private void OnContainerPrepared(object? sender, ContainerPreparedEventArgs e)
+    {
+        if (!IsDropDownOpen)
+            return;
+
+        var query = keyboardSearchText.Trim();
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            e.Container.IsVisible = true;
+            return;
+        }
+
+        if (e.Index >= 0 && e.Index < ItemsView.Count && ItemsView[e.Index] is { } item)
+        {
+            e.Container.IsVisible = IsItemMatch(item, query);
         }
     }
 
-    private void ResetPopupText()
+    private void OnContainerIndexChanged(object? sender, ContainerIndexChangedEventArgs e)
     {
-        currentInput = string.Empty;
-        inputTextBlock.Text = string.Empty;
-        inputPopup.IsOpen = false;
+        if (!IsDropDownOpen)
+            return;
+
+        var query = keyboardSearchText.Trim();
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            e.Container.IsVisible = true;
+            return;
+        }
+
+        if (e.NewIndex >= 0 && e.NewIndex < ItemsView.Count && ItemsView[e.NewIndex] is { } item)
+        {
+            e.Container.IsVisible = IsItemMatch(item, query);
+        }
     }
 
-    // Ensure proper disposal of resources
+    protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
+    {
+        base.OnPropertyChanged(change);
+
+        if (change.Property == ItemsSourceProperty)
+        {
+            searchCache.Clear();
+        }
+    }
+
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
     {
         base.OnDetachedFromVisualTree(e);
+
+        DropDownOpened -= OnDropDownOpened;
+        DropDownClosed -= OnDropDownClosed;
+        ContainerPrepared -= OnContainerPrepared;
+        ContainerIndexChanged -= OnContainerIndexChanged;
+
+        if (searchTextBox is not null)
+        {
+            searchTextBox.TextChanged -= SearchTextBoxOnTextChanged;
+            searchTextBox.KeyDown -= SearchTextBoxOnKeyDown;
+        }
+
         subscription.Dispose();
     }
 }

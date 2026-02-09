@@ -4,7 +4,8 @@ using System.Runtime.CompilerServices;
 namespace StabilityMatrix.Core.Helper.Cache;
 
 [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
-public class LRUCache<TK,TV> where TK : notnull
+public class LRUCache<TK, TV>
+    where TK : notnull
 {
     private readonly int capacity;
     private readonly Dictionary<TK, LinkedListNode<LRUCacheItem<TK, TV>>> cacheMap = new();
@@ -27,7 +28,7 @@ public class LRUCache<TK,TV> where TK : notnull
         }
         return default;
     }
-    
+
     public bool Get(TK key, out TV? value)
     {
         value = Get(key);
@@ -55,10 +56,18 @@ public class LRUCache<TK,TV> where TK : notnull
     [MethodImpl(MethodImplOptions.Synchronized)]
     public void Remove(TK key)
     {
-        if (!cacheMap.TryGetValue(key, out var node)) return;
-        
+        if (!cacheMap.TryGetValue(key, out var node))
+            return;
+
         lruList.Remove(node);
         cacheMap.Remove(key);
+    }
+
+    [MethodImpl(MethodImplOptions.Synchronized)]
+    public void Clear()
+    {
+        cacheMap.Clear();
+        lruList.Clear();
     }
 
     private void RemoveFirst()
@@ -66,22 +75,24 @@ public class LRUCache<TK,TV> where TK : notnull
         // Remove from LRUPriority
         var node = lruList.First;
         lruList.RemoveFirst();
-        
-        if (node == null) return;
-        
+
+        if (node == null)
+            return;
+
         // Remove from cache
         cacheMap.Remove(node.Value.Key);
     }
 }
 
 // ReSharper disable once InconsistentNaming
-internal class LRUCacheItem<TK,TV>
+internal class LRUCacheItem<TK, TV>
 {
     public LRUCacheItem(TK k, TV v)
     {
         Key = k;
         Value = v;
     }
+
     public TK Key;
     public TV Value;
 }

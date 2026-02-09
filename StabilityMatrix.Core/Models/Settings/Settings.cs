@@ -252,6 +252,9 @@ public class Settings
 
     public string? CivitModelBrowserFileNamePattern { get; set; }
 
+    public bool ModelPickerIsGridView { get; set; }
+    public Dictionary<string, ModelPickerFilterState> ModelPickerFilterStates { get; set; } = [];
+
     public int InferenceDimensionStepChange { get; set; } = 128;
 
     [JsonIgnore]
@@ -332,4 +335,6 @@ public class Settings
 [JsonSerializable(typeof(string))]
 [JsonSerializable(typeof(LastDownloadLocationInfo))]
 [JsonSerializable(typeof(Dictionary<string, LastDownloadLocationInfo>))]
+[JsonSerializable(typeof(ModelPickerFilterState))]
+[JsonSerializable(typeof(Dictionary<string, ModelPickerFilterState>))]
 internal partial class SettingsSerializerContext : JsonSerializerContext;

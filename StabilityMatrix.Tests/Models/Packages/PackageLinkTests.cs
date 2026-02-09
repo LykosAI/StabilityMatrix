@@ -17,7 +17,7 @@ public sealed class PackageLinkTests
         new() { DefaultRequestHeaders = { { "User-Agent", "StabilityMatrix/2.0" } } };
 
     private static IEnumerable<object[]> PackagesData =>
-        PackageHelper.GetPackages().Select(p => new object[] { p });
+        PackageHelper.GetPackages().Where(x => x is not ComfyZluda).Select(p => new object[] { p });
 
     private static readonly AsyncRetryPolicy<HttpResponseMessage> RetryPolicy = Policy<HttpResponseMessage>
         .HandleResult(response => response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)

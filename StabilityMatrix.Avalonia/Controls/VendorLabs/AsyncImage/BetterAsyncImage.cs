@@ -39,8 +39,8 @@ public partial class BetterAsyncImage : TemplatedControlBase
     public BetterAsyncImage()
     {
         // Need to run on UI thread to get our attached property, so we cache the result
-        _instanceImageCache = new Lazy<IImageCache?>(
-            () => Dispatcher.UIThread.Invoke(() => GetImageCache(this))
+        _instanceImageCache = new Lazy<IImageCache?>(() =>
+            Dispatcher.UIThread.Invoke(() => GetImageCache(this))
         );
     }
 
@@ -100,6 +100,7 @@ public partial class BetterAsyncImage : TemplatedControlBase
 
         if (source == null)
         {
+            AttachSource(null, newTokenSource.Token);
             return;
         }
 
@@ -114,6 +115,7 @@ public partial class BetterAsyncImage : TemplatedControlBase
 
         if (Source == null)
         {
+            AttachSource(null, newTokenSource.Token);
             return;
         }
 

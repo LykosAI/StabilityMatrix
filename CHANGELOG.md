@@ -41,6 +41,9 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed [#1476](https://github.com/LykosAI/StabilityMatrix/issues/1476) - Incorrect shared output folder for Forge Classic/Neo
 - Fixed [#1466](https://github.com/LykosAI/StabilityMatrix/issues/1466) - crash after moving portable install
 - Fixed [#1445](https://github.com/LykosAI/StabilityMatrix/issues/1445) - Linux app updates not actually updating - thanks to @NeuralFault!
+### Supporters
+#### 🌟 Visionaries
+Huge shoutout to our amazing Visionaries: **Waterclouds**, **JungleDragon**, **bluepopsicle**, **Bob S**, and **whudunit**! Your continued support fuels every new feature and improvement in Stability Matrix. We couldn't do it without you - thank you for believing in what we're building!
 
 ## v2.16.0-dev.1
 ### Added

@@ -67,16 +67,16 @@ public class ComfyNodeBuilder
     {
         public required LatentNodeConnection Samples { get; init; }
         public required VAENodeConnection Vae { get; init; }
-        
+
         [Range(64, 4096)]
         public int TileSize { get; init; } = 512;
-        
+
         [Range(0, 4096)]
         public int Overlap { get; init; } = 64;
-        
+
         [Range(8, 4096)]
         public int TemporalSize { get; init; } = 64;
-        
+
         [Range(4, 4096)]
         public int TemporalOverlap { get; init; } = 8;
     }
@@ -372,6 +372,39 @@ public class ComfyNodeBuilder
         public required double Strength { get; init; }
         public required double StartPercent { get; init; }
         public required double EndPercent { get; init; }
+    }
+
+    /// <summary>
+    /// Applies conditioning to a specific masked region of the image.
+    /// Used for regional prompting.
+    /// </summary>
+    public record ConditioningSetMask : ComfyTypedNodeBase<ConditioningNodeConnection>
+    {
+        public required ConditioningNodeConnection Conditioning { get; init; }
+        public required ImageMaskConnection Mask { get; init; }
+
+        [Range(0d, 10d)]
+        public double Strength { get; init; } = 1.0;
+
+        /// <summary>
+        /// How to apply the conditioning area.
+        /// "default" - Apply to full image, masked by strength.
+        /// "mask bounds" - Apply only within the mask bounding box.
+        /// </summary>
+        public string SetCondArea { get; init; } = "default";
+    }
+
+    /// <summary>
+    /// Combines two conditioning inputs into one.
+    /// Used to merge regional prompts.
+    /// </summary>
+    public record ConditioningCombine : ComfyTypedNodeBase<ConditioningNodeConnection>
+    {
+        [System.Text.Json.Serialization.JsonPropertyName("conditioning_1")]
+        public required ConditioningNodeConnection Conditioning1 { get; init; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("conditioning_2")]
+        public required ConditioningNodeConnection Conditioning2 { get; init; }
     }
 
     public record SVD_img2vid_Conditioning

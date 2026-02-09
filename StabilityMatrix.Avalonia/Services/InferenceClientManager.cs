@@ -724,6 +724,26 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
     }
 
     /// <inheritdoc />
+    public async Task UploadMaskImageAsync(
+        SkiaSharp.SKImage maskImage,
+        string fileName,
+        CancellationToken cancellationToken = default
+    )
+    {
+        EnsureConnected();
+
+        logger.LogDebug("Uploading mask image as {FileName}", fileName);
+
+        // Encode mask to PNG
+        using var data = maskImage.Encode(SkiaSharp.SKEncodedImageFormat.Png, 100);
+        using var stream = new MemoryStream();
+        data.SaveTo(stream);
+        stream.Position = 0;
+
+        await Client.UploadImageAsync(stream, fileName, cancellationToken);
+    }
+
+    /// <inheritdoc />
     public async Task CopyImageToInputAsync(FilePath imageFile, CancellationToken cancellationToken = default)
     {
         if (!IsConnected)

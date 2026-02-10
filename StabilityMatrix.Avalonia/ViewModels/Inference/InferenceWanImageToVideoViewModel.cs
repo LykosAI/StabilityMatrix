@@ -39,16 +39,17 @@ public class InferenceWanImageToVideoViewModel : InferenceWanTextToVideoViewMode
     /// <inheritdoc />
     protected override void BuildPrompt(BuildPromptEventArgs args)
     {
+        var applyArgs = args.ToModuleApplyStepEventArgs();
         var builder = args.Builder;
 
         builder.Connections.Seed = args.SeedOverride switch
         {
             { } seed => Convert.ToUInt64(seed),
-            _ => Convert.ToUInt64(SeedCardViewModel.Seed)
+            _ => Convert.ToUInt64(SeedCardViewModel.Seed),
         };
 
         // Load models
-        ModelCardViewModel.ApplyStep(args);
+        ModelCardViewModel.ApplyStep(applyArgs);
 
         // Setup latent from image
         var imageLoad = builder.Nodes.AddTypedNode(
@@ -57,22 +58,24 @@ public class InferenceWanImageToVideoViewModel : InferenceWanTextToVideoViewMode
                 Name = builder.Nodes.GetUniqueName("ControlNet_LoadImage"),
                 Image =
                     SelectImageCardViewModel.ImageSource?.GetHashGuidFileNameCached("Inference")
-                    ?? throw new ValidationException()
+                    ?? throw new ValidationException(),
             }
         );
         builder.Connections.Primary = imageLoad.Output1;
         builder.Connections.PrimarySize = SelectImageCardViewModel.CurrentBitmapSize;
 
-        BatchSizeCardViewModel.ApplyStep(args);
+        BatchSizeCardViewModel.ApplyStep(applyArgs);
 
-        SelectImageCardViewModel.ApplyStep(args);
+        SelectImageCardViewModel.ApplyStep(applyArgs);
 
-        PromptCardViewModel.ApplyStep(args);
+        PromptCardViewModel.ApplyStep(applyArgs);
 
-        SamplerCardViewModel.ApplyStep(args);
+        SamplerCardViewModel.ApplyStep(applyArgs);
+
+        applyArgs.InvokeAllPreOutputActions();
 
         // Animated webp output
-        VideoOutputSettingsCardViewModel.ApplyStep(args);
+        VideoOutputSettingsCardViewModel.ApplyStep(applyArgs);
     }
 
     /// <inheritdoc />

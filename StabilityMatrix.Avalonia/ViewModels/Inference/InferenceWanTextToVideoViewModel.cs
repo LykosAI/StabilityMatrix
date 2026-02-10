@@ -64,7 +64,7 @@ public class InferenceWanTextToVideoViewModel : InferenceGenerationViewModelBase
             samplerCard.IsSamplerSelectionEnabled = true;
             samplerCard.IsSchedulerSelectionEnabled = true;
             samplerCard.DenoiseStrength = 1.0d;
-            samplerCard.EnableAddons = false;
+            samplerCard.EnableAddons = true;
             samplerCard.IsLengthEnabled = true;
             samplerCard.Width = 832;
             samplerCard.Height = 480;
@@ -94,6 +94,7 @@ public class InferenceWanTextToVideoViewModel : InferenceGenerationViewModelBase
     {
         base.BuildPrompt(args);
 
+        var applyArgs = args.ToModuleApplyStepEventArgs();
         var builder = args.Builder;
 
         builder.Connections.Seed = args.SeedOverride switch
@@ -103,7 +104,7 @@ public class InferenceWanTextToVideoViewModel : InferenceGenerationViewModelBase
         };
 
         // Load models
-        ModelCardViewModel.ApplyStep(args);
+        ModelCardViewModel.ApplyStep(applyArgs);
 
         builder.SetupEmptyLatentSource(
             SamplerCardViewModel.Width,
@@ -114,14 +115,16 @@ public class InferenceWanTextToVideoViewModel : InferenceGenerationViewModelBase
             LatentType.Hunyuan
         );
 
-        BatchSizeCardViewModel.ApplyStep(args);
+        BatchSizeCardViewModel.ApplyStep(applyArgs);
 
-        PromptCardViewModel.ApplyStep(args);
+        PromptCardViewModel.ApplyStep(applyArgs);
 
-        SamplerCardViewModel.ApplyStep(args);
+        SamplerCardViewModel.ApplyStep(applyArgs);
+
+        applyArgs.InvokeAllPreOutputActions();
 
         // Animated webp output
-        VideoOutputSettingsCardViewModel.ApplyStep(args);
+        VideoOutputSettingsCardViewModel.ApplyStep(applyArgs);
     }
 
     /// <inheritdoc />

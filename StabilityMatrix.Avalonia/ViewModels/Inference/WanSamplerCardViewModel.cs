@@ -1,9 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models.Api.Comfy;
@@ -34,6 +36,14 @@ public class WanSamplerCardViewModel : SamplerCardViewModel
 
     public override void ApplyStep(ModuleApplyStepEventArgs e)
     {
+        if (EnableAddons)
+        {
+            foreach (var module in ModulesCardViewModel.Cards.OfType<ModuleBase>())
+            {
+                module.ApplyStep(e);
+            }
+        }
+
         // Set primary sampler and scheduler
         var primarySampler = SelectedSampler ?? throw new ValidationException("Sampler not selected");
         e.Builder.Connections.PrimarySampler = primarySampler;

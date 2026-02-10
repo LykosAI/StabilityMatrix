@@ -859,8 +859,14 @@ public abstract partial class InferenceGenerationViewModelBase
     /// </summary>
     protected virtual void OnRunningNodeChanged(object? sender, string? nodeName)
     {
-        // Ignore if regular progress updates started
-        if (sender is not ComfyTask { HasProgressUpdateStarted: false })
+        var task = sender as ComfyTask;
+        if (task == null)
+        {
+            return;
+        }
+
+        // Ignore if regular progress updates started, unless the running node is different from the one reporting progress
+        if (task.HasProgressUpdateStarted && task.LastProgressUpdate?.RunningNode == nodeName)
         {
             return;
         }

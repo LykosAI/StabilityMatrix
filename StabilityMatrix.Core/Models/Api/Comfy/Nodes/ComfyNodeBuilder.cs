@@ -2,6 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
+using System.Text.Json.Serialization;
 using OneOf;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
@@ -67,17 +68,21 @@ public class ComfyNodeBuilder
     {
         public required LatentNodeConnection Samples { get; init; }
         public required VAENodeConnection Vae { get; init; }
-        
+
         [Range(64, 4096)]
+        [JsonPropertyName("tile_size")]
         public int TileSize { get; init; } = 512;
-        
+
         [Range(0, 4096)]
+        [JsonPropertyName("overlap")]
         public int Overlap { get; init; } = 64;
-        
+
         [Range(8, 4096)]
+        [JsonPropertyName("temporal_size")]
         public int TemporalSize { get; init; } = 64;
-        
+
         [Range(4, 4096)]
+        [JsonPropertyName("temporal_overlap")]
         public int TemporalOverlap { get; init; } = 8;
     }
 

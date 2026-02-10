@@ -1223,12 +1223,11 @@
   {
     "ModelCategory": "Vae",
     "ModelName": "Flux.1 VAE",
-    "RepositoryPath": "black-forest-labs/FLUX.1-schnell",
+    "RepositoryPath": "Comfy-Org/Lumina_Image_2.0_Repackaged",
     "Files": [
-      "ae.safetensors"
+      "split_files/vae/ae.safetensors"
     ],
-    "LicenseType": "Apache 2.0",
-    "LoginRequired": true
+    "LicenseType": "Flux.1 Dev NonCommercial"
   },
   {
     "ModelCategory": "Vae",

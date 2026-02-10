@@ -365,8 +365,26 @@ public class Wan2GP(
         await SetupVenv(installLocation, pythonVersion: PyVersion.Parse(installedPackage.PythonVersion))
             .ConfigureAwait(false);
 
-        // Fix for distutils compatibility issue with Python 3.10 and setuptools
-        VenvRunner.UpdateEnvironmentVariables(env => env.SetItem("SETUPTOOLS_USE_DISTUTILS", "stdlib"));
+        // Set environment variables
+        VenvRunner.UpdateEnvironmentVariables(env =>
+        {
+            // Fix for distutils compatibility issue with Python 3.10 and setuptools
+            env = env.SetItem("SETUPTOOLS_USE_DISTUTILS", "stdlib");
+
+            // Add FFmpeg to PATH if it's installed (optional - for video processing)
+            if (!PrerequisiteHelper.IsFfmpegInstalled)
+                return env;
+
+            var ffmpegDir = Path.GetDirectoryName(PrerequisiteHelper.FfmpegPath);
+            if (string.IsNullOrEmpty(ffmpegDir))
+                return env;
+
+            var currentPath =
+                env.GetValueOrDefault("PATH") ?? Environment.GetEnvironmentVariable("PATH") ?? "";
+            env = env.SetItem("PATH", Compat.GetEnvPathWithExtensions(ffmpegDir, currentPath));
+
+            return env;
+        });
 
         // Notify user that the package is starting (loading can take a while)
         onConsoleOutput?.Invoke(

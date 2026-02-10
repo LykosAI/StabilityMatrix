@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using StabilityMatrix.Avalonia.ViewModels.Inference;
+﻿using StabilityMatrix.Avalonia.ViewModels.Inference;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Api.OpenModelsDb;

@@ -1,0 +1,63 @@
+﻿<controls:UserControlBase
+    x:Class="StabilityMatrix.Avalonia.Views.Dialogs.ImageAnnotationEditorDialog"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
+    xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
+    xmlns:vmDialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
+    d:DataContext="{x:Static mocks:DesignData.ImageAnnotationEditorViewModel}"
+    d:DesignHeight="700"
+    d:DesignWidth="900"
+    x:DataType="vmDialogs:ImageAnnotationEditorViewModel"
+    mc:Ignorable="d">
+    <sg:SpacedGrid Margin="0,8" RowDefinitions="Auto,*">
+        <!--  Toolbar  -->
+        <controls:Card Padding="8,4">
+            <Grid ColumnDefinitions="Auto,*,Auto">
+                <!--  Title  -->
+                <StackPanel
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    Orientation="Horizontal"
+                    Spacing="8">
+                    <avalonia:Icon FontSize="16" Value="fa-solid fa-pen-to-square" />
+                    <TextBlock
+                        FontSize="16"
+                        FontWeight="SemiBold"
+                        Text="Annotate Image" />
+                </StackPanel>
+
+                <!--  Instructions  -->
+                <TextBlock
+                    Grid.Column="1"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    FontSize="12"
+                    Opacity="0.7"
+                    Text="Draw on the image to guide the AI. Your annotations will be included when sending to the provider." />
+
+                <!--  Clear Button  -->
+                <Button
+                    Grid.Column="2"
+                    Padding="8,4"
+                    Command="{Binding ClearAnnotationsCommand}"
+                    ToolTip.Tip="Clear all annotations">
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <avalonia:Icon FontSize="12" Value="fa-solid fa-trash" />
+                        <TextBlock Text="Clear" />
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </controls:Card>
+
+        <!--  Paint Canvas  -->
+        <controls:Card Grid.Row="1" Padding="8,4,8,8">
+            <controls:PaintCanvas DataContext="{Binding PaintCanvasViewModel, Mode=OneWay}" />
+        </controls:Card>
+    </sg:SpacedGrid>
+</controls:UserControlBase>
+

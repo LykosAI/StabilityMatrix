@@ -51,6 +51,16 @@ public record LocalImageFile
     /// </summary>
     public string FileNameWithoutExtension => Path.GetFileNameWithoutExtension(AbsolutePath);
 
+    /// <summary>
+    /// Whether this file is a video file based on extension.
+    /// </summary>
+    public bool IsVideo => SupportedVideoExtensions.Contains(Path.GetExtension(AbsolutePath));
+
+    /// <summary>
+    /// Optional path to a thumbnail image for video files.
+    /// </summary>
+    public string? ThumbnailPath { get; init; }
+
     public (
         string? Parameters,
         string? ParametersJson,
@@ -164,6 +174,20 @@ public record LocalImageFile
             };
         }
 
+        // Handle video files - no image metadata, just file info
+        if (SupportedVideoExtensions.Contains(filePath.Extension))
+        {
+            filePath.Info.Refresh();
+
+            return new LocalImageFile
+            {
+                AbsolutePath = filePath,
+                ImageType = imageType,
+                CreatedAt = filePath.Info.CreationTimeUtc,
+                LastModifiedAt = filePath.Info.LastWriteTimeUtc,
+            };
+        }
+
         using var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read);
         using var ms = new SKManagedStream(fs);
         var codec = SKCodec.Create(ms);
@@ -186,4 +210,13 @@ public record LocalImageFile
         ".gif",
         ".webp",
     ];
+
+    public static readonly HashSet<string> SupportedVideoExtensions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ".mp4",
+        ".webm",
+        ".mov",
+        ".avi",
+        ".mkv",
+    };
 }

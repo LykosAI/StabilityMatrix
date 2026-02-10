@@ -43,6 +43,7 @@ public partial class PackageCardViewModel(
     ISettingsManager settingsManager,
     INavigationService<PackageManagerViewModel> navigationService,
     IServiceManager<ViewModelBase> vmFactory,
+    IPyInstallationManager pyInstallationManager,
     RunningPackageService runningPackageService
 ) : ProgressViewModel
 {
@@ -949,6 +950,41 @@ public partial class PackageCardViewModel(
             Text = "";
             IsIndeterminate = false;
             Value = 0;
+        }
+    }
+
+    [RelayCommand]
+    private async Task RunPythonCommand()
+    {
+        if (Package is null || IsUnknownPackage)
+            return;
+
+        var field = new TextBoxField
+        {
+            Label = "Arguments",
+            InnerLeftText = "python.exe",
+            Watermark = "-c \"print('Hello World')\"",
+        };
+
+        var result = await DialogHelper.GetTextEntryDialogResultAsync(field, "Run Python Command");
+
+        if (result.Result == ContentDialogResult.Primary)
+        {
+            var runCommandStep = new RunPythonCommandStep(pyInstallationManager, settingsManager)
+            {
+                Arguments = field.Text,
+                InstalledPackage = Package,
+                WorkingDirectory = Package.FullPath,
+            };
+
+            var runner = new PackageModificationRunner
+            {
+                ShowDialogOnStart = true,
+                CloseWhenFinished = false,
+                ModificationCompleteMessage = "Python command executed successfully",
+            };
+            EventManager.Instance.OnPackageInstallProgressAdded(runner);
+            await runner.ExecuteSteps([runCommandStep]).ConfigureAwait(false);
         }
     }
 

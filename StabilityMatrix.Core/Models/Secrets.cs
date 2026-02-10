@@ -13,6 +13,8 @@ public readonly record struct Secrets
     public LykosAccountV2Tokens? LykosAccountV2 { get; init; }
 
     public string? HuggingFaceToken { get; init; }
+
+    public string? GeminiApiKey { get; init; }
 }
 
 public static class SecretsExtensions

@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added NVIDIA driver version warning when launching ComfyUI with CUDA 13.0 (cu130) and driver versions below 580.x
 - Added legacy Python warning when launching InvokeAI installations using Python 3.10.11
 - Added Tiled VAE Decode to the Inference video workflows - thanks to @NeuralFault!
+- Added recoverable error dialog for UI thread exceptions, with option to continue instead of exiting
 ### Changed
 - Disabled update checking for legacy InvokeAI installations using Python 3.10.11
 - Hide rating stars in the Civitai browser page if no rating is available

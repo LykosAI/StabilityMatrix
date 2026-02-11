@@ -35,9 +35,9 @@ public class UnixPrerequisiteHelper(
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
     private const string UvMacDownloadUrl =
-        "https://github.com/astral-sh/uv/releases/download/0.9.26/uv-aarch64-apple-darwin.tar.gz";
+        "https://github.com/astral-sh/uv/releases/download/0.9.30/uv-aarch64-apple-darwin.tar.gz";
     private const string UvLinuxDownloadUrl =
-        "https://github.com/astral-sh/uv/releases/download/0.9.26/uv-x86_64-unknown-linux-gnu.tar.gz";
+        "https://github.com/astral-sh/uv/releases/download/0.9.30/uv-x86_64-unknown-linux-gnu.tar.gz";
 
     private DirectoryPath HomeDir => settingsManager.LibraryDir;
     private DirectoryPath AssetsDir => HomeDir.JoinDir("Assets");
@@ -75,7 +75,7 @@ public class UnixPrerequisiteHelper(
     // Cached store of whether or not git is installed
     private bool? isGitInstalled;
 
-    private string ExpectedUvVersion => "0.9.26";
+    private string ExpectedUvVersion => "0.9.30";
 
     public bool IsVcBuildToolsInstalled => false;
     public bool IsHipSdkInstalled => false;

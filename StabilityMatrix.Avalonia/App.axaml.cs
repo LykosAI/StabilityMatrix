@@ -151,6 +151,11 @@ public sealed class App : Application
     {
         base.OnFrameworkInitializationCompleted();
 
+        if (!Debugger.IsAttached || Program.Args.DebugExceptionDialog)
+        {
+            Dispatcher.UIThread.UnhandledException += Dispatcher_UnhandledException;
+        }
+
         if (Design.IsDesignMode)
         {
             DesignData.DesignData.Initialize();
@@ -1013,6 +1018,14 @@ public sealed class App : Application
         disposables.RemoveAll(d => d is NamedPipeWorker);
 
         Logger.Trace("Disposing {Count} Disposables", disposables.Count);
+    }
+
+    private static void Dispatcher_UnhandledException(object? sender, DispatcherUnhandledExceptionEventArgs e)
+    {
+        if (Program.ShowExceptionDialog(e.Exception, true))
+        {
+            e.Handled = true;
+        }
     }
 
     private static void TaskScheduler_UnobservedTaskException(

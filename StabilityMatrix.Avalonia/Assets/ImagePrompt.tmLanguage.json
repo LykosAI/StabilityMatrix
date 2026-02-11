@@ -26,7 +26,7 @@
           "name": "constant.character.escape.prompt"
         }
       },
-      "end": "[-+.!(){}\\[\\]<\\>:]",
+      "end": "[-+.!(){}\\[\\]<\\>:|\\\\]",
       "endCaptures": {
         "0": {
           "name": "constant.character.escape.target.prompt"
@@ -35,7 +35,7 @@
       "name": "meta.structure.escape.prompt",
       "patterns": [
         {
-          "match": "[^-+.!(){}\\[\\]<\\>:]",
+          "match": "[^-+.!(){}\\[\\]<\\>:|\\\\]",
           "name": "invalid.illegal.escape.prompt"
         }
       ]
@@ -147,7 +147,7 @@
             "4": {
               "name": "punctuation.separator.variable.prompt"
             },
-            "5" : {
+            "5": {
               "name": "constant.numeric"
             }
           }
@@ -214,7 +214,7 @@
       "match": "[^#,:\\[\\]\\(\\)\\<\\> \\\\]+",
       "name": "meta.embedded"
     },
-    "invalid_reserved" : {
+    "invalid_reserved": {
       "name": "invalid.illegal.reserved.prompt",
       "patterns": [
         {

@@ -442,6 +442,9 @@ public partial class PackageCardViewModel(
             return;
         }
 
+        if (!await ShowForgeVenvRecreationDialogIfNeeded(basePackage, Package))
+            return;
+
         var packageName = Package.DisplayName ?? Package.PackageName ?? "";
 
         Text = $"Updating {packageName}";
@@ -590,6 +593,9 @@ public partial class PackageCardViewModel(
             );
             return;
         }
+
+        if (!await ShowForgeVenvRecreationDialogIfNeeded(basePackage, Package))
+            return;
 
         var packageName = Package.DisplayName ?? Package.PackageName ?? "";
 
@@ -1023,6 +1029,44 @@ public partial class PackageCardViewModel(
             logger.LogError(e, "Error checking {PackageName} for updates", Package.PackageName);
             return false;
         }
+    }
+
+    private static bool RequiresForgeVenvRecreationNotice(
+        BasePackage basePackage,
+        InstalledPackage installedPackage
+    )
+    {
+        if (basePackage is not ForgeClassic)
+            return false;
+
+        return PyVersion.TryParse(installedPackage.PythonVersion, out var currentVersion)
+            && currentVersion < PyInstallationManager.Python_3_13_12;
+    }
+
+    private async Task<bool> ShowForgeVenvRecreationDialogIfNeeded(
+        BasePackage basePackage,
+        InstalledPackage installedPackage
+    )
+    {
+        if (!RequiresForgeVenvRecreationNotice(basePackage, installedPackage))
+            return true;
+
+        var dialog = new BetterContentDialog
+        {
+            Title = "Python Upgrade Required",
+            Content =
+                "This update will recreate the package venv to migrate from Python "
+                + $"{installedPackage.PythonVersion} to {PyInstallationManager.Python_3_13_12}.\n\n"
+                + "Any custom pip packages manually installed into the current venv may need to be reinstalled. "
+                + "Your launch options, extensions, and generated files are not affected.\n\n"
+                + "You can also install a fresh copy and migrate manually.\n\n"
+                + "Continue with update?",
+            PrimaryButtonText = "Continue",
+            CloseButtonText = Resources.Action_Cancel,
+            DefaultButton = ContentDialogButton.Primary,
+        };
+
+        return await dialog.ShowAsync() == ContentDialogResult.Primary;
     }
 
     public void ToggleSharedModelSymlink() => IsSharedModelSymlink = !IsSharedModelSymlink;

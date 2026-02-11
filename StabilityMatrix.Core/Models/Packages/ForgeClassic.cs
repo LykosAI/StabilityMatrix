@@ -33,7 +33,7 @@ public class ForgeClassic(
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private const string LegacyUpgradeAlert = "You are updating from an old version";
     private const string ContinuePrompt = "Press Enter to Continue";
-    private static readonly PyVersion MinimumPythonVersion = Python.PyInstallationManager.Python_3_13_12;
+    public override PyVersion? MinimumPythonVersion => Python.PyInstallationManager.Python_3_13_12;
 
     public override string Name => "forge-classic";
     public override string Author => "Haoming02";
@@ -198,7 +198,7 @@ public class ForgeClassic(
             );
 
         var shouldUpgradePython = options.IsUpdate && requestedPythonVersion < MinimumPythonVersion;
-        var targetPythonVersion = shouldUpgradePython ? MinimumPythonVersion : requestedPythonVersion;
+        var targetPythonVersion = shouldUpgradePython ? MinimumPythonVersion!.Value : requestedPythonVersion;
 
         if (shouldUpgradePython)
         {

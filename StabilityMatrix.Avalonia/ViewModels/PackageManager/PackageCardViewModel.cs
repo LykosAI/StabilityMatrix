@@ -442,7 +442,7 @@ public partial class PackageCardViewModel(
             return;
         }
 
-        if (!await ShowForgeVenvRecreationDialogIfNeeded(basePackage, Package))
+        if (!await ShowPythonUpgradeDialogIfNeeded(basePackage, Package))
             return;
 
         var packageName = Package.DisplayName ?? Package.PackageName ?? "";
@@ -594,7 +594,7 @@ public partial class PackageCardViewModel(
             return;
         }
 
-        if (!await ShowForgeVenvRecreationDialogIfNeeded(basePackage, Package))
+        if (!await ShowPythonUpgradeDialogIfNeeded(basePackage, Package))
             return;
 
         var packageName = Package.DisplayName ?? Package.PackageName ?? "";
@@ -1031,24 +1031,24 @@ public partial class PackageCardViewModel(
         }
     }
 
-    private static bool RequiresForgeVenvRecreationNotice(
+    private static bool RequiresPythonUpgradeNotice(
         BasePackage basePackage,
         InstalledPackage installedPackage
     )
     {
-        if (basePackage is not ForgeClassic)
+        if (basePackage.MinimumPythonVersion is not { } minimumVersion)
             return false;
 
         return PyVersion.TryParse(installedPackage.PythonVersion, out var currentVersion)
-            && currentVersion < PyInstallationManager.Python_3_13_12;
+            && currentVersion < minimumVersion;
     }
 
-    private async Task<bool> ShowForgeVenvRecreationDialogIfNeeded(
+    private async Task<bool> ShowPythonUpgradeDialogIfNeeded(
         BasePackage basePackage,
         InstalledPackage installedPackage
     )
     {
-        if (!RequiresForgeVenvRecreationNotice(basePackage, installedPackage))
+        if (!RequiresPythonUpgradeNotice(basePackage, installedPackage))
             return true;
 
         var dialog = new BetterContentDialog
@@ -1056,7 +1056,7 @@ public partial class PackageCardViewModel(
             Title = "Python Upgrade Required",
             Content =
                 "This update will recreate the package venv to migrate from Python "
-                + $"{installedPackage.PythonVersion} to {PyInstallationManager.Python_3_13_12}.\n\n"
+                + $"{installedPackage.PythonVersion} to {basePackage.MinimumPythonVersion}.\n\n"
                 + "Any custom pip packages manually installed into the current venv may need to be reinstalled. "
                 + "Your launch options, extensions, and generated files are not affected.\n\n"
                 + "You can also install a fresh copy and migrate manually.\n\n"

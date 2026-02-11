@@ -63,6 +63,12 @@ public abstract class BasePackage(ISettingsManager settingsManager)
     public virtual PyVersion RecommendedPythonVersion => PyInstallationManager.Python_3_10_17;
 
     /// <summary>
+    /// Minimum Python version required for updates. When set, updating a package with a lower
+    /// installed Python version will prompt for venv recreation. Null means no minimum enforced.
+    /// </summary>
+    public virtual PyVersion? MinimumPythonVersion => null;
+
+    /// <summary>
     /// Returns a list of extra commands that can be executed for this package.
     /// The function takes an InstalledPackage parameter to operate on a specific installation.
     /// </summary>

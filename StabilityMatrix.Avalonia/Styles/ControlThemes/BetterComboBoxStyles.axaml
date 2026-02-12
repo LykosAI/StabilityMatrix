@@ -310,6 +310,13 @@
             </Style>
         </Style>
 
+        <Style Selector="^[UseLegacyModelSearch=true] /template/ TextBox#PART_SearchTextBox">
+            <Setter Property="IsVisible" Value="False" />
+            <Setter Property="Margin" Value="0" />
+            <Setter Property="MinHeight" Value="0" />
+            <Setter Property="Height" Value="0" />
+        </Style>
+
         <Style Selector="^[IsEditable=true]">
             <Setter Property="IsTabStop" Value="False" />
             <Setter Property="KeyboardNavigation.TabNavigation" Value="Local" />

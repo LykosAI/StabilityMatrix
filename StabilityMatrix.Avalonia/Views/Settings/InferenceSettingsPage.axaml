@@ -88,7 +88,7 @@
             </sg:SpacedGrid>
 
             <!--  General  -->
-            <sg:SpacedGrid RowDefinitions="Auto,*,*,*" RowSpacing="4">
+            <sg:SpacedGrid RowDefinitions="Auto,*,*,*,*" RowSpacing="4">
                 <TextBlock
                     Margin="0,0,0,4"
                     FontWeight="Medium"
@@ -166,6 +166,18 @@
                     Target="{Binding #OutputImageFileNameFormatTextBox, Mode=OneWay}">
                     <DataGrid AutoGenerateColumns="True" ItemsSource="{Binding OutputImageFileNameFormatVars}" />
                 </ui:TeachingTip>
+
+                <ui:SettingsExpander
+                    Grid.Row="4"
+                    Description="Use the previous combo box model search behavior (floating typed text and auto-select first match)."
+                    Header="Legacy Model Search">
+                    <ui:SettingsExpander.IconSource>
+                        <controls:FASymbolIconSource Symbol="fa-solid fa-magnifying-glass" />
+                    </ui:SettingsExpander.IconSource>
+                    <ui:SettingsExpander.Footer>
+                        <ToggleSwitch IsChecked="{Binding UseLegacyModelSearch}" />
+                    </ui:SettingsExpander.Footer>
+                </ui:SettingsExpander>
 
             </sg:SpacedGrid>
 

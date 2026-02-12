@@ -5,21 +5,34 @@ using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Controls.Presenters;
 using Avalonia.Controls.Primitives;
+using Avalonia.Controls.Primitives.PopupPositioning;
 using Avalonia.Input;
+using Avalonia.Media;
 using Avalonia.Threading;
 using FuzzySharp;
+using Microsoft.Extensions.DependencyInjection;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Settings;
+using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.Controls;
 
 public class BetterComboBox : ComboBox
 {
+    private static readonly TimeSpan LegacySearchIdleResetDelay = TimeSpan.FromMilliseconds(1200);
+
     public static readonly StyledProperty<string> SearchWatermarkProperty = AvaloniaProperty.Register<
         BetterComboBox,
         string
     >(nameof(SearchWatermark), defaultValue: "Search...");
+    public static readonly StyledProperty<bool> UseLegacyModelSearchProperty = AvaloniaProperty.Register<
+        BetterComboBox,
+        bool
+    >(nameof(UseLegacyModelSearch));
+    public static readonly DirectProperty<BetterComboBox, string> SearchTextProperty =
+        AvaloniaProperty.RegisterDirect<BetterComboBox, string>(nameof(SearchText), o => o.SearchText);
 
     public string SearchWatermark
     {
@@ -27,11 +40,29 @@ public class BetterComboBox : ComboBox
         set => SetValue(SearchWatermarkProperty, value);
     }
 
+    public bool UseLegacyModelSearch
+    {
+        get => GetValue(UseLegacyModelSearchProperty);
+        set => SetValue(UseLegacyModelSearchProperty, value);
+    }
+
+    public string SearchText
+    {
+        get => searchText;
+        private set => SetAndRaise(SearchTextProperty, ref searchText, value);
+    }
+
     private readonly Subject<string> inputSubject = new();
     private readonly IDisposable subscription;
     private readonly LRUCache<string, object?> searchCache = new(50);
+    private readonly ISettingsManager? settingsManager;
+    private readonly Popup legacyInputPopup;
+    private readonly TextBlock legacyInputTextBlock;
+    private readonly DispatcherTimer legacySearchResetTimer = new() { Interval = LegacySearchIdleResetDelay };
     private TextBox? searchTextBox;
     private string keyboardSearchText = string.Empty;
+    private string searchText = string.Empty;
+    private string lastAppliedFilter = string.Empty;
     private bool isUpdatingSearchText;
 
     public BetterComboBox()
@@ -49,12 +80,40 @@ public class BetterComboBox : ComboBox
         subscription = inputObservable
             .ObserveOn(SynchronizationContext.Current)
             .Subscribe(OnInputReceived, _ => ResetSearchText());
+        legacySearchResetTimer.Tick += OnLegacySearchResetTimerTick;
+
+        legacyInputTextBlock = new TextBlock { Foreground = Brushes.White, FontSize = 13 };
+        legacyInputPopup = new Popup
+        {
+            IsLightDismissEnabled = true,
+            Placement = PlacementMode.AnchorAndGravity,
+            PlacementAnchor = PopupAnchor.Bottom,
+            PlacementGravity = PopupGravity.Top,
+            VerticalOffset = -6,
+            Child = new Border
+            {
+                Background = Brush.Parse("#333333"),
+                Padding = new Thickness(8, 4),
+                Child = legacyInputTextBlock,
+            },
+        };
+
+        if (!Design.IsDesignMode)
+        {
+            settingsManager = App.Services.GetService<ISettingsManager>();
+            if (settingsManager is not null)
+            {
+                UseLegacyModelSearch = settingsManager.Settings.UseLegacyModelSearch;
+                settingsManager.SettingsPropertyChanged += OnSettingsPropertyChanged;
+            }
+        }
     }
 
     /// <inheritdoc/>
     protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
     {
         base.OnApplyTemplate(e);
+        legacyInputPopup.PlacementTarget = this;
 
         if (e.NameScope.Find<ContentControl>("ContentPresenter") is { } contentPresenter)
         {
@@ -94,11 +153,16 @@ public class BetterComboBox : ComboBox
         {
             keyboardSearchText += e.Text;
             inputSubject.OnNext(keyboardSearchText);
+            RestartLegacySearchResetTimer();
+            UpdateLegacySearchPopupText(keyboardSearchText);
 
             if (IsDropDownOpen)
             {
                 UpdateSearchTextBoxText(keyboardSearchText);
-                Dispatcher.UIThread.Post(() => searchTextBox?.Focus(), DispatcherPriority.Input);
+                if (!UseLegacyModelSearch)
+                {
+                    Dispatcher.UIThread.Post(() => searchTextBox?.Focus(), DispatcherPriority.Input);
+                }
             }
 
             e.Handled = true;
@@ -113,7 +177,10 @@ public class BetterComboBox : ComboBox
             return;
 
         keyboardSearchText = textBox.Text ?? string.Empty;
+        SearchText = keyboardSearchText;
         inputSubject.OnNext(keyboardSearchText);
+        RestartLegacySearchResetTimer();
+        UpdateLegacySearchPopupText(keyboardSearchText);
     }
 
     private void SearchTextBoxOnKeyDown(object? sender, KeyEventArgs e)
@@ -121,25 +188,34 @@ public class BetterComboBox : ComboBox
         if (e.Key != Key.Escape)
             return;
 
+        StopLegacySearchResetTimer();
         IsDropDownOpen = false;
         e.Handled = true;
     }
 
     private void OnDropDownOpened(object? sender, EventArgs e)
     {
+        StopLegacySearchResetTimer();
         ResetSearchText();
         ApplyFilter(string.Empty);
-        Dispatcher.UIThread.Post(() => searchTextBox?.Focus(), DispatcherPriority.Input);
+        if (!UseLegacyModelSearch)
+        {
+            Dispatcher.UIThread.Post(() => searchTextBox?.Focus(), DispatcherPriority.Input);
+        }
     }
 
     private void OnDropDownClosed(object? sender, EventArgs e)
     {
+        StopLegacySearchResetTimer();
         ResetSearchText();
         ApplyFilter(string.Empty);
     }
 
     private void UpdateSearchTextBoxText(string text)
     {
+        SearchText = text;
+        UpdateLegacySearchPopupText(text);
+
         if (searchTextBox is null)
             return;
 
@@ -151,15 +227,86 @@ public class BetterComboBox : ComboBox
 
     private void ResetSearchText()
     {
+        StopLegacySearchResetTimer();
         keyboardSearchText = string.Empty;
         UpdateSearchTextBoxText(string.Empty);
+    }
+
+    private void RestartLegacySearchResetTimer()
+    {
+        if (!UseLegacyModelSearch || string.IsNullOrEmpty(keyboardSearchText))
+            return;
+
+        legacySearchResetTimer.Stop();
+        legacySearchResetTimer.Start();
+    }
+
+    private void StopLegacySearchResetTimer()
+    {
+        legacySearchResetTimer.Stop();
+    }
+
+    private void UpdateLegacySearchPopupText(string text)
+    {
+        if (!UseLegacyModelSearch || string.IsNullOrWhiteSpace(text))
+        {
+            HideLegacySearchPopup();
+            return;
+        }
+
+        legacyInputTextBlock.Text = text;
+
+        if (legacyInputPopup.PlacementTarget is null)
+        {
+            legacyInputPopup.PlacementTarget = this;
+        }
+
+        if (!legacyInputPopup.IsOpen)
+        {
+            legacyInputPopup.IsOpen = true;
+        }
+    }
+
+    private void HideLegacySearchPopup()
+    {
+        legacyInputTextBlock.Text = string.Empty;
+        legacyInputPopup.IsOpen = false;
+    }
+
+    private void OnLegacySearchResetTimerTick(object? sender, EventArgs e)
+    {
+        legacySearchResetTimer.Stop();
+
+        if (!UseLegacyModelSearch || string.IsNullOrWhiteSpace(keyboardSearchText))
+            return;
+
+        ResetSearchText();
     }
 
     private void OnInputReceived(string input)
     {
         if (IsDropDownOpen)
         {
-            Dispatcher.UIThread.Post(() => ApplyFilter(input));
+            if (UseLegacyModelSearch)
+            {
+                var query = input.Trim();
+                if (string.IsNullOrWhiteSpace(query))
+                    return;
+
+                var legacyMatch = FindLegacyMatch(query);
+                if (legacyMatch is not null)
+                {
+                    Dispatcher.UIThread.Post(() =>
+                    {
+                        SelectedItem = legacyMatch;
+                        ScrollIntoView(legacyMatch);
+                    });
+                }
+            }
+            else
+            {
+                Dispatcher.UIThread.Post(() => ApplyFilter(input));
+            }
             return;
         }
 
@@ -169,6 +316,17 @@ public class BetterComboBox : ComboBox
         if (searchCache.Get(input, out var cachedResult) && cachedResult is not null)
         {
             Dispatcher.UIThread.Post(() => SelectedItem = cachedResult);
+            return;
+        }
+
+        if (UseLegacyModelSearch)
+        {
+            var legacyMatch = FindLegacyMatch(input);
+            if (legacyMatch is not null)
+            {
+                searchCache.Add(input, legacyMatch);
+                Dispatcher.UIThread.Post(() => SelectedItem = legacyMatch);
+            }
             return;
         }
 
@@ -198,6 +356,9 @@ public class BetterComboBox : ComboBox
     private void ApplyFilter(string input)
     {
         var query = input.Trim();
+        var filterChanged = !string.Equals(lastAppliedFilter, query, StringComparison.Ordinal);
+        lastAppliedFilter = query;
+
         var hasQuery = !string.IsNullOrWhiteSpace(query);
         object? firstMatch = null;
 
@@ -220,6 +381,11 @@ public class BetterComboBox : ComboBox
             return;
         }
 
+        if (!filterChanged)
+        {
+            return;
+        }
+
         // Keep the first matching result pinned near the top when virtualizing.
         Dispatcher.UIThread.Post(() => ScrollIntoView(firstMatch), DispatcherPriority.Background);
     }
@@ -227,11 +393,40 @@ public class BetterComboBox : ComboBox
     private bool IsItemMatch(object item, string query)
     {
         var itemText = GetItemSearchText(item);
+
+        if (UseLegacyModelSearch)
+        {
+            return itemText.Contains(query, StringComparison.OrdinalIgnoreCase);
+        }
+
         if (itemText.Contains(query, StringComparison.OrdinalIgnoreCase))
             return true;
 
         // Allow approximate matching for typos while filtering.
         return Fuzz.PartialRatio(query, itemText) >= 70;
+    }
+
+    private object? FindLegacyMatch(string query)
+    {
+        var trimmedQuery = query.Trim();
+        if (string.IsNullOrWhiteSpace(trimmedQuery))
+            return null;
+
+        var enumMatch = Items
+            .OfType<Enum>()
+            .FirstOrDefault(e =>
+                e.GetStringValue().Contains(trimmedQuery, StringComparison.OrdinalIgnoreCase)
+            );
+        if (enumMatch is not null)
+        {
+            return enumMatch;
+        }
+
+        return Items
+            .OfType<ISearchText>()
+            .FirstOrDefault(item =>
+                GetItemSearchText(item).Contains(trimmedQuery, StringComparison.OrdinalIgnoreCase)
+            );
     }
 
     private static string GetItemSearchText(object item)
@@ -269,7 +464,7 @@ public class BetterComboBox : ComboBox
 
     private void OnContainerPrepared(object? sender, ContainerPreparedEventArgs e)
     {
-        if (!IsDropDownOpen)
+        if (!IsDropDownOpen || UseLegacyModelSearch)
             return;
 
         var query = keyboardSearchText.Trim();
@@ -287,7 +482,7 @@ public class BetterComboBox : ComboBox
 
     private void OnContainerIndexChanged(object? sender, ContainerIndexChangedEventArgs e)
     {
-        if (!IsDropDownOpen)
+        if (!IsDropDownOpen || UseLegacyModelSearch)
             return;
 
         var query = keyboardSearchText.Trim();
@@ -311,6 +506,28 @@ public class BetterComboBox : ComboBox
         {
             searchCache.Clear();
         }
+
+        if (change.Property == UseLegacyModelSearchProperty && !UseLegacyModelSearch)
+        {
+            StopLegacySearchResetTimer();
+            HideLegacySearchPopup();
+        }
+    }
+
+    private void OnSettingsPropertyChanged(object? sender, RelayPropertyChangedEventArgs e)
+    {
+        if (e.PropertyName != nameof(Settings.UseLegacyModelSearch) || settingsManager is null)
+            return;
+
+        Dispatcher.UIThread.Post(() =>
+        {
+            UseLegacyModelSearch = settingsManager.Settings.UseLegacyModelSearch;
+            if (!UseLegacyModelSearch)
+            {
+                StopLegacySearchResetTimer();
+                HideLegacySearchPopup();
+            }
+        });
     }
 
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
@@ -328,6 +545,14 @@ public class BetterComboBox : ComboBox
             searchTextBox.KeyDown -= SearchTextBoxOnKeyDown;
         }
 
+        if (settingsManager is not null)
+        {
+            settingsManager.SettingsPropertyChanged -= OnSettingsPropertyChanged;
+        }
+
+        legacySearchResetTimer.Tick -= OnLegacySearchResetTimerTick;
+        StopLegacySearchResetTimer();
+        HideLegacySearchPopup();
         subscription.Dispose();
     }
 }

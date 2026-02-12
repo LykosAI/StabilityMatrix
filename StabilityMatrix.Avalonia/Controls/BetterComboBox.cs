@@ -7,13 +7,13 @@ using Avalonia.Controls.Presenters;
 using Avalonia.Controls.Primitives;
 using Avalonia.Controls.Primitives.PopupPositioning;
 using Avalonia.Input;
-using Avalonia.Media;
 using Avalonia.Threading;
 using FuzzySharp;
 using Microsoft.Extensions.DependencyInjection;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Api.Comfy;
 using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Services;
 
@@ -82,7 +82,13 @@ public class BetterComboBox : ComboBox
             .Subscribe(OnInputReceived, _ => ResetSearchText());
         legacySearchResetTimer.Tick += OnLegacySearchResetTimerTick;
 
-        legacyInputTextBlock = new TextBlock { Foreground = Brushes.White, FontSize = 13 };
+        legacyInputTextBlock = new TextBlock { FontSize = 13 };
+        legacyInputTextBlock.Bind(
+            TextBlock.ForegroundProperty,
+            this.GetResourceObservable("ComboBoxForeground")
+        );
+        var popupBorder = new Border { Padding = new Thickness(8, 4), Child = legacyInputTextBlock };
+        popupBorder.Bind(Border.BackgroundProperty, this.GetResourceObservable("ComboBoxDropDownBackground"));
         legacyInputPopup = new Popup
         {
             IsLightDismissEnabled = true,
@@ -90,12 +96,7 @@ public class BetterComboBox : ComboBox
             PlacementAnchor = PopupAnchor.Bottom,
             PlacementGravity = PopupGravity.Top,
             VerticalOffset = -6,
-            Child = new Border
-            {
-                Background = Brush.Parse("#333333"),
-                Padding = new Thickness(8, 4),
-                Child = legacyInputTextBlock,
-            },
+            Child = popupBorder,
         };
 
         if (!Design.IsDesignMode)
@@ -322,11 +323,11 @@ public class BetterComboBox : ComboBox
         if (UseLegacyModelSearch)
         {
             var legacyMatch = FindLegacyMatch(input);
-            if (legacyMatch is not null)
-            {
-                searchCache.Add(input, legacyMatch);
-                Dispatcher.UIThread.Post(() => SelectedItem = legacyMatch);
-            }
+            if (legacyMatch is null)
+                return;
+
+            searchCache.Add(input, legacyMatch);
+            Dispatcher.UIThread.Post(() => SelectedItem = legacyMatch);
             return;
         }
 
@@ -392,7 +393,7 @@ public class BetterComboBox : ComboBox
 
     private bool IsItemMatch(object item, string query)
     {
-        var itemText = GetItemSearchText(item);
+        var itemText = GetItemSearchText(item, UseLegacyModelSearch);
 
         if (UseLegacyModelSearch)
         {
@@ -412,29 +413,39 @@ public class BetterComboBox : ComboBox
         if (string.IsNullOrWhiteSpace(trimmedQuery))
             return null;
 
-        var enumMatch = Items
-            .OfType<Enum>()
-            .FirstOrDefault(e =>
-                e.GetStringValue().Contains(trimmedQuery, StringComparison.OrdinalIgnoreCase)
-            );
-        if (enumMatch is not null)
+        object? firstSearchTextMatch = null;
+
+        foreach (var item in Items)
         {
-            return enumMatch;
+            if (item is Enum enumItem)
+            {
+                if (enumItem.GetStringValue().Contains(trimmedQuery, StringComparison.OrdinalIgnoreCase))
+                {
+                    return enumItem;
+                }
+            }
+            else if (firstSearchTextMatch is null && item is ISearchText or ComfySampler or ComfyScheduler)
+            {
+                if (GetItemSearchText(item, true).Contains(trimmedQuery, StringComparison.OrdinalIgnoreCase))
+                {
+                    firstSearchTextMatch = item;
+                }
+            }
         }
 
-        return Items
-            .OfType<ISearchText>()
-            .FirstOrDefault(item =>
-                GetItemSearchText(item).Contains(trimmedQuery, StringComparison.OrdinalIgnoreCase)
-            );
+        return firstSearchTextMatch;
     }
 
-    private static string GetItemSearchText(object item)
+    private static string GetItemSearchText(object item, bool useLegacySearch = false)
     {
         return item switch
         {
-            HybridModelFile hybridModel => hybridModel.DetailedSearchText,
+            HybridModelFile hybridModel => useLegacySearch
+                ? hybridModel.SearchText
+                : hybridModel.DetailedSearchText,
             Enum enumItem => enumItem.GetStringValue(),
+            ComfySampler sampler => $"{sampler.DisplayName} {sampler.Name}",
+            ComfyScheduler scheduler => $"{scheduler.DisplayName} {scheduler.Name}",
             ISearchText searchable => searchable.SearchText,
             _ => item.ToString() ?? string.Empty,
         };

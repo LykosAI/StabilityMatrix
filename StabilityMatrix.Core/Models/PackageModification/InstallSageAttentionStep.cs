@@ -228,11 +228,14 @@ public class InstallSageAttentionStep(
     {
         var venvLibsDir = installedPackagePath.JoinDir("venv", "libs");
         var venvIncludeDir = installedPackagePath.JoinDir("venv", "include");
+        // Check for version-specific Python lib (e.g., python312.lib for Python 3.12)
+        var pyVersion = PyVersion.Parse(InstalledPackage.PythonVersion);
+        var pythonLibName = $"python{pyVersion.Major}{pyVersion.Minor}.lib";
         if (
             venvLibsDir.Exists
             && venvIncludeDir.Exists
             && venvLibsDir.JoinFile("python3.lib").Exists
-            && venvLibsDir.JoinFile("python310.lib").Exists
+            && venvLibsDir.JoinFile(pythonLibName).Exists
         )
         {
             return;

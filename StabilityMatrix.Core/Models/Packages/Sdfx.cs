@@ -157,7 +157,7 @@ public class Sdfx(
 
     public override IEnumerable<PackagePrerequisite> Prerequisites =>
         [
-            PackagePrerequisite.Python310,
+            PackagePrerequisite.PythonUvManaged,
             PackagePrerequisite.VcRedist,
             PackagePrerequisite.Git,
             PackagePrerequisite.Node,

@@ -48,9 +48,16 @@ public class UnixPrerequisiteHelper(
             ? AssetsDir.JoinDir("Python310")
             : AssetsDir.JoinDir($"Python{version.Major}{version.Minor}{version.Micro}");
 
+    // Helper method to get the relative Python shared library path for a specific version
+    private static string GetRelativePythonDllPath(PyVersion version) =>
+        Compat.Switch(
+            (PlatformKind.Linux, Path.Combine("lib", $"libpython{version.Major}.{version.Minor}.so")),
+            (PlatformKind.MacOS, Path.Combine("lib", $"libpython{version.Major}.{version.Minor}.dylib"))
+        );
+
     // Helper method to check if specific Python version is installed
     private bool IsPythonVersionInstalled(PyVersion version) =>
-        GetPythonDir(version).JoinFile(PyRunner.RelativePythonDllPath).Exists;
+        GetPythonDir(version).JoinFile(GetRelativePythonDllPath(version)).Exists;
 
     // Legacy property for compatibility
     public bool IsPythonInstalled => IsPythonVersionInstalled(PyInstallationManager.DefaultVersion);
@@ -86,14 +93,15 @@ public class UnixPrerequisiteHelper(
     public DirectoryPath DotnetDir => AssetsDir.JoinDir("dotnet");
 
     // Helper method to get Python download URL for a specific version
-    private RemoteResource GetPythonDownloadResource(PyVersion version)
+    private RemoteResource? GetPythonDownloadResource(PyVersion version)
     {
         if (version == PyInstallationManager.Python_3_10_11)
         {
             return Assets.PythonDownloadUrl;
         }
 
-        throw new ArgumentException($"Unsupported Python version: {version}", nameof(version));
+        // Non-legacy versions are handled by UV - return null to signal UV installation
+        return null;
     }
 
     // Helper method to get download path for a specific Python version
@@ -122,10 +130,24 @@ public class UnixPrerequisiteHelper(
         await UnpackResourcesIfNecessary(progress);
         await InstallUvIfNecessary(progress);
 
+        // Legacy Python 3.10 prerequisite - kept for backward compatibility
         if (prerequisites.Contains(PackagePrerequisite.Python310))
         {
             await InstallPythonIfNecessary(PyInstallationManager.Python_3_10_11, progress);
             await InstallVirtualenvIfNecessary(PyInstallationManager.Python_3_10_11, progress);
+        }
+
+        // UV-managed Python - uses the version specified by pyVersion or the default (3.12.10)
+        if (prerequisites.Contains(PackagePrerequisite.PythonUvManaged))
+        {
+            var targetVersion = pyVersion ?? PyInstallationManager.DefaultVersion;
+            if (!await EnsurePythonVersion(targetVersion))
+            {
+                throw new MissingPrerequisiteException(
+                    @"Python",
+                    @$"Python {targetVersion} was not found and/or failed to install via UV. Please check the logs for more details."
+                );
+            }
         }
 
         if (pyVersion is not null)
@@ -195,8 +217,9 @@ public class UnixPrerequisiteHelper(
     public async Task InstallAllIfNecessary(IProgress<ProgressReport>? progress = null)
     {
         await UnpackResourcesIfNecessary(progress);
-        await InstallPythonIfNecessary(PyInstallationManager.Python_3_10_11, progress);
         await InstallUvIfNecessary(progress);
+        // Install the new default Python version via UV
+        await InstallPythonIfNecessary(PyInstallationManager.DefaultVersion, progress);
     }
 
     public async Task UnpackResourcesIfNecessary(IProgress<ProgressReport>? progress = null)
@@ -305,10 +328,24 @@ public class UnixPrerequisiteHelper(
 
         Directory.CreateDirectory(AssetsDir);
 
-        // Download
+        // For non-legacy versions, try UV installation first
         var remote = GetPythonDownloadResource(version);
-        var url = remote.Url;
-        var hashSha256 = remote.HashSha256;
+        if (remote is null)
+        {
+            Logger.Info("Python {Version} will be installed via UV instead of direct download.", version);
+            if (await EnsurePythonVersion(version))
+            {
+                progress?.Report(new ProgressReport(1f, $"Python {version} installed via UV"));
+                return;
+            }
+            throw new ArgumentException(
+                $"No download URL configured for Python {version} and UV installation failed."
+            );
+        }
+
+        // Download legacy Python from direct URL
+        var url = remote.Value.Url;
+        var hashSha256 = remote.Value.HashSha256;
 
         var fileName = Path.GetFileName(url.LocalPath);
         var downloadPath = Path.Combine(AssetsDir, fileName);

@@ -62,9 +62,9 @@ public class Wan2GP(
     public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>
         new() { [SharedOutputType.Img2Vid] = ["outputs"] };
 
-    // AMD ROCm requires Python 3.11, NVIDIA uses 3.10
+    // AMD ROCm requires Python 3.11+, NVIDIA uses 3.12
     public override PyVersion RecommendedPythonVersion =>
-        IsAmdRocm ? Python.PyInstallationManager.Python_3_11_13 : Python.PyInstallationManager.Python_3_10_17;
+        IsAmdRocm ? Python.PyInstallationManager.Python_3_11_13 : Python.PyInstallationManager.Python_3_12_10;
 
     public override string Disclaimer =>
         IsAmdRocm && Compat.IsWindows
@@ -247,13 +247,17 @@ public class Wan2GP(
                 .ConfigureAwait(false);
         }
 
+        // Determine the CPython ABI tag for the current Python version (e.g., cp310, cp312)
+        var pyVer = PyVersion.Parse(installedPackage.PythonVersion);
+        var cpTag = $"cp{pyVer.Major}{pyVer.Minor}";
+
         // Install SageAttention and Flash Attention
         if (Compat.IsWindows)
         {
             progress?.Report(new ProgressReport(-1f, "Installing SageAttention...", isIndeterminate: true));
             await venvRunner
                 .PipInstall(
-                    "https://github.com/woct0rdho/SageAttention/releases/download/v2.2.0-windows/sageattention-2.2.0+cu128torch2.7.1-cp310-cp310-win_amd64.whl",
+                    $"https://github.com/woct0rdho/SageAttention/releases/download/v2.2.0-windows/sageattention-2.2.0+cu128torch2.7.1-{cpTag}-{cpTag}-win_amd64.whl",
                     onConsoleOutput
                 )
                 .ConfigureAwait(false);
@@ -261,7 +265,7 @@ public class Wan2GP(
             progress?.Report(new ProgressReport(-1f, "Installing Flash Attention...", isIndeterminate: true));
             await venvRunner
                 .PipInstall(
-                    "https://huggingface.co/lldacing/flash-attention-windows-wheel/resolve/main/flash_attn-2.7.4.post1%2Bcu128torch2.7.0cxx11abiFALSE-cp310-cp310-win_amd64.whl",
+                    $"https://huggingface.co/lldacing/flash-attention-windows-wheel/resolve/main/flash_attn-2.7.4.post1%2Bcu128torch2.7.0cxx11abiFALSE-{cpTag}-{cpTag}-win_amd64.whl",
                     onConsoleOutput
                 )
                 .ConfigureAwait(false);
@@ -269,17 +273,15 @@ public class Wan2GP(
         else if (Compat.IsLinux)
         {
             progress?.Report(new ProgressReport(-1f, "Installing SageAttention...", isIndeterminate: true));
+            // HuggingFace repo only has cp310 wheels; install from PyPI for broader version support
             await venvRunner
-                .PipInstall(
-                    "https://huggingface.co/MonsterMMORPG/SECourses_Premium_Flash_Attention/resolve/main/sageattention-2.1.1-cp310-cp310-linux_x86_64.whl",
-                    onConsoleOutput
-                )
+                .PipInstall("sageattention==2.1.1", onConsoleOutput)
                 .ConfigureAwait(false);
 
             progress?.Report(new ProgressReport(-1f, "Installing Flash Attention...", isIndeterminate: true));
             await venvRunner
                 .PipInstall(
-                    "https://github.com/kingbri1/flash-attention/releases/download/v2.7.4.post1/flash_attn-2.7.4.post1+cu128torch2.7.0cxx11abiFALSE-cp310-cp310-linux_x86_64.whl",
+                    $"https://github.com/kingbri1/flash-attention/releases/download/v2.7.4.post1/flash_attn-2.7.4.post1+cu128torch2.7.0cxx11abiFALSE-{cpTag}-{cpTag}-linux_x86_64.whl",
                     onConsoleOutput
                 )
                 .ConfigureAwait(false);

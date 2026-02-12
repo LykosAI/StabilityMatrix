@@ -21,18 +21,22 @@ public class PyInstallationManager(IUvManager uvManager, ISettingsManager settin
     public static readonly PyVersion Python_3_12_10 = new(3, 12, 10);
 
     /// <summary>
-    /// List of preferred/target Python versions StabilityMatrix officially supports.
-    /// UV can be used to fetch these if not present.
+    /// List of legacy Python versions that may still be present from older installations.
+    /// These are kept for backward compatibility and migration purposes.
     /// </summary>
     public static readonly IReadOnlyList<PyVersion> OldVersions = new List<PyVersion>
     {
         Python_3_10_11,
+        Python_3_10_17,
     }.AsReadOnly();
 
     /// <summary>
     /// The default Python version to use if none is specified.
+    /// Updated from 3.10.11 to 3.12.10 to address security vulnerabilities
+    /// in Python 3.10 and compatibility with modern packages (e.g., Forge Neo, ComfyUI).
+    /// See: https://github.com/LykosAI/StabilityMatrix/issues/1138
     /// </summary>
-    public static readonly PyVersion DefaultVersion = Python_3_10_11;
+    public static readonly PyVersion DefaultVersion = Python_3_12_10;
 
     /// <summary>
     /// Gets all discoverable Python installations (legacy and UV-managed).

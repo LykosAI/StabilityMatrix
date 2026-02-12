@@ -110,7 +110,7 @@ public class InvokeAI(
     }
 
     public override IEnumerable<PackagePrerequisite> Prerequisites =>
-        [PackagePrerequisite.Python310, PackagePrerequisite.VcRedist, PackagePrerequisite.Git];
+        [PackagePrerequisite.PythonUvManaged, PackagePrerequisite.VcRedist, PackagePrerequisite.Git];
 
     public override Task DownloadPackage(
         string installLocation,

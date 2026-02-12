@@ -95,6 +95,12 @@ internal static class Assets
     public static IEnumerable<(AvaloniaResource resource, string relativePath)> PyModuleVenv =>
         FindAssets("win-x64/venv/");
 
+    /// <summary>
+    /// Legacy Python 3.10.11 download URL. Kept for backward compatibility with existing
+    /// installations that still use the embedded Python 3.10.11.
+    /// New installations use UV-managed Python (3.12.10+ by default).
+    /// See: https://github.com/LykosAI/StabilityMatrix/issues/1138
+    /// </summary>
     [SupportedOSPlatform("windows")]
     [SupportedOSPlatform("linux")]
     [SupportedOSPlatform("macos")]

@@ -299,7 +299,7 @@ public partial class PackageImportViewModel(
             PreferredSharedFolderMethod = sharedFolderRecommendation,
             PythonVersion =
                 SelectedPythonVersion?.Version.StringValue
-                ?? PyInstallationManager.Python_3_10_17.StringValue,
+                ?? SelectedBasePackage.RecommendedPythonVersion.StringValue,
         };
 
         // Recreate venv if it's a BaseGitPackage

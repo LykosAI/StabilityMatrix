@@ -34,8 +34,8 @@ public class PyRunner : IPyRunner
     /// </summary>
     public string GetPythonDirName(PyVersion? version = null) =>
         version != null
-            ? $"Python{version.Value.Major}{version.Value.Minor}{version.Value.Micro}"
-            : "Python310"; // Default to 3.10.11 for compatibility
+            ? PyInstallation.GetDirectoryNameForVersion(version.Value)
+            : PyInstallation.GetDirectoryNameForVersion(PyInstallationManager.DefaultVersion);
 
     /// <summary>
     /// Get the Python directory for the given version, or the default version if none specified

@@ -292,10 +292,24 @@ public class WindowsPrerequisiteHelper(
             await InstallHipSdkIfNecessary(progress);
         }
 
+        // Legacy Python 3.10 prerequisite - kept for backward compatibility
         if (prerequisites.Contains(PackagePrerequisite.Python310))
         {
             await InstallPythonIfNecessary(PyInstallationManager.Python_3_10_11, progress);
             await InstallVirtualenvIfNecessary(PyInstallationManager.Python_3_10_11, progress);
+        }
+
+        // UV-managed Python - uses the version specified by pyVersion or the default (3.12.10)
+        if (prerequisites.Contains(PackagePrerequisite.PythonUvManaged))
+        {
+            var targetVersion = pyVersion ?? PyInstallationManager.DefaultVersion;
+            if (!await EnsurePythonVersion(targetVersion))
+            {
+                throw new MissingPrerequisiteException(
+                    @"Python",
+                    @$"Python {targetVersion} was not found and/or failed to install via UV. Please check the logs for more details."
+                );
+            }
         }
 
         if (pyVersion is not null)
@@ -331,7 +345,7 @@ public class WindowsPrerequisiteHelper(
 
         if (prerequisites.Contains(PackagePrerequisite.Tkinter))
         {
-            await InstallTkinterIfNecessary(PyInstallationManager.Python_3_10_11, progress);
+            await InstallTkinterIfNecessary(pyVersion ?? PyInstallationManager.DefaultVersion, progress);
         }
 
         if (prerequisites.Contains(PackagePrerequisite.VcBuildTools))
@@ -344,12 +358,13 @@ public class WindowsPrerequisiteHelper(
     {
         await InstallVcRedistIfNecessary(progress);
         await UnpackResourcesIfNecessary(progress);
-        await InstallPythonIfNecessary(PyInstallationManager.Python_3_10_11, progress);
+        await InstallUvIfNecessary(progress);
+        // Install the new default Python version via UV
+        await InstallPythonIfNecessary(PyInstallationManager.DefaultVersion, progress);
         await InstallGitIfNecessary(progress);
         await InstallNodeIfNecessary(progress);
         await InstallVcBuildToolsIfNecessary(progress);
         await InstallHipSdkIfNecessary(progress);
-        await InstallUvIfNecessary(progress);
     }
 
     public async Task UnpackResourcesIfNecessary(IProgress<ProgressReport>? progress = null)
@@ -398,7 +413,17 @@ public class WindowsPrerequisiteHelper(
         }
         else
         {
-            throw new ArgumentException($"No download URL configured for Python {version}");
+            // For non-legacy versions, delegate to UV-based installation
+            Logger.Info("Python {Version} will be installed via UV instead of direct download.", version);
+            if (await EnsurePythonVersion(version))
+            {
+                progress?.Report(new ProgressReport(1f, $"Python {version} installed via UV"));
+                return;
+            }
+            throw new ArgumentException(
+                $"No download URL configured for Python {version} and UV installation failed. "
+                + "Please ensure UV is installed and accessible."
+            );
         }
 
         var url = remote.Value.Url.ToString();

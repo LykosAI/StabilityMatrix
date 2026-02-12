@@ -60,7 +60,7 @@ public abstract class BasePackage(ISettingsManager settingsManager)
     public virtual bool UsesVenv => true;
     public virtual bool InstallRequiresAdmin => false;
     public virtual string? AdminRequiredReason => null;
-    public virtual PyVersion RecommendedPythonVersion => PyInstallationManager.Python_3_10_17;
+    public virtual PyVersion RecommendedPythonVersion => PyInstallationManager.Python_3_12_10;
 
     /// <summary>
     /// Returns a list of extra commands that can be executed for this package.
@@ -298,7 +298,7 @@ public abstract class BasePackage(ISettingsManager settingsManager)
             : PackageVersionType.GithubRelease | PackageVersionType.Commit;
 
     public virtual IEnumerable<PackagePrerequisite> Prerequisites =>
-        [PackagePrerequisite.Git, PackagePrerequisite.Python310, PackagePrerequisite.VcRedist];
+        [PackagePrerequisite.Git, PackagePrerequisite.PythonUvManaged, PackagePrerequisite.VcRedist];
 
     public abstract Task<DownloadPackageVersionOptions?> GetUpdate(InstalledPackage installedPackage);
 

@@ -22,6 +22,9 @@ public class SimpleSDXL(
     public override string Name => "SimpleSDXL";
     public override string DisplayName { get; set; } = "SimpleSDXL";
     public override string Author => "metercai";
+
+    // Pin to Python 3.10 - uses prebuilt insightface cp310 wheel and older torch (2.3.1)
+    public override PyVersion RecommendedPythonVersion => PyInstallationManager.Python_3_10_17;
     public override string Blurb =>
         "Enhanced version of Fooocus for SDXL, more suitable for Chinese and Cloud. Supports Flux.";
     public override string LicenseUrl => "https://github.com/metercai/SimpleSDXL/blob/SimpleSDXL/LICENSE";

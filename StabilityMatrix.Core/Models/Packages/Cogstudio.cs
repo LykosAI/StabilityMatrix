@@ -21,6 +21,9 @@ public class Cogstudio(
 {
     public override string Name => "Cogstudio";
     public override string DisplayName { get; set; } = "Cogstudio";
+
+    // Pin to Python 3.10 - uses prebuilt deepspeed cp310 wheel
+    public override PyVersion RecommendedPythonVersion => PyInstallationManager.Python_3_10_17;
     public override string RepositoryName => "CogVideo";
     public override string RepositoryAuthor => "THUDM";
     public override string Author => "pinokiofactory";

@@ -19,4 +19,10 @@ public class ForgeNeo(
     public override string DisplayName { get; set; } = "Stable Diffusion WebUI Forge - Neo";
     public override string MainBranch => "neo";
     public override PackageType PackageType => PackageType.SdInference;
+
+    /// <summary>
+    /// Forge Neo requires Python 3.12+ due to dependencies like audioop-lts.
+    /// See: https://github.com/LykosAI/StabilityMatrix/issues/1138
+    /// </summary>
+    public override PyVersion RecommendedPythonVersion => Python.PyInstallationManager.Python_3_12_10;
 }

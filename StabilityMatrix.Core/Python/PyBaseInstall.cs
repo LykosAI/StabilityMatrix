@@ -13,7 +13,7 @@ public class PyBaseInstall(PyInstallation installation)
 
     /// <summary>
     /// Gets a PyBaseInstall instance for the default Python installation.
-    /// This uses the default Python 3.10.16 installation.
+    /// Uses PyInstallationManager.DefaultVersion (currently Python 3.12.10).
     /// </summary>
     public static PyBaseInstall Default => new(new PyInstallation(PyInstallationManager.DefaultVersion));
 

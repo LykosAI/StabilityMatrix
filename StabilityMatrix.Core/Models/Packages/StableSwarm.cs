@@ -185,7 +185,7 @@ public class StableSwarm(
         [
             PackagePrerequisite.Git,
             PackagePrerequisite.Dotnet,
-            PackagePrerequisite.Python310,
+            PackagePrerequisite.PythonUvManaged,
             PackagePrerequisite.VcRedist,
         ];
 

@@ -133,7 +133,7 @@ public partial class OneClickInstallViewModel : ContentDialogViewModelBase
             new SetupPrerequisitesStep(
                 prerequisiteHelper,
                 SelectedPackage,
-                PyInstallationManager.Python_3_10_17
+                SelectedPackage.RecommendedPythonVersion
             )
         };
 
@@ -179,7 +179,7 @@ public partial class OneClickInstallViewModel : ContentDialogViewModelBase
             LastUpdateCheck = DateTimeOffset.Now,
             PreferredTorchIndex = torchVersion,
             PreferredSharedFolderMethod = recommendedSharedFolderMethod,
-            PythonVersion = PyInstallationManager.Python_3_10_17.StringValue
+            PythonVersion = SelectedPackage.RecommendedPythonVersion.StringValue
         };
 
         var installStep = new InstallPackageStep(

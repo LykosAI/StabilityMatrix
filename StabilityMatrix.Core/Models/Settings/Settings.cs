@@ -206,6 +206,9 @@ public class Settings
     public int ConsoleFontSize { get; set; } = 14;
     public bool AutoLoadCivitModels { get; set; } = true;
 
+    [JsonPropertyName("UseLegacyModelSearch")]
+    public bool UseLegacySearch { get; set; }
+
     /// <summary>
     /// When false, will copy files when drag/drop import happens
     /// Otherwise, it will move, as it states

@@ -86,6 +86,78 @@ public class Wan2GP(
     /// </summary>
     private bool IsAmdRocm => GetRecommendedTorchVersion() == TorchIndex.Rocm;
 
+    /// <summary>
+    /// Python wrapper script that patches logging to also print to stdout/stderr, so
+    /// StabilityMatrix can capture the output. Wan2GP logs through Gradio UI notifications
+    /// (gr.Info/Warning/Error) and callback-driven UI updates that never reach the console.
+    /// This script:
+    /// 1. Configures Python's logging module to output to stderr (captures library logging)
+    /// 2. Prevents transformers from suppressing its own logging (wgp.py calls set_verbosity_error)
+    /// 3. Monkey-patches gr.Info/Warning/Error to also print to stdout/stderr
+    /// 4. Runs the target script (wgp.py) via runpy
+    /// </summary>
+    private const string GradioLogPatchScript = """
+        # StabilityMatrix: Patch logging to print to console for capture.
+        import sys
+        import logging
+
+        def _apply_logging_patch():
+            # Configure Python's root logger to output to stderr at INFO level.
+            # Many libraries (torch, diffusers, transformers, etc.) use the logging
+            # module but output may be suppressed without a handler configured.
+            root = logging.getLogger()
+            if not any(isinstance(h, logging.StreamHandler) for h in root.handlers):
+                handler = logging.StreamHandler(sys.stderr)
+                handler.setFormatter(logging.Formatter("[%(name)s] %(levelname)s: %(message)s"))
+                root.addHandler(handler)
+            if root.level > logging.INFO:
+                root.setLevel(logging.INFO)
+
+            # Prevent transformers from suppressing its own logging.
+            # wgp.py calls transformers.utils.logging.set_verbosity_error() which
+            # silences all non-error messages. We neutralize those calls so model
+            # loading and download messages remain visible.
+            try:
+                import transformers.utils.logging as tf_logging
+                tf_logging.set_verbosity_error = lambda: None
+                tf_logging.set_verbosity_warning = lambda: None
+                tf_logging.set_verbosity(logging.INFO)
+            except Exception as e:
+                print(f"[StabilityMatrix] Failed to patch transformers logging: {e}", file=sys.stderr, flush=True)
+
+            # Monkey-patch Gradio's UI notification functions to also print to console.
+            # These only fire for validation/error messages, not generation progress.
+            try:
+                import gradio as gr
+                _orig_info = getattr(gr, 'Info', None)
+                _orig_warning = getattr(gr, 'Warning', None)
+                _orig_error = getattr(gr, 'Error', None)
+                if _orig_info is not None:
+                    def patched_info(message, *args, **kwargs):
+                        print(f"[Gradio] {message}", flush=True)
+                        return _orig_info(message, *args, **kwargs)
+                    gr.Info = patched_info
+                if _orig_warning is not None:
+                    def patched_warning(message, *args, **kwargs):
+                        print(f"[Gradio] WARNING: {message}", flush=True)
+                        return _orig_warning(message, *args, **kwargs)
+                    gr.Warning = patched_warning
+                if _orig_error is not None:
+                    def patched_error(message, *args, **kwargs):
+                        print(f"[Gradio] ERROR: {message}", file=sys.stderr, flush=True)
+                        return _orig_error(message, *args, **kwargs)
+                    gr.Error = patched_error
+            except Exception as e:
+                print(f"[StabilityMatrix] Failed to patch Gradio logging: {e}", file=sys.stderr, flush=True)
+
+        if __name__ == "__main__":
+            _apply_logging_patch()
+            target_script = sys.argv[1]
+            sys.argv = sys.argv[1:]
+            import runpy
+            runpy.run_path(target_script, run_name="__main__")
+        """;
+
     public override List<LaunchOptionDefinition> LaunchOptions =>
         [
             new()
@@ -368,13 +440,22 @@ public class Wan2GP(
         // Fix for distutils compatibility issue with Python 3.10 and setuptools
         VenvRunner.UpdateEnvironmentVariables(env => env.SetItem("SETUPTOOLS_USE_DISTUTILS", "stdlib"));
 
+        // Write the Gradio logging patch wrapper script so gr.Info/Warning/Error
+        // messages are also printed to stdout/stderr for console capture
+        var patchScriptPath = Path.Combine(installLocation, "_sm_gradio_log_patch.py");
+        await File.WriteAllTextAsync(patchScriptPath, GradioLogPatchScript, cancellationToken)
+            .ConfigureAwait(false);
+
+        var targetScript = Path.Combine(installLocation, options.Command ?? LaunchCommand);
+
         // Notify user that the package is starting (loading can take a while)
         onConsoleOutput?.Invoke(
             new ProcessOutput { Text = "Launching Wan2GP, please wait while the UI initializes...\n" }
         );
 
+        // Launch via the patch wrapper, which monkey-patches Gradio then runs wgp.py
         VenvRunner.RunDetached(
-            [Path.Combine(installLocation, options.Command ?? LaunchCommand), .. options.Arguments],
+            [patchScriptPath, targetScript, .. options.Arguments],
             HandleConsoleOutput,
             OnExit
         );

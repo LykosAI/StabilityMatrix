@@ -70,7 +70,7 @@ public partial class InferenceSettingsViewModel : PageViewModelBase
     private bool filterExtraNetworksByBaseModel;
 
     [ObservableProperty]
-    private bool useLegacyModelSearch;
+    private bool useLegacySearch;
 
     private List<string> ignoredFileNameFormatVars =
     [
@@ -152,8 +152,8 @@ public partial class InferenceSettingsViewModel : PageViewModelBase
 
         settingsManager.RelayPropertyFor(
             this,
-            vm => vm.UseLegacyModelSearch,
-            settings => settings.UseLegacyModelSearch,
+            vm => vm.UseLegacySearch,
+            settings => settings.UseLegacySearch,
             true
         );
 

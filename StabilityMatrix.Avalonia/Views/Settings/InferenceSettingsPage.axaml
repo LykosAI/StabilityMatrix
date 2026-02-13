@@ -169,13 +169,13 @@
 
                 <ui:SettingsExpander
                     Grid.Row="4"
-                    Description="Use the previous combo box model search behavior (floating typed text and auto-select first match)."
-                    Header="Legacy Model Search">
+                    Description="Force all combo boxes to use floating search (floating typed text, auto-select first match). When off, each combo box uses its own configured search mode."
+                    Header="Use Floating Search">
                     <ui:SettingsExpander.IconSource>
                         <controls:FASymbolIconSource Symbol="fa-solid fa-magnifying-glass" />
                     </ui:SettingsExpander.IconSource>
                     <ui:SettingsExpander.Footer>
-                        <ToggleSwitch IsChecked="{Binding UseLegacyModelSearch}" />
+                        <ToggleSwitch IsChecked="{Binding UseLegacySearch}" />
                     </ui:SettingsExpander.Footer>
                 </ui:SettingsExpander>
 

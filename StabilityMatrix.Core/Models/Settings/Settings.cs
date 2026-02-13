@@ -205,7 +205,9 @@ public class Settings
     public bool SortConnectedModelsFirst { get; set; } = true;
     public int ConsoleFontSize { get; set; } = 14;
     public bool AutoLoadCivitModels { get; set; } = true;
-    public bool UseLegacyModelSearch { get; set; }
+
+    [JsonPropertyName("UseLegacyModelSearch")]
+    public bool UseLegacySearch { get; set; }
 
     /// <summary>
     /// When false, will copy files when drag/drop import happens

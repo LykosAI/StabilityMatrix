@@ -45,7 +45,14 @@ public class NotificationService(ILogger<NotificationService> logger, ISettingsM
 
     public void Show(INotification notification)
     {
-        notificationManager?.Show(notification);
+        if (Dispatcher.UIThread.CheckAccess())
+        {
+            notificationManager?.Show(notification);
+        }
+        else
+        {
+            Dispatcher.UIThread.Post(() => notificationManager?.Show(notification));
+        }
     }
 
     /// <inheritdoc />

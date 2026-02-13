@@ -27,10 +27,10 @@ public class BetterComboBox : ComboBox
         BetterComboBox,
         string
     >(nameof(SearchWatermark), defaultValue: "Search...");
-    public static readonly StyledProperty<bool> UseLegacyModelSearchProperty = AvaloniaProperty.Register<
+    public static readonly StyledProperty<bool> UseLegacySearchProperty = AvaloniaProperty.Register<
         BetterComboBox,
         bool
-    >(nameof(UseLegacyModelSearch));
+    >(nameof(UseLegacySearch));
     public static readonly DirectProperty<BetterComboBox, string> SearchTextProperty =
         AvaloniaProperty.RegisterDirect<BetterComboBox, string>(nameof(SearchText), o => o.SearchText);
 
@@ -40,10 +40,10 @@ public class BetterComboBox : ComboBox
         set => SetValue(SearchWatermarkProperty, value);
     }
 
-    public bool UseLegacyModelSearch
+    public bool UseLegacySearch
     {
-        get => GetValue(UseLegacyModelSearchProperty);
-        set => SetValue(UseLegacyModelSearchProperty, value);
+        get => GetValue(UseLegacySearchProperty);
+        set => SetValue(UseLegacySearchProperty, value);
     }
 
     public string SearchText
@@ -104,7 +104,7 @@ public class BetterComboBox : ComboBox
             settingsManager = App.Services.GetService<ISettingsManager>();
             if (settingsManager is not null)
             {
-                UseLegacyModelSearch = settingsManager.Settings.UseLegacyModelSearch;
+                ApplyGlobalLegacySearchOverride(settingsManager.Settings.UseLegacySearch);
                 settingsManager.SettingsPropertyChanged += OnSettingsPropertyChanged;
             }
         }
@@ -160,7 +160,7 @@ public class BetterComboBox : ComboBox
             if (IsDropDownOpen)
             {
                 UpdateSearchTextBoxText(keyboardSearchText);
-                if (!UseLegacyModelSearch)
+                if (!UseLegacySearch)
                 {
                     Dispatcher.UIThread.Post(() => searchTextBox?.Focus(), DispatcherPriority.Input);
                 }
@@ -199,7 +199,7 @@ public class BetterComboBox : ComboBox
         StopLegacySearchResetTimer();
         ResetSearchText();
         ApplyFilter(string.Empty);
-        if (!UseLegacyModelSearch)
+        if (!UseLegacySearch)
         {
             Dispatcher.UIThread.Post(() => searchTextBox?.Focus(), DispatcherPriority.Input);
         }
@@ -235,7 +235,7 @@ public class BetterComboBox : ComboBox
 
     private void RestartLegacySearchResetTimer()
     {
-        if (!UseLegacyModelSearch || string.IsNullOrEmpty(keyboardSearchText))
+        if (!UseLegacySearch || string.IsNullOrEmpty(keyboardSearchText))
             return;
 
         legacySearchResetTimer.Stop();
@@ -249,7 +249,7 @@ public class BetterComboBox : ComboBox
 
     private void UpdateLegacySearchPopupText(string text)
     {
-        if (!UseLegacyModelSearch || string.IsNullOrWhiteSpace(text))
+        if (!UseLegacySearch || string.IsNullOrWhiteSpace(text))
         {
             HideLegacySearchPopup();
             return;
@@ -278,7 +278,7 @@ public class BetterComboBox : ComboBox
     {
         legacySearchResetTimer.Stop();
 
-        if (!UseLegacyModelSearch || string.IsNullOrWhiteSpace(keyboardSearchText))
+        if (!UseLegacySearch || string.IsNullOrWhiteSpace(keyboardSearchText))
             return;
 
         ResetSearchText();
@@ -288,7 +288,7 @@ public class BetterComboBox : ComboBox
     {
         if (IsDropDownOpen)
         {
-            if (UseLegacyModelSearch)
+            if (UseLegacySearch)
             {
                 var query = input.Trim();
                 if (string.IsNullOrWhiteSpace(query))
@@ -320,7 +320,7 @@ public class BetterComboBox : ComboBox
             return;
         }
 
-        if (UseLegacyModelSearch)
+        if (UseLegacySearch)
         {
             var legacyMatch = FindLegacyMatch(input);
             if (legacyMatch is null)
@@ -393,9 +393,9 @@ public class BetterComboBox : ComboBox
 
     private bool IsItemMatch(object item, string query)
     {
-        var itemText = GetItemSearchText(item, UseLegacyModelSearch);
+        var itemText = GetItemSearchText(item, UseLegacySearch);
 
-        if (UseLegacyModelSearch)
+        if (UseLegacySearch)
         {
             return itemText.Contains(query, StringComparison.OrdinalIgnoreCase);
         }
@@ -475,7 +475,7 @@ public class BetterComboBox : ComboBox
 
     private void OnContainerPrepared(object? sender, ContainerPreparedEventArgs e)
     {
-        if (!IsDropDownOpen || UseLegacyModelSearch)
+        if (!IsDropDownOpen || UseLegacySearch)
             return;
 
         var query = keyboardSearchText.Trim();
@@ -493,7 +493,7 @@ public class BetterComboBox : ComboBox
 
     private void OnContainerIndexChanged(object? sender, ContainerIndexChangedEventArgs e)
     {
-        if (!IsDropDownOpen || UseLegacyModelSearch)
+        if (!IsDropDownOpen || UseLegacySearch)
             return;
 
         var query = keyboardSearchText.Trim();
@@ -518,22 +518,34 @@ public class BetterComboBox : ComboBox
             searchCache.Clear();
         }
 
-        if (change.Property == UseLegacyModelSearchProperty && !UseLegacyModelSearch)
+        if (change.Property == UseLegacySearchProperty && !UseLegacySearch)
         {
             StopLegacySearchResetTimer();
             HideLegacySearchPopup();
         }
     }
 
+    private void ApplyGlobalLegacySearchOverride(bool globalOverride)
+    {
+        if (globalOverride)
+        {
+            SetValue(UseLegacySearchProperty, true);
+        }
+        else
+        {
+            ClearValue(UseLegacySearchProperty);
+        }
+    }
+
     private void OnSettingsPropertyChanged(object? sender, RelayPropertyChangedEventArgs e)
     {
-        if (e.PropertyName != nameof(Settings.UseLegacyModelSearch) || settingsManager is null)
+        if (e.PropertyName != nameof(Settings.UseLegacySearch) || settingsManager is null)
             return;
 
         Dispatcher.UIThread.Post(() =>
         {
-            UseLegacyModelSearch = settingsManager.Settings.UseLegacyModelSearch;
-            if (!UseLegacyModelSearch)
+            ApplyGlobalLegacySearchOverride(settingsManager.Settings.UseLegacySearch);
+            if (!UseLegacySearch)
             {
                 StopLegacySearchResetTimer();
                 HideLegacySearchPopup();

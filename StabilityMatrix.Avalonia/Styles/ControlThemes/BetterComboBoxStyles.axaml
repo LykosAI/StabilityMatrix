@@ -310,7 +310,7 @@
             </Style>
         </Style>
 
-        <Style Selector="^[UseLegacyModelSearch=true] /template/ TextBox#PART_SearchTextBox">
+        <Style Selector="^[UseLegacySearch=true] /template/ TextBox#PART_SearchTextBox">
             <Setter Property="IsVisible" Value="False" />
             <Setter Property="Margin" Value="0" />
             <Setter Property="MinHeight" Value="0" />

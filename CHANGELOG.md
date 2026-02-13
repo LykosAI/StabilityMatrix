@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Updated gfx110X Windows ROCm nightly index - thanks to @NeuralFault!
 - Updated ComfyUI-Zluda install to more closely match the author's intended installation method - thanks to @NeuralFault!
 - Updated Forge Classic installs/updates to use the upstream install script for better version compatibility with torch/sage/triton/nunchaku
+- Backslashes can now be escaped in Inference prompts via `\\`
 ### Fixed
 - Fixed [#1541](https://github.com/LykosAI/StabilityMatrix/issues/1541), [#1518](https://github.com/LykosAI/StabilityMatrix/issues/1518), [#1513](https://github.com/LykosAI/StabilityMatrix/issues/1513), [#1488](https://github.com/LykosAI/StabilityMatrix/issues/1488) - Forge Neo update breaking things
 - Fixed [#1529](https://github.com/LykosAI/StabilityMatrix/issues/1529) - "Selected commit is null" error when installing packages and rate limited by GitHub
@@ -30,6 +31,11 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed [#1476](https://github.com/LykosAI/StabilityMatrix/issues/1476) - Incorrect shared output folder for Forge Classic/Neo
 - Fixed [#1466](https://github.com/LykosAI/StabilityMatrix/issues/1466) - crash after moving portable install
 - Fixed [#1445](https://github.com/LykosAI/StabilityMatrix/issues/1445) - Linux app updates not actually updating - thanks to @NeuralFault!
+### Supporters
+#### 🌟 Visionaries
+To our stellar Visionaries: **Waterclouds**, **JungleDragon**, **bluepopsicle**, **Bob S**, and **whudunit**! Your generosity keeps this project thriving and gives us the confidence to tackle the big challenges. Thank you for being the foundation that makes it all possible!
+#### 🚀 Pioneers
+Shoutout to our incredible Pioneer crew for keeping the momentum going! Thank you to: **Szir777**, **Noah M**, **[USA]TechDude**, **Thom**, **SeraphOfSalem**, **Desert Viber**, **Adam**, **Droolguy**, **ACTUALLY_the_Real_Willem_Dafoe**, **takyamtom**, **robek**, **Ghislain G**, **Phil R**, **Tundra Everquill**, and a warm welcome to our newest Pioneers: **Andrew B**, **snotty**, **Miguel A**, and **SinthCore**!
 
 ## v2.15.5
 ### Added

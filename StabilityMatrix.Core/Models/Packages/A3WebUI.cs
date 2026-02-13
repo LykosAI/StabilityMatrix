@@ -306,7 +306,7 @@ public class A3WebUI(
     public override IReadOnlyList<string> ExtraLaunchArguments =>
         settingsManager.IsLibraryDirSet ? ["--gradio-allowed-path", settingsManager.ImagesDirectory] : [];
 
-    private ImmutableDictionary<string, string> GetEnvVars(ImmutableDictionary<string, string> env)
+    protected virtual ImmutableDictionary<string, string> GetEnvVars(ImmutableDictionary<string, string> env)
     {
         // Set the Stable Diffusion repository URL to a working fork
         // This is required because the original Stability-AI/stablediffusion repo was removed

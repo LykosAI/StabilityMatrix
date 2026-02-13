@@ -122,8 +122,8 @@ public class Wan2GP(
                 tf_logging.set_verbosity_error = lambda: None
                 tf_logging.set_verbosity_warning = lambda: None
                 tf_logging.set_verbosity(logging.INFO)
-            except Exception:
-                pass
+            except Exception as e:
+                print(f"[StabilityMatrix] Failed to patch transformers logging: {e}", file=sys.stderr, flush=True)
 
             # Monkey-patch Gradio's UI notification functions to also print to console.
             # These only fire for validation/error messages, not generation progress.
@@ -147,8 +147,8 @@ public class Wan2GP(
                         print(f"[Gradio] ERROR: {message}", file=sys.stderr, flush=True)
                         return _orig_error(message, *args, **kwargs)
                     gr.Error = patched_error
-            except Exception:
-                pass
+            except Exception as e:
+                print(f"[StabilityMatrix] Failed to patch Gradio logging: {e}", file=sys.stderr, flush=True)
 
         if __name__ == "__main__":
             _apply_logging_patch()

@@ -226,7 +226,7 @@ public class A3WebUI(
         // 1. Configure the entire install process declaratively.
         var config = new PipInstallConfig
         {
-            RequirementsFilePaths = ["requirements_versions.txt"],
+            RequirementsFilePaths = ["requirements_versions.txt", "setuptools<82"],
             TorchVersion = torchIndex == TorchIndex.Mps ? "==2.3.1" : (isBlackwell ? "" : "==2.1.2"),
             TorchvisionVersion = torchIndex == TorchIndex.Mps ? "==0.18.1" : (isBlackwell ? "" : "==0.16.2"),
             XformersVersion = isBlackwell ? " " : "==0.0.23.post1",
@@ -235,6 +235,7 @@ public class A3WebUI(
             ExtraPipArgs =
             [
                 "https://github.com/openai/CLIP/archive/d50d76daa670286dd6cacf3bcd80b5e4823fc8e1.zip",
+                "setuptools<82",
             ],
         };
 
@@ -306,7 +307,7 @@ public class A3WebUI(
     public override IReadOnlyList<string> ExtraLaunchArguments =>
         settingsManager.IsLibraryDirSet ? ["--gradio-allowed-path", settingsManager.ImagesDirectory] : [];
 
-    private ImmutableDictionary<string, string> GetEnvVars(ImmutableDictionary<string, string> env)
+    protected virtual ImmutableDictionary<string, string> GetEnvVars(ImmutableDictionary<string, string> env)
     {
         // Set the Stable Diffusion repository URL to a working fork
         // This is required because the original Stability-AI/stablediffusion repo was removed

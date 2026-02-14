@@ -185,11 +185,9 @@ public class SDWebForge(
             torchIndex is TorchIndex.Cuda
             && (SettingsManager.Settings.PreferredGpu?.IsBlackwellGpu() ?? HardwareHelper.HasBlackwellGpu());
 
-        var isAmd = torchIndex is TorchIndex.Rocm;
-
         var config = new PipInstallConfig
         {
-            PrePipInstallArgs = ["joblib", "setuptools<82"],
+            PrePipInstallArgs = ["joblib"],
             RequirementsFilePaths = requirementsPaths,
             TorchVersion = "",
             TorchvisionVersion = "",
@@ -199,7 +197,7 @@ public class SDWebForge(
             [
                 "https://github.com/openai/CLIP/archive/d50d76daa670286dd6cacf3bcd80b5e4823fc8e1.zip",
             ],
-            PostInstallPipArgs = ["numpy==1.26.4", "setuptools<82"],
+            PostInstallPipArgs = ["numpy==1.26.4"],
         };
 
         await StandardPipInstallProcessAsync(

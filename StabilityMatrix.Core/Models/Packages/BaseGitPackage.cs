@@ -235,6 +235,14 @@ public abstract class BaseGitPackage : BasePackage
             await venvRunner.Setup(true, onConsoleOutput).ConfigureAwait(false);
         }
 
+        // Constrain setuptools<82 in uv's isolated build environments.
+        // setuptools 82+ removed pkg_resources, breaking source builds that import it.
+        var buildConstraintsPath = Path.Combine(installedPackagePath, venvName, "uv-build-constraints.txt");
+        await File.WriteAllTextAsync(buildConstraintsPath, "setuptools<82\n").ConfigureAwait(false);
+        venvRunner.UpdateEnvironmentVariables(env =>
+            env.SetItem("UV_BUILD_CONSTRAINT", buildConstraintsPath)
+        );
+
         // ensure pip is installed
         await venvRunner.PipInstall("pip", onConsoleOutput).ConfigureAwait(false);
 

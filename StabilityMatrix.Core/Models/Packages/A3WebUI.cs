@@ -226,7 +226,7 @@ public class A3WebUI(
         // 1. Configure the entire install process declaratively.
         var config = new PipInstallConfig
         {
-            RequirementsFilePaths = ["requirements_versions.txt", "setuptools<82"],
+            RequirementsFilePaths = ["requirements_versions.txt"],
             TorchVersion = torchIndex == TorchIndex.Mps ? "==2.3.1" : (isBlackwell ? "" : "==2.1.2"),
             TorchvisionVersion = torchIndex == TorchIndex.Mps ? "==0.18.1" : (isBlackwell ? "" : "==0.16.2"),
             XformersVersion = isBlackwell ? " " : "==0.0.23.post1",
@@ -235,7 +235,6 @@ public class A3WebUI(
             ExtraPipArgs =
             [
                 "https://github.com/openai/CLIP/archive/d50d76daa670286dd6cacf3bcd80b5e4823fc8e1.zip",
-                "setuptools<82",
             ],
         };
 

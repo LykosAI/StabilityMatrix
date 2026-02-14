@@ -239,8 +239,12 @@ public abstract class BaseGitPackage : BasePackage
         // setuptools 82+ removed pkg_resources, breaking source builds that import it.
         var buildConstraintsPath = Path.Combine(installedPackagePath, venvName, "uv-build-constraints.txt");
         await File.WriteAllTextAsync(buildConstraintsPath, "setuptools<82\n").ConfigureAwait(false);
+        // Use relative path because uv splits UV_BUILD_CONSTRAINT on spaces (it's a list-type env var),
+        // which breaks when the absolute path contains spaces. The working directory is installedPackagePath,
+        // so the relative path resolves correctly.
+        var relativeBuildConstraintsPath = Path.Combine(venvName, "uv-build-constraints.txt");
         venvRunner.UpdateEnvironmentVariables(env =>
-            env.SetItem("UV_BUILD_CONSTRAINT", buildConstraintsPath)
+            env.SetItem("UV_BUILD_CONSTRAINT", relativeBuildConstraintsPath)
         );
 
         // ensure pip is installed

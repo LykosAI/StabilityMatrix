@@ -23,7 +23,6 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Backslashes can now be escaped in Inference prompts via `\\`
 ### Fixed
 - Fixed parsing of escape sequences in Inference such as `\\`
-- Fixed batch notification firing when only one image is generated
 - Fixed [#1546](https://github.com/LykosAI/StabilityMatrix/issues/1546), [#1541](https://github.com/LykosAI/StabilityMatrix/issues/1541) - "No module named 'pkg_resources'" error when installing Automatic1111/Forge/reForge packages
 - Fixed [#1545](https://github.com/LykosAI/StabilityMatrix/issues/1545), [#1518](https://github.com/LykosAI/StabilityMatrix/issues/1518), [#1513](https://github.com/LykosAI/StabilityMatrix/issues/1513), [#1488](https://github.com/LykosAI/StabilityMatrix/issues/1488) - Forge Neo update breaking things
 - Fixed [#1529](https://github.com/LykosAI/StabilityMatrix/issues/1529) - "Selected commit is null" error when installing packages and rate limited by GitHub
@@ -38,7 +37,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 #### 🌟 Visionaries
 To our stellar Visionaries: **Waterclouds**, **JungleDragon**, **bluepopsicle**, **Bob S**, and **whudunit**! Your generosity keeps this project thriving and gives us the confidence to tackle the big challenges. Thank you for being the foundation that makes it all possible!
 #### 🚀 Pioneers
-Shoutout to our incredible Pioneer crew for keeping the momentum going! Thank you to: **Szir777**, **Noah M**, **[USA]TechDude**, **Thom**, **SeraphOfSalem**, **Desert Viber**, **Adam**, **Droolguy**, **ACTUALLY_the_Real_Willem_Dafoe**, **takyamtom**, **robek**, **Ghislain G**, **Phil R**, **Tundra Everquill**, and a warm welcome to our newest Pioneers: **Andrew B**, **snotty**, **Miguel A**, and **SinthCore**!
+Shoutout to our incredible Pioneer crew for keeping the momentum going! Thank you to: **Szir777**, **Noah M**, **[USA]TechDude**, **Thom**, **SeraphOfSalem**, **Desert Viber**, **Adam**, **Droolguy**, **ACTUALLY_the_Real_Willem_Dafoe**, **takyamtom**, **robek**, **Ghislain G**, **Phil R**, **Tundra Everquill**, and a warm welcome to our newest Pioneers: **Andrew B**, **snotty**, **Miguel A**, **SinthCore**, and **Ahmed S**!
 
 ## v2.15.5
 ### Added

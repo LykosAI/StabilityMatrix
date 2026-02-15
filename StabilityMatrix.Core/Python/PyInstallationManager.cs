@@ -19,6 +19,7 @@ public class PyInstallationManager(IUvManager uvManager, ISettingsManager settin
     public static readonly PyVersion Python_3_10_17 = new(3, 10, 17);
     public static readonly PyVersion Python_3_11_13 = new(3, 11, 13);
     public static readonly PyVersion Python_3_12_10 = new(3, 12, 10);
+    public static readonly PyVersion Python_3_13_12 = new(3, 13, 12);
 
     /// <summary>
     /// List of preferred/target Python versions StabilityMatrix officially supports.
@@ -107,7 +108,7 @@ public class PyInstallationManager(IUvManager uvManager, ISettingsManager settin
         var allPythons = await uvManager.ListAvailablePythonsAsync().ConfigureAwait(false);
         Func<UvPythonInfo, bool> isSupportedVersion = settingsManager.Settings.ShowAllAvailablePythonVersions
             ? p => p is { Source: "cpython", Version.Minor: >= 10 }
-            : p => p is { Source: "cpython", Version.Minor: >= 10 and <= 12 };
+            : p => p is { Source: "cpython", Version.Minor: >= 10 and <= 13, Variant: not "freethreaded" };
 
         var filteredPythons = allPythons
             .Where(isSupportedVersion)

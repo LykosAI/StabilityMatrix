@@ -21,8 +21,17 @@ public class ComfyZluda(
     ISettingsManager settingsManager,
     IDownloadService downloadService,
     IPrerequisiteHelper prerequisiteHelper,
-    IPyInstallationManager pyInstallationManager
-) : ComfyUI(githubApi, settingsManager, downloadService, prerequisiteHelper, pyInstallationManager)
+    IPyInstallationManager pyInstallationManager,
+    IPipWheelService pipWheelService
+)
+    : ComfyUI(
+        githubApi,
+        settingsManager,
+        downloadService,
+        prerequisiteHelper,
+        pyInstallationManager,
+        pipWheelService
+    )
 {
     private const string ZludaPatchDownloadUrl =
         "https://github.com/lshqqytiger/ZLUDA/releases/download/rel.5e717459179dc272b7d7d23391f0fad66c7459cf/ZLUDA-nightly-windows-rocm6-amd64.zip";
@@ -93,9 +102,7 @@ public class ComfyZluda(
                 },
             };
 
-            options.AddRange(
-                base.LaunchOptions.Where(x => x.Name != "Cross Attention Method")
-            );
+            options.AddRange(base.LaunchOptions.Where(x => x.Name != "Cross Attention Method"));
             return options;
         }
     }

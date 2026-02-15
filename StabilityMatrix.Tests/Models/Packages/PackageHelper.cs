@@ -23,7 +23,8 @@ public static class PackageHelper
             .AddSingleton(Substitute.For<IDownloadService>())
             .AddSingleton(Substitute.For<IPyRunner>())
             .AddSingleton(Substitute.For<IPyInstallationManager>())
-            .AddSingleton(Substitute.For<IPrerequisiteHelper>());
+            .AddSingleton(Substitute.For<IPrerequisiteHelper>())
+            .AddSingleton(Substitute.For<IPipWheelService>());
 
         var assembly = typeof(BasePackage).Assembly;
         var packageTypes = assembly

@@ -1,4 +1,5 @@
-﻿using Injectio.Attributes;
+﻿using System.Collections.Immutable;
+using Injectio.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Python;
@@ -12,8 +13,17 @@ public class Reforge(
     ISettingsManager settingsManager,
     IDownloadService downloadService,
     IPrerequisiteHelper prerequisiteHelper,
-    IPyInstallationManager pyInstallationManager
-) : SDWebForge(githubApi, settingsManager, downloadService, prerequisiteHelper, pyInstallationManager)
+    IPyInstallationManager pyInstallationManager,
+    IPipWheelService pipWheelService
+)
+    : SDWebForge(
+        githubApi,
+        settingsManager,
+        downloadService,
+        prerequisiteHelper,
+        pyInstallationManager,
+        pipWheelService
+    )
 {
     public override string Name => "reforge";
     public override string Author => "Panchovix";
@@ -27,4 +37,8 @@ public class Reforge(
     public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Recommended;
     public override bool OfferInOneClickInstaller => true;
     public override PackageType PackageType => PackageType.SdInference;
+
+    protected override ImmutableDictionary<string, string> GetEnvVars(
+        ImmutableDictionary<string, string> env
+    ) => env;
 }

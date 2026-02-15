@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
@@ -90,9 +91,13 @@ public partial class CivitFileViewModel : DisposableViewModelBase
 
     private void ModelIndexChanged(object? sender, EventArgs e)
     {
-        IsInstalled =
-            CivitFile is { Type: CivitFileType.Model, Hashes.BLAKE3: not null }
-            && modelIndexService.ModelIndexBlake3Hashes.Contains(CivitFile.Hashes.BLAKE3);
+        // Dispatch to UI thread since the event may be raised from a background thread
+        Dispatcher.UIThread.Post(() =>
+        {
+            IsInstalled =
+                CivitFile is { Type: CivitFileType.Model, Hashes.BLAKE3: not null }
+                && modelIndexService.ModelIndexBlake3Hashes.Contains(CivitFile.Hashes.BLAKE3);
+        });
     }
 
     [RelayCommand(CanExecute = nameof(CanExecuteDownload))]

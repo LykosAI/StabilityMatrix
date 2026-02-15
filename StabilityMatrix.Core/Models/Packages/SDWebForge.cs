@@ -18,8 +18,17 @@ public class SDWebForge(
     ISettingsManager settingsManager,
     IDownloadService downloadService,
     IPrerequisiteHelper prerequisiteHelper,
-    IPyInstallationManager pyInstallationManager
-) : A3WebUI(githubApi, settingsManager, downloadService, prerequisiteHelper, pyInstallationManager)
+    IPyInstallationManager pyInstallationManager,
+    IPipWheelService pipWheelService
+)
+    : A3WebUI(
+        githubApi,
+        settingsManager,
+        downloadService,
+        prerequisiteHelper,
+        pyInstallationManager,
+        pipWheelService
+    )
 {
     public override string Name => "stable-diffusion-webui-forge";
     public override string DisplayName { get; set; } = "Stable Diffusion WebUI Forge";
@@ -36,7 +45,7 @@ public class SDWebForge(
     public override string MainBranch => "main";
     public override bool ShouldIgnoreReleases => true;
     public override IPackageExtensionManager ExtensionManager => null;
-    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.ReallyRecommended;
+    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Simple;
     public override PackageType PackageType => PackageType.Legacy;
 
     public override List<LaunchOptionDefinition> LaunchOptions =>
@@ -175,8 +184,6 @@ public class SDWebForge(
         var isBlackwell =
             torchIndex is TorchIndex.Cuda
             && (SettingsManager.Settings.PreferredGpu?.IsBlackwellGpu() ?? HardwareHelper.HasBlackwellGpu());
-
-        var isAmd = torchIndex is TorchIndex.Rocm;
 
         var config = new PipInstallConfig
         {

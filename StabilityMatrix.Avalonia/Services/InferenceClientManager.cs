@@ -331,15 +331,22 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             if (!settingsManager.IsLibraryDirSet)
                 return;
 
-            ResetSharedProperties();
-
-            if (IsConnected)
+            // Dispatch to UI thread to prevent race conditions with Avalonia's selection model.
+            // The ModelIndexChanged event may be raised from a background thread, and modifying
+            // observable collections from a non-UI thread can cause ArgumentOutOfRangeException
+            // when the selection model tries to enumerate selected items.
+            Dispatcher.UIThread.Post(() =>
             {
-                LoadSharedPropertiesAsync()
-                    .SafeFireAndForget(onException: ex =>
-                        logger.LogError(ex, "Error loading shared properties")
-                    );
-            }
+                ResetSharedProperties();
+
+                if (IsConnected)
+                {
+                    LoadSharedPropertiesAsync()
+                        .SafeFireAndForget(onException: ex =>
+                            logger.LogError(ex, "Error loading shared properties")
+                        );
+                }
+            });
         };
     }
 

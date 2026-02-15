@@ -29,6 +29,7 @@ public abstract class BaseGitPackage : BasePackage
     protected readonly IDownloadService DownloadService;
     protected readonly IPrerequisiteHelper PrerequisiteHelper;
     protected readonly IPyInstallationManager PyInstallationManager;
+    protected readonly IPipWheelService PipWheelService;
     public IPyVenvRunner? VenvRunner;
 
     public virtual string RepositoryName => Name;
@@ -68,7 +69,8 @@ public abstract class BaseGitPackage : BasePackage
         ISettingsManager settingsManager,
         IDownloadService downloadService,
         IPrerequisiteHelper prerequisiteHelper,
-        IPyInstallationManager pyInstallationManager
+        IPyInstallationManager pyInstallationManager,
+        IPipWheelService pipWheelService
     )
         : base(settingsManager)
     {
@@ -76,6 +78,7 @@ public abstract class BaseGitPackage : BasePackage
         DownloadService = downloadService;
         PrerequisiteHelper = prerequisiteHelper;
         PyInstallationManager = pyInstallationManager;
+        PipWheelService = pipWheelService;
     }
 
     public override async Task<DownloadPackageVersionOptions?> GetLatestVersion(
@@ -232,6 +235,18 @@ public abstract class BaseGitPackage : BasePackage
             await venvRunner.Setup(true, onConsoleOutput).ConfigureAwait(false);
         }
 
+        // Constrain setuptools<82 in uv's isolated build environments.
+        // setuptools 82+ removed pkg_resources, breaking source builds that import it.
+        var buildConstraintsPath = Path.Combine(installedPackagePath, venvName, "uv-build-constraints.txt");
+        await File.WriteAllTextAsync(buildConstraintsPath, "setuptools<82\n").ConfigureAwait(false);
+        // Use relative path because uv splits UV_BUILD_CONSTRAINT on spaces (it's a list-type env var),
+        // which breaks when the absolute path contains spaces. The working directory is installedPackagePath,
+        // so the relative path resolves correctly.
+        var relativeBuildConstraintsPath = Path.Combine(venvName, "uv-build-constraints.txt");
+        venvRunner.UpdateEnvironmentVariables(env =>
+            env.SetItem("UV_BUILD_CONSTRAINT", relativeBuildConstraintsPath)
+        );
+
         // ensure pip is installed
         await venvRunner.PipInstall("pip", onConsoleOutput).ConfigureAwait(false);
 
@@ -278,27 +293,30 @@ public abstract class BaseGitPackage : BasePackage
             );
         }
 
+        var gitArgs = new List<string> { "clone" };
+
+        var branchArg = !string.IsNullOrWhiteSpace(versionOptions.VersionTag)
+            ? versionOptions.VersionTag
+            : versionOptions.BranchName;
+
+        if (!string.IsNullOrWhiteSpace(branchArg))
+        {
+            gitArgs.Add("--branch");
+            gitArgs.Add(branchArg);
+        }
+
+        gitArgs.Add(GithubUrl);
+        gitArgs.Add(installLocation);
+
         await PrerequisiteHelper
-            .RunGit(
-                new[]
-                {
-                    "clone",
-                    "--branch",
-                    !string.IsNullOrWhiteSpace(versionOptions.VersionTag)
-                        ? versionOptions.VersionTag
-                        : versionOptions.BranchName ?? MainBranch,
-                    GithubUrl,
-                    installLocation,
-                },
-                progress?.AsProcessOutputHandler()
-            )
+            .RunGit(gitArgs.ToArray(), progress?.AsProcessOutputHandler())
             .ConfigureAwait(false);
 
         if (!versionOptions.IsLatest && !string.IsNullOrWhiteSpace(versionOptions.CommitHash))
         {
             await PrerequisiteHelper
                 .RunGit(
-                    new[] { "checkout", versionOptions.CommitHash },
+                    ["checkout", versionOptions.CommitHash],
                     progress?.AsProcessOutputHandler(),
                     installLocation
                 )

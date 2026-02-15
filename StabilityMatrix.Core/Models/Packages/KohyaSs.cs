@@ -18,8 +18,17 @@ public class KohyaSs(
     IDownloadService downloadService,
     IPrerequisiteHelper prerequisiteHelper,
     IPyRunner runner,
-    IPyInstallationManager pyInstallationManager
-) : BaseGitPackage(githubApi, settingsManager, downloadService, prerequisiteHelper, pyInstallationManager)
+    IPyInstallationManager pyInstallationManager,
+    IPipWheelService pipWheelService
+)
+    : BaseGitPackage(
+        githubApi,
+        settingsManager,
+        downloadService,
+        prerequisiteHelper,
+        pyInstallationManager,
+        pipWheelService
+    )
 {
     public override string Name => "kohya_ss";
     public override string DisplayName { get; set; } = "kohya_ss";

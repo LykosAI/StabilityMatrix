@@ -403,11 +403,16 @@ public partial class CheckpointsPageViewModel(
 
         EventManager.Instance.ModelIndexChanged += (_, _) =>
         {
-            RefreshCategories();
-            ModelsCache.EditDiff(
-                modelIndexService.ModelIndex.Values.SelectMany(x => x),
-                LocalModelFile.RelativePathConnectedModelInfoComparer
-            );
+            // Dispatch to UI thread to prevent race conditions with Avalonia's selection model.
+            // The ModelIndexChanged event may be raised from a background thread.
+            Dispatcher.UIThread.Post(() =>
+            {
+                RefreshCategories();
+                ModelsCache.EditDiff(
+                    modelIndexService.ModelIndex.Values.SelectMany(x => x),
+                    LocalModelFile.RelativePathConnectedModelInfoComparer
+                );
+            });
         };
 
         AddDisposable(

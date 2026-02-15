@@ -16,8 +16,17 @@ public class Cogstudio(
     ISettingsManager settingsManager,
     IDownloadService downloadService,
     IPrerequisiteHelper prerequisiteHelper,
-    IPyInstallationManager pyInstallationManager
-) : BaseGitPackage(githubApi, settingsManager, downloadService, prerequisiteHelper, pyInstallationManager)
+    IPyInstallationManager pyInstallationManager,
+    IPipWheelService pipWheelService
+)
+    : BaseGitPackage(
+        githubApi,
+        settingsManager,
+        downloadService,
+        prerequisiteHelper,
+        pyInstallationManager,
+        pipWheelService
+    )
 {
     public override string Name => "Cogstudio";
     public override string DisplayName { get; set; } = "Cogstudio";
@@ -156,7 +165,7 @@ public class Cogstudio(
         }
 
         VenvRunner.RunDetached(
-            [Path.Combine(installLocation, options.Command ?? LaunchCommand), ..options.Arguments],
+            [Path.Combine(installLocation, options.Command ?? LaunchCommand), .. options.Arguments],
             HandleConsoleOutput,
             OnExit
         );

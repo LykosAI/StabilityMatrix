@@ -250,6 +250,28 @@ public sealed class App : Application
                 fonts.Add("Helvetica Neue");
                 fonts.Add("Helvetica");
             }
+            else if (Compat.IsLinux)
+            {
+                // For Chinese locales, prioritize CJK-capable fonts first
+                if (Cultures.Current?.Name is "zh-Hans" or "zh-Hant")
+                {
+                    // Common Chinese fonts on Linux systems
+                    fonts.Add("Noto Sans CJK SC");
+                    fonts.Add("Noto Sans CJK TC");
+                    fonts.Add("Source Han Sans");
+                    fonts.Add("WenQuanYi Micro Hei");
+                    fonts.Add("WenQuanYi Zen Hei");
+                }
+
+                // Add common Linux fonts
+                fonts.Add("Ubuntu");
+                fonts.Add("DejaVu Sans");
+
+                // Fallback to system default
+                fonts.Add(FontFamily.Default.Name);
+
+                return new FontFamily(string.Join(",", fonts));
+            }
             else
             {
                 return FontFamily.Default;
@@ -281,6 +303,9 @@ public sealed class App : Application
             Logger.Debug("ActivatableLifetime available, setting up activation protocol handlers");
             activatableLifetime.Activated += OnActivated;
         }
+
+        // Update font when culture/language changes
+        EventManager.Instance.CultureChanged += (_, _) => SetFontFamily(GetPlatformDefaultFontFamily());
     }
 
     private void ShowMainWindow()

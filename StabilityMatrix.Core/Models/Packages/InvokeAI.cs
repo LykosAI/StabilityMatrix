@@ -25,8 +25,17 @@ public class InvokeAI(
     ISettingsManager settingsManager,
     IDownloadService downloadService,
     IPrerequisiteHelper prerequisiteHelper,
-    IPyInstallationManager pyInstallationManager
-) : BaseGitPackage(githubApi, settingsManager, downloadService, prerequisiteHelper, pyInstallationManager)
+    IPyInstallationManager pyInstallationManager,
+    IPipWheelService pipWheelService
+)
+    : BaseGitPackage(
+        githubApi,
+        settingsManager,
+        downloadService,
+        prerequisiteHelper,
+        pyInstallationManager,
+        pipWheelService
+    )
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private const string RelativeRootPath = "invokeai-root";
@@ -121,6 +130,11 @@ public class InvokeAI(
     {
         return Task.CompletedTask;
     }
+
+    public override Task<bool> CheckForUpdates(InstalledPackage package) =>
+        package.PythonVersion == Python.PyInstallationManager.Python_3_10_11.ToString()
+            ? Task.FromResult(false)
+            : base.CheckForUpdates(package);
 
     public override async Task InstallPackage(
         string installLocation,
@@ -290,6 +304,44 @@ public class InvokeAI(
             .ConfigureAwait(false);
 
         VenvRunner.UpdateEnvironmentVariables(env => GetEnvVars(env, installedPackagePath));
+
+        // Check for legacy Python 3.10.11 installations
+        if (installedPackage.PythonVersion == Python.PyInstallationManager.Python_3_10_11.ToString())
+        {
+            var warningMessage = """
+
+                ============================================================
+                            LEGACY INVOKEAI INSTALLATION
+                ============================================================
+
+                This InvokeAI installation is using Python 3.10.11, which
+                is no longer supported by InvokeAI.
+
+                Automatic updates have been disabled for this installation
+                to prevent compatibility issues.
+
+                Your current installation will continue to work, but will
+                not receive updates.
+
+                Recommended actions:
+                  1. Install a new InvokeAI instance with Python 3.12+
+                  2. Copy your settings and data from this installation
+                     to the new one
+                  3. Once verified, you can delete this old installation
+
+                Note: You can run both installations side-by-side during
+                the migration.
+
+                ============================================================
+
+                """;
+
+            Logger.Warn(
+                "InvokeAI installation using legacy Python {PythonVersion} - updates disabled",
+                installedPackage.PythonVersion
+            );
+            onConsoleOutput?.Invoke(ProcessOutput.FromStdErrLine(warningMessage));
+        }
 
         // Launch command is for a console entry point, and not a direct script
         var entryPoint = await VenvRunner.GetEntryPoint(command).ConfigureAwait(false);

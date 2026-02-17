@@ -312,6 +312,8 @@ public class VladAutomatic(
             )
             .ConfigureAwait(false);
 
+        ApplySetuptoolsConstraints(venvRunner, installLocation);
+
         await venvRunner.PipInstall(["setuptools", "rich", "uv"]).ConfigureAwait(false);
         if (options.PythonOptions.PythonVersion is { Minor: < 12 })
         {
@@ -431,6 +433,8 @@ public class VladAutomatic(
             )
             .ConfigureAwait(false);
 
+        ApplySetuptoolsConstraints(venvRunner, installedPackage.FullPath!.Unwrap());
+
         await venvRunner.CustomInstall("launch.py --upgrade --test", onConsoleOutput).ConfigureAwait(false);
 
         try
@@ -466,6 +470,12 @@ public class VladAutomatic(
         }
 
         return baseUpdateResult;
+    }
+
+    private static void ApplySetuptoolsConstraints(IPyVenvRunner venvRunner, string installLocation)
+    {
+        var constraintPath = Path.Combine(installLocation, "venv", "uv-build-constraints.txt");
+        venvRunner.UpdateEnvironmentVariables(env => env.SetItem("PIP_CONSTRAINT", constraintPath));
     }
 
     private class VladExtensionManager(VladAutomatic package)

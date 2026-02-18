@@ -5,6 +5,10 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.16.0-dev.3
+### Fixed
+- Fixed an issue where `Align Your Steps` scheduler and Unet Loader workflows ignored Regional Prompting (and other addon) conditioning modifiers.
+
 ## v2.16.0-dev.2
 ### Added
 - Added Regional Prompting addon to Inference - paint detailed masks to apply different prompts, strengths, and settings to specific regions of your image

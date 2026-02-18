@@ -390,14 +390,14 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
                 new ComfyNodeBuilder.FluxGuidance
                 {
                     Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.FluxGuidance)),
-                    Conditioning = e.Builder.Connections.GetRefinerOrBaseConditioning().Positive,
+                    Conditioning = e.Temp.GetRefinerOrBaseConditioning().Positive,
                     Guidance = CfgScale,
                 }
             );
 
             e.Builder.Connections.Base.Conditioning = new ConditioningConnections(
                 fluxGuidance.Output,
-                e.Builder.Connections.GetRefinerOrBaseConditioning().Negative
+                e.Temp.GetRefinerOrBaseConditioning().Negative
             );
 
             // Guider
@@ -414,7 +414,7 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
         }
         else
         {
-            e.Builder.Connections.Base.Conditioning = e.Builder.Connections.GetRefinerOrBaseConditioning();
+            e.Builder.Connections.Base.Conditioning = e.Temp.GetRefinerOrBaseConditioning();
 
             var cfgGuider = e.Nodes.AddTypedNode(
                 new ComfyNodeBuilder.CFGGuider

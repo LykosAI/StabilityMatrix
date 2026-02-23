@@ -68,6 +68,21 @@ public class ModelIndexServiceTests
         Assert.IsFalse(result);
     }
 
+    [TestMethod]
+    public void GetHasEarlyAccessUpdateOnly_ReturnsFalse_WhenInstalledVersionIsNotInRemoteList()
+    {
+        var model = CreateLocalModel(installedVersionId: 100, hasUpdate: true);
+        var remoteModel = CreateRemoteModel(
+            CreateVersion(id: 300, isEarlyAccess: true),
+            CreateVersion(id: 200, isEarlyAccess: true),
+            CreateVersion(id: 150, isEarlyAccess: false)
+        );
+
+        var result = InvokeGetHasEarlyAccessUpdateOnly(model, remoteModel);
+
+        Assert.IsFalse(result);
+    }
+
     private static bool InvokeGetHasEarlyAccessUpdateOnly(LocalModelFile model, CivitModel? remoteModel)
     {
         var method = typeof(ModelIndexService).GetMethod(

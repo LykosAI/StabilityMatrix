@@ -720,18 +720,6 @@ public partial class ModelIndexService : IModelIndexService
         if (installedIndex <= 0)
             return false;
 
-        var hasEarlyAccess = false;
-        for (var i = 0; i < installedIndex; i++)
-        {
-            if (versions[i].IsEarlyAccess)
-            {
-                hasEarlyAccess = true;
-                continue;
-            }
-
-            return false;
-        }
-
-        return hasEarlyAccess;
+        return versions.Take(installedIndex).All(version => version.IsEarlyAccess);
     }
 }

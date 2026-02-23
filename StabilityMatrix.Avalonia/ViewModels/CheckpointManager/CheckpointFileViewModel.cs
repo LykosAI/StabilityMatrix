@@ -25,6 +25,8 @@ namespace StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
 public partial class CheckpointFileViewModel : SelectableViewModelBase
 {
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasEarlyAccessUpdateOnly))]
+    [NotifyPropertyChangedFor(nameof(HasStandardUpdate))]
     private LocalModelFile checkpointFile;
 
     [ObservableProperty]
@@ -64,6 +66,8 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
     public bool CanShowTriggerWords => CheckpointFile.ConnectedModelInfo?.TrainedWords?.Length > 0;
     public string BaseModelName => CheckpointFile.ConnectedModelInfo?.BaseModel ?? string.Empty;
     public CivitModelType ModelType => CheckpointFile.ConnectedModelInfo?.ModelType ?? CivitModelType.Unknown;
+    public bool HasEarlyAccessUpdateOnly => CheckpointFile.HasEarlyAccessUpdateOnly;
+    public bool HasStandardUpdate => CheckpointFile.HasUpdate && !CheckpointFile.HasEarlyAccessUpdateOnly;
 
     /// <inheritdoc/>
     public CheckpointFileViewModel(

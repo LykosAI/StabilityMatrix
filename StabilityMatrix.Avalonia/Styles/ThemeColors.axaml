@@ -1,7 +1,8 @@
-﻿<ResourceDictionary xmlns="https://github.com/avaloniaui"
-                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:sty="clr-namespace:FluentAvalonia.Styling;assembly=FluentAvalonia">
-    <!-- Static colors -->
+﻿<ResourceDictionary
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:sty="clr-namespace:FluentAvalonia.Styling;assembly=FluentAvalonia">
+    <!--  Static colors  -->
     <Color x:Key="ThemePrimaryColor">#333333</Color>
     <Color x:Key="ThemeDarkDarkRedColor">#952923</Color>
     <Color x:Key="ThemeDarkRedColor">#C2362E</Color>
@@ -32,58 +33,59 @@
     <Color x:Key="ThemeAmberColor">#FFC107</Color>
     <Color x:Key="ThemeOrangeColor">#FF9800</Color>
     <Color x:Key="ThemeDeepOrangeColor">#FF5722</Color>
+    <Color x:Key="ThemeDeepOrangeColorTransparent">#AAFF5722</Color>
     <Color x:Key="ThemeEldenRingOrangeColor">#FF4F00</Color>
     <Color x:Key="ThemeBrownColor">#795548</Color>
     <Color x:Key="ThemeGreyColor">#9E9E9E</Color>
     <Color x:Key="ThemeLightGreyColor">#C0C0C0</Color>
     <Color x:Key="ThemeBlueGreyColor">#607D8B</Color>
-    
-    <!-- Dark / light dynamic colors -->
+
+    <!--  Dark / light dynamic colors  -->
     <ResourceDictionary.ThemeDictionaries>
         <ResourceDictionary x:Key="Default">
-            <SolidColorBrush x:Key="ThemeBackgroundBrush" Color="#AAAAAA"/>
-            <SolidColorBrush x:Key="ThemeDarkAccentForegroundBrush" Color="#AAAAAA"/>
-            <SolidColorBrush x:Key="ThemeDarkAccentBackgroundBrush" Color="#686868"/>
-            <SolidColorBrush x:Key="RegionColor" Color="#AAAAAA"/>
-            
-            <SolidColorBrush x:Key="CompletionBorderBrush" Color="#43454A"/>
-            <SolidColorBrush x:Key="CompletionBackgroundBrush" Color="#2B2D30"/>
-            <SolidColorBrush x:Key="CompletionSecondaryBackgroundBrush" Color="#393B40"/>
-            <SolidColorBrush x:Key="CompletionForegroundBrush" Color="#B4B8BF"/>
-            <SolidColorBrush x:Key="CompletionSecondaryForegroundBrush" Color="#878B8D"/>
-            <SolidColorBrush x:Key="CompletionSelectionBackgroundBrush" Color="#2E436E"/>
-            <SolidColorBrush x:Key="CompletionSelectionForegroundBrush" Color="#5389F4"/>
+            <SolidColorBrush x:Key="ThemeBackgroundBrush" Color="#AAAAAA" />
+            <SolidColorBrush x:Key="ThemeDarkAccentForegroundBrush" Color="#AAAAAA" />
+            <SolidColorBrush x:Key="ThemeDarkAccentBackgroundBrush" Color="#686868" />
+            <SolidColorBrush x:Key="RegionColor" Color="#AAAAAA" />
+
+            <SolidColorBrush x:Key="CompletionBorderBrush" Color="#43454A" />
+            <SolidColorBrush x:Key="CompletionBackgroundBrush" Color="#2B2D30" />
+            <SolidColorBrush x:Key="CompletionSecondaryBackgroundBrush" Color="#393B40" />
+            <SolidColorBrush x:Key="CompletionForegroundBrush" Color="#B4B8BF" />
+            <SolidColorBrush x:Key="CompletionSecondaryForegroundBrush" Color="#878B8D" />
+            <SolidColorBrush x:Key="CompletionSelectionBackgroundBrush" Color="#2E436E" />
+            <SolidColorBrush x:Key="CompletionSelectionForegroundBrush" Color="#5389F4" />
         </ResourceDictionary>
-        
+
         <ResourceDictionary x:Key="Dark">
-            <SolidColorBrush x:Key="ThemeBackgroundBrush" Color="#282828"/>
-            <SolidColorBrush x:Key="ThemeDarkAccentForegroundBrush" Color="#AAAAAA"/>
-            <SolidColorBrush x:Key="ThemeDarkAccentBackgroundBrush" Color="#252525"/>
-            <SolidColorBrush x:Key="RegionColor" Color="#282828"/>
-            
-            <SolidColorBrush x:Key="CompletionBorderBrush" Color="#43454A"/>
-            <SolidColorBrush x:Key="CompletionBackgroundBrush" Color="#2B2D30"/>
-            <SolidColorBrush x:Key="CompletionSecondaryBackgroundBrush" Color="#393B40"/>
-            <SolidColorBrush x:Key="CompletionForegroundBrush" Color="#B4B8BF"/>
-            <SolidColorBrush x:Key="CompletionSecondaryForegroundBrush" Color="#878B8D"/>
-            <SolidColorBrush x:Key="CompletionSelectionBackgroundBrush" Color="#2E436E"/>
-            <SolidColorBrush x:Key="CompletionSelectionForegroundBrush" Color="#5389F4"/>
+            <SolidColorBrush x:Key="ThemeBackgroundBrush" Color="#282828" />
+            <SolidColorBrush x:Key="ThemeDarkAccentForegroundBrush" Color="#AAAAAA" />
+            <SolidColorBrush x:Key="ThemeDarkAccentBackgroundBrush" Color="#252525" />
+            <SolidColorBrush x:Key="RegionColor" Color="#282828" />
+
+            <SolidColorBrush x:Key="CompletionBorderBrush" Color="#43454A" />
+            <SolidColorBrush x:Key="CompletionBackgroundBrush" Color="#2B2D30" />
+            <SolidColorBrush x:Key="CompletionSecondaryBackgroundBrush" Color="#393B40" />
+            <SolidColorBrush x:Key="CompletionForegroundBrush" Color="#B4B8BF" />
+            <SolidColorBrush x:Key="CompletionSecondaryForegroundBrush" Color="#878B8D" />
+            <SolidColorBrush x:Key="CompletionSelectionBackgroundBrush" Color="#2E436E" />
+            <SolidColorBrush x:Key="CompletionSelectionForegroundBrush" Color="#5389F4" />
         </ResourceDictionary>
-        
+
         <ResourceDictionary x:Key="{x:Static sty:FluentAvaloniaTheme.HighContrastTheme}">
-            <SolidColorBrush x:Key="ThemeBackgroundBrush" Color="#AAAAAA"/>
-            <SolidColorBrush x:Key="ThemeDarkAccentForegroundBrush" Color="#AAAAAA"/>
-            <SolidColorBrush x:Key="ThemeDarkAccentBackgroundBrush" Color="#686868"/>
-            <SolidColorBrush x:Key="RegionColor" Color="#AAAAAA"/>
-            
-            <SolidColorBrush x:Key="CompletionBorderBrush" Color="#43454A"/>
-            <SolidColorBrush x:Key="CompletionBackgroundBrush" Color="#2B2D30"/>
-            <SolidColorBrush x:Key="CompletionSecondaryBackgroundBrush" Color="#393B40"/>
-            <SolidColorBrush x:Key="CompletionForegroundBrush" Color="#B4B8BF"/>
-            <SolidColorBrush x:Key="CompletionSecondaryForegroundBrush" Color="#878B8D"/>
-            <SolidColorBrush x:Key="CompletionSelectionBackgroundBrush" Color="#2E436E"/>
-            <SolidColorBrush x:Key="CompletionSelectionForegroundBrush" Color="#5389F4"/>
+            <SolidColorBrush x:Key="ThemeBackgroundBrush" Color="#AAAAAA" />
+            <SolidColorBrush x:Key="ThemeDarkAccentForegroundBrush" Color="#AAAAAA" />
+            <SolidColorBrush x:Key="ThemeDarkAccentBackgroundBrush" Color="#686868" />
+            <SolidColorBrush x:Key="RegionColor" Color="#AAAAAA" />
+
+            <SolidColorBrush x:Key="CompletionBorderBrush" Color="#43454A" />
+            <SolidColorBrush x:Key="CompletionBackgroundBrush" Color="#2B2D30" />
+            <SolidColorBrush x:Key="CompletionSecondaryBackgroundBrush" Color="#393B40" />
+            <SolidColorBrush x:Key="CompletionForegroundBrush" Color="#B4B8BF" />
+            <SolidColorBrush x:Key="CompletionSecondaryForegroundBrush" Color="#878B8D" />
+            <SolidColorBrush x:Key="CompletionSelectionBackgroundBrush" Color="#2E436E" />
+            <SolidColorBrush x:Key="CompletionSelectionForegroundBrush" Color="#5389F4" />
         </ResourceDictionary>
     </ResourceDictionary.ThemeDictionaries>
-    
+
 </ResourceDictionary>

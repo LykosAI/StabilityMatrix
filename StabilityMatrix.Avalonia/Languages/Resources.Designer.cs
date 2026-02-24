@@ -2307,6 +2307,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Model Version Description.
+        /// </summary>
+        public static string Label_ModelVersionDescription {
+            get {
+                return ResourceManager.GetString("Label_ModelVersionDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Search models, #tags, or @users.
         /// </summary>
         public static string Label_ModelSearchWatermark {

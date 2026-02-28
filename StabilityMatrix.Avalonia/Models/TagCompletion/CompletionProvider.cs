@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
+﻿using System.Diagnostics;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using AutoComplete.Builders;
 using AutoComplete.Clients.IndexSearchers;
@@ -358,12 +354,12 @@ public partial class CompletionProvider : ICompletionProvider
         {
             (PromptExtraNetworkType.Lora, "lora"),
             (PromptExtraNetworkType.LyCORIS, "lyco"),
-            (PromptExtraNetworkType.Embedding, "embedding")
+            (PromptExtraNetworkType.Embedding, "embedding"),
         };
 
         return availableTypes
-            .Where(
-                type => type.Item1.GetStringValue().StartsWith(searchTerm, StringComparison.OrdinalIgnoreCase)
+            .Where(type =>
+                type.Item1.GetStringValue().StartsWith(searchTerm, StringComparison.OrdinalIgnoreCase)
             )
             .Select(type => new ModelTypeCompletionData(type.Item2, type.Item1));
     }
@@ -381,7 +377,7 @@ public partial class CompletionProvider : ICompletionProvider
         {
             Term = searchTerm,
             MaxItemCount = itemsCount,
-            SuggestWhenFoundStartsWith = suggest
+            SuggestWhenFoundStartsWith = suggest,
         };
 
         var result = searcher.Search(searchOptions);

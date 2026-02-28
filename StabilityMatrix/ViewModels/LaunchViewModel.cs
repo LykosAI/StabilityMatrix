@@ -1,23 +1,4 @@
-﻿using System;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Windows;
-using AsyncAwaitBestPractices;
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using Microsoft.Extensions.Logging;
-using Microsoft.Toolkit.Uwp.Notifications;
-using StabilityMatrix.Core.Helper;
-using StabilityMatrix.Core.Helper.Factory;
-using StabilityMatrix.Core.Models;
-using StabilityMatrix.Core.Models.Packages;
-using StabilityMatrix.Core.Processes;
-using StabilityMatrix.Core.Python;
-using StabilityMatrix.Core.Services;
-using StabilityMatrix.Helper;
-using Wpf.Ui.Contracts;
-using Wpf.Ui.Controls.ContentDialogControl;
+﻿using StabilityMatrix.Helper;
 using EventManager = StabilityMatrix.Core.Helper.EventManager;
 using ISnackbarService = StabilityMatrix.Helper.ISnackbarService;
 
@@ -39,17 +20,32 @@ public partial class LaunchViewModel : ObservableObject
     private bool clearingPackages;
     private string webUiUrl = string.Empty;
 
-    [ObservableProperty] private string consoleInput = "";
-    [ObservableProperty] private Visibility launchButtonVisibility;
-    [ObservableProperty] private Visibility stopButtonVisibility;
-    [ObservableProperty] private bool isLaunchTeachingTipsOpen = false;
-    [ObservableProperty] private bool showWebUiButton;
-    [ObservableProperty] private ObservableCollection<string>? consoleHistory;
-    
-    [ObservableProperty] private InstalledPackage? selectedPackage;
-    [ObservableProperty] private ObservableCollection<InstalledPackage> installedPackages = new();
-    
-    public LaunchViewModel(ISettingsManager settingsManager,
+    [ObservableProperty]
+    private string consoleInput = "";
+
+    [ObservableProperty]
+    private Visibility launchButtonVisibility;
+
+    [ObservableProperty]
+    private Visibility stopButtonVisibility;
+
+    [ObservableProperty]
+    private bool isLaunchTeachingTipsOpen = false;
+
+    [ObservableProperty]
+    private bool showWebUiButton;
+
+    [ObservableProperty]
+    private ObservableCollection<string>? consoleHistory;
+
+    [ObservableProperty]
+    private InstalledPackage? selectedPackage;
+
+    [ObservableProperty]
+    private ObservableCollection<InstalledPackage> installedPackages = new();
+
+    public LaunchViewModel(
+        ISettingsManager settingsManager,
         IPackageFactory packageFactory,
         IContentDialogService contentDialogService,
         LaunchOptionsDialogViewModel launchOptionsDialogViewModel,
@@ -57,7 +53,8 @@ public partial class LaunchViewModel : ObservableObject
         IPyRunner pyRunner,
         IDialogFactory dialogFactory,
         ISnackbarService snackbarService,
-        ISharedFolders sharedFolders)
+        ISharedFolders sharedFolders
+    )
     {
         this.pyRunner = pyRunner;
         this.dialogFactory = dialogFactory;
@@ -75,10 +72,11 @@ public partial class LaunchViewModel : ObservableObject
 
         ToastNotificationManagerCompat.OnActivated += ToastNotificationManagerCompatOnOnActivated;
     }
-    
+
     partial void OnSelectedPackageChanged(InstalledPackage? value)
     {
-        if (clearingPackages) return;
+        if (clearingPackages)
+            return;
         settingsManager.Transaction(s => s.ActiveInstalledPackageId = value?.Id);
     }
 
@@ -92,8 +90,7 @@ public partial class LaunchViewModel : ObservableObject
         OnLoaded();
     }
 
-    private void ToastNotificationManagerCompatOnOnActivated(
-        ToastNotificationActivatedEventArgsCompat e)
+    private void ToastNotificationManagerCompatOnOnActivated(ToastNotificationActivatedEventArgsCompat e)
     {
         if (!e.Argument.StartsWith("http"))
             return;
@@ -106,72 +103,80 @@ public partial class LaunchViewModel : ObservableObject
         LaunchWebUi();
     }
 
-    public AsyncRelayCommand LaunchCommand => new(async () =>
-    {
-        var activeInstall = SelectedPackage;
-
-        if (activeInstall == null)
+    public AsyncRelayCommand LaunchCommand =>
+        new(async () =>
         {
-            // No selected package: error snackbar
-            snackbarService.ShowSnackbarAsync(
-                "You must install and select a package before launching",
-                "No package selected").SafeFireAndForget();
-            return;
-        }
+            var activeInstall = SelectedPackage;
 
-        var activeInstallName = activeInstall.PackageName;
-        var basePackage = string.IsNullOrWhiteSpace(activeInstallName)
-            ? null
-            : packageFactory.FindPackageByName(activeInstallName);
+            if (activeInstall == null)
+            {
+                // No selected package: error snackbar
+                snackbarService
+                    .ShowSnackbarAsync(
+                        "You must install and select a package before launching",
+                        "No package selected"
+                    )
+                    .SafeFireAndForget();
+                return;
+            }
 
-        if (basePackage == null)
-        {
-            logger.LogWarning(
-                "During launch, package name '{PackageName}' did not match a definition",
-                activeInstallName);
-            snackbarService.ShowSnackbarAsync(
-                "Install package name did not match a definition. Please reinstall and let us know about this issue.",
-                "Package name invalid").SafeFireAndForget();
-            return;
-        }
+            var activeInstallName = activeInstall.PackageName;
+            var basePackage = string.IsNullOrWhiteSpace(activeInstallName)
+                ? null
+                : packageFactory.FindPackageByName(activeInstallName);
 
-        // If this is the first launch (LaunchArgs is null),
-        // load and save a launch options dialog in background
-        // so that dynamic initial values are saved.
-        if (activeInstall.LaunchArgs == null)
-        {
-            var definitions = basePackage.LaunchOptions;
-            // Open a config page and save it
-            var dialog = dialogFactory.CreateLaunchOptionsDialog(definitions, activeInstall);
-            var args = dialog.AsLaunchArgs();
-            settingsManager.SaveLaunchArgs(activeInstall.Id, args);
-        }
+            if (basePackage == null)
+            {
+                logger.LogWarning(
+                    "During launch, package name '{PackageName}' did not match a definition",
+                    activeInstallName
+                );
+                snackbarService
+                    .ShowSnackbarAsync(
+                        "Install package name did not match a definition. Please reinstall and let us know about this issue.",
+                        "Package name invalid"
+                    )
+                    .SafeFireAndForget();
+                return;
+            }
 
-        // Clear console
-        ConsoleHistory?.Clear();
+            // If this is the first launch (LaunchArgs is null),
+            // load and save a launch options dialog in background
+            // so that dynamic initial values are saved.
+            if (activeInstall.LaunchArgs == null)
+            {
+                var definitions = basePackage.LaunchOptions;
+                // Open a config page and save it
+                var dialog = dialogFactory.CreateLaunchOptionsDialog(definitions, activeInstall);
+                var args = dialog.AsLaunchArgs();
+                settingsManager.SaveLaunchArgs(activeInstall.Id, args);
+            }
 
-        await pyRunner.Initialize();
+            // Clear console
+            ConsoleHistory?.Clear();
 
-        // Get path from package
-        var packagePath = $"{settingsManager.LibraryDir}\\{activeInstall.LibraryPath!}";
+            await pyRunner.Initialize();
 
-        basePackage.ConsoleOutput += OnConsoleOutput;
-        basePackage.Exited += OnExit;
-        basePackage.StartupComplete += RunningPackageOnStartupComplete;
+            // Get path from package
+            var packagePath = $"{settingsManager.LibraryDir}\\{activeInstall.LibraryPath!}";
 
-        // Update shared folder links (in case library paths changed)
-        await sharedFolders.UpdateLinksForPackage(basePackage, packagePath);
+            basePackage.ConsoleOutput += OnConsoleOutput;
+            basePackage.Exited += OnExit;
+            basePackage.StartupComplete += RunningPackageOnStartupComplete;
 
-        // Load user launch args from settings and convert to string
-        var userArgs = settingsManager.GetLaunchArgs(activeInstall.Id);
-        var userArgsString = string.Join(" ", userArgs.Select(opt => opt.ToArgString()));
+            // Update shared folder links (in case library paths changed)
+            await sharedFolders.UpdateLinksForPackage(basePackage, packagePath);
 
-        // Join with extras, if any
-        userArgsString = string.Join(" ", userArgsString, basePackage.ExtraLaunchArguments);
-        await basePackage.RunPackage(packagePath, userArgsString);
-        runningPackage = basePackage;
-        SetProcessRunning(true);
-    });
+            // Load user launch args from settings and convert to string
+            var userArgs = settingsManager.GetLaunchArgs(activeInstall.Id);
+            var userArgsString = string.Join(" ", userArgs.Select(opt => opt.ToArgString()));
+
+            // Join with extras, if any
+            userArgsString = string.Join(" ", userArgsString, basePackage.ExtraLaunchArguments);
+            await basePackage.RunPackage(packagePath, userArgsString);
+            runningPackage = basePackage;
+            SetProcessRunning(true);
+        });
 
     [RelayCommand]
     private async Task ConfigAsync()
@@ -257,8 +262,8 @@ public partial class LaunchViewModel : ObservableObject
             var activePackageId = settingsManager.Settings.ActiveInstalledPackageId;
             if (activePackageId != null)
             {
-                SelectedPackage = InstalledPackages.FirstOrDefault(
-                    x => x.Id == activePackageId) ?? InstalledPackages[0];
+                SelectedPackage =
+                    InstalledPackages.FirstOrDefault(x => x.Id == activePackageId) ?? InstalledPackages[0];
             }
         }
     }
@@ -281,8 +286,7 @@ public partial class LaunchViewModel : ObservableObject
         runningPackage?.Shutdown();
         runningPackage = null;
         SetProcessRunning(false);
-        ConsoleHistory?.Add(
-            $"Stopped process at {DateTimeOffset.Now}");
+        ConsoleHistory?.Add($"Stopped process at {DateTimeOffset.Now}");
         ShowWebUiButton = false;
         return Task.CompletedTask;
     }
@@ -323,7 +327,8 @@ public partial class LaunchViewModel : ObservableObject
 
     private void OnConsoleOutput(object? sender, ProcessOutput output)
     {
-        if (string.IsNullOrWhiteSpace(output.Text)) return;
+        if (string.IsNullOrWhiteSpace(output.Text))
+            return;
         Application.Current.Dispatcher.Invoke(() =>
         {
             ConsoleHistory ??= new ObservableCollection<string>();
@@ -332,8 +337,11 @@ public partial class LaunchViewModel : ObservableObject
             {
                 ConsoleHistory[^2] = output.Text.TrimEnd('\n');
             }
-            else if ((output.Text.Contains("it/s") || output.Text.Contains("s/it") || output.Text.Contains("B/s")) &&
-                     !output.Text.Contains("Total progress") && !output.Text.Contains(" 0%"))
+            else if (
+                (output.Text.Contains("it/s") || output.Text.Contains("s/it") || output.Text.Contains("B/s"))
+                && !output.Text.Contains("Total progress")
+                && !output.Text.Contains(" 0%")
+            )
             {
                 ConsoleHistory[^1] = output.Text.TrimEnd('\n');
             }
@@ -344,10 +352,10 @@ public partial class LaunchViewModel : ObservableObject
                     ConsoleHistory.Add(output.Text.TrimEnd('\n'));
                 }
             }
-            
-            ConsoleHistory =
-                new ObservableCollection<string>(
-                    ConsoleHistory.Where(str => !string.IsNullOrWhiteSpace(str)));
+
+            ConsoleHistory = new ObservableCollection<string>(
+                ConsoleHistory.Where(str => !string.IsNullOrWhiteSpace(str))
+            );
         });
     }
 

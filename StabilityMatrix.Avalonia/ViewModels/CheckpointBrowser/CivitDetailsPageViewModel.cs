@@ -1,4 +1,5 @@
-﻿using System.Collections.ObjectModel;
+﻿using System.Collections.Frozen;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Globalization;
@@ -15,7 +16,6 @@ using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
 using Injectio.Attributes;
 using Microsoft.Extensions.Logging;
-using Refit;
 using StabilityMatrix.Avalonia.Animations;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
@@ -65,7 +65,7 @@ public partial class CivitDetailsPageViewModel(
     [NotifyPropertyChangedFor(nameof(CanGoNext), nameof(CanGoPrevious))]
     public required partial int CurrentIndex { get; set; }
 
-    private List<string> ignoredFileNameFormatVars =
+    private readonly FrozenSet<string> ignoredFileNameFormatVars =
     [
         "seed",
         "prompt",
@@ -86,17 +86,17 @@ public partial class CivitDetailsPageViewModel(
             .Substitutions.Where(kv => !ignoredFileNameFormatVars.Contains(kv.Key))
             .Select(kv => new FileNameFormatVar { Variable = $"{{{kv.Key}}}", Example = kv.Value.Invoke() });
 
-    private SourceCache<CivitImage, string> imageCache = new(x => x.Url);
+    private readonly SourceCache<CivitImage, string> imageCache = new(x => x.Url);
 
     public IObservableCollection<ImageSource> ImageSources { get; set; } =
         new ObservableCollectionExtended<ImageSource>();
 
-    private SourceCache<CivitModelVersion, int> modelVersionCache = new(x => x.Id);
+    private readonly SourceCache<CivitModelVersion, int> modelVersionCache = new(x => x.Id);
 
     public IObservableCollection<ModelVersionViewModel> ModelVersions { get; set; } =
         new ObservableCollectionExtended<ModelVersionViewModel>();
 
-    private SourceCache<CivitFile, int> civitFileCache = new(x => x.Id);
+    private readonly SourceCache<CivitFile, int> civitFileCache = new(x => x.Id);
 
     public IObservableCollection<CivitFileViewModel> CivitFiles { get; set; } =
         new ObservableCollectionExtended<CivitFileViewModel>();
@@ -670,12 +670,15 @@ public partial class CivitDetailsPageViewModel(
             if (file is not { Type: CivitFileType.Model, Hashes.BLAKE3: not null })
                 continue;
 
-            var matchingModels = (await modelIndexService.FindByHashAsync(file.Hashes.BLAKE3)).ToList();
+            List<LocalModelFile> matchingModels =
+            [
+                .. (await modelIndexService.FindByHashAsync(file.Hashes.BLAKE3)),
+            ];
 
             if (matchingModels.Count == 0)
             {
                 await modelIndexService.RefreshIndex();
-                matchingModels = (await modelIndexService.FindByHashAsync(file.Hashes.BLAKE3)).ToList();
+                matchingModels = [.. (await modelIndexService.FindByHashAsync(file.Hashes.BLAKE3))];
             }
 
             if (matchingModels.Count == 0)

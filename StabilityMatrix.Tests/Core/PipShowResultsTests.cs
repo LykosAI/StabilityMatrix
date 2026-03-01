@@ -174,4 +174,11 @@ public class PipShowResultsTests
         Assert.AreEqual("package-a", result.Name);
         Assert.AreEqual("1.0.0", result.Version);
     }
+
+    [TestMethod]
+    public void TestEmptyInputThrowsFormatException()
+    {
+        var input = "";
+        Assert.ThrowsException<FormatException>(() => PipShowResult.Parse(input));
+    }
 }

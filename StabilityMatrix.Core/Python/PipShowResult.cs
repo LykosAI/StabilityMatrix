@@ -64,10 +64,20 @@ public record PipShowResult
             linesDict.TryAdd(key, value);
         }
 
+        if (!linesDict.TryGetValue("Name", out var name))
+        {
+            throw new FormatException("The 'Name' key was not found in the pip show output.");
+        }
+
+        if (!linesDict.TryGetValue("Version", out var version))
+        {
+            throw new FormatException("The 'Version' key was not found in the pip show output.");
+        }
+
         return new PipShowResult
         {
-            Name = linesDict["Name"],
-            Version = linesDict["Version"],
+            Name = name,
+            Version = version,
             Summary = linesDict.GetValueOrDefault("Summary"),
             HomePage = linesDict.GetValueOrDefault("Home-page"),
             Author = linesDict.GetValueOrDefault("Author"),

@@ -45,11 +45,24 @@ public record PipShowResult
             lines.RemoveRange(indexOfLicense, indexOfLocation - indexOfLicense);
         }
 
-        var linesDict = lines
-            .Select(line => line.Split(':', 2))
-            .Where(split => split.Length == 2)
-            .Select(split => new KeyValuePair<string, string>(split[0].Trim(), split[1].Trim()))
-            .ToDictionary(pair => pair.Key, pair => pair.Value);
+        var linesDict = new Dictionary<string, string>();
+        foreach (var line in lines)
+        {
+            var split = line.Split(':', 2);
+            if (split.Length != 2)
+                continue;
+
+            var key = split[0].Trim();
+            var value = split[1].Trim();
+
+            if (key == "Name" && linesDict.ContainsKey("Name"))
+            {
+                // We've hit a new package, so stop parsing
+                break;
+            }
+
+            linesDict.TryAdd(key, value);
+        }
 
         return new PipShowResult
         {
@@ -68,7 +81,7 @@ public record PipShowResult
             RequiredBy = linesDict
                 .GetValueOrDefault("Required-by")
                 ?.Split(',', StringSplitOptions.TrimEntries)
-                .ToList()
+                .ToList(),
         };
     }
 

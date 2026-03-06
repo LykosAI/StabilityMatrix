@@ -51,17 +51,6 @@ public partial class FADownloadableComboBox : FAComboBox
         if (scrollViewer == null)
             return;
 
-        // On Linux, FAComboBox popups are rendered as overlay popups that share the
-        // same TopLevel visual root as the main window. FAComboBox.OnPopupOpened adds
-        // a TopLevel tunnel handler that marks ALL pointer-wheel events as handled
-        // (when dropdown is open and source.VisualRoot == TopLevel) to prevent parent
-        // ScrollViewers from stealing the event. The side-effect is that the popup's
-        // own internal ScrollViewer also never receives the event.
-        //
-        // Fix: add our own tunnel handler directly on the popup ScrollViewer
-        // (which runs after the TopLevel handler in tunnel order) that resets
-        // e.Handled = false, allowing the ScrollViewer's normal bubble handler
-        // to process the scroll and move the dropdown list.
         openSubscription = scrollViewer.AddDisposableHandler(
             PointerWheelChangedEvent,
             static (_, ev) =>

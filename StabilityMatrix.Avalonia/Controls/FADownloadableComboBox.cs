@@ -2,6 +2,10 @@
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
+using Avalonia.Input;
+using Avalonia.Interactivity;
+using Avalonia.VisualTree;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,6 +20,65 @@ namespace StabilityMatrix.Avalonia.Controls;
 public partial class FADownloadableComboBox : FAComboBox
 {
     protected override Type StyleKeyOverride => typeof(FAComboBox);
+
+    private Popup? dropDownPopup;
+    private IDisposable? openSubscription;
+
+    protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
+    {
+        base.OnApplyTemplate(e);
+
+        DropDownOpened -= OnDropDownOpenedHandler;
+        DropDownClosed -= OnDropDownClosedHandler;
+
+        // Template part name is "Popup" per FAComboBox.properties.cs (s_tpPopup = "Popup")
+        dropDownPopup = e.NameScope.Find<Popup>("Popup");
+
+        DropDownOpened += OnDropDownOpenedHandler;
+        DropDownClosed += OnDropDownClosedHandler;
+    }
+
+    private void OnDropDownOpenedHandler(object? sender, EventArgs e)
+    {
+        openSubscription?.Dispose();
+        openSubscription = null;
+
+        if (dropDownPopup?.Child is not Control popupChild)
+            return;
+
+        var scrollViewer = popupChild.GetVisualDescendants().OfType<ScrollViewer>().FirstOrDefault();
+
+        if (scrollViewer == null)
+            return;
+
+        // On Linux, FAComboBox popups are rendered as overlay popups that share the
+        // same TopLevel visual root as the main window. FAComboBox.OnPopupOpened adds
+        // a TopLevel tunnel handler that marks ALL pointer-wheel events as handled
+        // (when dropdown is open and source.VisualRoot == TopLevel) to prevent parent
+        // ScrollViewers from stealing the event. The side-effect is that the popup's
+        // own internal ScrollViewer also never receives the event.
+        //
+        // Fix: add our own tunnel handler directly on the popup ScrollViewer
+        // (which runs after the TopLevel handler in tunnel order) that resets
+        // e.Handled = false, allowing the ScrollViewer's normal bubble handler
+        // to process the scroll and move the dropdown list.
+        openSubscription = scrollViewer.AddDisposableHandler(
+            PointerWheelChangedEvent,
+            static (_, ev) =>
+            {
+                if (ev.Handled)
+                    ev.Handled = false;
+            },
+            RoutingStrategies.Tunnel,
+            handledEventsToo: true
+        );
+    }
+
+    private void OnDropDownClosedHandler(object? sender, EventArgs e)
+    {
+        openSubscription?.Dispose();
+        openSubscription = null;
+    }
 
     static FADownloadableComboBox()
     {

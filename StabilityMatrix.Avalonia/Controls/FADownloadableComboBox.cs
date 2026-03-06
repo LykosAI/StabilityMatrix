@@ -28,6 +28,7 @@ public partial class FADownloadableComboBox : FAComboBox
     {
         base.OnApplyTemplate(e);
 
+        CleanupSubscription();
         DropDownOpened -= OnDropDownOpenedHandler;
         DropDownClosed -= OnDropDownClosedHandler;
 
@@ -40,8 +41,7 @@ public partial class FADownloadableComboBox : FAComboBox
 
     private void OnDropDownOpenedHandler(object? sender, EventArgs e)
     {
-        openSubscription?.Dispose();
-        openSubscription = null;
+        CleanupSubscription();
 
         if (dropDownPopup?.Child is not Control popupChild)
             return;
@@ -64,6 +64,11 @@ public partial class FADownloadableComboBox : FAComboBox
     }
 
     private void OnDropDownClosedHandler(object? sender, EventArgs e)
+    {
+        CleanupSubscription();
+    }
+
+    private void CleanupSubscription()
     {
         openSubscription?.Dispose();
         openSubscription = null;

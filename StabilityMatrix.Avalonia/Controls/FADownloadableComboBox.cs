@@ -12,6 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
+using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
 
 namespace StabilityMatrix.Avalonia.Controls;
@@ -49,6 +50,13 @@ public partial class FADownloadableComboBox : FAComboBox
         var scrollViewer = popupChild.GetVisualDescendants().OfType<ScrollViewer>().FirstOrDefault();
 
         if (scrollViewer == null)
+            return;
+
+        // On Unix-like systems, overlay popups share the same TopLevel visual root as the main window.
+        // FAComboBox.OnPopupOpened adds a TopLevel tunnel handler that marks all wheel eventsas handled while the dropdown is open,
+        // which inadvertently blocks scroll-wheelevents in popup menus in Inference model cards.
+        // Resetting e.Handled on the ScrollViewer's tunnel phase counters this.
+        if (!Compat.IsUnix)
             return;
 
         openSubscription = scrollViewer.AddDisposableHandler(

@@ -398,6 +398,7 @@ public class ComfyUI(
             var indexUrl = gfxArch switch
             {
                 "gfx1151" => "https://rocm.nightlies.amd.com/v2/gfx1151",
+                "gfx1150" => "https://rocm.nightlies.amd.com/v2-staging/gfx1150",
                 _ when gfxArch.StartsWith("gfx110") => "https://rocm.nightlies.amd.com/v2/gfx110X-all",
                 _ when gfxArch.StartsWith("gfx120") => "https://rocm.nightlies.amd.com/v2/gfx120X-all",
                 _ => throw new ArgumentOutOfRangeException(

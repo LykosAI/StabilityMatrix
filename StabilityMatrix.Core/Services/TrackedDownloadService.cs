@@ -129,6 +129,26 @@ public class TrackedDownloadService : ITrackedDownloadService, IDisposable
         }
     }
 
+    public async Task TryRestartDownload(TrackedDownload download)
+    {
+        // Re-create the backing JSON file and re-add to the dictionary.
+        // Downloads are removed on failure, so this restores the tracking entry
+        // so that subsequent state-change events can persist normally.
+        var downloadsDir = new DirectoryPath(settingsManager.DownloadsDirectory);
+        downloadsDir.Create();
+        var jsonFile = downloadsDir.JoinFile($"{download.Id}.json");
+
+        var jsonFileStream = jsonFile.Info.Open(FileMode.Create, FileAccess.ReadWrite, FileShare.Read);
+        var json = JsonSerializer.Serialize(download);
+        jsonFileStream.Write(Encoding.UTF8.GetBytes(json));
+        jsonFileStream.Flush();
+
+        // Handlers are already attached from the original AddDownload call.
+        downloads.TryAdd(download.Id, (download, jsonFileStream));
+
+        await TryResumeDownload(download).ConfigureAwait(false);
+    }
+
     public async Task TryResumeDownload(TrackedDownload download)
     {
         if (IsQueueEnabled && ActiveDownloads >= MaxConcurrentDownloads)

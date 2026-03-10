@@ -99,10 +99,11 @@ public class DownloadProgressItemViewModel : PausableProgressItemViewModelBase
 
     /// <inheritdoc />
     /// Resets the internal retry counter so the user gets a fresh 3-attempt budget,
-    /// then re-queues the download exactly as if it were being resumed from pause.
+    /// then re-registers the download in the service dictionary (it was removed on
+    /// failure) and resumes it through the normal concurrency queue.
     public override Task Retry()
     {
         download.ResetAttempts();
-        return downloadService.TryResumeDownload(download);
+        return downloadService.TryRestartDownload(download);
     }
 }

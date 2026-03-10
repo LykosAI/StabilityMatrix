@@ -318,11 +318,8 @@ public class TrackedDownload
     }
 
     /// <summary>
-    /// Returns true for transient network/SSL exceptions that are safe to retry.
-    /// Catches direct IOException/AuthenticationException, the same types wrapped as
-    /// InnerException (common AggregateException shape from HttpClient), and any leg
-    /// of a multi-inner AggregateException — covering VPN tunnel resets
-    /// ("Connection reset by peer") and TLS re-key failures (OpenSSL SSL_ERROR_SSL).
+    /// Returns true for transient network/SSL exceptions that are safe to retry (ie: VPN tunnel resets or TLS re-key failures)
+    /// (IOException, AuthenticationException, or either wrapped in an AggregateException).
     /// </summary>
     private static bool IsTransientNetworkException(Exception? ex) =>
         ex is IOException or AuthenticationException
@@ -385,8 +382,7 @@ public class TrackedDownload
                     attempts
                 );
 
-                // Persist Inactive state to disk before the delay so that a restart
-                // during the backoff window loads the download as a resumable entry.
+                // Persist Inactive to disk before the delay so a restart during backoff loads it as resumable.
                 OnProgressStateChanging(ProgressState.Inactive);
                 ProgressState = ProgressState.Inactive;
                 OnProgressStateChanged(ProgressState.Inactive);
@@ -424,13 +420,14 @@ public class TrackedDownload
     }
 
     /// <summary>
-    /// Resets the internal retry attempt counter back to zero.
-    /// Call this before a user-initiated retry so the download gets
-    /// a fresh budget of automatic retries on the new attempt.
+    /// Resets the retry counter and silently sets state to Inactive without firing events.
+    /// Must be called before re-adding to TrackedDownloadService to avoid events
+    /// firing while the download is absent from the dictionary.
     /// </summary>
     public void ResetAttempts()
     {
         attempts = 0;
+        ProgressState = ProgressState.Inactive;
     }
 
     public void SetDownloadService(IDownloadService service)

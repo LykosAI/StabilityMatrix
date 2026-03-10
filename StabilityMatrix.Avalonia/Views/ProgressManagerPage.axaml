@@ -120,7 +120,7 @@
                                         Command="{Binding RetryCommand}"
                                         IsVisible="{Binding CanRetry}"
                                         ToolTip.Tip="Retry download">
-                                        <ui:SymbolIcon Symbol="ArrowCounterclockwise" />
+                                        <ui:SymbolIcon Symbol="Refresh" />
                                     </Button>
                                 </StackPanel>
 

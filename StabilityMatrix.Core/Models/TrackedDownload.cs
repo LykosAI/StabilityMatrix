@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.Security.Authentication;
 using System.Text.Json.Serialization;
 using AsyncAwaitBestPractices;
 using NLog;
@@ -317,6 +318,15 @@ public class TrackedDownload
     }
 
     /// <summary>
+    /// Returns true for transient network/SSL exceptions that are safe to retry.
+    /// </summary>
+    private static bool IsTransientNetworkException(Exception? ex) =>
+        ex is IOException or AuthenticationException
+        || ex?.InnerException is IOException or AuthenticationException
+        || ex is AggregateException ae
+            && ae.InnerExceptions.Any(e => e is IOException or AuthenticationException);
+
+    /// <summary>
     /// Invoked by the task's completion callback
     /// </summary>
     private void OnDownloadTaskCompleted(Task task)
@@ -349,7 +359,7 @@ public class TrackedDownload
             // Set the exception
             Exception = task.Exception;
 
-            if ((Exception is IOException || Exception?.InnerException is IOException) && attempts < 3)
+            if (IsTransientNetworkException(Exception) && attempts < 3)
             {
                 attempts++;
                 Logger.Warn(

@@ -319,6 +319,10 @@ public class TrackedDownload
 
     /// <summary>
     /// Returns true for transient network/SSL exceptions that are safe to retry.
+    /// Catches direct IOException/AuthenticationException, the same types wrapped as
+    /// InnerException (common AggregateException shape from HttpClient), and any leg
+    /// of a multi-inner AggregateException — covering VPN tunnel resets
+    /// ("Connection reset by peer") and TLS re-key failures (OpenSSL SSL_ERROR_SSL).
     /// </summary>
     private static bool IsTransientNetworkException(Exception? ex) =>
         ex is IOException or AuthenticationException
@@ -369,9 +373,26 @@ public class TrackedDownload
                     attempts
                 );
 
+                // Exponential backoff: 2 s → 4 s → 8 s, capped at 30 s, ±500 ms jitter.
+                // Gives the VPN tunnel time to re-key/re-route before reconnecting,
+                // which prevents the retry from hitting the same torn connection.
+                var delayMs =
+                    (int)Math.Min(2000 * Math.Pow(2, attempts - 1), 30_000) + Random.Shared.Next(-500, 500);
+                Logger.Debug(
+                    "Download {Download} retrying in {Delay}ms (attempt {Attempt}/3)",
+                    FileName,
+                    delayMs,
+                    attempts
+                );
+
+                // Persist Inactive state to disk before the delay so that a restart
+                // during the backoff window loads the download as a resumable entry.
                 OnProgressStateChanging(ProgressState.Inactive);
                 ProgressState = ProgressState.Inactive;
-                Resume();
+                OnProgressStateChanged(ProgressState.Inactive);
+
+                // Fire-and-forget the delayed resume to avoid blocking the task continuation thread.
+                Task.Delay(Math.Max(delayMs, 0)).ContinueWith(_ => Resume()).SafeFireAndForget();
                 return;
             }
 

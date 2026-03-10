@@ -423,6 +423,16 @@ public class TrackedDownload
         downloadPauseTokenSource = null;
     }
 
+    /// <summary>
+    /// Resets the internal retry attempt counter back to zero.
+    /// Call this before a user-initiated retry so the download gets
+    /// a fresh budget of automatic retries on the new attempt.
+    /// </summary>
+    public void ResetAttempts()
+    {
+        attempts = 0;
+    }
+
     public void SetDownloadService(IDownloadService service)
     {
         downloadService = service;

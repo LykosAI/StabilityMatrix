@@ -14,7 +14,8 @@ public abstract partial class PausableProgressItemViewModelBase : ProgressItemVi
         nameof(IsPaused),
         nameof(IsCompleted),
         nameof(CanPauseResume),
-        nameof(CanCancel)
+        nameof(CanCancel),
+        nameof(CanRetry)
     )]
     private ProgressState state = ProgressState.Inactive;
 
@@ -33,8 +34,19 @@ public abstract partial class PausableProgressItemViewModelBase : ProgressItemVi
     public virtual bool SupportsPauseResume => true;
     public virtual bool SupportsCancel => true;
 
+    /// <summary>
+    /// Override to true in subclasses that support manual retry after failure.
+    /// Defaults to false so unrelated progress item types are never affected.
+    /// </summary>
+    public virtual bool SupportsRetry => false;
+
     public bool CanPauseResume => SupportsPauseResume && !IsCompleted && !IsPending;
     public bool CanCancel => SupportsCancel && !IsCompleted;
+
+    /// <summary>
+    /// True only when this item supports retry AND is in the Failed state.
+    /// </summary>
+    public bool CanRetry => SupportsRetry && State == ProgressState.Failed;
 
     private AsyncRelayCommand? pauseCommand;
     public IAsyncRelayCommand PauseCommand => pauseCommand ??= new AsyncRelayCommand(Pause);
@@ -50,6 +62,11 @@ public abstract partial class PausableProgressItemViewModelBase : ProgressItemVi
     public IAsyncRelayCommand CancelCommand => cancelCommand ??= new AsyncRelayCommand(Cancel);
 
     public virtual Task Cancel() => Task.CompletedTask;
+
+    private AsyncRelayCommand? retryCommand;
+    public IAsyncRelayCommand RetryCommand => retryCommand ??= new AsyncRelayCommand(Retry);
+
+    public virtual Task Retry() => Task.CompletedTask;
 
     [RelayCommand]
     private Task TogglePauseResume()

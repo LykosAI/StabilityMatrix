@@ -71,6 +71,11 @@ public class DownloadProgressItemViewModel : PausableProgressItemViewModelBase
         }
     }
 
+    /// <summary>
+    /// Downloads support manual retry when they reach the Failed state.
+    /// </summary>
+    public override bool SupportsRetry => true;
+
     /// <inheritdoc />
     public override Task Cancel()
     {
@@ -89,6 +94,15 @@ public class DownloadProgressItemViewModel : PausableProgressItemViewModelBase
     /// <inheritdoc />
     public override Task Resume()
     {
+        return downloadService.TryResumeDownload(download);
+    }
+
+    /// <inheritdoc />
+    /// Resets the internal retry counter so the user gets a fresh 3-attempt budget,
+    /// then re-queues the download exactly as if it were being resumed from pause.
+    public override Task Retry()
+    {
+        download.ResetAttempts();
         return downloadService.TryResumeDownload(download);
     }
 }

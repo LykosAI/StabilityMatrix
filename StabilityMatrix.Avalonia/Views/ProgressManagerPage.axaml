@@ -113,6 +113,15 @@
                                         IsVisible="{Binding CanCancel}">
                                         <ui:SymbolIcon Symbol="Cancel" />
                                     </Button>
+
+                                    <!--  Retry button: only visible when download is in Failed state  -->
+                                    <Button
+                                        Classes="transparent-full"
+                                        Command="{Binding RetryCommand}"
+                                        IsVisible="{Binding CanRetry}"
+                                        ToolTip.Tip="Retry download">
+                                        <ui:SymbolIcon Symbol="ArrowCounterclockwise" />
+                                    </Button>
                                 </StackPanel>
 
                                 <ProgressBar

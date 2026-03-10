@@ -629,7 +629,7 @@
                                             HorizontalAlignment="Left"
                                             VerticalAlignment="Top"
                                             Classes="success"
-                                            IsVisible="{Binding CheckpointFile.HasUpdate}">
+                                            IsVisible="{Binding HasStandardUpdate}">
 
                                             <TextBlock
                                                 HorizontalAlignment="Center"
@@ -637,6 +637,24 @@
                                                 FontSize="11"
                                                 FontWeight="Medium">
                                                 <Run Text="{x:Static lang:Resources.Label_UpdateAvailable}" />
+                                                <Run Text="{Binding CheckpointFile.LatestModelInfo.LatestVersionCreatedAt}" />
+                                            </TextBlock>
+                                        </controls:Card>
+                                        <controls:Card
+                                            Height="24"
+                                            Margin="4,8,0,0"
+                                            Padding="4"
+                                            HorizontalAlignment="Left"
+                                            VerticalAlignment="Top"
+                                            Classes="early-access"
+                                            IsVisible="{Binding HasEarlyAccessUpdateOnly}">
+
+                                            <TextBlock
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center"
+                                                FontSize="11"
+                                                FontWeight="Medium">
+                                                <Run Text="{x:Static lang:Resources.Label_EarlyAccessUpdateAvailable}" />
                                                 <Run Text="{Binding CheckpointFile.LatestModelInfo.LatestVersionCreatedAt}" />
                                             </TextBlock>
                                         </controls:Card>

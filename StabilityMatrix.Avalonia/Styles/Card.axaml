@@ -94,6 +94,15 @@
                 </Style>
             </Style>
 
+            <!--  Early Access  -->
+            <Style Selector="controls|Card.early-access">
+                <Setter Property="Background" Value="{DynamicResource ThemeDeepOrangeColorTransparent}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource ThemeDeepOrangeColorTransparent}" />
+                <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+                    <Setter Property="Foreground" Value="{DynamicResource ButtonForeground}" />
+                </Style>
+            </Style>
+
             <!--  Info  -->
             <Style Selector="controls|Card.info">
                 <Setter Property="Background" Value="{DynamicResource ThemeDarkBlueColorTransparent}" />

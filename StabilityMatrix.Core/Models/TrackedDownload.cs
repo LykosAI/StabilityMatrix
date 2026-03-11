@@ -78,6 +78,7 @@ public class TrackedDownload
     [JsonIgnore]
     public Exception? Exception { get; private set; }
 
+    private const int MaxRetryAttempts = 3;
     private int attempts;
     private CancellationTokenSource? retryDelayCancellationTokenSource;
 
@@ -381,7 +382,7 @@ public class TrackedDownload
             // Set the exception
             Exception = task.Exception;
 
-            if (IsTransientNetworkException(Exception) && attempts < 3)
+            if (IsTransientNetworkException(Exception) && attempts < MaxRetryAttempts)
             {
                 attempts++;
                 Logger.Warn(
@@ -397,10 +398,11 @@ public class TrackedDownload
                 var delayMs =
                     (int)Math.Min(2000 * Math.Pow(2, attempts - 1), 30_000) + Random.Shared.Next(-500, 500);
                 Logger.Debug(
-                    "Download {Download} retrying in {Delay}ms (attempt {Attempt}/3)",
+                    "Download {Download} retrying in {Delay}ms (attempt {Attempt}/{MaxAttempts})",
                     FileName,
                     delayMs,
-                    attempts
+                    attempts,
+                    MaxRetryAttempts
                 );
 
                 // Persist Inactive to disk before the delay so a restart during backoff loads it as resumable.

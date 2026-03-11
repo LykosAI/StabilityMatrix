@@ -121,6 +121,13 @@ public class TrackedDownload
         }
     }
 
+    private void CancelRetryDelay()
+    {
+        retryDelayCancellationTokenSource?.Cancel();
+        retryDelayCancellationTokenSource?.Dispose();
+        retryDelayCancellationTokenSource = null;
+    }
+
     private async Task StartDownloadTask(long resumeFromByte, CancellationToken cancellationToken)
     {
         var progress = new Progress<ProgressReport>(OnProgressUpdate);
@@ -187,9 +194,7 @@ public class TrackedDownload
             );
         }
         // Cancel any pending auto-retry delay (defensive: Start() accepts Inactive state).
-        retryDelayCancellationTokenSource?.Cancel();
-        retryDelayCancellationTokenSource?.Dispose();
-        retryDelayCancellationTokenSource = null;
+        CancelRetryDelay();
 
         Logger.Debug("Starting download {Download}", FileName);
 
@@ -209,9 +214,7 @@ public class TrackedDownload
     internal void Resume()
     {
         // Cancel any pending auto-retry delay since we're resuming now.
-        retryDelayCancellationTokenSource?.Cancel();
-        retryDelayCancellationTokenSource?.Dispose();
-        retryDelayCancellationTokenSource = null;
+        CancelRetryDelay();
 
         if (ProgressState != ProgressState.Inactive && ProgressState != ProgressState.Paused)
         {
@@ -249,9 +252,7 @@ public class TrackedDownload
     public void Pause()
     {
         // Cancel any pending auto-retry delay.
-        retryDelayCancellationTokenSource?.Cancel();
-        retryDelayCancellationTokenSource?.Dispose();
-        retryDelayCancellationTokenSource = null;
+        CancelRetryDelay();
 
         if (ProgressState != ProgressState.Working)
         {
@@ -283,9 +284,7 @@ public class TrackedDownload
         }
 
         // Cancel any pending auto-retry delay.
-        retryDelayCancellationTokenSource?.Cancel();
-        retryDelayCancellationTokenSource?.Dispose();
-        retryDelayCancellationTokenSource = null;
+        CancelRetryDelay();
 
         Logger.Debug("Cancelling download {Download}", FileName);
 

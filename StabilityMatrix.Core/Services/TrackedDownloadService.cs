@@ -138,13 +138,33 @@ public class TrackedDownloadService : ITrackedDownloadService, IDisposable
         downloadsDir.Create();
         var jsonFile = downloadsDir.JoinFile($"{download.Id}.json");
 
-        var jsonFileStream = jsonFile.Info.Open(FileMode.Create, FileAccess.ReadWrite, FileShare.Read);
-        var json = JsonSerializer.Serialize(download);
-        jsonFileStream.Write(Encoding.UTF8.GetBytes(json));
-        jsonFileStream.Flush();
+        var jsonFileStream = new FileStream(
+            jsonFile.Info.FullName,
+            FileMode.Create,
+            FileAccess.ReadWrite,
+            FileShare.Read,
+            bufferSize: 4096,
+            useAsync: true
+        );
+        var jsonBytes = JsonSerializer.SerializeToUtf8Bytes(download);
 
-        // Handlers are already attached from the original AddDownload call.
-        downloads.TryAdd(download.Id, (download, jsonFileStream));
+        try
+        {
+            await jsonFileStream.WriteAsync(jsonBytes).ConfigureAwait(false);
+            await jsonFileStream.FlushAsync().ConfigureAwait(false);
+
+            // Handlers are already attached from the original AddDownload call.
+            if (!downloads.TryAdd(download.Id, (download, jsonFileStream)))
+            {
+                // Already tracked; discard the newly opened stream.
+                await jsonFileStream.DisposeAsync().ConfigureAwait(false);
+            }
+        }
+        catch
+        {
+            await jsonFileStream.DisposeAsync().ConfigureAwait(false);
+            throw;
+        }
 
         await TryResumeDownload(download).ConfigureAwait(false);
     }

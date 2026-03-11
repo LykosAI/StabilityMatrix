@@ -79,6 +79,7 @@ public class TrackedDownload
     public Exception? Exception { get; private set; }
 
     private int attempts;
+    private CancellationTokenSource? retryDelayCancellationTokenSource;
 
     #region Events
     public event EventHandler<ProgressReport>? ProgressUpdate;
@@ -185,6 +186,11 @@ public class TrackedDownload
                 $"Download state must be inactive or pending to start, not {ProgressState}"
             );
         }
+        // Cancel any pending auto-retry delay (defensive: Start() accepts Inactive state).
+        retryDelayCancellationTokenSource?.Cancel();
+        retryDelayCancellationTokenSource?.Dispose();
+        retryDelayCancellationTokenSource = null;
+
         Logger.Debug("Starting download {Download}", FileName);
 
         EnsureDownloadService();
@@ -202,6 +208,11 @@ public class TrackedDownload
 
     internal void Resume()
     {
+        // Cancel any pending auto-retry delay since we're resuming now.
+        retryDelayCancellationTokenSource?.Cancel();
+        retryDelayCancellationTokenSource?.Dispose();
+        retryDelayCancellationTokenSource = null;
+
         if (ProgressState != ProgressState.Inactive && ProgressState != ProgressState.Paused)
         {
             Logger.Warn(
@@ -209,6 +220,7 @@ public class TrackedDownload
                 FileName,
                 ProgressState
             );
+            return;
         }
         Logger.Debug("Resuming download {Download}", FileName);
 
@@ -236,6 +248,11 @@ public class TrackedDownload
 
     public void Pause()
     {
+        // Cancel any pending auto-retry delay.
+        retryDelayCancellationTokenSource?.Cancel();
+        retryDelayCancellationTokenSource?.Dispose();
+        retryDelayCancellationTokenSource = null;
+
         if (ProgressState != ProgressState.Working)
         {
             Logger.Warn(
@@ -264,6 +281,11 @@ public class TrackedDownload
             );
             return;
         }
+
+        // Cancel any pending auto-retry delay.
+        retryDelayCancellationTokenSource?.Cancel();
+        retryDelayCancellationTokenSource?.Dispose();
+        retryDelayCancellationTokenSource = null;
 
         Logger.Debug("Cancelling download {Download}", FileName);
 
@@ -387,8 +409,21 @@ public class TrackedDownload
                 ProgressState = ProgressState.Inactive;
                 OnProgressStateChanged(ProgressState.Inactive);
 
-                // Fire-and-forget the delayed resume to avoid blocking the task continuation thread.
-                Task.Delay(Math.Max(delayMs, 0)).ContinueWith(_ => Resume()).SafeFireAndForget();
+                // Clean up the completed task resources; Resume() will create new ones.
+                downloadTask = null;
+                downloadCancellationTokenSource = null;
+                downloadPauseTokenSource = null;
+
+                // Schedule the retry with a cancellation token so Cancel/Pause can abort the delay.
+                retryDelayCancellationTokenSource?.Dispose();
+                retryDelayCancellationTokenSource = new CancellationTokenSource();
+                Task.Delay(Math.Max(delayMs, 0), retryDelayCancellationTokenSource.Token)
+                    .ContinueWith(t =>
+                    {
+                        if (t.IsCompletedSuccessfully)
+                            Resume();
+                    })
+                    .SafeFireAndForget();
                 return;
             }
 

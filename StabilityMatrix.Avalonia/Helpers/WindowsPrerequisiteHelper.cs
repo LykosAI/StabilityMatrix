@@ -660,6 +660,7 @@ public class WindowsPrerequisiteHelper(
         await UnzipGit(progress);
 
         await FixGitLongPaths();
+        await ConfigurePortableGit();
     }
 
     [SupportedOSPlatform("windows")]
@@ -679,6 +680,18 @@ public class WindowsPrerequisiteHelper(
         }
 
         return false;
+    }
+
+    private async Task ConfigurePortableGit()
+    {
+        try
+        {
+            await RunGit(["config", "--system", "advice.detachedHead", "false"]);
+        }
+        catch (Exception e)
+        {
+            Logger.Warn(e, "Failed to configure portable git");
+        }
     }
 
     [SupportedOSPlatform("windows")]

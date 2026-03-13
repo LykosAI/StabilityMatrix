@@ -10,6 +10,27 @@ public static class ProcessRunner
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
+    private static void ApplyEnvironmentVariables(
+        ProcessStartInfo info,
+        IEnumerable<KeyValuePair<string, string>>? environmentVariables
+    )
+    {
+        if (environmentVariables is null)
+            return;
+
+        var keys = new List<string>();
+        foreach (var (key, value) in environmentVariables)
+        {
+            info.EnvironmentVariables[key] = value;
+            keys.Add(key);
+        }
+
+        if (keys.Count > 0)
+        {
+            Logger.Debug("Setting environment variables: [{Keys}]", string.Join(", ", keys));
+        }
+    }
+
     /// <summary>
     /// Opens the given URL in the default browser.
     /// </summary>
@@ -169,13 +190,7 @@ public static class ProcessRunner
             CreateNoWindow = true,
         };
 
-        if (environmentVariables != null)
-        {
-            foreach (var (key, value) in environmentVariables)
-            {
-                info.EnvironmentVariables[key] = value;
-            }
-        }
+        ApplyEnvironmentVariables(info, environmentVariables);
 
         if (workingDirectory != null)
         {
@@ -218,13 +233,7 @@ public static class ProcessRunner
             info.StandardErrorEncoding = Encoding.UTF8;
         }
 
-        if (environmentVariables != null)
-        {
-            foreach (var (key, value) in environmentVariables)
-            {
-                info.EnvironmentVariables[key] = value;
-            }
-        }
+        ApplyEnvironmentVariables(info, environmentVariables);
 
         if (workingDirectory != null)
         {
@@ -297,13 +306,7 @@ public static class ProcessRunner
             CreateNoWindow = true,
         };
 
-        if (environmentVariables != null)
-        {
-            foreach (var (key, value) in environmentVariables)
-            {
-                info.EnvironmentVariables[key] = value;
-            }
-        }
+        ApplyEnvironmentVariables(info, environmentVariables);
 
         if (workingDirectory != null)
         {
@@ -420,13 +423,7 @@ public static class ProcessRunner
             CreateNoWindow = true,
         };
 
-        if (environmentVariables != null)
-        {
-            foreach (var (key, value) in environmentVariables)
-            {
-                info.EnvironmentVariables[key] = value;
-            }
-        }
+        ApplyEnvironmentVariables(info, environmentVariables);
 
         if (workingDirectory != null)
         {
@@ -468,13 +465,7 @@ public static class ProcessRunner
             CreateNoWindow = true,
         };
 
-        if (environmentVariables != null)
-        {
-            foreach (var (key, value) in environmentVariables)
-            {
-                info.EnvironmentVariables[key] = value;
-            }
-        }
+        ApplyEnvironmentVariables(info, environmentVariables);
 
         if (workingDirectory != null)
         {
@@ -525,13 +516,7 @@ public static class ProcessRunner
             WorkingDirectory = workingDirectory,
         };
 
-        if (environmentVariables != null)
-        {
-            foreach (var (key, value) in environmentVariables)
-            {
-                processInfo.EnvironmentVariables[key] = value;
-            }
-        }
+        ApplyEnvironmentVariables(processInfo, environmentVariables);
 
         using var process = new Process();
         process.StartInfo = processInfo;

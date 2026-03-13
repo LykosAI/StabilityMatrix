@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using System.Reactive.Linq;
+using System.Text.Json;
 using AsyncAwaitBestPractices;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
@@ -413,7 +414,8 @@ public partial class CivitDetailsPageViewModel(
                         settingsManager.ModelsDirectory,
                         viewModel.CivitFile.Type,
                         CivitModel.Type,
-                        CivitModel.BaseModelType
+                        CivitModel.BaseModelType,
+                        viewModel.CivitFile.Name
                     );
                     effectiveLocationKeyForPreference =
                         viewModel.InstallLocations.FirstOrDefault(loc =>
@@ -490,7 +492,12 @@ public partial class CivitDetailsPageViewModel(
             SelectedVersion?.ModelVersion,
             viewModel.CivitFile,
             fileNameOverride,
-            inferenceDefaults: IsInferenceDefaultsEnabled ? SamplerCardViewModel : null
+            inferenceDefaults: IsInferenceDefaultsEnabled ? SamplerCardViewModel : null,
+            onImportComplete: () =>
+                TryMoveDownloadedCheckpointToDiffusionModelsIfNeededAsync(
+                    viewModel.CivitFile,
+                    finalDestinationDir
+                )
         );
 
         notificationService.Show(
@@ -536,7 +543,8 @@ public partial class CivitDetailsPageViewModel(
                 new DirectoryPath(settingsManager.ModelsDirectory),
                 file.FileViewModel.CivitFile.Type,
                 CivitModel.Type,
-                CivitModel.BaseModelType
+                CivitModel.BaseModelType,
+                file.FileViewModel.CivitFile.Name
             );
 
             var folderName = Path.GetInvalidFileNameChars()
@@ -556,7 +564,12 @@ public partial class CivitDetailsPageViewModel(
                 destinationDir,
                 file.ModelVersion,
                 file.FileViewModel.CivitFile,
-                fileNameOverride
+                fileNameOverride,
+                onImportComplete: () =>
+                    TryMoveDownloadedCheckpointToDiffusionModelsIfNeededAsync(
+                        file.FileViewModel.CivitFile,
+                        destinationDir
+                    )
             );
         }
 
@@ -863,7 +876,8 @@ public partial class CivitDetailsPageViewModel(
             rootModelsDirectory,
             selectedFile.Type,
             CivitModel.Type,
-            CivitModel.BaseModelType
+            CivitModel.BaseModelType,
+            selectedFile.Name
         );
 
         if (!downloadDirectory.ToString().EndsWith("Unknown"))
@@ -884,9 +898,15 @@ public partial class CivitDetailsPageViewModel(
             }
         }
 
-        if (downloadDirectory.ToString().EndsWith(SharedFolderType.DiffusionModels.GetStringValue()))
+        var isGguf = Path.GetExtension(selectedFile.Name).Equals(".gguf", StringComparison.OrdinalIgnoreCase);
+
+        if (
+            downloadDirectory.ToString().EndsWith(SharedFolderType.DiffusionModels.GetStringValue())
+            && !isGguf
+        )
         {
             // also add StableDiffusion in case we have an AIO version
+            // (not for GGUFs, which are always UNet-only)
             var stableDiffusionDirectory = rootModelsDirectory.JoinDir(
                 SharedFolderType.StableDiffusion.GetStringValue()
             );
@@ -905,7 +925,8 @@ public partial class CivitDetailsPageViewModel(
         DirectoryPath rootModelsDirectory,
         CivitFileType? fileType,
         CivitModelType modelType,
-        string? baseModelType
+        string? baseModelType,
+        string? fileName = null
     )
     {
         if (fileType is CivitFileType.VAE)
@@ -928,7 +949,215 @@ public partial class CivitDetailsPageViewModel(
             return rootModelsDirectory.JoinDir(SharedFolderType.DiffusionModels.GetStringValue());
         }
 
+        // GGUF checkpoints are always UNet-only, route directly to DiffusionModels
+        if (
+            modelType is CivitModelType.Checkpoint
+            && fileName is not null
+            && Path.GetExtension(fileName).Equals(".gguf", StringComparison.OrdinalIgnoreCase)
+        )
+        {
+            return rootModelsDirectory.JoinDir(SharedFolderType.DiffusionModels.GetStringValue());
+        }
+
         return rootModelsDirectory.JoinDir(modelType.ConvertTo<SharedFolderType>().GetStringValue());
+    }
+
+    private async Task TryMoveDownloadedCheckpointToDiffusionModelsIfNeededAsync(
+        CivitFile civitFile,
+        DirectoryPath requestedDestinationDir
+    )
+    {
+        if (
+            civitFile.Type is not (CivitFileType.Model or CivitFileType.PrunedModel)
+            || CivitModel.Type is not CivitModelType.Checkpoint
+        )
+        {
+            return;
+        }
+
+        if (!settingsManager.IsLibraryDirSet)
+        {
+            return;
+        }
+
+        if (!Path.GetExtension(civitFile.Name).Equals(".safetensors", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(civitFile.Hashes.BLAKE3))
+        {
+            return;
+        }
+
+        try
+        {
+            await modelIndexService.RefreshIndex();
+
+            var matchingModels = (await modelIndexService.FindByHashAsync(civitFile.Hashes.BLAKE3)).ToList();
+            if (matchingModels.Count == 0)
+            {
+                return;
+            }
+
+            var modelsRoot = new DirectoryPath(settingsManager.ModelsDirectory);
+            if (!IsPathWithinDirectory(requestedDestinationDir, modelsRoot))
+            {
+                return;
+            }
+
+            var sourceModel = PickMostLikelyDownloadedModel(
+                matchingModels,
+                modelsRoot,
+                requestedDestinationDir
+            );
+            if (sourceModel is null)
+            {
+                return;
+            }
+
+            var sourceModelPath = new FilePath(sourceModel.GetFullPath(modelsRoot));
+            if (!sourceModelPath.Exists)
+            {
+                return;
+            }
+
+            var checkpointKind = await SafetensorClassifier.ClassifyAsync(sourceModelPath);
+            if (checkpointKind is not SafetensorCheckpointKind.UnetOnly)
+            {
+                return;
+            }
+
+            var stableDiffusionRoot = modelsRoot.JoinDir(SharedFolderType.StableDiffusion.GetStringValue());
+            var diffusionModelsRoot = modelsRoot.JoinDir(SharedFolderType.DiffusionModels.GetStringValue());
+
+            if (!IsPathWithinDirectory(sourceModelPath, stableDiffusionRoot))
+            {
+                return;
+            }
+
+            var sourceDirectory = sourceModelPath.Directory;
+            if (sourceDirectory is null)
+            {
+                return;
+            }
+
+            var relativeSubDir = Path.GetRelativePath(stableDiffusionRoot, sourceDirectory);
+            var destinationDirectory =
+                relativeSubDir == "."
+                    ? diffusionModelsRoot
+                    : new DirectoryPath(Path.Combine(diffusionModelsRoot, relativeSubDir));
+
+            destinationDirectory.Create();
+
+            var originalModelName = sourceModelPath.Name;
+            var destinationModelPath = destinationDirectory.JoinFile(sourceModelPath.Name);
+            var movedModelPath = await sourceModelPath.MoveToWithIncrementAsync(destinationModelPath);
+            var wasRenamedForCollision = !movedModelPath.Name.Equals(
+                originalModelName,
+                StringComparison.OrdinalIgnoreCase
+            );
+
+            var cmInfoPath = sourceDirectory.JoinFile(
+                $"{Path.GetFileNameWithoutExtension(originalModelName)}{ConnectedModelInfo.FileExtension}"
+            );
+            if (cmInfoPath.Exists)
+            {
+                await FileTransfers.MoveFileAsync(
+                    cmInfoPath,
+                    destinationDirectory.JoinFile(
+                        $"{movedModelPath.NameWithoutExtension}{ConnectedModelInfo.FileExtension}"
+                    ),
+                    overwrite: true
+                );
+            }
+
+            foreach (
+                var previewFile in sourceDirectory.EnumerateFiles(
+                    $"{Path.GetFileNameWithoutExtension(originalModelName)}.preview.*",
+                    SearchOption.TopDirectoryOnly
+                )
+            )
+            {
+                await FileTransfers.MoveFileAsync(
+                    previewFile,
+                    destinationDirectory.JoinFile(
+                        $"{movedModelPath.NameWithoutExtension}.preview{previewFile.Extension}"
+                    ),
+                    overwrite: true
+                );
+            }
+
+            await modelIndexService.RefreshIndex();
+
+            Dispatcher.UIThread.Post(() =>
+            {
+                var movedRelativePath = Path.GetRelativePath(modelsRoot, movedModelPath);
+                notificationService.Show(
+                    "Model moved",
+                    wasRenamedForCollision
+                        ? $"Detected UNet-only checkpoint and moved it to \"Models/{movedRelativePath}\" (renamed from \"{originalModelName}\" to \"{movedModelPath.Name}\" because that filename already existed)."
+                        : $"Detected UNet-only checkpoint and moved it to \"Models/{movedRelativePath}\"."
+                );
+            });
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(
+                ex,
+                "Failed to evaluate or move downloaded checkpoint {FileName}",
+                civitFile.Name
+            );
+        }
+    }
+
+    private static LocalModelFile? PickMostLikelyDownloadedModel(
+        IEnumerable<LocalModelFile> candidates,
+        DirectoryPath modelsRoot,
+        DirectoryPath requestedDestinationDir
+    )
+    {
+        var existingCandidates = candidates
+            .Select(model => new { Model = model, FullPath = model.GetFullPath(modelsRoot) })
+            .Where(x => File.Exists(x.FullPath))
+            .ToList();
+
+        if (existingCandidates.Count == 0)
+        {
+            return null;
+        }
+
+        var preferredCandidates = existingCandidates
+            .Where(x => IsPathWithinDirectory(x.FullPath, requestedDestinationDir))
+            .ToList();
+
+        if (preferredCandidates.Count == 0)
+        {
+            return null;
+        }
+
+        return preferredCandidates
+            .OrderByDescending(x => File.GetLastWriteTimeUtc(x.FullPath))
+            .Select(x => x.Model)
+            .FirstOrDefault();
+    }
+
+    private static bool IsPathWithinDirectory(string candidatePath, string directoryPath)
+    {
+        var normalizedCandidate = Path.GetFullPath(candidatePath)
+            .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        var normalizedDirectory = Path.GetFullPath(directoryPath)
+            .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+
+        if (string.Equals(normalizedCandidate, normalizedDirectory, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        return normalizedCandidate.StartsWith(
+            normalizedDirectory + Path.DirectorySeparatorChar,
+            StringComparison.OrdinalIgnoreCase
+        );
     }
 
     private IReadOnlyDictionary<string, string> GetOtherMetadata(CivitImageGenerationDataResponse value)

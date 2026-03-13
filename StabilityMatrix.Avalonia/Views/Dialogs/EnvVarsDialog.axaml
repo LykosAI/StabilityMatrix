@@ -61,7 +61,7 @@
                         Height="50"
                         Command="{Binding AddRowCommand}"
                         IconSource="Add"
-                        Label="{x:Static lang:Resources.Action_Save}" />
+                        Label="{x:Static lang:Resources.Action_New}" />
                     <ui:CommandBarButton
                         Width="45"
                         Height="50"

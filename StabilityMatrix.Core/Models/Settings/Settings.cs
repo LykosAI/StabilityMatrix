@@ -170,7 +170,8 @@ public class Settings
             var userVars = UserEnvironmentVariablesList is { Count: > 0 }
                 ? UserEnvironmentVariablesList
                     .Where(kvp => kvp.IsEnabled && !string.IsNullOrWhiteSpace(kvp.Key))
-                    .ToDictionary(kvp => kvp.Key, kvp => kvp.Value, StringComparer.Ordinal)
+                    .GroupBy(kvp => kvp.Key, StringComparer.Ordinal)
+                    .ToDictionary(g => g.Key, g => g.Last().Value, StringComparer.Ordinal)
                 : UserEnvironmentVariables;
 
             if (userVars is null || userVars.Count == 0)

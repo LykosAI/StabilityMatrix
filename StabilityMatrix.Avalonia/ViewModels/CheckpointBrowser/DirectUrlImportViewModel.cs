@@ -411,7 +411,7 @@ public partial class DirectUrlImportViewModel : TabViewModelBase
             Query = request.Query,
             Tag = request.Tag,
             Username = request.Username,
-            Types = request.Types,
+            Types = request.Types?.ToArray(),
             Sort = request.Sort,
             Period = request.Period,
             Rating = request.Rating,
@@ -422,7 +422,7 @@ public partial class DirectUrlImportViewModel : TabViewModelBase
             AllowDifferentLicenses = request.AllowDifferentLicenses,
             AllowCommercialUse = request.AllowCommercialUse,
             Nsfw = request.Nsfw,
-            BaseModels = request.BaseModels,
+            BaseModels = request.BaseModels?.ToArray(),
             CommaSeparatedModelIds = request.CommaSeparatedModelIds,
             Cursor = request.Cursor,
         };

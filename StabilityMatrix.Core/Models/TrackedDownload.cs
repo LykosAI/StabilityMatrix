@@ -403,7 +403,7 @@ public class TrackedDownload
                     "Download {Download} failed, trying fallback URL {Url} ({Index}/{Total})",
                     FileName,
                     nextUrl,
-                    currentUrlIndex,
+                    currentUrlIndex + 1,
                     FallbackUris.Count + 1
                 );
 

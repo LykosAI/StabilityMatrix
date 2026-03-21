@@ -343,9 +343,7 @@ public partial class DirectUrlImportViewModel : TabViewModelBase
         return rawValue.Split([
             ',',
             ';'
-        ], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .Where(v => !string.IsNullOrWhiteSpace(v))
-            .ToArray();
+        ], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
     }
 
     private static string? GetQueryValue(Uri uri, string key)

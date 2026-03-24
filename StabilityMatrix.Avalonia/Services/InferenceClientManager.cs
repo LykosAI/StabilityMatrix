@@ -652,11 +652,17 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         );
         downloadableClipVisionModelsSource.EditDiff(downloadableClipVisionModels, HybridModelFile.Comparer);
 
-        samplersSource.EditDiff(ComfySampler.Defaults, ComfySampler.Comparer);
+        // When connected, skip resetting samplers/schedulers to defaults only.
+        // EditDiff would remove server-only items (e.g. custom samplers from extensions),
+        // causing the ComboBox to clear its selection before LoadSharedPropertiesAsync
+        // re-fetches the full list from the server.
+        if (!IsConnected)
+        {
+            samplersSource.EditDiff(ComfySampler.Defaults, ComfySampler.Comparer);
+            schedulersSource.EditDiff(ComfyScheduler.Defaults, ComfyScheduler.Comparer);
+        }
 
         latentUpscalersSource.EditDiff(ComfyUpscaler.Defaults, ComfyUpscaler.Comparer);
-
-        schedulersSource.EditDiff(ComfyScheduler.Defaults, ComfyScheduler.Comparer);
 
         // Load Upscalers
         modelUpscalersSource.EditDiff(

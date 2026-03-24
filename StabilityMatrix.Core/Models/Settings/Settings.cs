@@ -151,6 +151,8 @@ public class Settings
     [JsonPropertyName("EnvironmentVariables")]
     public Dictionary<string, string>? UserEnvironmentVariables { get; set; }
 
+    public List<EnvVarKeyPair>? UserEnvironmentVariablesList { get; set; }
+
     [JsonIgnore]
     public IReadOnlyDictionary<string, string> EnvironmentVariables
     {
@@ -164,13 +166,21 @@ public class Settings
                 "cache"
             );
 
-            if (UserEnvironmentVariables is null || UserEnvironmentVariables.Count == 0)
+            // Prefer new list format, fall back to legacy dict
+            var userVars = UserEnvironmentVariablesList is { Count: > 0 }
+                ? UserEnvironmentVariablesList
+                    .Where(kvp => kvp.IsEnabled && !string.IsNullOrWhiteSpace(kvp.Key))
+                    .GroupBy(kvp => kvp.Key, StringComparer.Ordinal)
+                    .ToDictionary(g => g.Key, g => g.Last().Value, StringComparer.Ordinal)
+                : UserEnvironmentVariables;
+
+            if (userVars is null || userVars.Count == 0)
             {
                 return DefaultEnvironmentVariables;
             }
 
             return DefaultEnvironmentVariables
-                .Concat(UserEnvironmentVariables)
+                .Concat(userVars)
                 .GroupBy(pair => pair.Key)
                 // User variables override default variables with the same key
                 .ToDictionary(grouping => grouping.Key, grouping => grouping.Last().Value);

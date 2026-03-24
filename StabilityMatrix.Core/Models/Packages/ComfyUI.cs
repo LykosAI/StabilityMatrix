@@ -837,6 +837,19 @@ public class ComfyUI(
                     venvRunner.WorkingDirectory = installScript.Directory;
                     venvRunner.UpdateEnvironmentVariables(env =>
                     {
+                        // Recompute UV_BUILD_CONSTRAINT relative to the new working directory,
+                        // since the constraints file is in the ComfyUI root's venv folder.
+                        var constraintsAbsPath = Path.Combine(
+                            installedPackage.FullPath!,
+                            "venv",
+                            "uv-build-constraints.txt"
+                        );
+                        var constraintsRelPath = Path.GetRelativePath(
+                            installScript.Directory!.FullPath,
+                            constraintsAbsPath
+                        );
+                        env = env.SetItem("UV_BUILD_CONSTRAINT", constraintsRelPath);
+
                         // set env vars for Impact Pack for Face Detailer
                         env = env.SetItem("COMFYUI_PATH", installedPackage.FullPath!);
 

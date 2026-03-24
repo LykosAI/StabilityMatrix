@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Fixed
 - Fixed an issue where `Align Your Steps` scheduler and Unet Loader workflows ignored Regional Prompting (and other addon) conditioning modifiers.
 
+## v2.16.0-pre.1
+### Added
+- Added enable/disable toggle for environment variables in Settings, allowing variables to be temporarily disabled without deleting them
+### Changed
+- Improved safetensor checkpoint classification to correctly detect UNet-only models for Wan Video, HiDream, Z-Image, Hunyuan3D, and diffusers-format Flux architectures, ensuring they are routed to the DiffusionModels folder
+- GGUF checkpoint downloads now go directly to the DiffusionModels folder instead of StableDiffusion
+- Configured portable Git to suppress detached HEAD advice messages
+### Fixed
+- Fixed downloaded checkpoint going to StableDiffusion folder when a saved download preference existed, even for GGUF files that should always go to DiffusionModels
+- Fixed potential crash when adding metadata to malformed or non-PNG image data in Inference
+- Fixed non-Latin-1 characters (e.g. Japanese, Chinese, Korean, emoji) in image generation parameters being stored in PNG tEXt chunks, violating the PNG specification and causing character corruption (mojibake) in standard-compliant parsers. Non-Latin-1 content now uses spec-compliant iTXt chunks with proper UTF-8 encoding ([#1535](https://github.com/LykosAI/StabilityMatrix/issues/1535))
+
 ## v2.16.0-dev.2
 ### Added
 - Added Regional Prompting addon to Inference - paint detailed masks to apply different prompts, strengths, and settings to specific regions of your image

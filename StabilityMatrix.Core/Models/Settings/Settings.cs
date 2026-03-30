@@ -265,6 +265,8 @@ public class Settings
 
     public string? CivitModelBrowserFileNamePattern { get; set; }
 
+    public string? ModelOrganizationFileNamePattern { get; set; }
+
     public bool ModelPickerIsGridView { get; set; }
     public Dictionary<string, ModelPickerFilterState> ModelPickerFilterStates { get; set; } = [];
 

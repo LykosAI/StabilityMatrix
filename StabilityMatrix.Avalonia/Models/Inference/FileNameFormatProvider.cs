@@ -9,6 +9,7 @@ using Avalonia.Data;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
+using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.Inference;
 
 namespace StabilityMatrix.Avalonia.Models.Inference;
@@ -24,6 +25,25 @@ public partial class FileNameFormatProvider
     public CivitModel? CivitModel { get; init; }
     public CivitModelVersion? CivitModelVersion { get; init; }
     public CivitFile? CivitFile { get; init; }
+    public LocalModelFile? LocalModelFile { get; init; }
+
+    public static ISet<string> LocalOrganizationVariables { get; } =
+        new HashSet<string>(
+            [
+                "date",
+                "time",
+                "author",
+                "base_model",
+                "file_name",
+                "file_id",
+                "model_id",
+                "model_name",
+                "model_version_id",
+                "model_version_name",
+                "model_type",
+            ],
+            StringComparer.Ordinal
+        );
 
     private Dictionary<string, Func<string?>>? _substitutions;
 
@@ -35,7 +55,11 @@ public partial class FileNameFormatProvider
             { "negative_prompt", () => GenerationParameters?.NegativePrompt },
             {
                 "model_name",
-                () => Path.GetFileNameWithoutExtension(GenerationParameters?.ModelName) ?? CivitModel?.Name
+                () =>
+                    Path.GetFileNameWithoutExtension(GenerationParameters?.ModelName)
+                    ?? CivitModel?.Name
+                    ?? LocalModelFile?.ConnectedModelInfo?.ModelName
+                    ?? LocalModelFile?.FileNameWithoutExtension
             },
             { "model_hash", () => GenerationParameters?.ModelHash },
             { "sampler", () => GenerationParameters?.Sampler },
@@ -47,14 +71,45 @@ public partial class FileNameFormatProvider
             { "project_name", () => ProjectName },
             { "date", () => DateTime.Now.ToString("yyyy-MM-dd") },
             { "time", () => DateTime.Now.ToString("HH-mm-ss") },
-            { "author", () => CivitModel?.Creator?.Username },
-            { "base_model", () => CivitModelVersion?.BaseModel },
-            { "file_name", () => Path.GetFileNameWithoutExtension(CivitFile?.Name) },
-            { "file_id", () => CivitFile?.Id.ToString() },
-            { "model_id", () => CivitModel?.Id.ToString() },
-            { "model_version_id", () => CivitModelVersion?.Id.ToString() },
-            { "model_version_name", () => CivitModelVersion?.Name },
-            { "model_type", () => CivitModel?.Type.ToString() },
+            {
+                "author",
+                () => CivitModel?.Creator?.Username ?? LocalModelFile?.ConnectedModelInfo?.AuthorUsername
+            },
+            {
+                "base_model",
+                () => CivitModelVersion?.BaseModel ?? LocalModelFile?.ConnectedModelInfo?.BaseModel
+            },
+            {
+                "file_name",
+                () =>
+                    Path.GetFileNameWithoutExtension(CivitFile?.Name)
+                    ?? Path.GetFileNameWithoutExtension(LocalModelFile?.ConnectedModelInfo?.RemoteFileName)
+                    ?? LocalModelFile?.FileNameWithoutExtension
+            },
+            {
+                "file_id",
+                () => CivitFile?.Id.ToString() ?? LocalModelFile?.ConnectedModelInfo?.RemoteFileId?.ToString()
+            },
+            {
+                "model_id",
+                () => CivitModel?.Id.ToString() ?? LocalModelFile?.ConnectedModelInfo?.ModelId?.ToString()
+            },
+            {
+                "model_version_id",
+                () =>
+                    CivitModelVersion?.Id.ToString()
+                    ?? LocalModelFile?.ConnectedModelInfo?.VersionId?.ToString()
+            },
+            {
+                "model_version_name",
+                () => CivitModelVersion?.Name ?? LocalModelFile?.ConnectedModelInfo?.VersionName
+            },
+            {
+                "model_type",
+                () =>
+                    CivitModel?.Type.ToString()
+                    ?? (LocalModelFile?.ConnectedModelInfo is { } cmInfo ? cmInfo.ModelType.ToString() : null)
+            },
         };
 
     /// <summary>
@@ -65,15 +120,13 @@ public partial class FileNameFormatProvider
     [Pure]
     public ValidationResult Validate(string format)
     {
-        var regex = BracketRegex();
-        var matches = regex.Matches(format);
-        var variables = matches.Select(m => m.Groups[1].Value);
+        var variables = GetVariableTexts(format);
 
         foreach (var variableText in variables)
         {
             try
             {
-                var (variable, _) = ExtractVariableAndSlice(variableText);
+                var variable = GetVariableName(variableText);
 
                 if (!Substitutions.ContainsKey(variable))
                 {
@@ -87,6 +140,47 @@ public partial class FileNameFormatProvider
         }
 
         return ValidationResult.Success!;
+    }
+
+    public IEnumerable<string> GetVariableTexts(string template)
+    {
+        return BracketRegex().Matches(template).Select(m => m.Groups[1].Value);
+    }
+
+    public string GetVariableName(string variableText)
+    {
+        var (variable, _) = ExtractVariableAndSlice(variableText);
+        return variable;
+    }
+
+    public bool TryResolveVariable(string variableText, out string? value, out string? error)
+    {
+        try
+        {
+            var (variable, slice) = ExtractVariableAndSlice(variableText);
+            if (!Substitutions.TryGetValue(variable, out var substitution))
+            {
+                value = null;
+                error = $"Unknown variable '{variable}'";
+                return false;
+            }
+
+            value = ApplySlice(substitution(), slice);
+            if (value is null)
+            {
+                error = $"Variable '{variable}' is not available";
+                return false;
+            }
+
+            error = null;
+            return true;
+        }
+        catch (Exception e)
+        {
+            value = null;
+            error = $"Invalid variable '{variableText}': {e.Message}";
+            return false;
+        }
     }
 
     public IEnumerable<FileNameFormatPart> GetParts(string template)
@@ -114,36 +208,7 @@ public partial class FileNameFormatProvider
             var (variable, slice) = ExtractVariableAndSlice(result.Groups[1].Value);
             var substitution = Substitutions[variable];
 
-            // Slice string if necessary
-            if (slice is not null)
-            {
-                parts.Add(
-                    (FileNameFormatPart)(
-                        () =>
-                        {
-                            var value = substitution();
-                            if (value is null)
-                                return null;
-
-                            if (slice.End is null)
-                            {
-                                value = value[(slice.Start ?? 0)..];
-                            }
-                            else
-                            {
-                                var length = Math.Min(value.Length, slice.End.Value) - (slice.Start ?? 0);
-                                value = value.Substring(slice.Start ?? 0, length);
-                            }
-
-                            return value;
-                        }
-                    )
-                );
-            }
-            else
-            {
-                parts.Add(substitution);
-            }
+            parts.Add((FileNameFormatPart)(() => ApplySlice(substitution(), slice)));
 
             currentIndex += result.Length;
         }
@@ -198,6 +263,35 @@ public partial class FileNameFormatProvider
         };
     }
 
+    public static FileNameFormatProvider GetSampleForOrganization()
+    {
+        return new FileNameFormatProvider
+        {
+            LocalModelFile = new LocalModelFile
+            {
+                RelativePath = "StableDiffusion/sample_file.safetensors",
+                SharedFolderType = SharedFolderType.StableDiffusion,
+                ConnectedModelInfo = new ConnectedModelInfo
+                {
+                    ModelId = 1234,
+                    ModelName = "Sample Model",
+                    ModelDescription = string.Empty,
+                    Nsfw = false,
+                    Tags = [],
+                    ModelType = CivitModelType.Checkpoint,
+                    VersionId = 5678,
+                    VersionName = "v1.0",
+                    AuthorUsername = "SampleUser",
+                    BaseModel = "Illustrious",
+                    RemoteFileName = "sample_file.safetensors",
+                    RemoteFileId = 910,
+                    Hashes = new CivitFileHashes(),
+                    Source = ConnectedModelSource.Civitai,
+                },
+            },
+        };
+    }
+
     /// <summary>
     /// Extract variable and index from a combined string
     /// </summary>
@@ -222,6 +316,20 @@ public partial class FileNameFormatProvider
         );
 
         return (variable, slice);
+    }
+
+    private static string? ApplySlice(string? value, Slice? slice)
+    {
+        if (value is null || slice is null)
+            return value;
+
+        if (slice.End is null)
+        {
+            return value[(slice.Start ?? 0)..];
+        }
+
+        var length = Math.Min(value.Length, slice.End.Value) - (slice.Start ?? 0);
+        return value.Substring(slice.Start ?? 0, length);
     }
 
     /// <summary>

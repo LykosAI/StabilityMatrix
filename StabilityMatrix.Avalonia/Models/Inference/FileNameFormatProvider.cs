@@ -144,7 +144,7 @@ public partial class FileNameFormatProvider
 
     public IEnumerable<string> GetVariableTexts(string template)
     {
-        return BracketRegex().Matches(template).Select(m => m.Groups[1].Value);
+        return VariableRegex().Matches(template).Select(m => m.Groups[1].Value);
     }
 
     public string GetVariableName(string variableText)
@@ -185,7 +185,7 @@ public partial class FileNameFormatProvider
 
     public IEnumerable<FileNameFormatPart> GetParts(string template)
     {
-        var regex = BracketRegex();
+        var regex = VariableRegex();
         var matches = regex.Matches(template);
 
         var parts = new List<FileNameFormatPart>();
@@ -337,6 +337,8 @@ public partial class FileNameFormatProvider
     /// </summary>
     [GeneratedRegex(@"\{([a-z_:\d\[\]]+)\}")]
     private static partial Regex BracketRegex();
+
+    internal static Regex VariableRegex() => BracketRegex();
 
     /// <summary>
     /// Regex for matching a Python-like array index.

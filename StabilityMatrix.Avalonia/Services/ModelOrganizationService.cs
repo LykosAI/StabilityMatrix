@@ -20,7 +20,6 @@ public class ModelOrganizationService
         Path.DirectorySeparatorChar,
         Path.AltDirectorySeparatorChar,
     ];
-    private static readonly Regex TemplateRegex = new(@"\{([a-z_:\d\[\]]+)\}", RegexOptions.Compiled);
     private static readonly HashSet<char> InvalidSubstitutionChars =
     [
         .. Path.GetInvalidFileNameChars(),
@@ -325,7 +324,7 @@ public class ModelOrganizationService
         var builder = new StringBuilder();
         var currentIndex = 0;
 
-        foreach (var match in TemplateRegex.Matches(template).Cast<Match>())
+        foreach (var match in FileNameFormatProvider.VariableRegex().Matches(template).Cast<Match>())
         {
             if (match.Index > currentIndex)
             {

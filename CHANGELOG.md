@@ -10,9 +10,6 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added a checkpoint organizer for previewing and reorganizing local models using connected metadata-driven folder and filename patterns (requested in [#280](https://github.com/LykosAI/StabilityMatrix/issues/280), [#424](https://github.com/LykosAI/StabilityMatrix/issues/424))
 ### Fixed
 - Fixed an issue where `Align Your Steps` scheduler and Unet Loader workflows ignored Regional Prompting (and other addon) conditioning modifiers.
-- Fixed organizer moving files outside the selected folder scope when using multi-segment patterns
-- Fixed organizer `Update Metadata` incorrectly running the missing-metadata scan path
-- Fixed organizer apply leaving model sidecars behind after a later move failure
 
 ## v2.16.0-pre.1
 ### Added

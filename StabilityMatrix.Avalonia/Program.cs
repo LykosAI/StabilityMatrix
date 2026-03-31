@@ -14,6 +14,8 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Threading;
 using CommandLine;
+using MessagePipe;
+using Microsoft.Extensions.DependencyInjection;
 using NLog;
 using Polly.Contrib.WaitAndRetry;
 using Projektanker.Icons.Avalonia;
@@ -37,6 +39,10 @@ public static class Program
 {
     private static Logger? _logger;
     private static Logger Logger => _logger ??= LogManager.GetCurrentClassLogger();
+
+    private static Mutex? singleInstanceMutex;
+
+    public const string ShowWindowIpcKey = "show_window";
 
     public static AppArgs Args { get; private set; } = new();
 
@@ -109,6 +115,17 @@ public static class Program
         HandleUpdateReplacement();
         HandleUpdateCleanup();
 
+        // Single-instance check: if another instance is running, signal it to show and exit
+        if (Args.WaitForExitPid is null && !Compat.IsMacOS)
+        {
+            singleInstanceMutex = new Mutex(true, "StabilityMatrix_SingleInstance", out var createdNew);
+            if (!createdNew)
+            {
+                SignalExistingInstanceAndExit();
+                return;
+            }
+        }
+
         var infoVersion = Assembly
             .GetExecutingAssembly()
             .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
@@ -130,6 +147,32 @@ public static class Program
         }
 
         BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+    }
+
+    /// <summary>
+    /// Sends a show-window signal to the existing instance via named pipe and exits.
+    /// </summary>
+    [DoesNotReturn]
+    private static void SignalExistingInstanceAndExit()
+    {
+        try
+        {
+            var services = new ServiceCollection();
+            services.AddMessagePipe().AddNamedPipeInterprocess("StabilityMatrix");
+            using var provider = services.BuildServiceProvider();
+            var publisher = provider.GetRequiredService<IDistributedPublisher<string, Uri>>();
+
+            publisher
+                .PublishAsync(ShowWindowIpcKey, new Uri("stabilitymatrix://show-window"))
+                .AsTask()
+                .Wait(TimeSpan.FromSeconds(3));
+        }
+        catch (Exception e)
+        {
+            Console.Error.WriteLine($"Failed to signal existing instance: {e.Message}");
+        }
+
+        Environment.Exit(0);
     }
 
     [DoesNotReturn]

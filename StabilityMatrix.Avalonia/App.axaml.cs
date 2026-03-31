@@ -1041,9 +1041,10 @@ public sealed class App : Application
                 socket.Connect(new System.Net.Sockets.UnixDomainSocketEndPoint(socketPath));
                 // Connected successfully - another instance is running, don't delete
             }
-            catch (System.Net.Sockets.SocketException)
+            catch (System.Net.Sockets.SocketException ex)
+                when (ex.SocketErrorCode == System.Net.Sockets.SocketError.ConnectionRefused)
             {
-                // Connection refused or failed - socket is stale, safe to delete
+                // A refused connection means the socket file exists but nothing is listening anymore.
                 File.Delete(socketPath);
                 Logger.Info("Deleted stale Unix domain socket: {SocketPath}", socketPath);
             }

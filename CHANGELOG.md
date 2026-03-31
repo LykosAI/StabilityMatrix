@@ -6,8 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
 ## v2.16.0-dev.3
+### Added
+- Added single-instance window activation signaling so reopening the app restores and focuses the existing desktop window instead of launching a duplicate instance
 ### Fixed
 - Fixed an issue where `Align Your Steps` scheduler and Unet Loader workflows ignored Regional Prompting (and other addon) conditioning modifiers.
+- Potentially fixed [#1578](https://github.com/LykosAI/StabilityMatrix/issues/1578) - `SocketException: Address already in use` on Linux startup by cleaning stale interprocess socket files and reactivating the existing window
 
 ## v2.16.0-pre.1
 ### Added

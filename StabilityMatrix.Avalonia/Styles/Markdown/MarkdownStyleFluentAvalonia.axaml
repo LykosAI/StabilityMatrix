@@ -230,12 +230,16 @@
         <Style.Setters>
             <Setter Property="Margin" Value="0,8" />
             <Setter Property="LineHeight" Value="22" />
+            <!--  Normally 14  -->
+            <Setter Property="FontSize" Value="15" />
         </Style.Setters>
     </Style>
     <Style Selector=".NotificationDialog .Markdown_Avalonia_MarkdownViewer TextBlock">
         <Style.Setters>
             <Setter Property="Margin" Value="0,10,0,16" />
             <Setter Property="LineHeight" Value="22" />
+            <!--  Normally 14  -->
+            <Setter Property="FontSize" Value="15" />
         </Style.Setters>
     </Style>
     <Style Selector=".NotificationDialog .Markdown_Avalonia_MarkdownViewer ctxt|CBold">

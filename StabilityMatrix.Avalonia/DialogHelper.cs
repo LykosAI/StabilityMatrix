@@ -9,6 +9,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Documents;
 using Avalonia.Data;
 using Avalonia.Layout;
 using Avalonia.LogicalTree;
@@ -250,10 +251,7 @@ public static class DialogHelper
         // like "Segoe UI Variable Text". Use non-variable "Segoe UI" for markdown rendering.
         if (Compat.IsWindows && Cultures.Current?.Name != "ja-JP")
         {
-            viewer.SetValue(
-                global::Avalonia.Controls.Documents.TextElement.FontFamilyProperty,
-                new FontFamily("Segoe UI")
-            );
+            viewer.SetValue(TextElement.FontFamilyProperty, new FontFamily("Segoe UI"));
         }
 
         // Apply style class if provided (wraps content for CSS selector targeting)

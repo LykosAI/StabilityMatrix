@@ -115,6 +115,7 @@ public partial class NotificationBannerViewModel(IAppNotificationService appNoti
         dialog.MinDialogWidth = 700;
         dialog.MaxDialogWidth = 900;
         dialog.MaxDialogHeight = 800;
+        dialog.ContentMargin = new Thickness(16, 8);
 
         // If custom buttons are defined, configure them
         if (dialogData.Buttons is { Count: > 0 } buttons)

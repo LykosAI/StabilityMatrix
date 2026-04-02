@@ -1,4 +1,4 @@
-﻿namespace StabilityMatrix.Core.Models.Configs;
+namespace StabilityMatrix.Core.Models.Configs;
 
 public class DebugOptions
 {
@@ -6,15 +6,21 @@ public class DebugOptions
     /// Sets up LiteDB to use a temporary database file on each run
     /// </summary>
     public bool TempDatabase { get; set; }
-    
+
     /// <summary>
     /// Always show the one-click install page on launch
     /// </summary>
     public bool ShowOneClickInstall { get; set; }
-    
+
     /// <summary>
     /// Override the default update manifest url
     /// (https://cdn.lykos.ai/update.json)
     /// </summary>
     public string? UpdateManifestUrl { get; set; }
+
+    /// <summary>
+    /// Override the default notifications manifest url
+    /// (https://cdn.lykos.ai/notifications/notifications.json)
+    /// </summary>
+    public string? NotificationsUrl { get; set; }
 }

@@ -10,7 +10,12 @@ using StabilityMatrix.Core.Models.Notifications;
 namespace StabilityMatrix.Core.Services;
 
 [RegisterSingleton<IAppNotificationService, AppNotificationService>]
-public class AppNotificationService : IAppNotificationService
+public class AppNotificationService(
+    ILogger<AppNotificationService> logger,
+    IHttpClientFactory httpClientFactory,
+    ISettingsManager settingsManager,
+    IOptions<DebugOptions> debugOptions
+) : IAppNotificationService
 {
     private static readonly TimeSpan CacheTtl = TimeSpan.FromHours(6);
 
@@ -19,10 +24,7 @@ public class AppNotificationService : IAppNotificationService
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
     };
 
-    private readonly ILogger<AppNotificationService> logger;
-    private readonly IHttpClientFactory httpClientFactory;
-    private readonly ISettingsManager settingsManager;
-    private readonly DebugOptions debugOptions;
+    private readonly DebugOptions debugOptions = debugOptions.Value;
 
     private string NotificationsUrl =>
         debugOptions.NotificationsUrl ?? "https://cdn.lykos.ai/notifications/notifications.json";
@@ -33,19 +35,6 @@ public class AppNotificationService : IAppNotificationService
 
     /// <inheritdoc />
     public AppNotification? CurrentNotification { get; private set; }
-
-    public AppNotificationService(
-        ILogger<AppNotificationService> logger,
-        IHttpClientFactory httpClientFactory,
-        ISettingsManager settingsManager,
-        IOptions<DebugOptions> debugOptions
-    )
-    {
-        this.logger = logger;
-        this.httpClientFactory = httpClientFactory;
-        this.settingsManager = settingsManager;
-        this.debugOptions = debugOptions.Value;
-    }
 
     /// <inheritdoc />
     public async Task<AppNotification?> CheckForNotificationsAsync()

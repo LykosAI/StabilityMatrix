@@ -246,12 +246,19 @@ public static class DialogHelper
 
         var viewer = new BetterMarkdownScrollViewer { Markdown = markdown };
 
-        // Work around Avalonia 11.3.x variable font regression (AvaloniaUI/Avalonia#18875)
-        // where FontWeight doesn't apply for inline spans like CBold when using variable fonts
-        // like "Segoe UI Variable Text". Use non-variable "Segoe UI" for markdown rendering.
-        if (Compat.IsWindows && Cultures.Current?.Name != "ja-JP")
+        // Ensure the markdown viewer uses the correct font:
+        // - For Japanese: use bundled NotoSansJP (CTextBlock doesn't inherit ContentControlThemeFontFamily)
+        // - For Windows: use non-variable "Segoe UI" to work around Avalonia 11.3.x variable font
+        //   regression (AvaloniaUI/Avalonia#18875) where FontWeight doesn't apply for inline spans
+        // - Otherwise: use app's platform default font
+        if (App.Current is { } app)
         {
-            viewer.SetValue(TextElement.FontFamilyProperty, new FontFamily("Segoe UI"));
+            var fontFamily =
+                Cultures.Current?.Name == "ja-JP" ? app.GetPlatformDefaultFontFamily()
+                : Compat.IsWindows ? new FontFamily("Segoe UI")
+                : app.GetPlatformDefaultFontFamily();
+
+            viewer.SetValue(TextElement.FontFamilyProperty, fontFamily);
         }
 
         // Apply style class if provided (wraps content for CSS selector targeting)

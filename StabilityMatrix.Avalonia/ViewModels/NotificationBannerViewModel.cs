@@ -118,22 +118,57 @@ public partial class NotificationBannerViewModel(IAppNotificationService appNoti
         dialog.MaxDialogHeight = 800;
         dialog.ContentMargin = new Thickness(16, 8);
 
-        // If custom buttons are defined, configure them
+        AppNotificationButton? primaryButton = null;
+        AppNotificationButton? secondaryButton = null;
+        AppNotificationButton? closeButton = null;
+
         if (dialogData.Buttons is { Count: > 0 } buttons)
         {
-            // First button -> Primary
-            if (buttons.Count >= 1)
+            // Route each button to its ContentDialog slot based on Style
+            foreach (var btn in buttons)
             {
-                var btn = buttons[0];
-                dialog.PrimaryButtonText = appNotificationService.ResolveLocalizedString(btn.Label) ?? "";
-                dialog.IsPrimaryButtonEnabled = true;
-            }
+                switch (btn.Style)
+                {
+                    case AppNotificationButtonStyle.Primary:
+                    case AppNotificationButtonStyle.Accent:
+                        if (primaryButton is null)
+                        {
+                            primaryButton = btn;
+                            dialog.PrimaryButtonText =
+                                appNotificationService.ResolveLocalizedString(btn.Label) ?? "";
+                            dialog.IsPrimaryButtonEnabled = true;
+                        }
+                        break;
 
-            // Second button -> Close
-            if (buttons.Count >= 2)
-            {
-                var btn = buttons[1];
-                dialog.CloseButtonText = appNotificationService.ResolveLocalizedString(btn.Label) ?? "";
+                    case AppNotificationButtonStyle.Close:
+                    case AppNotificationButtonStyle.Secondary
+                        when closeButton is null && primaryButton is not null:
+                        // Use as close slot if we already have a primary, or it's explicitly Close style
+                        if (btn.Style == AppNotificationButtonStyle.Close || closeButton is null)
+                        {
+                            closeButton = btn;
+                            dialog.CloseButtonText =
+                                appNotificationService.ResolveLocalizedString(btn.Label) ?? "";
+                        }
+                        break;
+
+                    case AppNotificationButtonStyle.Secondary:
+                        // First Secondary with no Primary yet → treat as Primary
+                        if (primaryButton is null)
+                        {
+                            primaryButton = btn;
+                            dialog.PrimaryButtonText =
+                                appNotificationService.ResolveLocalizedString(btn.Label) ?? "";
+                            dialog.IsPrimaryButtonEnabled = true;
+                        }
+                        else if (closeButton is null)
+                        {
+                            closeButton = btn;
+                            dialog.CloseButtonText =
+                                appNotificationService.ResolveLocalizedString(btn.Label) ?? "";
+                        }
+                        break;
+                }
             }
         }
         else
@@ -143,29 +178,25 @@ public partial class NotificationBannerViewModel(IAppNotificationService appNoti
 
         var result = await dialog.ShowAsync();
 
-        // Handle button actions
-        if (dialogData.Buttons is { Count: > 0 } actionButtons)
+        // Resolve which button was clicked from the ContentDialog result
+        var clickedButton = result switch
         {
-            var clickedButton = result switch
-            {
-                ContentDialogResult.Primary when actionButtons.Count >= 1 => actionButtons[0],
-                ContentDialogResult.None when actionButtons.Count >= 2 => actionButtons[1],
-                _ => null,
-            };
+            ContentDialogResult.Primary => primaryButton,
+            ContentDialogResult.Secondary => secondaryButton,
+            ContentDialogResult.None => closeButton,
+            _ => null,
+        };
 
-            if (clickedButton is not null)
+        if (clickedButton is not null)
+        {
+            if (clickedButton.Type == AppNotificationButtonType.Url && clickedButton.Url is not null)
             {
-                // Open URL if applicable
-                if (clickedButton.Type == AppNotificationButtonType.Url && clickedButton.Url is not null)
-                {
-                    ProcessRunner.OpenUrl(clickedButton.Url);
-                }
+                ProcessRunner.OpenUrl(clickedButton.Url);
+            }
 
-                // Dismiss if applicable
-                if (clickedButton.Type == AppNotificationButtonType.Dismiss || clickedButton.DismissOnClick)
-                {
-                    DismissClicked();
-                }
+            if (clickedButton.Type == AppNotificationButtonType.Dismiss || clickedButton.DismissOnClick)
+            {
+                DismissClicked();
             }
         }
     }

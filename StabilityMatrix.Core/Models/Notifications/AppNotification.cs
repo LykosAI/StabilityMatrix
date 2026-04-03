@@ -184,7 +184,23 @@ public enum AppNotificationButtonType
 [JsonConverter(typeof(JsonStringEnumConverter<AppNotificationButtonStyle>))]
 public enum AppNotificationButtonStyle
 {
+    /// <summary>
+    /// Maps to the ContentDialog Primary button (accent-colored).
+    /// </summary>
     Primary,
+
+    /// <summary>
+    /// Maps to the ContentDialog Secondary button.
+    /// </summary>
     Secondary,
+
+    /// <summary>
+    /// Maps to the ContentDialog Close button (subtle / cancel styling).
+    /// </summary>
+    Close,
+
+    /// <summary>
+    /// Maps to the ContentDialog Primary button with accent style override.
+    /// </summary>
     Accent,
 }

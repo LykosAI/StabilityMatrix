@@ -131,8 +131,8 @@ public class AppNotificationService : IAppNotificationService
             }
             else
             {
-                var httpClient = httpClientFactory.CreateClient("AppNotificationClient");
-                var response = await httpClient.GetAsync(NotificationsUrl).ConfigureAwait(false);
+                using var httpClient = httpClientFactory.CreateClient("AppNotificationClient");
+                using var response = await httpClient.GetAsync(NotificationsUrl).ConfigureAwait(false);
 
                 if (!response.IsSuccessStatusCode)
                 {

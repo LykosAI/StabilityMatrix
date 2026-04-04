@@ -53,6 +53,13 @@ public record AppNotification
     public string? MaxVersion { get; init; }
 
     /// <summary>
+    /// When true, the notification is only shown after first-launch setup has been completed
+    /// in a previous session. This prevents showing notifications during or immediately after
+    /// the first-launch setup flow.
+    /// </summary>
+    public bool RequireSetupComplete { get; init; }
+
+    /// <summary>
     /// Visual style for the banner.
     /// </summary>
     public AppNotificationStyle Style { get; init; } = new();

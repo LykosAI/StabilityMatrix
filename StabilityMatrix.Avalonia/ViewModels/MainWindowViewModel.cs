@@ -321,6 +321,13 @@ public partial class MainWindowViewModel : ViewModelBase
             })
             .SafeFireAndForget();
 
+        // Mark first-launch setup as complete (after notification check so that notifications
+        // with requireSetupComplete are deferred until the next session)
+        if (!settingsManager.Settings.FirstLaunchSetupComplete)
+        {
+            settingsManager.Transaction(s => s.FirstLaunchSetupComplete = true);
+        }
+
         // Periodic launch stats
         if (
             settingsManager.Settings.Analytics.IsUsageDataEnabled

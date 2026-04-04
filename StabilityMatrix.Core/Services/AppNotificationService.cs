@@ -213,6 +213,10 @@ public class AppNotificationService(
                         return false;
                 }
 
+                // First-launch setup check, delay notification until a subsequent session
+                if (n.RequireSetupComplete && !(settingsManager.Settings.FirstLaunchSetupComplete))
+                    return false;
+
                 // Locale check — must have a resolvable message
                 if (ResolveLocalizedString(n.Message) is null)
                     return false;

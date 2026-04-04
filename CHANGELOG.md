@@ -5,6 +5,15 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.15.7
+### Added
+- Added notification system with localizable banner and markdown detail dialog UI
+### Fixed
+- Fixed bold text not rendering in markdown dialogs on Windows 11 due to Avalonia 11.3.x variable font regression with Segoe UI Variable Text
+- Fixed Japanese text appearing compressed/squished in markdown dialogs by ensuring the bundled NotoSansJP font is used for CTextBlock rendering
+- Fixed ContentDialog title and buttons not using the correct font for Japanese locale (NotoSansJP) when shown as overlay
+- Added missing `CBold` and `CItalic` inline styles to the markdown style sheet
+
 ## v2.15.6
 ### Added
 - Added NVIDIA driver version warning when launching ComfyUI with CUDA 13.0 (cu130) and driver versions below 580.x

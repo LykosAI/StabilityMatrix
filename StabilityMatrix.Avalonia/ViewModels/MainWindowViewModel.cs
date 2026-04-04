@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using AsyncAwaitBestPractices;
@@ -47,6 +47,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly IModelIndexService modelIndexService;
     private readonly Lazy<IModelDownloadLinkHandler> modelDownloadLinkHandler;
     private readonly INotificationService notificationService;
+    private readonly IAppNotificationService appNotificationService;
     private readonly IAnalyticsHelper analyticsHelper;
     private readonly IUpdateHelper updateHelper;
     private readonly ISecretsManager secretsManager;
@@ -71,6 +72,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
     public ProgressManagerViewModel ProgressManagerViewModel { get; init; }
     public UpdateViewModel UpdateViewModel { get; init; }
+    public NotificationBannerViewModel NotificationBannerViewModel { get; init; }
 
     public double PaneWidth =>
         (Compat.IsWindows ? 0 : 20)
@@ -97,6 +99,7 @@ public partial class MainWindowViewModel : ViewModelBase
         IModelIndexService modelIndexService,
         Lazy<IModelDownloadLinkHandler> modelDownloadLinkHandler,
         INotificationService notificationService,
+        IAppNotificationService appNotificationService,
         IAnalyticsHelper analyticsHelper,
         IUpdateHelper updateHelper,
         ISecretsManager secretsManager,
@@ -111,6 +114,7 @@ public partial class MainWindowViewModel : ViewModelBase
         this.modelIndexService = modelIndexService;
         this.modelDownloadLinkHandler = modelDownloadLinkHandler;
         this.notificationService = notificationService;
+        this.appNotificationService = appNotificationService;
         this.analyticsHelper = analyticsHelper;
         this.updateHelper = updateHelper;
         this.secretsManager = secretsManager;
@@ -118,6 +122,7 @@ public partial class MainWindowViewModel : ViewModelBase
         this.settingsNavService = settingsNavService;
         ProgressManagerViewModel = dialogFactory.Get<ProgressManagerViewModel>();
         UpdateViewModel = dialogFactory.Get<UpdateViewModel>();
+        NotificationBannerViewModel = new NotificationBannerViewModel(appNotificationService);
     }
 
     public override void OnLoaded()
@@ -294,6 +299,34 @@ public partial class MainWindowViewModel : ViewModelBase
 
         // Start checking for updates
         await updateHelper.StartCheckingForUpdates();
+
+        // Check for server-pushed notifications (non-blocking)
+        Task.Run(async () =>
+            {
+                try
+                {
+                    var notification = await appNotificationService.CheckForNotificationsAsync();
+                    if (notification is not null)
+                    {
+                        await Dispatcher.UIThread.InvokeAsync(() =>
+                        {
+                            NotificationBannerViewModel.Show(notification);
+                        });
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error(ex, "Error checking for notifications");
+                }
+            })
+            .SafeFireAndForget();
+
+        // Mark first-launch setup as complete (after notification check so that notifications
+        // with requireSetupComplete are deferred until the next session)
+        if (!settingsManager.Settings.FirstLaunchSetupComplete)
+        {
+            settingsManager.Transaction(s => s.FirstLaunchSetupComplete = true);
+        }
 
         // Periodic launch stats
         if (

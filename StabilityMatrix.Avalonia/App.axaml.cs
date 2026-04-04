@@ -376,6 +376,7 @@ public sealed class App : Application
             provider.GetRequiredService<IModelIndexService>(),
             provider.GetRequiredService<Lazy<IModelDownloadLinkHandler>>(),
             provider.GetRequiredService<INotificationService>(),
+            provider.GetRequiredService<IAppNotificationService>(),
             provider.GetRequiredService<IAnalyticsHelper>(),
             provider.GetRequiredService<IUpdateHelper>(),
             provider.GetRequiredService<ISecretsManager>(),

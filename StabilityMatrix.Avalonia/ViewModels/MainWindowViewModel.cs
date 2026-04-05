@@ -4,11 +4,13 @@ using System.Runtime.InteropServices;
 using AsyncAwaitBestPractices;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Controls.Primitives;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using FluentAvalonia.UI.Controls;
 using FluentAvalonia.UI.Media.Animation;
+using MessagePipe;
 using NLog;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Helpers;
@@ -53,6 +55,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly ISecretsManager secretsManager;
     private readonly INavigationService<MainWindowViewModel> navigationService;
     private readonly INavigationService<SettingsViewModel> settingsNavService;
+    private readonly IDistributedSubscriber<string, Uri> showWindowSubscriber;
     public string Greeting => "Welcome to Avalonia!";
 
     [ObservableProperty]
@@ -104,7 +107,8 @@ public partial class MainWindowViewModel : ViewModelBase
         IUpdateHelper updateHelper,
         ISecretsManager secretsManager,
         INavigationService<MainWindowViewModel> navigationService,
-        INavigationService<SettingsViewModel> settingsNavService
+        INavigationService<SettingsViewModel> settingsNavService,
+        IDistributedSubscriber<string, Uri> showWindowSubscriber
     )
     {
         this.settingsManager = settingsManager;
@@ -120,6 +124,7 @@ public partial class MainWindowViewModel : ViewModelBase
         this.secretsManager = secretsManager;
         this.navigationService = navigationService;
         this.settingsNavService = settingsNavService;
+        this.showWindowSubscriber = showWindowSubscriber;
         ProgressManagerViewModel = dialogFactory.Get<ProgressManagerViewModel>();
         UpdateViewModel = dialogFactory.Get<UpdateViewModel>();
         NotificationBannerViewModel = new NotificationBannerViewModel(appNotificationService);
@@ -158,18 +163,13 @@ public partial class MainWindowViewModel : ViewModelBase
         try
         {
             await modelDownloadLinkHandler.Value.StartListening();
+
+            // Subscribe to show-window signals from other instances
+            await showWindowSubscriber.SubscribeAsync(Program.ShowWindowIpcKey, OnShowWindowSignalReceived);
         }
-        catch (IOException)
+        catch (Exception ex) when (ex is IOException or System.Net.Sockets.SocketException)
         {
-            var dialog = new BetterContentDialog
-            {
-                Title = Resources.Label_StabilityMatrixAlreadyRunning,
-                Content = Resources.Label_AnotherInstanceAlreadyRunning,
-                IsPrimaryButtonEnabled = true,
-                PrimaryButtonText = Resources.Action_Close,
-                DefaultButton = ContentDialogButton.Primary,
-            };
-            await dialog.ShowAsync();
+            Logger.Warn(ex, "Another instance is already running, shutting down");
             App.Shutdown();
             return;
         }
@@ -446,6 +446,31 @@ public partial class MainWindowViewModel : ViewModelBase
                     }
                 });
         }
+    }
+
+    private void OnShowWindowSignalReceived(Uri _)
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (
+                Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime
+                {
+                    MainWindow: { } mainWindow
+                }
+            )
+            {
+                if (mainWindow.WindowState == WindowState.Minimized)
+                {
+                    mainWindow.WindowState = WindowState.Normal;
+                }
+
+                // Topmost toggle forces the window to front on Windows,
+                // where SetForegroundWindow is restricted to the foreground process
+                mainWindow.Topmost = true;
+                mainWindow.Topmost = false;
+                mainWindow.Activate();
+            }
+        });
     }
 
     /// <summary>

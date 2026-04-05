@@ -381,7 +381,8 @@ public sealed class App : Application
             provider.GetRequiredService<IUpdateHelper>(),
             provider.GetRequiredService<ISecretsManager>(),
             provider.GetRequiredService<INavigationService<MainWindowViewModel>>(),
-            provider.GetRequiredService<INavigationService<SettingsViewModel>>()
+            provider.GetRequiredService<INavigationService<SettingsViewModel>>(),
+            provider.GetRequiredService<IDistributedSubscriber<string, Uri>>()
         )
         {
             Pages =
@@ -452,6 +453,14 @@ public sealed class App : Application
         // Named pipe interprocess communication on Windows and Linux for uri handling
         if (!disableMessagePipeInterprocess && (Compat.IsWindows || Compat.IsLinux))
         {
+            // On Linux, named pipes use Unix domain sockets which leave stale socket files
+            // if the app crashes or exits without cleanup. Delete the stale file if no other
+            // instance is running, so the new instance can bind successfully.
+            if (Compat.IsLinux)
+            {
+                CleanupStaleUnixSocket("StabilityMatrix");
+            }
+
             services.AddMessagePipe().AddNamedPipeInterprocess("StabilityMatrix");
         }
         else
@@ -971,6 +980,47 @@ public sealed class App : Application
             onExitSemaphore.Release();
 
             LogManager.Shutdown();
+        }
+    }
+
+    /// <summary>
+    /// On Linux, .NET named pipes use Unix domain sockets. If the app exits without cleanup,
+    /// the socket file remains and prevents the next instance from binding.
+    /// This deletes the stale socket file if no other instance holds it.
+    /// </summary>
+    private static void CleanupStaleUnixSocket(string pipeName)
+    {
+        try
+        {
+            var tempPath = Path.GetTempPath();
+            var socketPath = Path.Combine(tempPath, $"CoreFxPipe_{pipeName}");
+
+            if (!File.Exists(socketPath))
+                return;
+
+            // Try connecting to see if another instance is actually listening
+            using var socket = new System.Net.Sockets.Socket(
+                System.Net.Sockets.AddressFamily.Unix,
+                System.Net.Sockets.SocketType.Stream,
+                System.Net.Sockets.ProtocolType.Unspecified
+            );
+
+            try
+            {
+                socket.Connect(new System.Net.Sockets.UnixDomainSocketEndPoint(socketPath));
+                // Connected successfully - another instance is running, don't delete
+            }
+            catch (System.Net.Sockets.SocketException ex)
+                when (ex.SocketErrorCode == System.Net.Sockets.SocketError.ConnectionRefused)
+            {
+                // A refused connection means the socket file exists but nothing is listening anymore.
+                File.Delete(socketPath);
+                Logger.Info("Deleted stale Unix domain socket: {SocketPath}", socketPath);
+            }
+        }
+        catch (Exception e)
+        {
+            Logger.Warn(e, "Failed to clean up stale Unix domain socket");
         }
     }
 

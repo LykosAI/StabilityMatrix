@@ -69,6 +69,19 @@ public class SettingsJsonSanitizerTests
     }
 
     [TestMethod]
+    public void TryFixBraces_MixedBrackets_ClosesInCorrectOrder()
+    {
+        // Truncated JSON with an open array inside an object
+        var input = """{"items": [1, 2, 3""";
+
+        var result = SettingsJsonSanitizer.TryFixBraces(input);
+
+        // Should close ] then } in correct LIFO order
+        Assert.IsNotNull(JsonDocument.Parse(result));
+        Assert.IsTrue(result.TrimEnd().EndsWith('}'));
+    }
+
+    [TestMethod]
     public void TryDeserializeWithRecovery_ValidJson_ReturnsSettings()
     {
         var json = """

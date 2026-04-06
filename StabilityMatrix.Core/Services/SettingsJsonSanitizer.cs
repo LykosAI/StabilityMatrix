@@ -16,40 +16,20 @@ public static class SettingsJsonSanitizer
     /// </summary>
     public static byte[] SanitizeBytes(byte[] rawBytes)
     {
-        // Check if any null bytes exist first (fast path for clean files)
-        var hasNullBytes = false;
-        foreach (var b in rawBytes)
-        {
-            if (b == 0x00)
-            {
-                hasNullBytes = true;
-                break;
-            }
-        }
-
-        if (!hasNullBytes)
+        // Fast path for clean files
+        if (Array.IndexOf(rawBytes, (byte)0x00) < 0)
             return rawBytes;
 
-        // Filter out null bytes
-        var result = new byte[rawBytes.Length];
-        var writeIndex = 0;
-        foreach (var b in rawBytes)
-        {
-            if (b != 0x00)
-            {
-                result[writeIndex++] = b;
-            }
-        }
-
-        return result.AsSpan(0, writeIndex).ToArray();
+        return Array.FindAll(rawBytes, b => b != 0x00);
     }
 
     /// <summary>
-    /// Ensures the JSON text has matching curly braces by appending missing closing braces.
+    /// Ensures the JSON text has matching brackets by appending missing closing braces/brackets.
+    /// Uses a stack to correctly handle nested and mixed <c>{}</c> / <c>[]</c> pairs.
     /// </summary>
     public static string TryFixBraces(string jsonText)
     {
-        var openCount = 0;
+        var stack = new Stack<char>();
         var inString = false;
         var escaped = false;
 
@@ -79,73 +59,73 @@ public static class SettingsJsonSanitizer
             switch (c)
             {
                 case '{':
-                    openCount++;
+                    stack.Push('}');
                     break;
-                case '}':
-                    openCount--;
+                case '[':
+                    stack.Push(']');
+                    break;
+                case '}' or ']' when stack.Count > 0:
+                    stack.Pop();
                     break;
             }
         }
 
-        if (openCount > 0)
+        if (stack.Count == 0)
+            return jsonText;
+
+        // Trim trailing garbage after the last valid content
+        var trimmed = jsonText.TrimEnd();
+
+        // If we end in the middle of a value (e.g. truncated number or string),
+        // trim back to the last structural character
+        if (trimmed.Length > 0)
         {
-            // Trim trailing garbage after the last valid content
-            var trimmed = jsonText.TrimEnd();
-
-            // If we end in the middle of a value (e.g. truncated number or string),
-            // try to find the last complete property by removing the trailing partial content
-            if (trimmed.Length > 0)
+            var lastChar = trimmed[^1];
+            if (lastChar != '"' && lastChar != '}' && lastChar != ']'
+                && !char.IsDigit(lastChar) && lastChar != 'e' && lastChar != 'l'
+                && lastChar != 's' && lastChar != ',')
             {
-                var lastChar = trimmed[^1];
-                // If the last char isn't a valid JSON value terminator, trim back to the last comma or brace
-                if (lastChar != '"' && lastChar != '}' && lastChar != ']'
-                    && !char.IsDigit(lastChar) && lastChar != 'e' && lastChar != 'l'
-                    && lastChar != 's' && lastChar != ',')
+                var lastSafe = trimmed.LastIndexOfAny([',', '}', ']', '{', '[']);
+                if (lastSafe > 0)
                 {
-                    // Find the last comma, closing bracket, or opening brace
-                    var lastSafe = trimmed.LastIndexOfAny([',', '}', ']', '{']);
-                    if (lastSafe > 0)
-                    {
-                        trimmed = trimmed[..(lastSafe + 1)];
-                    }
-                }
-
-                // Remove trailing comma before we add closing braces
-                trimmed = trimmed.TrimEnd();
-                if (trimmed.EndsWith(','))
-                {
-                    trimmed = trimmed[..^1];
+                    trimmed = trimmed[..(lastSafe + 1)];
                 }
             }
 
-            // Re-count braces after trimming
-            openCount = 0;
-            inString = false;
-            escaped = false;
-            foreach (var c in trimmed)
+            // Remove trailing comma before we add closing brackets
+            trimmed = trimmed.TrimEnd();
+            if (trimmed.EndsWith(','))
             {
-                if (escaped) { escaped = false; continue; }
-                if (c == '\\' && inString) { escaped = true; continue; }
-                if (c == '"') { inString = !inString; continue; }
-                if (inString) continue;
-                switch (c)
-                {
-                    case '{': openCount++; break;
-                    case '}': openCount--; break;
-                }
+                trimmed = trimmed[..^1];
             }
-
-            // Append missing closing braces
-            var sb = new StringBuilder(trimmed);
-            for (var i = 0; i < openCount; i++)
-            {
-                sb.Append('\n').Append('}');
-            }
-
-            return sb.ToString();
         }
 
-        return jsonText;
+        // Re-scan trimmed text to rebuild the stack
+        stack.Clear();
+        inString = false;
+        escaped = false;
+        foreach (var c in trimmed)
+        {
+            if (escaped) { escaped = false; continue; }
+            if (c == '\\' && inString) { escaped = true; continue; }
+            if (c == '"') { inString = !inString; continue; }
+            if (inString) continue;
+            switch (c)
+            {
+                case '{': stack.Push('}'); break;
+                case '[': stack.Push(']'); break;
+                case '}' or ']' when stack.Count > 0: stack.Pop(); break;
+            }
+        }
+
+        // Append missing closing brackets in correct LIFO order
+        var sb = new StringBuilder(trimmed);
+        while (stack.Count > 0)
+        {
+            sb.Append('\n').Append(stack.Pop());
+        }
+
+        return sb.ToString();
     }
 
     /// <summary>

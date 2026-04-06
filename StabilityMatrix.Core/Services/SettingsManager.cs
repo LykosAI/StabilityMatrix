@@ -477,41 +477,7 @@ public class SettingsManager(ILogger<SettingsManager> logger) : ISettingsManager
                 return;
             }
 
-            // Try normal deserialization first
-            try
-            {
-                var loadedSettings = JsonSerializer.Deserialize(
-                    rawBytes,
-                    SettingsSerializerContext.Default.Settings
-                );
-
-                if (loadedSettings is not null)
-                {
-                    Settings = loadedSettings;
-                    return;
-                }
-            }
-            catch (JsonException ex)
-            {
-                logger.LogWarning(ex, "Failed to deserialize settings, attempting recovery");
-            }
-
-            // Recovery path
-            BackupCorruptedFile(rawBytes);
-
-            var jsonText = Encoding.UTF8.GetString(SettingsJsonSanitizer.SanitizeBytes(rawBytes));
-            var recovered = SettingsJsonSanitizer.TryDeserializeWithRecovery(jsonText, logger);
-
-            if (recovered is not null)
-            {
-                Settings = recovered;
-                logger.LogInformation("Settings recovered from corrupted file");
-            }
-            else
-            {
-                logger.LogWarning("Could not recover settings from corrupted file, using defaults");
-                Settings = new Settings();
-            }
+            Settings = DeserializeOrRecoverSettings(rawBytes);
         }
         finally
         {
@@ -546,41 +512,7 @@ public class SettingsManager(ILogger<SettingsManager> logger) : ISettingsManager
                 return;
             }
 
-            // Try normal deserialization first
-            try
-            {
-                var loadedSettings = JsonSerializer.Deserialize(
-                    rawBytes,
-                    SettingsSerializerContext.Default.Settings
-                );
-
-                if (loadedSettings is not null)
-                {
-                    Settings = loadedSettings;
-                    return;
-                }
-            }
-            catch (JsonException ex)
-            {
-                logger.LogWarning(ex, "Failed to deserialize settings, attempting recovery");
-            }
-
-            // Recovery path
-            BackupCorruptedFile(rawBytes);
-
-            var jsonText = Encoding.UTF8.GetString(SettingsJsonSanitizer.SanitizeBytes(rawBytes));
-            var recovered = SettingsJsonSanitizer.TryDeserializeWithRecovery(jsonText, logger);
-
-            if (recovered is not null)
-            {
-                Settings = recovered;
-                logger.LogInformation("Settings recovered from corrupted file");
-            }
-            else
-            {
-                logger.LogWarning("Could not recover settings from corrupted file, using defaults");
-                Settings = new Settings();
-            }
+            Settings = DeserializeOrRecoverSettings(rawBytes);
         }
         finally
         {
@@ -590,6 +522,46 @@ public class SettingsManager(ILogger<SettingsManager> logger) : ISettingsManager
 
             Loaded?.Invoke(this, EventArgs.Empty);
         }
+    }
+
+    /// <summary>
+    /// Attempts to deserialize settings from raw bytes, falling back to sanitization
+    /// and recovery if the JSON is corrupted. Returns default settings as a last resort.
+    /// </summary>
+    private Settings DeserializeOrRecoverSettings(byte[] rawBytes)
+    {
+        // Try normal deserialization first
+        try
+        {
+            var loadedSettings = JsonSerializer.Deserialize(
+                rawBytes,
+                SettingsSerializerContext.Default.Settings
+            );
+
+            if (loadedSettings is not null)
+            {
+                return loadedSettings;
+            }
+        }
+        catch (JsonException ex)
+        {
+            logger.LogWarning(ex, "Failed to deserialize settings, attempting recovery");
+        }
+
+        // Recovery path: backup corrupted file, sanitize, and attempt recovery
+        BackupCorruptedFile(rawBytes);
+
+        var jsonText = Encoding.UTF8.GetString(SettingsJsonSanitizer.SanitizeBytes(rawBytes));
+        var recovered = SettingsJsonSanitizer.TryDeserializeWithRecovery(jsonText, logger);
+
+        if (recovered is not null)
+        {
+            logger.LogInformation("Settings recovered from corrupted file");
+            return recovered;
+        }
+
+        logger.LogWarning("Could not recover settings from corrupted file, using defaults");
+        return new Settings();
     }
 
     private void BackupCorruptedFile(byte[] rawBytes)

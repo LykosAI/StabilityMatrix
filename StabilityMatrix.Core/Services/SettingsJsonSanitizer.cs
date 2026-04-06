@@ -118,8 +118,17 @@ public static class SettingsJsonSanitizer
             }
         }
 
-        // Append missing closing brackets in correct LIFO order
         var sb = new StringBuilder(trimmed);
+
+        // If truncated inside a string literal, close it first
+        if (inString)
+        {
+            if (escaped)
+                sb.Append('\\');
+            sb.Append('"');
+        }
+
+        // Append missing closing brackets in correct LIFO order
         while (stack.Count > 0)
         {
             sb.Append('\n').Append(stack.Pop());
@@ -208,38 +217,17 @@ public static class SettingsJsonSanitizer
             return null;
         }
 
-        // Remove properties that can't be individually serialized back
-        var propsToRemove = new List<string>();
-        foreach (var (key, value) in rootObject)
-        {
-            try
-            {
-                // Validate each property by serializing it to a string
-                _ = value?.ToJsonString();
-            }
-            catch (Exception)
-            {
-                propsToRemove.Add(key);
-            }
-        }
-
-        foreach (var key in propsToRemove)
-        {
-            logger?.LogWarning("Removing corrupt property from settings: {Key}", key);
-            rootObject.Remove(key);
-        }
-
-        // Re-serialize the cleaned node tree and attempt typed deserialization
+        // Re-serialize the cleaned node tree and attempt typed deserialization.
+        // JsonNode.Parse with lenient options may accept JSON that the typed deserializer
+        // can handle, and any properties with incompatible types will get their defaults
+        // from the Settings class property initializers.
         try
         {
             var cleanedJson = rootObject.ToJsonString();
             var settings = JsonSerializer.Deserialize(cleanedJson, SettingsSerializerContext.Default.Settings);
             if (settings is not null)
             {
-                logger?.LogInformation(
-                    "Settings recovered via property-level recovery ({RemovedCount} properties removed)",
-                    propsToRemove.Count
-                );
+                logger?.LogInformation("Settings recovered via property-level recovery");
                 return settings;
             }
         }

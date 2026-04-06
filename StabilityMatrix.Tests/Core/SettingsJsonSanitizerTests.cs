@@ -82,6 +82,18 @@ public class SettingsJsonSanitizerTests
     }
 
     [TestMethod]
+    public void TryFixBraces_TruncatedInsideString_ClosesStringAndBraces()
+    {
+        // JSON truncated in the middle of a string value
+        var input = """{"Theme": "Da""";
+
+        var result = SettingsJsonSanitizer.TryFixBraces(input);
+
+        // Should close the string literal, then the brace
+        Assert.IsNotNull(JsonDocument.Parse(result));
+    }
+
+    [TestMethod]
     public void TryDeserializeWithRecovery_ValidJson_ReturnsSettings()
     {
         var json = """

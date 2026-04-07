@@ -171,26 +171,36 @@ public class DownloadService : IDownloadService
         // Total of the original content
         long originalContentLength = 0;
 
-        using var noRedirectRequest = new HttpRequestMessage();
-        noRedirectRequest.Method = HttpMethod.Get;
-        noRedirectRequest.RequestUri = new Uri(downloadUrl);
-        noRedirectRequest.Headers.Range = new RangeHeaderValue(existingFileSize, null);
-
         HttpResponseMessage? response = null;
         foreach (
             var delay in Backoff.DecorrelatedJitterBackoffV2(TimeSpan.FromMilliseconds(50), retryCount: 4)
         )
         {
+            using var noRedirectRequest = new HttpRequestMessage();
+            noRedirectRequest.Method = HttpMethod.Get;
+            noRedirectRequest.RequestUri = new Uri(downloadUrl);
+            noRedirectRequest.Headers.Range = new RangeHeaderValue(existingFileSize, null);
+
             var noRedirectResponse = await noRedirectClient
                 .SendAsync(noRedirectRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
                 .ConfigureAwait(false);
 
+            // Resolve redirect target URL for cross-domain auth (e.g. civarchive → civitai)
+            var effectiveDownloadUrl = downloadUrl;
             if ((int)noRedirectResponse.StatusCode > 299 && (int)noRedirectResponse.StatusCode < 400)
             {
                 var redirectUrl = noRedirectResponse.Headers.Location?.ToString();
                 if (redirectUrl != null && redirectUrl.Contains("reason=download-auth"))
                 {
                     throw new UnauthorizedAccessException();
+                }
+
+                // Use the redirect target for the actual download so auth headers
+                // are applied for the correct domain
+                if (!string.IsNullOrWhiteSpace(redirectUrl))
+                {
+                    effectiveDownloadUrl = redirectUrl;
+                    await AddConditionalHeaders(client, new Uri(effectiveDownloadUrl)).ConfigureAwait(false);
                 }
             }
             else if (noRedirectResponse.StatusCode == HttpStatusCode.Unauthorized)
@@ -231,7 +241,7 @@ public class DownloadService : IDownloadService
 
             using var redirectRequest = new HttpRequestMessage();
             redirectRequest.Method = HttpMethod.Get;
-            redirectRequest.RequestUri = new Uri(downloadUrl);
+            redirectRequest.RequestUri = new Uri(effectiveDownloadUrl);
             redirectRequest.Headers.Range = new RangeHeaderValue(existingFileSize, null);
 
             response = await client
@@ -239,7 +249,8 @@ public class DownloadService : IDownloadService
                 .ConfigureAwait(false);
 
             remainingContentLength = response.Content.Headers.ContentLength ?? 0;
-            originalContentLength = response.Content.Headers.ContentRange?.Length.GetValueOrDefault() ?? 0;
+            originalContentLength =
+                response.Content.Headers.ContentRange?.Length.GetValueOrDefault() ?? remainingContentLength;
 
             if (remainingContentLength > 0)
                 break;

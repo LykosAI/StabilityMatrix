@@ -1,6 +1,8 @@
+using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Core.Models.Settings;
 
@@ -11,6 +13,11 @@ namespace StabilityMatrix.Core.Services;
 /// </summary>
 public static class SettingsJsonSanitizer
 {
+    private static readonly Dictionary<string, PropertyInfo> SettingsProperties = typeof(Settings)
+        .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+        .Where(property => property.CanWrite && property.GetCustomAttribute<JsonIgnoreAttribute>() is null)
+        .ToDictionary(GetJsonPropertyName, StringComparer.OrdinalIgnoreCase);
+
     /// <summary>
     /// Strips null bytes (0x00) from raw file content.
     /// </summary>
@@ -29,96 +36,10 @@ public static class SettingsJsonSanitizer
     /// </summary>
     public static string TryFixBraces(string jsonText)
     {
-        var stack = new Stack<char>();
-        var inString = false;
-        var escaped = false;
-
-        foreach (var c in jsonText)
-        {
-            if (escaped)
-            {
-                escaped = false;
-                continue;
-            }
-
-            if (c == '\\' && inString)
-            {
-                escaped = true;
-                continue;
-            }
-
-            if (c == '"')
-            {
-                inString = !inString;
-                continue;
-            }
-
-            if (inString)
-                continue;
-
-            switch (c)
-            {
-                case '{':
-                    stack.Push('}');
-                    break;
-                case '[':
-                    stack.Push(']');
-                    break;
-                case '}' or ']' when stack.Count > 0:
-                    stack.Pop();
-                    break;
-            }
-        }
-
-        if (stack.Count == 0)
-            return jsonText;
-
-        // Trim trailing garbage after the last valid content
-        var trimmed = jsonText.TrimEnd();
-
-        // If we end in the middle of a value (e.g. truncated number or string),
-        // trim back to the last structural character
-        if (trimmed.Length > 0)
-        {
-            var lastChar = trimmed[^1];
-            if (lastChar != '"' && lastChar != '}' && lastChar != ']'
-                && !char.IsDigit(lastChar) && lastChar != 'e' && lastChar != 'l'
-                && lastChar != 's' && lastChar != ',')
-            {
-                var lastSafe = trimmed.LastIndexOfAny([',', '}', ']', '{', '[']);
-                if (lastSafe > 0)
-                {
-                    trimmed = trimmed[..(lastSafe + 1)];
-                }
-            }
-
-            // Remove trailing comma before we add closing brackets
-            trimmed = trimmed.TrimEnd();
-            if (trimmed.EndsWith(','))
-            {
-                trimmed = trimmed[..^1];
-            }
-        }
-
-        // Re-scan trimmed text to rebuild the stack
-        stack.Clear();
-        inString = false;
-        escaped = false;
-        foreach (var c in trimmed)
-        {
-            if (escaped) { escaped = false; continue; }
-            if (c == '\\' && inString) { escaped = true; continue; }
-            if (c == '"') { inString = !inString; continue; }
-            if (inString) continue;
-            switch (c)
-            {
-                case '{': stack.Push('}'); break;
-                case '[': stack.Push(']'); break;
-                case '}' or ']' when stack.Count > 0: stack.Pop(); break;
-            }
-        }
-
-        var sb = new StringBuilder(trimmed);
+        var normalized = NormalizeClosures(jsonText, out var stack, out _, out _);
+        var trimmed = TrimIncompleteValue(normalized);
+        var rescanned = NormalizeClosures(trimmed, out stack, out var inString, out var escaped);
+        var sb = new StringBuilder(rescanned);
 
         // If truncated inside a string literal, close it first
         if (inString)
@@ -159,7 +80,10 @@ public static class SettingsJsonSanitizer
         }
         catch (JsonException ex)
         {
-            logger?.LogWarning(ex, "Sanitized text still failed to deserialize, attempting property-level recovery");
+            logger?.LogWarning(
+                ex,
+                "Sanitized text still failed to deserialize, attempting property-level recovery"
+            );
         }
 
         // Step 3: Property-level recovery using JsonNode
@@ -179,7 +103,7 @@ public static class SettingsJsonSanitizer
                 documentOptions: new JsonDocumentOptions
                 {
                     AllowTrailingCommas = true,
-                    CommentHandling = JsonCommentHandling.Skip
+                    CommentHandling = JsonCommentHandling.Skip,
                 }
             );
         }
@@ -200,7 +124,7 @@ public static class SettingsJsonSanitizer
                     documentOptions: new JsonDocumentOptions
                     {
                         AllowTrailingCommas = true,
-                        CommentHandling = JsonCommentHandling.Skip
+                        CommentHandling = JsonCommentHandling.Skip,
                     }
                 );
             }
@@ -217,25 +141,188 @@ public static class SettingsJsonSanitizer
             return null;
         }
 
-        // Re-serialize the cleaned node tree and attempt typed deserialization.
-        // JsonNode.Parse with lenient options may accept JSON that the typed deserializer
-        // can handle, and any properties with incompatible types will get their defaults
-        // from the Settings class property initializers.
-        try
+        var settings = new Settings();
+        var recoveredPropertyCount = 0;
+
+        foreach (var property in rootObject)
         {
-            var cleanedJson = rootObject.ToJsonString();
-            var settings = JsonSerializer.Deserialize(cleanedJson, SettingsSerializerContext.Default.Settings);
-            if (settings is not null)
+            if (property.Value is null)
+                continue;
+
+            if (!SettingsProperties.TryGetValue(property.Key, out var targetProperty))
+                continue;
+
+            if (!TryDeserializePropertyValue(property.Value, targetProperty.PropertyType, out var value))
             {
-                logger?.LogInformation("Settings recovered via property-level recovery");
-                return settings;
+                logger?.LogWarning(
+                    "Skipping corrupted settings property {PropertyName} during recovery",
+                    property.Key
+                );
+                continue;
             }
-        }
-        catch (JsonException ex)
-        {
-            logger?.LogWarning(ex, "Property-level recovery failed during final deserialization");
+
+            targetProperty.SetValue(settings, value);
+            recoveredPropertyCount++;
         }
 
-        return null;
+        logger?.LogInformation(
+            "Settings recovered via property-level recovery with {RecoveredPropertyCount} properties",
+            recoveredPropertyCount
+        );
+        return settings;
+    }
+
+    private static string NormalizeClosures(
+        string jsonText,
+        out Stack<char> stack,
+        out bool inString,
+        out bool escaped
+    )
+    {
+        stack = new Stack<char>();
+        inString = false;
+        escaped = false;
+        var normalized = new StringBuilder(jsonText.Length + 8);
+
+        foreach (var c in jsonText)
+        {
+            if (escaped)
+            {
+                normalized.Append(c);
+                escaped = false;
+                continue;
+            }
+
+            if (c == '\\' && inString)
+            {
+                normalized.Append(c);
+                escaped = true;
+                continue;
+            }
+
+            if (c == '"')
+            {
+                normalized.Append(c);
+                inString = !inString;
+                continue;
+            }
+
+            if (inString)
+            {
+                normalized.Append(c);
+                continue;
+            }
+
+            switch (c)
+            {
+                case '{':
+                    normalized.Append(c);
+                    stack.Push('}');
+                    break;
+                case '[':
+                    normalized.Append(c);
+                    stack.Push(']');
+                    break;
+                case '}'
+                or ']':
+                    ConsumeClosingToken(c, stack, normalized);
+                    break;
+                default:
+                    normalized.Append(c);
+                    break;
+            }
+        }
+
+        return normalized.ToString();
+    }
+
+    private static void ConsumeClosingToken(char token, Stack<char> stack, StringBuilder normalized)
+    {
+        if (stack.Count == 0)
+            return;
+
+        if (stack.Peek() == token)
+        {
+            normalized.Append(token);
+            stack.Pop();
+            return;
+        }
+
+        if (!stack.Contains(token))
+            return;
+
+        while (stack.Count > 0 && stack.Peek() != token)
+        {
+            normalized.Append(stack.Pop());
+        }
+
+        if (stack.Count == 0)
+            return;
+
+        normalized.Append(token);
+        stack.Pop();
+    }
+
+    private static string TrimIncompleteValue(string jsonText)
+    {
+        var trimmed = jsonText.TrimEnd();
+        if (trimmed.Length == 0)
+            return trimmed;
+
+        var lastChar = trimmed[^1];
+        if (
+            lastChar != '"'
+            && lastChar != '}'
+            && lastChar != ']'
+            && !char.IsDigit(lastChar)
+            && lastChar != 'e'
+            && lastChar != 'l'
+            && lastChar != 's'
+            && lastChar != ','
+        )
+        {
+            var lastSafe = trimmed.LastIndexOfAny([',', '}', ']', '{', '[']);
+            if (lastSafe > 0)
+            {
+                trimmed = trimmed[..(lastSafe + 1)];
+            }
+        }
+
+        trimmed = trimmed.TrimEnd();
+        if (trimmed.EndsWith(','))
+        {
+            trimmed = trimmed[..^1];
+        }
+
+        return trimmed;
+    }
+
+    private static string GetJsonPropertyName(PropertyInfo property)
+    {
+        return property.GetCustomAttribute<JsonPropertyNameAttribute>()?.Name ?? property.Name;
+    }
+
+    private static bool TryDeserializePropertyValue(JsonNode node, Type propertyType, out object? value)
+    {
+        try
+        {
+            value = JsonSerializer.Deserialize(
+                node.ToJsonString(),
+                propertyType,
+                SettingsSerializerContext.Default.Options
+            );
+
+            if (value is null && propertyType.IsValueType && Nullable.GetUnderlyingType(propertyType) is null)
+            {
+                return false;
+            }
+
+            return true;
+        }
+        catch (JsonException)
+        {
+            value = null;
+            return false;
+        }
     }
 }

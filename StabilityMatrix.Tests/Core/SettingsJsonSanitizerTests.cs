@@ -82,6 +82,19 @@ public class SettingsJsonSanitizerTests
     }
 
     [TestMethod]
+    public void TryFixBraces_MissingArrayCloseBeforeObjectClose_InsertsArrayClose()
+    {
+        var input = """{"items": [1, 2, 3}""";
+
+        var result = SettingsJsonSanitizer.TryFixBraces(input);
+
+        var document = JsonDocument.Parse(result);
+        var items = document.RootElement.GetProperty("items");
+        Assert.AreEqual(JsonValueKind.Array, items.ValueKind);
+        Assert.AreEqual(3, items.GetArrayLength());
+    }
+
+    [TestMethod]
     public void TryFixBraces_TruncatedInsideString_ClosesStringAndBraces()
     {
         // JSON truncated in the middle of a string value
@@ -97,12 +110,12 @@ public class SettingsJsonSanitizerTests
     public void TryDeserializeWithRecovery_ValidJson_ReturnsSettings()
     {
         var json = """
-        {
-            "Version": 1,
-            "Theme": "Dark",
-            "InferenceDimensionStepChange": 64
-        }
-        """;
+            {
+                "Version": 1,
+                "Theme": "Dark",
+                "InferenceDimensionStepChange": 64
+            }
+            """;
 
         var result = SettingsJsonSanitizer.TryDeserializeWithRecovery(json);
 
@@ -142,13 +155,13 @@ public class SettingsJsonSanitizerTests
     public void TryDeserializeWithRecovery_TruncatedJson_RecoversSalvageableProperties()
     {
         var json = """
-        {
-            "Version": 1,
-            "Theme": "Dark",
-            "InferenceDimensionStepChange": 64,
-            "CheckForUpdates": true,
-            "ConsoleFontSize":
-        """;
+            {
+                "Version": 1,
+                "Theme": "Dark",
+                "InferenceDimensionStepChange": 64,
+                "CheckForUpdates": true,
+                "ConsoleFontSize":
+            """;
 
         var result = SettingsJsonSanitizer.TryDeserializeWithRecovery(json);
 
@@ -187,13 +200,13 @@ public class SettingsJsonSanitizerTests
     {
         // JSON where Theme is valid but we have an invalid property type
         var json = """
-        {
-            "Version": 1,
-            "Theme": "Dark",
-            "FirstLaunchSetupComplete": true,
-            "InferenceDimensionStepChange": 64
-        }
-        """;
+            {
+                "Version": 1,
+                "Theme": "Dark",
+                "FirstLaunchSetupComplete": true,
+                "InferenceDimensionStepChange": 64
+            }
+            """;
 
         var result = SettingsJsonSanitizer.TryDeserializeWithRecovery(json);
 
@@ -204,13 +217,48 @@ public class SettingsJsonSanitizerTests
     }
 
     [TestMethod]
+    public void TryDeserializeWithRecovery_InvalidPropertyType_SkipsBadPropertyAndPreservesOthers()
+    {
+        var json = """
+            {
+                "Theme": "Dark",
+                "CheckForUpdates": true,
+                "InferenceDimensionStepChange": "oops"
+            }
+            """;
+
+        var result = SettingsJsonSanitizer.TryDeserializeWithRecovery(json);
+
+        Assert.IsNotNull(result);
+        Assert.AreEqual("Dark", result.Theme);
+        Assert.AreEqual(true, result.CheckForUpdates);
+        Assert.AreEqual(128, result.InferenceDimensionStepChange);
+    }
+
+    [TestMethod]
+    public void TryDeserializeWithRecovery_MissingArrayCloseBeforeObjectClose_Recovers()
+    {
+        var json = """
+            {
+                "Theme": "Dark",
+                "SelectedBaseModels": ["sdxl"}
+            """;
+
+        var result = SettingsJsonSanitizer.TryDeserializeWithRecovery(json);
+
+        Assert.IsNotNull(result);
+        Assert.AreEqual("Dark", result.Theme);
+        CollectionAssert.AreEqual(new[] { "sdxl" }, result.SelectedBaseModels);
+    }
+
+    [TestMethod]
     public void TryDeserializeWithRecovery_MissingClosingBrace_Recovers()
     {
         var json = """
-        {
-            "Version": 1,
-            "Theme": "Dark"
-        """;
+            {
+                "Version": 1,
+                "Theme": "Dark"
+            """;
 
         var result = SettingsJsonSanitizer.TryDeserializeWithRecovery(json);
 
@@ -223,11 +271,11 @@ public class SettingsJsonSanitizerTests
     public void TryDeserializeWithRecovery_TrailingComma_Recovers()
     {
         var json = """
-        {
-            "Version": 1,
-            "Theme": "Dark",
-        }
-        """;
+            {
+                "Version": 1,
+                "Theme": "Dark",
+            }
+            """;
 
         var result = SettingsJsonSanitizer.TryDeserializeWithRecovery(json);
 

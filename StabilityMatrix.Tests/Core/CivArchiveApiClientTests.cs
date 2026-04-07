@@ -1,0 +1,174 @@
+using System.Net;
+using Microsoft.Extensions.Logging.Abstractions;
+using NSubstitute;
+using StabilityMatrix.Core.Api;
+using StabilityMatrix.Core.Models.Api.CivArchive;
+
+namespace StabilityMatrix.Tests.Core;
+
+[TestClass]
+public class CivArchiveApiClientTests
+{
+    [TestMethod]
+    public void BuildSearchDataPath_UsesDefaultFilterValues()
+    {
+        var result = CivArchiveApiClient.BuildSearchDataPath("/top-models", new CivArchiveSearchFilters());
+
+        Assert.AreEqual(
+            "/top-models.json?platform=all&sort=top&rating=safe&platform_status=all&kind=all&period=all&page=1",
+            result
+        );
+    }
+
+    [TestMethod]
+    public void BuildSearchDataPath_SerializesMultiSelectFilters()
+    {
+        var result = CivArchiveApiClient.BuildSearchDataPath(
+            "/top-models",
+            new CivArchiveSearchFilters
+            {
+                Types = ["LORA", "Checkpoint"],
+                BaseModels = ["Illustrious", "Pony"],
+                Page = 2,
+            }
+        );
+
+        StringAssert.Contains(result, "type=LORA%2CCheckpoint");
+        StringAssert.Contains(result, "base_model=Illustrious%2CPony");
+        StringAssert.Contains(result, "page=2");
+    }
+
+    [TestMethod]
+    public async Task SearchAsync_RefreshesBuildIdAfter404()
+    {
+        var requests = new List<string>();
+        var responses = new Queue<HttpResponseMessage>(
+            [
+                CreateJsonResponse("""<html><script>{"buildId":"old-build"}</script></html>""", "text/html"),
+                new HttpResponseMessage(HttpStatusCode.NotFound),
+                CreateJsonResponse("""<html><script>{"buildId":"new-build"}</script></html>""", "text/html"),
+                CreateJsonResponse(
+                    ListResponseJson(
+                        """{"id":"v1","name":"Model","kind":"version","url":"/models/1?modelVersionId=2"}"""
+                    )
+                ),
+            ]
+        );
+
+        var client = CreateClient(
+            new RecordingHandler(
+                (request, _) =>
+                {
+                    requests.Add(request.RequestUri!.ToString());
+                    return responses.Dequeue();
+                }
+            )
+        );
+
+        var response = await client.SearchAsync(new CivArchiveSearchFilters());
+
+        Assert.AreEqual(1, response.Results.Count);
+        Assert.IsTrue(requests.Any(x => x.Contains("/_next/data/old-build/")));
+        Assert.IsTrue(requests.Any(x => x.Contains("/_next/data/new-build/")));
+    }
+
+    [TestMethod]
+    public async Task SearchAsync_ParsesVersionAndFileResults()
+    {
+        var listJson = ListResponseJson(
+            """
+            {"id":"v2581228","name":"CyberRealistic Pony v16.0","type":"Checkpoint","kind":"version","download_count":59326,"url":"/models/443821?modelVersionId=2581228","base_model":"Pony","image_url":"https://example.org/image.jpg","created_at":1767967595,"username":"Cyberdelia","platform":"civitai"},
+            {"id":"rf_hash","name":"realDream_14Hyper.safetensors","kind":"file","download_count":0,"url":"/sha256/a00019e86d53aece9858347e4df8a774a6d2933c30d0691faa9beb0cc56e7366","username":"Carlos2312","platform":"huggingface","created_at":1771938405}
+            """
+        );
+
+        var responses = new Queue<HttpResponseMessage>(
+            [
+                CreateJsonResponse("""<html><script>{"buildId":"test-build"}</script></html>""", "text/html"),
+                CreateJsonResponse(listJson),
+            ]
+        );
+
+        var client = CreateClient(new RecordingHandler((_, _) => responses.Dequeue()));
+        var response = await client.SearchAsync(new CivArchiveSearchFilters());
+
+        Assert.AreEqual(2, response.Results.Count);
+        Assert.AreEqual(CivArchiveKindOption.Version, response.Results[0].Kind);
+        Assert.AreEqual(CivArchiveKindOption.File, response.Results[1].Kind);
+        Assert.AreEqual(
+            "a00019e86d53aece9858347e4df8a774a6d2933c30d0691faa9beb0cc56e7366",
+            response.Results[1].Sha256FromUrl
+        );
+    }
+
+    [TestMethod]
+    public async Task GetModelDetailsAsync_ParsesFilesMirrorsAndSha256()
+    {
+        const string detailJson = """
+            {"pageProps":{"model":{"id":153568,"name":"Real Dream","type":"Checkpoint","creator_username":"sinatra","platform":"civitai","platform_name":"CivitAI","version":{"id":2053273,"name":"SDXL 7","baseModel":"SDXL 1.0","description":"<p>Version description</p>","files":[{"id":1950275,"name":"realDream_sdxl7.safetensors","type":"Model","sizeKB":6775783.6,"downloadUrl":"https://civitai.com/api/download/models/2053273","sha256":"63b1db60611f52c4fbb2cade67dbdf4029c6620c5b22f2a4ddb27a47d7601953","mirrors":[{"filename":"realDream_sdxl7.safetensors","url":"https://civitai.com/api/download/models/2053273","source":"civitai","is_gated":false,"is_paid":false}]}],"images":[{"id":1,"url":"https://example.org/image.webp","link":"https://example.org/image.webp","type":"image"}],"mirrors":[{"platform":"tungsten","platform_url":"https://tungsten.run/model/kZ7yDBQjZP?model_version=L2KrgferKS","version_name":"SDXL 7"}]}}}}
+            """;
+
+        var responses = new Queue<HttpResponseMessage>(
+            [
+                CreateJsonResponse("""<html><script>{"buildId":"test-build"}</script></html>""", "text/html"),
+                CreateJsonResponse(detailJson),
+            ]
+        );
+
+        var client = CreateClient(new RecordingHandler((_, _) => responses.Dequeue()));
+        var response = await client.GetModelDetailsAsync("/models/153568?modelVersionId=2053273");
+
+        Assert.AreEqual("Real Dream", response.Model.Name);
+        Assert.AreEqual("SDXL 7", response.Model.Version?.Name);
+        Assert.AreEqual(1, response.Model.Version?.Files.Count);
+        Assert.AreEqual(
+            "63b1db60611f52c4fbb2cade67dbdf4029c6620c5b22f2a4ddb27a47d7601953",
+            response.Model.Version?.Files[0].Sha256
+        );
+        Assert.AreEqual(1, response.Model.Version?.Mirrors.Count);
+    }
+
+    private static ICivArchiveApiClient CreateClient(HttpMessageHandler handler)
+    {
+        var httpClientFactory = Substitute.For<IHttpClientFactory>();
+        httpClientFactory
+            .CreateClient()
+            .Returns(new HttpClient(handler) { BaseAddress = new Uri("https://civarchive.com") });
+
+        return new CivArchiveApiClient(NullLogger<CivArchiveApiClient>.Instance, httpClientFactory);
+    }
+
+    private static HttpResponseMessage CreateJsonResponse(
+        string content,
+        string mediaType = "application/json"
+    )
+    {
+        return new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent(content)
+            {
+                Headers = { ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(mediaType) },
+            },
+        };
+    }
+
+    private static string ListResponseJson(string resultsJson)
+    {
+        return "{\"pageProps\":{\"canonicalUrl\":\"https://civarchive.com/top-models\",\"data\":{\"results\":["
+            + resultsJson
+            + "],\"hits\":2,\"totalHits\":2},\"filters\":{\"q\":\"\",\"type\":\"all\",\"base_model\":\"all\",\"platform\":\"all\",\"sort\":\"top\",\"rating\":\"safe\",\"platform_status\":\"all\",\"kind\":\"all\",\"tags\":\"\",\"username\":\"\",\"period\":\"all\",\"page\":1},\"filterOptions\":{\"baseModels\":[\"Illustrious\",\"Pony\"],\"modelTypes\":[\"LORA\",\"Checkpoint\"]}}}";
+    }
+
+    private sealed class RecordingHandler(
+        Func<HttpRequestMessage, CancellationToken, HttpResponseMessage> responder
+    ) : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken
+        )
+        {
+            return Task.FromResult(responder(request, cancellationToken));
+        }
+    }
+}

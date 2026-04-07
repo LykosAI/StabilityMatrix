@@ -1,0 +1,432 @@
+﻿<controls:UserControlBase
+    x:Class="StabilityMatrix.Avalonia.Views.CivArchiveDetailsPage"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
+    xmlns:avalonia1="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
+    xmlns:checkpointBrowser="clr-namespace:StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser"
+    xmlns:civArchive="clr-namespace:StabilityMatrix.Core.Models.Api.CivArchive;assembly=StabilityMatrix.Core"
+    xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+    xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
+    xmlns:input="clr-namespace:FluentAvalonia.UI.Input;assembly=FluentAvalonia"
+    xmlns:scroll="clr-namespace:StabilityMatrix.Avalonia.Controls.Scroll"
+    xmlns:ui="using:FluentAvalonia.UI.Controls"
+    x:Name="Root"
+    x:CompileBindings="True"
+    x:DataType="checkpointBrowser:CivArchiveDetailsPageViewModel">
+    <controls:UserControlBase.Resources>
+        <converters:KiloFormatterStringConverter x:Key="KiloFormatterConverter" />
+        <input:StandardUICommand x:Key="ShowImageDialogCommand" Command="{Binding ShowImageDialogCommand}" />
+    </controls:UserControlBase.Resources>
+
+    <Grid Margin="16" RowDefinitions="Auto,Auto,Auto,*">
+
+        <!--  Row 0: Header breadcrumb  -->
+        <Grid ColumnDefinitions="*,Auto">
+            <StackPanel
+                VerticalAlignment="Center"
+                Orientation="Horizontal"
+                Spacing="8">
+                <Button Classes="transparent-full" Command="{Binding GoBackCommand}">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <ui:SymbolIcon
+                            VerticalAlignment="Center"
+                            FontSize="18"
+                            Symbol="ChevronLeft" />
+                        <TextBlock FontSize="24" Text="CivArchive" />
+                    </StackPanel>
+                </Button>
+                <ui:SymbolIcon
+                    VerticalAlignment="Center"
+                    FontSize="24"
+                    Symbol="ChevronRight" />
+                <TextBlock
+                    MaxWidth="600"
+                    VerticalAlignment="Center"
+                    FontSize="24"
+                    Text="{Binding Model.Name}"
+                    TextTrimming="CharacterEllipsis" />
+
+                <avalonia:Icon
+                    Margin="16,0,0,0"
+                    VerticalAlignment="Center"
+                    Value="fa-solid fa-download" />
+                <TextBlock VerticalAlignment="Center" Text="{Binding Model.DownloadCount, Converter={StaticResource KiloFormatterConverter}}" />
+            </StackPanel>
+
+            <StackPanel
+                Grid.Column="1"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Center"
+                Orientation="Horizontal"
+                Spacing="8">
+                <Button
+                    Classes="accent"
+                    Command="{Binding DownloadModelCommand}"
+                    IsVisible="{Binding HasDownloadUrl}">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <avalonia:Icon
+                            VerticalAlignment="Center"
+                            FontSize="12"
+                            Value="fa-solid fa-download" />
+                        <TextBlock VerticalAlignment="Center" Text="Download" />
+                    </StackPanel>
+                </Button>
+                <Button Command="{Binding OpenOnCivArchiveCommand}" Content="Open on CivArchive" />
+            </StackPanel>
+        </Grid>
+
+        <!--  Row 1: Tags  -->
+        <ItemsRepeater
+            Grid.Row="1"
+            Margin="0,8,0,0"
+            ItemsSource="{Binding Model.Tags}">
+            <ItemsRepeater.Layout>
+                <StackLayout Orientation="Horizontal" Spacing="4" />
+            </ItemsRepeater.Layout>
+            <ItemsRepeater.ItemTemplate>
+                <DataTemplate>
+                    <controls:Card Padding="8,2">
+                        <TextBlock
+                            FontSize="13"
+                            FontWeight="Light"
+                            Text="{Binding}"
+                            TextAlignment="Center" />
+                    </controls:Card>
+                </DataTemplate>
+            </ItemsRepeater.ItemTemplate>
+        </ItemsRepeater>
+
+        <!--  Row 2: Version selector tabs  -->
+        <scroll:BetterScrollViewer
+            Grid.Row="2"
+            Margin="0,8,0,0"
+            HorizontalScrollBarVisibility="Auto"
+            IsVisible="{Binding Model.Versions.Count}"
+            VerticalScrollBarVisibility="Disabled">
+            <ItemsRepeater ItemsSource="{Binding Model.Versions}">
+                <ItemsRepeater.Layout>
+                    <StackLayout Orientation="Horizontal" Spacing="4" />
+                </ItemsRepeater.Layout>
+                <ItemsRepeater.ItemTemplate>
+                    <DataTemplate DataType="{x:Type civArchive:CivArchiveVersionReference}">
+                        <Button
+                            Padding="12,6"
+                            Command="{Binding #Root.DataContext.SelectVersionCommand}"
+                            CommandParameter="{Binding .}"
+                            Content="{Binding Name}" />
+                    </DataTemplate>
+                </ItemsRepeater.ItemTemplate>
+            </ItemsRepeater>
+        </scroll:BetterScrollViewer>
+
+        <!--  Row 3: Main content area (2 columns)  -->
+        <Grid
+            Grid.Row="3"
+            Margin="0,12,0,0"
+            ColumnDefinitions="2*,*">
+
+            <!--  Left column: images + splitter + description  -->
+            <Grid
+                Grid.Column="0"
+                Margin="0,0,12,0"
+                RowDefinitions="3*,Auto,*">
+
+                <!--  Image gallery (horizontal scroll, mouse wheel scrolls horizontally)  -->
+                <scroll:BetterScrollViewer
+                    Grid.Row="0"
+                    Margin="0,0,0,8"
+                    AllowAutoHide="True"
+                    HorizontalScrollBarVisibility="Auto"
+                    IsVisible="{Binding Images.Count}"
+                    PointerWheelChanged="ImageScroller_OnPointerWheelChanged"
+                    VerticalScrollBarVisibility="Disabled">
+                    <ItemsRepeater ItemsSource="{Binding Images}">
+                        <ItemsRepeater.Layout>
+                            <StackLayout Orientation="Horizontal" Spacing="12" />
+                        </ItemsRepeater.Layout>
+                        <ItemsRepeater.ItemTemplate>
+                            <DataTemplate DataType="{x:Type civArchive:CivArchiveModelImage}">
+                                <controls:BetterAdvancedImage
+                                    CornerRadius="8"
+                                    Cursor="Hand"
+                                    Source="{Binding Url}"
+                                    Stretch="UniformToFill"
+                                    StretchDirection="Both">
+                                    <Interaction.Behaviors>
+                                        <EventTriggerBehavior EventName="PointerPressed">
+                                            <InvokeCommandAction Command="{StaticResource ShowImageDialogCommand}" CommandParameter="{Binding}" />
+                                        </EventTriggerBehavior>
+                                    </Interaction.Behaviors>
+                                </controls:BetterAdvancedImage>
+                            </DataTemplate>
+                        </ItemsRepeater.ItemTemplate>
+                    </ItemsRepeater>
+                </scroll:BetterScrollViewer>
+
+                <GridSplitter
+                    Grid.Row="1"
+                    MaxWidth="100"
+                    Margin="0,0,0,6"
+                    VerticalAlignment="Center"
+                    Background="White"
+                    BorderThickness="1"
+                    CornerRadius="4"
+                    Opacity="0.5" />
+
+                <!--  Description  -->
+                <controls:Card
+                    Grid.Row="2"
+                    VerticalAlignment="Stretch"
+                    VerticalContentAlignment="Top">
+                    <ScrollViewer>
+                        <StackPanel Margin="12" Spacing="12">
+                            <controls:MarkdownViewer Html="{Binding ModelDescriptionHtml}" />
+                            <controls:MarkdownViewer Html="{Binding VersionDescriptionHtml}" IsVisible="{Binding VersionDescriptionHtml, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                        </StackPanel>
+                    </ScrollViewer>
+                </controls:Card>
+            </Grid>
+
+            <!--  Right column: details, files, source links  -->
+            <ScrollViewer Grid.Column="1">
+                <StackPanel Spacing="8">
+
+                    <!--  Details card  -->
+                    <controls:Card MinWidth="200" Padding="12">
+                        <StackPanel Spacing="8">
+                            <TextBlock
+                                FontSize="20"
+                                FontWeight="Light"
+                                Text="Details" />
+                            <Separator Margin="0" />
+                            <avalonia1:SpacedGrid ColumnDefinitions="*,*" RowDefinitions="*,Auto,*,Auto,*,Auto,*,Auto,*">
+                                <TextBlock
+                                    Grid.Row="0"
+                                    Grid.Column="0"
+                                    Text="Author" />
+                                <TextBlock
+                                    Grid.Row="0"
+                                    Grid.Column="1"
+                                    Foreground="{DynamicResource AccentButtonBackground}"
+                                    Text="{Binding Model.CreatorUsername}" />
+
+                                <Separator
+                                    Grid.Row="1"
+                                    Grid.Column="0"
+                                    Grid.ColumnSpan="2"
+                                    Margin="0,4" />
+
+                                <TextBlock
+                                    Grid.Row="2"
+                                    Grid.Column="0"
+                                    Text="Platform" />
+                                <TextBlock
+                                    Grid.Row="2"
+                                    Grid.Column="1"
+                                    Text="{Binding Model.PlatformName}" />
+
+                                <Separator
+                                    Grid.Row="3"
+                                    Grid.Column="0"
+                                    Grid.ColumnSpan="2"
+                                    Margin="0,4" />
+
+                                <TextBlock
+                                    Grid.Row="4"
+                                    Grid.Column="0"
+                                    Text="Type" />
+                                <TextBlock
+                                    Grid.Row="4"
+                                    Grid.Column="1"
+                                    Text="{Binding Model.Type}" />
+
+                                <Separator
+                                    Grid.Row="5"
+                                    Grid.Column="0"
+                                    Grid.ColumnSpan="2"
+                                    Margin="0,4" />
+
+                                <TextBlock
+                                    Grid.Row="6"
+                                    Grid.Column="0"
+                                    Text="Base Model" />
+                                <TextBlock
+                                    Grid.Row="6"
+                                    Grid.Column="1"
+                                    Text="{Binding Model.Version.BaseModel}" />
+
+                                <Separator
+                                    Grid.Row="7"
+                                    Grid.Column="0"
+                                    Grid.ColumnSpan="2"
+                                    Margin="0,4" />
+
+                                <TextBlock
+                                    Grid.Row="8"
+                                    Grid.Column="0"
+                                    Text="Downloads" />
+                                <TextBlock
+                                    Grid.Row="8"
+                                    Grid.Column="1"
+                                    Text="{Binding Model.DownloadCount, Converter={StaticResource KiloFormatterConverter}}" />
+                            </avalonia1:SpacedGrid>
+                        </StackPanel>
+                    </controls:Card>
+
+                    <!--  Trigger words card  -->
+                    <controls:Card Padding="12" IsVisible="{Binding Model.Version.Trigger.Count}">
+                        <StackPanel Spacing="8">
+                            <TextBlock
+                                FontSize="20"
+                                FontWeight="Light"
+                                Text="Trigger Words" />
+                            <ItemsRepeater ItemsSource="{Binding Model.Version.Trigger}">
+                                <ItemsRepeater.Layout>
+                                    <WrapLayout
+                                        HorizontalSpacing="4"
+                                        Orientation="Horizontal"
+                                        VerticalSpacing="4" />
+                                </ItemsRepeater.Layout>
+                                <ItemsRepeater.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border
+                                            Padding="8,4"
+                                            Background="{DynamicResource ControlFillColorDefaultBrush}"
+                                            CornerRadius="4">
+                                            <TextBlock
+                                                FontFamily="Cascadia Code,Consolas,Menlo,Monospace,DejaVu Sans Mono,monospace"
+                                                FontSize="13"
+                                                Text="{Binding}" />
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsRepeater.ItemTemplate>
+                            </ItemsRepeater>
+                        </StackPanel>
+                    </controls:Card>
+
+                    <!--  Files card  -->
+                    <controls:Card Padding="12">
+                        <StackPanel Spacing="8">
+                            <TextBlock
+                                FontSize="20"
+                                FontWeight="Light"
+                                Text="Files" />
+                            <ItemsRepeater ItemsSource="{Binding Files}">
+                                <ItemsRepeater.ItemTemplate>
+                                    <DataTemplate DataType="{x:Type civArchive:CivArchiveModelFile}">
+                                        <Border Margin="0,0,0,8" Padding="0,4">
+                                            <StackPanel Spacing="4">
+                                                <TextBlock
+                                                    FontWeight="SemiBold"
+                                                    Text="{Binding Name}"
+                                                    TextWrapping="Wrap" />
+                                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                                    <TextBlock
+                                                        FontSize="12"
+                                                        Foreground="{DynamicResource TextControlForegroundDisabled}"
+                                                        Text="{Binding FormattedSize}" />
+                                                    <TextBlock
+                                                        FontSize="12"
+                                                        Foreground="{DynamicResource TextControlForegroundDisabled}"
+                                                        Text="{Binding Type}" />
+                                                </StackPanel>
+                                                <TextBlock
+                                                    FontSize="11"
+                                                    Foreground="{DynamicResource TextControlForegroundDisabled}"
+                                                    IsVisible="{Binding Sha256, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                                    TextWrapping="Wrap">
+                                                    <Run Text="SHA256: " /><Run Text="{Binding Sha256}" />
+                                                </TextBlock>
+                                                <StackPanel
+                                                    Margin="0,4,0,0"
+                                                    Orientation="Horizontal"
+                                                    Spacing="4">
+                                                    <Button
+                                                        Padding="6,3"
+                                                        Command="{Binding #Root.DataContext.CopySha256Command}"
+                                                        CommandParameter="{Binding .}"
+                                                        Content="Copy SHA256"
+                                                        FontSize="12"
+                                                        IsVisible="{Binding Sha256, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                                                    <ItemsRepeater ItemsSource="{Binding Mirrors}">
+                                                        <ItemsRepeater.Layout>
+                                                            <StackLayout Orientation="Horizontal" Spacing="4" />
+                                                        </ItemsRepeater.Layout>
+                                                        <ItemsRepeater.ItemTemplate>
+                                                            <DataTemplate DataType="{x:Type civArchive:CivArchiveFileMirror}">
+                                                                <Button
+                                                                    Padding="6,3"
+                                                                    Command="{Binding #Root.DataContext.OpenFileMirrorCommand}"
+                                                                    CommandParameter="{Binding .}"
+                                                                    Content="{Binding Source}"
+                                                                    FontSize="12" />
+                                                            </DataTemplate>
+                                                        </ItemsRepeater.ItemTemplate>
+                                                    </ItemsRepeater>
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsRepeater.ItemTemplate>
+                            </ItemsRepeater>
+                        </StackPanel>
+                    </controls:Card>
+
+                    <!--  Source links card  -->
+                    <controls:Card Padding="12" IsVisible="{Binding Mirrors.Count}">
+                        <StackPanel Spacing="8">
+                            <TextBlock
+                                FontSize="20"
+                                FontWeight="Light"
+                                Text="Source Links" />
+                            <ItemsRepeater ItemsSource="{Binding Mirrors}">
+                                <ItemsRepeater.ItemTemplate>
+                                    <DataTemplate DataType="{x:Type civArchive:CivArchiveVersionMirror}">
+                                        <Button
+                                            Margin="0,0,0,4"
+                                            HorizontalAlignment="Left"
+                                            Command="{Binding #Root.DataContext.OpenVersionMirrorCommand}"
+                                            CommandParameter="{Binding .}">
+                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                <avalonia:Icon
+                                                    VerticalAlignment="Center"
+                                                    FontSize="12"
+                                                    Value="fa-solid fa-up-right-from-square" />
+                                                <TextBlock VerticalAlignment="Center" Text="{Binding Platform}" />
+                                                <TextBlock
+                                                    VerticalAlignment="Center"
+                                                    Foreground="{DynamicResource TextControlForegroundDisabled}"
+                                                    IsVisible="{Binding VersionName, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                                    Text="{Binding VersionName}" />
+                                            </StackPanel>
+                                        </Button>
+                                    </DataTemplate>
+                                </ItemsRepeater.ItemTemplate>
+                            </ItemsRepeater>
+                        </StackPanel>
+                    </controls:Card>
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+
+        <!--  Error overlay  -->
+        <TextBlock
+            Grid.RowSpan="4"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            FontSize="18"
+            IsVisible="{Binding ErrorText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+            Text="{Binding ErrorText}" />
+
+        <!--  Loading overlay  -->
+        <controls:ProgressRing
+            Grid.RowSpan="4"
+            Width="128"
+            Height="128"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            IsIndeterminate="True"
+            IsVisible="{Binding IsLoading}" />
+    </Grid>
+</controls:UserControlBase>

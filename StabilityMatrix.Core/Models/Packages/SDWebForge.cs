@@ -183,7 +183,7 @@ public class SDWebForge(
         var torchIndex = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
         var isLegacyNvidia =
             torchIndex is TorchIndex.Cuda
-            && (SettingsManager.Settings.PreferredGpu?.IsLegacyNvidia() ?? HardwareHelper.HasLegacyNvidia());
+            && (SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu() ?? HardwareHelper.HasLegacyNvidiaGpu());
 
         var config = new PipInstallConfig
         {

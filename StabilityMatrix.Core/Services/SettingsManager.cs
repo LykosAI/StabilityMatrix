@@ -568,7 +568,8 @@ public class SettingsManager(ILogger<SettingsManager> logger) : ISettingsManager
     {
         try
         {
-            var backupPath = SettingsFile + ".bak";
+            var timestamp = DateTime.Now.ToString("yyyyMMdd-HHmmss");
+            var backupPath = SettingsFile + $".{timestamp}.bak";
             File.WriteAllBytes(backupPath, rawBytes);
             logger.LogInformation("Backed up corrupted settings file to {BackupPath}", backupPath);
         }
@@ -614,7 +615,16 @@ public class SettingsManager(ILogger<SettingsManager> logger) : ISettingsManager
             // Write to temp file then rename for atomic save
             var tempPath = SettingsFile + ".tmp";
             File.WriteAllBytes(tempPath, jsonBytes);
-            File.Move(tempPath, SettingsFile, overwrite: true);
+            try
+            {
+                File.Move(tempPath, SettingsFile, overwrite: true);
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Failed to move temp settings file, cleaning up");
+                try { File.Delete(tempPath); } catch { /* best effort */ }
+                throw;
+            }
         }
         finally
         {
@@ -658,7 +668,16 @@ public class SettingsManager(ILogger<SettingsManager> logger) : ISettingsManager
             // Write to temp file then rename for atomic save
             var tempPath = SettingsFile + ".tmp";
             await File.WriteAllBytesAsync(tempPath, jsonBytes, cancellationToken).ConfigureAwait(false);
-            File.Move(tempPath, SettingsFile, overwrite: true);
+            try
+            {
+                File.Move(tempPath, SettingsFile, overwrite: true);
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Failed to move temp settings file, cleaning up");
+                try { File.Delete(tempPath); } catch { /* best effort */ }
+                throw;
+            }
         }
         finally
         {

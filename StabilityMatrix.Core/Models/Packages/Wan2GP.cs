@@ -466,14 +466,6 @@ public class Wan2GP(
 
         var targetScript = Path.Combine(installLocation, options.Command ?? LaunchCommand);
 
-        // Write the Gradio logging patch wrapper script so gr.Info/Warning/Error
-        // messages are also printed to stdout/stderr for console capture
-        var patchScriptPath = Path.Combine(installLocation, "_sm_gradio_log_patch.py");
-        await File.WriteAllTextAsync(patchScriptPath, GradioLogPatchScript, cancellationToken)
-            .ConfigureAwait(false);
-
-        var targetScript = Path.Combine(installLocation, options.Command ?? LaunchCommand);
-
         // Notify user that the package is starting (loading can take a while)
         onConsoleOutput?.Invoke(
             new ProcessOutput { Text = "Launching Wan2GP, please wait while the UI initializes...\n" }

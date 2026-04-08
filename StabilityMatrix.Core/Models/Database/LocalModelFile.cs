@@ -24,12 +24,18 @@ public record LocalModelFile
                 return false;
             return x.RelativePath == y.RelativePath
                 && Equals(x.ConnectedModelInfo, y.ConnectedModelInfo)
-                && x.HasUpdate == y.HasUpdate;
+                && x.HasUpdate == y.HasUpdate
+                && x.HasEarlyAccessUpdateOnly == y.HasEarlyAccessUpdateOnly;
         }
 
         public int GetHashCode(LocalModelFile obj)
         {
-            return HashCode.Combine(obj.RelativePath, obj.ConnectedModelInfo, obj.HasUpdate);
+            return HashCode.Combine(
+                obj.RelativePath,
+                obj.ConnectedModelInfo,
+                obj.HasUpdate,
+                obj.HasEarlyAccessUpdateOnly
+            );
         }
     }
 
@@ -44,12 +50,13 @@ public record LocalModelFile
             return true;
         return RelativePath == other.RelativePath
             && ConnectedModelInfo == other.ConnectedModelInfo
-            && HasUpdate == other.HasUpdate;
+            && HasUpdate == other.HasUpdate
+            && HasEarlyAccessUpdateOnly == other.HasEarlyAccessUpdateOnly;
     }
 
     public override int GetHashCode()
     {
-        return HashCode.Combine(RelativePath, ConnectedModelInfo, HasUpdate);
+        return HashCode.Combine(RelativePath, ConnectedModelInfo, HasUpdate, HasEarlyAccessUpdateOnly);
     }
 
     /// <summary>
@@ -87,6 +94,11 @@ public record LocalModelFile
     /// Whether or not an update is available for this model
     /// </summary>
     public bool HasUpdate { get; set; }
+
+    /// <summary>
+    /// Whether updates are limited to Early Access versions only.
+    /// </summary>
+    public bool HasEarlyAccessUpdateOnly { get; set; }
 
     /// <summary>
     /// Last time this model was checked for an update

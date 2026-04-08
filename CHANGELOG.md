@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added single-instance window activation signaling so reopening the app restores and focuses the existing desktop window instead of launching a duplicate instance
 - Added notification system with localizable banner and markdown detail dialog UI
 - Added warning in data directory selector when an OneDrive folder is selected
+- Added support in the Checkpoints page to distinguish standard updates from Early Access-only updates - thanks to @x0x0b!
+- Added torch index for Strix/Gorgon Point Ryzen AI APUs on Windows - thanks to @NeuralFault!
+### Changed
+- Settings file saves are now atomic to prevent corruption from interrupted writes
 ### Fixed
 - Fixed an issue where `Align Your Steps` scheduler and Unet Loader workflows ignored Regional Prompting (and other addon) conditioning modifiers.
 - Potentially fixed [#1578](https://github.com/LykosAI/StabilityMatrix/issues/1578) - `SocketException: Address already in use` on Linux startup by cleaning stale interprocess socket files and reactivating the existing window
@@ -20,6 +24,9 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed download progress bar showing 100% immediately for fresh downloads due to missing Content-Length fallback when Content-Range header is absent
 - Fixed downloads failing with "The request message was already sent" when the server doesn't return Content-Length on the first attempt, caused by reusing a consumed HttpRequestMessage in the retry loop
 - Fixed downloads from sources that redirect to CivitAI/HuggingFace (e.g. CivArchive) failing with Unauthorized by resolving the redirect target URL and applying auth headers for the correct domain
+- Fixed dropdown menu overlayed in Inference UI Model Cards not being scrollable on Linux - thanks to @NeuralFault!
+- Fixed [#1590](https://github.com/LykosAI/StabilityMatrix/issues/1590) - Startup crash when settings file is corrupted. Settings files are now self-healing with automatic recovery from null bytes, truncated JSON, and missing brackets
+- Fixed [#1397](https://github.com/LykosAI/StabilityMatrix/issues/1397), [#610](https://github.com/LykosAI/StabilityMatrix/issues/610) - duplicate pip package entries in results - thanks to @e-nord!
 
 ## v2.15.6
 ### Added

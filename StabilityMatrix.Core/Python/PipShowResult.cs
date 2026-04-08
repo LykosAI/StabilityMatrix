@@ -45,16 +45,39 @@ public record PipShowResult
             lines.RemoveRange(indexOfLicense, indexOfLocation - indexOfLicense);
         }
 
-        var linesDict = lines
-            .Select(line => line.Split(':', 2))
-            .Where(split => split.Length == 2)
-            .Select(split => new KeyValuePair<string, string>(split[0].Trim(), split[1].Trim()))
-            .ToDictionary(pair => pair.Key, pair => pair.Value);
+        var linesDict = new Dictionary<string, string>();
+        foreach (var line in lines)
+        {
+            var split = line.Split(':', 2);
+            if (split.Length != 2)
+                continue;
+
+            var key = split[0].Trim();
+            var value = split[1].Trim();
+
+            if (key == "Name" && linesDict.ContainsKey("Name"))
+            {
+                // We've hit a new package, so stop parsing
+                break;
+            }
+
+            linesDict.TryAdd(key, value);
+        }
+
+        if (!linesDict.TryGetValue("Name", out var name))
+        {
+            throw new FormatException("The 'Name' key was not found in the pip show output.");
+        }
+
+        if (!linesDict.TryGetValue("Version", out var version))
+        {
+            throw new FormatException("The 'Version' key was not found in the pip show output.");
+        }
 
         return new PipShowResult
         {
-            Name = linesDict["Name"],
-            Version = linesDict["Version"],
+            Name = name,
+            Version = version,
             Summary = linesDict.GetValueOrDefault("Summary"),
             HomePage = linesDict.GetValueOrDefault("Home-page"),
             Author = linesDict.GetValueOrDefault("Author"),
@@ -68,7 +91,7 @@ public record PipShowResult
             RequiredBy = linesDict
                 .GetValueOrDefault("Required-by")
                 ?.Split(',', StringSplitOptions.TrimEntries)
-                .ToList()
+                .ToList(),
         };
     }
 

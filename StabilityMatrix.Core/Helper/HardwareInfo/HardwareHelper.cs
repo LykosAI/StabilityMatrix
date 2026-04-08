@@ -187,7 +187,7 @@ public static partial class HardwareHelper
                 }
                 catch (Exception e)
                 {
-                    Logger.Error(e, "Failed to get GPU info using nvidia-smi, falling back to registry");
+                    Logger.Warn(e, "Failed to get GPU info using nvidia-smi, falling back to registry");
 
                     var fallback = Compat.IsLinux
                         ? IterGpuInfoLinux().ToList()

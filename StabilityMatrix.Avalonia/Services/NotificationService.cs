@@ -1,6 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Threading;
@@ -41,13 +39,20 @@ public class NotificationService(ILogger<NotificationService> logger, ISettingsM
         notificationManager = new WindowNotificationManager(TopLevel.GetTopLevel(visual))
         {
             Position = position,
-            MaxItems = maxItems
+            MaxItems = maxItems,
         };
     }
 
     public void Show(INotification notification)
     {
-        notificationManager?.Show(notification);
+        if (Dispatcher.UIThread.CheckAccess())
+        {
+            notificationManager?.Show(notification);
+        }
+        else
+        {
+            Dispatcher.UIThread.Post(() => notificationManager?.Show(notification));
+        }
     }
 
     /// <inheritdoc />
@@ -94,25 +99,23 @@ public class NotificationService(ILogger<NotificationService> logger, ISettingsM
                     // Show app toast
                     if (isPersistent)
                     {
-                        Dispatcher.UIThread.Invoke(
-                            () =>
-                                ShowPersistent(
-                                    notification.Title ?? "",
-                                    notification.Body ?? "",
-                                    key.Level.ToNotificationType()
-                                )
+                        Dispatcher.UIThread.Invoke(() =>
+                            ShowPersistent(
+                                notification.Title ?? "",
+                                notification.Body ?? "",
+                                key.Level.ToNotificationType()
+                            )
                         );
                     }
                     else
                     {
-                        Dispatcher.UIThread.Invoke(
-                            () =>
-                                Show(
-                                    notification.Title ?? "",
-                                    notification.Body ?? "",
-                                    key.Level.ToNotificationType(),
-                                    expiration
-                                )
+                        Dispatcher.UIThread.Invoke(() =>
+                            Show(
+                                notification.Title ?? "",
+                                notification.Body ?? "",
+                                key.Level.ToNotificationType(),
+                                expiration
+                            )
                         );
                     }
                     return;
@@ -130,25 +133,23 @@ public class NotificationService(ILogger<NotificationService> logger, ISettingsM
                 // Show app toast
                 if (isPersistent)
                 {
-                    Dispatcher.UIThread.Invoke(
-                        () =>
-                            ShowPersistent(
-                                notification.Title ?? "",
-                                notification.Body ?? "",
-                                key.Level.ToNotificationType()
-                            )
+                    Dispatcher.UIThread.Invoke(() =>
+                        ShowPersistent(
+                            notification.Title ?? "",
+                            notification.Body ?? "",
+                            key.Level.ToNotificationType()
+                        )
                     );
                 }
                 else
                 {
-                    Dispatcher.UIThread.Invoke(
-                        () =>
-                            Show(
-                                notification.Title ?? "",
-                                notification.Body ?? "",
-                                key.Level.ToNotificationType(),
-                                expiration
-                            )
+                    Dispatcher.UIThread.Invoke(() =>
+                        Show(
+                            notification.Title ?? "",
+                            notification.Body ?? "",
+                            key.Level.ToNotificationType(),
+                            expiration
+                        )
                     );
                 }
 

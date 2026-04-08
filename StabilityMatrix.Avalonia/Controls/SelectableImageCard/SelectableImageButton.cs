@@ -25,6 +25,11 @@ public class SelectableImageButton : Button
         double
     >("ImageHeight", 300);
 
+    public static readonly StyledProperty<bool> IsVideoProperty = AvaloniaProperty.Register<
+        SelectableImageButton,
+        bool
+    >("IsVideo", false);
+
     static SelectableImageButton()
     {
         AffectsRender<SelectableImageButton>(ImageWidthProperty, ImageHeightProperty);
@@ -53,5 +58,11 @@ public class SelectableImageButton : Button
     {
         get => GetValue(SourceProperty);
         set => SetValue(SourceProperty, value);
+    }
+
+    public bool IsVideo
+    {
+        get => GetValue(IsVideoProperty);
+        set => SetValue(IsVideoProperty, value);
     }
 }

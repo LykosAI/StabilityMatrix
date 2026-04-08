@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.IO;
-using System.Linq;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Reactive.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -62,6 +56,12 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
     private readonly SourceCache<HybridModelFile, string> modelsSource = new(p => p.GetId());
 
     public IObservableCollection<HybridModelFile> Models { get; } =
+        new ObservableCollectionExtended<HybridModelFile>();
+
+    /// <summary>
+    /// Unified collection of all models (Checkpoints + UNet/Diffusion models).
+    /// </summary>
+    public IObservableCollection<HybridModelFile> AllModels { get; } =
         new ObservableCollectionExtended<HybridModelFile>();
 
     private readonly SourceCache<HybridModelFile, string> vaeModelsSource = new(p => p.GetId());
@@ -173,6 +173,18 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             .Connect()
             .DeferUntilLoaded()
             .SortAndBind(Models, SortExpressionComparer<HybridModelFile>.Ascending(f => f.ShortDisplayName))
+            .ObserveOn(SynchronizationContext.Current)
+            .Subscribe();
+
+        // AllModels: merge checkpoints and unet models into unified collection
+        modelsSource
+            .Connect()
+            .Or(unetModelsSource.Connect())
+            .DeferUntilLoaded()
+            .SortAndBind(
+                AllModels,
+                SortExpressionComparer<HybridModelFile>.Ascending(f => f.ShortDisplayName)
+            )
             .ObserveOn(SynchronizationContext.Current)
             .Subscribe();
 
@@ -640,11 +652,17 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         );
         downloadableClipVisionModelsSource.EditDiff(downloadableClipVisionModels, HybridModelFile.Comparer);
 
-        samplersSource.EditDiff(ComfySampler.Defaults, ComfySampler.Comparer);
+        // When connected, skip resetting samplers/schedulers to defaults only.
+        // EditDiff would remove server-only items (e.g. custom samplers from extensions),
+        // causing the ComboBox to clear its selection before LoadSharedPropertiesAsync
+        // re-fetches the full list from the server.
+        if (!IsConnected)
+        {
+            samplersSource.EditDiff(ComfySampler.Defaults, ComfySampler.Comparer);
+            schedulersSource.EditDiff(ComfyScheduler.Defaults, ComfyScheduler.Comparer);
+        }
 
         latentUpscalersSource.EditDiff(ComfyUpscaler.Defaults, ComfyUpscaler.Comparer);
-
-        schedulersSource.EditDiff(ComfyScheduler.Defaults, ComfyScheduler.Comparer);
 
         // Load Upscalers
         modelUpscalersSource.EditDiff(
@@ -709,6 +727,26 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
 
             await Client.UploadImageAsync(ms, uploadName, cancellationToken);
         }
+    }
+
+    /// <inheritdoc />
+    public async Task UploadMaskImageAsync(
+        SkiaSharp.SKImage maskImage,
+        string fileName,
+        CancellationToken cancellationToken = default
+    )
+    {
+        EnsureConnected();
+
+        logger.LogDebug("Uploading mask image as {FileName}", fileName);
+
+        // Encode mask to PNG
+        using var data = maskImage.Encode(SkiaSharp.SKEncodedImageFormat.Png, 100);
+        using var stream = new MemoryStream();
+        data.SaveTo(stream);
+        stream.Position = 0;
+
+        await Client.UploadImageAsync(stream, fileName, cancellationToken);
     }
 
     /// <inheritdoc />

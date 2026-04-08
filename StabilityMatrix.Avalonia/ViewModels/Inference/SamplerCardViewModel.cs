@@ -149,6 +149,7 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
             [
                 typeof(FreeUModule),
                 typeof(ControlNetModule),
+                typeof(RegionalPromptModule),
                 typeof(LayerDiffuseModule),
                 typeof(FluxGuidanceModule),
                 typeof(DiscreteModelSamplingModule),
@@ -190,6 +191,18 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
         CfgScale = defaults.CfgScale;
         SelectedSampler = defaults.Sampler;
         SelectedScheduler = defaults.Scheduler;
+    }
+
+    partial void OnWidthChanged(int value)
+    {
+        // Sync width to TabContext so other components can access it
+        tabContext.SamplerWidth = value;
+    }
+
+    partial void OnHeightChanged(int value)
+    {
+        // Sync height to TabContext so other components can access it
+        tabContext.SamplerHeight = value;
     }
 
     [RelayCommand]
@@ -377,14 +390,14 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
                 new ComfyNodeBuilder.FluxGuidance
                 {
                     Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.FluxGuidance)),
-                    Conditioning = e.Builder.Connections.GetRefinerOrBaseConditioning().Positive,
+                    Conditioning = e.Temp.GetRefinerOrBaseConditioning().Positive,
                     Guidance = CfgScale,
                 }
             );
 
             e.Builder.Connections.Base.Conditioning = new ConditioningConnections(
                 fluxGuidance.Output,
-                e.Builder.Connections.GetRefinerOrBaseConditioning().Negative
+                e.Temp.GetRefinerOrBaseConditioning().Negative
             );
 
             // Guider
@@ -401,7 +414,7 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
         }
         else
         {
-            e.Builder.Connections.Base.Conditioning = e.Builder.Connections.GetRefinerOrBaseConditioning();
+            e.Builder.Connections.Base.Conditioning = e.Temp.GetRefinerOrBaseConditioning();
 
             var cfgGuider = e.Nodes.AddTypedNode(
                 new ComfyNodeBuilder.CFGGuider

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace StabilityMatrix.Avalonia.Services;
+﻿namespace StabilityMatrix.Avalonia.Services;
 
 public interface IDiscordRichPresenceService : IDisposable
 {

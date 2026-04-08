@@ -1,4 +1,5 @@
 ﻿using System.Text.Json.Serialization;
+using DesktopNotifications;
 using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Models;
@@ -9,6 +10,7 @@ using StabilityMatrix.Avalonia.ViewModels.Inference.Video;
 using StabilityMatrix.Avalonia.Views.Inference;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
@@ -17,6 +19,8 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 [RegisterScoped<InferenceWanTextToVideoViewModel>, ManagedService]
 public class InferenceWanTextToVideoViewModel : InferenceGenerationViewModelBase, IParametersLoadableState
 {
+    private readonly INotificationService notificationService;
+
     [JsonIgnore]
     public StackCardViewModel StackCardViewModel { get; }
 
@@ -47,6 +51,7 @@ public class InferenceWanTextToVideoViewModel : InferenceGenerationViewModelBase
     )
         : base(vmFactory, inferenceClientManager, notificationService, settingsManager, runningPackageService)
     {
+        this.notificationService = notificationService;
         SeedCardViewModel = vmFactory.Get<SeedCardViewModel>();
         SeedCardViewModel.GenerateNewSeed();
 
@@ -184,6 +189,24 @@ public class InferenceWanTextToVideoViewModel : InferenceGenerationViewModelBase
         foreach (var args in batchArgs)
         {
             await RunGeneration(args, cancellationToken);
+        }
+
+        // Only show batch notification when there's more than one item
+        // (single items already get a "Prompt Completed" notification)
+        if (batches > 1)
+        {
+            await notificationService.ShowAsync(
+                NotificationKey.Inference_BatchCompleted,
+                new Notification
+                {
+                    Title = "Batch Completed",
+                    Body =
+                        $"Batch of {batches} items [{Guid.NewGuid().ToString()[..7].ToLower()}] completed successfully",
+                    BodyImagePath = ImageGalleryCardViewModel
+                        .ImageSources.LastOrDefault()
+                        ?.LocalFile?.FullPath,
+                }
+            );
         }
     }
 

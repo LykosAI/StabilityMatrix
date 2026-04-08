@@ -1128,6 +1128,9 @@
   <data name="Warning_PleaseExtractFirst" xml:space="preserve">
     <value>PLEASE EXTRACT THE APP FROM THE ZIP FILE BEFORE RUNNING STABILITY MATRIX</value>
   </data>
+  <data name="Warning_OneDriveFolder" xml:space="preserve">
+    <value>OneDrive folders are not recommended: file syncing can break Git, Python venvs, and package installations.</value>
+  </data>
   <data name="Label_HistorySize" xml:space="preserve">
     <value>History Size</value>
   </data>

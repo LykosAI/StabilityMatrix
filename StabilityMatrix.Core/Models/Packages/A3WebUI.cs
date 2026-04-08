@@ -227,8 +227,8 @@ public class A3WebUI(
         var config = new PipInstallConfig
         {
             RequirementsFilePaths = ["requirements_versions.txt"],
-            TorchVersion = "",
-            TorchvisionVersion = "",
+            TorchVersion = " ",
+            TorchvisionVersion = " ",
             XformersVersion = isLegacyNvidia ? "==0.0.30" : " ",
             CudaIndex = isLegacyNvidia ? "cu126" : "cu128",
             RocmIndex = "rocm7.2",

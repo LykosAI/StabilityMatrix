@@ -4130,7 +4130,7 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to OneDrive folders are not recommended — file syncing can break Git, Python venvs, and package installations..
+        ///   Looks up a localized string similar to PLS NO ONEDRIVE. It can break Git, Python venvs, and big model installs..
         /// </summary>
         public static string Warning_OneDriveFolder {
             get {

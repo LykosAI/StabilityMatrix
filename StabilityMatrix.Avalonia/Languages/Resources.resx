@@ -1129,7 +1129,7 @@
     <value>PLEASE EXTRACT THE APP FROM THE ZIP FILE BEFORE RUNNING STABILITY MATRIX</value>
   </data>
   <data name="Warning_OneDriveFolder" xml:space="preserve">
-    <value>OneDrive folders are not recommended — file syncing can break Git, Python venvs, and package installations.</value>
+    <value>PLS NO ONEDRIVE. It can break Git, Python venvs, and big model installs.</value>
   </data>
   <data name="Label_HistorySize" xml:space="preserve">
     <value>History Size</value>

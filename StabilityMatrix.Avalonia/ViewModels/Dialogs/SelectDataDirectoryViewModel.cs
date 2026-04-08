@@ -25,6 +25,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 public partial class SelectDataDirectoryViewModel : ContentDialogViewModelBase
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+    private static readonly IReadOnlyList<string> OneDriveRoots = LoadOneDriveRoots();
 
     public static string DefaultInstallLocation =>
         Compat.IsLinux
@@ -250,12 +251,18 @@ public partial class SelectDataDirectoryViewModel : ContentDialogViewModelBase
 
     private static IEnumerable<string> GetOneDriveRoots()
     {
+        return OneDriveRoots;
+    }
+
+    private static IReadOnlyList<string> LoadOneDriveRoots()
+    {
         return new[] { "OneDrive", "OneDriveConsumer", "OneDriveCommercial" }
             .Select(Environment.GetEnvironmentVariable)
             .Where(path => !string.IsNullOrWhiteSpace(path))
             .Select(path => Path.GetFullPath(path!))
             .Distinct(StringComparer.OrdinalIgnoreCase)
-            .Select(EnsureTrailingDirectorySeparator);
+            .Select(EnsureTrailingDirectorySeparator)
+            .ToList();
     }
 
     private static string EnsureTrailingDirectorySeparator(string path)

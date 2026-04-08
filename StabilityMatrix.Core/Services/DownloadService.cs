@@ -149,8 +149,10 @@ public class DownloadService : IDownloadService
         client.Timeout = TimeSpan.FromMinutes(10);
         client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("StabilityMatrix", "2.0"));
 
-        await AddConditionalHeaders(client, new Uri(downloadUrl)).ConfigureAwait(false);
-        await AddConditionalHeaders(noRedirectClient, new Uri(downloadUrl)).ConfigureAwait(false);
+        var originalDownloadUri = new Uri(downloadUrl);
+
+        await AddConditionalHeaders(client, originalDownloadUri).ConfigureAwait(false);
+        await AddConditionalHeaders(noRedirectClient, originalDownloadUri).ConfigureAwait(false);
 
         // Create file if it doesn't exist
         if (!File.Exists(downloadPath))
@@ -161,10 +163,11 @@ public class DownloadService : IDownloadService
 
         await using var file = new FileStream(
             downloadPath,
-            FileMode.Append,
+            FileMode.OpenOrCreate,
             FileAccess.Write,
             FileShare.None
         );
+        file.Seek(existingFileSize, SeekOrigin.Begin);
 
         // Remaining content length
         long remainingContentLength = 0;
@@ -176,9 +179,11 @@ public class DownloadService : IDownloadService
             var delay in Backoff.DecorrelatedJitterBackoffV2(TimeSpan.FromMilliseconds(50), retryCount: 4)
         )
         {
+            await AddConditionalHeaders(client, originalDownloadUri).ConfigureAwait(false);
+
             using var noRedirectRequest = new HttpRequestMessage();
             noRedirectRequest.Method = HttpMethod.Get;
-            noRedirectRequest.RequestUri = new Uri(downloadUrl);
+            noRedirectRequest.RequestUri = originalDownloadUri;
             noRedirectRequest.Headers.Range = new RangeHeaderValue(existingFileSize, null);
 
             var noRedirectResponse = await noRedirectClient
@@ -186,21 +191,24 @@ public class DownloadService : IDownloadService
                 .ConfigureAwait(false);
 
             // Resolve redirect target URL for cross-domain auth (e.g. civarchive → civitai)
-            var effectiveDownloadUrl = downloadUrl;
+            var effectiveDownloadUri = originalDownloadUri;
             if ((int)noRedirectResponse.StatusCode > 299 && (int)noRedirectResponse.StatusCode < 400)
             {
-                var redirectUrl = noRedirectResponse.Headers.Location?.ToString();
-                if (redirectUrl != null && redirectUrl.Contains("reason=download-auth"))
+                var redirectUri = noRedirectResponse.Headers.Location;
+                if (redirectUri != null && redirectUri.ToString().Contains("reason=download-auth"))
                 {
                     throw new UnauthorizedAccessException();
                 }
 
                 // Use the redirect target for the actual download so auth headers
                 // are applied for the correct domain
-                if (!string.IsNullOrWhiteSpace(redirectUrl))
+                if (redirectUri != null)
                 {
-                    effectiveDownloadUrl = redirectUrl;
-                    await AddConditionalHeaders(client, new Uri(effectiveDownloadUrl)).ConfigureAwait(false);
+                    effectiveDownloadUri = redirectUri.IsAbsoluteUri
+                        ? redirectUri
+                        : new Uri(originalDownloadUri, redirectUri);
+
+                    await AddConditionalHeaders(client, effectiveDownloadUri).ConfigureAwait(false);
                 }
             }
             else if (noRedirectResponse.StatusCode == HttpStatusCode.Unauthorized)
@@ -241,7 +249,7 @@ public class DownloadService : IDownloadService
 
             using var redirectRequest = new HttpRequestMessage();
             redirectRequest.Method = HttpMethod.Get;
-            redirectRequest.RequestUri = new Uri(effectiveDownloadUrl);
+            redirectRequest.RequestUri = effectiveDownloadUri;
             redirectRequest.Headers.Range = new RangeHeaderValue(existingFileSize, null);
 
             response = await client
@@ -249,8 +257,16 @@ public class DownloadService : IDownloadService
                 .ConfigureAwait(false);
 
             remainingContentLength = response.Content.Headers.ContentLength ?? 0;
+            if (response.StatusCode == HttpStatusCode.OK)
+            {
+                file.Seek(0, SeekOrigin.Begin);
+                file.SetLength(0);
+                existingFileSize = 0;
+            }
+
             originalContentLength =
-                response.Content.Headers.ContentRange?.Length.GetValueOrDefault() ?? remainingContentLength;
+                response.Content.Headers.ContentRange?.Length.GetValueOrDefault()
+                ?? (existingFileSize + remainingContentLength);
 
             if (remainingContentLength > 0)
                 break;
@@ -382,6 +398,8 @@ public class DownloadService : IDownloadService
     /// </summary>
     private async Task AddConditionalHeaders(HttpClient client, Uri url)
     {
+        client.DefaultRequestHeaders.Authorization = null;
+
         // Check if civit download
         if (url.Host.Equals("civitai.com", StringComparison.OrdinalIgnoreCase))
         {

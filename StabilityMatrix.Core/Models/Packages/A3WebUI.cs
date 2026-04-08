@@ -222,9 +222,6 @@ public class A3WebUI(
         var isLegacyNvidia =
             torchIndex is TorchIndex.Cuda
             && (SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu() ?? HardwareHelper.HasLegacyNvidiaGpu());
-        var isRocm =
-            torchIndex is TorchIndex.Rocm
-            && (SettingsManager.Settings.PreferredGpu?.IsAmd ?? HardwareHelper.HasAmdGpu());
 
         // 1. Configure the entire install process declaratively.
         var config = new PipInstallConfig

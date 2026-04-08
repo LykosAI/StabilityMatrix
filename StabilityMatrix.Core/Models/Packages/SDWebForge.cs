@@ -181,17 +181,17 @@ public class SDWebForge(
         }
 
         var torchIndex = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
-        var isBlackwell =
+        var isLegacyNvidia =
             torchIndex is TorchIndex.Cuda
-            && (SettingsManager.Settings.PreferredGpu?.IsBlackwellGpu() ?? HardwareHelper.HasBlackwellGpu());
+            && (SettingsManager.Settings.PreferredGpu?.IsLegacyNvidia() ?? HardwareHelper.HasLegacyNvidia());
 
         var config = new PipInstallConfig
         {
             PrePipInstallArgs = ["joblib"],
             RequirementsFilePaths = requirementsPaths,
-            TorchVersion = "",
-            TorchvisionVersion = "",
-            CudaIndex = isBlackwell ? "cu128" : "cu126",
+            TorchVersion = " ",
+            TorchvisionVersion = " ",
+            CudaIndex = isLegacyNvidia ? "cu126" : "cu128",
             RocmIndex = "rocm7.2",
             ExtraPipArgs =
             [

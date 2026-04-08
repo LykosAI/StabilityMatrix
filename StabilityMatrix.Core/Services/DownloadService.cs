@@ -259,6 +259,12 @@ public class DownloadService : IDownloadService
             remainingContentLength = response.Content.Headers.ContentLength ?? 0;
             if (response.StatusCode == HttpStatusCode.OK)
             {
+                logger.LogWarning(
+                    "Server ignored the Range header while resuming download {DownloadUrl} to {DownloadPath}; restarting from the beginning after {ExistingFileSize} bytes",
+                    effectiveDownloadUri,
+                    downloadPath,
+                    existingFileSize
+                );
                 file.Seek(0, SeekOrigin.Begin);
                 file.SetLength(0);
                 existingFileSize = 0;

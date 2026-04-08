@@ -4,6 +4,7 @@ using System.Linq.Expressions;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reflection;
+using System.Text;
 using System.Text.Json;
 using AsyncAwaitBestPractices;
 using CompiledExpressions;
@@ -468,23 +469,15 @@ public class SettingsManager(ILogger<SettingsManager> logger) : ISettingsManager
                 return;
             }
 
-            using var fileStream = SettingsFile.Info.OpenRead();
+            var rawBytes = File.ReadAllBytes(SettingsFile);
 
-            if (fileStream.Length == 0)
+            if (rawBytes.Length == 0)
             {
                 logger.LogWarning("Settings file is empty, using default settings");
                 return;
             }
 
-            var loadedSettings = JsonSerializer.Deserialize(
-                fileStream,
-                SettingsSerializerContext.Default.Settings
-            );
-
-            if (loadedSettings is not null)
-            {
-                Settings = loadedSettings;
-            }
+            Settings = DeserializeOrRecoverSettings(rawBytes);
         }
         finally
         {
@@ -511,24 +504,15 @@ public class SettingsManager(ILogger<SettingsManager> logger) : ISettingsManager
                 return;
             }
 
-            await using var fileStream = SettingsFile.Info.OpenRead();
+            var rawBytes = await File.ReadAllBytesAsync(SettingsFile, cancellationToken).ConfigureAwait(false);
 
-            if (fileStream.Length == 0)
+            if (rawBytes.Length == 0)
             {
                 logger.LogWarning("Settings file is empty, using default settings");
                 return;
             }
 
-            var loadedSettings = await JsonSerializer
-                .DeserializeAsync(fileStream, SettingsSerializerContext.Default.Settings, cancellationToken)
-                .ConfigureAwait(false);
-
-            if (loadedSettings is not null)
-            {
-                Settings = loadedSettings;
-            }
-
-            Loaded?.Invoke(this, EventArgs.Empty);
+            Settings = DeserializeOrRecoverSettings(rawBytes);
         }
         finally
         {
@@ -537,6 +521,61 @@ public class SettingsManager(ILogger<SettingsManager> logger) : ISettingsManager
             isLoaded = true;
 
             Loaded?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
+    /// <summary>
+    /// Attempts to deserialize settings from raw bytes, falling back to sanitization
+    /// and recovery if the JSON is corrupted. Returns default settings as a last resort.
+    /// </summary>
+    private Settings DeserializeOrRecoverSettings(byte[] rawBytes)
+    {
+        // Try normal deserialization first
+        try
+        {
+            var loadedSettings = JsonSerializer.Deserialize(
+                rawBytes,
+                SettingsSerializerContext.Default.Settings
+            );
+
+            if (loadedSettings is not null)
+            {
+                return loadedSettings;
+            }
+        }
+        catch (JsonException ex)
+        {
+            logger.LogWarning(ex, "Failed to deserialize settings, attempting recovery");
+        }
+
+        // Recovery path: backup corrupted file, sanitize, and attempt recovery
+        BackupCorruptedFile(rawBytes);
+
+        var jsonText = Encoding.UTF8.GetString(SettingsJsonSanitizer.SanitizeBytes(rawBytes));
+        var recovered = SettingsJsonSanitizer.TryDeserializeWithRecovery(jsonText, logger);
+
+        if (recovered is not null)
+        {
+            logger.LogInformation("Settings recovered from corrupted file");
+            return recovered;
+        }
+
+        logger.LogWarning("Could not recover settings from corrupted file, using defaults");
+        return new Settings();
+    }
+
+    private void BackupCorruptedFile(byte[] rawBytes)
+    {
+        try
+        {
+            var timestamp = DateTime.Now.ToString("yyyyMMdd-HHmmss");
+            var backupPath = SettingsFile + $".{timestamp}.bak";
+            File.WriteAllBytes(backupPath, rawBytes);
+            logger.LogInformation("Backed up corrupted settings file to {BackupPath}", backupPath);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Failed to create backup of corrupted settings file");
         }
     }
 
@@ -550,15 +589,13 @@ public class SettingsManager(ILogger<SettingsManager> logger) : ISettingsManager
 
         try
         {
-            // Create empty settings file if it doesn't exist
-            if (!SettingsFile.Exists)
-            {
-                SettingsFile.Directory?.Create();
-                SettingsFile.Create();
-            }
+            SettingsFile.Directory?.Create();
 
             // Check disk space
-            if (SystemInfo.GetDiskFreeSpaceBytes(SettingsFile) is < 1 * SystemInfo.Mebibyte)
+            if (
+                SettingsFile.Exists
+                && SystemInfo.GetDiskFreeSpaceBytes(SettingsFile) is < 1 * SystemInfo.Mebibyte
+            )
             {
                 logger.LogWarning("Not enough disk space to save settings");
                 return;
@@ -575,12 +612,18 @@ public class SettingsManager(ILogger<SettingsManager> logger) : ISettingsManager
                 return;
             }
 
-            using var fs = File.Open(SettingsFile, FileMode.Open);
-            if (fs.CanWrite)
+            // Write to temp file then rename for atomic save
+            var tempPath = SettingsFile + ".tmp";
+            File.WriteAllBytes(tempPath, jsonBytes);
+            try
             {
-                fs.Write(jsonBytes, 0, jsonBytes.Length);
-                fs.Flush();
-                fs.SetLength(jsonBytes.Length);
+                File.Move(tempPath, SettingsFile, overwrite: true);
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Failed to move temp settings file, cleaning up");
+                try { File.Delete(tempPath); } catch { /* best effort */ }
+                throw;
             }
         }
         finally
@@ -599,15 +642,13 @@ public class SettingsManager(ILogger<SettingsManager> logger) : ISettingsManager
 
         try
         {
-            // Create empty settings file if it doesn't exist
-            if (!SettingsFile.Exists)
-            {
-                SettingsFile.Directory?.Create();
-                SettingsFile.Create();
-            }
+            SettingsFile.Directory?.Create();
 
             // Check disk space
-            if (SystemInfo.GetDiskFreeSpaceBytes(SettingsFile) is < 1 * SystemInfo.Mebibyte)
+            if (
+                SettingsFile.Exists
+                && SystemInfo.GetDiskFreeSpaceBytes(SettingsFile) is < 1 * SystemInfo.Mebibyte
+            )
             {
                 logger.LogWarning("Not enough disk space to save settings");
                 return;
@@ -624,12 +665,18 @@ public class SettingsManager(ILogger<SettingsManager> logger) : ISettingsManager
                 return;
             }
 
-            await using var fs = File.Open(SettingsFile, FileMode.Open);
-            if (fs.CanWrite)
+            // Write to temp file then rename for atomic save
+            var tempPath = SettingsFile + ".tmp";
+            await File.WriteAllBytesAsync(tempPath, jsonBytes, cancellationToken).ConfigureAwait(false);
+            try
             {
-                await fs.WriteAsync(jsonBytes, cancellationToken).ConfigureAwait(false);
-                await fs.FlushAsync(cancellationToken).ConfigureAwait(false);
-                fs.SetLength(jsonBytes.Length);
+                File.Move(tempPath, SettingsFile, overwrite: true);
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Failed to move temp settings file, cleaning up");
+                try { File.Delete(tempPath); } catch { /* best effort */ }
+                throw;
             }
         }
         finally

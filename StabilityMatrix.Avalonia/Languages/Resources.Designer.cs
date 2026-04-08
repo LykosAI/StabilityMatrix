@@ -3304,6 +3304,15 @@ namespace StabilityMatrix.Avalonia.Languages {
                 return ResourceManager.GetString("Label_UpdateAvailable", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Early Access Update Available.
+        /// </summary>
+        public static string Label_EarlyAccessUpdateAvailable {
+            get {
+                return ResourceManager.GetString("Label_EarlyAccessUpdateAvailable", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to Updates.

@@ -7,10 +7,21 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 
 ## v2.16.0-dev.3
 ### Added
+- Added enable/disable toggle for environment variables in Settings, allowing variables to be temporarily disabled without deleting them
 - Added single-instance window activation signaling so reopening the app restores and focuses the existing desktop window instead of launching a duplicate instance
 - Added notification system with localizable banner and markdown detail dialog UI
 - Added warning in data directory selector when an OneDrive folder is selected
+- Added support in the Checkpoints page to distinguish standard updates from Early Access-only updates - thanks to @x0x0b!
+- Added torch index for Strix/Gorgon Point Ryzen AI APUs on Windows - thanks to @NeuralFault!
+### Changed
+- Improved safetensor checkpoint classification to correctly detect UNet-only models for Wan Video, HiDream, Z-Image, Hunyuan3D, and diffusers-format Flux architectures, ensuring they are routed to the DiffusionModels folder
+- GGUF checkpoint downloads now go directly to the DiffusionModels folder instead of StableDiffusion
+- Configured portable Git to suppress detached HEAD advice messages
+- Settings file saves are now atomic to prevent corruption from interrupted writes
 ### Fixed
+- Fixed downloaded checkpoint going to StableDiffusion folder when a saved download preference existed, even for GGUF files that should always go to DiffusionModels
+- Fixed potential crash when adding metadata to malformed or non-PNG image data in Inference
+- Fixed non-Latin-1 characters (e.g. Japanese, Chinese, Korean, emoji) in image generation parameters being stored in PNG tEXt chunks, violating the PNG specification and causing character corruption (mojibake) in standard-compliant parsers. Non-Latin-1 content now uses spec-compliant iTXt chunks with proper UTF-8 encoding ([#1535](https://github.com/LykosAI/StabilityMatrix/issues/1535))
 - Fixed an issue where `Align Your Steps` scheduler and Unet Loader workflows ignored Regional Prompting (and other addon) conditioning modifiers.
 - Potentially fixed [#1578](https://github.com/LykosAI/StabilityMatrix/issues/1578) - `SocketException: Address already in use` on Linux startup by cleaning stale interprocess socket files and reactivating the existing window
 - Fixed bold text not rendering in markdown dialogs on Windows 11 due to Avalonia 11.3.x variable font regression with Segoe UI Variable Text
@@ -20,18 +31,9 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed download progress bar showing 100% immediately for fresh downloads due to missing Content-Length fallback when Content-Range header is absent
 - Fixed downloads failing with "The request message was already sent" when the server doesn't return Content-Length on the first attempt, caused by reusing a consumed HttpRequestMessage in the retry loop
 - Fixed downloads from sources that redirect to CivitAI/HuggingFace (e.g. CivArchive) failing with Unauthorized by resolving the redirect target URL and applying auth headers for the correct domain
-
-## v2.16.0-pre.1
-### Added
-- Added enable/disable toggle for environment variables in Settings, allowing variables to be temporarily disabled without deleting them
-### Changed
-- Improved safetensor checkpoint classification to correctly detect UNet-only models for Wan Video, HiDream, Z-Image, Hunyuan3D, and diffusers-format Flux architectures, ensuring they are routed to the DiffusionModels folder
-- GGUF checkpoint downloads now go directly to the DiffusionModels folder instead of StableDiffusion
-- Configured portable Git to suppress detached HEAD advice messages
-### Fixed
-- Fixed downloaded checkpoint going to StableDiffusion folder when a saved download preference existed, even for GGUF files that should always go to DiffusionModels
-- Fixed potential crash when adding metadata to malformed or non-PNG image data in Inference
-- Fixed non-Latin-1 characters (e.g. Japanese, Chinese, Korean, emoji) in image generation parameters being stored in PNG tEXt chunks, violating the PNG specification and causing character corruption (mojibake) in standard-compliant parsers. Non-Latin-1 content now uses spec-compliant iTXt chunks with proper UTF-8 encoding ([#1535](https://github.com/LykosAI/StabilityMatrix/issues/1535))
+- Fixed dropdown menu overlayed in Inference UI Model Cards not being scrollable on Linux - thanks to @NeuralFault!
+- Fixed [#1590](https://github.com/LykosAI/StabilityMatrix/issues/1590) - Startup crash when settings file is corrupted. Settings files are now self-healing with automatic recovery from null bytes, truncated JSON, and missing brackets
+- Fixed [#1397](https://github.com/LykosAI/StabilityMatrix/issues/1397), [#610](https://github.com/LykosAI/StabilityMatrix/issues/610) - duplicate pip package entries in results - thanks to @e-nord!
 
 ## v2.16.0-dev.2
 ### Added
@@ -102,6 +104,63 @@ Huge shoutout to our amazing Visionaries: **Waterclouds**, **JungleDragon**, **b
 ### Supporters
 #### 🌟 Visionaries
 A massive thank you to our esteemed Visionaries: **Waterclouds**, **JungleDragon**, **bluepopsicle**, **Bob S**, and **whudunit**! Your generosity is the powerhouse behind Stability Matrix, enabling us to keep building and refining with confidence. We are truly grateful for your partnership!
+
+## v2.15.7
+### Added
+- Added single-instance window activation signaling so reopening the app restores and focuses the existing desktop window instead of launching a duplicate instance
+- Added notification system with localizable banner and markdown detail dialog UI
+- Added warning in data directory selector when an OneDrive folder is selected
+- Added support in the Checkpoints page to distinguish standard updates from Early Access-only updates - thanks to @x0x0b!
+- Added torch index for Strix/Gorgon Point Ryzen AI APUs on Windows - thanks to @NeuralFault!
+### Changed
+- Settings file saves are now atomic to prevent corruption from interrupted writes
+### Fixed
+- Fixed an issue where `Align Your Steps` scheduler and Unet Loader workflows ignored Regional Prompting (and other addon) conditioning modifiers.
+- Potentially fixed [#1578](https://github.com/LykosAI/StabilityMatrix/issues/1578) - `SocketException: Address already in use` on Linux startup by cleaning stale interprocess socket files and reactivating the existing window
+- Fixed bold text not rendering in markdown dialogs on Windows 11 due to Avalonia 11.3.x variable font regression with Segoe UI Variable Text
+- Fixed Japanese text appearing compressed/squished in markdown dialogs by ensuring the bundled NotoSansJP font is used for CTextBlock rendering
+- Fixed ContentDialog title and buttons not using the correct font for Japanese locale (NotoSansJP) when shown as overlay
+- Added missing `CBold` and `CItalic` inline styles to the markdown style sheet
+- Fixed download progress bar showing 100% immediately for fresh downloads due to missing Content-Length fallback when Content-Range header is absent
+- Fixed downloads failing with "The request message was already sent" when the server doesn't return Content-Length on the first attempt, caused by reusing a consumed HttpRequestMessage in the retry loop
+- Fixed downloads from sources that redirect to CivitAI/HuggingFace (e.g. CivArchive) failing with Unauthorized by resolving the redirect target URL and applying auth headers for the correct domain
+- Fixed dropdown menu overlayed in Inference UI Model Cards not being scrollable on Linux - thanks to @NeuralFault!
+- Fixed [#1590](https://github.com/LykosAI/StabilityMatrix/issues/1590) - Startup crash when settings file is corrupted. Settings files are now self-healing with automatic recovery from null bytes, truncated JSON, and missing brackets
+- Fixed [#1397](https://github.com/LykosAI/StabilityMatrix/issues/1397), [#610](https://github.com/LykosAI/StabilityMatrix/issues/610) - duplicate pip package entries in results - thanks to @e-nord!
+
+## v2.15.6
+### Added
+- Added NVIDIA driver version warning when launching ComfyUI with CUDA 13.0 (cu130) and driver versions below 580.x
+- Added legacy Python warning when launching InvokeAI installations using Python 3.10.11
+- Added Tiled VAE Decode to the Inference video workflows - thanks to @NeuralFault!
+### Changed
+- Disabled update checking for legacy InvokeAI installations using Python 3.10.11
+- Hide rating stars in the Civitai browser page if no rating is available
+- Updated uv to v0.9.30
+- Updated PortableGit to v2.52.0.windows.1
+- Updated Sage/Triton/Nunchaku installers to use GitHub API to fetch latest releases
+- Updated ComfyUI installations and updates to automatically install ComfyUI Manager
+- Updated gfx110X Windows ROCm nightly index - thanks to @NeuralFault!
+- Updated ComfyUI-Zluda install to more closely match the author's intended installation method - thanks to @NeuralFault!
+- Updated Forge Classic installs/updates to use the upstream install script for better version compatibility with torch/sage/triton/nunchaku
+- Backslashes can now be escaped in Inference prompts via `\\`
+### Fixed
+- Fixed parsing of escape sequences in Inference such as `\\`
+- Fixed [#1546](https://github.com/LykosAI/StabilityMatrix/issues/1546), [#1541](https://github.com/LykosAI/StabilityMatrix/issues/1541) - "No module named 'pkg_resources'" error when installing Automatic1111/Forge/reForge packages
+- Fixed [#1545](https://github.com/LykosAI/StabilityMatrix/issues/1545), [#1518](https://github.com/LykosAI/StabilityMatrix/issues/1518), [#1513](https://github.com/LykosAI/StabilityMatrix/issues/1513), [#1488](https://github.com/LykosAI/StabilityMatrix/issues/1488) - Forge Neo update breaking things
+- Fixed [#1529](https://github.com/LykosAI/StabilityMatrix/issues/1529) - "Selected commit is null" error when installing packages and rate limited by GitHub
+- Fixed [#1525](https://github.com/LykosAI/StabilityMatrix/issues/1525) - Crash after downloading a model
+- Fixed [#1523](https://github.com/LykosAI/StabilityMatrix/issues/1523), [#1499](https://github.com/LykosAI/StabilityMatrix/issues/1499), [#1494](https://github.com/LykosAI/StabilityMatrix/issues/1494) - Automatic1111 using old stable diffusion repo
+- Fixed [#1505](https://github.com/LykosAI/StabilityMatrix/issues/1505) - incorrect port argument for Wan2GP
+- Possibly fix [#1502](https://github.com/LykosAI/StabilityMatrix/issues/1502) - English fonts not displaying correctly on Linux in Chinese environments
+- Fixed [#1476](https://github.com/LykosAI/StabilityMatrix/issues/1476) - Incorrect shared output folder for Forge Classic/Neo
+- Fixed [#1466](https://github.com/LykosAI/StabilityMatrix/issues/1466) - crash after moving portable install
+- Fixed [#1445](https://github.com/LykosAI/StabilityMatrix/issues/1445) - Linux app updates not actually updating - thanks to @NeuralFault!
+### Supporters
+#### 🌟 Visionaries
+To our stellar Visionaries: **Waterclouds**, **JungleDragon**, **bluepopsicle**, **Bob S**, and **whudunit**! Your generosity keeps this project thriving and gives us the confidence to tackle the big challenges. Thank you for being the foundation that makes it all possible!
+#### 🚀 Pioneers
+Shoutout to our incredible Pioneer crew for keeping the momentum going! Thank you to: **Szir777**, **Noah M**, **[USA]TechDude**, **Thom**, **SeraphOfSalem**, **Desert Viber**, **Adam**, **Droolguy**, **ACTUALLY_the_Real_Willem_Dafoe**, **takyamtom**, **robek**, **Ghislain G**, **Phil R**, **Tundra Everquill**, and a warm welcome to our newest Pioneers: **Andrew B**, **snotty**, **Miguel A**, **SinthCore**, and **Ahmed S**!
 
 ## v2.15.5
 ### Added

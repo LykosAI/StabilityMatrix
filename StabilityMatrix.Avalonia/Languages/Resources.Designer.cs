@@ -4128,6 +4128,15 @@ namespace StabilityMatrix.Avalonia.Languages {
                 return ResourceManager.GetString("Warning_PleaseExtractFirst", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to OneDrive folders are not recommended: file syncing can break Git, Python venvs, and package installations..
+        /// </summary>
+        public static string Warning_OneDriveFolder {
+            get {
+                return ResourceManager.GetString("Warning_OneDriveFolder", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to Enter package name.

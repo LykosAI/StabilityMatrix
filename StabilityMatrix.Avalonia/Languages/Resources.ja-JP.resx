@@ -231,6 +231,9 @@
   <data name="Label_UpdateAvailable" xml:space="preserve">
     <value>更新あり</value>
   </data>
+  <data name="Label_EarlyAccessUpdateAvailable" xml:space="preserve">
+    <value>Early Accessの更新あり</value>
+  </data>
   <data name="Label_BecomeAPatron" xml:space="preserve">
     <value>Patreonになる</value>
   </data>

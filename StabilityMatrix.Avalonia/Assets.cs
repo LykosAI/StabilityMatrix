@@ -196,6 +196,8 @@ internal static class Assets
 
     public static Uri PatreonUrl { get; } = new("https://patreon.com/StabilityMatrix");
 
+    public static Uri MembershipUrl { get; } = new("https://lykos.ai/membership?ref=a1");
+
     public static Uri CivitAIUrl { get; } = new("https://civitai.com");
 
     public static Uri LykosForgotPasswordUrl { get; } = new("https://lykos.ai/forgot-password");

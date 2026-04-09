@@ -10,6 +10,100 @@ public static class ProcessRunner
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
+    // Managed Python/uv subprocesses should not inherit ambient Python/venv activation state.
+    private static readonly string[] PythonEnvironmentVariablesToSanitize =
+    [
+        "PYTHONHOME",
+        "PYTHONPATH",
+        "PYTHONSTARTUP",
+        "PYTHONUSERBASE",
+        "PYTHONEXECUTABLE",
+        "__PYVENV_LAUNCHER__",
+        "VIRTUAL_ENV",
+        "CONDA_PREFIX",
+        "CONDA_DEFAULT_ENV",
+    ];
+
+    public static void SanitizeCurrentProcessPythonEnvironment(bool setNoUserSite = true)
+    {
+        var removedKeys = new List<string>();
+        foreach (var key in PythonEnvironmentVariablesToSanitize)
+        {
+            if (Environment.GetEnvironmentVariable(key, EnvironmentVariableTarget.Process) is null)
+                continue;
+
+            Environment.SetEnvironmentVariable(key, null, EnvironmentVariableTarget.Process);
+            removedKeys.Add(key);
+        }
+
+        if (setNoUserSite)
+        {
+            Environment.SetEnvironmentVariable("PYTHONNOUSERSITE", "1", EnvironmentVariableTarget.Process);
+        }
+
+        if (removedKeys.Count > 0)
+        {
+            Logger.Debug(
+                "Removed inherited Python environment variables from current process: [{Keys}]",
+                string.Join(", ", removedKeys)
+            );
+        }
+    }
+
+    internal static void PrepareEnvironment(
+        ProcessStartInfo info,
+        string fileName,
+        IEnumerable<KeyValuePair<string, string>>? environmentVariables
+    )
+    {
+        if (UsesPythonRuntime(fileName))
+        {
+            var explicitKeys =
+                environmentVariables?.Select(kvp => kvp.Key).ToHashSet(StringComparer.OrdinalIgnoreCase)
+                ?? [];
+
+            var removedKeys = new List<string>();
+            foreach (var key in PythonEnvironmentVariablesToSanitize)
+            {
+                if (explicitKeys.Contains(key))
+                    continue;
+
+                if (info.Environment.Remove(key))
+                {
+                    removedKeys.Add(key);
+                }
+            }
+
+            if (!explicitKeys.Contains("PYTHONNOUSERSITE"))
+            {
+                info.Environment["PYTHONNOUSERSITE"] = "1";
+            }
+
+            if (removedKeys.Count > 0)
+            {
+                Logger.Debug(
+                    "Removed inherited Python environment variables: [{Keys}]",
+                    string.Join(", ", removedKeys)
+                );
+            }
+        }
+
+        ApplyEnvironmentVariables(info, environmentVariables);
+    }
+
+    internal static bool UsesPythonRuntime(string fileName)
+    {
+        var executableName = Path.GetFileNameWithoutExtension(fileName);
+        if (string.IsNullOrWhiteSpace(executableName))
+            return false;
+
+        return executableName.StartsWith("python", StringComparison.OrdinalIgnoreCase)
+            || executableName.StartsWith("pypy", StringComparison.OrdinalIgnoreCase)
+            || executableName.StartsWith("pip", StringComparison.OrdinalIgnoreCase)
+            || executableName.Equals("uv", StringComparison.OrdinalIgnoreCase)
+            || executableName.Equals("uvx", StringComparison.OrdinalIgnoreCase);
+    }
+
     private static void ApplyEnvironmentVariables(
         ProcessStartInfo info,
         IEnumerable<KeyValuePair<string, string>>? environmentVariables
@@ -190,7 +284,7 @@ public static class ProcessRunner
             CreateNoWindow = true,
         };
 
-        ApplyEnvironmentVariables(info, environmentVariables);
+        PrepareEnvironment(info, fileName, environmentVariables);
 
         if (workingDirectory != null)
         {
@@ -233,7 +327,7 @@ public static class ProcessRunner
             info.StandardErrorEncoding = Encoding.UTF8;
         }
 
-        ApplyEnvironmentVariables(info, environmentVariables);
+        PrepareEnvironment(info, fileName, environmentVariables);
 
         if (workingDirectory != null)
         {
@@ -306,7 +400,7 @@ public static class ProcessRunner
             CreateNoWindow = true,
         };
 
-        ApplyEnvironmentVariables(info, environmentVariables);
+        PrepareEnvironment(info, fileName, environmentVariables);
 
         if (workingDirectory != null)
         {
@@ -423,7 +517,7 @@ public static class ProcessRunner
             CreateNoWindow = true,
         };
 
-        ApplyEnvironmentVariables(info, environmentVariables);
+        PrepareEnvironment(info, fileName, environmentVariables);
 
         if (workingDirectory != null)
         {

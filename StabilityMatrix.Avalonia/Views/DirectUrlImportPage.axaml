@@ -8,7 +8,7 @@
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
-    d:DataContext="{x:Static mocks:DesignData.HuggingFacePageViewModel}"
+    d:DataContext="{x:Static mocks:DesignData.DirectUrlImportViewModel}"
     d:DesignHeight="700"
     d:DesignWidth="800"
     x:CompileBindings="True"
@@ -16,45 +16,41 @@
     mc:Ignorable="d">
     <ScrollViewer>
         <StackPanel Margin="24" Spacing="16" VerticalAlignment="Top">
-            <!-- Header -->
             <TextBlock
                 FontSize="18"
                 FontWeight="SemiBold"
-                Text="Direct URL Import" />
+                Text="{x:Static lang:Resources.Label_DirectUrlImport}" />
 
-            <!-- URLs Input Section -->
             <StackPanel Spacing="8">
                 <TextBlock
                     FontWeight="Medium"
-                    Text="Input URLs (one per line):" />
+                    Text="{x:Static lang:Resources.Text_DirectUrlInputUrlsOnePerLine}" />
 
                 <TextBox
                     AcceptsReturn="True"
                     Height="150"
                     IsEnabled="{Binding !IsImporting}"
-                    Watermark="https://example.com/model.safetensors&#10;https://civitai.com/models?query=anime"
+                    Watermark="{x:Static lang:Resources.Text_UrlImportUrlsWatermark}"
                     Text="{Binding UrlsInput, Mode=TwoWay}"
                     TextWrapping="Wrap"
                     VerticalAlignment="Top" />
             </StackPanel>
 
-            <!-- Filename Section -->
             <StackPanel Spacing="8">
                 <TextBlock
                     FontWeight="Medium"
-                    Text="Model Filename (for direct URLs):" />
+                    Text="{x:Static lang:Resources.Label_ModelFileNameForDirectUrls}" />
 
                 <TextBox
                     IsEnabled="{Binding !IsImporting}"
-                    Watermark="model.safetensors"
+                    Watermark="{x:Static lang:Resources.Text_UrlImportModelFileNameWatermark}"
                     Text="{Binding ModelFileName, Mode=TwoWay}" />
             </StackPanel>
 
-            <!-- Download Location Section -->
             <StackPanel Spacing="8">
                 <TextBlock
                     FontWeight="Medium"
-                    Text="Download Location:" />
+                    Text="{x:Static lang:Resources.Label_SelectDownloadLocation}" />
 
                 <StackPanel Spacing="8" Orientation="Horizontal">
                     <ComboBox
@@ -67,7 +63,7 @@
                     <Button
                         Classes="transparent-full"
                         Command="{Binding SelectCustomFolderCommand}"
-                        Content="Browse..." />
+                        Content="{x:Static lang:Resources.Action_SelectDirectory}" />
                 </StackPanel>
 
                 <TextBlock
@@ -77,7 +73,6 @@
                     Text="{Binding CustomDownloadLocation}" />
             </StackPanel>
 
-            <!-- Status Section -->
             <StackPanel Spacing="8">
                 <TextBlock
                     FontSize="12"
@@ -86,16 +81,14 @@
                     Text="{Binding ImportStatus}" />
             </StackPanel>
 
-            <!-- Standard start button -->
             <StackPanel Spacing="8" Orientation="Horizontal" IsVisible="{Binding !IsCivitAiSelectionMode}">
                 <Button
                     Classes="accent"
                     Command="{Binding ImportCommand}"
                     IsEnabled="{Binding !IsImporting}"
-                    Content="Start Download" />
+                    Content="{x:Static lang:Resources.Action_Download}" />
             </StackPanel>
 
-            <!-- CivitAI paging/selection section -->
             <Border
                 Background="{DynamicResource ColorNeutralBackground3}"
                 BorderBrush="{DynamicResource ColorNeutralStroke2}"
@@ -107,7 +100,7 @@
                     <TextBlock
                         FontSize="14"
                         FontWeight="SemiBold"
-                        Text="Select CivitAI models from current page" />
+                        Text="{x:Static lang:Resources.Label_SelectCivitAiModelsFromCurrentPage}" />
 
                     <TextBlock
                         FontSize="11"
@@ -151,27 +144,26 @@
                             Classes="accent"
                             Command="{Binding ImportSelectedCivitAiModelsCommand}"
                             IsEnabled="{Binding !IsImporting}"
-                            Content="Import selected from this page" />
+                            Content="{x:Static lang:Resources.Action_Import}" />
 
                         <Button
                             Command="{Binding SkipCurrentCivitAiPageCommand}"
                             IsEnabled="{Binding !IsImporting}"
-                            Content="Skip this page" />
+                            Content="{x:Static lang:Resources.Action_SkipThisPage}" />
 
                         <Button
                             Command="{Binding ContinueNextCivitAiPageCommand}"
                             IsEnabled="{Binding !IsImporting}"
                             IsVisible="{Binding HasMoreCivitAiPages}"
-                            Content="Load next page" />
+                            Content="{x:Static lang:Resources.Label_NextPage}" />
 
                         <Button
                             Command="{Binding CancelCivitAiSelectionCommand}"
-                            Content="Cancel" />
+                            Content="{x:Static lang:Resources.Action_Cancel}" />
                     </StackPanel>
                 </StackPanel>
             </Border>
 
-            <!-- Info Section -->
             <Border
                 Padding="12"
                 Background="{DynamicResource ColorNeutralBackground3}"
@@ -182,30 +174,30 @@
                     <TextBlock
                         FontSize="11"
                         FontWeight="SemiBold"
-                        Text="Tips:" />
+                        Text="{x:Static lang:Resources.Label_Tips}" />
 
                     <TextBlock
                         FontSize="11"
                         Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                        Text="• If you add CivitAI page URLs (for example https://civitai.com/models?query=... ), you'll be asked to pick models page-by-page."
+                        Text="{x:Static lang:Resources.Text_DirectUrlImportTipCivitAiPage}"
                         TextWrapping="Wrap" />
 
                     <TextBlock
                         FontSize="11"
                         Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                        Text="• Use direct URLs only when you want a single fallback filename for download."
+                        Text="{x:Static lang:Resources.Text_DirectUrlImportTipDirectUrls}"
                         TextWrapping="Wrap" />
 
                     <TextBlock
                         FontSize="11"
                         Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                        Text="• If your CivitAI URL is a model page (https://civitai.com/models/12345), the page's available models are shown for selection."
+                        Text="{x:Static lang:Resources.Text_DirectUrlImportTipCivitAiModelPage}"
                         TextWrapping="Wrap" />
 
                     <TextBlock
                         FontSize="11"
                         Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                        Text="• The download will be saved to the selected model folder."
+                        Text="{x:Static lang:Resources.Text_DirectUrlImportTipSaveLocation}"
                         TextWrapping="Wrap" />
                 </StackPanel>
             </Border>

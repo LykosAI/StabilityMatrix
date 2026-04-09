@@ -1,25 +1,23 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.IO;
 using System.Linq;
-using System.Net;
 using System.Threading.Tasks;
-using AsyncAwaitBestPractices;
+using System.Web;
 using Avalonia.Controls.Notifications;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Injectio.Attributes;
 using StabilityMatrix.Avalonia;
-using StabilityMatrix.Core.Api;
-using StabilityMatrix.Core.Models.Api;
+using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Services;
 
@@ -29,7 +27,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
 [RegisterSingleton<DirectUrlImportViewModel>]
 public partial class DirectUrlImportViewModel : TabViewModelBase
 {
-    private const string CustomLocationLabel = "Custom...";
+    private static string CustomLocationLabel => Resources.Label_CustomEllipsis;
     private const string CivitAiHost = "civitai.com";
     private const string WwwCivitAiHost = "www.civitai.com";
     private const int DefaultCivitPageLimit = 30;
@@ -42,7 +40,6 @@ public partial class DirectUrlImportViewModel : TabViewModelBase
 
     private readonly Queue<CivitAiImportContext> civitAiImportQueue = new();
     private CivitAiImportContext? activeCivitAiContext;
-    private DirectoryPath activeDownloadFolder;
 
     [ObservableProperty]
     private string urlsInput = string.Empty;
@@ -85,7 +82,7 @@ public partial class DirectUrlImportViewModel : TabViewModelBase
 
     private string lastValidDownloadLocation = string.Empty;
 
-    public override string Header => "Direct URL";
+    public override string Header => Resources.Label_DirectUrl;
 
     public DirectUrlImportViewModel(
         IModelImportService modelImportService,
@@ -103,7 +100,7 @@ public partial class DirectUrlImportViewModel : TabViewModelBase
     public override void OnLoaded()
     {
         LoadAvailableDownloadLocations();
-        if (AvailableDownloadLocations.Count > 0)
+        if (AvailableDownloadLocations.Count > 0 && string.IsNullOrWhiteSpace(SelectedDownloadLocation))
         {
             SelectedDownloadLocation = AvailableDownloadLocations[0];
             if (!IsCustomLocation(SelectedDownloadLocation))
@@ -140,25 +137,12 @@ public partial class DirectUrlImportViewModel : TabViewModelBase
 
     private void LoadAvailableDownloadLocations()
     {
-        var locations = new List<string>();
-        var modelsDir = new DirectoryPath(settingsManager.ModelsDirectory);
-
-        // Add standard shared folder types
-        foreach (var folderType in Enum.GetValues(typeof(SharedFolderType)).Cast<SharedFolderType>())
-        {
-            if (folderType == SharedFolderType.Unknown)
-            {
-                continue;
-            }
-
-            var path = modelsDir.JoinDir(folderType.GetStringValue()).ToString();
-            var displayName = $"Models/{folderType.GetStringValue()}";
-            locations.Add(displayName);
-        }
-
-        // Add custom location option
+        var locations = Enum
+            .GetValues<SharedFolderType>()
+            .Where(folderType => folderType != SharedFolderType.Unknown)
+            .Select(folderType => $"Models/{folderType.GetStringValue()}")
+            .ToList();
         locations.Add(CustomLocationLabel);
-
         AvailableDownloadLocations = locations;
     }
 
@@ -167,54 +151,32 @@ public partial class DirectUrlImportViewModel : TabViewModelBase
     {
         if (string.IsNullOrWhiteSpace(UrlsInput))
         {
-            notificationService.Show(
-                new Notification(
-                    "No URLs provided",
-                    "Please enter at least one URL",
-                    NotificationType.Warning
-                )
+            ShowNotification(
+                Resources.Label_NoUrlsProvided,
+                Resources.Text_PleaseEnterAtLeastOneUrl,
+                NotificationType.Warning
             );
             return;
         }
 
-        if (string.IsNullOrWhiteSpace(SelectedDownloadLocation))
+        var downloadFolder = GetValidatedDownloadFolder();
+        if (downloadFolder is null)
         {
-            notificationService.Show(
-                new Notification(
-                    "No location selected",
-                    "Please select a download location",
-                    NotificationType.Warning
-                )
-            );
-            return;
-        }
-
-        if (IsCustomLocation(SelectedDownloadLocation) && string.IsNullOrWhiteSpace(CustomDownloadLocation))
-        {
-            notificationService.Show(
-                new Notification(
-                    "No custom location selected",
-                    "Please pick a folder for the custom location",
-                    NotificationType.Warning
-                )
-            );
             return;
         }
 
         try
         {
             IsImporting = true;
-            ImportStatus = "Parsing URLs...";
+            ImportStatus = Resources.Text_ParsingUrls;
 
             var parsedUrls = ParseUrls(UrlsInput);
             if (parsedUrls.Count == 0)
             {
-                notificationService.Show(
-                    new Notification(
-                        "Invalid URLs",
-                        "Please enter at least one valid URL",
-                        NotificationType.Warning
-                    )
+                ShowNotification(
+                    Resources.Label_InvalidUrl,
+                    Resources.Text_PleaseEnterAtLeastOneValidUrl,
+                    NotificationType.Warning
                 );
                 return;
             }
@@ -236,70 +198,54 @@ public partial class DirectUrlImportViewModel : TabViewModelBase
 
             if (directUrls.Count > 0 && string.IsNullOrWhiteSpace(ModelFileName))
             {
-                notificationService.Show(
-                    new Notification(
-                        "No filename provided",
-                        "Please enter a filename for fallback direct downloads",
-                        NotificationType.Warning
-                    )
+                ShowNotification(
+                    Resources.Label_NoFileNameProvided,
+                    Resources.Text_PleaseEnterAFileNameForFallbackDirectDownloads,
+                    NotificationType.Warning
                 );
                 return;
             }
 
-            var downloadFolder = ResolveDownloadFolder();
-            activeDownloadFolder = downloadFolder;
-
             if (directUrls.Count > 0)
             {
-                ImportStatus = $"Downloading from {directUrls.Count} direct URL(s)...";
-                await modelImportService.DoCustomImport(
-                    directUrls,
+                ImportStatus = string.Format(
+                    Resources.Text_DownloadingFromDirectUrls,
+                    directUrls.Count
+                );
+                await modelImportService.DoCustomImport(directUrls, ModelFileName, downloadFolder);
+
+                var downloadMessage = string.Format(
+                    Resources.Label_DownloadWillBeSavedToLocation,
                     ModelFileName,
                     downloadFolder
                 );
-
-                ImportStatus = $"Started download of {ModelFileName}";
-                notificationService.Show(
-                    new Notification(
-                        "Download started",
-                        $"Attempting to download {ModelFileName} from {directUrls.Count} URL(s)",
-                        NotificationType.Success
-                    )
+                ImportStatus = downloadMessage;
+                ShowNotification(
+                    Resources.Label_DownloadStarted,
+                    downloadMessage,
+                    NotificationType.Success
                 );
             }
 
             if (civitAiContexts.Count > 0)
             {
                 StartCivitAiSelectionFlow(civitAiContexts);
-                ImportStatus = "Loading CivitAI models...";
+                ImportStatus = Resources.Text_LoadingCivitAiModels;
                 await LoadCurrentCivitAiPageAsync();
                 return;
             }
 
-            // Clear input after successful direct import
             UrlsInput = string.Empty;
             ModelFileName = string.Empty;
             ImportStatus = string.Empty;
         }
         catch (UriFormatException ex)
         {
-            notificationService.Show(
-                new Notification(
-                    "Invalid URL",
-                    $"One or more URLs are invalid: {ex.Message}",
-                    NotificationType.Error
-                )
-            );
+            ShowNotification(Resources.Label_InvalidUrl, ex.Message, NotificationType.Error);
         }
         catch (Exception ex)
         {
-            notificationService.Show(
-                new Notification(
-                    "Import failed",
-                    $"Error: {ex.Message}",
-                    NotificationType.Error
-                )
-            );
+            ShowNotification(Resources.Label_ImportFailed, ex.Message, NotificationType.Error);
         }
         finally
         {
@@ -314,17 +260,16 @@ public partial class DirectUrlImportViewModel : TabViewModelBase
     {
         var urls = new List<Uri>();
 
-        foreach (var line in rawInput.Split(UrlLineSeparators, StringSplitOptions.RemoveEmptyEntries))
+        foreach (
+            var line in rawInput.Split(
+                UrlLineSeparators,
+                StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries
+            )
+        )
         {
-            var trimmed = line.Trim();
-            if (string.IsNullOrWhiteSpace(trimmed))
+            if (!Uri.TryCreate(line, UriKind.Absolute, out var parsed))
             {
-                continue;
-            }
-
-            if (!Uri.TryCreate(trimmed, UriKind.Absolute, out var parsed))
-            {
-                throw new UriFormatException($"Invalid URL: {trimmed}");
+                throw new UriFormatException(string.Format(Resources.Text_InvalidUrlFormat, line));
             }
 
             urls.Add(parsed);
@@ -346,44 +291,6 @@ public partial class DirectUrlImportViewModel : TabViewModelBase
         ], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
     }
 
-    private static string? GetQueryValue(Uri uri, string key)
-    {
-        if (string.IsNullOrWhiteSpace(uri.Query) || string.IsNullOrWhiteSpace(key))
-        {
-            return null;
-        }
-
-        var query = uri.Query.AsSpan();
-        if (query.Length <= 1)
-        {
-            return null;
-        }
-
-        if (query[0] == '?')
-        {
-            query = query[1..];
-        }
-
-        foreach (var pair in query.ToString().Split('&', StringSplitOptions.RemoveEmptyEntries))
-        {
-            var parts = pair.Split('=', 2);
-            var rawName = parts.Length > 0 ? WebUtility.UrlDecode(parts[0]) : null;
-            if (!string.Equals(rawName, key, StringComparison.OrdinalIgnoreCase))
-            {
-                continue;
-            }
-
-            if (parts.Length == 1)
-            {
-                return string.Empty;
-            }
-
-            return WebUtility.UrlDecode(parts[1]);
-        }
-
-        return null;
-    }
-
     private static int? ParseQueryInt(string? rawValue)
     {
         return int.TryParse(rawValue, out var value) ? value : null;
@@ -400,32 +307,6 @@ public partial class DirectUrlImportViewModel : TabViewModelBase
         return Enum.TryParse(value, true, out TEnum parsed)
             ? parsed
             : null;
-    }
-
-    private static CivitModelsRequest CloneRequest(CivitModelsRequest request)
-    {
-        return new CivitModelsRequest
-        {
-            Limit = request.Limit,
-            Page = request.Page,
-            Query = request.Query,
-            Tag = request.Tag,
-            Username = request.Username,
-            Types = request.Types?.ToArray(),
-            Sort = request.Sort,
-            Period = request.Period,
-            Rating = request.Rating,
-            Favorites = request.Favorites,
-            Hidden = request.Hidden,
-            PrimaryFileOnly = request.PrimaryFileOnly,
-            AllowDerivatives = request.AllowDerivatives,
-            AllowDifferentLicenses = request.AllowDifferentLicenses,
-            AllowCommercialUse = request.AllowCommercialUse,
-            Nsfw = request.Nsfw,
-            BaseModels = request.BaseModels?.ToArray(),
-            CommaSeparatedModelIds = request.CommaSeparatedModelIds,
-            Cursor = request.Cursor,
-        };
     }
 
     private DirectoryPath ResolveDownloadFolder()
@@ -460,6 +341,7 @@ public partial class DirectUrlImportViewModel : TabViewModelBase
         }
 
         var request = new CivitModelsRequest { Limit = DefaultCivitPageLimit, Nsfw = "true" };
+        var query = HttpUtility.ParseQueryString(uri.Query);
 
         var pathParts = uri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
         if (pathParts.Length > 1 && int.TryParse(pathParts[1], out var modelId))
@@ -468,25 +350,24 @@ public partial class DirectUrlImportViewModel : TabViewModelBase
             context = new CivitAiImportContext
             {
                 Request = request,
-                SourceUrl = uri,
                 SourceLabel = $"https://{CivitAiHost}/models/{modelId}",
             };
 
             return true;
         }
 
-        var queryValue = GetQueryValue(uri, "query");
-        var tagValue = GetQueryValue(uri, "tag");
-        var usernameValue = GetQueryValue(uri, "username");
-        var idsValue = GetQueryValue(uri, "ids");
-        var modelIdValue = GetQueryValue(uri, "modelId");
-        var sortValue = GetQueryValue(uri, "sort");
-        var periodValue = GetQueryValue(uri, "period");
-        var cursorValue = GetQueryValue(uri, "cursor");
-        var pageValue = GetQueryValue(uri, "page");
-        var limitValue = GetQueryValue(uri, "limit");
-        var typesValue = GetQueryValue(uri, "types");
-        var baseModelsValue = GetQueryValue(uri, "baseModels");
+        var queryValue = query["query"];
+        var tagValue = query["tag"];
+        var usernameValue = query["username"];
+        var idsValue = query["ids"];
+        var modelIdValue = query["modelId"];
+        var sortValue = query["sort"];
+        var periodValue = query["period"];
+        var cursorValue = query["cursor"];
+        var pageValue = query["page"];
+        var limitValue = query["limit"];
+        var typesValue = query["types"];
+        var baseModelsValue = query["baseModels"];
 
         if (!string.IsNullOrWhiteSpace(queryValue))
         {
@@ -564,7 +445,6 @@ public partial class DirectUrlImportViewModel : TabViewModelBase
         context = new CivitAiImportContext
         {
             Request = request,
-            SourceUrl = uri,
             SourceLabel = uri.ToString(),
         };
 
@@ -597,13 +477,17 @@ public partial class DirectUrlImportViewModel : TabViewModelBase
         var selected = CivitAiCurrentPageModels.Where(x => x.IsSelected).ToList();
         if (selected.Count == 0)
         {
-            notificationService.Show(
-                new Notification(
-                    "No models selected",
-                    "Please select at least one model from this page",
-                    NotificationType.Warning
-                )
+            ShowNotification(
+                Resources.Label_NoModelsSelected,
+                Resources.Text_PleaseEnterAtLeastOneModelFromThisPage,
+                NotificationType.Warning
             );
+            return;
+        }
+
+        var downloadFolder = GetValidatedDownloadFolder();
+        if (downloadFolder is null)
+        {
             return;
         }
 
@@ -616,7 +500,7 @@ public partial class DirectUrlImportViewModel : TabViewModelBase
 
             foreach (var item in selected)
             {
-                if (await TryImportCivitModel(item.Model, item.ModelVersion))
+                if (await TryImportCivitModel(item.Model, item.ModelVersion, downloadFolder))
                 {
                     started++;
                 }
@@ -628,22 +512,18 @@ public partial class DirectUrlImportViewModel : TabViewModelBase
 
             if (failed > 0)
             {
-                notificationService.Show(
-                    new Notification(
-                        "Some imports failed",
-                        $"Started {started} model(s), skipped {failed} model(s)",
-                        NotificationType.Warning
-                    )
+                ShowNotification(
+                    Resources.Label_SomeImportsFailed,
+                    string.Format(Resources.Text_StartedModelsSkippedModels, started, failed),
+                    NotificationType.Warning
                 );
             }
             else
             {
-                notificationService.Show(
-                    new Notification(
-                        "Imports started",
-                        $"Started {started} model(s)",
-                        NotificationType.Success
-                    )
+                ShowNotification(
+                    Resources.Label_ImportsStarted,
+                    string.Format(Resources.Text_StartedModels, started),
+                    NotificationType.Success
                 );
             }
 
@@ -682,41 +562,12 @@ public partial class DirectUrlImportViewModel : TabViewModelBase
 
     private async Task MoveToNextCivitAiPageAsync()
     {
-        if (activeCivitAiContext is null)
+        if (!TryAdvanceToNextCivitAiPage())
         {
-            ResetCivitAiSelectionFlow();
+            CompleteCivitAiSelectionFlow();
             return;
         }
 
-        if (!string.IsNullOrWhiteSpace(activeCivitAiContext.NextCursor))
-        {
-            activeCivitAiContext.CurrentCursor = activeCivitAiContext.NextCursor;
-            activeCivitAiContext.NextCursor = null;
-            await LoadCurrentCivitAiPageAsync();
-            return;
-        }
-
-        if (activeCivitAiContext.NextPage is > 0)
-        {
-            activeCivitAiContext.CurrentCursor = null;
-            activeCivitAiContext.Request.Page = activeCivitAiContext.NextPage;
-            activeCivitAiContext.Request.Cursor = null;
-            activeCivitAiContext.NextPage = null;
-            await LoadCurrentCivitAiPageAsync();
-            return;
-        }
-
-        if (!civitAiImportQueue.TryDequeue(out var nextContext))
-        {
-            ResetCivitAiSelectionFlow();
-            UrlsInput = string.Empty;
-            ModelFileName = string.Empty;
-            ImportStatus = string.Empty;
-            return;
-        }
-
-        activeCivitAiContext = nextContext;
-        CivitAiCurrentPageUrl = nextContext.SourceLabel;
         await LoadCurrentCivitAiPageAsync();
     }
 
@@ -732,88 +583,37 @@ public partial class DirectUrlImportViewModel : TabViewModelBase
 
         try
         {
-            var request = CloneRequest(activeCivitAiContext.Request);
-            if (!string.IsNullOrWhiteSpace(activeCivitAiContext.CurrentCursor))
+            while (activeCivitAiContext is not null)
             {
-                request.Cursor = activeCivitAiContext.CurrentCursor;
-            }
-
-            var response = await civitApi.GetModels(request);
-
-            CivitAiCurrentPageModels.Clear();
-
-            if (response.Items is not { Count: > 0 })
-            {
-                CivitAiSelectionStatus = "No models found on this page. Moving to next...";
-                await MoveToNextCivitAiPageAsync();
-                return;
-            }
-
-            foreach (var model in response.Items.DistinctBy(x => x.Id))
-            {
-                if (model.ModelVersions is not { Count: > 0 })
+                var request = activeCivitAiContext.Request.Clone();
+                if (!string.IsNullOrWhiteSpace(activeCivitAiContext.CurrentCursor))
                 {
+                    request.Cursor = activeCivitAiContext.CurrentCursor;
+                }
+
+                var response = await civitApi.GetModels(request);
+                var pageModels = CreateSelectionItems(response.Items);
+
+                if (pageModels.Count == 0)
+                {
+                    CivitAiSelectionStatus = response.Items is { Count: > 0 }
+                        ? Resources.Text_NoDownloadableModelVersionsFoundOnThisPageMovingToNext
+                        : Resources.Text_NoModelsFoundOnThisPageMovingToNext;
+
+                    if (!TryAdvanceToNextCivitAiPage())
+                    {
+                        CompleteCivitAiSelectionFlow();
+                        return;
+                    }
+
                     continue;
                 }
 
-                foreach (var version in model.ModelVersions.DistinctBy(x => x.Id))
-                {
-                    if (version.Files is not { Count: > 0 })
-                    {
-                        continue;
-                    }
-
-                    CivitAiCurrentPageModels.Add(
-                        new CivitModelSelectionItem
-                        {
-                            Model = model,
-                            ModelVersion = version,
-                            IsSelected = false,
-                        }
-                    );
-                }
-            }
-
-            if (CivitAiCurrentPageModels.Count == 0)
-            {
-                CivitAiSelectionStatus = "No downloadable model versions found on this page. Moving to next...";
-                await MoveToNextCivitAiPageAsync();
+                SetCurrentCivitAiPage(response, pageModels);
                 return;
             }
 
-            activeCivitAiContext.NextCursor = response.Metadata?.NextCursor;
-            activeCivitAiContext.NextPage = ParseQueryInt(response.Metadata?.NextPage);
-
-            HasMoreCivitAiPages =
-                !string.IsNullOrWhiteSpace(activeCivitAiContext.NextCursor)
-                || activeCivitAiContext.NextPage is > 0;
-
-            CivitAiSelectionStatus =
-                $"{CivitAiCurrentPageModels.Count} model(s) available from {CivitAiCurrentPageUrl}";
-            var pageLabelSource = "CivitAI page";
-            if (!string.IsNullOrWhiteSpace(activeCivitAiContext.Request.Query))
-            {
-                pageLabelSource = $"Search: {activeCivitAiContext.Request.Query}";
-            }
-            else if (!string.IsNullOrWhiteSpace(activeCivitAiContext.Request.Tag))
-            {
-                pageLabelSource = $"Tag: #{activeCivitAiContext.Request.Tag}";
-            }
-            else if (!string.IsNullOrWhiteSpace(activeCivitAiContext.Request.Username))
-            {
-                pageLabelSource = $"User: @{activeCivitAiContext.Request.Username}";
-            }
-            else if (!string.IsNullOrWhiteSpace(activeCivitAiContext.Request.CommaSeparatedModelIds))
-            {
-                pageLabelSource = $"Models: {activeCivitAiContext.Request.CommaSeparatedModelIds}";
-            }
-
-            if (activeCivitAiContext.Request.Page is > 0)
-            {
-                pageLabelSource += $" (Page {activeCivitAiContext.Request.Page})";
-            }
-
-            CivitAiCurrentPageLabel = pageLabelSource;
+            CompleteCivitAiSelectionFlow();
         }
         finally
         {
@@ -821,7 +621,11 @@ public partial class DirectUrlImportViewModel : TabViewModelBase
         }
     }
 
-    private async Task<bool> TryImportCivitModel(CivitModel model, CivitModelVersion modelVersion)
+    private async Task<bool> TryImportCivitModel(
+        CivitModel model,
+        CivitModelVersion modelVersion,
+        DirectoryPath downloadFolder
+    )
     {
         var modelFile =
             modelVersion.Files?.FirstOrDefault(file => file.Type == CivitFileType.Model)
@@ -829,19 +633,21 @@ public partial class DirectUrlImportViewModel : TabViewModelBase
 
         if (modelFile is null)
         {
-            notificationService.Show(
-                new Notification(
-                    "Model has no files",
-                    $"{model.Name} ({modelVersion.Name}) has no downloadable files",
-                    NotificationType.Warning
-                )
+            ShowNotification(
+                Resources.Label_ModelHasNoFiles,
+                string.Format(
+                    Resources.Text_ModelHasNoDownloadableFiles,
+                    model.Name,
+                    modelVersion.Name
+                ),
+                NotificationType.Warning
             );
             return false;
         }
 
         await modelImportService.DoImport(
             model,
-            activeDownloadFolder,
+            downloadFolder,
             selectedVersion: modelVersion,
             selectedFile: modelFile
         );
@@ -865,7 +671,6 @@ public partial class DirectUrlImportViewModel : TabViewModelBase
     private sealed class CivitAiImportContext
     {
         public required CivitModelsRequest Request { get; init; }
-        public required Uri SourceUrl { get; init; }
         public required string SourceLabel { get; init; }
         public string? CurrentCursor { get; set; }
         public string? NextCursor { get; set; }
@@ -883,7 +688,7 @@ public partial class DirectUrlImportViewModel : TabViewModelBase
         public string DisplayName => $"{Model.Name} - {ModelVersion.Name}";
 
         public string Details =>
-            $"{Model.Type} • {ModelVersion.BaseModel ?? "Unknown Base"} • {Model.Creator?.Username}";
+            $"{Model.Type} • {ModelVersion.BaseModel ?? Resources.Label_UnknownBase} • {Model.Creator?.Username}";
     }
 
     [RelayCommand]
@@ -891,12 +696,10 @@ public partial class DirectUrlImportViewModel : TabViewModelBase
     {
         if (!App.StorageProvider.CanPickFolder)
         {
-            notificationService.Show(
-                new Notification(
-                    "Custom folder not available",
-                    "The platform does not support folder picking",
-                    NotificationType.Warning
-                )
+            ShowNotification(
+                Resources.Label_SelectDownloadFolder,
+                Resources.Text_PlatformDoesNotSupportFolderPicking,
+                NotificationType.Warning
             );
             return;
         }
@@ -904,7 +707,7 @@ public partial class DirectUrlImportViewModel : TabViewModelBase
         var files = await App.StorageProvider.OpenFolderPickerAsync(
             new FolderPickerOpenOptions
             {
-                Title = "Select Download Folder",
+                Title = Resources.Label_SelectDownloadFolder,
                 AllowMultiple = false,
             }
         );
@@ -913,7 +716,7 @@ public partial class DirectUrlImportViewModel : TabViewModelBase
         {
             CustomDownloadLocation = path;
             SelectedDownloadLocation = CustomLocationLabel;
-            ImportStatus = $"Custom folder set: {path}";
+            ImportStatus = string.Format(Resources.Text_CustomFolderSet, path);
             return;
         }
 
@@ -928,5 +731,165 @@ public partial class DirectUrlImportViewModel : TabViewModelBase
         }
 
         return AvailableDownloadLocations.FirstOrDefault(loc => !IsCustomLocation(loc)) ?? string.Empty;
+    }
+
+    private DirectoryPath? GetValidatedDownloadFolder()
+    {
+        if (string.IsNullOrWhiteSpace(SelectedDownloadLocation))
+        {
+            ShowNotification(
+                Resources.Label_SelectDownloadLocation,
+                Resources.Text_PleaseSelectADownloadLocation,
+                NotificationType.Warning
+            );
+            return null;
+        }
+
+        if (IsCustomLocation(SelectedDownloadLocation) && string.IsNullOrWhiteSpace(CustomDownloadLocation))
+        {
+            ShowNotification(
+                Resources.Label_SelectDownloadLocation,
+                Resources.Text_PleasePickAFolderForTheCustomLocation,
+                NotificationType.Warning
+            );
+            return null;
+        }
+
+        return ResolveDownloadFolder();
+    }
+
+    private bool TryAdvanceToNextCivitAiPage()
+    {
+        if (activeCivitAiContext is null)
+        {
+            return false;
+        }
+
+        if (!string.IsNullOrWhiteSpace(activeCivitAiContext.NextCursor))
+        {
+            activeCivitAiContext.CurrentCursor = activeCivitAiContext.NextCursor;
+            activeCivitAiContext.NextCursor = null;
+            return true;
+        }
+
+        if (activeCivitAiContext.NextPage is > 0)
+        {
+            activeCivitAiContext.CurrentCursor = null;
+            activeCivitAiContext.Request.Page = activeCivitAiContext.NextPage;
+            activeCivitAiContext.Request.Cursor = null;
+            activeCivitAiContext.NextPage = null;
+            return true;
+        }
+
+        if (!civitAiImportQueue.TryDequeue(out var nextContext))
+        {
+            return false;
+        }
+
+        activeCivitAiContext = nextContext;
+        CivitAiCurrentPageUrl = nextContext.SourceLabel;
+        return true;
+    }
+
+    private static List<CivitModelSelectionItem> CreateSelectionItems(IReadOnlyList<CivitModel>? models)
+    {
+        var items = new List<CivitModelSelectionItem>();
+        if (models is not { Count: > 0 })
+        {
+            return items;
+        }
+
+        foreach (var model in models.DistinctBy(x => x.Id))
+        {
+            if (model.ModelVersions is not { Count: > 0 })
+            {
+                continue;
+            }
+
+            foreach (var version in model.ModelVersions.DistinctBy(x => x.Id))
+            {
+                if (version.Files is not { Count: > 0 })
+                {
+                    continue;
+                }
+
+                items.Add(
+                    new CivitModelSelectionItem
+                    {
+                        Model = model,
+                        ModelVersion = version,
+                    }
+                );
+            }
+        }
+
+        return items;
+    }
+
+    private void SetCurrentCivitAiPage(
+        CivitModelsResponse response,
+        IReadOnlyCollection<CivitModelSelectionItem> pageModels
+    )
+    {
+        CivitAiCurrentPageModels.Clear();
+        foreach (var item in pageModels)
+        {
+            CivitAiCurrentPageModels.Add(item);
+        }
+
+        activeCivitAiContext!.NextCursor = response.Metadata?.NextCursor;
+        activeCivitAiContext.NextPage = ParseQueryInt(response.Metadata?.NextPage);
+        HasMoreCivitAiPages =
+            !string.IsNullOrWhiteSpace(activeCivitAiContext.NextCursor)
+            || activeCivitAiContext.NextPage is > 0;
+        CivitAiCurrentPageLabel = FormatCivitAiPageLabel(activeCivitAiContext);
+        CivitAiSelectionStatus = string.Format(
+            Resources.Text_CivitAiModelsAvailableFrom,
+            CivitAiCurrentPageModels.Count,
+            CivitAiCurrentPageUrl
+        );
+    }
+
+    private static string FormatCivitAiPageLabel(CivitAiImportContext context)
+    {
+        var pageLabelSource = Resources.Text_CivitAiPage;
+        if (!string.IsNullOrWhiteSpace(context.Request.Query))
+        {
+            pageLabelSource = string.Format(Resources.Text_SearchFormat, context.Request.Query);
+        }
+        else if (!string.IsNullOrWhiteSpace(context.Request.Tag))
+        {
+            pageLabelSource = string.Format(Resources.Text_TagFormat, context.Request.Tag);
+        }
+        else if (!string.IsNullOrWhiteSpace(context.Request.Username))
+        {
+            pageLabelSource = string.Format(Resources.Text_UserFormat, context.Request.Username);
+        }
+        else if (!string.IsNullOrWhiteSpace(context.Request.CommaSeparatedModelIds))
+        {
+            pageLabelSource = string.Format(
+                Resources.Text_ModelsFormat,
+                context.Request.CommaSeparatedModelIds
+            );
+        }
+
+        if (context.Request.Page is > 0)
+        {
+            pageLabelSource = string.Format(Resources.Text_PageFormat, pageLabelSource, context.Request.Page);
+        }
+
+        return pageLabelSource;
+    }
+
+    private void CompleteCivitAiSelectionFlow()
+    {
+        ResetCivitAiSelectionFlow();
+        UrlsInput = string.Empty;
+        ModelFileName = string.Empty;
+    }
+
+    private void ShowNotification(string title, string message, NotificationType notificationType)
+    {
+        notificationService.Show(new Notification(title, message, notificationType));
     }
 }

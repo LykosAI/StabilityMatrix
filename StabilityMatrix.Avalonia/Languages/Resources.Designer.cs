@@ -4146,5 +4146,437 @@ namespace StabilityMatrix.Avalonia.Languages {
                 return ResourceManager.GetString("Watermark_EnterPackageName", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string.
+        /// </summary>
+        public static string Action_SkipThisPage {
+            get {
+                return ResourceManager.GetString("Action_SkipThisPage", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string.
+        /// </summary>
+        public static string Label_CustomEllipsis {
+            get {
+                return ResourceManager.GetString("Label_CustomEllipsis", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string.
+        /// </summary>
+        public static string Label_DirectUrl {
+            get {
+                return ResourceManager.GetString("Label_DirectUrl", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string.
+        /// </summary>
+        public static string Label_DirectUrlImport {
+            get {
+                return ResourceManager.GetString("Label_DirectUrlImport", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string.
+        /// </summary>
+        public static string Label_ImportFailed {
+            get {
+                return ResourceManager.GetString("Label_ImportFailed", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string.
+        /// </summary>
+        public static string Label_ImportsStarted {
+            get {
+                return ResourceManager.GetString("Label_ImportsStarted", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string.
+        /// </summary>
+        public static string Label_InvalidUrl {
+            get {
+                return ResourceManager.GetString("Label_InvalidUrl", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string.
+        /// </summary>
+        public static string Label_ModelFileNameForDirectUrls {
+            get {
+                return ResourceManager.GetString("Label_ModelFileNameForDirectUrls", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string.
+        /// </summary>
+        public static string Label_ModelHasNoFiles {
+            get {
+                return ResourceManager.GetString("Label_ModelHasNoFiles", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string.
+        /// </summary>
+        public static string Label_NoFileNameProvided {
+            get {
+                return ResourceManager.GetString("Label_NoFileNameProvided", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string.
+        /// </summary>
+        public static string Label_NoModelsSelected {
+            get {
+                return ResourceManager.GetString("Label_NoModelsSelected", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string.
+        /// </summary>
+        public static string Label_NoUrlsProvided {
+            get {
+                return ResourceManager.GetString("Label_NoUrlsProvided", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string.
+        /// </summary>
+        public static string Label_SelectCivitAiModelsFromCurrentPage {
+            get {
+                return ResourceManager.GetString("Label_SelectCivitAiModelsFromCurrentPage", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string.
+        /// </summary>
+        public static string Label_SelectDownloadFolder {
+            get {
+                return ResourceManager.GetString("Label_SelectDownloadFolder", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string.
+        /// </summary>
+        public static string Label_SomeImportsFailed {
+            get {
+                return ResourceManager.GetString("Label_SomeImportsFailed", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string.
+        /// </summary>
+        public static string Label_Tips {
+            get {
+                return ResourceManager.GetString("Label_Tips", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string.
+        /// </summary>
+        public static string Label_UnknownBase {
+            get {
+                return ResourceManager.GetString("Label_UnknownBase", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string.
+        /// </summary>
+        public static string Text_CivitAiModelsAvailableFrom {
+            get {
+                return ResourceManager.GetString("Text_CivitAiModelsAvailableFrom", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string.
+        /// </summary>
+        public static string Text_CivitAiPage {
+            get {
+                return ResourceManager.GetString("Text_CivitAiPage", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string.
+        /// </summary>
+        public static string Text_CustomFolderSet {
+            get {
+                return ResourceManager.GetString("Text_CustomFolderSet", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string.
+        /// </summary>
+        public static string Text_DirectUrlImportTipCivitAiModelPage {
+            get {
+                return ResourceManager.GetString("Text_DirectUrlImportTipCivitAiModelPage", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string.
+        /// </summary>
+        public static string Text_DirectUrlImportTipCivitAiPage {
+            get {
+                return ResourceManager.GetString("Text_DirectUrlImportTipCivitAiPage", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string.
+        /// </summary>
+        public static string Text_DirectUrlImportTipDirectUrls {
+            get {
+                return ResourceManager.GetString("Text_DirectUrlImportTipDirectUrls", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string.
+        /// </summary>
+        public static string Text_DirectUrlImportTipSaveLocation {
+            get {
+                return ResourceManager.GetString("Text_DirectUrlImportTipSaveLocation", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string.
+        /// </summary>
+        public static string Text_DirectUrlInputUrlsOnePerLine {
+            get {
+                return ResourceManager.GetString("Text_DirectUrlInputUrlsOnePerLine", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string.
+        /// </summary>
+        public static string Text_DownloadingFromDirectUrls {
+            get {
+                return ResourceManager.GetString("Text_DownloadingFromDirectUrls", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string.
+        /// </summary>
+        public static string Text_InvalidUrlFormat {
+            get {
+                return ResourceManager.GetString("Text_InvalidUrlFormat", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string.
+        /// </summary>
+        public static string Text_LoadingCivitAiModels {
+            get {
+                return ResourceManager.GetString("Text_LoadingCivitAiModels", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string.
+        /// </summary>
+        public static string Text_ModelHasNoDownloadableFiles {
+            get {
+                return ResourceManager.GetString("Text_ModelHasNoDownloadableFiles", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string.
+        /// </summary>
+        public static string Text_ModelsFormat {
+            get {
+                return ResourceManager.GetString("Text_ModelsFormat", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string.
+        /// </summary>
+        public static string Text_NoDownloadableModelVersionsFoundOnThisPageMovingToNext {
+            get {
+                return ResourceManager.GetString("Text_NoDownloadableModelVersionsFoundOnThisPageMovingToNext", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string.
+        /// </summary>
+        public static string Text_NoModelsFoundOnThisPageMovingToNext {
+            get {
+                return ResourceManager.GetString("Text_NoModelsFoundOnThisPageMovingToNext", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string.
+        /// </summary>
+        public static string Text_PageFormat {
+            get {
+                return ResourceManager.GetString("Text_PageFormat", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string.
+        /// </summary>
+        public static string Text_ParsingUrls {
+            get {
+                return ResourceManager.GetString("Text_ParsingUrls", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string.
+        /// </summary>
+        public static string Text_PleaseEnterAFileNameForFallbackDirectDownloads {
+            get {
+                return ResourceManager.GetString("Text_PleaseEnterAFileNameForFallbackDirectDownloads", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string.
+        /// </summary>
+        public static string Text_PleaseEnterAtLeastOneModelFromThisPage {
+            get {
+                return ResourceManager.GetString("Text_PleaseEnterAtLeastOneModelFromThisPage", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string.
+        /// </summary>
+        public static string Text_PleaseEnterAtLeastOneUrl {
+            get {
+                return ResourceManager.GetString("Text_PleaseEnterAtLeastOneUrl", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string.
+        /// </summary>
+        public static string Text_PleaseEnterAtLeastOneValidUrl {
+            get {
+                return ResourceManager.GetString("Text_PleaseEnterAtLeastOneValidUrl", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string.
+        /// </summary>
+        public static string Text_PleasePickAFolderForTheCustomLocation {
+            get {
+                return ResourceManager.GetString("Text_PleasePickAFolderForTheCustomLocation", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string.
+        /// </summary>
+        public static string Text_PleaseSelectADownloadLocation {
+            get {
+                return ResourceManager.GetString("Text_PleaseSelectADownloadLocation", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string.
+        /// </summary>
+        public static string Text_PlatformDoesNotSupportFolderPicking {
+            get {
+                return ResourceManager.GetString("Text_PlatformDoesNotSupportFolderPicking", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string.
+        /// </summary>
+        public static string Text_SearchFormat {
+            get {
+                return ResourceManager.GetString("Text_SearchFormat", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string.
+        /// </summary>
+        public static string Text_StartedModels {
+            get {
+                return ResourceManager.GetString("Text_StartedModels", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string.
+        /// </summary>
+        public static string Text_StartedModelsSkippedModels {
+            get {
+                return ResourceManager.GetString("Text_StartedModelsSkippedModels", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string.
+        /// </summary>
+        public static string Text_TagFormat {
+            get {
+                return ResourceManager.GetString("Text_TagFormat", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string.
+        /// </summary>
+        public static string Text_UrlImportModelFileNameWatermark {
+            get {
+                return ResourceManager.GetString("Text_UrlImportModelFileNameWatermark", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string.
+        /// </summary>
+        public static string Text_UrlImportUrlsWatermark {
+            get {
+                return ResourceManager.GetString("Text_UrlImportUrlsWatermark", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string.
+        /// </summary>
+        public static string Text_UserFormat {
+            get {
+                return ResourceManager.GetString("Text_UserFormat", resourceCulture);
+            }
+        }
     }
 }

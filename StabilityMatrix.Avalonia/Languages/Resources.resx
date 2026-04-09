@@ -1509,4 +1509,149 @@ We prioritize your privacy ([Gen AI Terms](&lt;https://lykos.ai/gen-ai-terms&gt;
   <data name="Label_Filter" xml:space="preserve">
     <value>Filter</value>
   </data>
+  <data name="Action_SkipThisPage" xml:space="preserve">
+    <value>Skip this page</value>
+  </data>
+  <data name="Label_CustomEllipsis" xml:space="preserve">
+    <value>Custom...</value>
+  </data>
+  <data name="Label_DirectUrl" xml:space="preserve">
+    <value>Direct URL</value>
+  </data>
+  <data name="Label_DirectUrlImport" xml:space="preserve">
+    <value>Direct URL Import</value>
+  </data>
+  <data name="Label_ImportFailed" xml:space="preserve">
+    <value>Import failed</value>
+  </data>
+  <data name="Label_ImportsStarted" xml:space="preserve">
+    <value>Imports started</value>
+  </data>
+  <data name="Label_InvalidUrl" xml:space="preserve">
+    <value>Invalid URL</value>
+  </data>
+  <data name="Label_ModelFileNameForDirectUrls" xml:space="preserve">
+    <value>Model File Name (for direct URLs):</value>
+  </data>
+  <data name="Label_ModelHasNoFiles" xml:space="preserve">
+    <value>Model has no files</value>
+  </data>
+  <data name="Label_NoFileNameProvided" xml:space="preserve">
+    <value>No file name provided</value>
+  </data>
+  <data name="Label_NoModelsSelected" xml:space="preserve">
+    <value>No models selected</value>
+  </data>
+  <data name="Label_NoUrlsProvided" xml:space="preserve">
+    <value>No URLs provided</value>
+  </data>
+  <data name="Label_SelectCivitAiModelsFromCurrentPage" xml:space="preserve">
+    <value>Select CivitAI models from current page</value>
+  </data>
+  <data name="Label_SelectDownloadFolder" xml:space="preserve">
+    <value>Select Download Folder</value>
+  </data>
+  <data name="Label_SomeImportsFailed" xml:space="preserve">
+    <value>Some imports failed</value>
+  </data>
+  <data name="Label_Tips" xml:space="preserve">
+    <value>Tips:</value>
+  </data>
+  <data name="Label_UnknownBase" xml:space="preserve">
+    <value>Unknown Base</value>
+  </data>
+  <data name="Text_CivitAiModelsAvailableFrom" xml:space="preserve">
+    <value>{0} model(s) available from {1}</value>
+  </data>
+  <data name="Text_CivitAiPage" xml:space="preserve">
+    <value>CivitAI page</value>
+  </data>
+  <data name="Text_CustomFolderSet" xml:space="preserve">
+    <value>Custom folder set: {0}</value>
+  </data>
+  <data name="Text_DirectUrlImportTipCivitAiModelPage" xml:space="preserve">
+    <value>• If your CivitAI URL is a model page (https://civitai.com/models/12345), the page's available models are shown for selection.</value>
+  </data>
+  <data name="Text_DirectUrlImportTipCivitAiPage" xml:space="preserve">
+    <value>• If you add CivitAI page URLs (for example https://civitai.com/models?query=... ), you'll be asked to pick models page-by-page.</value>
+  </data>
+  <data name="Text_DirectUrlImportTipDirectUrls" xml:space="preserve">
+    <value>• Use direct URLs only when you want a single fallback file name for download.</value>
+  </data>
+  <data name="Text_DirectUrlImportTipSaveLocation" xml:space="preserve">
+    <value>• The download will be saved to the selected model folder.</value>
+  </data>
+  <data name="Text_DirectUrlInputUrlsOnePerLine" xml:space="preserve">
+    <value>Input URLs (one per line):</value>
+  </data>
+  <data name="Text_DownloadingFromDirectUrls" xml:space="preserve">
+    <value>Downloading from {0} direct URL(s)...</value>
+  </data>
+  <data name="Text_InvalidUrlFormat" xml:space="preserve">
+    <value>Invalid URL: {0}</value>
+  </data>
+  <data name="Text_LoadingCivitAiModels" xml:space="preserve">
+    <value>Loading CivitAI models...</value>
+  </data>
+  <data name="Text_ModelHasNoDownloadableFiles" xml:space="preserve">
+    <value>{0} ({1}) has no downloadable files.</value>
+  </data>
+  <data name="Text_ModelsFormat" xml:space="preserve">
+    <value>Models: {0}</value>
+  </data>
+  <data name="Text_NoDownloadableModelVersionsFoundOnThisPageMovingToNext" xml:space="preserve">
+    <value>No downloadable model versions found on this page. Moving to the next page...</value>
+  </data>
+  <data name="Text_NoModelsFoundOnThisPageMovingToNext" xml:space="preserve">
+    <value>No models found on this page. Moving to the next page...</value>
+  </data>
+  <data name="Text_PageFormat" xml:space="preserve">
+    <value>{0} (Page {1})</value>
+  </data>
+  <data name="Text_ParsingUrls" xml:space="preserve">
+    <value>Parsing URLs...</value>
+  </data>
+  <data name="Text_PleaseEnterAFileNameForFallbackDirectDownloads" xml:space="preserve">
+    <value>Please enter a file name for fallback direct downloads.</value>
+  </data>
+  <data name="Text_PleaseEnterAtLeastOneModelFromThisPage" xml:space="preserve">
+    <value>Please select at least one model from this page.</value>
+  </data>
+  <data name="Text_PleaseEnterAtLeastOneUrl" xml:space="preserve">
+    <value>Please enter at least one URL.</value>
+  </data>
+  <data name="Text_PleaseEnterAtLeastOneValidUrl" xml:space="preserve">
+    <value>Please enter at least one valid URL.</value>
+  </data>
+  <data name="Text_PleasePickAFolderForTheCustomLocation" xml:space="preserve">
+    <value>Please pick a folder for the custom location.</value>
+  </data>
+  <data name="Text_PleaseSelectADownloadLocation" xml:space="preserve">
+    <value>Please select a download location.</value>
+  </data>
+  <data name="Text_PlatformDoesNotSupportFolderPicking" xml:space="preserve">
+    <value>The platform does not support folder picking.</value>
+  </data>
+  <data name="Text_SearchFormat" xml:space="preserve">
+    <value>Search: {0}</value>
+  </data>
+  <data name="Text_StartedModels" xml:space="preserve">
+    <value>Started {0} model(s).</value>
+  </data>
+  <data name="Text_StartedModelsSkippedModels" xml:space="preserve">
+    <value>Started {0} model(s), skipped {1} model(s).</value>
+  </data>
+  <data name="Text_TagFormat" xml:space="preserve">
+    <value>Tag: #{0}</value>
+  </data>
+  <data name="Text_UrlImportModelFileNameWatermark" xml:space="preserve">
+    <value>model.safetensors</value>
+  </data>
+  <data name="Text_UrlImportUrlsWatermark" xml:space="preserve">
+    <value>https://example.com/model.safetensors
+https://civitai.com/models?query=anime</value>
+  </data>
+  <data name="Text_UserFormat" xml:space="preserve">
+    <value>User: @{0}</value>
+  </data>
 </root>

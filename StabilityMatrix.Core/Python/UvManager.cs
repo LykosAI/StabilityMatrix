@@ -332,7 +332,8 @@ public partial class UvManager : IUvManager
 
     [GeneratedRegex(
         @"^\s*(?<key>[a-zA-Z0-9_.-]+(?:[\+\-][a-zA-Z0-9_.-]+)?)\s+(?<status_or_path>.+)\s*$",
-        RegexOptions.IgnoreCase | RegexOptions.Compiled
+        RegexOptions.IgnoreCase | RegexOptions.Compiled,
+        "en-US"
     )]
     private static partial Regex UvListRegex();
 }

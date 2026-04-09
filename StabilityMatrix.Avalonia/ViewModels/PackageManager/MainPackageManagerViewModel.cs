@@ -252,5 +252,5 @@ public partial class MainPackageManagerViewModel : PageViewModelBase
     }
 
     private void OnInstalledPackagesChanged(object? sender, EventArgs e) =>
-        Dispatcher.UIThread.Post(() => OnLoadedAsync().SafeFireAndForget());
+        Dispatcher.UIThread.InvokeAsync(OnLoadedAsync).SafeFireAndForget();
 }

@@ -217,7 +217,11 @@ public class TrackedDownload
         // Cancel any pending auto-retry delay since we're resuming now.
         CancelRetryDelay();
 
-        if (ProgressState != ProgressState.Inactive && ProgressState != ProgressState.Paused)
+        if (
+            ProgressState != ProgressState.Inactive
+            && ProgressState != ProgressState.Paused
+            && ProgressState != ProgressState.Pending
+        )
         {
             Logger.Warn(
                 "Attempted to resume download {Download} but it is not paused ({State})",
@@ -272,6 +276,33 @@ public class TrackedDownload
         OnProgressStateChanged(ProgressState);
     }
 
+    /// <summary>
+    /// Cleans up temp file and all sidecar files (e.g. .cm-info.json, preview image)
+    /// for a download that has already failed and will not be retried.
+    /// This transitions the state to <see cref="ProgressState.Cancelled"/> so the
+    /// service removes the tracking entry.
+    /// </summary>
+    public void Dismiss()
+    {
+        if (ProgressState != ProgressState.Failed)
+        {
+            Logger.Warn(
+                "Attempted to dismiss download {Download} but it is not in a failed state ({State})",
+                FileName,
+                ProgressState
+            );
+            return;
+        }
+
+        Logger.Debug("Dismissing failed download {Download}", FileName);
+
+        DoCleanup();
+
+        OnProgressStateChanging(ProgressState.Cancelled);
+        ProgressState = ProgressState.Cancelled;
+        OnProgressStateChanged(ProgressState);
+    }
+
     public void Cancel()
     {
         if (ProgressState is not (ProgressState.Working or ProgressState.Inactive))
@@ -313,9 +344,12 @@ public class TrackedDownload
     }
 
     /// <summary>
-    /// Deletes the temp file and any extra cleanup files
+    /// Deletes the temp file and, optionally, any extra cleanup files (e.g. sidecar metadata).
+    /// Pass <paramref name="includeExtraCleanupFiles"/> as <c>false</c> when the download
+    /// failed but may be retried — sidecar files (.cm-info.json, preview image) should survive
+    /// so a manual retry doesn't need to recreate them.
     /// </summary>
-    private void DoCleanup()
+    private void DoCleanup(bool includeExtraCleanupFiles = true)
     {
         try
         {
@@ -325,6 +359,9 @@ public class TrackedDownload
         {
             Logger.Warn("Failed to delete temp file {TempFile}", TempFileName);
         }
+
+        if (!includeExtraCleanupFiles)
+            return;
 
         foreach (var extraFile in ExtraCleanupFileNames)
         {
@@ -440,10 +477,16 @@ public class TrackedDownload
             ProgressState = ProgressState.Success;
         }
 
-        // For failed or cancelled, delete the temp files
-        if (ProgressState is ProgressState.Failed or ProgressState.Cancelled)
+        // For cancelled, delete the temp file and any sidecar metadata.
+        // For failed, only delete the temp file — sidecar files (.cm-info.json, preview image)
+        // are preserved so a manual retry doesn't need to recreate them.
+        if (ProgressState is ProgressState.Cancelled)
         {
             DoCleanup();
+        }
+        else if (ProgressState is ProgressState.Failed)
+        {
+            DoCleanup(includeExtraCleanupFiles: false);
         }
         // For pause, just do nothing
 

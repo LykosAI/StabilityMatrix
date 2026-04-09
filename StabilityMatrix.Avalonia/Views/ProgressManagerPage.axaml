@@ -122,6 +122,15 @@
                                         ToolTip.Tip="Retry download">
                                         <ui:SymbolIcon Symbol="Refresh" />
                                     </Button>
+
+                                    <!--  Dismiss button: cleans up sidecar files for failed downloads that won't be retried  -->
+                                    <Button
+                                        Classes="transparent-full"
+                                        Command="{Binding DismissCommand}"
+                                        IsVisible="{Binding CanDismiss}"
+                                        ToolTip.Tip="Dismiss and clean up">
+                                        <ui:SymbolIcon Symbol="Delete" />
+                                    </Button>
                                 </StackPanel>
 
                                 <ProgressBar

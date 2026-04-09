@@ -245,12 +245,17 @@ public class TrackedDownloadService : ITrackedDownloadService, IDisposable
     /// </summary>
     private void UpdateJsonForDownload(TrackedDownload download)
     {
+        // The download may have already been removed from the dictionary (e.g. it failed and was
+        // then dismissed). In that case there is nothing to persist, so skip silently.
+        if (!downloads.TryGetValue(download.Id, out var downloadInfo))
+            return;
+
         // Serialize to json
         var json = JsonSerializer.Serialize(download);
         var jsonBytes = Encoding.UTF8.GetBytes(json);
 
         // Write to file
-        var (_, fs) = downloads[download.Id];
+        var (_, fs) = downloadInfo;
         fs.Seek(0, SeekOrigin.Begin);
         fs.Write(jsonBytes);
         fs.Flush();

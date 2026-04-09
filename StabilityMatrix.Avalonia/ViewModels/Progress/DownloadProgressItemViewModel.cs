@@ -76,6 +76,12 @@ public class DownloadProgressItemViewModel : PausableProgressItemViewModelBase
     /// </summary>
     public override bool SupportsRetry => true;
 
+    /// <summary>
+    /// Downloads support dismiss, which cleans up all sidecar files when
+    /// the user discards a failed download without retrying.
+    /// </summary>
+    public override bool SupportsDismiss => true;
+
     /// <inheritdoc />
     public override Task Cancel()
     {
@@ -105,5 +111,14 @@ public class DownloadProgressItemViewModel : PausableProgressItemViewModelBase
     {
         download.ResetAttempts();
         return downloadService.TryRestartDownload(download);
+    }
+
+    /// <inheritdoc />
+    /// Runs full cleanup (temp file + sidecar files) for a failed download the user
+    /// chooses not to retry, then transitions to Cancelled so the service removes it.
+    public override Task Dismiss()
+    {
+        download.Dismiss();
+        return Task.CompletedTask;
     }
 }

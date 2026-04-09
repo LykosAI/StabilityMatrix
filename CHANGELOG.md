@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Settings file saves are now atomic to prevent corruption from interrupted writes
 ### Fixed
 - Fixed [#1596](https://github.com/LykosAI/StabilityMatrix/issues/1596) - package installs and managed embedded Python startup being poisoned by inherited shell Python activation variables such as `PYTHONHOME`, `PYTHONPATH`, `VIRTUAL_ENV`, and Conda environment variables
+- Fixed the Package Manager "Add Package" teaching tip opening inopportunely while packages were still loading or after opening the add-package dialog
 - Fixed downloaded checkpoint going to StableDiffusion folder when a saved download preference existed, even for GGUF files that should always go to DiffusionModels
 - Fixed potential crash when adding metadata to malformed or non-PNG image data in Inference
 - Fixed non-Latin-1 characters (e.g. Japanese, Chinese, Korean, emoji) in image generation parameters being stored in PNG tEXt chunks, violating the PNG specification and causing character corruption (mojibake) in standard-compliant parsers. Non-Latin-1 content now uses spec-compliant iTXt chunks with proper UTF-8 encoding ([#1535](https://github.com/LykosAI/StabilityMatrix/issues/1535))

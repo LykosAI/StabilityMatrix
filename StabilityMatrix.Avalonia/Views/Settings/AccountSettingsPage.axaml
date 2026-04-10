@@ -226,19 +226,19 @@
 
                 <!--  Expanded: Supporting since, Community, Manage link  -->
                 <ui:SettingsExpanderItem Padding="16,12">
-                    <Grid ColumnDefinitions="*,*,*" RowDefinitions="Auto,Auto,Auto">
+                    <Grid ColumnDefinitions="*,0.5*,0.7*" RowDefinitions="Auto,Auto,Auto">
                         <!--  Column headers  -->
                         <TextBlock
                             Grid.Row="0"
                             Grid.Column="0"
-                            Margin="0,0,0,6"
+                            Margin="0,0,16,6"
                             FontWeight="SemiBold"
                             Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                             Text="{x:Static lang:Resources.Label_SupportingSince}" />
                         <TextBlock
                             Grid.Row="0"
                             Grid.Column="1"
-                            Margin="0,0,0,6"
+                            Margin="16,0,16,6"
                             FontWeight="SemiBold"
                             Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                             Text="{x:Static lang:Resources.Label_Community}" />
@@ -247,10 +247,13 @@
                         <TextBlock
                             Grid.Row="1"
                             Grid.Column="0"
-                            Text="{Binding MemberSinceText, FallbackValue=''}" />
+                            Margin="0,0,16,0"
+                            Text="{Binding MemberSinceText, FallbackValue=''}"
+                            TextWrapping="Wrap" />
                         <Button
                             Grid.Row="1"
                             Grid.Column="1"
+                            Margin="16,0"
                             Padding="8,4"
                             Classes="transparent"
                             Command="{x:Static helpers:IOCommands.OpenUriCommand}"
@@ -263,6 +266,7 @@
                         <controls:HyperlinkIconButton
                             Grid.Row="1"
                             Grid.Column="2"
+                            Margin="16,0,0,0"
                             Command="{Binding OpenMembershipUrlCommand}"
                             Content="{x:Static lang:Resources.Action_ManageMembership}"
                             Icon="Open" />
@@ -271,9 +275,10 @@
                         <TextBlock
                             Grid.Row="2"
                             Grid.Column="0"
-                            Margin="0,4,0,0"
+                            Margin="0,4,16,0"
                             Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                            Text="{x:Static lang:Resources.Label_ThankYouSupporter}" />
+                            Text="{x:Static lang:Resources.Label_ThankYouSupporter}"
+                            TextWrapping="Wrap" />
                     </Grid>
                 </ui:SettingsExpanderItem>
             </ui:SettingsExpander>

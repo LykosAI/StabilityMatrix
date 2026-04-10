@@ -129,6 +129,46 @@ public class TrackedDownloadService : ITrackedDownloadService, IDisposable
         }
     }
 
+    public async Task TryRestartDownload(TrackedDownload download)
+    {
+        // Re-create the backing JSON file and re-add to the dictionary.
+        // Downloads are removed on failure, so this restores the tracking entry
+        // so that subsequent state-change events can persist normally.
+        var downloadsDir = new DirectoryPath(settingsManager.DownloadsDirectory);
+        downloadsDir.Create();
+        var jsonFile = downloadsDir.JoinFile($"{download.Id}.json");
+
+        var jsonFileStream = new FileStream(
+            jsonFile.Info.FullName,
+            FileMode.Create,
+            FileAccess.ReadWrite,
+            FileShare.Read,
+            bufferSize: 4096,
+            useAsync: true
+        );
+        var jsonBytes = JsonSerializer.SerializeToUtf8Bytes(download);
+
+        try
+        {
+            await jsonFileStream.WriteAsync(jsonBytes).ConfigureAwait(false);
+            await jsonFileStream.FlushAsync().ConfigureAwait(false);
+
+            // Handlers are already attached from the original AddDownload call.
+            if (!downloads.TryAdd(download.Id, (download, jsonFileStream)))
+            {
+                // Already tracked; discard the newly opened stream.
+                await jsonFileStream.DisposeAsync().ConfigureAwait(false);
+            }
+        }
+        catch
+        {
+            await jsonFileStream.DisposeAsync().ConfigureAwait(false);
+            throw;
+        }
+
+        await TryResumeDownload(download).ConfigureAwait(false);
+    }
+
     public async Task TryResumeDownload(TrackedDownload download)
     {
         if (IsQueueEnabled && ActiveDownloads >= MaxConcurrentDownloads)
@@ -205,12 +245,17 @@ public class TrackedDownloadService : ITrackedDownloadService, IDisposable
     /// </summary>
     private void UpdateJsonForDownload(TrackedDownload download)
     {
+        // The download may have already been removed from the dictionary (e.g. it failed and was
+        // then dismissed). In that case there is nothing to persist, so skip silently.
+        if (!downloads.TryGetValue(download.Id, out var downloadInfo))
+            return;
+
         // Serialize to json
         var json = JsonSerializer.Serialize(download);
         var jsonBytes = Encoding.UTF8.GetBytes(json);
 
         // Write to file
-        var (_, fs) = downloads[download.Id];
+        var (_, fs) = downloadInfo;
         fs.Seek(0, SeekOrigin.Begin);
         fs.Write(jsonBytes);
         fs.Flush();

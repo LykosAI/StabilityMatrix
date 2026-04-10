@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Text;
 using NLog;
 using StabilityMatrix.Core.Exceptions;

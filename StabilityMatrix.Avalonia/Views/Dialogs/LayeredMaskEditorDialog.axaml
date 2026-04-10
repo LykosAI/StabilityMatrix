@@ -398,12 +398,13 @@
                                                     <!--  Row 0: Core controls and name  -->
                                                     <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,*,Auto">
                                                         <!--  Drag grip icon  -->
+                                                        <!--  Symbol is 'ReOrder' but is ambiguous reference  -->
                                                         <fluentIcons:SymbolIcon
                                                             Margin="4,0,4,0"
                                                             VerticalAlignment="Center"
                                                             FontSize="16"
                                                             Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                                                            Symbol="ReOrder" />
+                                                            Symbol="990684" />
 
                                                         <!--  Enable for generation  -->
                                                         <ToggleButton

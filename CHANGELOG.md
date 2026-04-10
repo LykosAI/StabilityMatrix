@@ -5,6 +5,111 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+<<<<<<< HEAD
+=======
+## v2.16.0-dev.3
+### Added
+- Added enable/disable toggle for environment variables in Settings, allowing variables to be temporarily disabled without deleting them
+- Added single-instance window activation signaling so reopening the app restores and focuses the existing desktop window instead of launching a duplicate instance
+- Added notification system with localizable banner and markdown detail dialog UI
+- Added warning in data directory selector when an OneDrive folder is selected
+- Added support in the Checkpoints page to distinguish standard updates from Early Access-only updates - thanks to @x0x0b!
+- Added torch index for Strix/Gorgon Point Ryzen AI APUs on Windows - thanks to @NeuralFault!
+### Changed
+- Improved safetensor checkpoint classification to correctly detect UNet-only models for Wan Video, HiDream, Z-Image, Hunyuan3D, and diffusers-format Flux architectures, ensuring they are routed to the DiffusionModels folder
+- GGUF checkpoint downloads now go directly to the DiffusionModels folder instead of StableDiffusion
+- Configured portable Git to suppress detached HEAD advice messages
+- Settings file saves are now atomic to prevent corruption from interrupted writes
+### Fixed
+- Fixed [#1596](https://github.com/LykosAI/StabilityMatrix/issues/1596) - package installs and managed embedded Python startup being poisoned by inherited shell Python activation variables such as `PYTHONHOME`, `PYTHONPATH`, `VIRTUAL_ENV`, and Conda environment variables
+- Fixed the Package Manager "Add Package" teaching tip opening inopportunely while packages were still loading or after opening the add-package dialog
+- Fixed downloaded checkpoint going to StableDiffusion folder when a saved download preference existed, even for GGUF files that should always go to DiffusionModels
+- Fixed potential crash when adding metadata to malformed or non-PNG image data in Inference
+- Fixed non-Latin-1 characters (e.g. Japanese, Chinese, Korean, emoji) in image generation parameters being stored in PNG tEXt chunks, violating the PNG specification and causing character corruption (mojibake) in standard-compliant parsers. Non-Latin-1 content now uses spec-compliant iTXt chunks with proper UTF-8 encoding ([#1535](https://github.com/LykosAI/StabilityMatrix/issues/1535))
+- Fixed an issue where `Align Your Steps` scheduler and Unet Loader workflows ignored Regional Prompting (and other addon) conditioning modifiers.
+- Potentially fixed [#1578](https://github.com/LykosAI/StabilityMatrix/issues/1578) - `SocketException: Address already in use` on Linux startup by cleaning stale interprocess socket files and reactivating the existing window
+- Fixed bold text not rendering in markdown dialogs on Windows 11 due to Avalonia 11.3.x variable font regression with Segoe UI Variable Text
+- Fixed Japanese text appearing compressed/squished in markdown dialogs by ensuring the bundled NotoSansJP font is used for CTextBlock rendering
+- Fixed ContentDialog title and buttons not using the correct font for Japanese locale (NotoSansJP) when shown as overlay
+- Added missing `CBold` and `CItalic` inline styles to the markdown style sheet
+- Fixed download progress bar showing 100% immediately for fresh downloads due to missing Content-Length fallback when Content-Range header is absent
+- Fixed downloads failing with "The request message was already sent" when the server doesn't return Content-Length on the first attempt, caused by reusing a consumed HttpRequestMessage in the retry loop
+- Fixed downloads from sources that redirect to CivitAI/HuggingFace (e.g. CivArchive) failing with Unauthorized by resolving the redirect target URL and applying auth headers for the correct domain
+- Fixed dropdown menu overlayed in Inference UI Model Cards not being scrollable on Linux - thanks to @NeuralFault!
+- Fixed [#1590](https://github.com/LykosAI/StabilityMatrix/issues/1590) - Startup crash when settings file is corrupted. Settings files are now self-healing with automatic recovery from null bytes, truncated JSON, and missing brackets
+- Fixed [#1397](https://github.com/LykosAI/StabilityMatrix/issues/1397), [#610](https://github.com/LykosAI/StabilityMatrix/issues/610) - duplicate pip package entries in results - thanks to @e-nord!
+
+## v2.16.0-dev.2
+### Added
+- Added Regional Prompting addon to Inference - paint detailed masks to apply different prompts, strengths, and settings to specific regions of your image
+  - Multi-layer mask editor with Photoshop-style interface for managing layers with independent masks, prompts, colors, and opacity
+  - Professional brush tools: freehand brush/eraser with pressure sensitivity, rectangle/ellipse shapes with fill/stroke modes, paint bucket flood fill
+  - Brush feathering/softness control for smooth, blended mask edges (0 = hard edge, 1 = soft/blurred)
+  - Per-layer prompt and strength controls, export/import masks as PNG, duplicate layers, image reference layers for tracing
+  - GPU-accelerated rendering with compact gzip-compressed metadata serialization
+- Added new Model Picker dialog for Inference with grid/list views, search, filtering, and NSFW overlay
+- Added browse buttons to all model dropdowns in Inference (Model, Refiner, VAE, Text Encoders, CLIP Vision)
+- Added inline search box to model combo box dropdowns with fuzzy matching 
+- Added NVIDIA driver version warning when launching ComfyUI with CUDA 13.0 (cu130) and driver versions below 580.x
+- Added legacy Python warning when launching InvokeAI installations using Python 3.10.11
+- Added Tiled VAE Decode to the Inference video workflows - thanks to @NeuralFault!
+- Added recoverable error dialog for UI thread exceptions, with option to continue instead of exiting
+### Changed
+- Disabled update checking for legacy InvokeAI installations using Python 3.10.11
+- Hide rating stars in the Civitai browser page if no rating is available
+- Updated uv to v0.9.30
+- Updated PortableGit to v2.52.0.windows.1
+- Updated Sage/Triton/Nunchaku installers to use GitHub API to fetch latest releases
+- Updated ComfyUI installations and updates to automatically install ComfyUI Manager
+- Updated gfx110X Windows ROCm nightly index - thanks to @NeuralFault!
+- Updated ComfyUI-Zluda install to more closely match the author's intended installation method - thanks to @NeuralFault!
+- Updated Forge Classic installs/updates to use the upstream install script for better version compatibility with torch/sage/triton/nunchaku
+### Fixed
+- Fixed parsing of escape sequences in Inference such as `\\`
+- Fixed batch notification firing when only one image is generated
+- Fixed [#1546](https://github.com/LykosAI/StabilityMatrix/issues/1546), [#1541](https://github.com/LykosAI/StabilityMatrix/issues/1541) - "No module named 'pkg_resources'" error when installing Automatic1111/Forge/reForge packages
+- Fixed [#1545](https://github.com/LykosAI/StabilityMatrix/issues/1545), [#1518](https://github.com/LykosAI/StabilityMatrix/issues/1518), [#1513](https://github.com/LykosAI/StabilityMatrix/issues/1513), [#1488](https://github.com/LykosAI/StabilityMatrix/issues/1488) - Forge Neo update breaking things
+- Fixed [#1529](https://github.com/LykosAI/StabilityMatrix/issues/1529) - "Selected commit is null" error when installing packages and rate limited by GitHub
+- Fixed [#1525](https://github.com/LykosAI/StabilityMatrix/issues/1525) - Crash after downloading a model
+- Fixed [#1523](https://github.com/LykosAI/StabilityMatrix/issues/1523), [#1499](https://github.com/LykosAI/StabilityMatrix/issues/1499), [#1494](https://github.com/LykosAI/StabilityMatrix/issues/1494) - Automatic1111 using old stable diffusion repo
+- Fixed [#1505](https://github.com/LykosAI/StabilityMatrix/issues/1505) - incorrect port argument for Wan2GP
+- Possibly fix [#1502](https://github.com/LykosAI/StabilityMatrix/issues/1502) - English fonts not displaying correctly on Linux in Chinese environments
+- Fixed [#1476](https://github.com/LykosAI/StabilityMatrix/issues/1476) - Incorrect shared output folder for Forge Classic/Neo
+- Fixed [#1466](https://github.com/LykosAI/StabilityMatrix/issues/1466) - crash after moving portable install
+- Fixed [#1445](https://github.com/LykosAI/StabilityMatrix/issues/1445) - Linux app updates not actually updating - thanks to @NeuralFault!
+### Supporters
+#### 🌟 Visionaries
+Huge shoutout to our amazing Visionaries: **Waterclouds**, **JungleDragon**, **bluepopsicle**, **Bob S**, and **whudunit**! Your continued support fuels every new feature and improvement in Stability Matrix. We couldn't do it without you - thank you for believing in what we're building!
+
+## v2.16.0-dev.1
+### Added
+#### New Feature: 🧪 Image Lab  - Conversational Image Generation for ComfyUI
+- We've added a brand new conversational interface for image generation! Image Lab lets you iterate on images naturally through chat, rather than just one-off prompts.
+  - Local-First Power: Native support for Flux Kontext and Qwen Image Edit running entirely locally via your ComfyUI backend.
+  - Smart Setup: Stability Matrix automatically detects and helps you download the specific models and LoRAs needed for these local workflows.
+  - Interactive Tools: Drag-and-drop image inputs, use the built-in annotation tool to draw on images, and keep persistent conversation history.
+  - Cloud Option: Includes optional support for Nano Banana (Gemini 3 Pro/2.5) for users who want to leverage external reasoning models.
+- Added new package - [Wan2GP](https://github.com/deepbeepmeep/Wan2GP)
+- Added [Stable Diffusion WebUI Forge - Neo](https://github.com/Haoming02/sd-webui-forge-classic/tree/neo) as a separate package for convenience
+- Added Intel GPU support for ComfyUI
+- Added "Run Python Command" option to the package card's 3-dots menu for running arbitrary Python code in the package's virtual environment
+- Added togglable `--uv` argument to the SD.Next launch options
+- Added Tiled VAE decoding as an Inference addon thanks to @NeuralFault!
+### Changed
+- Moved the original Stable Diffusion WebUI Forge to the "Legacy" packages tab due to inactivity
+- Updated to cu130 torch index for ComfyUI installs with Nvidia GPUs
+- Consolidated and fixed AMD GPU architecture detection
+- Updated SageAttention installer to latest v2.2.0-windows.post4 version
+- Video files can now be opened directly from the Output browser
+- Videos will now appear with thumbnails in the Output browser
+### Fixed
+- Fixed [#1450](https://github.com/LykosAI/StabilityMatrix/issues/1450) - Older SD.Next not launching due to forced `--uv` argument
+- Fixed duplicate custom node installations when installing workflows from the Workflow Browser - thanks again to @NeuralFault!
+### Supporters
+#### 🌟 Visionaries
+A massive thank you to our esteemed Visionaries: **Waterclouds**, **JungleDragon**, **bluepopsicle**, **Bob S**, and **whudunit**! Your generosity is the powerhouse behind Stability Matrix, enabling us to keep building and refining with confidence. We are truly grateful for your partnership!
+
+>>>>>>> 770671ec (Merge pull request #1224 from ionite34/fix-add-package-tip-showing-inopportunely)
 ## v2.15.7
 ### Added
 - Added single-instance window activation signaling so reopening the app restores and focuses the existing desktop window instead of launching a duplicate instance

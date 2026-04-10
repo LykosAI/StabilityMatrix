@@ -121,8 +121,10 @@ A massive thank you to our esteemed Visionaries: **Waterclouds**, **JungleDragon
 - Added warning in data directory selector when an OneDrive folder is selected
 - Added support in the Checkpoints page to distinguish standard updates from Early Access-only updates - thanks to @x0x0b!
 - Added torch index for Strix/Gorgon Point Ryzen AI APUs on Windows - thanks to @NeuralFault!
+- Added retry button to failed downloads - thanks to @NeuralFault!
 ### Changed
 - Settings file saves are now atomic to prevent corruption from interrupted writes
+- Updated torch indexes for A1111, ComfyUI, InvokeAI, and Forge-based UIs to rocm7.2 / cu128 depending on GPU - thanks to @NeuralFault!
 ### Fixed
 - Fixed an issue where `Align Your Steps` scheduler and Unet Loader workflows ignored Regional Prompting (and other addon) conditioning modifiers.
 - Fixed the Package Manager "Add Package" teaching tip opening inopportunely while packages were still loading or after opening the add-package dialog
@@ -133,6 +135,7 @@ A massive thank you to our esteemed Visionaries: **Waterclouds**, **JungleDragon
 - Fixed downloads failing with "The request message was already sent" when the server doesn't return Content-Length on the first attempt, caused by reusing a consumed HttpRequestMessage in the retry loop
 - Fixed downloads from sources that redirect to CivitAI/HuggingFace (e.g. CivArchive) failing with Unauthorized by resolving the redirect target URL and applying auth headers for the correct domain
 - Fixed dropdown menu overlayed in Inference UI Model Cards not being scrollable on Linux - thanks to @NeuralFault!
+- Fixed model downloads failing on VPN connections - thanks to @NeuralFault!
 - Fixed [#1598](https://github.com/LykosAI/StabilityMatrix/issues/1598) - download progress bar showing 100% immediately for fresh downloads due to missing Content-Length fallback when Content-Range header is absent
 - Fixed [#1597](https://github.com/LykosAI/StabilityMatrix/issues/1597) - reForge launch failing due to setuptools version
 - Fixed [#1596](https://github.com/LykosAI/StabilityMatrix/issues/1596) - package installs and managed embedded Python startup being poisoned by inherited shell Python activation variables such as `PYTHONHOME`, `PYTHONPATH`, `VIRTUAL_ENV`, and Conda environment variables

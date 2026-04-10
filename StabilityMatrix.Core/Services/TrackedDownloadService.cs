@@ -258,6 +258,7 @@ public class TrackedDownloadService : ITrackedDownloadService, IDisposable
         var (_, fs) = downloadInfo;
         fs.Seek(0, SeekOrigin.Begin);
         fs.Write(jsonBytes);
+        fs.SetLength(jsonBytes.Length);
         fs.Flush();
     }
 

@@ -37,7 +37,7 @@
             <ControlTemplate>
                 <controls:Card Padding="12">
                     <sg:SpacedGrid
-                        ColumnDefinitions="Auto,*"
+                        ColumnDefinitions="90,*,Auto"
                         ColumnSpacing="8"
                         RowDefinitions="*,*,*,*,*,*,*"
                         RowSpacing="0">
@@ -57,6 +57,16 @@
                             SelectedItem="{Binding SelectedModel}"
                             Theme="{StaticResource BetterComboBoxHybridModelTheme}" />
 
+                        <!--  Browse Button  -->
+                        <Button
+                            Grid.Row="0"
+                            Grid.Column="2"
+                            VerticalAlignment="Stretch"
+                            Command="{Binding OpenModelPickerCommand}"
+                            ToolTip.Tip="Browse all models">
+                            <fluent:SymbolIcon FontSize="16" Symbol="Search" />
+                        </Button>
+
                         <!--  model precision  -->
                         <TextBlock
                             Grid.Row="1"
@@ -69,6 +79,7 @@
                         <ui:FAComboBox
                             Grid.Row="1"
                             Grid.Column="1"
+                            Grid.ColumnSpan="2"
                             Margin="0,8,0,0"
                             HorizontalAlignment="Stretch"
                             IsTextSearchEnabled="True"
@@ -93,6 +104,15 @@
                             IsTextSearchEnabled="True"
                             ItemsSource="{Binding ClientManager.VaeModels}"
                             SelectedItem="{Binding SelectedVae}" />
+                        <Button
+                            Grid.Row="2"
+                            Grid.Column="2"
+                            Margin="4,8,0,0"
+                            VerticalAlignment="Stretch"
+                            Command="{Binding OpenVaePickerCommand}"
+                            ToolTip.Tip="Browse all VAE models">
+                            <fluent:SymbolIcon FontSize="16" Symbol="Search" />
+                        </Button>
 
                         <!--  Text Encoder  -->
                         <TextBlock
@@ -112,6 +132,15 @@
                             ItemsSource="{Binding ClientManager.ClipModels}"
                             SelectedItem="{Binding SelectedClipModel}"
                             Theme="{StaticResource BetterComboBoxHybridModelTheme}" />
+                        <Button
+                            Grid.Row="3"
+                            Grid.Column="2"
+                            Margin="4,8,0,0"
+                            VerticalAlignment="Stretch"
+                            Command="{Binding OpenClipPickerCommand}"
+                            ToolTip.Tip="Browse all CLIP models">
+                            <fluent:SymbolIcon FontSize="16" Symbol="Search" />
+                        </Button>
 
                         <!--  CLIP Vision  -->
                         <TextBlock
@@ -133,6 +162,16 @@
                             ItemsSource="{Binding ClientManager.ClipVisionModels}"
                             SelectedItem="{Binding SelectedClipVisionModel}"
                             Theme="{StaticResource BetterComboBoxHybridModelTheme}" />
+                        <Button
+                            Grid.Row="4"
+                            Grid.Column="2"
+                            Margin="4,8,0,0"
+                            VerticalAlignment="Stretch"
+                            Command="{Binding OpenClipVisionPickerCommand}"
+                            IsVisible="{Binding IsClipVisionEnabled}"
+                            ToolTip.Tip="Browse all CLIP Vision models">
+                            <fluent:SymbolIcon FontSize="16" Symbol="Search" />
+                        </Button>
 
                         <!--  Shift  -->
                         <TextBlock
@@ -144,6 +183,7 @@
                         <ui:NumberBox
                             Grid.Row="5"
                             Grid.Column="1"
+                            Grid.ColumnSpan="2"
                             Margin="0,8,0,0"
                             HorizontalAlignment="Stretch"
                             SelectionHighlightColor="Transparent"
@@ -156,7 +196,7 @@
                         <Panel
                             Grid.Row="6"
                             Grid.Column="0"
-                            Grid.ColumnSpan="2">
+                            Grid.ColumnSpan="3">
                             <controls:StackEditableCard Margin="0,8,0,0" DataContext="{Binding ExtraNetworksStackCardViewModel}" />
                         </Panel>
                     </sg:SpacedGrid>

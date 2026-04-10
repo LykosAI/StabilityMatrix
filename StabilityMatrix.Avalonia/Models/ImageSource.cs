@@ -57,6 +57,8 @@ public record ImageSource : IDisposable, ITemplateKey<ImageSourceTemplateType>
     public ImageSource(Bitmap bitmap)
     {
         Bitmap = bitmap;
+        // Set default template key for bitmap-only sources
+        TemplateKey = ImageSourceTemplateType.Image;
     }
 
     [JsonIgnore]

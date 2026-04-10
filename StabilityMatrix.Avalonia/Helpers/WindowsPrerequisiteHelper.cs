@@ -118,6 +118,12 @@ public class WindowsPrerequisiteHelper(
     public bool IsUvInstalled => File.Exists(UvExePath);
     private string ExpectedUvVersion => "0.9.30";
 
+    // FFmpeg paths
+    private string FfmpegDownloadPath => Path.Combine(AssetsDir, "ffmpeg.zip");
+    private string FfmpegExtractPath => Path.Combine(AssetsDir, "ffmpeg");
+    public string FfmpegPath => Path.Combine(FfmpegExtractPath, "bin", "ffmpeg.exe");
+    public bool IsFfmpegInstalled => File.Exists(FfmpegPath);
+
     public string GitBinPath => Path.Combine(PortableGitInstallDir, "bin");
     public bool IsVcBuildToolsInstalled => Directory.Exists(VcBuildToolsExistsPath);
     public bool IsHipSdkInstalled => Directory.Exists(HipInstalledPath);
@@ -654,6 +660,7 @@ public class WindowsPrerequisiteHelper(
         await UnzipGit(progress);
 
         await FixGitLongPaths();
+        await ConfigurePortableGit();
     }
 
     [SupportedOSPlatform("windows")]
@@ -673,6 +680,18 @@ public class WindowsPrerequisiteHelper(
         }
 
         return false;
+    }
+
+    private async Task ConfigurePortableGit()
+    {
+        try
+        {
+            await RunGit(["config", "--system", "advice.detachedHead", "false"]);
+        }
+        catch (Exception e)
+        {
+            Logger.Warn(e, "Failed to configure portable git");
+        }
     }
 
     [SupportedOSPlatform("windows")]
@@ -758,6 +777,75 @@ public class WindowsPrerequisiteHelper(
         {
             Directory.Move(extractedNodeDir, Path.Combine(AssetsDir, "nodejs"));
         }
+    }
+
+    [SupportedOSPlatform("windows")]
+    public async Task InstallFfmpegIfNecessary(IProgress<ProgressReport>? progress = null)
+    {
+        if (IsFfmpegInstalled)
+        {
+            Logger.Debug("FFmpeg already installed at {FfmpegPath}", FfmpegPath);
+            return;
+        }
+
+        Logger.Info("FFmpeg not found at {FfmpegPath}, downloading...", FfmpegPath);
+
+        Directory.CreateDirectory(AssetsDir);
+
+        var downloadUrl = Assets.FfmpegDownloadUrl.Url.ToString();
+
+        progress?.Report(
+            new ProgressReport(
+                progress: 0f,
+                isIndeterminate: false,
+                type: ProgressType.Download,
+                message: "Downloading FFmpeg..."
+            )
+        );
+
+        await downloadService.DownloadToFileAsync(downloadUrl, FfmpegDownloadPath, progress: progress);
+
+        progress?.Report(
+            new ProgressReport(
+                progress: 0.5f,
+                isIndeterminate: true,
+                type: ProgressType.Generic,
+                message: "Installing FFmpeg..."
+            )
+        );
+
+        // Extract to temp location first since archive has nested folder
+        var tempExtractPath = Path.Combine(AssetsDir, "ffmpeg-temp");
+        Directory.CreateDirectory(tempExtractPath);
+
+        await ArchiveHelper.Extract(FfmpegDownloadPath, tempExtractPath, progress);
+
+        // Find the extracted directory (e.g., ffmpeg-n7.1-latest-win64-lgpl-7.1)
+        var extractedDirs = Directory.GetDirectories(tempExtractPath);
+        if (extractedDirs.Length > 0)
+        {
+            var extractedDir = extractedDirs[0];
+
+            // Move to final location
+            if (Directory.Exists(FfmpegExtractPath))
+            {
+                Directory.Delete(FfmpegExtractPath, true);
+            }
+            Directory.Move(extractedDir, FfmpegExtractPath);
+        }
+
+        // Cleanup
+        if (Directory.Exists(tempExtractPath))
+        {
+            Directory.Delete(tempExtractPath, true);
+        }
+        File.Delete(FfmpegDownloadPath);
+
+        progress?.Report(
+            new ProgressReport(progress: 1f, message: "FFmpeg install complete", type: ProgressType.Generic)
+        );
+
+        Logger.Info("FFmpeg installed successfully at {FfmpegPath}", FfmpegPath);
     }
 
     [SupportedOSPlatform("windows")]

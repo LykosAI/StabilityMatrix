@@ -265,7 +265,8 @@
                                 ImageHeight="300"
                                 ImageWidth="300"
                                 IsSelected="{Binding IsSelected}"
-                                Source="{Binding ImageFile.AbsolutePath, Converter={StaticResource FileUriConverter}}">
+                                IsVideo="{Binding ImageFile.IsVideo}"
+                                Source="{Binding DisplayPath, Converter={StaticResource FileUriConverter}}">
                                 <selectableImageCard:SelectableImageButton.ContextFlyout>
                                     <ui:FAMenuFlyout>
                                         <ui:MenuFlyoutItem

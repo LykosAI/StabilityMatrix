@@ -44,6 +44,7 @@ using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.TagCompletion;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
 using StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
 using StabilityMatrix.Avalonia.ViewModels.Controls;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
@@ -554,22 +555,32 @@ public partial class MainSettingsViewModel : PageViewModelBase
     {
         var viewModel = dialogFactory.Get<EnvVarsViewModel>();
 
-        // Load current settings
-        var current = settingsManager.Settings.UserEnvironmentVariables ?? new Dictionary<string, string>();
-        viewModel.EnvVars = new ObservableCollection<EnvVarKeyPair>(
-            current.Select(kvp => new EnvVarKeyPair(kvp.Key, kvp.Value))
-        );
+        // Load current settings — prefer new list format, fall back to legacy dict
+        var currentList = settingsManager.Settings.UserEnvironmentVariablesList;
+        if (currentList is { Count: > 0 })
+        {
+            viewModel.EnvVars = new ObservableCollection<EnvVarKeyPair>(currentList);
+        }
+        else
+        {
+            var current =
+                settingsManager.Settings.UserEnvironmentVariables ?? new Dictionary<string, string>();
+            viewModel.EnvVars = new ObservableCollection<EnvVarKeyPair>(
+                current.Select(kvp => new EnvVarKeyPair(kvp.Key, kvp.Value))
+            );
+        }
 
         var dialog = viewModel.GetDialog();
 
         if (await dialog.ShowAsync() == ContentDialogResult.Primary)
         {
-            // Save settings
-            var newEnvVars = viewModel
-                .EnvVars.Where(kvp => !string.IsNullOrWhiteSpace(kvp.Key))
-                .GroupBy(kvp => kvp.Key, StringComparer.Ordinal)
-                .ToDictionary(g => g.Key, g => g.First().Value, StringComparer.Ordinal);
-            settingsManager.Transaction(s => s.UserEnvironmentVariables = newEnvVars);
+            // Save in new list format, clear legacy dict
+            var newEnvVars = viewModel.EnvVars.Where(kvp => !string.IsNullOrWhiteSpace(kvp.Key)).ToList();
+            settingsManager.Transaction(s =>
+            {
+                s.UserEnvironmentVariablesList = newEnvVars;
+                s.UserEnvironmentVariables = null;
+            });
         }
     }
 
@@ -1270,6 +1281,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
             new CommandItem(DebugRobocopyCommand),
             new CommandItem(DebugInstallUvCommand),
             new CommandItem(DebugRunUvCommand),
+            new CommandItem(DebugClassifySafetensorCommand),
         ];
 
     [RelayCommand]
@@ -1531,6 +1543,42 @@ public partial class MainSettingsViewModel : PageViewModelBase
     private void DebugNvidiaSmi()
     {
         HardwareHelper.IterGpuInfoNvidiaSmi();
+    }
+
+    [RelayCommand]
+    private async Task DebugClassifySafetensor()
+    {
+        var files = await App.StorageProvider.OpenFilePickerAsync(
+            new FilePickerOpenOptions
+            {
+                Title = "Select a .safetensors file",
+                FileTypeFilter = [new FilePickerFileType("Safetensors") { Patterns = ["*.safetensors"] }],
+            }
+        );
+
+        if (files.Count == 0)
+            return;
+
+        var filePath = files[0].TryGetLocalPath();
+        if (filePath is null)
+            return;
+
+        try
+        {
+            var kind = await SafetensorClassifier.ClassifyAsync(new FilePath(filePath));
+
+            var fileName = Path.GetFileName(filePath);
+            await DialogHelper
+                .CreateMarkdownDialog(
+                    $"**File:** `{fileName}`\n\n**Classification:** `{kind}`",
+                    "Safetensor Classification"
+                )
+                .ShowAsync();
+        }
+        catch (Exception e)
+        {
+            notificationService.Show("Classification failed", e.Message, NotificationType.Error);
+        }
     }
 
     #endregion

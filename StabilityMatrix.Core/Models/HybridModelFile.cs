@@ -230,4 +230,47 @@ public record HybridModelFile : ISearchText, IDownloadableResource
 
     [JsonIgnore]
     public string SearchText => SortKey;
+
+    /// <summary>
+    /// Gets a detailed search text string that includes model name, version, filename, tags,
+    /// trained words, and other metadata for comprehensive search/filtering.
+    /// </summary>
+    [JsonIgnore]
+    public string DetailedSearchText
+    {
+        get
+        {
+            var terms = new List<string>
+            {
+                SearchText,
+                ShortDisplayName,
+                FileName,
+                RemoteName ?? string.Empty,
+                DownloadableResource?.FileName ?? string.Empty,
+                DownloadableResource?.RelativeDirectory ?? string.Empty,
+            };
+
+            if (Local is { } localModel)
+            {
+                terms.Add(localModel.DisplayModelName);
+                terms.Add(localModel.DisplayModelVersion);
+                terms.Add(localModel.DisplayModelFileName);
+                terms.Add(localModel.DisplayConfigFileName);
+
+                if (localModel.ConnectedModelInfo is { } connectedModel)
+                {
+                    terms.Add(connectedModel.BaseModel ?? string.Empty);
+                    terms.Add(connectedModel.ModelType.GetStringValue());
+
+                    if (connectedModel.Tags.Length > 0)
+                        terms.Add(string.Join(' ', connectedModel.Tags));
+
+                    if (connectedModel.TrainedWords is { Length: > 0 })
+                        terms.Add(string.Join(' ', connectedModel.TrainedWords));
+                }
+            }
+
+            return string.Join(' ', terms.Where(term => !string.IsNullOrWhiteSpace(term)));
+        }
+    }
 }

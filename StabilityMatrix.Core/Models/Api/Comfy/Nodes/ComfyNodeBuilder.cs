@@ -379,6 +379,39 @@ public class ComfyNodeBuilder
         public required double EndPercent { get; init; }
     }
 
+    /// <summary>
+    /// Applies conditioning to a specific masked region of the image.
+    /// Used for regional prompting.
+    /// </summary>
+    public record ConditioningSetMask : ComfyTypedNodeBase<ConditioningNodeConnection>
+    {
+        public required ConditioningNodeConnection Conditioning { get; init; }
+        public required ImageMaskConnection Mask { get; init; }
+
+        [Range(0d, 10d)]
+        public double Strength { get; init; } = 1.0;
+
+        /// <summary>
+        /// How to apply the conditioning area.
+        /// "default" - Apply to full image, masked by strength.
+        /// "mask bounds" - Apply only within the mask bounding box.
+        /// </summary>
+        public string SetCondArea { get; init; } = "default";
+    }
+
+    /// <summary>
+    /// Combines two conditioning inputs into one.
+    /// Used to merge regional prompts.
+    /// </summary>
+    public record ConditioningCombine : ComfyTypedNodeBase<ConditioningNodeConnection>
+    {
+        [System.Text.Json.Serialization.JsonPropertyName("conditioning_1")]
+        public required ConditioningNodeConnection Conditioning1 { get; init; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("conditioning_2")]
+        public required ConditioningNodeConnection Conditioning2 { get; init; }
+    }
+
     public record SVD_img2vid_Conditioning
         : ComfyTypedNodeBase<ConditioningNodeConnection, ConditioningNodeConnection, LatentNodeConnection>
     {
@@ -479,6 +512,38 @@ public class ComfyNodeBuilder
         public required double Guidance { get; init; }
     }
 
+    public record ImageStitch : ComfyTypedNodeBase<ImageNodeConnection>
+    {
+        public required ImageNodeConnection Image1 { get; init; }
+        public ImageNodeConnection? Image2 { get; init; }
+
+        /// <summary>
+        /// Direction to stitch images: "right", "down", "left", "up"
+        /// </summary>
+        public string Direction { get; init; } = "right";
+
+        public bool MatchImageSize { get; init; } = true;
+
+        [Range(0, 1024)]
+        public int SpacingWidth { get; init; } = 0;
+
+        /// <summary>
+        /// Color for spacing: "white", "black", etc.
+        /// </summary>
+        public string SpacingColor { get; init; } = "white";
+    }
+
+    public record ReferenceLatent : ComfyTypedNodeBase<ConditioningNodeConnection>
+    {
+        public required ConditioningNodeConnection Conditioning { get; init; }
+        public LatentNodeConnection? Latent { get; init; }
+    }
+
+    public record FluxKontextImageScale : ComfyTypedNodeBase<ImageNodeConnection>
+    {
+        public required ImageNodeConnection Image { get; init; }
+    }
+
     public record BasicGuider : ComfyTypedNodeBase<GuiderNodeConnection>
     {
         public required ModelNodeConnection Model { get; init; }
@@ -541,6 +606,30 @@ public class ComfyNodeBuilder
 
         [Range(0, 100)]
         public required double Shift { get; init; }
+    }
+
+    /// <summary>
+    /// Model sampling adjustment for AuraFlow-based models (used by Qwen Image Edit)
+    /// </summary>
+    public record ModelSamplingAuraFlow : ComfyTypedNodeBase<ModelNodeConnection>
+    {
+        public required ModelNodeConnection Model { get; init; }
+
+        [Range(0, 100)]
+        public double Shift { get; init; } = 3.1;
+    }
+
+    /// <summary>
+    /// Text encoder for Qwen Image Edit that supports up to 3 input images
+    /// </summary>
+    public record TextEncodeQwenImageEditPlus : ComfyTypedNodeBase<ConditioningNodeConnection>
+    {
+        public required ClipNodeConnection Clip { get; init; }
+        public VAENodeConnection? Vae { get; init; }
+        public ImageNodeConnection? Image1 { get; init; }
+        public ImageNodeConnection? Image2 { get; init; }
+        public ImageNodeConnection? Image3 { get; init; }
+        public required string Prompt { get; init; }
     }
 
     public record RescaleCFG : ComfyTypedNodeBase<ModelNodeConnection>

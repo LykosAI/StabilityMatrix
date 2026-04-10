@@ -46,7 +46,8 @@
                                 DisplayMemberBinding="{Binding DisplayName}"
                                 IsVisible="{Binding IsSamplerSelectionEnabled}"
                                 ItemsSource="{Binding ClientManager.Samplers}"
-                                SelectedItem="{Binding SelectedSampler}" />
+                                SelectedItem="{Binding SelectedSampler}"
+                                UseLegacySearch="True" />
                             <!--  Scheduler  -->
                             <TextBlock
                                 Grid.Row="1"
@@ -63,7 +64,8 @@
                                 DisplayMemberBinding="{Binding DisplayName}"
                                 IsVisible="{Binding IsSchedulerSelectionEnabled}"
                                 ItemsSource="{Binding ClientManager.Schedulers}"
-                                SelectedItem="{Binding SelectedScheduler}" />
+                                SelectedItem="{Binding SelectedScheduler}"
+                                UseLegacySearch="True" />
 
                             <TextBlock
                                 Grid.Row="2"

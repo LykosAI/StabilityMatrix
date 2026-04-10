@@ -468,6 +468,7 @@ public static class ProcessRunner
             CreateNoWindow = true,
         };
 
+<<<<<<< HEAD
         if (environmentVariables != null)
         {
             foreach (var (key, value) in environmentVariables)
@@ -475,6 +476,9 @@ public static class ProcessRunner
                 info.EnvironmentVariables[key] = value;
             }
         }
+=======
+        PrepareEnvironment(info, fileName, environmentVariables);
+>>>>>>> 373b890f (Merge pull request #1226 from ionite34/fix-setuptools-error-reforge)
 
         if (workingDirectory != null)
         {

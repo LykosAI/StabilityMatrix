@@ -1114,4 +1114,64 @@
     <value>Recherche de Modèles Accélérée</value>
     <comment>Fuzzy</comment>
   </data>
+  <data name="Label_SupportUs" xml:space="preserve">
+    <value>Nous soutenir</value>
+  </data>
+  <data name="Label_Membership" xml:space="preserve">
+    <value>Adhésion</value>
+  </data>
+  <data name="Action_ManageMembership" xml:space="preserve">
+    <value>Gérer l'adhésion</value>
+  </data>
+  <data name="Action_BecomeSupporter" xml:space="preserve">
+    <value>Devenir soutien</value>
+  </data>
+  <data name="Label_LegacyConnections" xml:space="preserve">
+    <value>Anciennes connexions</value>
+  </data>
+  <data name="Label_PatreonLegacyDescription" xml:space="preserve">
+    <value>Patreon n'est plus utilisé pour les nouvelles adhésions. Les connexions Patreon existantes restent valides pendant la période de transition.</value>
+  </data>
+  <data name="Sponsorship_ConnectLykosPrompt" xml:space="preserve">
+    <value>Connectez-vous avec votre compte Lykos pour activer vos avantages d'adhésion.</value>
+  </data>
+  <data name="InfoBar_PatreonMigration" xml:space="preserve">
+    <value>Vous pouvez maintenant passer à une adhésion directe Lykos. Conservez votre niveau et soutenez le développement indépendant.</value>
+  </data>
+  <data name="InfoBar_PatreonGracePeriod" xml:space="preserve">
+    <value>Vos avantages Patreon restent actifs jusqu'au {0}.</value>
+  </data>
+  <data name="Action_LearnMore" xml:space="preserve">
+    <value>En savoir plus</value>
+  </data>
+  <data name="Action_MigrateNow" xml:space="preserve">
+    <value>Migrer maintenant</value>
+  </data>
+  <data name="Label_ThankYouSupporter" xml:space="preserve">
+    <value>Merci de soutenir Stability Matrix !</value>
+  </data>
+  <data name="Label_SupporterCTA" xml:space="preserve">
+    <value>Soutenez le développement open-source et accédez à des fonctionnalités supplémentaires et avantages communautaires.</value>
+  </data>
+  <data name="Label_ActiveSupporterTier" xml:space="preserve">
+    <value>Soutien {0}</value>
+  </data>
+  <data name="Label_ContributorAccess" xml:space="preserve">
+    <value>Vous avez un accès contributeur</value>
+  </data>
+  <data name="Label_ThankYouContributor" xml:space="preserve">
+    <value>Merci de construire avec nous 💙</value>
+  </data>
+  <data name="Label_ContributorAccessDescription" xml:space="preserve">
+    <value>Vous avez un accès contributeur aux canaux de versions préliminaires et de développement.</value>
+  </data>
+  <data name="Label_SupportingSince" xml:space="preserve">
+    <value>Soutien depuis</value>
+  </data>
+  <data name="Label_Benefits" xml:space="preserve">
+    <value>Avantages</value>
+  </data>
+  <data name="Label_Community" xml:space="preserve">
+    <value>Communauté</value>
+  </data>
 </root>

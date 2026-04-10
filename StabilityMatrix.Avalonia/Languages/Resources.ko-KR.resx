@@ -1261,4 +1261,64 @@
     <value>가속 모델 탐색</value>
     <comment>Fuzzy</comment>
   </data>
+  <data name="Label_SupportUs" xml:space="preserve">
+    <value>후원하기</value>
+  </data>
+  <data name="Label_Membership" xml:space="preserve">
+    <value>멤버십</value>
+  </data>
+  <data name="Action_ManageMembership" xml:space="preserve">
+    <value>멤버십 관리</value>
+  </data>
+  <data name="Action_BecomeSupporter" xml:space="preserve">
+    <value>후원자 되기</value>
+  </data>
+  <data name="Label_LegacyConnections" xml:space="preserve">
+    <value>이전 연결</value>
+  </data>
+  <data name="Label_PatreonLegacyDescription" xml:space="preserve">
+    <value>Patreon은 더 이상 신규 멤버십에 사용되지 않습니다. 기존 Patreon 연결은 전환 기간 동안 유효합니다.</value>
+  </data>
+  <data name="Sponsorship_ConnectLykosPrompt" xml:space="preserve">
+    <value>멤버십 혜택을 활성화하려면 Lykos 계정으로 로그인하세요.</value>
+  </data>
+  <data name="InfoBar_PatreonMigration" xml:space="preserve">
+    <value>이제 Lykos 직접 멤버십으로 전환할 수 있습니다. 등급을 유지하면서 독립적인 개발을 후원하세요.</value>
+  </data>
+  <data name="InfoBar_PatreonGracePeriod" xml:space="preserve">
+    <value>Patreon 혜택은 {0}까지 계속 이용할 수 있습니다.</value>
+  </data>
+  <data name="Action_LearnMore" xml:space="preserve">
+    <value>자세히 알아보기</value>
+  </data>
+  <data name="Action_MigrateNow" xml:space="preserve">
+    <value>지금 전환</value>
+  </data>
+  <data name="Label_ThankYouSupporter" xml:space="preserve">
+    <value>Stability Matrix를 후원해 주셔서 감사합니다!</value>
+  </data>
+  <data name="Label_SupporterCTA" xml:space="preserve">
+    <value>오픈소스 개발을 지원하고 추가 기능과 커뮤니티 혜택을 이용하세요.</value>
+  </data>
+  <data name="Label_ActiveSupporterTier" xml:space="preserve">
+    <value>{0} 후원자</value>
+  </data>
+  <data name="Label_ContributorAccess" xml:space="preserve">
+    <value>기여자 액세스가 있습니다</value>
+  </data>
+  <data name="Label_ThankYouContributor" xml:space="preserve">
+    <value>함께 만들어 주셔서 감사합니다 💙</value>
+  </data>
+  <data name="Label_ContributorAccessDescription" xml:space="preserve">
+    <value>미리보기 및 개발 릴리스 채널에 대한 기여자 액세스 권한이 있습니다.</value>
+  </data>
+  <data name="Label_SupportingSince" xml:space="preserve">
+    <value>후원 시작</value>
+  </data>
+  <data name="Label_Benefits" xml:space="preserve">
+    <value>혜택</value>
+  </data>
+  <data name="Label_Community" xml:space="preserve">
+    <value>커뮤니티</value>
+  </data>
 </root>

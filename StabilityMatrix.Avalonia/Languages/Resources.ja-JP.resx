@@ -1435,4 +1435,64 @@ Sparkは兆レベルのパラメータを持つ基盤モデルで、膨大なパ
 ### 🔒 プライバシーファースト
 私たちはプライバシーを最優先に考えています。([生成AI利用規約](https://lykos.ai/gen-ai-terms)) **あなたのプロンプトや出力内容は、Lykos AIや必要なクラウドインフラパートナーによるAI学習には一切使用されません。** 処理はお客様の質問に対する返答を生成するためだけに安全を重視して使われ、**その後はプロンプト内容そのものではなく、メタデータ(タイムスタンプやトークン数など)のみを保存します。** あなたのデータが販売や共有されることは決してありません。</value>
   </data>
+  <data name="Label_SupportUs" xml:space="preserve">
+    <value>サポートする</value>
+  </data>
+  <data name="Label_Membership" xml:space="preserve">
+    <value>メンバーシップ</value>
+  </data>
+  <data name="Action_ManageMembership" xml:space="preserve">
+    <value>メンバーシップを管理</value>
+  </data>
+  <data name="Action_BecomeSupporter" xml:space="preserve">
+    <value>サポーターになる</value>
+  </data>
+  <data name="Label_LegacyConnections" xml:space="preserve">
+    <value>以前の連携</value>
+  </data>
+  <data name="Label_PatreonLegacyDescription" xml:space="preserve">
+    <value>Patreonは新規メンバーシップには使用されません。既存のPatreon連携は移行期間中、引き続き有効です。</value>
+  </data>
+  <data name="Sponsorship_ConnectLykosPrompt" xml:space="preserve">
+    <value>メンバーシップ特典を有効にするには、Lykosアカウントでサインインしてください。</value>
+  </data>
+  <data name="InfoBar_PatreonMigration" xml:space="preserve">
+    <value>Lykosダイレクトメンバーシップに移行できるようになりました。ティアを維持したまま、独立した開発を支援できます。</value>
+  </data>
+  <data name="InfoBar_PatreonGracePeriod" xml:space="preserve">
+    <value>Patreonの特典は{0}まで引き続きご利用いただけます。</value>
+  </data>
+  <data name="Action_LearnMore" xml:space="preserve">
+    <value>詳細を見る</value>
+  </data>
+  <data name="Action_MigrateNow" xml:space="preserve">
+    <value>今すぐ移行</value>
+  </data>
+  <data name="Label_ThankYouSupporter" xml:space="preserve">
+    <value>Stability Matrixをご支援いただきありがとうございます！</value>
+  </data>
+  <data name="Label_SupporterCTA" xml:space="preserve">
+    <value>オープンソース開発を支援し、追加機能やコミュニティ特典をご利用いただけます。</value>
+  </data>
+  <data name="Label_ActiveSupporterTier" xml:space="preserve">
+    <value>{0} サポーター</value>
+  </data>
+  <data name="Label_ContributorAccess" xml:space="preserve">
+    <value>コントリビューターアクセスがあります</value>
+  </data>
+  <data name="Label_ThankYouContributor" xml:space="preserve">
+    <value>一緒に開発してくれてありがとう 💙</value>
+  </data>
+  <data name="Label_ContributorAccessDescription" xml:space="preserve">
+    <value>プレビューおよび開発リリースチャンネルへのコントリビューターアクセスがあります。</value>
+  </data>
+  <data name="Label_SupportingSince" xml:space="preserve">
+    <value>サポート開始</value>
+  </data>
+  <data name="Label_Benefits" xml:space="preserve">
+    <value>特典</value>
+  </data>
+  <data name="Label_Community" xml:space="preserve">
+    <value>コミュニティ</value>
+  </data>
 </root>

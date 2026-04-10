@@ -61,6 +61,7 @@ public static class Program
     public static void Main(string[] args)
     {
         StartupTimer.Start();
+        ProcessRunner.SanitizeCurrentProcessPythonEnvironment();
 
         SetDebugBuild();
 

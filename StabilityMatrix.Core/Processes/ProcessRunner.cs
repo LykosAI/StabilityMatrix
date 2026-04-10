@@ -559,7 +559,7 @@ public static class ProcessRunner
             CreateNoWindow = true,
         };
 
-        ApplyEnvironmentVariables(info, environmentVariables);
+        PrepareEnvironment(info, fileName, environmentVariables);
 
         if (workingDirectory != null)
         {

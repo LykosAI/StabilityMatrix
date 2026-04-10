@@ -197,7 +197,8 @@ public class SDWebForge(
             [
                 "https://github.com/openai/CLIP/archive/d50d76daa670286dd6cacf3bcd80b5e4823fc8e1.zip",
             ],
-            PostInstallPipArgs = ["numpy==1.26.4"],
+            // CLIP imports pkg_resources.packaging at runtime, which breaks with setuptools 70.x.
+            PostInstallPipArgs = ["numpy==1.26.4", "setuptools==69.5.1"],
         };
 
         await StandardPipInstallProcessAsync(

@@ -13,9 +13,14 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added support in the Checkpoints page to distinguish standard updates from Early Access-only updates - thanks to @x0x0b!
 - Added torch index for Strix/Gorgon Point Ryzen AI APUs on Windows - thanks to @NeuralFault!
 - Added retry button to failed downloads - thanks to @NeuralFault!
+- Added new Membership support in Account Settings with Patreon migration prompt
 ### Changed
 - Settings file saves are now atomic to prevent corruption from interrupted writes
 - Updated torch indexes for A1111, ComfyUI, InvokeAI, and Forge-based UIs to rocm7.2 / cu128 depending on GPU - thanks to @NeuralFault!
+- Replaced the "Become a Patron" footer button with "Support Us", linking to the new direct Lykos support page at lykos.ai/membership
+- Updated the prompt dialog shown when enabling features like Accelerated Model Discovery to use Lykos accounts instead of Patreon linking
+- Moved the Patreon connection in Account Settings to a new "Legacy Connections" section, only shown for users with an existing Patreon link
+- Localized previously hardcoded strings on the Account Settings page (menu items, descriptions, section headers) and added Japanese, Korean, German, and French translations
 ### Fixed
 - Fixed an issue where `Align Your Steps` scheduler and Unet Loader workflows ignored Regional Prompting (and other addon) conditioning modifiers.
 - Fixed the Package Manager "Add Package" teaching tip opening inopportunely while packages were still loading or after opening the add-package dialog

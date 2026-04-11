@@ -102,11 +102,11 @@
             Markdown="{Binding FeatureText}" />
 
         <ui:InfoBar
-            Title="{x:Static lang:Resources.Sponsorship_ConnectPatreonPrompt}"
+            Title="{x:Static lang:Resources.Sponsorship_ConnectLykosPrompt}"
             IsClosable="False"
-            IsOpen="{Binding !IsPatreonConnected}">
+            IsOpen="{Binding !IsLykosConnected}">
             <ui:InfoBar.IconSource>
-                <ui:ImageIconSource Source="{StaticResource BrandsPatreonSymbolWhite}" />
+                <fluentIcons:SymbolIconSource IconVariant="Filled" Symbol="PersonCircle" />
             </ui:InfoBar.IconSource>
             <ui:InfoBar.ActionButton>
                 <Button Command="{Binding NavigateToAccountSettingsCommand}" Content="{x:Static lang:Resources.Label_AccountSettings}" />

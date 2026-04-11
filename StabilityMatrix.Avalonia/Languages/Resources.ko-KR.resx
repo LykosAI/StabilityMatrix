@@ -1261,4 +1261,106 @@
     <value>가속 모델 탐색</value>
     <comment>Fuzzy</comment>
   </data>
+  <data name="Label_SupportUs" xml:space="preserve">
+    <value>후원하기</value>
+  </data>
+  <data name="Label_Membership" xml:space="preserve">
+    <value>멤버십</value>
+  </data>
+  <data name="Action_ManageMembership" xml:space="preserve">
+    <value>멤버십 관리</value>
+  </data>
+  <data name="Action_BecomeSupporter" xml:space="preserve">
+    <value>서포터 되기</value>
+  </data>
+  <data name="Label_LegacyConnections" xml:space="preserve">
+    <value>이전 연결</value>
+  </data>
+  <data name="Label_PatreonLegacyDescription" xml:space="preserve">
+    <value>Patreon은 더 이상 신규 멤버십에 사용되지 않습니다. 기존 연결은 전환 기간 동안 유효합니다.</value>
+  </data>
+  <data name="Sponsorship_ConnectLykosPrompt" xml:space="preserve">
+    <value>멤버십 혜택을 활성화하려면 Lykos 계정으로 로그인하세요.</value>
+  </data>
+  <data name="InfoBar_PatreonMigration" xml:space="preserve">
+    <value>이제 Lykos 멤버십으로 직접 전환할 수 있습니다. 티어는 그대로 유지하고 독립적인 개발을 지원해 주세요.</value>
+  </data>
+  <data name="InfoBar_PatreonGracePeriod" xml:space="preserve">
+    <value>Patreon 혜택은 {0}까지 계속 이용하실 수 있습니다.</value>
+    <comment>{0} = date</comment>
+  </data>
+  <data name="Action_LearnMore" xml:space="preserve">
+    <value>자세히 알아보기</value>
+  </data>
+  <data name="Action_MigrateNow" xml:space="preserve">
+    <value>지금 전환</value>
+  </data>
+  <data name="Label_ThankYouSupporter" xml:space="preserve">
+    <value>Stability Matrix를 후원해 주셔서 감사합니다 💙</value>
+  </data>
+  <data name="Label_SupporterCTA" xml:space="preserve">
+    <value>오픈소스 개발을 후원하고 추가 기능과 커뮤니티 혜택을 이용해보세요.</value>
+  </data>
+  <data name="Action_ManageLykosAccount" xml:space="preserve">
+    <value>Lykos 계정 관리</value>
+  </data>
+  <data name="Action_EditGravatar" xml:space="preserve">
+    <value>Gravatar에서 프로필 이미지 수정</value>
+  </data>
+  <data name="Action_CopyUserId" xml:space="preserve">
+    <value>사용자 ID 복사</value>
+  </data>
+  <data name="Label_LykosOffDescription" xml:space="preserve">
+    <value>Stability Matrix에 연결된 기능 관리</value>
+  </data>
+  <data name="Label_PatreonOffDescription" xml:space="preserve">
+    <value>자동 업데이트를 위한 프리뷰 및 개발 릴리스 채널 액세스</value>
+  </data>
+  <data name="Label_CivitAIOffDescription" xml:space="preserve">
+    <value>로그인이 필요한 CivitAI 모델을 다운로드하기 위해 연결합니다</value>
+  </data>
+  <data name="Label_HuggingFaceOffDescription" xml:space="preserve">
+    <value>로그인이 필요한 Hugging Face 모델을 다운로드하기 위해 연결합니다</value>
+  </data>
+  <data name="Label_ImageGenerationApis" xml:space="preserve">
+    <value>이미지 생성 API</value>
+  </data>
+  <data name="Label_GeminiOffDescription" xml:space="preserve">
+    <value>Image Lab에서 Nano Banana를 이미지 생성에 사용하려면 Gemini API 키를 추가하세요</value>
+  </data>
+  <data name="Label_AboutAccountCredentials" xml:space="preserve">
+    <value>계정 자격 증명 정보</value>
+  </data>
+  <data name="Label_CredentialsStorageNotice" xml:space="preserve">
+    <value>계정 자격 증명 및 토큰은 AES 암호화되어 컴퓨터에 로컬로 안전하게 저장됩니다.
+
+컴퓨터 하드웨어를 변경하는 경우 계정에 다시 로그인해야 할 수 있습니다.
+
+저장한 후에는 계정 토큰을 다시 볼 수 없으므로 다른 곳에서 사용해야 할 경우 메모해 두시기 바랍니다.</value>
+  </data>
+  <data name="Label_ConnectPatreonAccount" xml:space="preserve">
+    <value>Patreon 계정 연결</value>
+  </data>
+  <data name="Label_ActiveSupporterTier" xml:space="preserve">
+    <value>{0} 서포터</value>
+    <comment>{0} = tier name</comment>
+  </data>
+  <data name="Label_ContributorAccess" xml:space="preserve">
+    <value>기여자 권한이 있습니다</value>
+  </data>
+  <data name="Label_ThankYouContributor" xml:space="preserve">
+    <value>함께 만들어가 주셔서 감사합니다 💙</value>
+  </data>
+  <data name="Label_ContributorAccessDescription" xml:space="preserve">
+    <value>프리뷰 및 개발 빌드 릴리스 채널에 대한 기여자 액세스 권한이 있습니다.</value>
+  </data>
+  <data name="Label_SupportingSince" xml:space="preserve">
+    <value>후원 시작일</value>
+  </data>
+  <data name="Label_Benefits" xml:space="preserve">
+    <value>혜택</value>
+  </data>
+  <data name="Label_Community" xml:space="preserve">
+    <value>커뮤니티</value>
+  </data>
 </root>

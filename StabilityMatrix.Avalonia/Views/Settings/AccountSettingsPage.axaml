@@ -6,6 +6,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:fluentIcons="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
     xmlns:helpers="clr-namespace:StabilityMatrix.Avalonia.Helpers"
+    xmlns:icon="https://github.com/projektanker/icons.avalonia"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
@@ -96,19 +97,38 @@
                                     CommandParameter="{Binding LykosAccountManageUrl}"
                                     HotKey="{x:Null}"
                                     IconSource="Link"
-                                    Text="Manage your Lykos Account" />
+                                    Text="{x:Static lang:Resources.Action_ManageLykosAccount}" />
                                 <ui:MenuFlyoutItem
                                     Command="{x:Static helpers:IOCommands.OpenUrlCommand}"
                                     CommandParameter="http://gravatar.com/emails/"
                                     HotKey="{x:Null}"
                                     IconSource="Link"
-                                    Text="Edit Profile Image on Gravatar" />
+                                    Text="{x:Static lang:Resources.Action_EditGravatar}" />
                                 <ui:MenuFlyoutSeparator />
                                 <ui:MenuFlyoutItem
                                     Command="{x:Static helpers:ClipboardCommands.CopyTextCommand}"
                                     CommandParameter="{Binding LykosStatus.Id}"
                                     IconSource="Copy"
-                                    Text="Copy User ID" />
+                                    Text="{x:Static lang:Resources.Action_CopyUserId}" />
+
+                                <!--  Debug: Simulate user states  -->
+                                <ui:MenuFlyoutSeparator IsVisible="{Binding IsDebugMode}" />
+                                <ui:MenuFlyoutSubItem
+                                    IconSource="Bug"
+                                    IsVisible="{Binding IsDebugMode}"
+                                    Text="Debug: Simulate Role">
+                                    <ui:MenuFlyoutItem Command="{Binding DebugSimulateNewUserCommand}" Text="New User (no roles)" />
+                                    <ui:MenuFlyoutItem Command="{Binding DebugSimulateSupporterCommand}" Text="Supporter" />
+                                    <ui:MenuFlyoutItem Command="{Binding DebugSimulateInsiderCommand}" Text="Insider" />
+                                    <ui:MenuFlyoutItem Command="{Binding DebugSimulatePioneerCommand}" Text="Pioneer" />
+                                    <ui:MenuFlyoutItem Command="{Binding DebugSimulateVisionaryCommand}" Text="Visionary" />
+                                    <ui:MenuFlyoutSeparator />
+                                    <ui:MenuFlyoutItem Command="{Binding DebugSimulateDeveloperCommand}" Text="Developer (no sub)" />
+                                    <ui:MenuFlyoutItem Command="{Binding DebugSimulateTranslatorInsiderCommand}" Text="Translator + Insider" />
+                                    <ui:MenuFlyoutItem Command="{Binding DebugSimulatePatreonMigrantCommand}" Text="Patreon Migrant (Insider)" />
+                                    <ui:MenuFlyoutSeparator />
+                                    <ui:MenuFlyoutItem Command="{Binding DebugResetToRealCommand}" Text="Reset to Real Account" />
+                                </ui:MenuFlyoutSubItem>
                             </ui:FAMenuFlyout>
                         </Button.Flyout>
                         <controls:BetterAdvancedImage
@@ -125,9 +145,167 @@
                             Text="{Binding LykosStatus.DisplayName, FallbackValue=''}"
                             Theme="{DynamicResource SubtitleTextBlockStyle}" />
                         <TextBlock Text="{Binding LykosStatus.Email, FallbackValue=''}" />
+                        <!--  Role Badges  -->
+                        <WrapPanel
+                            Name="RoleBadgesPanel"
+                            Margin="0,4,0,0"
+                            IsVisible="{Binding RoleBadges.Count}" />
                     </StackPanel>
                 </StackPanel>
             </sg:SpacedGrid>
+
+            <!--  Membership: Flat card for non-subscribers  -->
+            <Border
+                Margin="0,0,0,4"
+                Padding="16"
+                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="8">
+                <Border.IsVisible>
+                    <MultiBinding Converter="{x:Static BoolConverters.And}">
+                        <Binding Path="LykosStatus.IsConnected" />
+                        <Binding Path="!IsActiveSubscriber" />
+                    </MultiBinding>
+                </Border.IsVisible>
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                    <fluentIcons:SymbolIcon
+                        Grid.Column="0"
+                        Margin="0,0,12,0"
+                        VerticalAlignment="Center"
+                        FontSize="24"
+                        Foreground="#f97315"
+                        IconVariant="Filled"
+                        Symbol="Star" />
+                    <StackPanel
+                        Grid.Column="1"
+                        VerticalAlignment="Center"
+                        Spacing="2">
+                        <TextBlock FontWeight="SemiBold" Text="{x:Static lang:Resources.Label_Membership}" />
+                        <!--  Contributor: two-line thank you  -->
+                        <StackPanel IsVisible="{Binding IsContributorWithoutSubscription}" Spacing="2">
+                            <TextBlock Text="{x:Static lang:Resources.Label_ThankYouContributor}" TextWrapping="Wrap" />
+                            <TextBlock
+                                Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                Text="{x:Static lang:Resources.Label_ContributorAccessDescription}"
+                                TextWrapping="Wrap" />
+                        </StackPanel>
+                        <!--  Regular user: CTA text  -->
+                        <TextBlock
+                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                            Text="{x:Static lang:Resources.Label_SupporterCTA}"
+                            TextWrapping="Wrap">
+                            <TextBlock.IsVisible>
+                                <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                    <Binding Path="!IsActiveSubscriber" />
+                                    <Binding Path="!IsContributorWithoutSubscription" />
+                                </MultiBinding>
+                            </TextBlock.IsVisible>
+                        </TextBlock>
+                    </StackPanel>
+                    <Button
+                        Grid.Column="2"
+                        VerticalAlignment="Center"
+                        Command="{Binding OpenMembershipUrlCommand}"
+                        Content="{x:Static lang:Resources.Action_BecomeSupporter}" />
+                </Grid>
+            </Border>
+
+            <!--  Membership: SettingsExpander for active subscribers  -->
+            <ui:SettingsExpander
+                Margin="0,0,0,4"
+                Description="{Binding MembershipDescription}"
+                Header="{x:Static lang:Resources.Label_Membership}"
+                IsVisible="{Binding IsActiveSubscriber}">
+                <ui:SettingsExpander.IconSource>
+                    <fluentIcons:SymbolIconSource
+                        Foreground="#f97315"
+                        IconVariant="Filled"
+                        Symbol="Star" />
+                </ui:SettingsExpander.IconSource>
+
+                <!--  Expanded: Supporting since, Community, Manage link  -->
+                <ui:SettingsExpanderItem Padding="16,12">
+                    <Grid ColumnDefinitions="*,0.5*,0.7*" RowDefinitions="Auto,Auto,Auto">
+                        <!--  Column headers  -->
+                        <TextBlock
+                            Grid.Row="0"
+                            Grid.Column="0"
+                            Margin="0,0,16,6"
+                            FontWeight="SemiBold"
+                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                            Text="{x:Static lang:Resources.Label_SupportingSince}" />
+                        <TextBlock
+                            Grid.Row="0"
+                            Grid.Column="1"
+                            Margin="16,0,16,6"
+                            FontWeight="SemiBold"
+                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                            Text="{x:Static lang:Resources.Label_Community}" />
+
+                        <!--  Row 1: Date / Discord / Manage  -->
+                        <TextBlock
+                            Grid.Row="1"
+                            Grid.Column="0"
+                            Margin="0,0,16,0"
+                            Text="{Binding MemberSinceText, FallbackValue=''}"
+                            TextWrapping="Wrap" />
+                        <Button
+                            Grid.Row="1"
+                            Grid.Column="1"
+                            Margin="16,0"
+                            Padding="8,4"
+                            Classes="transparent"
+                            Command="{x:Static helpers:IOCommands.OpenUriCommand}"
+                            CommandParameter="{x:Static sm:Assets.DiscordServerUrl}">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <icon:Icon FontSize="14" Value="fa-brands fa-discord" />
+                                <TextBlock Text="Discord" />
+                            </StackPanel>
+                        </Button>
+                        <controls:HyperlinkIconButton
+                            Grid.Row="1"
+                            Grid.Column="2"
+                            Margin="16,0,0,0"
+                            Command="{Binding OpenMembershipUrlCommand}"
+                            Content="{x:Static lang:Resources.Action_ManageMembership}"
+                            Icon="Open" />
+
+                        <!--  Row 2: Thank you  -->
+                        <TextBlock
+                            Grid.Row="2"
+                            Grid.Column="0"
+                            Margin="0,4,16,0"
+                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                            Text="{x:Static lang:Resources.Label_ThankYouSupporter}"
+                            TextWrapping="Wrap" />
+                    </Grid>
+                </ui:SettingsExpanderItem>
+            </ui:SettingsExpander>
+
+            <!--  Patreon Migration Card  -->
+            <ui:InfoBar
+                Title="{x:Static lang:Resources.InfoBar_PatreonMigration}"
+                Margin="0,0,0,8"
+                IsClosable="True"
+                IsOpen="{Binding ShowPatreonMigrationPrompt}"
+                Severity="Informational">
+                <ui:InfoBar.Content>
+                    <StackPanel Margin="0,-8,0,12" Spacing="12">
+                        <TextBlock
+                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                            Text="{Binding PatreonGracePeriodText}"
+                            TextWrapping="Wrap" />
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Button Command="{Binding OpenMembershipUrlCommand}" Content="{x:Static lang:Resources.Action_MigrateNow}" />
+                            <controls:HyperlinkIconButton
+                                Command="{Binding OpenPatreonBlogPostCommand}"
+                                Content="{x:Static lang:Resources.Action_LearnMore}"
+                                Icon="Open" />
+                        </StackPanel>
+                    </StackPanel>
+                </ui:InfoBar.Content>
+            </ui:InfoBar>
 
             <controls:SettingsAccountLinkExpander
                 ConnectCommand="{Binding ConnectLykosCommand}"
@@ -135,32 +313,13 @@
                 Header="Lykos"
                 HeaderTargetUri="{x:Static sm:Assets.LykosUrl}"
                 IsConnected="{Binding LykosStatus.IsConnected}"
-                OffDescription="Manage connected features in Stability Matrix">
+                OffDescription="{x:Static lang:Resources.Label_LykosOffDescription}">
                 <controls:SettingsAccountLinkExpander.IconSource>
                     <ui:ImageIconSource Source="{StaticResource BrandsLykos}" />
                 </controls:SettingsAccountLinkExpander.IconSource>
                 <controls:SettingsAccountLinkExpander.IsLoading>
                     <MultiBinding Converter="{x:Static BoolConverters.Or}">
                         <Binding Path="ConnectLykosCommand.IsRunning" />
-                        <Binding Path="!IsInitialUpdateFinished" />
-                    </MultiBinding>
-                </controls:SettingsAccountLinkExpander.IsLoading>
-            </controls:SettingsAccountLinkExpander>
-
-            <controls:SettingsAccountLinkExpander
-                ConnectCommand="{Binding ConnectPatreonCommand}"
-                DisconnectCommand="{Binding DisconnectPatreonCommand}"
-                Header="Patreon"
-                HeaderTargetUri="{x:Static sm:Assets.PatreonUrl}"
-                IsConnected="{Binding IsPatreonConnected}"
-                IsEnabled="{Binding LykosStatus.IsConnected}"
-                OffDescription="Access Preview and Dev release channels for auto-updates">
-                <controls:SettingsAccountLinkExpander.IconSource>
-                    <ui:ImageIconSource Source="{StaticResource BrandsPatreonSymbolWhite}" />
-                </controls:SettingsAccountLinkExpander.IconSource>
-                <controls:SettingsAccountLinkExpander.IsLoading>
-                    <MultiBinding Converter="{x:Static BoolConverters.Or}">
-                        <Binding Path="ConnectPatreonCommand.IsRunning" />
                         <Binding Path="!IsInitialUpdateFinished" />
                     </MultiBinding>
                 </controls:SettingsAccountLinkExpander.IsLoading>
@@ -182,7 +341,11 @@
                     Header="CivitAI"
                     HeaderTargetUri="{x:Static sm:Assets.CivitAIUrl}"
                     IsConnected="{Binding CivitStatus.IsConnected}"
+<<<<<<< HEAD
                     OffDescription="Connect to Download Models that require login"
+=======
+                    OffDescription="{x:Static lang:Resources.Label_CivitAIOffDescription}"
+>>>>>>> eca1fd20 (Merge pull request #1232 from ionite34/patreon-migration-and-accounts)
                     OnDescriptionExtra="{Binding CivitStatus.UsernameWithParentheses}">
                     <controls:SettingsAccountLinkExpander.IconSource>
                         <ui:BitmapIconSource UriSource="avares://StabilityMatrix.Avalonia/Assets/brands-civitai.png" />
@@ -202,7 +365,7 @@
                     Header="Hugging Face"
                     HeaderTargetUri="https://huggingface.co/settings/tokens"
                     IsConnected="{Binding IsHuggingFaceConnected}"
-                    OffDescription="Connect to download models that require login from Hugging Face"
+                    OffDescription="{x:Static lang:Resources.Label_HuggingFaceOffDescription}"
                     OnDescriptionExtra="{Binding HuggingFaceUsernameWithParentheses}">
                     <controls:SettingsAccountLinkExpander.IconSource>
                         <ui:BitmapIconSource UriSource="avares://StabilityMatrix.Avalonia/Assets/brands-hf-logo.png" />
@@ -217,6 +380,61 @@
 
             </sg:SpacedGrid>
 
+<<<<<<< HEAD
+=======
+            <!--  Gemini API Section  -->
+            <TextBlock
+                Margin="0,16,0,8"
+                FontSize="16"
+                FontWeight="SemiBold"
+                Text="{x:Static lang:Resources.Label_ImageGenerationApis}" />
+
+            <controls:SettingsAccountLinkExpander
+                ConnectCommand="{Binding SetGeminiApiKeyCommand}"
+                DisconnectCommand="{Binding RemoveGeminiApiKeyCommand}"
+                Header="Gemini API"
+                HeaderTargetUri="https://aistudio.google.com/api-keys"
+                IsConnected="{Binding HasGeminiApiKey}"
+                OffDescription="{x:Static lang:Resources.Label_GeminiOffDescription}">
+                <controls:SettingsAccountLinkExpander.IconSource>
+                    <fluentIcons:SymbolIconSource Symbol="Sparkle" />
+                </controls:SettingsAccountLinkExpander.IconSource>
+            </controls:SettingsAccountLinkExpander>
+
+            <!--  Legacy Connections (Patreon) - only visible when Patreon is linked  -->
+            <StackPanel IsVisible="{Binding IsPatreonConnected}">
+                <TextBlock
+                    Margin="0,24,0,4"
+                    FontWeight="Medium"
+                    Text="{x:Static lang:Resources.Label_LegacyConnections}" />
+                <TextBlock
+                    Margin="0,0,0,8"
+                    FontSize="12"
+                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                    Text="{x:Static lang:Resources.Label_PatreonLegacyDescription}"
+                    TextWrapping="Wrap" />
+
+                <controls:SettingsAccountLinkExpander
+                    ConnectCommand="{Binding ConnectPatreonCommand}"
+                    DisconnectCommand="{Binding DisconnectPatreonCommand}"
+                    Header="Patreon"
+                    HeaderTargetUri="{x:Static sm:Assets.PatreonUrl}"
+                    IsConnected="{Binding IsPatreonConnected}"
+                    IsEnabled="{Binding LykosStatus.IsConnected}"
+                    OffDescription="{x:Static lang:Resources.Label_PatreonOffDescription}">
+                    <controls:SettingsAccountLinkExpander.IconSource>
+                        <ui:ImageIconSource Source="{StaticResource BrandsPatreonSymbolWhite}" />
+                    </controls:SettingsAccountLinkExpander.IconSource>
+                    <controls:SettingsAccountLinkExpander.IsLoading>
+                        <MultiBinding Converter="{x:Static BoolConverters.Or}">
+                            <Binding Path="ConnectPatreonCommand.IsRunning" />
+                            <Binding Path="!IsInitialUpdateFinished" />
+                        </MultiBinding>
+                    </controls:SettingsAccountLinkExpander.IsLoading>
+                </controls:SettingsAccountLinkExpander>
+            </StackPanel>
+
+>>>>>>> eca1fd20 (Merge pull request #1232 from ionite34/patreon-migration-and-accounts)
         </StackPanel>
     </ScrollViewer>
 

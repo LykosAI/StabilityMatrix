@@ -535,9 +535,9 @@ public partial class MainWindow : AppWindowBase
         ProcessRunner.OpenUrl(Assets.DiscordServerUrl);
     }
 
-    private void PatreonPatreonItem_OnTapped(object? sender, TappedEventArgs e)
+    private void FooterSupportItem_OnTapped(object? sender, TappedEventArgs e)
     {
-        ProcessRunner.OpenUrl(Assets.PatreonUrl);
+        ProcessRunner.OpenUrl(Assets.MembershipUrl);
     }
 
     private void TopLevel_OnBackRequested(object? sender, RoutedEventArgs e)

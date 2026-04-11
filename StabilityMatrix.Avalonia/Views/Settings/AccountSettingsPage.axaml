@@ -427,8 +427,6 @@
                     </controls:SettingsAccountLinkExpander.IsLoading>
                 </controls:SettingsAccountLinkExpander>
             </StackPanel>
-
->>>>>>> eca1fd20 (Merge pull request #1232 from ionite34/patreon-migration-and-accounts)
         </StackPanel>
     </ScrollViewer>
 

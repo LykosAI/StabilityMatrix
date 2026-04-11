@@ -341,11 +341,7 @@
                     Header="CivitAI"
                     HeaderTargetUri="{x:Static sm:Assets.CivitAIUrl}"
                     IsConnected="{Binding CivitStatus.IsConnected}"
-<<<<<<< HEAD
-                    OffDescription="Connect to Download Models that require login"
-=======
                     OffDescription="{x:Static lang:Resources.Label_CivitAIOffDescription}"
->>>>>>> eca1fd20 (Merge pull request #1232 from ionite34/patreon-migration-and-accounts)
                     OnDescriptionExtra="{Binding CivitStatus.UsernameWithParentheses}">
                     <controls:SettingsAccountLinkExpander.IconSource>
                         <ui:BitmapIconSource UriSource="avares://StabilityMatrix.Avalonia/Assets/brands-civitai.png" />
@@ -380,8 +376,6 @@
 
             </sg:SpacedGrid>
 
-<<<<<<< HEAD
-=======
             <!--  Gemini API Section  -->
             <TextBlock
                 Margin="0,16,0,8"

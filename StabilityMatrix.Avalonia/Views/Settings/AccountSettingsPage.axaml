@@ -335,7 +335,7 @@
                     Text="{x:Static lang:Resources.Label_Integrations}" />
 
                 <controls:SettingsAccountLinkExpander
-                    Grid.Row="2"
+                    Grid.Row="1"
                     ConnectCommand="{Binding ConnectCivitCommand}"
                     DisconnectCommand="{Binding DisconnectCivitCommand}"
                     Header="CivitAI"
@@ -355,7 +355,7 @@
                 </controls:SettingsAccountLinkExpander>
 
                 <controls:SettingsAccountLinkExpander
-                    Grid.Row="3"
+                    Grid.Row="2"
                     ConnectCommand="{Binding ConnectHuggingFaceCommand}"
                     DisconnectCommand="{Binding DisconnectHuggingFaceCommand}"
                     Header="Hugging Face"
@@ -427,6 +427,7 @@
                     </controls:SettingsAccountLinkExpander.IsLoading>
                 </controls:SettingsAccountLinkExpander>
             </StackPanel>
+
         </StackPanel>
     </ScrollViewer>
 

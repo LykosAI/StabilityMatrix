@@ -10,30 +10,39 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added enable/disable toggle for environment variables in Settings, allowing variables to be temporarily disabled without deleting them
 - Added single-instance window activation signaling so reopening the app restores and focuses the existing desktop window instead of launching a duplicate instance
 - Added notification system with localizable banner and markdown detail dialog UI
-- Added warning in data directory selector when an OneDrive folder is selected
+- Added warning in data directory selector when a OneDrive folder is selected
 - Added support in the Checkpoints page to distinguish standard updates from Early Access-only updates - thanks to @x0x0b!
 - Added torch index for Strix/Gorgon Point Ryzen AI APUs on Windows - thanks to @NeuralFault!
+- Added retry button to failed downloads - thanks to @NeuralFault!
 ### Changed
 - Improved safetensor checkpoint classification to correctly detect UNet-only models for Wan Video, HiDream, Z-Image, Hunyuan3D, and diffusers-format Flux architectures, ensuring they are routed to the DiffusionModels folder
 - GGUF checkpoint downloads now go directly to the DiffusionModels folder instead of StableDiffusion
 - Configured portable Git to suppress detached HEAD advice messages
 - Settings file saves are now atomic to prevent corruption from interrupted writes
+- Updated torch indexes for A1111, ComfyUI, InvokeAI, and Forge-based UIs to rocm7.2 / cu128 depending on GPU - thanks to @NeuralFault!
 ### Fixed
+- Fixed the Package Manager "Add Package" teaching tip opening inopportunely while packages were still loading or after opening the add-package dialog
 - Fixed downloaded checkpoint going to StableDiffusion folder when a saved download preference existed, even for GGUF files that should always go to DiffusionModels
 - Fixed potential crash when adding metadata to malformed or non-PNG image data in Inference
 - Fixed non-Latin-1 characters (e.g. Japanese, Chinese, Korean, emoji) in image generation parameters being stored in PNG tEXt chunks, violating the PNG specification and causing character corruption (mojibake) in standard-compliant parsers. Non-Latin-1 content now uses spec-compliant iTXt chunks with proper UTF-8 encoding ([#1535](https://github.com/LykosAI/StabilityMatrix/issues/1535))
 - Fixed an issue where `Align Your Steps` scheduler and Unet Loader workflows ignored Regional Prompting (and other addon) conditioning modifiers.
-- Potentially fixed [#1578](https://github.com/LykosAI/StabilityMatrix/issues/1578) - `SocketException: Address already in use` on Linux startup by cleaning stale interprocess socket files and reactivating the existing window
 - Fixed bold text not rendering in markdown dialogs on Windows 11 due to Avalonia 11.3.x variable font regression with Segoe UI Variable Text
 - Fixed Japanese text appearing compressed/squished in markdown dialogs by ensuring the bundled NotoSansJP font is used for CTextBlock rendering
 - Fixed ContentDialog title and buttons not using the correct font for Japanese locale (NotoSansJP) when shown as overlay
 - Added missing `CBold` and `CItalic` inline styles to the markdown style sheet
-- Fixed download progress bar showing 100% immediately for fresh downloads due to missing Content-Length fallback when Content-Range header is absent
 - Fixed downloads failing with "The request message was already sent" when the server doesn't return Content-Length on the first attempt, caused by reusing a consumed HttpRequestMessage in the retry loop
 - Fixed downloads from sources that redirect to CivitAI/HuggingFace (e.g. CivArchive) failing with Unauthorized by resolving the redirect target URL and applying auth headers for the correct domain
 - Fixed dropdown menu overlayed in Inference UI Model Cards not being scrollable on Linux - thanks to @NeuralFault!
+- Fixed model downloads failing on VPN connections - thanks to @NeuralFault!
+- Fixed [#1598](https://github.com/LykosAI/StabilityMatrix/issues/1598) - download progress bar showing 100% immediately for fresh downloads due to missing Content-Length fallback when Content-Range header is absent
+- Fixed [#1597](https://github.com/LykosAI/StabilityMatrix/issues/1597) - reForge launch failing due to setuptools version
+- Fixed [#1596](https://github.com/LykosAI/StabilityMatrix/issues/1596) - package installs and managed embedded Python startup being poisoned by inherited shell Python activation variables such as `PYTHONHOME`, `PYTHONPATH`, `VIRTUAL_ENV`, and Conda environment variables
 - Fixed [#1590](https://github.com/LykosAI/StabilityMatrix/issues/1590) - Startup crash when settings file is corrupted. Settings files are now self-healing with automatic recovery from null bytes, truncated JSON, and missing brackets
+- Potentially fixed [#1578](https://github.com/LykosAI/StabilityMatrix/issues/1578) - `SocketException: Address already in use` on Linux startup by cleaning stale interprocess socket files and reactivating the existing window
 - Fixed [#1397](https://github.com/LykosAI/StabilityMatrix/issues/1397), [#610](https://github.com/LykosAI/StabilityMatrix/issues/610) - duplicate pip package entries in results - thanks to @e-nord!
+### Supporters
+#### 🌟 Visionaries
+A heartfelt thank you to our incredible Visionaries: **Waterclouds**, **JungleDragon**, **bluepopsicle**, **Bob S**, and **whudunit** - every feature, fix, and late-night breakthrough in this release carries your fingerprints. A huge welcome to our newest Visionaries **Droolguy** and **snotty** (leveling up from the Pioneer ranks!), a warm welcome back to longtime Visionary **Ibixat**, and an equally huge welcome to **LG**, making their Stability Matrix debut straight at the Visionary tier! You're the reason we can keep building bold things - and an extra-special thank you to everyone now supporting us directly through our new platform. Your trust in this next chapter means the world!
 
 ## v2.16.0-dev.2
 ### Added
@@ -112,21 +121,34 @@ A massive thank you to our esteemed Visionaries: **Waterclouds**, **JungleDragon
 - Added warning in data directory selector when an OneDrive folder is selected
 - Added support in the Checkpoints page to distinguish standard updates from Early Access-only updates - thanks to @x0x0b!
 - Added torch index for Strix/Gorgon Point Ryzen AI APUs on Windows - thanks to @NeuralFault!
+- Added retry button to failed downloads - thanks to @NeuralFault!
 ### Changed
 - Settings file saves are now atomic to prevent corruption from interrupted writes
+- Updated torch indexes for A1111, ComfyUI, InvokeAI, and Forge-based UIs to rocm7.2 / cu128 depending on GPU - thanks to @NeuralFault!
 ### Fixed
 - Fixed an issue where `Align Your Steps` scheduler and Unet Loader workflows ignored Regional Prompting (and other addon) conditioning modifiers.
-- Potentially fixed [#1578](https://github.com/LykosAI/StabilityMatrix/issues/1578) - `SocketException: Address already in use` on Linux startup by cleaning stale interprocess socket files and reactivating the existing window
+- Fixed the Package Manager "Add Package" teaching tip opening inopportunely while packages were still loading or after opening the add-package dialog
 - Fixed bold text not rendering in markdown dialogs on Windows 11 due to Avalonia 11.3.x variable font regression with Segoe UI Variable Text
 - Fixed Japanese text appearing compressed/squished in markdown dialogs by ensuring the bundled NotoSansJP font is used for CTextBlock rendering
 - Fixed ContentDialog title and buttons not using the correct font for Japanese locale (NotoSansJP) when shown as overlay
 - Added missing `CBold` and `CItalic` inline styles to the markdown style sheet
-- Fixed download progress bar showing 100% immediately for fresh downloads due to missing Content-Length fallback when Content-Range header is absent
 - Fixed downloads failing with "The request message was already sent" when the server doesn't return Content-Length on the first attempt, caused by reusing a consumed HttpRequestMessage in the retry loop
 - Fixed downloads from sources that redirect to CivitAI/HuggingFace (e.g. CivArchive) failing with Unauthorized by resolving the redirect target URL and applying auth headers for the correct domain
 - Fixed dropdown menu overlayed in Inference UI Model Cards not being scrollable on Linux - thanks to @NeuralFault!
+- Fixed model downloads failing on VPN connections - thanks to @NeuralFault!
+- Fixed [#1598](https://github.com/LykosAI/StabilityMatrix/issues/1598) - download progress bar showing 100% immediately for fresh downloads due to missing Content-Length fallback when Content-Range header is absent
+- Fixed [#1597](https://github.com/LykosAI/StabilityMatrix/issues/1597) - reForge launch failing due to setuptools version
+- Fixed [#1596](https://github.com/LykosAI/StabilityMatrix/issues/1596) - package installs and managed embedded Python startup being poisoned by inherited shell Python activation variables such as `PYTHONHOME`, `PYTHONPATH`, `VIRTUAL_ENV`, and Conda environment variables
 - Fixed [#1590](https://github.com/LykosAI/StabilityMatrix/issues/1590) - Startup crash when settings file is corrupted. Settings files are now self-healing with automatic recovery from null bytes, truncated JSON, and missing brackets
+- Potentially fixed [#1578](https://github.com/LykosAI/StabilityMatrix/issues/1578) - `SocketException: Address already in use` on Linux startup by cleaning stale interprocess socket files and reactivating the existing window
 - Fixed [#1397](https://github.com/LykosAI/StabilityMatrix/issues/1397), [#610](https://github.com/LykosAI/StabilityMatrix/issues/610) - duplicate pip package entries in results - thanks to @e-nord!
+### Supporters
+#### 🌟 Visionaries
+Lifting up our legendary Visionaries: **Waterclouds**, **JungleDragon**, **bluepopsicle**, **Bob S**, and **whudunit**. Through every release, every milestone, and every twist of this wild journey, your support has been our north star. A huge welcome to our newest Visionaries **Droolguy** and **snotty** (leveling up from the Pioneer crew!), a warm welcome back to longtime Visionary **Ibixat**, and an equally huge welcome to **LG**, making their Stability Matrix debut straight at the Visionary tier - so glad to have you all on board! We cannot thank you enough for standing behind Stability Matrix!
+#### 🚀 Pioneers
+And to our mighty Pioneer crew - the folks who keep the engine humming - thank you for everything! Massive shoutout to: **Szir777**, **Noah M**, **[USA]TechDude**, **Thom**, **SeraphOfSalem**, **Desert Viber**, **Adam**, **ACTUALLY_the_Real_Willem_Dafoe**, **takyamtom**, **robek**, **Ghislain G**, **Phil R**, **Tundra Everquill**, **Andrew B**, **SinthCore**, and **Ahmed S**. And a very warm welcome to our newest Pioneer **Commissar Lord Death**, plus a heartfelt shoutout to one more new Pioneer who joined us quietly through the Stripe migration - you know who you are, and we're so glad to have you!
+
+And one more heartfelt thank you to everyone now supporting us directly through our new platform - this next chapter wouldn't be possible without your trust, and we're so grateful you've come along for the ride!
 
 ## v2.15.6
 ### Added

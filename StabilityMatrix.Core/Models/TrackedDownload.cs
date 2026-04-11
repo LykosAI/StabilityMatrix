@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.Security.Authentication;
 using System.Text.Json.Serialization;
 using AsyncAwaitBestPractices;
 using NLog;
@@ -77,7 +78,9 @@ public class TrackedDownload
     [JsonIgnore]
     public Exception? Exception { get; private set; }
 
+    private const int MaxRetryAttempts = 3;
     private int attempts;
+    private CancellationTokenSource? retryDelayCancellationTokenSource;
 
     #region Events
     public event EventHandler<ProgressReport>? ProgressUpdate;
@@ -117,6 +120,13 @@ public class TrackedDownload
         {
             throw new InvalidOperationException("Download service is not set.");
         }
+    }
+
+    private void CancelRetryDelay()
+    {
+        retryDelayCancellationTokenSource?.Cancel();
+        retryDelayCancellationTokenSource?.Dispose();
+        retryDelayCancellationTokenSource = null;
     }
 
     private async Task StartDownloadTask(long resumeFromByte, CancellationToken cancellationToken)
@@ -184,6 +194,9 @@ public class TrackedDownload
                 $"Download state must be inactive or pending to start, not {ProgressState}"
             );
         }
+        // Cancel any pending auto-retry delay (defensive: Start() accepts Inactive state).
+        CancelRetryDelay();
+
         Logger.Debug("Starting download {Download}", FileName);
 
         EnsureDownloadService();
@@ -201,13 +214,21 @@ public class TrackedDownload
 
     internal void Resume()
     {
-        if (ProgressState != ProgressState.Inactive && ProgressState != ProgressState.Paused)
+        // Cancel any pending auto-retry delay since we're resuming now.
+        CancelRetryDelay();
+
+        if (
+            ProgressState != ProgressState.Inactive
+            && ProgressState != ProgressState.Paused
+            && ProgressState != ProgressState.Pending
+        )
         {
             Logger.Warn(
                 "Attempted to resume download {Download} but it is not paused ({State})",
                 FileName,
                 ProgressState
             );
+            return;
         }
         Logger.Debug("Resuming download {Download}", FileName);
 
@@ -235,6 +256,9 @@ public class TrackedDownload
 
     public void Pause()
     {
+        // Cancel any pending auto-retry delay.
+        CancelRetryDelay();
+
         if (ProgressState != ProgressState.Working)
         {
             Logger.Warn(
@@ -252,6 +276,33 @@ public class TrackedDownload
         OnProgressStateChanged(ProgressState);
     }
 
+    /// <summary>
+    /// Cleans up temp file and all sidecar files (e.g. .cm-info.json, preview image)
+    /// for a download that has already failed and will not be retried.
+    /// This transitions the state to <see cref="ProgressState.Cancelled"/> so the
+    /// service removes the tracking entry.
+    /// </summary>
+    public void Dismiss()
+    {
+        if (ProgressState != ProgressState.Failed)
+        {
+            Logger.Warn(
+                "Attempted to dismiss download {Download} but it is not in a failed state ({State})",
+                FileName,
+                ProgressState
+            );
+            return;
+        }
+
+        Logger.Debug("Dismissing failed download {Download}", FileName);
+
+        DoCleanup();
+
+        OnProgressStateChanging(ProgressState.Cancelled);
+        ProgressState = ProgressState.Cancelled;
+        OnProgressStateChanged(ProgressState);
+    }
+
     public void Cancel()
     {
         if (ProgressState is not (ProgressState.Working or ProgressState.Inactive))
@@ -263,6 +314,9 @@ public class TrackedDownload
             );
             return;
         }
+
+        // Cancel any pending auto-retry delay.
+        CancelRetryDelay();
 
         Logger.Debug("Cancelling download {Download}", FileName);
 
@@ -290,9 +344,12 @@ public class TrackedDownload
     }
 
     /// <summary>
-    /// Deletes the temp file and any extra cleanup files
+    /// Deletes the temp file and, optionally, any extra cleanup files (e.g. sidecar metadata).
+    /// Pass <paramref name="includeExtraCleanupFiles"/> as <c>false</c> when the download
+    /// failed but may be retried — sidecar files (.cm-info.json, preview image) should survive
+    /// so a manual retry doesn't need to recreate them.
     /// </summary>
-    private void DoCleanup()
+    private void DoCleanup(bool includeExtraCleanupFiles = true)
     {
         try
         {
@@ -302,6 +359,9 @@ public class TrackedDownload
         {
             Logger.Warn("Failed to delete temp file {TempFile}", TempFileName);
         }
+
+        if (!includeExtraCleanupFiles)
+            return;
 
         foreach (var extraFile in ExtraCleanupFileNames)
         {
@@ -315,6 +375,16 @@ public class TrackedDownload
             }
         }
     }
+
+    /// <summary>
+    /// Returns true for transient network/SSL exceptions that are safe to retry (ie: VPN tunnel resets or TLS re-key failures)
+    /// (IOException, AuthenticationException, or either wrapped in an AggregateException).
+    /// </summary>
+    private static bool IsTransientNetworkException(Exception? ex) =>
+        ex is IOException or AuthenticationException
+        || ex?.InnerException is IOException or AuthenticationException
+        || ex is AggregateException ae
+            && ae.InnerExceptions.Any(e => e is IOException or AuthenticationException);
 
     /// <summary>
     /// Invoked by the task's completion callback
@@ -349,7 +419,7 @@ public class TrackedDownload
             // Set the exception
             Exception = task.Exception;
 
-            if ((Exception is IOException || Exception?.InnerException is IOException) && attempts < 3)
+            if (IsTransientNetworkException(Exception) && attempts < MaxRetryAttempts)
             {
                 attempts++;
                 Logger.Warn(
@@ -359,9 +429,39 @@ public class TrackedDownload
                     attempts
                 );
 
+                // Exponential backoff: 2 s → 4 s → 8 s, capped at 30 s, ±500 ms jitter.
+                // Gives the VPN tunnel time to re-key/re-route before reconnecting,
+                // which prevents the retry from hitting the same torn connection.
+                var delayMs =
+                    (int)Math.Min(2000 * Math.Pow(2, attempts - 1), 30_000) + Random.Shared.Next(-500, 500);
+                Logger.Debug(
+                    "Download {Download} retrying in {Delay}ms (attempt {Attempt}/{MaxAttempts})",
+                    FileName,
+                    delayMs,
+                    attempts,
+                    MaxRetryAttempts
+                );
+
+                // Persist Inactive to disk before the delay so a restart during backoff loads it as resumable.
                 OnProgressStateChanging(ProgressState.Inactive);
                 ProgressState = ProgressState.Inactive;
-                Resume();
+                OnProgressStateChanged(ProgressState.Inactive);
+
+                // Clean up the completed task resources; Resume() will create new ones.
+                downloadTask = null;
+                downloadCancellationTokenSource = null;
+                downloadPauseTokenSource = null;
+
+                // Schedule the retry with a cancellation token so Cancel/Pause can abort the delay.
+                retryDelayCancellationTokenSource?.Dispose();
+                retryDelayCancellationTokenSource = new CancellationTokenSource();
+                Task.Delay(Math.Max(delayMs, 0), retryDelayCancellationTokenSource.Token)
+                    .ContinueWith(t =>
+                    {
+                        if (t.IsCompletedSuccessfully)
+                            Resume();
+                    })
+                    .SafeFireAndForget();
                 return;
             }
 
@@ -377,10 +477,16 @@ public class TrackedDownload
             ProgressState = ProgressState.Success;
         }
 
-        // For failed or cancelled, delete the temp files
-        if (ProgressState is ProgressState.Failed or ProgressState.Cancelled)
+        // For cancelled, delete the temp file and any sidecar metadata.
+        // For failed, only delete the temp file — sidecar files (.cm-info.json, preview image)
+        // are preserved so a manual retry doesn't need to recreate them.
+        if (ProgressState is ProgressState.Cancelled)
         {
             DoCleanup();
+        }
+        else if (ProgressState is ProgressState.Failed)
+        {
+            DoCleanup(includeExtraCleanupFiles: false);
         }
         // For pause, just do nothing
 
@@ -390,6 +496,17 @@ public class TrackedDownload
         downloadTask = null;
         downloadCancellationTokenSource = null;
         downloadPauseTokenSource = null;
+    }
+
+    /// <summary>
+    /// Resets the retry counter and silently sets state to Inactive without firing events.
+    /// Must be called before re-adding to TrackedDownloadService to avoid events
+    /// firing while the download is absent from the dictionary.
+    /// </summary>
+    public void ResetAttempts()
+    {
+        attempts = 0;
+        ProgressState = ProgressState.Inactive;
     }
 
     public void SetDownloadService(IDownloadService service)

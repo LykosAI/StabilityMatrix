@@ -376,25 +376,6 @@
 
             </sg:SpacedGrid>
 
-            <!--  Gemini API Section  -->
-            <TextBlock
-                Margin="0,16,0,8"
-                FontSize="16"
-                FontWeight="SemiBold"
-                Text="{x:Static lang:Resources.Label_ImageGenerationApis}" />
-
-            <controls:SettingsAccountLinkExpander
-                ConnectCommand="{Binding SetGeminiApiKeyCommand}"
-                DisconnectCommand="{Binding RemoveGeminiApiKeyCommand}"
-                Header="Gemini API"
-                HeaderTargetUri="https://aistudio.google.com/api-keys"
-                IsConnected="{Binding HasGeminiApiKey}"
-                OffDescription="{x:Static lang:Resources.Label_GeminiOffDescription}">
-                <controls:SettingsAccountLinkExpander.IconSource>
-                    <fluentIcons:SymbolIconSource Symbol="Sparkle" />
-                </controls:SettingsAccountLinkExpander.IconSource>
-            </controls:SettingsAccountLinkExpander>
-
             <!--  Legacy Connections (Patreon) - only visible when Patreon is linked  -->
             <StackPanel IsVisible="{Binding IsPatreonConnected}">
                 <TextBlock

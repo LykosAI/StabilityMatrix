@@ -1131,6 +1131,9 @@
   <data name="Warning_PleaseExtractFirst" xml:space="preserve">
     <value>PLEASE EXTRACT THE APP FROM THE ZIP FILE BEFORE RUNNING STABILITY MATRIX</value>
   </data>
+  <data name="Warning_OneDriveFolder" xml:space="preserve">
+    <value>OneDrive folders are not recommended: file syncing can break Git, Python venvs, and package installations.</value>
+  </data>
   <data name="Label_HistorySize" xml:space="preserve">
     <value>History Size</value>
   </data>
@@ -1508,5 +1511,132 @@ We prioritize your privacy ([Gen AI Terms](&lt;https://lykos.ai/gen-ai-terms&gt;
   </data>
   <data name="Label_Filter" xml:space="preserve">
     <value>Filter</value>
+  </data>
+  <data name="Label_SupportUs" xml:space="preserve">
+    <value>Support Us</value>
+  </data>
+  <data name="Label_Membership" xml:space="preserve">
+    <value>Membership</value>
+  </data>
+  <data name="Action_ManageMembership" xml:space="preserve">
+    <value>Manage Membership</value>
+  </data>
+  <data name="Action_BecomeSupporter" xml:space="preserve">
+    <value>Become a Supporter</value>
+  </data>
+  <data name="Label_LegacyConnections" xml:space="preserve">
+    <value>Legacy Connections</value>
+  </data>
+  <data name="Label_PatreonLegacyDescription" xml:space="preserve">
+    <value>Patreon is no longer used for new memberships. Existing connections remain valid during the transition.</value>
+  </data>
+  <data name="Sponsorship_ConnectLykosPrompt" xml:space="preserve">
+    <value>Sign in with your Lykos account to activate your membership benefits.</value>
+  </data>
+  <data name="InfoBar_PatreonMigration" xml:space="preserve">
+    <value>You can now move to a direct Lykos membership. Keep your tier and support independent development.</value>
+  </data>
+  <data name="InfoBar_PatreonGracePeriod" xml:space="preserve">
+    <value>Your Patreon benefits continue through {0}.</value>
+    <comment>{0} = date</comment>
+  </data>
+  <data name="Action_LearnMore" xml:space="preserve">
+    <value>Learn More</value>
+  </data>
+  <data name="Action_MigrateNow" xml:space="preserve">
+    <value>Migrate Now</value>
+  </data>
+  <data name="Label_ThankYouSupporter" xml:space="preserve">
+    <value>Thank you for supporting Stability Matrix 💙</value>
+  </data>
+  <data name="Label_SupporterCTA" xml:space="preserve">
+    <value>Support open-source development and get access to additional features and community perks.</value>
+  </data>
+  <data name="Action_ManageLykosAccount" xml:space="preserve">
+    <value>Manage your Lykos Account</value>
+  </data>
+  <data name="Action_EditGravatar" xml:space="preserve">
+    <value>Edit Profile Image on Gravatar</value>
+  </data>
+  <data name="Action_CopyUserId" xml:space="preserve">
+    <value>Copy User ID</value>
+  </data>
+  <data name="Label_LykosOffDescription" xml:space="preserve">
+    <value>Manage connected features in Stability Matrix</value>
+  </data>
+  <data name="Label_PatreonOffDescription" xml:space="preserve">
+    <value>Access preview and dev release channels for auto-updates</value>
+  </data>
+  <data name="Label_CivitAIOffDescription" xml:space="preserve">
+    <value>Connect to download models that require login from CivitAI</value>
+  </data>
+  <data name="Label_HuggingFaceOffDescription" xml:space="preserve">
+    <value>Connect to download models that require login from Hugging Face</value>
+  </data>
+  <data name="Label_ImageGenerationApis" xml:space="preserve">
+    <value>Image Generation APIs</value>
+  </data>
+  <data name="Label_GeminiOffDescription" xml:space="preserve">
+    <value>Add your Gemini API key to use Nano Banana in the Image Lab for image generation</value>
+  </data>
+  <data name="Label_AboutAccountCredentials" xml:space="preserve">
+    <value>About Account Credentials</value>
+  </data>
+  <data name="Label_CredentialsStorageNotice" xml:space="preserve">
+    <value>Account credentials and tokens are stored locally on your computer, with at-rest AES encryption.
+
+If you make changes to your computer hardware, you may need to re-login to your accounts.
+
+Account tokens will not be viewable after saving, please make a note of them if you need to use them elsewhere.</value>
+  </data>
+  <data name="Label_ConnectPatreonAccount" xml:space="preserve">
+    <value>Connect Patreon Account</value>
+  </data>
+  <data name="Label_ActiveSupporterTier" xml:space="preserve">
+    <value>{0} supporter</value>
+    <comment>{0} = tier name (Supporter, Insider, Pioneer, Visionary)</comment>
+  </data>
+  <data name="Label_ContributorAccess" xml:space="preserve">
+    <value>You have contributor access</value>
+  </data>
+  <data name="Label_ThankYouContributor" xml:space="preserve">
+    <value>Thanks for building with us 💙</value>
+  </data>
+  <data name="Label_ContributorAccessDescription" xml:space="preserve">
+    <value>You have contributor access to preview and dev release channels.</value>
+  </data>
+  <data name="Label_SupportingSince" xml:space="preserve">
+    <value>Supporting since</value>
+  </data>
+  <data name="Label_Benefits" xml:space="preserve">
+    <value>Benefits</value>
+  </data>
+  <data name="Label_Community" xml:space="preserve">
+    <value>Community</value>
+  </data>
+  <data name="Label_PromptAmplifierRateLimitTitle" xml:space="preserve">
+    <value>Rate Limit Reached</value>
+  </data>
+  <data name="Label_PromptAmplifierRateLimitMessage" xml:space="preserve">
+    <value>You have no Prompt Amplifier usage left this month. Usage resets on the 1st of each month. ({0} days left)</value>
+    <comment>{0} = days remaining until next month</comment>
+  </data>
+  <data name="Label_PromptAmplifierError" xml:space="preserve">
+    <value>Prompt Amplifier Error</value>
+  </data>
+  <data name="Label_ModerationError" xml:space="preserve">
+    <value>Moderation Error</value>
+  </data>
+  <data name="Label_PromptFlaggedMessage" xml:space="preserve">
+    <value>Your prompt was flagged by the moderation system. Please try again with a different prompt.</value>
+  </data>
+  <data name="Label_LoginRequiredMessage" xml:space="preserve">
+    <value>You need to be logged in to use this feature.</value>
+  </data>
+  <data name="Label_RequestErrorMessage" xml:space="preserve">
+    <value>There was an error processing your request.</value>
+  </data>
+  <data name="Label_BecomeSupporterDescription" xml:space="preserve">
+    <value>Support the Stability Matrix Team and get access to early development builds and be the first to test new features.</value>
   </data>
 </root>

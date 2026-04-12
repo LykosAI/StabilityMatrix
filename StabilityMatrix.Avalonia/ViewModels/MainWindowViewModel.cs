@@ -1,14 +1,16 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using AsyncAwaitBestPractices;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Controls.Primitives;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using FluentAvalonia.UI.Controls;
 using FluentAvalonia.UI.Media.Animation;
+using MessagePipe;
 using NLog;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Helpers;
@@ -47,11 +49,13 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly IModelIndexService modelIndexService;
     private readonly Lazy<IModelDownloadLinkHandler> modelDownloadLinkHandler;
     private readonly INotificationService notificationService;
+    private readonly IAppNotificationService appNotificationService;
     private readonly IAnalyticsHelper analyticsHelper;
     private readonly IUpdateHelper updateHelper;
     private readonly ISecretsManager secretsManager;
     private readonly INavigationService<MainWindowViewModel> navigationService;
     private readonly INavigationService<SettingsViewModel> settingsNavService;
+    private readonly IDistributedSubscriber<string, Uri> showWindowSubscriber;
     public string Greeting => "Welcome to Avalonia!";
 
     [ObservableProperty]
@@ -71,6 +75,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
     public ProgressManagerViewModel ProgressManagerViewModel { get; init; }
     public UpdateViewModel UpdateViewModel { get; init; }
+    public NotificationBannerViewModel NotificationBannerViewModel { get; init; }
 
     public double PaneWidth =>
         (Compat.IsWindows ? 0 : 20)
@@ -97,11 +102,13 @@ public partial class MainWindowViewModel : ViewModelBase
         IModelIndexService modelIndexService,
         Lazy<IModelDownloadLinkHandler> modelDownloadLinkHandler,
         INotificationService notificationService,
+        IAppNotificationService appNotificationService,
         IAnalyticsHelper analyticsHelper,
         IUpdateHelper updateHelper,
         ISecretsManager secretsManager,
         INavigationService<MainWindowViewModel> navigationService,
-        INavigationService<SettingsViewModel> settingsNavService
+        INavigationService<SettingsViewModel> settingsNavService,
+        IDistributedSubscriber<string, Uri> showWindowSubscriber
     )
     {
         this.settingsManager = settingsManager;
@@ -111,13 +118,16 @@ public partial class MainWindowViewModel : ViewModelBase
         this.modelIndexService = modelIndexService;
         this.modelDownloadLinkHandler = modelDownloadLinkHandler;
         this.notificationService = notificationService;
+        this.appNotificationService = appNotificationService;
         this.analyticsHelper = analyticsHelper;
         this.updateHelper = updateHelper;
         this.secretsManager = secretsManager;
         this.navigationService = navigationService;
         this.settingsNavService = settingsNavService;
+        this.showWindowSubscriber = showWindowSubscriber;
         ProgressManagerViewModel = dialogFactory.Get<ProgressManagerViewModel>();
         UpdateViewModel = dialogFactory.Get<UpdateViewModel>();
+        NotificationBannerViewModel = new NotificationBannerViewModel(appNotificationService);
     }
 
     public override void OnLoaded()
@@ -153,18 +163,13 @@ public partial class MainWindowViewModel : ViewModelBase
         try
         {
             await modelDownloadLinkHandler.Value.StartListening();
+
+            // Subscribe to show-window signals from other instances
+            await showWindowSubscriber.SubscribeAsync(Program.ShowWindowIpcKey, OnShowWindowSignalReceived);
         }
-        catch (IOException)
+        catch (Exception ex) when (ex is IOException or System.Net.Sockets.SocketException)
         {
-            var dialog = new BetterContentDialog
-            {
-                Title = Resources.Label_StabilityMatrixAlreadyRunning,
-                Content = Resources.Label_AnotherInstanceAlreadyRunning,
-                IsPrimaryButtonEnabled = true,
-                PrimaryButtonText = Resources.Action_Close,
-                DefaultButton = ContentDialogButton.Primary,
-            };
-            await dialog.ShowAsync();
+            Logger.Warn(ex, "Another instance is already running, shutting down");
             App.Shutdown();
             return;
         }
@@ -295,6 +300,34 @@ public partial class MainWindowViewModel : ViewModelBase
         // Start checking for updates
         await updateHelper.StartCheckingForUpdates();
 
+        // Check for server-pushed notifications (non-blocking)
+        Task.Run(async () =>
+            {
+                try
+                {
+                    var notification = await appNotificationService.CheckForNotificationsAsync();
+                    if (notification is not null)
+                    {
+                        await Dispatcher.UIThread.InvokeAsync(() =>
+                        {
+                            NotificationBannerViewModel.Show(notification);
+                        });
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error(ex, "Error checking for notifications");
+                }
+            })
+            .SafeFireAndForget();
+
+        // Mark first-launch setup as complete (after notification check so that notifications
+        // with requireSetupComplete are deferred until the next session)
+        if (!settingsManager.Settings.FirstLaunchSetupComplete)
+        {
+            settingsManager.Transaction(s => s.FirstLaunchSetupComplete = true);
+        }
+
         // Periodic launch stats
         if (
             settingsManager.Settings.Analytics.IsUsageDataEnabled
@@ -413,6 +446,31 @@ public partial class MainWindowViewModel : ViewModelBase
                     }
                 });
         }
+    }
+
+    private void OnShowWindowSignalReceived(Uri _)
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (
+                Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime
+                {
+                    MainWindow: { } mainWindow
+                }
+            )
+            {
+                if (mainWindow.WindowState == WindowState.Minimized)
+                {
+                    mainWindow.WindowState = WindowState.Normal;
+                }
+
+                // Topmost toggle forces the window to front on Windows,
+                // where SetForegroundWindow is restricted to the foreground process
+                mainWindow.Topmost = true;
+                mainWindow.Topmost = false;
+                mainWindow.Activate();
+            }
+        });
     }
 
     /// <summary>

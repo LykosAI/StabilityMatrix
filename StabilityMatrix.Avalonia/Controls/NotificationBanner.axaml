@@ -1,0 +1,33 @@
+﻿<UserControl
+    x:Class="StabilityMatrix.Avalonia.Controls.NotificationBanner"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:designData="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:ui="using:FluentAvalonia.UI.Controls"
+    xmlns:vm="using:StabilityMatrix.Avalonia.ViewModels"
+    d:DataContext="{x:Static designData:DesignData.NotificationBannerViewModel}"
+    d:DesignHeight="150"
+    d:DesignWidth="1100"
+    x:DataType="vm:NotificationBannerViewModel"
+    IsVisible="{Binding IsVisible}"
+    mc:Ignorable="d">
+
+    <ui:InfoBar
+        Margin="12,8,12,4"
+        CloseButtonCommand="{Binding DismissClickedCommand}"
+        FontSize="14"
+        FontWeight="SemiBold"
+        IsClosable="{Binding IsDismissible}"
+        IsOpen="True"
+        Message="{Binding Message}"
+        Severity="{Binding Severity}">
+        <ui:InfoBar.ActionButton>
+            <Button
+                Command="{Binding ActionClickedCommand}"
+                Content="{Binding ActionLabel}"
+                IsVisible="{Binding HasAction}" />
+        </ui:InfoBar.ActionButton>
+    </ui:InfoBar>
+</UserControl>

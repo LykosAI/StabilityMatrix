@@ -504,7 +504,8 @@ public class SettingsManager(ILogger<SettingsManager> logger) : ISettingsManager
                 return;
             }
 
-            var rawBytes = await File.ReadAllBytesAsync(SettingsFile, cancellationToken).ConfigureAwait(false);
+            var rawBytes = await File.ReadAllBytesAsync(SettingsFile, cancellationToken)
+                .ConfigureAwait(false);
 
             if (rawBytes.Length == 0)
             {
@@ -622,7 +623,13 @@ public class SettingsManager(ILogger<SettingsManager> logger) : ISettingsManager
             catch (Exception ex)
             {
                 logger.LogWarning(ex, "Failed to move temp settings file, cleaning up");
-                try { File.Delete(tempPath); } catch { /* best effort */ }
+                try
+                {
+                    File.Delete(tempPath);
+                }
+                catch
+                { /* best effort */
+                }
                 throw;
             }
         }
@@ -675,7 +682,13 @@ public class SettingsManager(ILogger<SettingsManager> logger) : ISettingsManager
             catch (Exception ex)
             {
                 logger.LogWarning(ex, "Failed to move temp settings file, cleaning up");
-                try { File.Delete(tempPath); } catch { /* best effort */ }
+                try
+                {
+                    File.Delete(tempPath);
+                }
+                catch
+                { /* best effort */
+                }
                 throw;
             }
         }

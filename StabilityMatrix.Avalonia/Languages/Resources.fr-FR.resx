@@ -1114,4 +1114,130 @@
     <value>Recherche de Modèles Accélérée</value>
     <comment>Fuzzy</comment>
   </data>
+  <data name="Label_SupportUs" xml:space="preserve">
+    <value>Soutenez-nous</value>
+  </data>
+  <data name="Label_Membership" xml:space="preserve">
+    <value>Adhésion</value>
+  </data>
+  <data name="Action_ManageMembership" xml:space="preserve">
+    <value>Gérer l'adhésion</value>
+  </data>
+  <data name="Action_BecomeSupporter" xml:space="preserve">
+    <value>Devenir soutien</value>
+  </data>
+  <data name="Label_LegacyConnections" xml:space="preserve">
+    <value>Anciennes connexions</value>
+  </data>
+  <data name="Label_PatreonLegacyDescription" xml:space="preserve">
+    <value>Patreon n'est plus utilisé pour les nouvelles adhésions. Les connexions existantes restent valides pendant la transition.</value>
+  </data>
+  <data name="Sponsorship_ConnectLykosPrompt" xml:space="preserve">
+    <value>Connectez-vous avec votre compte Lykos pour activer vos avantages d'adhésion.</value>
+  </data>
+  <data name="InfoBar_PatreonMigration" xml:space="preserve">
+    <value>Vous pouvez désormais passer à une adhésion directe Lykos. Conservez votre niveau et soutenez le développement indépendant.</value>
+  </data>
+  <data name="InfoBar_PatreonGracePeriod" xml:space="preserve">
+    <value>Vos avantages Patreon restent actifs jusqu'au {0}.</value>
+    <comment>{0} = date</comment>
+  </data>
+  <data name="Action_LearnMore" xml:space="preserve">
+    <value>En savoir plus</value>
+  </data>
+  <data name="Action_MigrateNow" xml:space="preserve">
+    <value>Migrer maintenant</value>
+  </data>
+  <data name="Label_ThankYouSupporter" xml:space="preserve">
+    <value>Merci de soutenir Stability Matrix 💙</value>
+  </data>
+  <data name="Label_SupporterCTA" xml:space="preserve">
+    <value>Soutenez le développement open-source et accédez à des fonctionnalités supplémentaires et des avantages communautaires.</value>
+  </data>
+  <data name="Action_ManageLykosAccount" xml:space="preserve">
+    <value>Gérer votre compte Lykos</value>
+  </data>
+  <data name="Action_EditGravatar" xml:space="preserve">
+    <value>Modifier l'image de profil sur Gravatar</value>
+  </data>
+  <data name="Action_CopyUserId" xml:space="preserve">
+    <value>Copier l'ID utilisateur</value>
+  </data>
+  <data name="Label_LykosOffDescription" xml:space="preserve">
+    <value>Gérer les fonctionnalités connectées dans Stability Matrix</value>
+  </data>
+  <data name="Label_PatreonOffDescription" xml:space="preserve">
+    <value>Accéder aux canaux de préversion et de développement pour les mises à jour automatiques</value>
+  </data>
+  <data name="Label_CivitAIOffDescription" xml:space="preserve">
+    <value>Se connecter pour télécharger des modèles nécessitant une connexion CivitAI</value>
+  </data>
+  <data name="Label_HuggingFaceOffDescription" xml:space="preserve">
+    <value>Se connecter pour télécharger des modèles nécessitant une connexion Hugging Face</value>
+  </data>
+  <data name="Label_ImageGenerationApis" xml:space="preserve">
+    <value>APIs de génération d'images</value>
+  </data>
+  <data name="Label_GeminiOffDescription" xml:space="preserve">
+    <value>Ajoutez votre clé API Gemini pour utiliser Nano Banana dans l'Image Lab pour la génération d'images</value>
+  </data>
+  <data name="Label_AboutAccountCredentials" xml:space="preserve">
+    <value>À propos des identifiants de compte</value>
+  </data>
+  <data name="Label_CredentialsStorageNotice" xml:space="preserve">
+    <value>Les identifiants de compte et les jetons sont stockés localement sur votre ordinateur, avec un chiffrement AES au repos.
+
+Si vous modifiez le matériel de votre ordinateur, vous devrez peut-être vous reconnecter à vos comptes.
+
+Les jetons de compte ne seront plus visibles après l'enregistrement. Veuillez en prendre note si vous devez les utiliser ailleurs.</value>
+  </data>
+  <data name="Label_ConnectPatreonAccount" xml:space="preserve">
+    <value>Connecter un compte Patreon</value>
+  </data>
+  <data name="Label_ActiveSupporterTier" xml:space="preserve">
+    <value>Soutien {0}</value>
+    <comment>{0} = tier name</comment>
+  </data>
+  <data name="Label_ContributorAccess" xml:space="preserve">
+    <value>Vous avez un accès contributeur</value>
+  </data>
+  <data name="Label_ThankYouContributor" xml:space="preserve">
+    <value>Merci de construire avec nous 💙</value>
+  </data>
+  <data name="Label_ContributorAccessDescription" xml:space="preserve">
+    <value>Vous avez un accès contributeur aux canaux de préversion et de développement.</value>
+  </data>
+  <data name="Label_SupportingSince" xml:space="preserve">
+    <value>Soutien depuis le</value>
+  </data>
+  <data name="Label_Benefits" xml:space="preserve">
+    <value>Avantages</value>
+  </data>
+  <data name="Label_Community" xml:space="preserve">
+    <value>Communauté</value>
+  </data>
+  <data name="Label_PromptAmplifierRateLimitTitle" xml:space="preserve">
+    <value>Limite d'utilisation atteinte</value>
+  </data>
+  <data name="Label_PromptAmplifierRateLimitMessage" xml:space="preserve">
+    <value>Vous n'avez plus d'utilisation Prompt Amplifier ce mois-ci. L'utilisation est réinitialisée le 1er de chaque mois. ({0} jours restants)</value>
+  </data>
+  <data name="Label_PromptAmplifierError" xml:space="preserve">
+    <value>Erreur Prompt Amplifier</value>
+  </data>
+  <data name="Label_ModerationError" xml:space="preserve">
+    <value>Erreur de modération</value>
+  </data>
+  <data name="Label_PromptFlaggedMessage" xml:space="preserve">
+    <value>Votre prompt a été signalé par le système de modération. Veuillez réessayer avec un autre prompt.</value>
+  </data>
+  <data name="Label_LoginRequiredMessage" xml:space="preserve">
+    <value>Vous devez être connecté pour utiliser cette fonctionnalité.</value>
+  </data>
+  <data name="Label_RequestErrorMessage" xml:space="preserve">
+    <value>Une erreur s'est produite lors du traitement de votre demande.</value>
+  </data>
+  <data name="Label_BecomeSupporterDescription" xml:space="preserve">
+    <value>Soutenez l'équipe Stability Matrix et accédez aux builds de développement précoces pour tester les nouvelles fonctionnalités en avant-première.</value>
+  </data>
 </root>

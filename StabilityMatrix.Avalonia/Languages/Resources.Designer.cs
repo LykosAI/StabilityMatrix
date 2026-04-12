@@ -4447,5 +4447,53 @@ namespace StabilityMatrix.Avalonia.Languages {
                 return ResourceManager.GetString("Watermark_EnterPackageName", resourceCulture);
             }
         }
+
+        public static string Label_PromptAmplifierRateLimitTitle {
+            get {
+                return ResourceManager.GetString("Label_PromptAmplifierRateLimitTitle", resourceCulture);
+            }
+        }
+
+        public static string Label_PromptAmplifierRateLimitMessage {
+            get {
+                return ResourceManager.GetString("Label_PromptAmplifierRateLimitMessage", resourceCulture);
+            }
+        }
+
+        public static string Label_PromptAmplifierError {
+            get {
+                return ResourceManager.GetString("Label_PromptAmplifierError", resourceCulture);
+            }
+        }
+
+        public static string Label_ModerationError {
+            get {
+                return ResourceManager.GetString("Label_ModerationError", resourceCulture);
+            }
+        }
+
+        public static string Label_PromptFlaggedMessage {
+            get {
+                return ResourceManager.GetString("Label_PromptFlaggedMessage", resourceCulture);
+            }
+        }
+
+        public static string Label_LoginRequiredMessage {
+            get {
+                return ResourceManager.GetString("Label_LoginRequiredMessage", resourceCulture);
+            }
+        }
+
+        public static string Label_RequestErrorMessage {
+            get {
+                return ResourceManager.GetString("Label_RequestErrorMessage", resourceCulture);
+            }
+        }
+
+        public static string Label_BecomeSupporterDescription {
+            get {
+                return ResourceManager.GetString("Label_BecomeSupporterDescription", resourceCulture);
+            }
+        }
     }
 }

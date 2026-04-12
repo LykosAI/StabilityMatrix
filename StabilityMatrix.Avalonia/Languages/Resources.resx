@@ -1614,4 +1614,29 @@ Account tokens will not be viewable after saving, please make a note of them if 
   <data name="Label_Community" xml:space="preserve">
     <value>Community</value>
   </data>
+  <data name="Label_PromptAmplifierRateLimitTitle" xml:space="preserve">
+    <value>Rate Limit Reached</value>
+  </data>
+  <data name="Label_PromptAmplifierRateLimitMessage" xml:space="preserve">
+    <value>You have no Prompt Amplifier usage left this month. Usage resets on the 1st of each month. ({0} days left)</value>
+    <comment>{0} = days remaining until next month</comment>
+  </data>
+  <data name="Label_PromptAmplifierError" xml:space="preserve">
+    <value>Prompt Amplifier Error</value>
+  </data>
+  <data name="Label_ModerationError" xml:space="preserve">
+    <value>Moderation Error</value>
+  </data>
+  <data name="Label_PromptFlaggedMessage" xml:space="preserve">
+    <value>Your prompt was flagged by the moderation system. Please try again with a different prompt.</value>
+  </data>
+  <data name="Label_LoginRequiredMessage" xml:space="preserve">
+    <value>You need to be logged in to use this feature.</value>
+  </data>
+  <data name="Label_RequestErrorMessage" xml:space="preserve">
+    <value>There was an error processing your request.</value>
+  </data>
+  <data name="Label_BecomeSupporterDescription" xml:space="preserve">
+    <value>Support the Stability Matrix Team and get access to early development builds and be the first to test new features.</value>
+  </data>
 </root>

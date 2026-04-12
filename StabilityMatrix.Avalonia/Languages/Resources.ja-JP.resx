@@ -1537,4 +1537,28 @@ Sparkは兆レベルのパラメータを持つ基盤モデルで、膨大なパ
   <data name="Label_Community" xml:space="preserve">
     <value>コミュニティ</value>
   </data>
+  <data name="Label_PromptAmplifierRateLimitTitle" xml:space="preserve">
+    <value>利用上限に達しました</value>
+  </data>
+  <data name="Label_PromptAmplifierRateLimitMessage" xml:space="preserve">
+    <value>今月のプロンプトアンプリファイアの利用回数がなくなりました。利用回数は毎月1日にリセットされます。（残り{0}日）</value>
+  </data>
+  <data name="Label_PromptAmplifierError" xml:space="preserve">
+    <value>プロンプトアンプリファイアエラー</value>
+  </data>
+  <data name="Label_ModerationError" xml:space="preserve">
+    <value>モデレーションエラー</value>
+  </data>
+  <data name="Label_PromptFlaggedMessage" xml:space="preserve">
+    <value>プロンプトがモデレーションシステムによってフラグされました。別のプロンプトでもう一度お試しください。</value>
+  </data>
+  <data name="Label_LoginRequiredMessage" xml:space="preserve">
+    <value>この機能を使用するにはログインが必要です。</value>
+  </data>
+  <data name="Label_RequestErrorMessage" xml:space="preserve">
+    <value>リクエストの処理中にエラーが発生しました。</value>
+  </data>
+  <data name="Label_BecomeSupporterDescription" xml:space="preserve">
+    <value>Stability Matrixチームを支援して、開発初期ビルドへのアクセスや新機能を最初に試す権利を獲得しましょう。</value>
+  </data>
 </root>

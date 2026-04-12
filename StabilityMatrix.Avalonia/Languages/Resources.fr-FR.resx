@@ -1216,4 +1216,28 @@ Les jetons de compte ne seront plus visibles après l'enregistrement. Veuillez e
   <data name="Label_Community" xml:space="preserve">
     <value>Communauté</value>
   </data>
+  <data name="Label_PromptAmplifierRateLimitTitle" xml:space="preserve">
+    <value>Limite d'utilisation atteinte</value>
+  </data>
+  <data name="Label_PromptAmplifierRateLimitMessage" xml:space="preserve">
+    <value>Vous n'avez plus d'utilisation Prompt Amplifier ce mois-ci. L'utilisation est réinitialisée le 1er de chaque mois. ({0} jours restants)</value>
+  </data>
+  <data name="Label_PromptAmplifierError" xml:space="preserve">
+    <value>Erreur Prompt Amplifier</value>
+  </data>
+  <data name="Label_ModerationError" xml:space="preserve">
+    <value>Erreur de modération</value>
+  </data>
+  <data name="Label_PromptFlaggedMessage" xml:space="preserve">
+    <value>Votre prompt a été signalé par le système de modération. Veuillez réessayer avec un autre prompt.</value>
+  </data>
+  <data name="Label_LoginRequiredMessage" xml:space="preserve">
+    <value>Vous devez être connecté pour utiliser cette fonctionnalité.</value>
+  </data>
+  <data name="Label_RequestErrorMessage" xml:space="preserve">
+    <value>Une erreur s'est produite lors du traitement de votre demande.</value>
+  </data>
+  <data name="Label_BecomeSupporterDescription" xml:space="preserve">
+    <value>Soutenez l'équipe Stability Matrix et accédez aux builds de développement précoces pour tester les nouvelles fonctionnalités en avant-première.</value>
+  </data>
 </root>

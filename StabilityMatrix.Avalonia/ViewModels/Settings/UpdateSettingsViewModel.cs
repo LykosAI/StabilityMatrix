@@ -74,14 +74,14 @@ public partial class UpdateSettingsViewModel : PageViewModelBase
             new()
             {
                 UpdateChannel = UpdateChannel.Development,
-                Description = Resources.Label_UpdatesDevChannelDescription
+                Description = Resources.Label_UpdatesDevChannelDescription,
             },
             new()
             {
                 UpdateChannel = UpdateChannel.Preview,
-                Description = Resources.Label_UpdatesPreviewChannelDescription
+                Description = Resources.Label_UpdatesPreviewChannelDescription,
             },
-            new() { UpdateChannel = UpdateChannel.Stable }
+            new() { UpdateChannel = UpdateChannel.Stable },
         };
 
     public UpdateSettingsViewModel(
@@ -178,28 +178,27 @@ public partial class UpdateSettingsViewModel : PageViewModelBase
             .UIThread.InvokeAsync(async () =>
             {
                 var dialog = DialogHelper.CreateTaskDialog(
-                    "Become a Supporter",
-                    ""
-                        + "Support the Stability Matrix Team and get access to early development builds and be the first to test new features. "
+                    Resources.Action_BecomeSupporter,
+                    Resources.Label_BecomeSupporterDescription
                 );
 
                 dialog.Buttons = new[]
                 {
                     new(Resources.Label_Accounts, TaskDialogStandardResult.OK),
-                    TaskDialogButton.CloseButton
+                    TaskDialogButton.CloseButton,
                 };
 
                 dialog.Commands = new[]
                 {
                     new TaskDialogCommand
                     {
-                        Text = "Patreon",
-                        Description = "https://patreon.com/StabilityMatrix",
+                        Text = Resources.Label_Membership,
+                        Description = Assets.MembershipUrl.ToString(),
                         Command = new RelayCommand(() =>
                         {
-                            ProcessRunner.OpenUrl("https://patreon.com/StabilityMatrix");
-                        })
-                    }
+                            ProcessRunner.OpenUrl(Assets.MembershipUrl);
+                        }),
+                    },
                 };
 
                 if (await dialog.ShowAsync(true) is TaskDialogStandardResult.OK)
@@ -220,8 +219,7 @@ public partial class UpdateSettingsViewModel : PageViewModelBase
         foreach (var card in AvailableUpdateChannelCards)
         {
             card.LatestVersion = value
-                ?.UpdateChannels
-                .Where(kv => kv.Key <= card.UpdateChannel)
+                ?.UpdateChannels.Where(kv => kv.Key <= card.UpdateChannel)
                 .Select(kv => kv.Value)
                 .MaxBy(info => info.Version, SemVersion.PrecedenceComparer)
                 ?.Version;

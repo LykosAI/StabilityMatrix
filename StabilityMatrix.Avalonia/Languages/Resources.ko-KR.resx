@@ -1363,4 +1363,28 @@
   <data name="Label_Community" xml:space="preserve">
     <value>커뮤니티</value>
   </data>
+  <data name="Label_PromptAmplifierRateLimitTitle" xml:space="preserve">
+    <value>사용 한도 도달</value>
+  </data>
+  <data name="Label_PromptAmplifierRateLimitMessage" xml:space="preserve">
+    <value>이번 달 프롬프트 증폭기 사용량이 모두 소진되었습니다. 사용량은 매월 1일에 초기화됩니다. ({0}일 남음)</value>
+  </data>
+  <data name="Label_PromptAmplifierError" xml:space="preserve">
+    <value>프롬프트 증폭기 오류</value>
+  </data>
+  <data name="Label_ModerationError" xml:space="preserve">
+    <value>검수 오류</value>
+  </data>
+  <data name="Label_PromptFlaggedMessage" xml:space="preserve">
+    <value>프롬프트가 검수 시스템에 의해 차단되었습니다. 다른 프롬프트로 다시 시도해 주세요.</value>
+  </data>
+  <data name="Label_LoginRequiredMessage" xml:space="preserve">
+    <value>이 기능을 사용하려면 로그인이 필요합니다.</value>
+  </data>
+  <data name="Label_RequestErrorMessage" xml:space="preserve">
+    <value>요청을 처리하는 중 오류가 발생했습니다.</value>
+  </data>
+  <data name="Label_BecomeSupporterDescription" xml:space="preserve">
+    <value>Stability Matrix 팀을 후원하고 개발 초기 빌드에 액세스하여 새로운 기능을 가장 먼저 사용해 보세요.</value>
+  </data>
 </root>

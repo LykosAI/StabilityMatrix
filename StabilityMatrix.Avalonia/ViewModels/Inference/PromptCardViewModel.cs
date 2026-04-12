@@ -659,12 +659,15 @@ public partial class PromptCardViewModel
                 case HttpStatusCode.PaymentRequired:
                 {
                     var dialog = DialogHelper.CreateMarkdownDialog(
-                        $"You have no Prompt Amplifier usage left this month. Usage resets on the 1st of each month. ({Utilities.GetNumDaysTilBeginningOfNextMonth()} days left)",
-                        "Rate Limit Reached"
+                        string.Format(
+                            Resources.Label_PromptAmplifierRateLimitMessage,
+                            Utilities.GetNumDaysTilBeginningOfNextMonth()
+                        ),
+                        Resources.Label_PromptAmplifierRateLimitTitle
                     );
-                    dialog.PrimaryButtonText = "Upgrade";
+                    dialog.PrimaryButtonText = Resources.Action_Upgrade;
                     dialog.PrimaryButtonCommand = new RelayCommand(() =>
-                        ProcessRunner.OpenUrl("https://patreon.com/join/StabilityMatrix")
+                        ProcessRunner.OpenUrl(Assets.MembershipUrl)
                     );
                     dialog.IsPrimaryButtonEnabled = true;
                     dialog.DefaultButton = ContentDialogButton.Primary;
@@ -674,8 +677,8 @@ public partial class PromptCardViewModel
                 }
                 case HttpStatusCode.BadRequest:
                     notificationService.Show(
-                        "Moderation Error",
-                        "Your prompt was flagged by the moderation system. Please try again with a different prompt.",
+                        Resources.Label_ModerationError,
+                        Resources.Label_PromptFlaggedMessage,
                         NotificationType.Error
                     );
                     break;
@@ -687,16 +690,16 @@ public partial class PromptCardViewModel
                     else
                     {
                         notificationService.Show(
-                            "Prompt Amplifier Error",
-                            "You need to be logged in to use this feature.",
+                            Resources.Label_PromptAmplifierError,
+                            Resources.Label_LoginRequiredMessage,
                             NotificationType.Error
                         );
                     }
                     break;
                 default:
                     notificationService.Show(
-                        "Prompt Amplifier Error",
-                        "There was an error processing your request.",
+                        Resources.Label_PromptAmplifierError,
+                        Resources.Label_RequestErrorMessage,
                         NotificationType.Error
                     );
                     break;
@@ -705,7 +708,7 @@ public partial class PromptCardViewModel
         catch (Exception e)
         {
             logger.LogError(e, "Error amplifying prompt");
-            notificationService.Show("Prompt Amplifier Error", e.Message, NotificationType.Error);
+            notificationService.Show(Resources.Label_PromptAmplifierError, e.Message, NotificationType.Error);
         }
     }
 

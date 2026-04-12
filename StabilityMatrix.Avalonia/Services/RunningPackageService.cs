@@ -46,7 +46,7 @@ public partial class RunningPackageService(
     )
     {
         // Get lock
-        using var @lock = await packageLocks.LockAsync(installedPackage.Id, cancellationToken);
+        using var _ = await packageLocks.LockAsync(installedPackage.Id, cancellationToken);
 
         // Ignore if already running after lock
         if (RunningPackages.ContainsKey(installedPackage.Id))
@@ -266,7 +266,7 @@ public partial class RunningPackageService(
     public async Task StopPackage(Guid id, CancellationToken cancellationToken = default)
     {
         // Get lock
-        using var @lock = await packageLocks.LockAsync(id, cancellationToken);
+        using var _ = await packageLocks.LockAsync(id, cancellationToken);
 
         // Ignore if not running after lock
         if (!RunningPackages.TryGetValue(id, out var vm))

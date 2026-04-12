@@ -15,7 +15,7 @@ public static partial class HardwareHelper
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
     private static IReadOnlyList<GpuInfo>? cachedGpuInfos;
-    private static readonly object cachedGpuInfosLock = new();
+    private static readonly Lock cachedGpuInfosLock = new();
 
     private static readonly Lazy<IHardwareInfo> HardwareInfoLazy = new(() => new Hardware.Info.HardwareInfo()
     );

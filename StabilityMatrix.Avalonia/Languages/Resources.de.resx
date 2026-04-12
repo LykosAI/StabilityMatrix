@@ -1124,4 +1124,28 @@ Konto-Tokens sind nach dem Speichern nicht mehr einsehbar. Bitte notiere sie, we
   <data name="Label_Community" xml:space="preserve">
     <value>Community</value>
   </data>
+  <data name="Label_PromptAmplifierRateLimitTitle" xml:space="preserve">
+    <value>Nutzungslimit erreicht</value>
+  </data>
+  <data name="Label_PromptAmplifierRateLimitMessage" xml:space="preserve">
+    <value>Du hast diesen Monat keine Prompt-Amplifier-Nutzung mehr übrig. Die Nutzung wird am 1. jedes Monats zurückgesetzt. (noch {0} Tage)</value>
+  </data>
+  <data name="Label_PromptAmplifierError" xml:space="preserve">
+    <value>Prompt-Amplifier-Fehler</value>
+  </data>
+  <data name="Label_ModerationError" xml:space="preserve">
+    <value>Moderationsfehler</value>
+  </data>
+  <data name="Label_PromptFlaggedMessage" xml:space="preserve">
+    <value>Dein Prompt wurde vom Moderationssystem markiert. Bitte versuche es mit einem anderen Prompt erneut.</value>
+  </data>
+  <data name="Label_LoginRequiredMessage" xml:space="preserve">
+    <value>Du musst angemeldet sein, um diese Funktion zu verwenden.</value>
+  </data>
+  <data name="Label_RequestErrorMessage" xml:space="preserve">
+    <value>Bei der Verarbeitung deiner Anfrage ist ein Fehler aufgetreten.</value>
+  </data>
+  <data name="Label_BecomeSupporterDescription" xml:space="preserve">
+    <value>Unterstütze das Stability Matrix-Team und erhalte Zugang zu frühen Entwicklungs-Builds, um neue Funktionen als Erster zu testen.</value>
+  </data>
 </root>

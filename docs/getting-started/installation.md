@@ -11,7 +11,6 @@ Stability Matrix is available for Windows, macOS, and Linux. This page covers ho
 - [macOS](#macos)
 - [Linux](#linux)
 - [Portable Mode](#portable-mode)
-- [Troubleshooting](#troubleshooting)
 
 ---
 

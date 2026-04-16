@@ -642,7 +642,7 @@ In image-generation communities, IPEX usually comes up when discussing Intel-nat
 
 **MPS**
 
-MPS usually means the Apple Metal Performance Shaders backend as exposed through PyTorch on macOS. In practical local-AI discussion, it is the Apple Silicon GPU acceleration path used on M-series Macs.
+MPS means the Apple Metal Performance Shaders backend as exposed through PyTorch on macOS. In practical local-AI discussion, it is the Apple Silicon GPU acceleration path used on M-series Macs.
 
 It allows model operations to run on the integrated Apple GPU instead of only on the CPU. That can make local inference much more usable on Mac hardware, but MPS is still its own backend with its own operator coverage, performance limits, and occasional compatibility gaps compared with CUDA.
 

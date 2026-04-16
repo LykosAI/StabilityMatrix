@@ -2,6 +2,12 @@
 
 Stability Matrix is a multi-platform package manager and inference UI for Stable Diffusion and related AI image/video generation tools. This documentation covers all major features and sections of the application.
 
+This docuemtation is intended to provide a detailed guide and explaination of the many functions of Stability Matrix, its installation and use for both new and current users, and also more detailed and technical material for advanced users.
+While it cotains information on a vast majority of application specific functions, It also contains information that applies to AI image, video, and related generation aspects that can be useful both inside and outside of Stability Matrix.
+While not all encompassing on every minute detail, it is intended to be updated as new features and changes are released to the project as well as new ecosystem/model/usage information as-needed.
+
+Current Status: In-progress - Structure is in-place and planned docs are currently being progressively created and added.
+
 ## Table of Contents
 
 ### Getting Started

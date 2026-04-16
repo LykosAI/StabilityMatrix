@@ -440,17 +440,21 @@ Merges are especially common in SDXL-derived communities because that ecosystem 
 
 From a user perspective, a merge can be very good, but it can also be less predictable than a cleaner base or fine-tune lineage. If a model feels powerful but a little "mystery meat" in behavior, it is often a heavily merged release.
 
-**VAE-baked**
+**VAE-baked / AiO**
 
 VAE-baked means the checkpoint already includes its VAE inside the model file, so you do not usually need to load a separate external VAE.
 
-This term is most common in older Stable Diffusion and SDXL-style checkpoint ecosystems, where some releases shipped as:
+This term is most common in older Stable Diffusion checkpoint ecosystems, where releases could ship in several different ways. It also still comes up in SDXL discussions, but in practice most SDXL-derived checkpoints are already VAE-baked:
 
 - model only, requiring a matching external VAE
 - model plus separate VAE
 - model with the VAE already baked in
 
-Why it matters: if a model is VAE-baked, setup is simpler. If it is not, using the wrong VAE can hurt color, contrast, or decoding quality. In newer modular multi-file families, this exact baked-vs-separate distinction is often less central because the whole bundle is already distributed as coordinated components.
+In newer DiT-based ecosystems, you may also see AiO, short for all-in-one. In practice, AiO usually means the full generation stack is packaged together as one coordinated model release, often including the transformer or denoiser, text encoders, and VAE in the same bundled file or tightly coupled package.
+
+In many AiO releases, that really does mean a single bundled model file with the text encoder and or VAE included. The important nuance is that this is still not universal. Some modern DiT releases remain split into separate internal components, but are distributed and loaded as one complete package instead of expecting the user to assemble mismatched pieces manually.
+
+Why it matters: if a model is VAE-baked, setup is simpler because you do not need to hunt for a matching external VAE. If a model is described as AiO, it usually means setup is simpler at a broader level because the main transformer, text encoders, and VAE are meant to be used together as one packaged release. That said, not all DiT models are AiO, and many modern ones remain modular by design for flexibility, swapping components, and memory management.
 
 **Pruned Model**
 
@@ -464,13 +468,21 @@ For most end users, "pruned" usually means:
 
 It does not mean the model is fundamentally different in style or family. It usually means the same model has been packaged more efficiently for use rather than for continued training.
 
-**Quantization / Quantized Model**
+**Quantization / Quantized Models / Formats**
 
 Quantization means storing model weights at lower precision so the model uses less VRAM and RAM. A quantized model is usually the same general model family, but represented in a more memory-efficient format.
 
-Common formats and precision styles include fp8, int8, and GGUF quantization variants such as Q4, Q6, or Q8. Lower precision often makes a model more accessible on limited hardware, but it can also reduce quality, reduce compatibility, or change performance characteristics depending on the implementation.
+Common quantized releases and formats include fp8 and int8 checkpoints, as well as packaged formats such as GGUF with variants like Q4, Q5, Q6, or Q8. These labels usually tell you both that the model has been compressed and, in many cases, roughly how aggressive that compression is.
+
+What matters in practice is that quantization is both a precision choice and a release-format choice. Some quantized models are still distributed as ordinary checkpoint files in a lower precision such as fp8 or int8. Others are repackaged into formats such as GGUF that are designed around quantized inference workflows.
 
 Quantized releases are especially relevant in newer heavy model ecosystems, where full-size versions may be too large for many local users. In practical terms, quantization is often the reason a model becomes runnable at all on smaller GPUs.
+
+**GGUF**
+
+GGUF is a model file format commonly used for quantized transformer-style models. In image-generation contexts, it shows up most often with newer transformer-heavy families where full-size releases may be too heavy for many local systems.
+
+The practical reason people care about GGUF is not the container format by itself. It is that GGUF releases are often paired with quantization levels that make otherwise large models more runnable on limited hardware, especially in workflows aimed at lower VRAM usage.
 
 **Model Family / Base Family**
 
@@ -636,11 +648,17 @@ In many real workflows:
 - fp16 is very common for inference because it is much lighter than fp32
 - bf16 is often preferred on hardware that supports it well because it can be more numerically stable than fp16 in some cases
 
-**GGUF**
+**fp8**
 
-GGUF is a model file format commonly used for quantized transformer-style models. In image-generation contexts, it shows up most often with newer transformer-heavy families where full-size releases may be too heavy for many local systems.
+fp8 is an 8-bit floating-point precision format used in some newer inference and quantized-model workflows. Compared with fp16 or bf16, it can reduce memory use further and sometimes improve throughput on hardware and software stacks that support it well.
 
-The practical reason people care about GGUF is not the container format by itself. It is that GGUF releases are often paired with quantization levels that make otherwise large models more runnable on limited hardware, especially in workflows aimed at lower VRAM usage.
+In practice, fp8 usually matters most for newer transformer-heavy models where full-size weights are expensive to run. The tradeoff is the same general one as other lower-precision formats: lower VRAM use and potentially better speed, but also a higher chance of quality loss, unsupported code paths, or hardware-specific limitations.
+
+**int8**
+
+int8 is an 8-bit integer precision format used in quantized inference workflows. Unlike fp8, which is still a floating-point format, int8 stores values as integers and usually relies on extra scaling logic during inference.
+
+From a user perspective, int8 mostly means a more aggressively compressed model that can fit on weaker hardware than its fp16, bf16, or fp32 equivalent. The tradeoff is that int8 models are more dependent on runtime support, and depending on the implementation they may lose more quality or flexibility than lighter quantization approaches.
 
 **xFormers**
 

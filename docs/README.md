@@ -5,7 +5,7 @@ Stability Matrix is a multi-platform package manager and inference UI for Stable
 ## Table of Contents
 
 ### Getting Started
-- [Overview](getting-started/overview.md) — What Stability Matrix is and what it can do
+- [Overview](getting-started/overview.md) — What Stability Matrix is and what it can do and minimal requirements/recommendations on hardware
 - [Installation](getting-started/installation.md) — Installing on Windows, macOS, and Linux
 - [First Launch](getting-started/first-launch.md) — Walking through the setup wizard
 - [Data Directory](getting-started/data-directory.md) — Choosing and managing your data directory

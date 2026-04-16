@@ -329,12 +329,11 @@ Outpainting is basically a special case of inpainting where the masked region is
 
 A mask is the region that tells the model where edits should happen. In most inpainting workflows, the masked area is the editable area and the unmasked area is meant to stay unchanged or mostly unchanged.
 
-In common black-and-white mask conventions:
+In common inpainting interfaces, this is usually presented as a white painted mask layer drawn over the image. In practical terms, you mark the area you want changed, and everything outside that painted region is treated as preserved context.
 
-- white means "edit this"
-- black means "preserve this"
+Some interfaces and workflows also let you import a separate black-and-white mask image and place it on top of the base image as the edit mask instead of painting it by hand.
 
-Some tools invert that convention in their UI, so the exact display can vary, but the underlying idea is always the same: the mask defines the edit boundary.
+Some interfaces also support multiple mask colors or extra region semantics, but the core idea stays the same: the mask defines the edit boundary.
 
 Mask quality matters a lot. A hard mask edge can create obvious seams. A softer or slightly blurred edge often blends better. A mask that is too tight can starve the model of room to transition naturally, while a mask that is too large can cause the model to unnecessarily rewrite nearby areas.
 

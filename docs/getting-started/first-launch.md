@@ -51,7 +51,7 @@ When choosing a location:
 
 The dialog also includes **Portable Mode**, and it is enabled by default. For most users, this is the recommended option because it keeps the application and its `Data` folder together, which makes the whole install much easier to move later if the user wants to relocate it to another folder, drive, or PC.
 
-That portability is especially useful for larger Stable Diffusion setups, where packages, models, and related assets can take up a significant amount of space over time. Keeping everything bundled together reduces the chance of forgetting part of the install when moving it and makes backup or migration simpler.
+That portability is especially useful for larger setups, where packages, models, and related assets can take up a significant amount of space over time. Keeping everything bundled together reduces the chance of forgetting part of the install when moving it and makes backup or migration simpler.
 
 For a deeper explanation of how the library path and portable mode work, see [data-directory.md](data-directory.md).
 

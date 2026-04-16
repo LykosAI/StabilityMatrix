@@ -37,7 +37,7 @@ Windows releases are distributed as a `.zip` archive rather than a traditional i
 2. Extract the archive to a folder where Stability Matrix should live.
 3. Open the extracted folder and run `StabilityMatrix.exe`.
 
-The Microsoft Visual C++ Redistributable for x64 is required on Windows. On many systems it is already present, but if a package fails to start because the required Microsoft C/C++ runtime is missing (e.g. missing C_10.dll error loading PyTorch), install the latest [Visual C++ Redistributable x64 package](https://aka.ms/vc14/vc_redist.x64.exe) or see Microsoft's [latest supported Visual C++ Redistributable downloads page](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170).
+The Microsoft Visual C++ Redistributable for x64 is required on Windows. On many systems it is already present, but if a package fails to start because the required Microsoft C/C++ runtime is missing (e.g. missing C_10.dll error loading PyTorch), install the latest [Visual C++ Redistributable x64 package](https://aka.ms/vc14/vc_redist.x64.exe) or see Microsoft's [Visual C++ Redistributable downloads page](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170).
 
 On first launch, Windows may show a SmartScreen warning because the app was downloaded from the internet. If that happens, select **More info** and then **Run anyway** to continue, provided the download came from the official Downloads page or the project's GitHub Releases page.
 

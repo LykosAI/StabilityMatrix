@@ -619,6 +619,21 @@ The simple mental model is:
 
 In practical usage, ROCm support can vary more by GPU generation, OS, wheel availability, and kernel support than CUDA support often does. But for supported Radeon and Instinct hardware, ROCm is the main native AMD path for local model inference.
 
+**ZLUDA**
+
+ZLUDA is a compatibility layer that lets some CUDA-targeted software run on non-NVIDIA hardware by translating enough of the CUDA-facing behavior for those applications to work.
+
+At a practical level, you can think of it as taking software that expects CUDA-style code and CUDA API calls, then bridging or translating enough of that behavior into HIP and ROCm-compatible behavior for AMD hardware to execute it, using tooling provided by the HIP SDK such as `hipify`.
+
+In practical local image-generation use, ZLUDA most often comes up as an alternative AMD path on Windows when native ROCm support is unavailable, incomplete, or simply not the preferred setup for a particular GPU or package. It is not the same thing as ROCm, and it should not be thought of as AMD's native compute stack.
+
+The practical mental model is:
+
+- ROCm = AMD's native compute platform
+- ZLUDA = a compatibility path for some CUDA-oriented software on other hardware
+
+That distinction matters because ZLUDA compatibility is usually more package-specific and less universal than native CUDA or ROCm support. When a workflow relies on ZLUDA, support expectations, stability, and performance can differ significantly from the officially supported backend paths.
+
 **IPEX**
 
 IPEX means Intel Extension for PyTorch. It is Intel's optimized acceleration path for PyTorch workloads on Intel hardware, including Intel CPUs and, in some workflows, Intel Arc GPUs.

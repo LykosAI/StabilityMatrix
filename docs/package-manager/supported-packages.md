@@ -49,19 +49,12 @@ Training packages are used to fine-tune or train AI models such as LoRAs, checkp
 
 The following packages are no longer actively maintained or have been superseded by newer alternatives. They remain available for installation but are not recommended for new setups.
 
-- Stable Diffusion WebUI Forge
-	Regular Forge is treated as legacy in Stability Matrix because upstream development has been effectively stale during a long maintainer hiatus.
-- Stable Diffusion WebUI Forge - Classic
-	Forge Classic is still under active development as the pre-Gradio-4 main branch of the same project that also provides Forge - Neo. It remains usable for older Stable Diffusion and transformer-based model workflows, but is categorized as legacy because Forge - Neo is the recommended branch from that project.
-- Stable Diffusion WebUI AMDGPU Forge
-	This Windows-only package is still under active development, but Stability Matrix categorizes it as legacy because more recommended alternatives exist for ZLUDA-based installs (ComfyUI-Zluda and SD.Next).
-- SDFX
-    No longer in active development, stale.
-- Fooocus, Fooocus-ControlNet, Fooocus-MRE
-	These packages share the same developer lineage as regular Stable Diffusion WebUI Forge and are no longer in active development, with development effectively stale due to maintainer hiatus.
-- RuinedFooocus
-    Accidentally categorized as legacy due to inheriting Fooocus support status in Stability Matrix, still in active development and will be recategorized in a future update.
-- Fooocus - mashb1t's 1-Up Edition
-    No longer in active development, stale.
-- Stable Diffusion Web UI-UX
-- VoltaML
+- **Stable Diffusion WebUI Forge**
+- **Stable Diffusion WebUI Forge - Classic**
+- **Stable Diffusion WebUI AMDGPU Forge**
+- **SDFX**
+- **Fooocus, Fooocus-ControlNet, Fooocus-MRE**
+- **RuinedFooocus**
+- **Fooocus - mashb1t's 1-Up Edition**
+- **Stable Diffusion Web UI-UX**
+- **VoltaML**

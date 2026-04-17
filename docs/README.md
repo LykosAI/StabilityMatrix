@@ -31,7 +31,6 @@ Current Status: In-progress - Structure is in-place and planned docs are current
 - [Image Upscale](inference/image-upscale.md) — Upscaling images with AI upscaler models
 - [Video Generation](inference/video-generation.md) — Generating video with WAN and SVD models
 - [Advanced Controls](inference/advanced-controls.md) — ControlNet, FaceDetailer, FreeU, LayerDiffuse, and more
-- [Saving Projects](inference/saving-projects.md) — Saving and loading `.smproj` project files
 
 ### Checkpoint Manager
 - [Overview](checkpoint-manager/overview.md) — Centralized model storage shared across all packages

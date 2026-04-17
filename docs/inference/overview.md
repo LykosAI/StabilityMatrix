@@ -81,7 +81,7 @@ The Inference page supports standard project-style actions for these files, incl
 
 Generated images can also carry Stability Matrix project metadata. When a saved output includes embedded Stability Matrix project data, dropping that image back onto a compatible Inference tab can restore the serialized state directly from the image metadata.
 
-`.smproj` files are distinct from ComfyUI workflow JSON files. Project files capture the state of Stability Matrix's native Inference tabs, while the [Workflows Overview](../workflows/overview.md) page is for browsing and managing ComfyUI workflow files.
+`.smproj` files are distinct from ComfyUI workflow JSON files. Project files capture the state of Stability Matrix's native Inference tabs, while the [Workflows Browser](../workflows/overview.md) page is for browsing and managing ComfyUI workflow files.
 
 ## Related Pages
 

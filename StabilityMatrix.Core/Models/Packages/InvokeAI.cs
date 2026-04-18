@@ -52,7 +52,9 @@ public class InvokeAI(
     public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Advanced;
 
     public override Uri PreviewImageUri =>
-        new("https://raw.githubusercontent.com/invoke-ai/InvokeAI/main/docs/assets/canvas_preview.png");
+        new(
+            "https://raw.githubusercontent.com/invoke-ai/InvokeAI/3c17a569ce9203976963c3056526460d59129789/docs/src/content/docs/assets/invoke-webui-canvas.png"
+        );
 
     public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods =>
         [SharedFolderMethod.None, SharedFolderMethod.Configuration];

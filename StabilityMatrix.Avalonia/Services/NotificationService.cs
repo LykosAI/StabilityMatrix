@@ -45,16 +45,13 @@ public class NotificationService(ILogger<NotificationService> logger, ISettingsM
         };
     }
 
-   public void Show(INotification notification)
-{
-    // Must marshal to UI thread - WindowNotificationManager requires it
-    if (Dispatcher.UIThread.CheckAccess())
+    public void Show(INotification notification)
+    {
+        // Must marshal to UI thread - WindowNotificationManager requires it
+        Dispatcher.UIThread.Invoke(() => notificationManager?.Show(notification));
+    }
     {
         notificationManager?.Show(notification);
-    }
-    else
-    {
-        Dispatcher.UIThread.Post(() => notificationManager?.Show(notification));
     }
 }
 

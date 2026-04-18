@@ -45,10 +45,18 @@ public class NotificationService(ILogger<NotificationService> logger, ISettingsM
         };
     }
 
-    public void Show(INotification notification)
+   public void Show(INotification notification)
+{
+    // Must marshal to UI thread - WindowNotificationManager requires it
+    if (Dispatcher.UIThread.CheckAccess())
     {
         notificationManager?.Show(notification);
     }
+    else
+    {
+        Dispatcher.UIThread.Post(() => notificationManager?.Show(notification));
+    }
+}
 
     /// <inheritdoc />
     public Task ShowPersistentAsync(NotificationKey key, DesktopNotifications.Notification notification)

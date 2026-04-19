@@ -5,6 +5,10 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased - v2.15.8]
+### Fixed
+- Fixed [#1608](https://github.com/LykosAI/StabilityMatrix/issues/1608) - Crash when cdn fetch fails due to error notification not being shown on UI Thread - thanks to @NeuralFault!
+
 ## v2.15.7
 ### Added
 - Added single-instance window activation signaling so reopening the app restores and focuses the existing desktop window instead of launching a duplicate instance

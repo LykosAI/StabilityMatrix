@@ -1,5 +1,6 @@
 ﻿using Injectio.Attributes;
 using Microsoft.Extensions.Logging;
+using Refit;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Services;
 
@@ -22,13 +23,52 @@ public class CivitCompatApiManager(
 
     public Task<CivitModelsResponse> GetModels(CivitModelsRequest request)
     {
-        if (ShouldUseDiscoveryApi)
+        return GetModelsInternal(request);
+    }
+
+    private async Task<CivitModelsResponse> GetModelsInternal(CivitModelsRequest request)
+    {
+        if (!ShouldUseDiscoveryApi)
         {
-            logger.LogDebug($"Using Discovery API for {nameof(GetModels)}");
-            return discoveryApi.GetModels(request, transcodeAnimToImage: true, transcodeVideoToImage: true);
+            return await civitApi.GetModels(request).ConfigureAwait(false);
         }
 
-        return civitApi.GetModels(request);
+        try
+        {
+            logger.LogDebug("Using Discovery API for {Method}", nameof(GetModels));
+            return await discoveryApi
+                .GetModels(request, transcodeAnimToImage: true, transcodeVideoToImage: true)
+                .ConfigureAwait(false);
+        }
+        catch (ApiException ex)
+            when ((int)ex.StatusCode >= 500 || ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            logger.LogWarning(
+                ex,
+                "Discovery API failed for {Method} with {StatusCode}; falling back to direct CivitAI API",
+                nameof(GetModels),
+                ex.StatusCode
+            );
+            return await civitApi.GetModels(request).ConfigureAwait(false);
+        }
+        catch (HttpRequestException ex)
+        {
+            logger.LogWarning(
+                ex,
+                "Discovery API request failed for {Method}; falling back to direct CivitAI API",
+                nameof(GetModels)
+            );
+            return await civitApi.GetModels(request).ConfigureAwait(false);
+        }
+        catch (TaskCanceledException ex)
+        {
+            logger.LogWarning(
+                ex,
+                "Discovery API timed out for {Method}; falling back to direct CivitAI API",
+                nameof(GetModels)
+            );
+            return await civitApi.GetModels(request).ConfigureAwait(false);
+        }
     }
 
     public Task<CivitModel> GetModelById(int id)
@@ -49,6 +89,11 @@ public class CivitCompatApiManager(
     public Task<CivitModelVersion> GetModelVersionById(int id)
     {
         return civitApi.GetModelVersionById(id);
+    }
+
+    public Task<CivitEnumsResponse> GetEnums()
+    {
+        return civitApi.GetEnums();
     }
 
     public Task<HttpResponseMessage> GetBaseModelList()

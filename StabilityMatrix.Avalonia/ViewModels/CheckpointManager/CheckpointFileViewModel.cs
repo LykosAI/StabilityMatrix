@@ -133,7 +133,13 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
     {
         if (CheckpointFile.ConnectedModelInfo?.ModelId == null)
             return;
-        ProcessRunner.OpenUrl($"https://civitai.com/models/{CheckpointFile.ConnectedModelInfo.ModelId}");
+        ProcessRunner.OpenUrl(
+            CivitaiUrlHelper.GetModelUrl(
+                CheckpointFile.ConnectedModelInfo.ModelId.Value,
+                CheckpointFile.ConnectedModelInfo.Nsfw,
+                CheckpointFile.ConnectedModelInfo.VersionId
+            )
+        );
     }
 
     [RelayCommand]
@@ -149,7 +155,11 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
                 Task.CompletedTask,
             ConnectedModelSource.Civitai when CheckpointFile.ConnectedModelInfo.ModelId != null =>
                 App.Clipboard.SetTextAsync(
-                    $"https://civitai.com/models/{CheckpointFile.ConnectedModelInfo.ModelId}"
+                    CivitaiUrlHelper.GetModelUrl(
+                        CheckpointFile.ConnectedModelInfo.ModelId.Value,
+                        CheckpointFile.ConnectedModelInfo.Nsfw,
+                        CheckpointFile.ConnectedModelInfo.VersionId
+                    )
                 ),
 
             ConnectedModelSource.OpenModelDb => App.Clipboard.SetTextAsync(

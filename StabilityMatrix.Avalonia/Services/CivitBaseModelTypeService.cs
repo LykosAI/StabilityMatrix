@@ -99,7 +99,7 @@ public class CivitBaseModelTypeService(
             if (civitBaseModels.Count <= 0)
             {
                 civitBaseModels =
-                    await TryGetBaseModelsFromEnumsEndpoint() ?? await TryGetLegacyBaseModelList();
+                    await TryGetBaseModelsFromEnumsEndpoint() ?? await TryGetLegacyBaseModelList() ?? [];
 
                 civitBaseModels =
                     civitBaseModels.Count > 0 ? civitBaseModels : GetKnownVisibleBaseModelTypes();
@@ -143,7 +143,7 @@ public class CivitBaseModelTypeService(
         try
         {
             var enumsResponse = await civitApi.GetEnums();
-            var baseModels = enumsResponse.ActiveBaseModel ?? enumsResponse.BaseModel;
+            var baseModels = enumsResponse?.ActiveBaseModel ?? enumsResponse?.BaseModel;
 
             if (baseModels is { Count: > 0 })
             {

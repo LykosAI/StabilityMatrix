@@ -282,6 +282,14 @@ public class PackageFactory : IPackageFactory
                 pyInstallationManager,
                 pipWheelService
             ),
+            "Fooocus-API" => new FooocusAPI(
+                githubApiCache,
+                settingsManager,
+                downloadService,
+                prerequisiteHelper,
+                pyInstallationManager,
+                pipWheelService
+            ),
             _ => throw new ArgumentOutOfRangeException(nameof(installedPackage)),
         };
     }

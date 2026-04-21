@@ -1435,4 +1435,130 @@ Sparkは兆レベルのパラメータを持つ基盤モデルで、膨大なパ
 ### 🔒 プライバシーファースト
 私たちはプライバシーを最優先に考えています。([生成AI利用規約](https://lykos.ai/gen-ai-terms)) **あなたのプロンプトや出力内容は、Lykos AIや必要なクラウドインフラパートナーによるAI学習には一切使用されません。** 処理はお客様の質問に対する返答を生成するためだけに安全を重視して使われ、**その後はプロンプト内容そのものではなく、メタデータ(タイムスタンプやトークン数など)のみを保存します。** あなたのデータが販売や共有されることは決してありません。</value>
   </data>
+  <data name="Label_SupportUs" xml:space="preserve">
+    <value>サポートする</value>
+  </data>
+  <data name="Label_Membership" xml:space="preserve">
+    <value>メンバーシップ</value>
+  </data>
+  <data name="Action_ManageMembership" xml:space="preserve">
+    <value>メンバーシップの管理</value>
+  </data>
+  <data name="Action_BecomeSupporter" xml:space="preserve">
+    <value>サポーターになる</value>
+  </data>
+  <data name="Label_LegacyConnections" xml:space="preserve">
+    <value>従来の連携</value>
+  </data>
+  <data name="Label_PatreonLegacyDescription" xml:space="preserve">
+    <value>Patreonは新規メンバーシップには使用されなくなりました。既存の連携は移行期間中、引き続き有効です。</value>
+  </data>
+  <data name="Sponsorship_ConnectLykosPrompt" xml:space="preserve">
+    <value>Lykosアカウントでサインインして、メンバーシップ特典を有効にしてください。</value>
+  </data>
+  <data name="InfoBar_PatreonMigration" xml:space="preserve">
+    <value>直接Lykosメンバーシップへ移行できるようになりました。ティアはそのまま、独立した開発を支援できます。</value>
+  </data>
+  <data name="InfoBar_PatreonGracePeriod" xml:space="preserve">
+    <value>Patreonの特典は{0}まで引き続きご利用いただけます。</value>
+    <comment>{0} = date</comment>
+  </data>
+  <data name="Action_LearnMore" xml:space="preserve">
+    <value>詳細を見る</value>
+  </data>
+  <data name="Action_MigrateNow" xml:space="preserve">
+    <value>今すぐ移行</value>
+  </data>
+  <data name="Label_ThankYouSupporter" xml:space="preserve">
+    <value>Stability Matrixをご支援いただきありがとうございます 💙</value>
+  </data>
+  <data name="Label_SupporterCTA" xml:space="preserve">
+    <value>オープンソース開発を支援し、追加機能やコミュニティ特典にアクセスしましょう。</value>
+  </data>
+  <data name="Action_ManageLykosAccount" xml:space="preserve">
+    <value>Lykosアカウントの管理</value>
+  </data>
+  <data name="Action_EditGravatar" xml:space="preserve">
+    <value>Gravatarでプロフィール画像を編集</value>
+  </data>
+  <data name="Action_CopyUserId" xml:space="preserve">
+    <value>ユーザーIDをコピー</value>
+  </data>
+  <data name="Label_LykosOffDescription" xml:space="preserve">
+    <value>Stability Matrixの連携機能の管理</value>
+  </data>
+  <data name="Label_PatreonOffDescription" xml:space="preserve">
+    <value>自動アップデートのプレビュー版および開発版リリースチャンネルへのアクセス</value>
+  </data>
+  <data name="Label_CivitAIOffDescription" xml:space="preserve">
+    <value>ログインが必要なモデルをCivitAIからダウンロードするために連携します</value>
+  </data>
+  <data name="Label_HuggingFaceOffDescription" xml:space="preserve">
+    <value>ログインが必要なモデルをHugging Faceからダウンロードするために連携します</value>
+  </data>
+  <data name="Label_ImageGenerationApis" xml:space="preserve">
+    <value>画像生成API</value>
+  </data>
+  <data name="Label_GeminiOffDescription" xml:space="preserve">
+    <value>Gemini APIキーを追加して、Image LabでNano Bananaを使用して画像を生成します</value>
+  </data>
+  <data name="Label_AboutAccountCredentials" xml:space="preserve">
+    <value>アカウント認証情報について</value>
+  </data>
+  <data name="Label_CredentialsStorageNotice" xml:space="preserve">
+    <value>アカウントの認証情報とトークンは、AES暗号化されてお使いのコンピュータにローカル保存されます。
+
+コンピュータのハードウェアを変更した場合、アカウントへの再ログインが必要になることがあります。
+
+アカウントトークンは保存後に表示されなくなるため、他の場所で使用する場合はメモしておいてください。</value>
+  </data>
+  <data name="Label_ConnectPatreonAccount" xml:space="preserve">
+    <value>Patreonアカウントを連携</value>
+  </data>
+  <data name="Label_ActiveSupporterTier" xml:space="preserve">
+    <value>{0} サポーター</value>
+    <comment>{0} = tier name (Supporter, Insider, Pioneer, Visionary)</comment>
+  </data>
+  <data name="Label_ContributorAccess" xml:space="preserve">
+    <value>コントリビューターアクセス権があります</value>
+  </data>
+  <data name="Label_ThankYouContributor" xml:space="preserve">
+    <value>共に創り上げてくれてありがとう 💙</value>
+  </data>
+    <data name="Label_ContributorAccessDescription" xml:space="preserve">
+    <value>プレビュー版および開発版リリースチャンネルへのコントリビューターアクセス権があります。</value>
+  </data>
+  <data name="Label_SupportingSince" xml:space="preserve">
+    <value>サポート開始</value>
+  </data>
+  <data name="Label_Benefits" xml:space="preserve">
+    <value>特典</value>
+  </data>
+  <data name="Label_Community" xml:space="preserve">
+    <value>コミュニティ</value>
+  </data>
+  <data name="Label_PromptAmplifierRateLimitTitle" xml:space="preserve">
+    <value>利用上限に達しました</value>
+  </data>
+  <data name="Label_PromptAmplifierRateLimitMessage" xml:space="preserve">
+    <value>今月のプロンプトアンプリファイアの利用回数がなくなりました。利用回数は毎月1日にリセットされます。（残り{0}日）</value>
+  </data>
+  <data name="Label_PromptAmplifierError" xml:space="preserve">
+    <value>プロンプトアンプリファイアエラー</value>
+  </data>
+  <data name="Label_ModerationError" xml:space="preserve">
+    <value>モデレーションエラー</value>
+  </data>
+  <data name="Label_PromptFlaggedMessage" xml:space="preserve">
+    <value>プロンプトがモデレーションシステムによってフラグされました。別のプロンプトでもう一度お試しください。</value>
+  </data>
+  <data name="Label_LoginRequiredMessage" xml:space="preserve">
+    <value>この機能を使用するにはログインが必要です。</value>
+  </data>
+  <data name="Label_RequestErrorMessage" xml:space="preserve">
+    <value>リクエストの処理中にエラーが発生しました。</value>
+  </data>
+  <data name="Label_BecomeSupporterDescription" xml:space="preserve">
+    <value>Stability Matrixチームを支援して、開発初期ビルドへのアクセスや新機能を最初に試す権利を獲得しましょう。</value>
+  </data>
 </root>

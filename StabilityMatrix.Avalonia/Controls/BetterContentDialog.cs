@@ -196,6 +196,14 @@ public class BetterContentDialog : ContentDialog
 
     public BetterContentDialog()
     {
+        // Ensure the dialog uses the correct platform font (e.g. NotoSansJP for Japanese).
+        // ContentDialog is shown as an overlay and its template elements (title, buttons)
+        // don't inherit ContentControlThemeFontFamily from the app resources.
+        if (App.Current is { } app)
+        {
+            FontFamily = app.GetPlatformDefaultFontFamily();
+        }
+
         AddHandler(LoadedEvent, OnLoaded);
     }
 

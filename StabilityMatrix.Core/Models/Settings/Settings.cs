@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.Globalization;
 using System.Text.Json.Serialization;
 using Semver;
@@ -188,6 +188,11 @@ public class Settings
     public HashSet<TeachingTip> SeenTeachingTips { get; set; } = new();
 
     public Dictionary<NotificationKey, NotificationOption> NotificationOptions { get; set; } = new();
+
+    /// <summary>
+    /// IDs of server-pushed notifications the user has dismissed.
+    /// </summary>
+    public List<string> DismissedNotificationIds { get; set; } = [];
 
     public List<string> SelectedBaseModels { get; set; } = [];
     public List<string> SelectedCivitBaseModels { get; set; } = [];

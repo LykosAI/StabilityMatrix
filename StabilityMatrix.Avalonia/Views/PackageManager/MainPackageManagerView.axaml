@@ -607,7 +607,7 @@
             Name="TeachingTip1"
             Title="{x:Static lang:Resources.TeachingTip_AddPackageToGetStarted}"
             Grid.Row="0"
-            IsOpen="{Binding !Packages.Count}"
+            IsOpen="{Binding IsAddPackageTeachingTipOpen}"
             PreferredPlacement="Top"
             Target="{Binding #AddPackagesButton}" />
 

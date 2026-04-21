@@ -181,23 +181,24 @@ public class SDWebForge(
         }
 
         var torchIndex = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
-        var isBlackwell =
+        var isLegacyNvidia =
             torchIndex is TorchIndex.Cuda
-            && (SettingsManager.Settings.PreferredGpu?.IsBlackwellGpu() ?? HardwareHelper.HasBlackwellGpu());
+            && (SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu() ?? HardwareHelper.HasLegacyNvidiaGpu());
 
         var config = new PipInstallConfig
         {
             PrePipInstallArgs = ["joblib"],
             RequirementsFilePaths = requirementsPaths,
-            TorchVersion = "",
-            TorchvisionVersion = "",
-            CudaIndex = isBlackwell ? "cu128" : "cu126",
-            RocmIndex = "rocm7.1",
+            TorchVersion = " ",
+            TorchvisionVersion = " ",
+            CudaIndex = isLegacyNvidia ? "cu126" : "cu128",
+            RocmIndex = "rocm7.2",
             ExtraPipArgs =
             [
                 "https://github.com/openai/CLIP/archive/d50d76daa670286dd6cacf3bcd80b5e4823fc8e1.zip",
             ],
-            PostInstallPipArgs = ["numpy==1.26.4"],
+            // CLIP imports pkg_resources.packaging at runtime, which breaks with setuptools 70.x.
+            PostInstallPipArgs = ["numpy==1.26.4", "setuptools==69.5.1"],
         };
 
         await StandardPipInstallProcessAsync(

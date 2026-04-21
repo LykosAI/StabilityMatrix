@@ -1,11 +1,13 @@
 ﻿using System;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Controls;
-using Avalonia.Controls.Notifications; // Added this line
+using Avalonia.Controls.Notifications;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -40,6 +42,26 @@ namespace StabilityMatrix.Avalonia.ViewModels.Settings;
 [RegisterSingleton<AccountSettingsViewModel>]
 public partial class AccountSettingsViewModel : PageViewModelBase
 {
+    public record RoleBadge(string DisplayName, string ColorClass);
+
+    [Localizable(false)]
+    private static readonly Dictionary<string, string> RoleColorMap = new()
+    {
+        ["Visionary"] = "Amber",
+        ["Pioneer"] = "Purple",
+        ["Insider"] = "Blue",
+        ["Supporter"] = "Teal",
+        ["Developer"] = "Red",
+        ["BetaTester"] = "Cyan",
+        ["Translator"] = "LightGreen",
+    };
+
+    [Localizable(false)]
+    private static readonly Dictionary<string, string> RoleDisplayNames = new()
+    {
+        ["BetaTester"] = "Beta Tester",
+    };
+
     private readonly IAccountsService accountsService;
     private readonly ISettingsManager settingsManager;
     private readonly IServiceManager<ViewModelBase> vmFactory;
@@ -66,6 +88,47 @@ public partial class AccountSettingsViewModel : PageViewModelBase
 
     [ObservableProperty]
     private bool isPatreonConnected;
+
+    [ObservableProperty]
+    private bool isActiveSubscriber;
+
+    [ObservableProperty]
+    private string? membershipTier;
+
+    [ObservableProperty]
+    private ObservableCollection<RoleBadge> roleBadges = [];
+
+    /// <summary>
+    /// Description text for the membership SettingsExpander header.
+    /// Shows tier identity for supporters, contributor access for special roles, or CTA.
+    /// </summary>
+    [ObservableProperty]
+    private string? membershipDescription;
+
+    /// <summary>
+    /// True if user has a contributor role (Developer, BetaTester, Translator) but no active subscription.
+    /// These users see a thank-you message and the "Become a Supporter" CTA.
+    /// </summary>
+    [ObservableProperty]
+    private bool isContributorWithoutSubscription;
+
+    /// <summary>
+    /// "Supporting since March 2024" text, or null if MemberSince not available.
+    /// </summary>
+    [ObservableProperty]
+    private string? memberSinceText;
+
+    /// <summary>
+    /// "Your Patreon benefits continue through April 25, 2026." text for the migration card.
+    /// </summary>
+    [ObservableProperty]
+    private string? patreonGracePeriodText;
+
+    /// <summary>
+    /// Show migration prompt when user has Patreon linked but no Stripe subscription.
+    /// </summary>
+    [ObservableProperty]
+    private bool showPatreonMigrationPrompt;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(LykosProfileImageUrl))]
@@ -112,7 +175,7 @@ public partial class AccountSettingsViewModel : PageViewModelBase
             {
                 IsInitialUpdateFinished = true;
                 LykosStatus = args;
-                IsPatreonConnected = args.IsPatreonConnected;
+                ApplyMembershipState(args);
             });
         };
 
@@ -156,14 +219,8 @@ public partial class AccountSettingsViewModel : PageViewModelBase
         {
             var dialog = new BetterContentDialog
             {
-                Title = "About Account Credentials",
-                Content = """
-                    Account credentials and tokens are stored locally on your computer, with at-rest AES encryption. 
-
-                    If you make changes to your computer hardware, you may need to re-login to your accounts.
-
-                    Account tokens will not be viewable after saving, please make a note of them if you need to use them elsewhere.
-                    """,
+                Title = Resources.Label_AboutAccountCredentials,
+                Content = Resources.Label_CredentialsStorageNotice,
                 PrimaryButtonText = Resources.Action_Continue,
                 CloseButtonText = Resources.Action_Cancel,
                 DefaultButton = ContentDialogButton.Primary,
@@ -231,7 +288,7 @@ public partial class AccountSettingsViewModel : PageViewModelBase
         ProcessRunner.OpenUrl(urlResult.Result);
 
         var dialogVm = vmFactory.Get<OAuthConnectViewModel>();
-        dialogVm.Title = "Connect Patreon Account";
+        dialogVm.Title = Resources.Label_ConnectPatreonAccount;
         dialogVm.Url = url.ToString();
 
         if (await dialogVm.GetDialog().ShowAsync() == ContentDialogResult.Primary)
@@ -363,6 +420,168 @@ public partial class AccountSettingsViewModel : PageViewModelBase
             LykosProfileImageUrl = null;
         }
     }
+
+    [Localizable(false)]
+    [RelayCommand]
+    private static void OpenMembershipUrl()
+    {
+        ProcessRunner.OpenUrl(Assets.MembershipUrl);
+    }
+
+    [Localizable(false)]
+    [RelayCommand]
+    private static void OpenPatreonBlogPost()
+    {
+        ProcessRunner.OpenUrl(Assets.PatreonBlogPostUrl);
+    }
+
+    [Localizable(false)]
+    private static readonly HashSet<string> ContributorRoles = ["Developer", "BetaTester", "Translator"];
+
+    private static string GetMembershipDescription(LykosAccountStatusUpdateEventArgs args)
+    {
+        // Active subscriber with a tier — show tier name directly
+        if (args.IsActiveSupporter && args.HighestTier is { } tier)
+        {
+            return tier;
+        }
+
+        // Has a contributor role (Developer, BetaTester, Translator) but no subscription
+        if (args.User?.Roles.Any(r => ContributorRoles.Contains(r)) == true)
+        {
+            return Resources.Label_ContributorAccess;
+        }
+
+        return Resources.Label_SupporterCTA;
+    }
+
+    private void ApplyMembershipState(
+        LykosAccountStatusUpdateEventArgs args,
+        bool? overridePatreonConnected = null,
+        bool? overrideMigrationPrompt = null
+    )
+    {
+        IsPatreonConnected = overridePatreonConnected ?? args.IsPatreonConnected;
+        IsActiveSubscriber = args.IsActiveSupporter;
+        MembershipTier = args.HighestTier;
+        ShowPatreonMigrationPrompt =
+            overrideMigrationPrompt ?? (args.IsPatreonConnected && !args.HasStripeSubscription);
+        IsContributorWithoutSubscription =
+            !args.IsActiveSupporter && args.User?.Roles.Any(r => ContributorRoles.Contains(r)) == true;
+        MembershipDescription = GetMembershipDescription(args);
+        MemberSinceText = args.User?.MemberSince?.ToString("MMMM yyyy");
+        PatreonGracePeriodText = ShowPatreonMigrationPrompt
+            ? string.Format(
+                Resources.InfoBar_PatreonGracePeriod,
+                new DateTimeOffset(2026, 4, 25, 0, 0, 0, TimeSpan.Zero).ToString("MMMM d, yyyy")
+            )
+            : null;
+        RoleBadges = new ObservableCollection<RoleBadge>(
+            args.DisplayRoles.Select(r => new RoleBadge(
+                RoleDisplayNames.GetValueOrDefault(r, r),
+                RoleColorMap.GetValueOrDefault(r, "Grey")
+            ))
+        );
+    }
+
+    #region Debug: Simulate membership states
+
+    public bool IsDebugMode => Program.IsDebugBuild;
+
+    [Localizable(false)]
+    [RelayCommand]
+    private void DebugSimulateNewUser()
+    {
+        ApplyDebugRoles([]);
+    }
+
+    [Localizable(false)]
+    [RelayCommand]
+    private void DebugSimulateSupporter()
+    {
+        ApplyDebugRoles(["ActiveSubscriber", "Supporter"]);
+    }
+
+    [Localizable(false)]
+    [RelayCommand]
+    private void DebugSimulateInsider()
+    {
+        ApplyDebugRoles(["ActiveSubscriber", "Insider"]);
+    }
+
+    [Localizable(false)]
+    [RelayCommand]
+    private void DebugSimulatePioneer()
+    {
+        ApplyDebugRoles(["ActiveSubscriber", "Pioneer"]);
+    }
+
+    [Localizable(false)]
+    [RelayCommand]
+    private void DebugSimulateVisionary()
+    {
+        ApplyDebugRoles(["ActiveSubscriber", "Visionary"]);
+    }
+
+    [Localizable(false)]
+    [RelayCommand]
+    private void DebugSimulateDeveloper()
+    {
+        ApplyDebugRoles(["Developer"]);
+    }
+
+    [Localizable(false)]
+    [RelayCommand]
+    private void DebugSimulateTranslatorInsider()
+    {
+        ApplyDebugRoles(["ActiveSubscriber", "Insider", "Translator"]);
+    }
+
+    [Localizable(false)]
+    [RelayCommand]
+    private void DebugSimulatePatreonMigrant()
+    {
+        ApplyDebugRoles(
+            ["ActivePatron", "Insider"],
+            overridePatreonConnected: true,
+            overrideMigrationPrompt: true
+        );
+    }
+
+    [Localizable(false)]
+    [RelayCommand]
+    private void DebugResetToReal()
+    {
+        if (accountsService.LykosStatus is { } status)
+        {
+            LykosStatus = status;
+            ApplyMembershipState(status);
+        }
+    }
+
+    [Localizable(false)]
+    private void ApplyDebugRoles(
+        string[] roles,
+        bool overridePatreonConnected = false,
+        bool overrideMigrationPrompt = false
+    )
+    {
+        var mockArgs = new LykosAccountStatusUpdateEventArgs
+        {
+            IsConnected = true,
+            User = new AccountResponse
+            {
+                Id = LykosStatus.Id ?? "debug",
+                Roles = roles,
+                Permissions = LykosStatus.User?.Permissions ?? [],
+            },
+            Principal = LykosStatus.Principal,
+        };
+
+        ApplyMembershipState(mockArgs, overridePatreonConnected, overrideMigrationPrompt);
+    }
+
+    #endregion
 
     partial void OnHuggingFaceStatusChanged(HuggingFaceAccountStatusUpdateEventArgs value)
     {

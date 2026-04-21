@@ -34,7 +34,7 @@
         </DrawingImage>
     </controls:AppWindowBase.Resources>
 
-    <Grid RowDefinitions="Auto,Auto,*">
+    <Grid RowDefinitions="Auto,Auto,Auto,*">
         <Grid
             Name="TitleBarHost"
             Height="32"
@@ -70,9 +70,13 @@
 
             <Border Grid.Column="2" Padding="6" />
         </Grid>
+
+        <!--  Notification Banner  -->
+        <controls:NotificationBanner Grid.Row="1" DataContext="{Binding NotificationBannerViewModel}" />
+
         <ui:NavigationView
             Name="NavigationView"
-            Grid.Row="1"
+            Grid.Row="2"
             Grid.RowSpan="2"
             BackRequested="NavigationView_OnBackRequested"
             FooterMenuItemsSource="{Binding FooterPages, Mode=OneWay}"
@@ -115,13 +119,13 @@
                         </ui:NavigationViewItem.IconSource>
                     </ui:NavigationViewItem>
 
-                    <!--  Patreon  -->
+                    <!--  Support Us  -->
                     <ui:NavigationViewItem
-                        Name="PatreonPatreonItem"
-                        Content="{x:Static lang:Resources.Label_BecomeAPatron}"
-                        Tapped="PatreonPatreonItem_OnTapped">
+                        Name="FooterSupportItem"
+                        Content="{x:Static lang:Resources.Label_SupportUs}"
+                        Tapped="FooterSupportItem_OnTapped">
                         <ui:NavigationViewItem.IconSource>
-                            <ui:ImageIconSource Source="{StaticResource BrandsPatreonSymbolWhite}" />
+                            <fluentIcons:SymbolIconSource IconVariant="Filled" Symbol="Heart" />
                         </ui:NavigationViewItem.IconSource>
                     </ui:NavigationViewItem>
 
@@ -168,7 +172,7 @@
         <ui:TeachingTip
             Name="UpdateAvailableTeachingTip"
             Title="{x:Static lang:Resources.Label_UpdateAvailable}"
-            Grid.Row="1"
+            Grid.Row="2"
             Grid.RowSpan="2"
             PreferredPlacement="Right"
             Target="{Binding #FooterUpdateItem}" />
@@ -176,7 +180,7 @@
         <ui:TeachingTip
             Name="DownloadsTeachingTip"
             Title="{x:Static lang:Resources.Label_Downloads}"
-            Grid.Row="1"
+            Grid.Row="2"
             Grid.RowSpan="2"
             PreferredPlacement="Right"
             Target="{Binding #FooterDownloadItem}" />

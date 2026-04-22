@@ -86,7 +86,7 @@ Most users do not need these variables unless they are experimenting with ROCm t
 
 | Variable | Example Value | Purpose |
 |---|---|---|
-| `PYTORCH_TUNABLEOP_ENABLED` | `1` | Enables TunableOp itself. Without this, the tunable implementations are not used. |
+| `PYTORCH_TUNABLEOP_ENABLED` | `1` or `0` | Enables or disables TunableOp itself. |
 | `PYTORCH_TUNABLEOP_TUNING` | `0` or `1` | Controls whether tuning runs when no cached result exists. Set to `0` if you want TunableOp enabled but do not want it benchmarking kernels during the current run. `1` is implied by default. |
 | `PYTORCH_TUNABLEOP_FILENAME` | `Linux/macOS: /home/username/tuning/tunableop_results.csv`<br>`Windows: D:\tuning\tunableop_results.csv` | Sets the CSV file used for reading and writing tuned results. This can be a full path, which is useful when you want to keep tuning files outside the package directory or reuse a tuning database across runs or workloads. If unset, the CSV is written in the package's root directory and remains package-specific. |
 | `PYTORCH_TUNABLEOP_MAX_TUNING_DURATION_MS` | `60` | Caps how long TunableOp spends benchmarking each candidate solution, in milliseconds. Raising it may improve result quality, while lowering it reduces startup overhead. |

@@ -1,5 +1,7 @@
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Models.Rocm;
+using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
 
 namespace StabilityMatrix.Core.Services.Rocm;
@@ -74,6 +76,19 @@ public interface IRocmPackageHelper
         string installLocation,
         InstalledPackage installedPackage,
         RocmPackageProfile profile,
+        CancellationToken cancellationToken = default
+    );
+
+    /// <summary>
+    /// Performs the Windows-native ROCm bootstrap/install flow for a package using helper-resolved gfx-family feed URLs.
+    /// </summary>
+    Task InstallWindowsNativePackageAsync(
+        IPyVenvRunner venvRunner,
+        string installLocation,
+        InstalledPackage installedPackage,
+        RocmPackageProfile profile,
+        IProgress<ProgressReport>? progress = null,
+        Action<ProcessOutput>? onConsoleOutput = null,
         CancellationToken cancellationToken = default
     );
 }

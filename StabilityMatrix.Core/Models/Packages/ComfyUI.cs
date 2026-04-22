@@ -46,7 +46,19 @@ public class ComfyUI(
     {
         PackageName = "ComfyUI",
         RequiresWindows = true,
+        RequiresRocmSdk = true,
         NeedsRuntimeGfxResolution = true,
+        NeedsAotritonExperimental = true,
+        NeedsTunableOpCache = true,
+        ExtraInstallPipArgs = ["numpy<2"],
+        PostInstallPipArgs = ["typing-extensions>=4.15.0"],
+        UpgradePackages = true,
+        ExtraEnvironmentFactory = _ => new Dictionary<string, string>
+        {
+            ["MIOPEN_FIND_MODE"] = "2",
+            ["PYTORCH_ALLOC_CONF"] = "max_split_size_mb:512,garbage_collection_threshold:0.8",
+            ["COMFYUI_ENABLE_MIOPEN"] = "1",
+        },
     };
 
     public override string Name => "ComfyUI";
@@ -380,27 +392,51 @@ public class ComfyUI(
                 ?? HardwareHelper.HasLegacyNvidiaGpu()
             );
 
-        var config = new PipInstallConfig
+        if (Compat.IsWindows && torchIndex == TorchIndex.Rocm && HasWindowsRocmSupport())
         {
-            RequirementsFilePaths = ["requirements.txt"],
-            ExtraPipArgs = ["numpy<2"],
-            TorchaudioVersion = " ", // Request torchaudio without a specific version
-            CudaIndex = isLegacyNvidia ? "cu126" : "cu130",
-            RocmIndex = "rocm7.2",
-            UpgradePackages = true,
-            PostInstallPipArgs = ["typing-extensions>=4.15.0"],
-        };
+            if (rocmPackageHelper is null)
+            {
+                throw new InvalidOperationException(
+                    "Windows ROCm installation requires the shared ROCm helper to resolve gfx-specific index URLs."
+                );
+            }
 
-        await StandardPipInstallProcessAsync(
-                venvRunner,
-                options,
-                installedPackage,
-                config,
-                onConsoleOutput,
-                progress,
-                cancellationToken
-            )
-            .ConfigureAwait(false);
+            await rocmPackageHelper
+                .InstallWindowsNativePackageAsync(
+                    venvRunner,
+                    installLocation,
+                    installedPackage,
+                    WindowsRocmProfile,
+                    progress,
+                    onConsoleOutput,
+                    cancellationToken
+                )
+                .ConfigureAwait(false);
+        }
+        else
+        {
+            var config = new PipInstallConfig
+            {
+                RequirementsFilePaths = ["requirements.txt"],
+                ExtraPipArgs = ["numpy<2"],
+                TorchaudioVersion = " ", // Request torchaudio without a specific version
+                CudaIndex = isLegacyNvidia ? "cu126" : "cu130",
+                RocmIndex = "rocm7.2",
+                UpgradePackages = true,
+                PostInstallPipArgs = ["typing-extensions>=4.15.0"],
+            };
+
+            await StandardPipInstallProcessAsync(
+                    venvRunner,
+                    options,
+                    installedPackage,
+                    config,
+                    onConsoleOutput,
+                    progress,
+                    cancellationToken
+                )
+                .ConfigureAwait(false);
+        }
 
         try
         {
@@ -433,7 +469,11 @@ public class ComfyUI(
                             SettingsManager.Settings.PreferredGpu?.IsBlackwellGpu()
                             ?? HardwareHelper.HasBlackwellGpu(),
                         WorkingDirectory = installLocation,
-                        EnvironmentVariables = GetEnvVars(venvRunner.EnvironmentVariables),
+                        EnvironmentVariables = GetEnvVars(
+                            venvRunner.EnvironmentVariables,
+                            installLocation,
+                            installedPackage
+                        ),
                     };
 
                     await step.ExecuteAsync(progress).ConfigureAwait(false);
@@ -483,7 +523,7 @@ public class ComfyUI(
         await SetupVenv(installLocation, pythonVersion: PyVersion.Parse(installedPackage.PythonVersion))
             .ConfigureAwait(false);
 
-        VenvRunner.UpdateEnvironmentVariables(GetEnvVars);
+        VenvRunner.UpdateEnvironmentVariables(env => GetEnvVars(env, installLocation, installedPackage));
 
         // Check for old NVIDIA driver version with cu130 installations
         var isNvidia = SettingsManager.Settings.PreferredGpu?.IsNvidia ?? HardwareHelper.HasNvidiaGpu();
@@ -949,13 +989,27 @@ public class ComfyUI(
             .ConfigureAwait(false);
     }
 
-    private ImmutableDictionary<string, string> GetEnvVars(ImmutableDictionary<string, string> env)
+    private ImmutableDictionary<string, string> GetEnvVars(
+        ImmutableDictionary<string, string> env,
+        string installLocation,
+        InstalledPackage installedPackage
+    )
     {
         // if we're not on windows or we don't have a windows rocm gpu, return original env
         var hasRocmGpu = HasWindowsRocmSupport();
 
         if (!Compat.IsWindows || !hasRocmGpu)
             return env;
+
+        if (rocmPackageHelper is not null)
+        {
+            var rocmEnvironment = rocmPackageHelper
+                .BuildLaunchEnvironmentAsync(installLocation, installedPackage, WindowsRocmProfile)
+                .GetAwaiter()
+                .GetResult();
+
+            return env.SetItems(rocmEnvironment);
+        }
 
         // set some experimental speed improving env vars for Windows ROCm
         return env.SetItem("PYTORCH_TUNABLEOP_ENABLED", "1")

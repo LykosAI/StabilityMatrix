@@ -11,6 +11,10 @@ public class RocmInstallContext
 
     public string? RuntimeGfxArch { get; init; }
 
+    public string? RocmPackageIndexUrl { get; init; }
+
+    public string? RocmTorchIndexUrl { get; init; }
+
     public TorchIndex TorchIndex { get; init; } = TorchIndex.Rocm;
 
     public string? WheelCompatibilityHints { get; init; }

@@ -13,9 +13,11 @@ using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Models.Packages.Config;
 using StabilityMatrix.Core.Models.Packages.Extensions;
 using StabilityMatrix.Core.Models.Progress;
+using StabilityMatrix.Core.Models.Rocm;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
+using StabilityMatrix.Core.Services.Rocm;
 
 namespace StabilityMatrix.Core.Models.Packages;
 
@@ -26,7 +28,8 @@ public class ComfyUI(
     IDownloadService downloadService,
     IPrerequisiteHelper prerequisiteHelper,
     IPyInstallationManager pyInstallationManager,
-    IPipWheelService pipWheelService
+    IPipWheelService pipWheelService,
+    IRocmPackageHelper? rocmPackageHelper = null
 )
     : BaseGitPackage(
         githubApi,
@@ -38,6 +41,14 @@ public class ComfyUI(
     )
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
+    private static readonly RocmPackageProfile WindowsRocmProfile = new()
+    {
+        PackageName = "ComfyUI",
+        RequiresWindows = true,
+        NeedsRuntimeGfxResolution = true,
+    };
+
     public override string Name => "ComfyUI";
     public override string DisplayName { get; set; } = "ComfyUI";
     public override string Author => "comfyanonymous";
@@ -247,7 +258,7 @@ public class ComfyUI(
                 Name = "Enable DirectML",
                 Type = LaunchOptionType.Bool,
                 InitialValue =
-                    !HardwareHelper.HasWindowsRocmSupportedGpu()
+                    !HasWindowsRocmSupport()
                     && HardwareHelper.PreferDirectMLOrZluda()
                     && this is not ComfyZluda,
                 Options = ["--directml"],
@@ -362,91 +373,34 @@ public class ComfyUI(
             .ConfigureAwait(false);
 
         var torchIndex = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
-        var gfxArch =
-            SettingsManager.Settings.PreferredGpu?.GetAmdGfxArch()
-            ?? HardwareHelper.GetWindowsRocmSupportedGpu()?.GetAmdGfxArch();
-
-        // Special case for Windows ROCm Nightly builds
-        if (
-            Compat.IsWindows
-            && !string.IsNullOrWhiteSpace(gfxArch)
-            && torchIndex is TorchIndex.Rocm
-            && options.PythonOptions.PythonVersion >= PyVersion.Parse("3.11.0")
-        )
-        {
-            var config = new PipInstallConfig
-            {
-                RequirementsFilePaths = ["requirements.txt"],
-                ExtraPipArgs = ["numpy<2"],
-                SkipTorchInstall = true,
-                PostInstallPipArgs = ["typing-extensions>=4.15.0"],
-            };
-            await StandardPipInstallProcessAsync(
-                    venvRunner,
-                    options,
-                    installedPackage,
-                    config,
-                    onConsoleOutput,
-                    progress,
-                    cancellationToken
-                )
-                .ConfigureAwait(false);
-
-            progress?.Report(
-                new ProgressReport(-1f, "Installing ROCm nightly torch...", isIndeterminate: true)
+        var isLegacyNvidia =
+            torchIndex == TorchIndex.Cuda
+            && (
+                SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu()
+                ?? HardwareHelper.HasLegacyNvidiaGpu()
             );
-            var indexUrl = gfxArch switch
-            {
-                "gfx1150" => "https://rocm.nightlies.amd.com/v2-staging/gfx1150", // Strix/Gorgon Point
-                "gfx1151" => "https://rocm.nightlies.amd.com/v2/gfx1151", // Strix Halo
-                _ when gfxArch.StartsWith("gfx110") => "https://rocm.nightlies.amd.com/v2/gfx110X-all",
-                _ when gfxArch.StartsWith("gfx120") => "https://rocm.nightlies.amd.com/v2/gfx120X-all",
-                _ => throw new ArgumentOutOfRangeException(
-                    nameof(gfxArch),
-                    $"Unsupported GFX Arch: {gfxArch}"
-                ),
-            };
 
-            var torchPipArgs = new PipInstallArgs()
-                .AddArgs("--pre", "--upgrade")
-                .WithTorch()
-                .WithTorchVision()
-                .WithTorchAudio()
-                .AddArgs("--index-url", indexUrl);
-
-            await venvRunner.PipInstall(torchPipArgs, onConsoleOutput).ConfigureAwait(false);
-        }
-        else // Standard installation path for all other cases
+        var config = new PipInstallConfig
         {
-            var isLegacyNvidia =
-                torchIndex == TorchIndex.Cuda
-                && (
-                    SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu()
-                    ?? HardwareHelper.HasLegacyNvidiaGpu()
-                );
+            RequirementsFilePaths = ["requirements.txt"],
+            ExtraPipArgs = ["numpy<2"],
+            TorchaudioVersion = " ", // Request torchaudio without a specific version
+            CudaIndex = isLegacyNvidia ? "cu126" : "cu130",
+            RocmIndex = "rocm7.2",
+            UpgradePackages = true,
+            PostInstallPipArgs = ["typing-extensions>=4.15.0"],
+        };
 
-            var config = new PipInstallConfig
-            {
-                RequirementsFilePaths = ["requirements.txt"],
-                ExtraPipArgs = ["numpy<2"],
-                TorchaudioVersion = " ", // Request torchaudio without a specific version
-                CudaIndex = isLegacyNvidia ? "cu126" : "cu130",
-                RocmIndex = "rocm7.2",
-                UpgradePackages = true,
-                PostInstallPipArgs = ["typing-extensions>=4.15.0"],
-            };
-
-            await StandardPipInstallProcessAsync(
-                    venvRunner,
-                    options,
-                    installedPackage,
-                    config,
-                    onConsoleOutput,
-                    progress,
-                    cancellationToken
-                )
-                .ConfigureAwait(false);
-        }
+        await StandardPipInstallProcessAsync(
+                venvRunner,
+                options,
+                installedPackage,
+                config,
+                onConsoleOutput,
+                progress,
+                cancellationToken
+            )
+            .ConfigureAwait(false);
 
         try
         {
@@ -613,13 +567,7 @@ public class ComfyUI(
     {
         var preferRocm =
             (Compat.IsLinux && (SettingsManager.Settings.PreferredGpu?.IsAmd ?? HardwareHelper.PreferRocm()))
-            || (
-                Compat.IsWindows
-                && (
-                    SettingsManager.Settings.PreferredGpu?.IsWindowsRocmSupportedGpu()
-                    ?? HardwareHelper.HasWindowsRocmSupportedGpu()
-                )
-            );
+            || HasWindowsRocmSupport();
 
         if (AvailableTorchIndices.Contains(TorchIndex.Rocm) && preferRocm)
         {
@@ -627,6 +575,28 @@ public class ComfyUI(
         }
 
         return base.GetRecommendedTorchVersion();
+    }
+
+    /// <summary>
+    /// Uses the shared ROCm helper for Windows ROCm eligibility checks so ComfyUI does not maintain its own support matrix.
+    /// </summary>
+    private bool HasWindowsRocmSupport()
+    {
+        if (!Compat.IsWindows)
+            return false;
+
+        if (rocmPackageHelper is null)
+        {
+            return SettingsManager.Settings.PreferredGpu?.IsWindowsRocmSupportedGpu()
+                ?? HardwareHelper.HasWindowsRocmSupportedGpu();
+        }
+
+        var compatibility = rocmPackageHelper
+            .GetCompatibilityAsync(WindowsRocmProfile)
+            .GetAwaiter()
+            .GetResult();
+
+        return compatibility.IsCompatible;
     }
 
     public override IPackageExtensionManager ExtensionManager =>
@@ -982,9 +952,7 @@ public class ComfyUI(
     private ImmutableDictionary<string, string> GetEnvVars(ImmutableDictionary<string, string> env)
     {
         // if we're not on windows or we don't have a windows rocm gpu, return original env
-        var hasRocmGpu =
-            SettingsManager.Settings.PreferredGpu?.IsWindowsRocmSupportedGpu()
-            ?? HardwareHelper.HasWindowsRocmSupportedGpu();
+        var hasRocmGpu = HasWindowsRocmSupport();
 
         if (!Compat.IsWindows || !hasRocmGpu)
             return env;

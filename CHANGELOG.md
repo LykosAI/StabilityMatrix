@@ -5,12 +5,13 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
-## v2.15.8
+## [Unreleased - v2.15.8]
 ### Added
 - Added support for the civitai.red (mature-content) domain — NSFW CivitAI links now open and copy as civitai.red URLs, and pasting a civitai.red URL into the CivitAI model browser search works the same as a civitai.com URL
 ### Changed
 - The CivitAI base model type filter now uses CivitAI's official `/api/v1/enums` endpoint, with fallbacks to the previous technique and a built-in list, so the filter stays populated even if the CivitAI response format changes or the service is unreachable
 ### Fixed
+- Fixed [#1608](https://github.com/LykosAI/StabilityMatrix/issues/1608) - Crash when cdn fetch fails due to error notification not being shown on UI Thread - thanks to @NeuralFault!
 - Fixed CivitAI model browsing breaking during Discovery API outages — the browser now falls back to the direct CivitAI API when Discovery returns a server error, authentication failure, or times out
 - Fixed SwarmUI user settings (theme, output format, server configuration, etc.) and any user-added backend entries being overwritten when the install flow ran over an existing install — `Settings.fds` and `Backends.fds` are now merged with their existing contents instead of being rewritten from a stale template
 

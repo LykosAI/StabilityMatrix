@@ -3,6 +3,7 @@ using System.Reactive.Linq;
 using AsyncAwaitBestPractices;
 using Avalonia.Controls;
 using Avalonia.Threading;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData;
 using DynamicData.Binding;
@@ -61,6 +62,9 @@ public partial class MainPackageManagerViewModel : PageViewModelBase
     public IObservableCollection<PackageCardViewModel> PackageCards { get; } =
         new ObservableCollectionExtended<PackageCardViewModel>();
 
+    [ObservableProperty]
+    private bool isAddPackageTeachingTipOpen;
+
     private DispatcherTimer timer;
 
     public MainPackageManagerViewModel(
@@ -112,11 +116,13 @@ public partial class MainPackageManagerViewModel : PageViewModelBase
     public void SetPackages(IEnumerable<InstalledPackage> packages)
     {
         installedPackages.Edit(s => s.Load(packages));
+        UpdateAddPackageTeachingTip();
     }
 
     public void SetUnknownPackages(IEnumerable<InstalledPackage> packages)
     {
         unknownInstalledPackages.Edit(s => s.Load(packages));
+        UpdateAddPackageTeachingTip();
     }
 
     protected override async Task OnInitialLoadedAsync()
@@ -151,7 +157,9 @@ public partial class MainPackageManagerViewModel : PageViewModelBase
         if (Design.IsDesignMode || !settingsManager.IsLibraryDirSet)
             return;
 
+        IsAddPackageTeachingTipOpen = false;
         await LoadPackages();
+        UpdateAddPackageTeachingTip();
 
         timer.Start();
     }
@@ -164,6 +172,7 @@ public partial class MainPackageManagerViewModel : PageViewModelBase
 
     public void ShowInstallDialog(BasePackage? selectedPackage = null)
     {
+        IsAddPackageTeachingTipOpen = false;
         NavigateToSubPage(typeof(PackageInstallBrowserViewModel));
     }
 
@@ -237,6 +246,11 @@ public partial class MainPackageManagerViewModel : PageViewModelBase
         );
     }
 
+    private void UpdateAddPackageTeachingTip()
+    {
+        IsAddPackageTeachingTipOpen = Packages.Count == 0;
+    }
+
     private void OnInstalledPackagesChanged(object? sender, EventArgs e) =>
-        OnLoadedAsync().SafeFireAndForget();
+        Dispatcher.UIThread.InvokeAsync(OnLoadedAsync).SafeFireAndForget();
 }

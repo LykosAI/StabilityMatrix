@@ -236,6 +236,8 @@ public class A3WebUI(
             [
                 "https://github.com/openai/CLIP/archive/d50d76daa670286dd6cacf3bcd80b5e4823fc8e1.zip",
             ],
+            // CLIP imports pkg_resources.packaging at runtime, which breaks with setuptools 70.x.
+            PostInstallPipArgs = ["setuptools==69.5.1"],
         };
 
         // 2. Execute the standardized installation process.

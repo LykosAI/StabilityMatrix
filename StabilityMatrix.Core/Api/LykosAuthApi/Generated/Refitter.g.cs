@@ -198,6 +198,23 @@ namespace StabilityMatrix.Core.Api.LykosAuthApi
         [JsonPropertyName("patreonId")]
         public string PatreonId { get; set; }
 
+        [JsonPropertyName("stripeSubscriptionStatus")]
+        public string StripeSubscriptionStatus { get; set; }
+
+        [JsonPropertyName("shoutoutName")]
+        public string ShoutoutName { get; set; }
+
+        [JsonPropertyName("country")]
+        public string Country { get; set; }
+
+        [JsonPropertyName("preferredLanguage")]
+        public string PreferredLanguage { get; set; }
+
+        [JsonPropertyName("preferredCurrency")]
+        public string PreferredCurrency { get; set; }
+        
+        [JsonPropertyName("memberSince")]
+        public DateTimeOffset? MemberSince { get; set; }
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.2.0.0 (NJsonSchema v11.1.0.0 (Newtonsoft.Json v13.0.0.0))")]

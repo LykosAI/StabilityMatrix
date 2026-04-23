@@ -25,6 +25,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 public partial class SelectDataDirectoryViewModel : ContentDialogViewModelBase
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+    private static readonly IReadOnlyList<string> OneDriveRoots = LoadOneDriveRoots();
 
     public static string DefaultInstallLocation =>
         Compat.IsLinux
@@ -43,6 +44,7 @@ public partial class SelectDataDirectoryViewModel : ContentDialogViewModelBase
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsInTempFolder))]
+    [NotifyPropertyChangedFor(nameof(IsInOneDriveFolder))]
     private string dataDirectory = DefaultInstallLocation;
 
     [ObservableProperty]
@@ -67,6 +69,8 @@ public partial class SelectDataDirectoryViewModel : ContentDialogViewModelBase
                 Path.GetTempPath().TrimEnd(Path.DirectorySeparatorChar),
                 StringComparison.OrdinalIgnoreCase
             );
+
+    public bool IsInOneDriveFolder => IsPathInOneDrive(DataDirectory);
 
     public RefreshBadgeViewModel ValidatorRefreshBadge { get; } =
         new()
@@ -197,6 +201,87 @@ public partial class SelectDataDirectoryViewModel : ContentDialogViewModelBase
         catch (Exception e)
         {
             Logger.Warn(e, "Error checking drive FATness");
+            return false;
+        }
+    }
+
+    private static bool IsPathInOneDrive(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+            return false;
+
+        if (!TryGetFullPath(path, out var fullPath))
+            return false;
+
+        foreach (var oneDriveRoot in GetOneDriveRoots())
+        {
+            if (
+                fullPath.StartsWith(
+                    EnsureTrailingDirectorySeparator(oneDriveRoot),
+                    StringComparison.OrdinalIgnoreCase
+                )
+            )
+            {
+                return true;
+            }
+        }
+
+        var userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        if (!TryGetFullPath(userProfile, out var fullUserProfile))
+            return false;
+
+        if (
+            !fullPath.StartsWith(
+                EnsureTrailingDirectorySeparator(fullUserProfile),
+                StringComparison.OrdinalIgnoreCase
+            )
+        )
+        {
+            return false;
+        }
+
+        var relativePath = Path.GetRelativePath(fullUserProfile, fullPath);
+        var segments = relativePath.Split(
+            [Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar],
+            StringSplitOptions.RemoveEmptyEntries
+        );
+
+        return segments.Any(segment => segment.StartsWith("OneDrive", StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static IEnumerable<string> GetOneDriveRoots()
+    {
+        return OneDriveRoots;
+    }
+
+    private static IReadOnlyList<string> LoadOneDriveRoots()
+    {
+        return new[] { "OneDrive", "OneDriveConsumer", "OneDriveCommercial" }
+            .Select(Environment.GetEnvironmentVariable)
+            .Where(path => !string.IsNullOrWhiteSpace(path))
+            .Select(path => Path.GetFullPath(path!))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Select(EnsureTrailingDirectorySeparator)
+            .ToList();
+    }
+
+    private static string EnsureTrailingDirectorySeparator(string path)
+    {
+        return path.EndsWith(Path.DirectorySeparatorChar) || path.EndsWith(Path.AltDirectorySeparatorChar)
+            ? path
+            : path + Path.DirectorySeparatorChar;
+    }
+
+    private static bool TryGetFullPath(string? path, out string fullPath)
+    {
+        try
+        {
+            fullPath = EnsureTrailingDirectorySeparator(Path.GetFullPath(path!));
+            return true;
+        }
+        catch
+        {
+            fullPath = string.Empty;
             return false;
         }
     }

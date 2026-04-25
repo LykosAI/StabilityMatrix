@@ -25,6 +25,8 @@ namespace StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
 public partial class CheckpointFileViewModel : SelectableViewModelBase
 {
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasEarlyAccessUpdateOnly))]
+    [NotifyPropertyChangedFor(nameof(HasStandardUpdate))]
     private LocalModelFile checkpointFile;
 
     [ObservableProperty]
@@ -64,6 +66,8 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
     public bool CanShowTriggerWords => CheckpointFile.ConnectedModelInfo?.TrainedWords?.Length > 0;
     public string BaseModelName => CheckpointFile.ConnectedModelInfo?.BaseModel ?? string.Empty;
     public CivitModelType ModelType => CheckpointFile.ConnectedModelInfo?.ModelType ?? CivitModelType.Unknown;
+    public bool HasEarlyAccessUpdateOnly => CheckpointFile.HasEarlyAccessUpdateOnly;
+    public bool HasStandardUpdate => CheckpointFile.HasUpdate && !CheckpointFile.HasEarlyAccessUpdateOnly;
 
     /// <inheritdoc/>
     public CheckpointFileViewModel(
@@ -129,7 +133,13 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
     {
         if (CheckpointFile.ConnectedModelInfo?.ModelId == null)
             return;
-        ProcessRunner.OpenUrl($"https://civitai.com/models/{CheckpointFile.ConnectedModelInfo.ModelId}");
+        ProcessRunner.OpenUrl(
+            CivitaiUrlHelper.GetModelUrl(
+                CheckpointFile.ConnectedModelInfo.ModelId.Value,
+                CheckpointFile.ConnectedModelInfo.Nsfw,
+                CheckpointFile.ConnectedModelInfo.VersionId
+            )
+        );
     }
 
     [RelayCommand]
@@ -145,7 +155,11 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
                 Task.CompletedTask,
             ConnectedModelSource.Civitai when CheckpointFile.ConnectedModelInfo.ModelId != null =>
                 App.Clipboard.SetTextAsync(
-                    $"https://civitai.com/models/{CheckpointFile.ConnectedModelInfo.ModelId}"
+                    CivitaiUrlHelper.GetModelUrl(
+                        CheckpointFile.ConnectedModelInfo.ModelId.Value,
+                        CheckpointFile.ConnectedModelInfo.Nsfw,
+                        CheckpointFile.ConnectedModelInfo.VersionId
+                    )
                 ),
 
             ConnectedModelSource.OpenModelDb => App.Clipboard.SetTextAsync(

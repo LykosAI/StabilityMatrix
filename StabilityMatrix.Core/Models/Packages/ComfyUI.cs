@@ -404,7 +404,8 @@ public class ComfyUI(
             );
             var indexUrl = gfxArch switch
             {
-                "gfx1151" => "https://rocm.nightlies.amd.com/v2/gfx1151",
+                "gfx1150" => "https://rocm.nightlies.amd.com/v2-staging/gfx1150", // Strix/Gorgon Point
+                "gfx1151" => "https://rocm.nightlies.amd.com/v2/gfx1151", // Strix Halo
                 _ when gfxArch.StartsWith("gfx110") => "https://rocm.nightlies.amd.com/v2/gfx110X-all",
                 _ when gfxArch.StartsWith("gfx120") => "https://rocm.nightlies.amd.com/v2/gfx120X-all",
                 _ => throw new ArgumentOutOfRangeException(
@@ -437,7 +438,7 @@ public class ComfyUI(
                 ExtraPipArgs = ["numpy<2"],
                 TorchaudioVersion = " ", // Request torchaudio without a specific version
                 CudaIndex = isLegacyNvidia ? "cu126" : "cu130",
-                RocmIndex = "rocm7.1",
+                RocmIndex = "rocm7.2",
                 XpuIndex = "xpu",
                 UpgradePackages = true,
                 PostInstallPipArgs = ["typing-extensions>=4.15.0"],

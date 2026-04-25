@@ -15,5 +15,7 @@ public interface ITrackedDownloadService
         NewDownload(new Uri(downloadUrl), downloadPath);
     Task TryStartDownload(TrackedDownload download);
     Task TryResumeDownload(TrackedDownload download);
+    Task TryRestartDownload(TrackedDownload download);
+
     void UpdateMaxConcurrentDownloads(int newMax);
 }

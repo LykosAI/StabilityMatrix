@@ -191,7 +191,7 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
     [RelayCommand]
     private void OpenModel()
     {
-        ProcessRunner.OpenUrl($"https://civitai.com/models/{CivitModel.Id}");
+        ProcessRunner.OpenUrl(CivitaiUrlHelper.GetModelUrl(CivitModel.Id, CivitModel.Nsfw));
     }
 
     [RelayCommand]

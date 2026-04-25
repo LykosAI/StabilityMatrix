@@ -19,6 +19,9 @@ public interface ICivitApi
     [Get("/api/v1/model-versions/{id}")]
     Task<CivitModelVersion> GetModelVersionById(int id);
 
+    [Get("/api/v1/enums")]
+    Task<CivitEnumsResponse> GetEnums();
+
     [Get("/api/v1/models?baseModels=gimmethelist")]
     Task<HttpResponseMessage> GetBaseModelList();
 }

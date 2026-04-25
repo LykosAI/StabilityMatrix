@@ -511,6 +511,7 @@ public partial class ModelIndexService : IModelIndexService
             if (modelsDict.TryGetValue(model.RelativePath, out var dbModel))
             {
                 model.HasUpdate = dbModel.HasUpdate;
+                model.HasEarlyAccessUpdateOnly = dbModel.HasEarlyAccessUpdateOnly;
                 model.LastUpdateCheck = dbModel.LastUpdateCheck;
                 model.LatestModelInfo = dbModel.LatestModelInfo;
             }
@@ -668,6 +669,7 @@ public partial class ModelIndexService : IModelIndexService
                 .ToList();
 
             dbModel.HasUpdate = !latestHashes.Any(hash => installedHashes.Contains(hash!));
+            dbModel.HasEarlyAccessUpdateOnly = GetHasEarlyAccessUpdateOnly(dbModel, remoteModel);
             dbModel.LastUpdateCheck = DateTimeOffset.UtcNow;
             dbModel.LatestModelInfo = remoteModel;
 
@@ -699,5 +701,25 @@ public partial class ModelIndexService : IModelIndexService
             }
         }
         return hashes;
+    }
+
+    private static bool GetHasEarlyAccessUpdateOnly(LocalModelFile model, CivitModel? remoteModel)
+    {
+        if (!model.HasUpdate || !model.HasCivitMetadata)
+            return false;
+
+        var versions = remoteModel?.ModelVersions;
+        if (versions == null || versions.Count == 0)
+            return false;
+
+        var installedVersionId = model.ConnectedModelInfo?.VersionId;
+        if (installedVersionId == null)
+            return false;
+
+        var installedIndex = versions.FindIndex(version => version.Id == installedVersionId.Value);
+        if (installedIndex <= 0)
+            return false;
+
+        return versions.Take(installedIndex).All(version => version.IsEarlyAccess);
     }
 }

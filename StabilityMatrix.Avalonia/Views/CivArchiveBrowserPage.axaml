@@ -134,11 +134,26 @@
                         </LayoutTransformControl.LayoutTransform>
                         <Grid Width="330" RowDefinitions="300,Auto">
                             <Grid ClipToBounds="True">
+                                <!--
+                                    Two-layer blur-fill so portrait images aren't cropped (Uniform on the
+                                    foreground keeps the whole image visible) but we don't get letterbox
+                                    bars either (the same image, blurred and UniformToFilled, fills the
+                                    leftover space behind it).
+                                -->
                                 <controls:BetterAdvancedImage
                                     CornerRadius="8"
                                     IsVisible="{Binding ImageUrl, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
                                     Source="{Binding ImageUrl}"
-                                    Stretch="UniformToFill" />
+                                    Stretch="UniformToFill">
+                                    <controls:BetterAdvancedImage.Effect>
+                                        <BlurEffect Radius="24" />
+                                    </controls:BetterAdvancedImage.Effect>
+                                </controls:BetterAdvancedImage>
+                                <controls:BetterAdvancedImage
+                                    CornerRadius="8"
+                                    IsVisible="{Binding ImageUrl, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                    Source="{Binding ImageUrl}"
+                                    Stretch="Uniform" />
 
                                 <!--  Placeholder when no image  -->
                                 <Border Background="{DynamicResource ControlAltFillColorSecondaryBrush}" IsVisible="{Binding ImageUrl, Converter={x:Static StringConverters.IsNullOrEmpty}}">

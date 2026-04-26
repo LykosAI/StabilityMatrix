@@ -182,10 +182,27 @@ public partial class CivArchiveDetailsPageViewModel(
         var provider = BuildFormatProvider(Model?.Version, GetPrimaryFile(Model?.Version));
         var format = ParseFormatOrDefault(ModelFileNameFormat, provider);
 
-        var sample = format.GetFileName();
+        var sample = NormalizePathSegments(format.GetFileName());
         ModelNameFormatSample = string.IsNullOrWhiteSpace(sample)
             ? null
             : "Example: " + sample + ".safetensors";
+    }
+
+    /// <summary>
+    /// Strip empty path segments left behind by null/empty substitutions, so a pattern
+    /// like <c>{base_model}/{file_name}</c> with an empty base_model collapses to
+    /// <c>file_name</c> instead of <c>/file_name</c>.
+    /// </summary>
+    private static string NormalizePathSegments(string raw)
+    {
+        if (string.IsNullOrEmpty(raw) || (!raw.Contains('/') && !raw.Contains('\\')))
+            return raw;
+
+        var parts = raw.Split(
+            ['/', '\\'],
+            StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries
+        );
+        return string.Join('/', parts);
     }
 
     /// <summary>
@@ -755,7 +772,10 @@ public partial class CivArchiveDetailsPageViewModel(
         var provider = BuildFormatProvider(version, primaryFile);
         var format = ParseFormatOrDefault(ModelFileNameFormat, provider);
 
-        var stem = format.GetFileName();
+        // Normalize so a leading "/" from an empty {base_model} doesn't make Path.Combine
+        // treat the name as rooted and drop the destination folder.
+        var stem = NormalizePathSegments(format.GetFileName());
+
         if (string.IsNullOrWhiteSpace(stem))
         {
             // Pattern resolved to empty (e.g. only {file_name} on a non-CivitAI mirror with no primary file).

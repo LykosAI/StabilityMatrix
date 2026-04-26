@@ -822,18 +822,26 @@
                                                         <ItemsRepeater.ItemTemplate>
                                                             <DataTemplate DataType="{x:Type civArchive:CivArchiveFileMirror}">
                                                                 <Button
+                                                                    MaxWidth="240"
                                                                     Padding="8,3"
                                                                     Command="{Binding #Root.((checkpointBrowser:CivArchiveDetailsPageViewModel)DataContext).DownloadFromMirrorCommand}"
                                                                     CommandParameter="{Binding .}"
                                                                     CornerRadius="4"
                                                                     FontSize="12"
-                                                                    ToolTip.Tip="Download from this mirror">
+                                                                    ToolTip.Tip="{Binding Url}">
                                                                     <StackPanel Orientation="Horizontal" Spacing="6">
                                                                         <avalonia:Icon
                                                                             VerticalAlignment="Center"
                                                                             FontSize="10"
                                                                             Value="fa-solid fa-download" />
                                                                         <TextBlock VerticalAlignment="Center" Text="{Binding Source}" />
+                                                                        <TextBlock
+                                                                            VerticalAlignment="Center"
+                                                                            FontSize="11"
+                                                                            Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                                                            IsVisible="{Binding ShortIdentifier, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                                                            Text="{Binding ShortIdentifier}"
+                                                                            TextTrimming="CharacterEllipsis" />
                                                                     </StackPanel>
                                                                 </Button>
                                                             </DataTemplate>

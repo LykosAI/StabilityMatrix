@@ -259,6 +259,33 @@ public class CivArchiveFileMirror
 
     [JsonPropertyName("is_paid")]
     public bool IsPaid { get; set; }
+
+    /// <summary>
+    /// Short identifier extracted from the mirror URL — e.g. <c>user/repo</c> for HuggingFace
+    /// or the host's first path segment for other mirrors. Used as a secondary label so
+    /// 93 different "huggingface" mirrors of the same hash become distinguishable. Returns
+    /// null when the URL is missing or doesn't yield anything more specific than the source.
+    /// </summary>
+    [JsonIgnore]
+    public string? ShortIdentifier
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(Url))
+                return null;
+
+            if (!Uri.TryCreate(Url, UriKind.Absolute, out var uri))
+                return null;
+
+            var segments = uri.AbsolutePath.Trim('/').Split('/', StringSplitOptions.RemoveEmptyEntries);
+            if (segments.Length == 0)
+                return null;
+
+            // HuggingFace URLs are /{user}/{repo}/resolve/{branch}/{file}; we want user/repo.
+            // ModelScope is similar. Anything else: fall back to the first 2 path segments.
+            return segments.Length >= 2 ? $"{segments[0]}/{segments[1]}" : segments[0];
+        }
+    }
 }
 
 public class CivArchiveModelImage

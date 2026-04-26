@@ -135,5 +135,17 @@ public class TestCivArchiveApiClient : ICivArchiveApiClient
         );
     }
 
+    public Task<string?> ResolveFileUrlAsync(
+        string sha256RelativeUrl,
+        CancellationToken cancellationToken = default
+    )
+    {
+        // Map our seeded test file to the matching test version. Anything else returns null
+        // so the caller falls back to opening the URL externally.
+        return Task.FromResult<string?>(
+            sha256RelativeUrl == "/sha256/abc123" ? "/models/1?modelVersionId=11" : null
+        );
+    }
+
     public Uri GetAbsoluteUri(string relativeUrl) => new($"https://civarchive.com{relativeUrl}");
 }

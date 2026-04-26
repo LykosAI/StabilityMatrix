@@ -153,6 +153,51 @@ public class CivArchiveApiClientTests
         Assert.IsTrue(response.Model.Version?.Files[0].IsPrimary);
     }
 
+    [TestMethod]
+    public async Task ResolveFileUrlAsync_ReturnsLinkedVersionHref()
+    {
+        // /sha256/{hash} returns pageProps.models[] (plural) with full model data inside,
+        // including version.href — which is the canonical URL we want to navigate to.
+        const string sha256Json = """
+            {"pageProps":{"id":"file-1","models":[{"id":878387,"name":"Stable Diffusion 3.5 Large","type":"Checkpoint","versions":[{"id":983602,"name":"Workflow","href":"/models/878387?modelVersionId=983602"}],"version":{"id":983309,"name":"Large","base_model":"SD 3.5 Large","href":"/models/878387?modelVersionId=983309"}}]}}
+            """;
+
+        var responses = new Queue<HttpResponseMessage>(
+            [
+                CreateJsonResponse("""<html><script>{"buildId":"test-build"}</script></html>""", "text/html"),
+                CreateJsonResponse(sha256Json),
+            ]
+        );
+
+        var client = CreateClient(new RecordingHandler((_, _) => responses.Dequeue()));
+        var resolved = await client.ResolveFileUrlAsync(
+            "/sha256/ffef7a279d9134626e6ce0d494fba84fc1c7e720b3c7df2d19a09dc3796d8f93"
+        );
+
+        // Prefer version.href (the version that actually contains this file) over versions[0].href.
+        Assert.AreEqual("/models/878387?modelVersionId=983309", resolved);
+    }
+
+    [TestMethod]
+    public async Task ResolveFileUrlAsync_NoLinkedModel_ReturnsNull()
+    {
+        // Orphaned hash with no linked models → should return null so the caller can
+        // fall back to opening the URL externally instead of navigating to a dead page.
+        const string sha256Json = """{"pageProps":{"id":"file-2","models":[]}}""";
+
+        var responses = new Queue<HttpResponseMessage>(
+            [
+                CreateJsonResponse("""<html><script>{"buildId":"test-build"}</script></html>""", "text/html"),
+                CreateJsonResponse(sha256Json),
+            ]
+        );
+
+        var client = CreateClient(new RecordingHandler((_, _) => responses.Dequeue()));
+        var resolved = await client.ResolveFileUrlAsync("/sha256/abc");
+
+        Assert.IsNull(resolved);
+    }
+
     private static ICivArchiveApiClient CreateClient(HttpMessageHandler handler)
     {
         var httpClientFactory = Substitute.For<IHttpClientFactory>();

@@ -112,6 +112,44 @@ public partial class CivArchiveApiClient(
         return new CivArchiveModelDetailsResponse { Model = model };
     }
 
+    public async Task<string?> ResolveFileUrlAsync(
+        string sha256RelativeUrl,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (string.IsNullOrWhiteSpace(sha256RelativeUrl))
+        {
+            return null;
+        }
+
+        var nextDataPath = BuildDetailDataPath(sha256RelativeUrl);
+
+        try
+        {
+            var response = await GetNextDataAsync<CivArchiveSha256PageResponse>(
+                nextDataPath,
+                cancellationToken
+            );
+
+            // Each /sha256/{hash} response carries a `models[]` array; the first model's
+            // `version.href` is the canonical URL for the version that contains this file.
+            // Fall back to the first entry in `versions[]` if `version` is missing.
+            var firstModel = response.PageProps?.Models?.FirstOrDefault();
+            if (firstModel is null)
+            {
+                return null;
+            }
+
+            return !string.IsNullOrWhiteSpace(firstModel.Version?.Href)
+                ? firstModel.Version!.Href
+                : firstModel.Versions.FirstOrDefault()?.Href;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
     public Uri GetAbsoluteUri(string relativeUrl)
     {
         if (string.IsNullOrWhiteSpace(relativeUrl))
@@ -360,6 +398,18 @@ public partial class CivArchiveApiClient(
     {
         [JsonPropertyName("pageProps")]
         public CivArchiveDetailPageProps? PageProps { get; set; }
+    }
+
+    private sealed class CivArchiveSha256PageResponse
+    {
+        [JsonPropertyName("pageProps")]
+        public CivArchiveSha256PageProps? PageProps { get; set; }
+    }
+
+    private sealed class CivArchiveSha256PageProps
+    {
+        [JsonPropertyName("models")]
+        public List<CivArchiveModelDetails> Models { get; set; } = [];
     }
 
     private sealed class CivArchiveDetailPageProps

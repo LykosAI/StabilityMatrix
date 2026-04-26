@@ -407,17 +407,41 @@ public sealed partial class CivArchiveBrowserViewModel(
                 await PivotToUser(result);
                 break;
             case CivArchiveKindOption.File:
-                ProcessRunner.OpenUrl(civArchiveApiClient.GetAbsoluteUri(result.Url).ToString());
+                await OpenFileResult(result);
                 break;
             default:
-                var detailsVm = viewModelFactory.Get<CivArchiveDetailsPageViewModel>(vm =>
-                {
-                    vm.RelativeUrl = result.Url;
-                    return vm;
-                });
-                navigationService.NavigateTo(detailsVm, BetterSlideNavigationTransition.PageSlideFromRight);
+                NavigateToDetails(result.Url);
                 break;
         }
+    }
+
+    /// <summary>
+    /// File-kind results have a <c>/sha256/{hash}</c> URL whose endpoint returns a different
+    /// shape than the model details page. Resolve the SHA256 to its linked model + version
+    /// and navigate there in-app; if no model is linked (orphaned hash), fall back to opening
+    /// the URL externally.
+    /// </summary>
+    private async Task OpenFileResult(CivArchiveSearchResult result)
+    {
+        var resolvedUrl = await civArchiveApiClient.ResolveFileUrlAsync(result.Url);
+        if (!string.IsNullOrWhiteSpace(resolvedUrl))
+        {
+            NavigateToDetails(resolvedUrl);
+        }
+        else
+        {
+            ProcessRunner.OpenUrl(civArchiveApiClient.GetAbsoluteUri(result.Url).ToString());
+        }
+    }
+
+    private void NavigateToDetails(string relativeUrl)
+    {
+        var detailsVm = viewModelFactory.Get<CivArchiveDetailsPageViewModel>(vm =>
+        {
+            vm.RelativeUrl = relativeUrl;
+            return vm;
+        });
+        navigationService.NavigateTo(detailsVm, BetterSlideNavigationTransition.PageSlideFromRight);
     }
 
     [RelayCommand]

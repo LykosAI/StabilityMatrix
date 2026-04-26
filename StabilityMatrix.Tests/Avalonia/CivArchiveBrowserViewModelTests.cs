@@ -53,12 +53,13 @@ public class CivArchiveBrowserViewModelTests
         vm.SelectedSort = vm.AllSorts.First(x => x.Value == CivArchiveSortOption.Newest);
         await Task.Delay(50);
 
-        Assert.AreEqual(4, recordedFilters.Count);
+        // 3 calls: initial fetch, LoadNextPage, sort change.
+        // (No saved selections means ApplyFilterOptions doesn't trigger a redundant re-fetch.)
+        Assert.AreEqual(3, recordedFilters.Count);
         Assert.AreEqual(1, recordedFilters[0].Page);
-        Assert.AreEqual(1, recordedFilters[1].Page);
-        Assert.AreEqual(2, recordedFilters[2].Page);
-        Assert.AreEqual(1, recordedFilters[3].Page);
-        Assert.AreEqual(CivArchiveSortOption.Newest, recordedFilters[3].Sort);
+        Assert.AreEqual(2, recordedFilters[1].Page);
+        Assert.AreEqual(1, recordedFilters[2].Page);
+        Assert.AreEqual(CivArchiveSortOption.Newest, recordedFilters[2].Sort);
     }
 
     [TestMethod]
@@ -134,9 +135,13 @@ public class CivArchiveBrowserViewModelTests
                 var filters = call.Arg<CivArchiveSearchFilters>();
                 recordedFilters.Add(filters);
 
+                // Delay call #2 — that's the explicit ExecuteAsync at line below (line 149
+                // equivalent), so the sort change happens while it's in flight and gets
+                // queued. With the redundant init re-fetch removed, the second call is
+                // now the queueable one (used to be call #3).
                 return recordedFilters.Count switch
                 {
-                    3 => delayedResponse.Task,
+                    2 => delayedResponse.Task,
                     _ => Task.FromResult(CreateSearchResponse(filters.Page)),
                 };
             });
@@ -152,9 +157,10 @@ public class CivArchiveBrowserViewModelTests
         delayedResponse.SetResult(CreateSearchResponse(1));
         await loadingSearch;
 
-        Assert.AreEqual(4, recordedFilters.Count);
-        Assert.AreEqual(CivArchiveSortOption.Top, recordedFilters[2].Sort);
-        Assert.AreEqual(CivArchiveSortOption.Newest, recordedFilters[3].Sort);
+        // 3 calls: initial, in-flight (delayed), queued sort-change refresh.
+        Assert.AreEqual(3, recordedFilters.Count);
+        Assert.AreEqual(CivArchiveSortOption.Top, recordedFilters[1].Sort);
+        Assert.AreEqual(CivArchiveSortOption.Newest, recordedFilters[2].Sort);
     }
 
     [TestMethod]

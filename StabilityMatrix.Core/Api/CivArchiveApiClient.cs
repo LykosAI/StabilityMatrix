@@ -294,17 +294,20 @@ public partial class CivArchiveApiClient(
     [GeneratedRegex("\"buildId\":\"(?<buildId>[^\"]+)\"")]
     private static partial Regex BuildIdRegex();
 
-    private const string PlatformNames =
-        "tensorart|seaart|civision|pixai|tungsten|yodayo|moescape|shakker|tensorhub|civitai|huggingface|modelscope_cn|modelscope";
+    // Generic platform segment match — accepts any single non-slash path segment as the
+    // platform name so we don't have to maintain a hardcoded list each time CivArchive
+    // adds a mirror. Excludes "models" and "sha256" so we don't mis-classify the
+    // platform-less /models/... and /sha256/... routes as platform-prefixed.
+    private const string PlatformPattern = "(?!models/|sha256/)[^/]+";
 
     // Matches /{platform}/models/{id}/versions/{versionId}
     [GeneratedRegex(
-        $@"^/(?<platform>{PlatformNames})/models/(?<modelId>[^/]+)/versions/(?<versionId>[^/]+)$"
+        $@"^/(?<platform>{PlatformPattern})/models/(?<modelId>[^/]+)/versions/(?<versionId>[^/]+)$"
     )]
     private static partial Regex PlatformDetailRewriteRegex();
 
     // Matches /{platform}/models/{id} (without version)
-    [GeneratedRegex($@"^/(?<platform>{PlatformNames})/models/(?<modelId>[^/]+)$")]
+    [GeneratedRegex($@"^/(?<platform>{PlatformPattern})/models/(?<modelId>[^/]+)$")]
     private static partial Regex PlatformModelRewriteRegex();
 
     // Matches /models/{id}/{slug} (slug rewrite to /models/{id})

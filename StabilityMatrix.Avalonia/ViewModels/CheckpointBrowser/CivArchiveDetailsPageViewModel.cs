@@ -193,6 +193,8 @@ public partial class CivArchiveDetailsPageViewModel(
     /// Strip empty path segments left behind by null/empty substitutions, so a pattern
     /// like <c>{base_model}/{file_name}</c> with an empty base_model collapses to
     /// <c>file_name</c> instead of <c>/file_name</c>.
+    /// Also drops <c>..</c> / <c>.</c> traversal segments so a pattern variable that
+    /// resolves to <c>..</c> can't escape the destination folder.
     /// </summary>
     private static string NormalizePathSegments(string raw)
     {
@@ -200,9 +202,10 @@ public partial class CivArchiveDetailsPageViewModel(
             return raw;
 
         var parts = raw.Split(
-            ['/', '\\'],
-            StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries
-        );
+                ['/', '\\'],
+                StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries
+            )
+            .Where(p => p != ".." && p != ".");
         return string.Join('/', parts);
     }
 

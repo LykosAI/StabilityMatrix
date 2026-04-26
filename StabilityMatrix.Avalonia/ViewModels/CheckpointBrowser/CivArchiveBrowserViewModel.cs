@@ -259,13 +259,12 @@ public sealed partial class CivArchiveBrowserViewModel(
 
     private void RebuildVisibleResults()
     {
-        Results.Clear();
-        foreach (var item in rawResults)
-        {
-            if (HideInstalledModels && item.IsInstalled)
-                continue;
-            Results.Add(item);
-        }
+        // Replace the collection wholesale instead of Clear + N×Add — one
+        // PropertyChanged on Results vs N CollectionChanged notifications,
+        // which keeps ItemsRepeater from churning containers per item.
+        Results = new ObservableCollection<CivArchiveSearchResult>(
+            HideInstalledModels ? rawResults.Where(item => !item.IsInstalled) : rawResults
+        );
         NoResultsFound = HasSearched && Results.Count == 0;
         OnPropertyChanged(nameof(IsEndOfResults));
     }
@@ -311,21 +310,37 @@ public sealed partial class CivArchiveBrowserViewModel(
                 ApplyFilterOptions(response.FilterOptions);
                 filterOptionsLoaded = true;
 
-                if (!isInfiniteScroll && suppressSearch)
+                // ApplyFilterOptions sets suppressSearch=true while populating the option
+                // collections. Only re-fetch if the user actually has saved selections
+                // (Types/BaseModels) that we couldn't apply on the first call — for a
+                // first-run user with no saved selections the initial response is already
+                // correct and a second fetch is wasted bandwidth.
+                var savedOptions = settingsManager.Settings.CivArchiveBrowserOptions;
+                var hasSelections =
+                    savedOptions.SelectedModelTypes.Count > 0 || savedOptions.SelectedBaseModels.Count > 0;
+
+                if (!isInfiniteScroll && suppressSearch && hasSelections)
                 {
                     suppressSearch = false;
                     response = await civArchiveApiClient.SearchAsync(BuildFilters(currentPage));
+                }
+                else
+                {
+                    suppressSearch = false;
                 }
             }
 
             TotalHits = response.TotalHits;
             currentPage = response.EffectiveFilters.Page;
 
+            // O(1) dedupe lookup against everything we've already fetched, instead of a
+            // linear scan per incoming item (which becomes O(N²) as paged results grow).
+            var existingIds = isInfiniteScroll ? rawResults.Select(x => x.Id).ToHashSet() : [];
             var installedHashes = modelIndexService.ModelIndexSha256Hashes;
             var installedUrls = modelIndexService.ModelIndexCivArchiveUrls;
             foreach (var item in response.Results)
             {
-                if (isInfiniteScroll && rawResults.Any(existing => existing.Id == item.Id))
+                if (isInfiniteScroll && !existingIds.Add(item.Id))
                 {
                     continue;
                 }

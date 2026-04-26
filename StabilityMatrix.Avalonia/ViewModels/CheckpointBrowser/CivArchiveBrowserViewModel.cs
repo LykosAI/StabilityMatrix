@@ -439,20 +439,38 @@ public sealed partial class CivArchiveBrowserViewModel(
     private void ToggleAllModelTypes()
     {
         var shouldSelectAll = AllModelTypes.Any(x => !x.IsSelected);
-        foreach (var option in AllModelTypes)
+        suppressSearch = true;
+        try
         {
-            option.IsSelected = shouldSelectAll;
+            foreach (var option in AllModelTypes)
+            {
+                option.IsSelected = shouldSelectAll;
+            }
         }
+        finally
+        {
+            suppressSearch = false;
+        }
+        TriggerFilterSearch();
     }
 
     [RelayCommand]
     private void ToggleAllBaseModels()
     {
         var shouldSelectAll = AllBaseModels.Any(x => !x.IsSelected);
-        foreach (var option in AllBaseModels)
+        suppressSearch = true;
+        try
         {
-            option.IsSelected = shouldSelectAll;
+            foreach (var option in AllBaseModels)
+            {
+                option.IsSelected = shouldSelectAll;
+            }
         }
+        finally
+        {
+            suppressSearch = false;
+        }
+        TriggerFilterSearch();
     }
 
     /// <summary>

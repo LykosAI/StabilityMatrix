@@ -38,6 +38,15 @@ public class CivArchiveSearchResult
     [JsonIgnore]
     public CivArchiveKindOption Kind => CivArchiveEnumExtensions.ParseKind(KindRaw);
 
+    /// <summary>
+    /// True when the result kind is anything other than the default <c>Version</c>
+    /// (e.g. <c>File</c> or <c>User</c>). Most search results are Version-kind, so the
+    /// Kind chip on the card is only worth showing when it's something the user
+    /// wouldn't otherwise expect.
+    /// </summary>
+    [JsonIgnore]
+    public bool ShouldShowKindBadge => Kind != CivArchiveKindOption.Version;
+
     [JsonPropertyName("is_nsfw")]
     public bool IsNsfw { get; set; }
 

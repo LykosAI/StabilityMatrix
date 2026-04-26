@@ -165,7 +165,8 @@
                                     <controls:Card
                                         Padding="6,2"
                                         Background="#AA000000"
-                                        BorderThickness="0">
+                                        BorderThickness="0"
+                                        IsVisible="{Binding ShouldShowKindBadge}">
                                         <TextBlock
                                             FontSize="11"
                                             FontWeight="SemiBold"

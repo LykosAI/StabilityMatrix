@@ -30,16 +30,16 @@ public class CivArchiveModelDetails
     [JsonPropertyName("username")]
     public string? Username { get; set; }
 
-    [JsonPropertyName("downloadCount")]
+    [JsonPropertyName("download_count")]
     public long DownloadCount { get; set; }
 
-    [JsonPropertyName("favoriteCount")]
+    [JsonPropertyName("favorite_count")]
     public long FavoriteCount { get; set; }
 
-    [JsonPropertyName("commentCount")]
+    [JsonPropertyName("comment_count")]
     public long CommentCount { get; set; }
 
-    [JsonPropertyName("ratingCount")]
+    [JsonPropertyName("rating_count")]
     public long RatingCount { get; set; }
 
     [JsonPropertyName("rating")]
@@ -48,13 +48,13 @@ public class CivArchiveModelDetails
     [JsonPropertyName("is_nsfw")]
     public bool IsNsfw { get; set; }
 
-    [JsonPropertyName("createdAt")]
+    [JsonPropertyName("created_at")]
     public DateTimeOffset? CreatedAt { get; set; }
 
-    [JsonPropertyName("updatedAt")]
+    [JsonPropertyName("updated_at")]
     public DateTimeOffset? UpdatedAt { get; set; }
 
-    [JsonPropertyName("deletedAt")]
+    [JsonPropertyName("deleted_at")]
     public DateTimeOffset? DeletedAt { get; set; }
 
     [JsonPropertyName("tags")]
@@ -108,7 +108,7 @@ public class CivArchiveModelVersion
     [JsonIgnore]
     public string Id => IdWrapper?.ToString() ?? string.Empty;
 
-    [JsonPropertyName("modelId")]
+    [JsonPropertyName("model_id")]
     public JsonNodeIdWrapper? ModelIdWrapper { get; set; }
 
     [JsonIgnore]
@@ -117,22 +117,22 @@ public class CivArchiveModelVersion
     [JsonPropertyName("name")]
     public string Name { get; set; } = string.Empty;
 
-    [JsonPropertyName("baseModel")]
+    [JsonPropertyName("base_model")]
     public string? BaseModel { get; set; }
 
-    [JsonPropertyName("baseModelType")]
+    [JsonPropertyName("base_model_type")]
     public string? BaseModelType { get; set; }
 
     [JsonPropertyName("description")]
     public string? Description { get; set; }
 
-    [JsonPropertyName("downloadCount")]
+    [JsonPropertyName("download_count")]
     public long DownloadCount { get; set; }
 
-    [JsonPropertyName("favoriteCount")]
+    [JsonPropertyName("favorite_count")]
     public long FavoriteCount { get; set; }
 
-    [JsonPropertyName("ratingCount")]
+    [JsonPropertyName("rating_count")]
     public long RatingCount { get; set; }
 
     [JsonPropertyName("rating")]
@@ -141,13 +141,13 @@ public class CivArchiveModelVersion
     [JsonPropertyName("is_nsfw")]
     public bool IsNsfw { get; set; }
 
-    [JsonPropertyName("createdAt")]
+    [JsonPropertyName("created_at")]
     public DateTimeOffset? CreatedAt { get; set; }
 
-    [JsonPropertyName("updatedAt")]
+    [JsonPropertyName("updated_at")]
     public DateTimeOffset? UpdatedAt { get; set; }
 
-    [JsonPropertyName("deletedAt")]
+    [JsonPropertyName("deleted_at")]
     public DateTimeOffset? DeletedAt { get; set; }
 
     [JsonPropertyName("files")]
@@ -189,7 +189,7 @@ public class CivArchiveModelFile
     [JsonPropertyName("type")]
     public string? Type { get; set; }
 
-    [JsonPropertyName("sizeKB")]
+    [JsonPropertyName("size_kb")]
     public double SizeKb { get; set; }
 
     [JsonIgnore]
@@ -203,19 +203,19 @@ public class CivArchiveModelFile
     [JsonIgnore]
     public bool HasKnownSize => SizeKb >= 1.0;
 
-    [JsonPropertyName("downloadUrl")]
+    [JsonPropertyName("download_url")]
     public string? DownloadUrl { get; set; }
 
-    [JsonPropertyName("modelId")]
+    [JsonPropertyName("model_id")]
     public JsonNodeIdWrapper? ModelIdWrapper { get; set; }
 
     [JsonIgnore]
     public string ModelId => ModelIdWrapper?.ToString() ?? string.Empty;
 
-    [JsonPropertyName("modelName")]
+    [JsonPropertyName("model_name")]
     public string? ModelName { get; set; }
 
-    [JsonPropertyName("modelVersionId")]
+    [JsonPropertyName("model_version_id")]
     public JsonNodeIdWrapper? ModelVersionIdWrapper { get; set; }
 
     [JsonIgnore]
@@ -227,10 +227,10 @@ public class CivArchiveModelFile
     [JsonPropertyName("sha256")]
     public string? Sha256 { get; set; }
 
-    [JsonPropertyName("createdAt")]
+    [JsonPropertyName("created_at")]
     public DateTimeOffset? CreatedAt { get; set; }
 
-    [JsonPropertyName("updatedAt")]
+    [JsonPropertyName("updated_at")]
     public DateTimeOffset? UpdatedAt { get; set; }
 
     [JsonPropertyName("is_primary")]
@@ -251,7 +251,7 @@ public class CivArchiveFileMirror
     [JsonPropertyName("source")]
     public string? Source { get; set; }
 
-    [JsonPropertyName("deletedAt")]
+    [JsonPropertyName("deleted_at")]
     public DateTimeOffset? DeletedAt { get; set; }
 
     [JsonPropertyName("is_gated")]

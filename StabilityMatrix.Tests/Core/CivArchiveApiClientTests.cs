@@ -112,8 +112,9 @@ public class CivArchiveApiClientTests
     [TestMethod]
     public async Task GetModelDetailsAsync_ParsesFilesMirrorsAndSha256()
     {
+        // Field naming matches the real CivArchive API (snake_case throughout)
         const string detailJson = """
-            {"pageProps":{"model":{"id":153568,"name":"Real Dream","type":"Checkpoint","creator_username":"sinatra","platform":"civitai","platform_name":"CivitAI","version":{"id":2053273,"name":"SDXL 7","baseModel":"SDXL 1.0","description":"<p>Version description</p>","files":[{"id":1950275,"name":"realDream_sdxl7.safetensors","type":"Model","sizeKB":6775783.6,"downloadUrl":"https://civitai.com/api/download/models/2053273","sha256":"63b1db60611f52c4fbb2cade67dbdf4029c6620c5b22f2a4ddb27a47d7601953","mirrors":[{"filename":"realDream_sdxl7.safetensors","url":"https://civitai.com/api/download/models/2053273","source":"civitai","is_gated":false,"is_paid":false}]}],"images":[{"id":1,"url":"https://example.org/image.webp","link":"https://example.org/image.webp","type":"image"}],"mirrors":[{"platform":"tungsten","platform_url":"https://tungsten.run/model/kZ7yDBQjZP?model_version=L2KrgferKS","version_name":"SDXL 7"}]}}}}
+            {"pageProps":{"model":{"id":153568,"name":"Real Dream","type":"Checkpoint","download_count":4923593,"favorite_count":12,"rating":4.5,"rating_count":8,"created_at":"2026-04-17T23:30:06Z","creator_username":"sinatra","platform":"civitai","platform_name":"CivitAI","version":{"id":2053273,"name":"SDXL 7","base_model":"SDXL 1.0","description":"<p>Version description</p>","download_count":12345,"created_at":"2026-04-17T23:30:06Z","files":[{"id":1950275,"name":"realDream_sdxl7.safetensors","type":"Model","size_kb":6775783.6,"download_url":"https://civitai.com/api/download/models/2053273","sha256":"63b1db60611f52c4fbb2cade67dbdf4029c6620c5b22f2a4ddb27a47d7601953","is_primary":true,"created_at":"2026-04-17T23:30:06Z","mirrors":[{"filename":"realDream_sdxl7.safetensors","url":"https://civitai.com/api/download/models/2053273","source":"civitai","is_gated":false,"is_paid":false}]}],"images":[{"id":1,"url":"https://example.org/image.webp","link":"https://example.org/image.webp","type":"image"}],"mirrors":[{"platform":"tungsten","platform_url":"https://tungsten.run/model/kZ7yDBQjZP?model_version=L2KrgferKS","version_name":"SDXL 7"}]}}}}
             """;
 
         var responses = new Queue<HttpResponseMessage>(
@@ -134,6 +135,22 @@ public class CivArchiveApiClientTests
             response.Model.Version?.Files[0].Sha256
         );
         Assert.AreEqual(1, response.Model.Version?.Mirrors.Count);
+
+        // Snake-case field names — these all silently defaulted to 0/null when the DTO
+        // mapped them to camelCase (downloadCount/baseModel/sizeKB/etc.).
+        Assert.AreEqual(4923593, response.Model.DownloadCount);
+        Assert.AreEqual(12, response.Model.FavoriteCount);
+        Assert.AreEqual(4.5, response.Model.Rating);
+        Assert.AreEqual(8, response.Model.RatingCount);
+        Assert.IsNotNull(response.Model.CreatedAt);
+        Assert.AreEqual("SDXL 1.0", response.Model.Version?.BaseModel);
+        Assert.AreEqual(12345, response.Model.Version?.DownloadCount);
+        Assert.AreEqual(6775783.6, response.Model.Version?.Files[0].SizeKb);
+        Assert.AreEqual(
+            "https://civitai.com/api/download/models/2053273",
+            response.Model.Version?.Files[0].DownloadUrl
+        );
+        Assert.IsTrue(response.Model.Version?.Files[0].IsPrimary);
     }
 
     private static ICivArchiveApiClient CreateClient(HttpMessageHandler handler)

@@ -28,6 +28,7 @@ using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Api.CivArchive;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
 
@@ -678,6 +679,20 @@ public partial class CivArchiveDetailsPageViewModel(
                 {
                     download.ExpectedHashSha256 = file.Sha256;
                 }
+
+                // The CivitAI flow uses CivitPostDownloadContextAction to refresh the
+                // model index post-download; we don't have an analogous context action
+                // (we rely on cm-info instead of Blake3 hash), so subscribe directly to
+                // ProgressStateChanged. Refreshing the index fires ModelIndexChanged,
+                // which our OnInitialLoadedAsync subscription uses to flip the Installed
+                // badge / "Download again" label live.
+                download.ProgressStateChanged += (_, state) =>
+                {
+                    if (state == ProgressState.Success)
+                    {
+                        modelIndexService.BackgroundRefreshIndex();
+                    }
+                };
             }
         );
 

@@ -39,6 +39,14 @@ public class CivArchiveApiClientTests
     }
 
     [TestMethod]
+    public void BuildDetailDataPath_RewritesModelScopeCnPlatformRoutes()
+    {
+        var result = CivArchiveApiClient.BuildDetailDataPath("/modelscope_cn/models/123/versions/456");
+
+        Assert.AreEqual("/models/123.json?modelVersionId=456&platform=modelscope_cn", result);
+    }
+
+    [TestMethod]
     public async Task SearchAsync_RefreshesBuildIdAfter404()
     {
         var requests = new List<string>();

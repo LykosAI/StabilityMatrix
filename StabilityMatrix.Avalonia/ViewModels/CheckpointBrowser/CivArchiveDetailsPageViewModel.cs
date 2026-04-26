@@ -1,14 +1,20 @@
 using System.Collections.ObjectModel;
+using System.ComponentModel.DataAnnotations;
+using System.IO;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Threading;
 using AsyncAwaitBestPractices;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using DynamicData.Binding;
 using FluentAvalonia.Core;
+using FluentAvalonia.UI.Controls;
 using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Models;
+using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
@@ -16,9 +22,11 @@ using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
+using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Api.CivArchive;
+using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
@@ -34,9 +42,31 @@ public partial class CivArchiveDetailsPageViewModel(
     IServiceManager<ViewModelBase> vmFactory,
     IModelImportService modelImportService,
     ISettingsManager settingsManager,
-    INotificationService notificationService
-) : ViewModelBase
+    INotificationService notificationService,
+    IModelIndexService modelIndexService
+) : DisposableViewModelBase
 {
+    private static readonly string[] IgnoredFileNameFormatVars =
+    [
+        "seed",
+        "prompt",
+        "negative_prompt",
+        "model_hash",
+        "sampler",
+        "cfgscale",
+        "steps",
+        "width",
+        "height",
+        "project_type",
+        "project_name",
+    ];
+
+    public IEnumerable<FileNameFormatVar> ModelFileNameFormatVars =>
+        FileNameFormatProvider
+            .GetSampleForModelBrowser()
+            .Substitutions.Where(kv => !IgnoredFileNameFormatVars.Contains(kv.Key))
+            .Select(kv => new FileNameFormatVar { Variable = $"{{{kv.Key}}}", Example = kv.Value.Invoke() });
+
     [ObservableProperty]
     public partial string RelativeUrl { get; set; } = string.Empty;
 
@@ -61,6 +91,19 @@ public partial class CivArchiveDetailsPageViewModel(
     [ObservableProperty]
     public partial bool HasDownloadUrl { get; set; }
 
+    [ObservableProperty]
+    public partial bool IsInstalled { get; set; }
+
+    [ObservableProperty]
+    public partial string? InstalledLocation { get; set; }
+
+    [ObservableProperty]
+    [CustomValidation(typeof(CivArchiveDetailsPageViewModel), nameof(ValidateModelFileNameFormat))]
+    public partial string? ModelFileNameFormat { get; set; }
+
+    [ObservableProperty]
+    public partial string? ModelNameFormatSample { get; set; }
+
     public ObservableCollection<CivArchiveModelImage> Images { get; } = [];
     public ObservableCollection<CivArchiveModelFile> Files { get; } = [];
     public ObservableCollection<CivArchiveVersionMirror> Mirrors { get; } = [];
@@ -81,6 +124,42 @@ public partial class CivArchiveDetailsPageViewModel(
         ["Upscaler"] = (SharedFolderType.ESRGAN, CivitModelType.Upscaler),
     };
 
+    protected override async Task OnInitialLoadedAsync()
+    {
+        await base.OnInitialLoadedAsync();
+
+        AddDisposable(
+            settingsManager.RelayPropertyFor(
+                this,
+                vm => vm.ModelFileNameFormat,
+                settings => settings.CivitModelBrowserFileNamePattern,
+                true
+            )
+        );
+
+        AddDisposable(
+            this.WhenPropertyChanged(vm => vm.ModelFileNameFormat)
+                .Throttle(TimeSpan.FromMilliseconds(50))
+                .ObserveOn(SynchronizationContext.Current!)
+                .Subscribe(_ => UpdateNameFormatSample())
+        );
+
+        AddDisposable(
+            this.WhenPropertyChanged(vm => vm.Model)
+                .ObserveOn(SynchronizationContext.Current!)
+                .Subscribe(_ => UpdateNameFormatSample())
+        );
+
+        // Refresh the IsInstalled badge / Download button label when the user downloads
+        // (or deletes) this model — without forcing them to navigate away and back.
+        EventHandler indexChangedHandler = (_, _) =>
+            Dispatcher.UIThread.Post(() => UpdateInstalledStatus(Model?.Version));
+        EventManager.Instance.ModelIndexChanged += indexChangedHandler;
+        AddDisposable(
+            Disposable.Create(() => EventManager.Instance.ModelIndexChanged -= indexChangedHandler)
+        );
+    }
+
     public override async Task OnLoadedAsync()
     {
         await base.OnLoadedAsync();
@@ -91,6 +170,94 @@ public partial class CivArchiveDetailsPageViewModel(
         }
 
         await LoadModelAsync();
+    }
+
+    public static ValidationResult ValidateModelFileNameFormat(string? format, ValidationContext context)
+    {
+        return FileNameFormatProvider.GetSampleForModelBrowser().Validate(format ?? string.Empty);
+    }
+
+    private void UpdateNameFormatSample()
+    {
+        var provider = BuildFormatProvider(Model?.Version, GetPrimaryFile(Model?.Version));
+        var format = ParseFormatOrDefault(ModelFileNameFormat, provider);
+
+        var sample = format.GetFileName();
+        ModelNameFormatSample = string.IsNullOrWhiteSpace(sample)
+            ? null
+            : "Example: " + sample + ".safetensors";
+    }
+
+    /// <summary>
+    /// Parse a template against the provider, falling back to the default template if the input is empty,
+    /// references unknown variables, or fails to parse for any reason. Validate() must be called first
+    /// because Parse() throws KeyNotFoundException on unknown variables (e.g. mid-typing "{base}" before
+    /// the user finishes "{base_model}").
+    /// </summary>
+    private static FileNameFormat ParseFormatOrDefault(string? template, FileNameFormatProvider provider)
+    {
+        if (
+            !string.IsNullOrEmpty(template)
+            && provider.Validate(template) == ValidationResult.Success
+            && FileNameFormat.TryParse(template, provider, out var format)
+        )
+        {
+            return format;
+        }
+
+        return FileNameFormat.Parse(FileNameFormat.DefaultModelBrowserTemplate, provider);
+    }
+
+    private FileNameFormatProvider BuildFormatProvider(
+        CivArchiveModelVersion? version,
+        CivArchiveModelFile? primaryFile
+    )
+    {
+        if (Model is null)
+        {
+            return new FileNameFormatProvider();
+        }
+
+        // Build CivitModel-shaped stubs so FileNameFormatProvider can resolve {model_name}, {file_name}, etc.
+        var modelType = CivitModelType.Unknown;
+        if (Model.Type is not null && ModelTypeMap.TryGetValue(Model.Type, out var mapping))
+        {
+            modelType = mapping.ModelType;
+        }
+
+        var synthesizedFileName = string.IsNullOrWhiteSpace(version?.Name)
+            ? $"{Model.Name}.safetensors"
+            : $"{Model.Name}_{version.Name}.safetensors";
+
+        var civitModel = new CivitModel
+        {
+            Id = int.TryParse(Model.Id, out var modelId) ? modelId : 0,
+            Name = Model.Name,
+            Type = modelType,
+            Creator = new CivitCreator { Username = Model.CreatorUsername ?? Model.Username },
+        };
+
+        var civitVersion = version is null
+            ? null
+            : new CivitModelVersion
+            {
+                Id = int.TryParse(version.Id, out var versionId) ? versionId : 0,
+                Name = version.Name,
+                BaseModel = version.BaseModel,
+            };
+
+        var civitFile = new CivitFile
+        {
+            Id = int.TryParse(primaryFile?.Id, out var fileId) ? fileId : 0,
+            Name = !string.IsNullOrWhiteSpace(primaryFile?.Name) ? primaryFile.Name : synthesizedFileName,
+        };
+
+        return new FileNameFormatProvider
+        {
+            CivitModel = civitModel,
+            CivitModelVersion = civitVersion,
+            CivitFile = civitFile,
+        };
     }
 
     private async Task LoadModelAsync()
@@ -119,7 +286,7 @@ public partial class CivArchiveDetailsPageViewModel(
     private void PopulateVersionData(CivArchiveModelVersion? version)
     {
         VersionDescriptionHtml = WrapHtml(version?.Description);
-        HasDownloadUrl = !string.IsNullOrWhiteSpace(version?.DownloadUrl);
+        HasDownloadUrl = GetDownloadUris(version).Count > 0;
 
         Images.Clear();
         foreach (var image in version?.Images.Where(i => !string.IsNullOrWhiteSpace(i.Url)) ?? [])
@@ -137,6 +304,77 @@ public partial class CivArchiveDetailsPageViewModel(
         foreach (var mirror in version?.Mirrors ?? [])
         {
             Mirrors.Add(mirror);
+        }
+
+        UpdateInstalledStatus(version);
+    }
+
+    private void UpdateInstalledStatus(CivArchiveModelVersion? version)
+    {
+        // First try URL match — works for every platform, including ones where file hashes are missing.
+        var installedUrls = modelIndexService.ModelIndexCivArchiveUrls;
+        if (!string.IsNullOrWhiteSpace(RelativeUrl) && installedUrls.Contains(RelativeUrl))
+        {
+            IsInstalled = true;
+            InstalledLocation = LookupInstalledLocationByUrl(RelativeUrl);
+            return;
+        }
+
+        // Fallback to SHA256 match — catches CivitAI mirrors with full file hashes,
+        // including models downloaded via SM before SourceUrl tracking existed.
+        var hashes = version
+            ?.Files.Select(f => f.Sha256)
+            .Where(s => !string.IsNullOrWhiteSpace(s))
+            .Cast<string>()
+            .ToList();
+
+        if (hashes is null || hashes.Count == 0)
+        {
+            IsInstalled = false;
+            InstalledLocation = null;
+            return;
+        }
+
+        var installedHashes = modelIndexService.ModelIndexSha256Hashes;
+        var matchedHash = hashes.FirstOrDefault(h => installedHashes.Contains(h));
+
+        if (matchedHash is null)
+        {
+            IsInstalled = false;
+            InstalledLocation = null;
+            return;
+        }
+
+        IsInstalled = true;
+        _ = LoadInstalledLocationAsync(matchedHash);
+    }
+
+    private string? LookupInstalledLocationByUrl(string sourceUrl)
+    {
+        return modelIndexService
+            .ModelIndex.Values.SelectMany(x => x)
+            .FirstOrDefault(m =>
+                m.HasCivArchiveMetadata
+                && string.Equals(
+                    m.ConnectedModelInfo.SourceUrl,
+                    sourceUrl,
+                    StringComparison.OrdinalIgnoreCase
+                )
+            )
+            ?.RelativePath;
+    }
+
+    private async Task LoadInstalledLocationAsync(string sha256)
+    {
+        try
+        {
+            var matches = await modelIndexService.FindBySha256Async(sha256);
+            var first = matches?.FirstOrDefault();
+            InstalledLocation = first?.RelativePath;
+        }
+        catch
+        {
+            InstalledLocation = null;
         }
     }
 
@@ -232,10 +470,157 @@ public partial class CivArchiveDetailsPageViewModel(
     private async Task DownloadModel()
     {
         var version = Model?.Version;
-        if (version?.DownloadUrl is not { } downloadUrl || string.IsNullOrWhiteSpace(downloadUrl))
+        if (version is null)
+            return;
+
+        var primaryFile = GetPrimaryFile(version);
+        await ExecuteDownloadAsync(version, primaryFile, GetDownloadUris(version), sourceLabel: null);
+    }
+
+    [RelayCommand]
+    private async Task DeleteModel()
+    {
+        var localFiles = FindLocallyInstalledFiles();
+        if (localFiles.Count == 0)
+            return;
+
+        var pathsToDelete = new List<string>();
+        foreach (var localFile in localFiles)
         {
+            var checkpointPath = new FilePath(localFile.GetFullPath(settingsManager.ModelsDirectory));
+            if (File.Exists(checkpointPath))
+                pathsToDelete.Add(checkpointPath);
+
+            var previewPath = localFile.GetPreviewImageFullPath(settingsManager.ModelsDirectory);
+            if (!string.IsNullOrEmpty(previewPath) && File.Exists(previewPath))
+                pathsToDelete.Add(previewPath);
+
+            var cmInfoPath = checkpointPath
+                .ToString()
+                .Replace(checkpointPath.Extension, ConnectedModelInfo.FileExtension);
+            if (File.Exists(cmInfoPath))
+                pathsToDelete.Add(cmInfoPath);
+        }
+
+        if (pathsToDelete.Count == 0)
+            return;
+
+        var confirmDeleteVm = vmFactory.Get<ConfirmDeleteDialogViewModel>();
+        confirmDeleteVm.PathsToDelete = pathsToDelete;
+
+        var dialog = confirmDeleteVm.GetDialog();
+        var result = await dialog.ShowAsync();
+
+        if (result != ContentDialogResult.Primary)
+            return;
+
+        try
+        {
+            await confirmDeleteVm.ExecuteCurrentDeleteOperationAsync(failFast: true);
+        }
+        catch (Exception ex)
+        {
+            notificationService.Show("Delete failed", ex.Message);
+        }
+        finally
+        {
+            await modelIndexService.RefreshIndex();
+            // RefreshIndex fires ModelIndexChanged → our handler updates IsInstalled
+            // and the UI flips back to "Download" automatically.
+        }
+    }
+
+    /// <summary>
+    /// Find every locally installed file matching this model — try the SourceUrl first,
+    /// fall back to SHA256 hash matches for legacy downloads without SourceUrl.
+    /// </summary>
+    private List<LocalModelFile> FindLocallyInstalledFiles()
+    {
+        var matches = new List<LocalModelFile>();
+        var allLocal = modelIndexService.ModelIndex.Values.SelectMany(x => x).ToList();
+
+        if (!string.IsNullOrWhiteSpace(RelativeUrl))
+        {
+            matches.AddRange(
+                allLocal.Where(m =>
+                    m.HasCivArchiveMetadata
+                    && string.Equals(
+                        m.ConnectedModelInfo.SourceUrl,
+                        RelativeUrl,
+                        StringComparison.OrdinalIgnoreCase
+                    )
+                )
+            );
+        }
+
+        if (matches.Count == 0 && Model?.Version is { } version)
+        {
+            var hashes = version
+                .Files.Select(f => f.Sha256)
+                .Where(s => !string.IsNullOrWhiteSpace(s))
+                .Cast<string>()
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            if (hashes.Count > 0)
+            {
+                matches.AddRange(
+                    allLocal.Where(m =>
+                        !string.IsNullOrWhiteSpace(m.HashSha256) && hashes.Contains(m.HashSha256)
+                    )
+                );
+            }
+        }
+
+        return matches;
+    }
+
+    [RelayCommand]
+    private async Task DownloadFile(CivArchiveModelFile? file)
+    {
+        var version = Model?.Version;
+        if (version is null || file is null)
+            return;
+
+        await ExecuteDownloadAsync(version, file, GetDownloadUrisForFile(file), sourceLabel: null);
+    }
+
+    [RelayCommand]
+    private async Task DownloadFromMirror(CivArchiveFileMirror? mirror)
+    {
+        if (mirror is null || string.IsNullOrWhiteSpace(mirror.Url))
+            return;
+
+        // Gated/paid mirrors require auth or payment we can't handle in-app — open externally.
+        if (mirror.IsGated || mirror.IsPaid)
+        {
+            ProcessRunner.OpenUrl(mirror.Url);
             return;
         }
+
+        var version = Model?.Version;
+        if (version is null)
+            return;
+
+        // Find the parent file so we can attach hash + cm-info correctly.
+        var parentFile = version.Files.FirstOrDefault(f => f.Mirrors.Contains(mirror));
+
+        await ExecuteDownloadAsync(
+            version,
+            parentFile,
+            [civArchiveApiClient.GetAbsoluteUri(mirror.Url)],
+            sourceLabel: mirror.Source
+        );
+    }
+
+    private async Task ExecuteDownloadAsync(
+        CivArchiveModelVersion version,
+        CivArchiveModelFile? file,
+        IReadOnlyList<Uri> downloadUris,
+        string? sourceLabel
+    )
+    {
+        if (downloadUris.Count == 0 || Model is null)
+            return;
 
         if (!settingsManager.IsLibraryDirSet)
         {
@@ -243,49 +628,144 @@ public partial class CivArchiveDetailsPageViewModel(
             return;
         }
 
-        var downloadUri = civArchiveApiClient.GetAbsoluteUri(downloadUrl);
-
-        // Auto-determine download folder from model type
         var destinationDir = GetDefaultDownloadFolder();
+        var fileName = BuildDownloadFileName(version, file);
 
-        // Build filename: "{ModelName}_{VersionName}.safetensors"
-        var modelName = Model?.Name ?? "model";
-        var versionName = version.Name;
-        var fileName = string.IsNullOrWhiteSpace(versionName)
-            ? $"{modelName}.safetensors"
-            : $"{modelName}_{versionName}.safetensors";
-
-        // Sanitize filename
-        fileName = Path.GetInvalidFileNameChars()
-            .Aggregate(fileName, (current, c) => current.Replace(c, '_'));
-
-        // Get preview image URI if available
         Uri? previewImageUri = null;
+        string? previewImageExtension = null;
         var firstImage = version.Images.FirstOrDefault(i => !string.IsNullOrWhiteSpace(i.Url));
         if (firstImage?.Url is not null)
         {
             previewImageUri = new Uri(firstImage.Url);
+            previewImageExtension = ResolvePreviewImageExtension(previewImageUri);
         }
 
-        // Build cm-info metadata
-        var connectedModelInfo = BuildConnectedModelInfo(Model!, version);
+        var connectedModelInfo = BuildConnectedModelInfo(Model, version, RelativeUrl);
+        // Override hash so the cm-info matches the specific file being downloaded
+        // (BuildConnectedModelInfo defaults to the primary file's hash).
+        if (!string.IsNullOrWhiteSpace(file?.Sha256))
+        {
+            connectedModelInfo.Hashes = new CivitFileHashes { SHA256 = file.Sha256 };
+        }
 
         await modelImportService.DoCustomImport(
-            downloadUri,
+            downloadUris,
             fileName,
             destinationDir,
             previewImageUri,
+            previewImageFileExtension: previewImageExtension,
             connectedModelInfo: connectedModelInfo,
             configureDownload: download =>
             {
-                if (!string.IsNullOrWhiteSpace(version.Files.FirstOrDefault()?.Sha256))
+                if (!string.IsNullOrWhiteSpace(file?.Sha256))
                 {
-                    download.ExpectedHashSha256 = version.Files.First().Sha256;
+                    download.ExpectedHashSha256 = file.Sha256;
                 }
             }
         );
 
-        notificationService.Show("Download Started", $"{fileName} will be saved to {destinationDir}");
+        var finalPath = destinationDir.JoinFile(fileName);
+        var sourceText = string.IsNullOrEmpty(sourceLabel) ? string.Empty : $" from {sourceLabel}";
+        notificationService.Show(
+            "Download Started",
+            $"{finalPath.Name}{sourceText} will be saved to {finalPath.Directory}"
+        );
+    }
+
+    /// <summary>
+    /// CivArchive aggregates images from many platforms; some URLs don't end in a recognizable
+    /// extension (e.g. CivitAI's "/width=512/img" style paths or extension-less CDN URLs). Try
+    /// Path.GetExtension first, then scan the raw URL for a known image extension, then fall back
+    /// to ".jpeg" so the import never fails at the preview-image step.
+    /// </summary>
+    private static string ResolvePreviewImageExtension(Uri previewImageUri)
+    {
+        var fromPath = Path.GetExtension(previewImageUri.LocalPath);
+        if (!string.IsNullOrWhiteSpace(fromPath))
+            return fromPath;
+
+        ReadOnlySpan<string> known = [".jpeg", ".jpg", ".png", ".webp", ".gif", ".avif"];
+        var raw = previewImageUri.ToString();
+        foreach (var ext in known)
+        {
+            if (raw.Contains(ext, StringComparison.OrdinalIgnoreCase))
+                return ext;
+        }
+
+        return ".jpeg";
+    }
+
+    private IReadOnlyList<Uri> GetDownloadUrisForFile(CivArchiveModelFile file)
+    {
+        var urlCandidates = new List<string?> { file.DownloadUrl };
+        if (file.Mirrors is not null)
+        {
+            urlCandidates.AddRange(file.Mirrors.Where(m => !m.IsGated && !m.IsPaid).Select(m => m.Url));
+        }
+
+        return urlCandidates
+            .Where(url => !string.IsNullOrWhiteSpace(url))
+            .Select(url => civArchiveApiClient.GetAbsoluteUri(url!))
+            .Distinct()
+            .ToList();
+    }
+
+    private IReadOnlyList<Uri> GetDownloadUris(CivArchiveModelVersion? version)
+    {
+        if (version is null)
+        {
+            return [];
+        }
+
+        var primaryFile = GetPrimaryFile(version);
+        var urlCandidates = new List<string?> { version.DownloadUrl, primaryFile?.DownloadUrl };
+
+        if (primaryFile?.Mirrors is not null)
+        {
+            urlCandidates.AddRange(primaryFile.Mirrors.Select(mirror => mirror.Url));
+        }
+
+        return urlCandidates
+            .Where(url => !string.IsNullOrWhiteSpace(url))
+            .Select(url => civArchiveApiClient.GetAbsoluteUri(url!))
+            .Distinct()
+            .ToList();
+    }
+
+    private static CivArchiveModelFile? GetPrimaryFile(CivArchiveModelVersion? version)
+    {
+        if (version is null)
+        {
+            return null;
+        }
+
+        return version.Files.FirstOrDefault(f => f.IsPrimary) ?? version.Files.FirstOrDefault();
+    }
+
+    private string BuildDownloadFileName(CivArchiveModelVersion version, CivArchiveModelFile? primaryFile)
+    {
+        var extension = !string.IsNullOrWhiteSpace(primaryFile?.Name)
+            ? Path.GetExtension(primaryFile.Name)
+            : ".safetensors";
+        if (string.IsNullOrEmpty(extension))
+        {
+            extension = ".safetensors";
+        }
+
+        var provider = BuildFormatProvider(version, primaryFile);
+        var format = ParseFormatOrDefault(ModelFileNameFormat, provider);
+
+        var stem = format.GetFileName();
+        if (string.IsNullOrWhiteSpace(stem))
+        {
+            // Pattern resolved to empty (e.g. only {file_name} on a non-CivitAI mirror with no primary file).
+            // Fall back to a sensible synthesized name.
+            stem = string.IsNullOrWhiteSpace(version.Name)
+                ? Model?.Name ?? "model"
+                : $"{Model?.Name ?? "model"}_{version.Name}";
+        }
+
+        return stem + extension;
     }
 
     private DirectoryPath GetDefaultDownloadFolder()
@@ -301,7 +781,8 @@ public partial class CivArchiveDetailsPageViewModel(
 
     private static ConnectedModelInfo BuildConnectedModelInfo(
         CivArchiveModelDetails model,
-        CivArchiveModelVersion version
+        CivArchiveModelVersion version,
+        string sourceUrl
     )
     {
         var civitModelType = CivitModelType.Unknown;
@@ -327,6 +808,7 @@ public partial class CivArchiveDetailsPageViewModel(
             TrainedWords = version.Trigger.ToArray(),
             ThumbnailImageUrl = version.Images.FirstOrDefault(i => !string.IsNullOrWhiteSpace(i.Url))?.Url,
             Source = ConnectedModelSource.CivArchive,
+            SourceUrl = sourceUrl,
             Stats = new CivitModelStats
             {
                 DownloadCount = (int)model.DownloadCount,
@@ -344,15 +826,6 @@ public partial class CivArchiveDetailsPageViewModel(
         if (!string.IsNullOrWhiteSpace(mirror?.PlatformUrl))
         {
             ProcessRunner.OpenUrl(mirror.PlatformUrl);
-        }
-    }
-
-    [RelayCommand]
-    private void OpenFileMirror(CivArchiveFileMirror? mirror)
-    {
-        if (!string.IsNullOrWhiteSpace(mirror?.Url))
-        {
-            ProcessRunner.OpenUrl(mirror.Url);
         }
     }
 

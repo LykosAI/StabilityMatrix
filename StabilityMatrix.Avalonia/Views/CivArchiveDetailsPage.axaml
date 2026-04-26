@@ -8,14 +8,46 @@
     xmlns:civArchive="clr-namespace:StabilityMatrix.Core.Models.Api.CivArchive;assembly=StabilityMatrix.Core"
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
     xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
+    xmlns:inference="clr-namespace:StabilityMatrix.Avalonia.Models.Inference"
     xmlns:input="clr-namespace:FluentAvalonia.UI.Input;assembly=FluentAvalonia"
+    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     xmlns:scroll="clr-namespace:StabilityMatrix.Avalonia.Controls.Scroll"
     xmlns:ui="using:FluentAvalonia.UI.Controls"
     x:Name="Root"
     x:CompileBindings="True"
     x:DataType="checkpointBrowser:CivArchiveDetailsPageViewModel">
+
+    <controls:UserControlBase.Styles>
+        <!--  Image hover (lift + cursor)  -->
+        <Style Selector="controls|BetterAdvancedImage.GalleryImage">
+            <Setter Property="Transitions">
+                <Transitions>
+                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.18" />
+                </Transitions>
+            </Setter>
+            <Setter Property="RenderTransform" Value="scale(1, 1)" />
+        </Style>
+        <Style Selector="controls|BetterAdvancedImage.GalleryImage:pointerover">
+            <Setter Property="RenderTransform" Value="scale(1.02, 1.02)" />
+        </Style>
+
+        <!--  File row separator effect via hover bg  -->
+        <Style Selector="Border.FileRow">
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.12" />
+                </Transitions>
+            </Setter>
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <Style Selector="Border.FileRow:pointerover">
+            <Setter Property="Background" Value="{DynamicResource ControlAltFillColorTertiaryBrush}" />
+        </Style>
+    </controls:UserControlBase.Styles>
+
     <controls:UserControlBase.Resources>
         <converters:KiloFormatterStringConverter x:Key="KiloFormatterConverter" />
+        <converters:ObjectEqualsConverter x:Key="ObjectEqualsConverter" />
         <input:StandardUICommand x:Key="ShowImageDialogCommand" Command="{Binding ShowImageDialogCommand}" />
     </controls:UserControlBase.Resources>
 
@@ -45,13 +77,56 @@
                     VerticalAlignment="Center"
                     FontSize="24"
                     Text="{Binding Model.Name}"
-                    TextTrimming="CharacterEllipsis" />
+                    TextTrimming="CharacterEllipsis"
+                    ToolTip.Tip="{Binding Model.Name}" />
 
-                <avalonia:Icon
-                    Margin="16,0,0,0"
+                <!--  Type chip  -->
+                <controls:Card
+                    Margin="8,0,0,0"
+                    Padding="8,2"
                     VerticalAlignment="Center"
-                    Value="fa-solid fa-download" />
-                <TextBlock VerticalAlignment="Center" Text="{Binding Model.DownloadCount, Converter={StaticResource KiloFormatterConverter}}" />
+                    IsVisible="{Binding Model.Type, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                    <TextBlock
+                        FontSize="12"
+                        FontWeight="SemiBold"
+                        Text="{Binding Model.Type}" />
+                </controls:Card>
+
+                <!--  NSFW badge  -->
+                <controls:Card
+                    Padding="8,2"
+                    VerticalAlignment="Center"
+                    Background="#AAB91C1C"
+                    BorderThickness="0"
+                    IsVisible="{Binding Model.IsNsfw}">
+                    <TextBlock
+                        FontSize="12"
+                        FontWeight="SemiBold"
+                        Foreground="White"
+                        Text="NSFW" />
+                </controls:Card>
+
+                <!--  Installed badge  -->
+                <controls:Card
+                    Padding="8,2"
+                    VerticalAlignment="Center"
+                    Background="#AA059669"
+                    BorderThickness="0"
+                    IsVisible="{Binding IsInstalled}"
+                    ToolTip.Tip="{Binding InstalledLocation, FallbackValue='Already in your library'}">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <avalonia:Icon
+                            VerticalAlignment="Center"
+                            FontSize="11"
+                            Foreground="White"
+                            Value="fa-solid fa-check" />
+                        <TextBlock
+                            FontSize="12"
+                            FontWeight="SemiBold"
+                            Foreground="White"
+                            Text="Installed" />
+                    </StackPanel>
+                </controls:Card>
             </StackPanel>
 
             <StackPanel
@@ -60,19 +135,64 @@
                 VerticalAlignment="Center"
                 Orientation="Horizontal"
                 Spacing="8">
+                <StackPanel
+                    Margin="0,0,8,0"
+                    VerticalAlignment="Center"
+                    Orientation="Horizontal"
+                    Spacing="6"
+                    ToolTip.Tip="Downloads">
+                    <avalonia:Icon
+                        VerticalAlignment="Center"
+                        FontSize="13"
+                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                        Value="fa-solid fa-download" />
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                        Text="{Binding Model.DownloadCount, Converter={StaticResource KiloFormatterConverter}}" />
+                </StackPanel>
                 <Button
-                    Classes="accent"
+                    Classes.accent="{Binding !IsInstalled}"
                     Command="{Binding DownloadModelCommand}"
-                    IsVisible="{Binding HasDownloadUrl}">
+                    IsVisible="{Binding HasDownloadUrl}"
+                    ToolTip.Tip="Download primary file to default location">
                     <StackPanel Orientation="Horizontal" Spacing="8">
                         <avalonia:Icon
                             VerticalAlignment="Center"
                             FontSize="12"
                             Value="fa-solid fa-download" />
-                        <TextBlock VerticalAlignment="Center" Text="Download" />
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            IsVisible="{Binding !IsInstalled}"
+                            Text="Download" />
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            IsVisible="{Binding IsInstalled}"
+                            Text="Download again" />
                     </StackPanel>
                 </Button>
-                <Button Command="{Binding OpenOnCivArchiveCommand}" Content="Open on CivArchive" />
+                <Button Command="{Binding OpenOnCivArchiveCommand}">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <avalonia:Icon
+                            VerticalAlignment="Center"
+                            FontSize="12"
+                            Value="fa-solid fa-up-right-from-square" />
+                        <TextBlock VerticalAlignment="Center" Text="Open on CivArchive" />
+                    </StackPanel>
+                </Button>
+                <Button
+                    Classes="danger"
+                    Command="{Binding DeleteModelCommand}"
+                    IsVisible="{Binding IsInstalled}"
+                    ToolTip.Tip="Delete the locally installed copy of this model">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <avalonia:Icon
+                            VerticalAlignment="Center"
+                            FontSize="12"
+                            Value="fa-solid fa-trash" />
+                        <TextBlock VerticalAlignment="Center" Text="Delete" />
+                    </StackPanel>
+                </Button>
             </StackPanel>
         </Grid>
 
@@ -82,16 +202,26 @@
             Margin="0,8,0,0"
             ItemsSource="{Binding Model.Tags}">
             <ItemsRepeater.Layout>
-                <StackLayout Orientation="Horizontal" Spacing="4" />
+                <WrapLayout
+                    HorizontalSpacing="4"
+                    Orientation="Horizontal"
+                    VerticalSpacing="4" />
             </ItemsRepeater.Layout>
             <ItemsRepeater.ItemTemplate>
                 <DataTemplate>
                     <controls:Card Padding="8,2">
-                        <TextBlock
-                            FontSize="13"
-                            FontWeight="Light"
-                            Text="{Binding}"
-                            TextAlignment="Center" />
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <avalonia:Icon
+                                VerticalAlignment="Center"
+                                FontSize="10"
+                                Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                Value="fa-solid fa-tag" />
+                            <TextBlock
+                                FontSize="12"
+                                FontWeight="Light"
+                                Text="{Binding}"
+                                TextAlignment="Center" />
+                        </StackPanel>
                     </controls:Card>
                 </DataTemplate>
             </ItemsRepeater.ItemTemplate>
@@ -104,20 +234,48 @@
             HorizontalScrollBarVisibility="Auto"
             IsVisible="{Binding Model.Versions.Count}"
             VerticalScrollBarVisibility="Disabled">
-            <ItemsRepeater ItemsSource="{Binding Model.Versions}">
-                <ItemsRepeater.Layout>
-                    <StackLayout Orientation="Horizontal" Spacing="4" />
-                </ItemsRepeater.Layout>
-                <ItemsRepeater.ItemTemplate>
-                    <DataTemplate DataType="{x:Type civArchive:CivArchiveVersionReference}">
-                        <Button
-                            Padding="12,6"
-                            Command="{Binding #Root.DataContext.SelectVersionCommand}"
-                            CommandParameter="{Binding .}"
-                            Content="{Binding Name}" />
-                    </DataTemplate>
-                </ItemsRepeater.ItemTemplate>
-            </ItemsRepeater>
+            <!--  Bottom padding so the horizontal scrollbar doesn't overlap the pills.  -->
+            <StackPanel
+                Margin="0,0,0,12"
+                Orientation="Horizontal"
+                Spacing="6">
+                <avalonia:Icon
+                    Margin="0,0,4,0"
+                    VerticalAlignment="Center"
+                    FontSize="12"
+                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                    Value="fa-solid fa-code-branch" />
+                <ItemsRepeater ItemsSource="{Binding Model.Versions}">
+                    <ItemsRepeater.Layout>
+                        <StackLayout Orientation="Horizontal" Spacing="4" />
+                    </ItemsRepeater.Layout>
+                    <ItemsRepeater.ItemTemplate>
+                        <DataTemplate DataType="{x:Type civArchive:CivArchiveVersionReference}">
+                            <Grid>
+                                <Button
+                                    Padding="12,6"
+                                    Command="{Binding #Root.((checkpointBrowser:CivArchiveDetailsPageViewModel)DataContext).SelectVersionCommand}"
+                                    CommandParameter="{Binding .}"
+                                    Content="{Binding Name}"
+                                    CornerRadius="14" />
+                                <!--  Selection indicator: accent ring around the currently-loaded version  -->
+                                <Border
+                                    BorderBrush="{DynamicResource SystemAccentColor}"
+                                    BorderThickness="2"
+                                    CornerRadius="14"
+                                    IsHitTestVisible="False">
+                                    <Border.IsVisible>
+                                        <MultiBinding Converter="{StaticResource ObjectEqualsConverter}">
+                                            <Binding Path="Id" />
+                                            <Binding ElementName="Root" Path="DataContext.Model.Version.Id" />
+                                        </MultiBinding>
+                                    </Border.IsVisible>
+                                </Border>
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsRepeater.ItemTemplate>
+                </ItemsRepeater>
+            </StackPanel>
         </scroll:BetterScrollViewer>
 
         <!--  Row 3: Main content area (2 columns)  -->
@@ -148,6 +306,7 @@
                         <ItemsRepeater.ItemTemplate>
                             <DataTemplate DataType="{x:Type civArchive:CivArchiveModelImage}">
                                 <controls:BetterAdvancedImage
+                                    Classes="GalleryImage"
                                     CornerRadius="8"
                                     Cursor="Hand"
                                     Source="{Binding Url}"
@@ -195,21 +354,38 @@
                     <!--  Details card  -->
                     <controls:Card MinWidth="200" Padding="12">
                         <StackPanel Spacing="8">
-                            <TextBlock
-                                FontSize="20"
-                                FontWeight="Light"
-                                Text="Details" />
-                            <Separator Margin="0" />
-                            <avalonia1:SpacedGrid ColumnDefinitions="*,*" RowDefinitions="*,Auto,*,Auto,*,Auto,*,Auto,*">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <avalonia:Icon
+                                    VerticalAlignment="Center"
+                                    FontSize="16"
+                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                    Value="fa-solid fa-circle-info" />
                                 <TextBlock
+                                    FontSize="20"
+                                    FontWeight="Light"
+                                    Text="Details" />
+                            </StackPanel>
+                            <Separator Margin="0" />
+                            <avalonia1:SpacedGrid ColumnDefinitions="Auto,*" RowDefinitions="*,Auto,*,Auto,*,Auto,*,Auto,*,Auto,*,Auto,*">
+                                <StackPanel
                                     Grid.Row="0"
                                     Grid.Column="0"
-                                    Text="Author" />
+                                    Orientation="Horizontal"
+                                    Spacing="6">
+                                    <avalonia:Icon
+                                        VerticalAlignment="Center"
+                                        FontSize="11"
+                                        Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                        Value="fa-solid fa-user" />
+                                    <TextBlock Text="Author" />
+                                </StackPanel>
                                 <TextBlock
                                     Grid.Row="0"
                                     Grid.Column="1"
                                     Foreground="{DynamicResource AccentButtonBackground}"
-                                    Text="{Binding Model.CreatorUsername}" />
+                                    Text="{Binding Model.CreatorUsername}"
+                                    TextAlignment="Right"
+                                    TextTrimming="CharacterEllipsis" />
 
                                 <Separator
                                     Grid.Row="1"
@@ -217,14 +393,23 @@
                                     Grid.ColumnSpan="2"
                                     Margin="0,4" />
 
-                                <TextBlock
+                                <StackPanel
                                     Grid.Row="2"
                                     Grid.Column="0"
-                                    Text="Platform" />
+                                    Orientation="Horizontal"
+                                    Spacing="6">
+                                    <avalonia:Icon
+                                        VerticalAlignment="Center"
+                                        FontSize="11"
+                                        Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                        Value="fa-solid fa-server" />
+                                    <TextBlock Text="Platform" />
+                                </StackPanel>
                                 <TextBlock
                                     Grid.Row="2"
                                     Grid.Column="1"
-                                    Text="{Binding Model.PlatformName}" />
+                                    Text="{Binding Model.PlatformName}"
+                                    TextAlignment="Right" />
 
                                 <Separator
                                     Grid.Row="3"
@@ -232,14 +417,23 @@
                                     Grid.ColumnSpan="2"
                                     Margin="0,4" />
 
-                                <TextBlock
+                                <StackPanel
                                     Grid.Row="4"
                                     Grid.Column="0"
-                                    Text="Type" />
+                                    Orientation="Horizontal"
+                                    Spacing="6">
+                                    <avalonia:Icon
+                                        VerticalAlignment="Center"
+                                        FontSize="11"
+                                        Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                        Value="fa-solid fa-cube" />
+                                    <TextBlock Text="Type" />
+                                </StackPanel>
                                 <TextBlock
                                     Grid.Row="4"
                                     Grid.Column="1"
-                                    Text="{Binding Model.Type}" />
+                                    Text="{Binding Model.Type}"
+                                    TextAlignment="Right" />
 
                                 <Separator
                                     Grid.Row="5"
@@ -247,14 +441,23 @@
                                     Grid.ColumnSpan="2"
                                     Margin="0,4" />
 
-                                <TextBlock
+                                <StackPanel
                                     Grid.Row="6"
                                     Grid.Column="0"
-                                    Text="Base Model" />
+                                    Orientation="Horizontal"
+                                    Spacing="6">
+                                    <avalonia:Icon
+                                        VerticalAlignment="Center"
+                                        FontSize="11"
+                                        Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                        Value="fa-solid fa-layer-group" />
+                                    <TextBlock Text="Base Model" />
+                                </StackPanel>
                                 <TextBlock
                                     Grid.Row="6"
                                     Grid.Column="1"
-                                    Text="{Binding Model.Version.BaseModel}" />
+                                    Text="{Binding Model.Version.BaseModel}"
+                                    TextAlignment="Right" />
 
                                 <Separator
                                     Grid.Row="7"
@@ -262,14 +465,84 @@
                                     Grid.ColumnSpan="2"
                                     Margin="0,4" />
 
-                                <TextBlock
+                                <StackPanel
                                     Grid.Row="8"
                                     Grid.Column="0"
-                                    Text="Downloads" />
+                                    Orientation="Horizontal"
+                                    Spacing="6">
+                                    <avalonia:Icon
+                                        VerticalAlignment="Center"
+                                        FontSize="11"
+                                        Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                        Value="fa-solid fa-download" />
+                                    <TextBlock Text="Downloads" />
+                                </StackPanel>
                                 <TextBlock
                                     Grid.Row="8"
                                     Grid.Column="1"
-                                    Text="{Binding Model.DownloadCount, Converter={StaticResource KiloFormatterConverter}}" />
+                                    Text="{Binding Model.DownloadCount, Converter={StaticResource KiloFormatterConverter}}"
+                                    TextAlignment="Right" />
+
+                                <Separator
+                                    Grid.Row="9"
+                                    Grid.Column="0"
+                                    Grid.ColumnSpan="2"
+                                    Margin="0,4" />
+
+                                <StackPanel
+                                    Grid.Row="10"
+                                    Grid.Column="0"
+                                    Orientation="Horizontal"
+                                    Spacing="6">
+                                    <avalonia:Icon
+                                        VerticalAlignment="Center"
+                                        FontSize="11"
+                                        Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                        Value="fa-solid fa-heart" />
+                                    <TextBlock Text="Favorites" />
+                                </StackPanel>
+                                <TextBlock
+                                    Grid.Row="10"
+                                    Grid.Column="1"
+                                    Text="{Binding Model.FavoriteCount, Converter={StaticResource KiloFormatterConverter}}"
+                                    TextAlignment="Right" />
+
+                                <Separator
+                                    Grid.Row="11"
+                                    Grid.Column="0"
+                                    Grid.ColumnSpan="2"
+                                    Margin="0,4" />
+
+                                <StackPanel
+                                    Grid.Row="12"
+                                    Grid.Column="0"
+                                    Orientation="Horizontal"
+                                    Spacing="6">
+                                    <avalonia:Icon
+                                        VerticalAlignment="Center"
+                                        FontSize="11"
+                                        Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                        Value="fa-solid fa-star" />
+                                    <TextBlock Text="Rating" />
+                                </StackPanel>
+                                <StackPanel
+                                    Grid.Row="12"
+                                    Grid.Column="1"
+                                    HorizontalAlignment="Right"
+                                    Orientation="Horizontal"
+                                    Spacing="6"
+                                    ToolTip.Tip="{Binding Model.RatingCount, StringFormat='{}{0:N0} ratings'}">
+                                    <controls:StarsRating
+                                        VerticalAlignment="Center"
+                                        FontSize="14"
+                                        Foreground="{DynamicResource ThemeEldenRingOrangeColor}"
+                                        Value="{Binding Model.Rating}" />
+                                    <TextBlock
+                                        VerticalAlignment="Center"
+                                        FontSize="11"
+                                        Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                        Text="{Binding Model.RatingCount, Converter={StaticResource KiloFormatterConverter}}" />
+                                </StackPanel>
                             </avalonia1:SpacedGrid>
                         </StackPanel>
                     </controls:Card>
@@ -277,10 +550,17 @@
                     <!--  Trigger words card  -->
                     <controls:Card Padding="12" IsVisible="{Binding Model.Version.Trigger.Count}">
                         <StackPanel Spacing="8">
-                            <TextBlock
-                                FontSize="20"
-                                FontWeight="Light"
-                                Text="Trigger Words" />
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <avalonia:Icon
+                                    VerticalAlignment="Center"
+                                    FontSize="16"
+                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                    Value="fa-solid fa-wand-magic-sparkles" />
+                                <TextBlock
+                                    FontSize="20"
+                                    FontWeight="Light"
+                                    Text="Trigger Words" />
+                            </StackPanel>
                             <ItemsRepeater ItemsSource="{Binding Model.Version.Trigger}">
                                 <ItemsRepeater.Layout>
                                     <WrapLayout
@@ -305,62 +585,257 @@
                         </StackPanel>
                     </controls:Card>
 
+                    <!--  File Name Pattern card  -->
+                    <controls:Card Padding="12" IsVisible="{Binding HasDownloadUrl}">
+                        <StackPanel Spacing="8">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <avalonia:Icon
+                                    VerticalAlignment="Center"
+                                    FontSize="16"
+                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                    Value="fa-solid fa-file-signature" />
+                                <TextBlock
+                                    FontSize="20"
+                                    FontWeight="Light"
+                                    Text="{x:Static lang:Resources.Label_FileNamePattern}" />
+                            </StackPanel>
+                            <TextBox
+                                Name="ModelFileNameFormatTextBox"
+                                FontFamily="Cascadia Code,Consolas,Menlo,Monospace,DejaVu Sans Mono,monospace"
+                                FontSize="13"
+                                Text="{Binding ModelFileNameFormat}"
+                                Watermark="{x:Static inference:FileNameFormat.DefaultModelBrowserTemplate}" />
+                            <TextBlock
+                                FontSize="12"
+                                Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                IsVisible="{Binding ModelNameFormatSample, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                Text="{Binding ModelNameFormatSample}"
+                                TextTrimming="CharacterEllipsis"
+                                TextWrapping="NoWrap"
+                                ToolTip.Tip="{Binding ModelNameFormatSample}" />
+                        </StackPanel>
+                    </controls:Card>
+
                     <!--  Files card  -->
                     <controls:Card Padding="12">
                         <StackPanel Spacing="8">
-                            <TextBlock
-                                FontSize="20"
-                                FontWeight="Light"
-                                Text="Files" />
+                            <Grid ColumnDefinitions="*,Auto">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <avalonia:Icon
+                                        VerticalAlignment="Center"
+                                        FontSize="16"
+                                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                        Value="fa-solid fa-folder-open" />
+                                    <TextBlock
+                                        FontSize="20"
+                                        FontWeight="Light"
+                                        Text="Files" />
+                                    <controls:Card
+                                        Padding="6,1"
+                                        VerticalAlignment="Center"
+                                        IsVisible="{Binding Files.Count}">
+                                        <TextBlock
+                                            FontSize="11"
+                                            Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                            Text="{Binding Files.Count}" />
+                                    </controls:Card>
+                                </StackPanel>
+                            </Grid>
+
+                            <!--  Empty state — non-CivitAI platforms don't publish file metadata  -->
+                            <StackPanel
+                                Margin="0,8"
+                                HorizontalAlignment="Center"
+                                IsVisible="{Binding !Files.Count}"
+                                Spacing="8">
+                                <avalonia:Icon
+                                    HorizontalAlignment="Center"
+                                    FontSize="24"
+                                    Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                    Value="fa-solid fa-circle-info" />
+                                <TextBlock
+                                    HorizontalAlignment="Center"
+                                    FontWeight="SemiBold"
+                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                    Text="No file details from this platform" />
+                                <TextBlock
+                                    MaxWidth="280"
+                                    HorizontalAlignment="Center"
+                                    FontSize="12"
+                                    Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                    TextAlignment="Center"
+                                    TextWrapping="Wrap">
+                                    <Run Text="Use the" />
+                                    <Run FontWeight="SemiBold" Text="Download" />
+                                    <Run Text="button above, or open this model on its original platform via" />
+                                    <Run FontWeight="SemiBold" Text="Source Links" />
+                                    <Run Text="." />
+                                </TextBlock>
+                            </StackPanel>
+
                             <ItemsRepeater ItemsSource="{Binding Files}">
+                                <ItemsRepeater.Layout>
+                                    <StackLayout Orientation="Vertical" Spacing="4" />
+                                </ItemsRepeater.Layout>
                                 <ItemsRepeater.ItemTemplate>
                                     <DataTemplate DataType="{x:Type civArchive:CivArchiveModelFile}">
-                                        <Border Margin="0,0,0,8" Padding="0,4">
-                                            <StackPanel Spacing="4">
-                                                <TextBlock
-                                                    FontWeight="SemiBold"
-                                                    Text="{Binding Name}"
-                                                    TextWrapping="Wrap" />
-                                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <Border
+                                            Padding="8"
+                                            Classes="FileRow"
+                                            CornerRadius="6">
+                                            <StackPanel Spacing="6">
+                                                <!--  Top row: icon + name + primary badge  -->
+                                                <Grid ColumnDefinitions="Auto,*,Auto">
+                                                    <avalonia:Icon
+                                                        Margin="0,2,8,0"
+                                                        VerticalAlignment="Top"
+                                                        FontSize="16"
+                                                        Foreground="{DynamicResource AccentButtonBackground}"
+                                                        Value="fa-solid fa-file-lines" />
                                                     <TextBlock
-                                                        FontSize="12"
-                                                        Foreground="{DynamicResource TextControlForegroundDisabled}"
-                                                        Text="{Binding FormattedSize}" />
-                                                    <TextBlock
-                                                        FontSize="12"
-                                                        Foreground="{DynamicResource TextControlForegroundDisabled}"
-                                                        Text="{Binding Type}" />
-                                                </StackPanel>
-                                                <TextBlock
-                                                    FontSize="11"
-                                                    Foreground="{DynamicResource TextControlForegroundDisabled}"
-                                                    IsVisible="{Binding Sha256, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                                                    TextWrapping="Wrap">
-                                                    <Run Text="SHA256: " /><Run Text="{Binding Sha256}" />
-                                                </TextBlock>
-                                                <StackPanel
-                                                    Margin="0,4,0,0"
-                                                    Orientation="Horizontal"
-                                                    Spacing="4">
+                                                        Grid.Column="1"
+                                                        VerticalAlignment="Center"
+                                                        FontWeight="SemiBold"
+                                                        Text="{Binding Name}"
+                                                        TextWrapping="Wrap"
+                                                        ToolTip.Tip="{Binding Name}" />
+                                                    <controls:Card
+                                                        Grid.Column="2"
+                                                        Margin="6,0,0,0"
+                                                        Padding="6,1"
+                                                        VerticalAlignment="Center"
+                                                        Background="#AA059669"
+                                                        BorderThickness="0"
+                                                        IsVisible="{Binding IsPrimary}">
+                                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                                            <avalonia:Icon
+                                                                FontSize="9"
+                                                                Foreground="White"
+                                                                Value="fa-solid fa-star" />
+                                                            <TextBlock
+                                                                FontSize="10"
+                                                                FontWeight="SemiBold"
+                                                                Foreground="White"
+                                                                Text="Primary" />
+                                                        </StackPanel>
+                                                    </controls:Card>
+                                                </Grid>
+
+                                                <!--  Meta row: size + type pills + Download button  -->
+                                                <Grid ColumnDefinitions="*,Auto">
+                                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                                        <controls:Card Padding="6,2" IsVisible="{Binding HasKnownSize}">
+                                                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                                                <avalonia:Icon
+                                                                    VerticalAlignment="Center"
+                                                                    FontSize="10"
+                                                                    Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                                                    Value="fa-solid fa-weight-hanging" />
+                                                                <TextBlock
+                                                                    FontSize="11"
+                                                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                                    Text="{Binding FormattedSize}" />
+                                                            </StackPanel>
+                                                        </controls:Card>
+                                                        <controls:Card Padding="6,2" IsVisible="{Binding Type, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                                                            <TextBlock
+                                                                FontSize="11"
+                                                                Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                                Text="{Binding Type}" />
+                                                        </controls:Card>
+                                                    </StackPanel>
                                                     <Button
-                                                        Padding="6,3"
-                                                        Command="{Binding #Root.DataContext.CopySha256Command}"
+                                                        Grid.Column="1"
+                                                        Padding="10,4"
+                                                        Classes="accent"
+                                                        Command="{Binding #Root.((checkpointBrowser:CivArchiveDetailsPageViewModel)DataContext).DownloadFileCommand}"
                                                         CommandParameter="{Binding .}"
-                                                        Content="Copy SHA256"
-                                                        FontSize="12"
-                                                        IsVisible="{Binding Sha256, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                                                        CornerRadius="4"
+                                                        ToolTip.Tip="Download this file">
+                                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                                            <avalonia:Icon
+                                                                VerticalAlignment="Center"
+                                                                FontSize="11"
+                                                                Value="fa-solid fa-download" />
+                                                            <TextBlock
+                                                                VerticalAlignment="Center"
+                                                                FontSize="12"
+                                                                Text="Download" />
+                                                        </StackPanel>
+                                                    </Button>
+                                                </Grid>
+
+                                                <!--  SHA256: clickable to copy, monospace  -->
+                                                <Button
+                                                    Padding="6,4"
+                                                    HorizontalAlignment="Stretch"
+                                                    HorizontalContentAlignment="Stretch"
+                                                    Classes="transparent"
+                                                    Command="{Binding #Root.((checkpointBrowser:CivArchiveDetailsPageViewModel)DataContext).CopySha256Command}"
+                                                    CommandParameter="{Binding .}"
+                                                    CornerRadius="4"
+                                                    IsVisible="{Binding Sha256, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                                    ToolTip.Tip="Click to copy SHA256">
+                                                    <Grid ColumnDefinitions="Auto,*,Auto">
+                                                        <TextBlock
+                                                            Grid.Column="0"
+                                                            VerticalAlignment="Center"
+                                                            FontSize="10"
+                                                            FontWeight="SemiBold"
+                                                            Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                                            Text="SHA256" />
+                                                        <TextBlock
+                                                            Grid.Column="1"
+                                                            Margin="8,0"
+                                                            VerticalAlignment="Center"
+                                                            FontFamily="Cascadia Code,Consolas,Menlo,Monospace,DejaVu Sans Mono,monospace"
+                                                            FontSize="10"
+                                                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                            Text="{Binding Sha256}"
+                                                            TextTrimming="CharacterEllipsis" />
+                                                        <avalonia:Icon
+                                                            Grid.Column="2"
+                                                            VerticalAlignment="Center"
+                                                            FontSize="11"
+                                                            Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                                            Value="fa-regular fa-copy" />
+                                                    </Grid>
+                                                </Button>
+
+                                                <!--  Mirrors: download from a specific source (gated/paid open in browser)  -->
+                                                <StackPanel
+                                                    IsVisible="{Binding Mirrors.Count}"
+                                                    Orientation="Vertical"
+                                                    Spacing="4">
+                                                    <TextBlock
+                                                        FontSize="10"
+                                                        FontWeight="SemiBold"
+                                                        Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                                        Text="DOWNLOAD FROM" />
                                                     <ItemsRepeater ItemsSource="{Binding Mirrors}">
                                                         <ItemsRepeater.Layout>
-                                                            <StackLayout Orientation="Horizontal" Spacing="4" />
+                                                            <WrapLayout
+                                                                HorizontalSpacing="4"
+                                                                Orientation="Horizontal"
+                                                                VerticalSpacing="4" />
                                                         </ItemsRepeater.Layout>
                                                         <ItemsRepeater.ItemTemplate>
                                                             <DataTemplate DataType="{x:Type civArchive:CivArchiveFileMirror}">
                                                                 <Button
-                                                                    Padding="6,3"
-                                                                    Command="{Binding #Root.DataContext.OpenFileMirrorCommand}"
+                                                                    Padding="8,3"
+                                                                    Command="{Binding #Root.((checkpointBrowser:CivArchiveDetailsPageViewModel)DataContext).DownloadFromMirrorCommand}"
                                                                     CommandParameter="{Binding .}"
-                                                                    Content="{Binding Source}"
-                                                                    FontSize="12" />
+                                                                    CornerRadius="4"
+                                                                    FontSize="12"
+                                                                    ToolTip.Tip="Download from this mirror">
+                                                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                                                        <avalonia:Icon
+                                                                            VerticalAlignment="Center"
+                                                                            FontSize="10"
+                                                                            Value="fa-solid fa-download" />
+                                                                        <TextBlock VerticalAlignment="Center" Text="{Binding Source}" />
+                                                                    </StackPanel>
+                                                                </Button>
                                                             </DataTemplate>
                                                         </ItemsRepeater.ItemTemplate>
                                                     </ItemsRepeater>
@@ -376,30 +851,58 @@
                     <!--  Source links card  -->
                     <controls:Card Padding="12" IsVisible="{Binding Mirrors.Count}">
                         <StackPanel Spacing="8">
-                            <TextBlock
-                                FontSize="20"
-                                FontWeight="Light"
-                                Text="Source Links" />
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <avalonia:Icon
+                                    VerticalAlignment="Center"
+                                    FontSize="16"
+                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                    Value="fa-solid fa-link" />
+                                <TextBlock
+                                    FontSize="20"
+                                    FontWeight="Light"
+                                    Text="Source Links" />
+                            </StackPanel>
                             <ItemsRepeater ItemsSource="{Binding Mirrors}">
+                                <ItemsRepeater.Layout>
+                                    <StackLayout Orientation="Vertical" Spacing="4" />
+                                </ItemsRepeater.Layout>
                                 <ItemsRepeater.ItemTemplate>
                                     <DataTemplate DataType="{x:Type civArchive:CivArchiveVersionMirror}">
                                         <Button
-                                            Margin="0,0,0,4"
-                                            HorizontalAlignment="Left"
-                                            Command="{Binding #Root.DataContext.OpenVersionMirrorCommand}"
-                                            CommandParameter="{Binding .}">
-                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                            HorizontalAlignment="Stretch"
+                                            HorizontalContentAlignment="Left"
+                                            Command="{Binding #Root.((checkpointBrowser:CivArchiveDetailsPageViewModel)DataContext).OpenVersionMirrorCommand}"
+                                            CommandParameter="{Binding .}"
+                                            CornerRadius="4"
+                                            ToolTip.Tip="Open in browser">
+                                            <Grid ColumnDefinitions="Auto,*,Auto">
                                                 <avalonia:Icon
                                                     VerticalAlignment="Center"
                                                     FontSize="12"
-                                                    Value="fa-solid fa-up-right-from-square" />
-                                                <TextBlock VerticalAlignment="Center" Text="{Binding Platform}" />
-                                                <TextBlock
+                                                    Value="fa-solid fa-globe" />
+                                                <StackPanel
+                                                    Grid.Column="1"
+                                                    Margin="10,0"
+                                                    Orientation="Horizontal"
+                                                    Spacing="6">
+                                                    <TextBlock
+                                                        VerticalAlignment="Center"
+                                                        FontWeight="SemiBold"
+                                                        Text="{Binding Platform}" />
+                                                    <TextBlock
+                                                        VerticalAlignment="Center"
+                                                        FontSize="12"
+                                                        Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                                        IsVisible="{Binding VersionName, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                                        Text="{Binding VersionName}" />
+                                                </StackPanel>
+                                                <avalonia:Icon
+                                                    Grid.Column="2"
                                                     VerticalAlignment="Center"
-                                                    Foreground="{DynamicResource TextControlForegroundDisabled}"
-                                                    IsVisible="{Binding VersionName, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                                                    Text="{Binding VersionName}" />
-                                            </StackPanel>
+                                                    FontSize="10"
+                                                    Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                                    Value="fa-solid fa-up-right-from-square" />
+                                            </Grid>
                                         </Button>
                                     </DataTemplate>
                                 </ItemsRepeater.ItemTemplate>
@@ -411,13 +914,25 @@
         </Grid>
 
         <!--  Error overlay  -->
-        <TextBlock
+        <StackPanel
             Grid.RowSpan="4"
             HorizontalAlignment="Center"
             VerticalAlignment="Center"
-            FontSize="18"
             IsVisible="{Binding ErrorText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-            Text="{Binding ErrorText}" />
+            Spacing="12">
+            <avalonia:Icon
+                HorizontalAlignment="Center"
+                FontSize="48"
+                Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                Value="fa-solid fa-triangle-exclamation" />
+            <TextBlock
+                MaxWidth="500"
+                HorizontalAlignment="Center"
+                FontSize="18"
+                Text="{Binding ErrorText}"
+                TextAlignment="Center"
+                TextWrapping="Wrap" />
+        </StackPanel>
 
         <!--  Loading overlay  -->
         <controls:ProgressRing
@@ -428,5 +943,13 @@
             VerticalAlignment="Center"
             IsIndeterminate="True"
             IsVisible="{Binding IsLoading}" />
+
+        <ui:TeachingTip
+            Title="Format Variables"
+            IsOpen="{Binding #ModelFileNameFormatTextBox.IsFocused}"
+            PreferredPlacement="Top"
+            Target="{Binding #ModelFileNameFormatTextBox, Mode=OneWay}">
+            <DataGrid AutoGenerateColumns="True" ItemsSource="{Binding ModelFileNameFormatVars}" />
+        </ui:TeachingTip>
     </Grid>
 </controls:UserControlBase>

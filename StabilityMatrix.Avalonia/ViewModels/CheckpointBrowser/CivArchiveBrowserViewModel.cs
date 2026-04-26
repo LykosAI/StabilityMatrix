@@ -1,5 +1,7 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Reactive.Disposables;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
@@ -12,6 +14,7 @@ using StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.Api.CivArchive;
 using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Processes;
@@ -25,16 +28,37 @@ public sealed partial class CivArchiveBrowserViewModel(
     ICivArchiveApiClient civArchiveApiClient,
     ISettingsManager settingsManager,
     IServiceManager<ViewModelBase> viewModelFactory,
-    INavigationService<MainWindowViewModel> navigationService
+    INavigationService<MainWindowViewModel> navigationService,
+    IModelIndexService modelIndexService
 ) : TabViewModelBase, IInfinitelyScroll
 {
     private bool suppressSearch;
     private bool filterOptionsLoaded;
+    private bool searchQueued;
     private int currentPage = 1;
-    private int totalHits;
+
+    /// <summary>
+    /// All search results we've fetched so far across pages, regardless of client-side filters.
+    /// Used as the source for <see cref="Results"/> rebuilds and dedupe checks.
+    /// </summary>
+    private readonly List<CivArchiveSearchResult> rawResults = [];
 
     [ObservableProperty]
     private ObservableCollection<CivArchiveSearchResult> results = [];
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsEndOfResults), nameof(HasResultCount))]
+    private int totalHits;
+
+    [ObservableProperty]
+    private bool hideInstalledModels;
+
+    [ObservableProperty]
+    private double resizeFactor = 1.0;
+
+    public bool IsEndOfResults => HasSearched && TotalHits > 0 && rawResults.Count >= TotalHits;
+
+    public bool HasResultCount => HasSearched && TotalHits > 0;
 
     [ObservableProperty]
     private ObservableCollection<BaseModelOptionViewModel> allModelTypes = [];
@@ -43,13 +67,45 @@ public sealed partial class CivArchiveBrowserViewModel(
     private ObservableCollection<BaseModelOptionViewModel> allBaseModels = [];
 
     [ObservableProperty]
+    private ObservableCollection<BaseModelOptionViewModel> filteredModelTypes = [];
+
+    [ObservableProperty]
+    private ObservableCollection<BaseModelOptionViewModel> filteredBaseModels = [];
+
+    [ObservableProperty]
+    private string modelTypeFilter = string.Empty;
+
+    [ObservableProperty]
+    private string baseModelFilter = string.Empty;
+
+    public string ModelTypeSelectionSummary =>
+        AllModelTypes.Count == 0
+            ? string.Empty
+            : $"{AllModelTypes.Count(x => x.IsSelected)} of {AllModelTypes.Count} selected";
+
+    public string BaseModelSelectionSummary =>
+        AllBaseModels.Count == 0
+            ? string.Empty
+            : $"{AllBaseModels.Count(x => x.IsSelected)} of {AllBaseModels.Count} selected";
+
+    [ObservableProperty]
     private string searchQuery = string.Empty;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasAdvancedFilters))]
     private string tagQuery = string.Empty;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasAdvancedFilters))]
     private string usernameQuery = string.Empty;
+
+    /// <summary>
+    /// True when the user has set explicit Tags or Username via the "More filters" flyout
+    /// (not the inline @/# tokens — those are visible in the search box itself).
+    /// Used to show a small dot indicator on the More Filters button.
+    /// </summary>
+    public bool HasAdvancedFilters =>
+        !string.IsNullOrWhiteSpace(TagQuery) || !string.IsNullOrWhiteSpace(UsernameQuery);
 
     [ObservableProperty]
     private bool isLoading;
@@ -58,6 +114,7 @@ public sealed partial class CivArchiveBrowserViewModel(
     private bool noResultsFound;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsEndOfResults), nameof(HasResultCount))]
     private bool hasSearched;
 
     [ObservableProperty]
@@ -156,7 +213,61 @@ public sealed partial class CivArchiveBrowserViewModel(
     protected override async Task OnInitialLoadedAsync()
     {
         await base.OnInitialLoadedAsync();
+
+        AddDisposable(
+            settingsManager.RelayPropertyFor(
+                this,
+                vm => vm.ResizeFactor,
+                s => s.CivArchiveBrowserResizeFactor,
+                true
+            )
+        );
+
+        AddDisposable(
+            settingsManager.RelayPropertyFor(
+                this,
+                vm => vm.HideInstalledModels,
+                s => s.HideInstalledModelsInModelBrowser,
+                true
+            )
+        );
+
+        EventHandler indexHandler = (_, _) => Dispatcher.UIThread.Post(OnLocalModelIndexChanged);
+        EventManager.Instance.ModelIndexChanged += indexHandler;
+        AddDisposable(Disposable.Create(() => EventManager.Instance.ModelIndexChanged -= indexHandler));
+
         await SearchModels();
+    }
+
+    partial void OnHideInstalledModelsChanged(bool value) => RebuildVisibleResults();
+
+    private void OnLocalModelIndexChanged()
+    {
+        // The local index changed (download finished or model deleted) — re-evaluate every
+        // cached result's IsInstalled flag, then rebuild Results so the badge / hide-installed
+        // filter reflect reality without needing a re-search.
+        var hashes = modelIndexService.ModelIndexSha256Hashes;
+        var urls = modelIndexService.ModelIndexCivArchiveUrls;
+        foreach (var item in rawResults)
+        {
+            item.IsInstalled =
+                (!string.IsNullOrEmpty(item.Url) && urls.Contains(item.Url))
+                || (!string.IsNullOrEmpty(item.Sha256FromUrl) && hashes.Contains(item.Sha256FromUrl));
+        }
+        RebuildVisibleResults();
+    }
+
+    private void RebuildVisibleResults()
+    {
+        Results.Clear();
+        foreach (var item in rawResults)
+        {
+            if (HideInstalledModels && item.IsInstalled)
+                continue;
+            Results.Add(item);
+        }
+        NoResultsFound = HasSearched && Results.Count == 0;
+        OnPropertyChanged(nameof(IsEndOfResults));
     }
 
     [RelayCommand]
@@ -164,13 +275,24 @@ public sealed partial class CivArchiveBrowserViewModel(
     {
         if (IsLoading)
         {
+            if (!isInfiniteScroll)
+            {
+                searchQueued = true;
+            }
+
             return;
         }
 
         if (!isInfiniteScroll)
         {
+            searchQueued = false;
+        }
+
+        if (!isInfiniteScroll)
+        {
             currentPage = 1;
-            totalHits = 0;
+            TotalHits = 0;
+            rawResults.Clear();
             Results.Clear();
         }
 
@@ -196,21 +318,41 @@ public sealed partial class CivArchiveBrowserViewModel(
                 }
             }
 
-            totalHits = response.TotalHits;
+            TotalHits = response.TotalHits;
             currentPage = response.EffectiveFilters.Page;
 
+            var installedHashes = modelIndexService.ModelIndexSha256Hashes;
+            var installedUrls = modelIndexService.ModelIndexCivArchiveUrls;
             foreach (var item in response.Results)
             {
-                if (isInfiniteScroll && Results.Any(existing => existing.Id == item.Id))
+                if (isInfiniteScroll && rawResults.Any(existing => existing.Id == item.Id))
                 {
                     continue;
                 }
 
-                Results.Add(item);
+                // URL match works for any CivArchive download with a stored SourceUrl;
+                // SHA256 fallback covers the rare File-kind result with hash in URL.
+                if (!string.IsNullOrEmpty(item.Url) && installedUrls.Contains(item.Url))
+                {
+                    item.IsInstalled = true;
+                }
+                else if (
+                    !string.IsNullOrEmpty(item.Sha256FromUrl) && installedHashes.Contains(item.Sha256FromUrl)
+                )
+                {
+                    item.IsInstalled = true;
+                }
+
+                rawResults.Add(item);
+                if (!HideInstalledModels || !item.IsInstalled)
+                {
+                    Results.Add(item);
+                }
             }
 
             HasSearched = true;
             NoResultsFound = Results.Count == 0;
+            OnPropertyChanged(nameof(IsEndOfResults));
         }
         catch (Exception ex)
         {
@@ -221,6 +363,12 @@ public sealed partial class CivArchiveBrowserViewModel(
         {
             IsLoading = false;
             SaveSettings();
+        }
+
+        if (searchQueued)
+        {
+            searchQueued = false;
+            await SearchModels();
         }
     }
 
@@ -307,9 +455,45 @@ public sealed partial class CivArchiveBrowserViewModel(
         }
     }
 
+    /// <summary>
+    /// Reset every filter back to its default. Single property setter at the end re-triggers
+    /// the search instead of one fetch per change.
+    /// </summary>
+    [RelayCommand]
+    private async Task ResetFilters()
+    {
+        suppressSearch = true;
+        try
+        {
+            SearchQuery = string.Empty;
+            TagQuery = string.Empty;
+            UsernameQuery = string.Empty;
+            SelectedPlatform = AllPlatforms.First(x => x.Value == CivArchivePlatformOption.All);
+            SelectedSort = AllSorts.First(x => x.Value == CivArchiveSortOption.Top);
+            SelectedPeriod = AllPeriods.First(x => x.Value == CivArchivePeriodOption.All);
+            SelectedRating = AllRatings.First(x => x.Value == CivArchiveRatingOption.Safe);
+            SelectedPlatformStatus = AllPlatformStatuses.First(x =>
+                x.Value == CivArchivePlatformStatusOption.All
+            );
+            SelectedKind = AllKinds.First(x => x.Value == CivArchiveKindOption.All);
+            foreach (var option in AllModelTypes)
+                option.IsSelected = true;
+            foreach (var option in AllBaseModels)
+                option.IsSelected = true;
+        }
+        finally
+        {
+            suppressSearch = false;
+        }
+
+        await SearchModels();
+    }
+
     public async Task LoadNextPageAsync()
     {
-        if (!IsLoading && Results.Count < totalHits)
+        // Compare against rawResults so infinite-scroll keeps fetching even when
+        // HideInstalledModels filters items out of Results.
+        if (!IsLoading && rawResults.Count < TotalHits)
         {
             await SearchModels(true);
         }
@@ -351,6 +535,45 @@ public sealed partial class CivArchiveBrowserViewModel(
             option.PropertyChanged += OnSelectableOptionChanged;
             target.Add(option);
         }
+
+        if (ReferenceEquals(target, AllModelTypes))
+        {
+            ApplyModelTypeFilter();
+            OnPropertyChanged(nameof(ModelTypeSelectionSummary));
+        }
+        else if (ReferenceEquals(target, AllBaseModels))
+        {
+            ApplyBaseModelFilter();
+            OnPropertyChanged(nameof(BaseModelSelectionSummary));
+        }
+    }
+
+    partial void OnModelTypeFilterChanged(string value) => ApplyModelTypeFilter();
+
+    partial void OnBaseModelFilterChanged(string value) => ApplyBaseModelFilter();
+
+    private void ApplyModelTypeFilter() =>
+        RefreshFilteredOptions(AllModelTypes, FilteredModelTypes, ModelTypeFilter);
+
+    private void ApplyBaseModelFilter() =>
+        RefreshFilteredOptions(AllBaseModels, FilteredBaseModels, BaseModelFilter);
+
+    private static void RefreshFilteredOptions(
+        ObservableCollection<BaseModelOptionViewModel> source,
+        ObservableCollection<BaseModelOptionViewModel> target,
+        string filter
+    )
+    {
+        var query = filter?.Trim() ?? string.Empty;
+        var matches = string.IsNullOrEmpty(query)
+            ? source
+            : source.Where(x => x.ModelType.Contains(query, StringComparison.OrdinalIgnoreCase));
+
+        target.Clear();
+        foreach (var item in matches)
+        {
+            target.Add(item);
+        }
     }
 
     private void RestoreSettings()
@@ -375,11 +598,21 @@ public sealed partial class CivArchiveBrowserViewModel(
         var selectedTypes = GetSelectedValues(AllModelTypes);
         var selectedBaseModels = GetSelectedValues(AllBaseModels);
 
+        // Parse @user / #tag tokens inline from the search box and merge with
+        // explicit values from the More Filters flyout. Inline tokens win for username
+        // (only one allowed); tags are merged additively.
+        var (cleanedQuery, parsedTags, parsedUsername) = ParseSearchQuery(SearchQuery);
+        var combinedTags = string.Join(
+            ",",
+            new[] { TagQuery, parsedTags }.Where(s => !string.IsNullOrWhiteSpace(s))
+        );
+        var combinedUsername = !string.IsNullOrWhiteSpace(parsedUsername) ? parsedUsername : UsernameQuery;
+
         return new CivArchiveSearchFilters
         {
-            Query = SearchQuery,
-            Tags = TagQuery,
-            Username = UsernameQuery,
+            Query = cleanedQuery,
+            Tags = combinedTags,
+            Username = combinedUsername,
             Platform = SelectedPlatform?.Value ?? CivArchivePlatformOption.All,
             Sort = SelectedSort?.Value ?? CivArchiveSortOption.Top,
             Period = SelectedPeriod?.Value ?? CivArchivePeriodOption.All,
@@ -390,6 +623,34 @@ public sealed partial class CivArchiveBrowserViewModel(
             BaseModels = selectedBaseModels.Count == AllBaseModels.Count ? [] : selectedBaseModels,
             Page = page,
         };
+    }
+
+    /// <summary>
+    /// Pull <c>@user</c> and <c>#tag</c> tokens out of a free-form search string.
+    /// Returns the leftover query (model name search), comma-joined tag list, and the
+    /// parsed username (last-wins if multiple <c>@</c> tokens are present).
+    /// </summary>
+    internal static (string query, string tags, string username) ParseSearchQuery(string raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw))
+            return (string.Empty, string.Empty, string.Empty);
+
+        var tokens = raw.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        var queryParts = new List<string>();
+        var tags = new List<string>();
+        string username = string.Empty;
+
+        foreach (var token in tokens)
+        {
+            if (token.Length > 1 && token[0] == '@')
+                username = token[1..]; // last @user wins
+            else if (token.Length > 1 && token[0] == '#')
+                tags.Add(token[1..]);
+            else
+                queryParts.Add(token);
+        }
+
+        return (string.Join(' ', queryParts), string.Join(',', tags), username);
     }
 
     private static List<string> GetSelectedValues(IEnumerable<BaseModelOptionViewModel> options)
@@ -424,7 +685,15 @@ public sealed partial class CivArchiveBrowserViewModel(
 
     private async void OnSelectableOptionChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName != nameof(BaseModelOptionViewModel.IsSelected) || suppressSearch)
+        if (e.PropertyName != nameof(BaseModelOptionViewModel.IsSelected))
+        {
+            return;
+        }
+
+        OnPropertyChanged(nameof(ModelTypeSelectionSummary));
+        OnPropertyChanged(nameof(BaseModelSelectionSummary));
+
+        if (suppressSearch)
         {
             return;
         }

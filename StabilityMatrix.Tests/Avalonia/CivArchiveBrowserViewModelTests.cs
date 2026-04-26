@@ -5,7 +5,9 @@ using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
 using StabilityMatrix.Core.Api;
+using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.CivArchive;
+using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Services;
 
@@ -118,6 +120,228 @@ public class CivArchiveBrowserViewModelTests
             );
     }
 
+    [TestMethod]
+    public async Task ChangingFilterWhileLoading_QueuesRefreshWithLatestFilter()
+    {
+        var apiClient = Substitute.For<ICivArchiveApiClient>();
+        var delayedResponse = new TaskCompletionSource<CivArchiveSearchResponse>();
+        var recordedFilters = new List<CivArchiveSearchFilters>();
+
+        apiClient
+            .SearchAsync(Arg.Any<CivArchiveSearchFilters>(), Arg.Any<CancellationToken>())
+            .Returns(call =>
+            {
+                var filters = call.Arg<CivArchiveSearchFilters>();
+                recordedFilters.Add(filters);
+
+                return recordedFilters.Count switch
+                {
+                    3 => delayedResponse.Task,
+                    _ => Task.FromResult(CreateSearchResponse(filters.Page)),
+                };
+            });
+
+        var vm = CreateViewModel(apiClient, out _, out _);
+        vm.OnLoaded();
+
+        await vm.SearchModelsCommand.ExecuteAsync(false);
+
+        var loadingSearch = vm.SearchModelsCommand.ExecuteAsync(false);
+        vm.SelectedSort = vm.AllSorts.First(x => x.Value == CivArchiveSortOption.Newest);
+
+        delayedResponse.SetResult(CreateSearchResponse(1));
+        await loadingSearch;
+
+        Assert.AreEqual(4, recordedFilters.Count);
+        Assert.AreEqual(CivArchiveSortOption.Top, recordedFilters[2].Sort);
+        Assert.AreEqual(CivArchiveSortOption.Newest, recordedFilters[3].Sort);
+    }
+
+    [TestMethod]
+    public async Task DownloadModel_UsesPrimaryFileUrlNameAndHash()
+    {
+        var apiClient = Substitute.For<ICivArchiveApiClient>();
+        var modelImportService = Substitute.For<IModelImportService>();
+        var settingsManager = Substitute.For<ISettingsManager>();
+        var model = CreateDetailsModel(
+            new CivArchiveModelFile
+            {
+                Name = "realDream_sdxl7.ckpt",
+                DownloadUrl = "https://example.org/download/realDream_sdxl7.ckpt",
+                Sha256 = "63b1db60611f52c4fbb2cade67dbdf4029c6620c5b22f2a4ddb27a47d7601953",
+                IsPrimary = true,
+            }
+        );
+
+        IReadOnlyList<Uri>? capturedUris = null;
+        string? capturedFileName = null;
+        Action<TrackedDownload>? configureDownload = null;
+
+        apiClient
+            .GetModelDetailsAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(new CivArchiveModelDetailsResponse { Model = model });
+        apiClient.GetAbsoluteUri(Arg.Any<string>()).Returns(call => new Uri(call.Arg<string>()));
+        settingsManager.IsLibraryDirSet.Returns(true);
+        settingsManager.ModelsDirectory.Returns(Path.GetTempPath());
+        modelImportService
+            .DoCustomImport(
+                Arg.Do<IEnumerable<Uri>>(uris => capturedUris = uris.ToList()),
+                Arg.Do<string>(fileName => capturedFileName = fileName),
+                Arg.Any<DirectoryPath>(),
+                Arg.Any<Uri?>(),
+                Arg.Any<string?>(),
+                Arg.Any<ConnectedModelInfo?>(),
+                Arg.Do<Action<TrackedDownload>?>(action => configureDownload = action)
+            )
+            .Returns(Task.CompletedTask);
+
+        var vm = CreateDetailsViewModel(apiClient, modelImportService, settingsManager);
+        vm.RelativeUrl = "/models/153568?modelVersionId=2053273";
+
+        await vm.OnLoadedAsync();
+        await vm.DownloadModelCommand.ExecuteAsync(null);
+
+        Assert.IsTrue(vm.HasDownloadUrl);
+        Assert.AreEqual("realDream_sdxl7.ckpt", capturedFileName);
+        Assert.AreEqual("https://example.org/download/realDream_sdxl7.ckpt", capturedUris?[0].ToString());
+
+        var download = new TrackedDownload
+        {
+            Id = Guid.NewGuid(),
+            SourceUrl = capturedUris![0],
+            DownloadDirectory = new DirectoryPath(Path.GetTempPath()),
+            FileName = capturedFileName!,
+            TempFileName = $"{capturedFileName}.tmp",
+        };
+        configureDownload?.Invoke(download);
+        Assert.AreEqual(model.Version?.Files[0].Sha256, download.ExpectedHashSha256);
+    }
+
+    [TestMethod]
+    public async Task DownloadModel_UsesFileMirrorUrlWhenDirectUrlIsMissing()
+    {
+        var apiClient = Substitute.For<ICivArchiveApiClient>();
+        var modelImportService = Substitute.For<IModelImportService>();
+        var settingsManager = Substitute.For<ISettingsManager>();
+        var model = CreateDetailsModel(
+            new CivArchiveModelFile
+            {
+                Name = "mirror-only.safetensors",
+                Mirrors =
+                [
+                    new CivArchiveFileMirror
+                    {
+                        Source = "civitai",
+                        Url = "https://example.org/mirror/mirror-only.safetensors",
+                    },
+                ],
+            }
+        );
+
+        IReadOnlyList<Uri>? capturedUris = null;
+
+        apiClient
+            .GetModelDetailsAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(new CivArchiveModelDetailsResponse { Model = model });
+        apiClient.GetAbsoluteUri(Arg.Any<string>()).Returns(call => new Uri(call.Arg<string>()));
+        settingsManager.IsLibraryDirSet.Returns(true);
+        settingsManager.ModelsDirectory.Returns(Path.GetTempPath());
+        modelImportService
+            .DoCustomImport(
+                Arg.Do<IEnumerable<Uri>>(uris => capturedUris = uris.ToList()),
+                Arg.Any<string>(),
+                Arg.Any<DirectoryPath>(),
+                Arg.Any<Uri?>(),
+                Arg.Any<string?>(),
+                Arg.Any<ConnectedModelInfo?>(),
+                Arg.Any<Action<TrackedDownload>?>()
+            )
+            .Returns(Task.CompletedTask);
+
+        var vm = CreateDetailsViewModel(apiClient, modelImportService, settingsManager);
+        vm.RelativeUrl = "/models/153568?modelVersionId=2053273";
+
+        await vm.OnLoadedAsync();
+        await vm.DownloadModelCommand.ExecuteAsync(null);
+
+        Assert.IsTrue(vm.HasDownloadUrl);
+        Assert.AreEqual("https://example.org/mirror/mirror-only.safetensors", capturedUris?[0].ToString());
+    }
+
+    [TestMethod]
+    public void ParseSearchQuery_PlainQuery_ReturnsQueryOnly()
+    {
+        var (query, tags, username) = CivArchiveBrowserViewModel.ParseSearchQuery("dragon style");
+
+        Assert.AreEqual("dragon style", query);
+        Assert.AreEqual(string.Empty, tags);
+        Assert.AreEqual(string.Empty, username);
+    }
+
+    [TestMethod]
+    public void ParseSearchQuery_AtToken_ExtractsUsername()
+    {
+        var (query, tags, username) = CivArchiveBrowserViewModel.ParseSearchQuery("dragon @sinatra");
+
+        Assert.AreEqual("dragon", query);
+        Assert.AreEqual(string.Empty, tags);
+        Assert.AreEqual("sinatra", username);
+    }
+
+    [TestMethod]
+    public void ParseSearchQuery_HashTokens_ExtractedAsCommaJoined()
+    {
+        var (query, tags, username) = CivArchiveBrowserViewModel.ParseSearchQuery("painting #anime #sdxl");
+
+        Assert.AreEqual("painting", query);
+        Assert.AreEqual("anime,sdxl", tags);
+        Assert.AreEqual(string.Empty, username);
+    }
+
+    [TestMethod]
+    public void ParseSearchQuery_MultipleAtTokens_LastWins()
+    {
+        var (_, _, username) = CivArchiveBrowserViewModel.ParseSearchQuery("@alice @bob");
+
+        Assert.AreEqual("bob", username);
+    }
+
+    [TestMethod]
+    public void ParseSearchQuery_MixedTokens_AllExtracted()
+    {
+        var (query, tags, username) = CivArchiveBrowserViewModel.ParseSearchQuery(
+            "dragon #anime @sinatra #sdxl knight"
+        );
+
+        Assert.AreEqual("dragon knight", query);
+        Assert.AreEqual("anime,sdxl", tags);
+        Assert.AreEqual("sinatra", username);
+    }
+
+    [TestMethod]
+    public void ParseSearchQuery_EmptyOrWhitespace_ReturnsEmptyTuple()
+    {
+        var empty = CivArchiveBrowserViewModel.ParseSearchQuery("");
+        var whitespace = CivArchiveBrowserViewModel.ParseSearchQuery("   ");
+
+        Assert.AreEqual(string.Empty, empty.query);
+        Assert.AreEqual(string.Empty, empty.tags);
+        Assert.AreEqual(string.Empty, empty.username);
+        Assert.AreEqual(string.Empty, whitespace.query);
+    }
+
+    [TestMethod]
+    public void ParseSearchQuery_BareSigil_KeptAsRegularToken()
+    {
+        // A lone "@" or "#" with nothing after isn't a username/tag prefix —
+        // the parser leaves it as part of the regular query.
+        var (query, tags, username) = CivArchiveBrowserViewModel.ParseSearchQuery("foo @ # bar");
+
+        Assert.AreEqual("foo @ # bar", query);
+        Assert.AreEqual(string.Empty, tags);
+        Assert.AreEqual(string.Empty, username);
+    }
+
     private static CivArchiveBrowserViewModel CreateViewModel(
         ICivArchiveApiClient apiClient,
         out Settings settings,
@@ -141,7 +365,8 @@ public class CivArchiveBrowserViewModelTests
                 Substitute.For<IServiceManager<ViewModelBase>>(),
                 Substitute.For<IModelImportService>(),
                 Substitute.For<ISettingsManager>(),
-                Substitute.For<INotificationService>()
+                Substitute.For<INotificationService>(),
+                CreateModelIndexServiceStub()
             )
         );
 
@@ -149,8 +374,50 @@ public class CivArchiveBrowserViewModelTests
             apiClient,
             settingsManager,
             serviceManager,
-            navigationService ?? Substitute.For<INavigationService<MainWindowViewModel>>()
+            navigationService ?? Substitute.For<INavigationService<MainWindowViewModel>>(),
+            CreateModelIndexServiceStub()
         );
+    }
+
+    private static IModelIndexService CreateModelIndexServiceStub()
+    {
+        var stub = Substitute.For<IModelIndexService>();
+        stub.ModelIndexSha256Hashes.Returns(new HashSet<string>());
+        stub.ModelIndexBlake3Hashes.Returns(new HashSet<string>());
+        return stub;
+    }
+
+    private static CivArchiveDetailsPageViewModel CreateDetailsViewModel(
+        ICivArchiveApiClient apiClient,
+        IModelImportService modelImportService,
+        ISettingsManager settingsManager
+    )
+    {
+        return new CivArchiveDetailsPageViewModel(
+            apiClient,
+            Substitute.For<INavigationService<MainWindowViewModel>>(),
+            Substitute.For<IServiceManager<ViewModelBase>>(),
+            modelImportService,
+            settingsManager,
+            Substitute.For<INotificationService>(),
+            CreateModelIndexServiceStub()
+        );
+    }
+
+    private static CivArchiveModelDetails CreateDetailsModel(CivArchiveModelFile file)
+    {
+        return new CivArchiveModelDetails
+        {
+            Name = "Real Dream",
+            Type = "Checkpoint",
+            Version = new CivArchiveModelVersion
+            {
+                Name = "SDXL 7",
+                BaseModel = "SDXL 1.0",
+                Files = [file],
+                Images = [new CivArchiveModelImage { Url = "https://example.org/preview.webp" }],
+            },
+        };
     }
 
     private static CivArchiveSearchResponse CreateSearchResponse(int page)

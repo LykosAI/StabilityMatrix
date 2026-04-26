@@ -195,6 +195,14 @@ public class CivArchiveModelFile
     [JsonIgnore]
     public string FormattedSize => new FileSizeType(SizeKb).HumanReadableRepresentation;
 
+    /// <summary>
+    /// True when the API reported a plausible file size. Some non-CivitAI mirrors return
+    /// a tiny placeholder (e.g. 0.01 KB) when only the SHA256 was captured — for those we
+    /// hide the size chip rather than showing nonsense.
+    /// </summary>
+    [JsonIgnore]
+    public bool HasKnownSize => SizeKb >= 1.0;
+
     [JsonPropertyName("downloadUrl")]
     public string? DownloadUrl { get; set; }
 

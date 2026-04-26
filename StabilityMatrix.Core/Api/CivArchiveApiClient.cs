@@ -295,7 +295,7 @@ public partial class CivArchiveApiClient(
     private static partial Regex BuildIdRegex();
 
     private const string PlatformNames =
-        "tensorart|seaart|civision|pixai|tungsten|yodayo|moescape|shakker|tensorhub|civitai|huggingface|modelscope";
+        "tensorart|seaart|civision|pixai|tungsten|yodayo|moescape|shakker|tensorhub|civitai|huggingface|modelscope_cn|modelscope";
 
     // Matches /{platform}/models/{id}/versions/{versionId}
     [GeneratedRegex(

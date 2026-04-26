@@ -33,6 +33,12 @@ public class ConnectedModelInfo : IEquatable<ConnectedModelInfo>
 
     public ConnectedModelSource? Source { get; set; } = ConnectedModelSource.Civitai;
 
+    /// <summary>
+    /// Source-specific relative URL used to navigate back to the model's details page in-app.
+    /// Required for sources where ModelId/VersionId are not integer identifiers (e.g. CivArchive).
+    /// </summary>
+    public string? SourceUrl { get; set; }
+
     public ConnectedModelInfo() { }
 
     public ConnectedModelInfo(

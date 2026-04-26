@@ -250,6 +250,8 @@ public class Settings
 
     public double CivitBrowserResizeFactor { get; set; } = 1.0d;
 
+    public double CivArchiveBrowserResizeFactor { get; set; } = 1.0d;
+
     public bool HideEarlyAccessModels { get; set; }
 
     public bool CivitUseDiscoveryApi { get; set; }

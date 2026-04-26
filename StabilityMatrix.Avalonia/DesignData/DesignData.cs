@@ -138,7 +138,7 @@ public static class DesignData
             .AddSingleton(Substitute.For<INotificationService>())
             .AddSingleton(Substitute.For<ISharedFolders>())
             .AddSingleton(Substitute.For<IDownloadService>())
-            .AddSingleton(Substitute.For<IHttpClientFactory>())
+            .AddSingleton(CreateHttpClientFactory())
             .AddSingleton(Substitute.For<IApiFactory>())
             .AddSingleton(Substitute.For<IDiscordRichPresenceService>())
             .AddSingleton(Substitute.For<ITrackedDownloadService>())
@@ -458,6 +458,13 @@ public static class DesignData
 
     [NotNull]
     public static PackageInstallBrowserViewModel? NewInstallerDialogViewModel { get; private set; }
+
+    private static IHttpClientFactory CreateHttpClientFactory()
+    {
+        var httpClientFactory = Substitute.For<IHttpClientFactory>();
+        httpClientFactory.CreateClient(Arg.Any<string>()).Returns(_ => new HttpClient());
+        return httpClientFactory;
+    }
 
     [NotNull]
     public static PackageInstallDetailViewModel? PackageInstallDetailViewModel { get; private set; }

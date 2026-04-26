@@ -76,6 +76,18 @@ public class CivArchiveSearchResult
     [JsonPropertyName("platform")]
     public string? Platform { get; set; }
 
+    /// <summary>
+    /// Set client-side after a search response when the result's SHA256 matches a local model file.
+    /// </summary>
+    [JsonIgnore]
+    public bool IsInstalled { get; set; }
+
+    /// <summary>
+    /// Set client-side alongside <see cref="IsInstalled"/> for tooltip display.
+    /// </summary>
+    [JsonIgnore]
+    public string? LocalInstallPath { get; set; }
+
     [JsonIgnore]
     public string? Sha256FromUrl
     {

@@ -252,6 +252,8 @@ public class Settings
 
     public double CivArchiveBrowserResizeFactor { get; set; } = 1.0d;
 
+    public bool CivArchiveBrowserFitCardImages { get; set; } = true;
+
     public bool HideEarlyAccessModels { get; set; }
 
     public bool CivitUseDiscoveryApi { get; set; }

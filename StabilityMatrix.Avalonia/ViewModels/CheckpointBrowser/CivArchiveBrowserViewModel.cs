@@ -56,6 +56,13 @@ public sealed partial class CivArchiveBrowserViewModel(
     [ObservableProperty]
     private double resizeFactor = 1.0;
 
+    /// <summary>
+    /// True (default) renders card images in Fit mode (whole image visible with a blurred
+    /// edge-fill behind it). False switches to Fill mode (UniformToFill, may crop edges).
+    /// </summary>
+    [ObservableProperty]
+    private bool fitCardImages = true;
+
     public bool IsEndOfResults => HasSearched && TotalHits > 0 && rawResults.Count >= TotalHits;
 
     public bool HasResultCount => HasSearched && TotalHits > 0;
@@ -228,6 +235,15 @@ public sealed partial class CivArchiveBrowserViewModel(
                 this,
                 vm => vm.HideInstalledModels,
                 s => s.HideInstalledModelsInModelBrowser,
+                true
+            )
+        );
+
+        AddDisposable(
+            settingsManager.RelayPropertyFor(
+                this,
+                vm => vm.FitCardImages,
+                s => s.CivArchiveBrowserFitCardImages,
                 true
             )
         );

@@ -418,9 +418,9 @@ public partial class CivArchiveDetailsPageViewModel(
         }
 
         var currentIndex = Images.IndexOf(image);
-        var imageSource = new ImageSource(new Uri(image.Url));
-
-        await imageSource.GetBitmapAsync();
+        var imageSource = await PrepareImageSourceAsync(image.Url);
+        if (imageSource is null)
+            return;
 
         var vm = vmFactory.Get<ImageViewerViewModel>();
         vm.ImageSource = imageSource;
@@ -447,8 +447,10 @@ public partial class CivArchiveDetailsPageViewModel(
                                 return;
                             }
 
-                            var newSource = new ImageSource(new Uri(newImage.Url));
-                            await newSource.GetBitmapAsync();
+                            var newSource = await PrepareImageSourceAsync(newImage.Url);
+                            if (newSource is null)
+                                return;
+
                             sender.ImageSource = newSource;
                             currentIndex = newIndex;
                         }
@@ -457,6 +459,27 @@ public partial class CivArchiveDetailsPageViewModel(
             });
 
         await vm.GetDialog().ShowAsync();
+    }
+
+    /// <summary>
+    /// Build an <see cref="ImageSource"/> ready for the image viewer to render. Critically,
+    /// <see cref="ImageSource.GetOrRefreshTemplateKeyAsync"/> must run before assigning so the
+    /// viewer's template selector picks the right control for animated WebPs vs static images
+    /// — otherwise navigation to certain images shows "Unsupported format".
+    /// </summary>
+    private static async Task<ImageSource?> PrepareImageSourceAsync(string url)
+    {
+        try
+        {
+            var source = new ImageSource(new Uri(url));
+            await source.GetBitmapAsync();
+            await source.GetOrRefreshTemplateKeyAsync();
+            return source;
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     [RelayCommand]

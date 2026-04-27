@@ -462,19 +462,22 @@ public partial class CivArchiveDetailsPageViewModel(
     }
 
     /// <summary>
-    /// Build an <see cref="ImageSource"/> ready for the image viewer to render. Critically,
-    /// <see cref="ImageSource.GetOrRefreshTemplateKeyAsync"/> must run before assigning so the
-    /// viewer's template selector picks the right control for animated WebPs vs static images
-    /// — otherwise navigation to certain images shows "Unsupported format".
+    /// Build an <see cref="ImageSource"/> ready for the image viewer to render.
+    /// The viewer's template selector keys off <c>ImageSource.TemplateKey</c>; if that's
+    /// <c>Default</c>, the selector renders the literal "Unsupported Format" text. The
+    /// URL-construction path leaves TemplateKey as Default until a Task-based binding
+    /// resolves it, which races with the viewer's first paint on extensionless CivArchive
+    /// CDN URLs (e.g. <c>img.genur.art/sig/.../base64</c>). Use the bitmap-only constructor
+    /// instead — it sets TemplateKey to Image synchronously, which the AdvancedImageBox
+    /// can render whether the bytes were JPEG, PNG, or WebP.
     /// </summary>
     private static async Task<ImageSource?> PrepareImageSourceAsync(string url)
     {
         try
         {
-            var source = new ImageSource(new Uri(url));
-            await source.GetBitmapAsync();
-            await source.GetOrRefreshTemplateKeyAsync();
-            return source;
+            var loader = new ImageSource(new Uri(url));
+            var bitmap = await loader.GetBitmapAsync();
+            return bitmap is not null ? new ImageSource(bitmap) { RemoteUrl = new Uri(url) } : null;
         }
         catch
         {

@@ -663,8 +663,17 @@ public partial class CivArchiveDetailsPageViewModel(
         string? sourceLabel
     )
     {
-        if (downloadUris.Count == 0 || Model is null)
+        if (Model is null)
             return;
+
+        if (downloadUris.Count == 0)
+        {
+            notificationService.Show(
+                "No download available",
+                "This file has no usable download URL — every mirror was either missing or gated/paid."
+            );
+            return;
+        }
 
         if (!settingsManager.IsLibraryDirSet)
         {

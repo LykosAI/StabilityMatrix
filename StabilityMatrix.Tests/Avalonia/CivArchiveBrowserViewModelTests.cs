@@ -275,6 +275,64 @@ public class CivArchiveBrowserViewModelTests
     }
 
     [TestMethod]
+    public async Task DownloadModel_UsesImagePreviewAndSkipsVideoMedia()
+    {
+        var apiClient = Substitute.For<ICivArchiveApiClient>();
+        var modelImportService = Substitute.For<IModelImportService>();
+        var settingsManager = Substitute.For<ISettingsManager>();
+        var model = CreateDetailsModel(
+            new CivArchiveModelFile
+            {
+                Name = "model.safetensors",
+                DownloadUrl = "https://example.org/download/model.safetensors",
+                IsPrimary = true,
+            }
+        );
+        model.Version!.Images =
+        [
+            new CivArchiveModelImage { Url = "https://c.genur.art/video-id", Type = "video" },
+            new CivArchiveModelImage
+            {
+                Url = "https://img.genur.art/sig/width:450/quality:85/image-id",
+                Type = "image",
+            },
+        ];
+
+        Uri? capturedPreviewUri = null;
+
+        apiClient
+            .GetModelDetailsAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(new CivArchiveModelDetailsResponse { Model = model });
+        apiClient.GetAbsoluteUri(Arg.Any<string>()).Returns(call => new Uri(call.Arg<string>()));
+        settingsManager.IsLibraryDirSet.Returns(true);
+        settingsManager.ModelsDirectory.Returns(Path.GetTempPath());
+        modelImportService
+            .DoCustomImport(
+                Arg.Any<IEnumerable<Uri>>(),
+                Arg.Any<string>(),
+                Arg.Any<DirectoryPath>(),
+                Arg.Do<Uri?>(uri => capturedPreviewUri = uri),
+                Arg.Any<string?>(),
+                Arg.Any<ConnectedModelInfo?>(),
+                Arg.Any<Action<TrackedDownload>?>()
+            )
+            .Returns(Task.CompletedTask);
+
+        var vm = CreateDetailsViewModel(apiClient, modelImportService, settingsManager);
+        vm.RelativeUrl = "/models/1?modelVersionId=2";
+
+        await vm.OnLoadedAsync();
+        await vm.DownloadModelCommand.ExecuteAsync(null);
+
+        Assert.AreEqual(1, vm.Images.Count);
+        Assert.AreEqual("https://img.genur.art/sig/width:450/quality:85/image-id", vm.Images[0].Url);
+        Assert.AreEqual(
+            "https://img.genur.art/sig/width:450/quality:85/image-id",
+            capturedPreviewUri?.ToString()
+        );
+    }
+
+    [TestMethod]
     public void ParseSearchQuery_PlainQuery_ReturnsQueryOnly()
     {
         var (query, tags, username) = CivArchiveBrowserViewModel.ParseSearchQuery("dragon style");

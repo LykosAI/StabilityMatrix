@@ -310,7 +310,7 @@ public partial class CivArchiveDetailsPageViewModel(
         HasDownloadUrl = GetDownloadUris(version).Count > 0;
 
         Images.Clear();
-        foreach (var image in version?.Images.Where(i => !string.IsNullOrWhiteSpace(i.Url)) ?? [])
+        foreach (var image in version?.Images.Where(IsUsableImage) ?? [])
         {
             Images.Add(image);
         }
@@ -689,7 +689,7 @@ public partial class CivArchiveDetailsPageViewModel(
 
         Uri? previewImageUri = null;
         string? previewImageExtension = null;
-        var firstImage = version.Images.FirstOrDefault(i => !string.IsNullOrWhiteSpace(i.Url));
+        var firstImage = version.Images.FirstOrDefault(IsUsableImage);
         if (firstImage?.Url is not null)
         {
             previewImageUri = new Uri(firstImage.Url);
@@ -879,7 +879,7 @@ public partial class CivArchiveDetailsPageViewModel(
             ImportedAt = DateTimeOffset.UtcNow,
             Hashes = new CivitFileHashes { SHA256 = primaryFile?.Sha256 },
             TrainedWords = version.Trigger.ToArray(),
-            ThumbnailImageUrl = version.Images.FirstOrDefault(i => !string.IsNullOrWhiteSpace(i.Url))?.Url,
+            ThumbnailImageUrl = version.Images.FirstOrDefault(IsUsableImage)?.Url,
             Source = ConnectedModelSource.CivArchive,
             SourceUrl = sourceUrl,
             Stats = new CivitModelStats
@@ -891,6 +891,15 @@ public partial class CivArchiveDetailsPageViewModel(
                 Rating = model.Rating,
             },
         };
+    }
+
+    private static bool IsUsableImage(CivArchiveModelImage image)
+    {
+        return !string.IsNullOrWhiteSpace(image.Url)
+            && (
+                string.IsNullOrWhiteSpace(image.Type)
+                || string.Equals(image.Type, "image", StringComparison.OrdinalIgnoreCase)
+            );
     }
 
     [RelayCommand]

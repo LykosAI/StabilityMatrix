@@ -1,0 +1,85 @@
+using Avalonia.Controls.Notifications;
+using NSubstitute;
+using StabilityMatrix.Avalonia.Services;
+using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.Progress;
+using StabilityMatrix.Core.Services;
+
+namespace StabilityMatrix.Tests.Avalonia;
+
+[TestClass]
+public class ModelImportServiceTests
+{
+    [TestMethod]
+    public async Task DoCustomImport_StartsTrackedDownloadBeforePreviewDownloadCompletes()
+    {
+        var downloadService = Substitute.For<IDownloadService>();
+        var notificationService = Substitute.For<INotificationService>();
+        var trackedDownloadService = Substitute.For<ITrackedDownloadService>();
+        var service = new ModelImportService(downloadService, notificationService, trackedDownloadService);
+
+        var tempDir = Directory.CreateTempSubdirectory();
+        var modelUri = new Uri("https://example.org/model.safetensors");
+        var previewUri = new Uri("https://example.org/preview.webp");
+        var previewDownload = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var trackedDownload = new TrackedDownload
+        {
+            Id = Guid.NewGuid(),
+            SourceUrl = modelUri,
+            DownloadDirectory = new DirectoryPath(tempDir.FullName),
+            FileName = "model.safetensors",
+            TempFileName = "model.safetensors.tmp",
+        };
+
+        try
+        {
+            downloadService
+                .DownloadToFileAsync(
+                    previewUri.ToString(),
+                    Arg.Any<string>(),
+                    Arg.Any<IProgress<ProgressReport>?>(),
+                    Arg.Any<string?>(),
+                    Arg.Any<CancellationToken>()
+                )
+                .Returns(previewDownload.Task);
+
+            notificationService
+                .TryAsync(Arg.Any<Task>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<NotificationType>())
+                .Returns(call => AwaitTask(call.Arg<Task>()));
+
+            trackedDownloadService.NewDownload(modelUri, Arg.Any<FilePath>()).Returns(trackedDownload);
+            trackedDownloadService.TryStartDownload(trackedDownload).Returns(Task.CompletedTask);
+
+            var importTask = service.DoCustomImport(
+                [modelUri],
+                "model.safetensors",
+                new DirectoryPath(tempDir.FullName),
+                previewUri,
+                ".webp"
+            );
+
+            var completedTask = await Task.WhenAny(importTask, Task.Delay(TimeSpan.FromSeconds(1)));
+
+            Assert.AreSame(
+                importTask,
+                completedTask,
+                "The model import should not wait for preview image download completion."
+            );
+
+            await trackedDownloadService.Received(1).TryStartDownload(trackedDownload);
+            Assert.IsFalse(previewDownload.Task.IsCompleted);
+        }
+        finally
+        {
+            previewDownload.TrySetResult();
+            tempDir.Delete(recursive: true);
+        }
+    }
+
+    private static async Task<TaskResult<bool>> AwaitTask(Task task)
+    {
+        await task;
+        return new TaskResult<bool>(true);
+    }
+}

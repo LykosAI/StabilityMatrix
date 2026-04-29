@@ -100,16 +100,16 @@ When a guide says a model is "DiT-based," it usually means the main denoising en
 
 **VAE**
 
-VAE stands for Variational Autoencoder. In image-generation workflows, the VAE is the component that converts between normal image pixels and the model's compressed latent space.
+VAE stands for Variational Autoencoder, or sometimes referred to as Variable Auto Encoder. In image-generation workflows, the VAE is the component that converts between normal image pixels and the model's numerical, sometimes compressed if using a UNet workflow, representative latent space.
 
 You can think of it as a translator between two worlds:
 
 - VAE encode: image -> latent
 - VAE decode: latent -> image
 
-The denoiser usually works in latent space because latent tensors are much smaller than full-resolution images, which makes diffusion practical on consumer hardware. The VAE is what lets the pipeline move into that smaller space and back out again.
+The denoiser usually works in latent space because latent tensors are much smaller than full-resolution images, which makes diffusion practical on consumer hardware. The VAE is what lets the pipeline move into that latent space and back out again.
 
-This is also why the wrong VAE can visibly damage output. Common symptoms include washed-out colors, odd contrast, muddy textures, or images that simply do not decode correctly. In older SD and SDXL workflows, matching the intended VAE can matter a lot.
+This is also why the wrong VAE can visibly damage output. Common symptoms include washed-out colors, odd contrast, muddy textures, or images that simply do not decode correctly and resulting in error. In older SD and SDXL workflows, matching the intended VAE can matter a lot.
 
 **Latent**
 

@@ -167,11 +167,24 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
         ModelCardViewModel.ApplyStep(applyArgs);
 
         var isUnetLoader = ModelCardViewModel.SelectedModelLoader is ModelLoader.Unet;
+        var isStableDiffusionUnet = isUnetLoader && ModelCardViewModel.SelectedClipType is "stable_diffusion";
+        var isFlux2Unet = isUnetLoader && ModelCardViewModel.SelectedClipType is "flux2";
         var useSd3Latent =
-            SamplerCardViewModel.ModulesCardViewModel.IsModuleEnabled<FluxGuidanceModule>() || isUnetLoader;
+            SamplerCardViewModel.ModulesCardViewModel.IsModuleEnabled<FluxGuidanceModule>()
+            || (isUnetLoader && !isStableDiffusionUnet && !isFlux2Unet);
         var usePlasmaNoise = SamplerCardViewModel.ModulesCardViewModel.IsModuleEnabled<PlasmaNoiseModule>();
 
-        if (useSd3Latent)
+        if (isFlux2Unet)
+        {
+            builder.SetupEmptyLatentSource(
+                SamplerCardViewModel.Width,
+                SamplerCardViewModel.Height,
+                BatchSizeCardViewModel.BatchSize,
+                BatchSizeCardViewModel.IsBatchIndexEnabled ? BatchSizeCardViewModel.BatchIndex : null,
+                latentType: LatentType.Flux2
+            );
+        }
+        else if (useSd3Latent)
         {
             builder.SetupEmptyLatentSource(
                 SamplerCardViewModel.Width,
@@ -217,7 +230,11 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
         PromptCardViewModel.ApplyStep(applyArgs);
 
         // Setup Sampler and Refiner if enabled
-        if (isUnetLoader)
+        if (isFlux2Unet)
+        {
+            SamplerCardViewModel.ApplyStepsInitialCustomSampler(applyArgs, false, useFlux2Scheduler: true);
+        }
+        else if (isUnetLoader && !isStableDiffusionUnet)
         {
             SamplerCardViewModel.ApplyStepsInitialCustomSampler(applyArgs, true);
         }

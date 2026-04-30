@@ -185,7 +185,7 @@ public partial class ModelCardViewModel(
     private bool isTextEncodersExpanded = true;
 
     public List<string> WeightDTypes { get; set; } = ["default", "fp8_e4m3fn", "fp8_e5m2"];
-    public List<string> ClipTypes { get; set; } = ["flux", "sd3", "HiDream"];
+    public List<string> ClipTypes { get; set; } = ["flux", "flux2", "stable_diffusion", "sd3", "HiDream"];
 
     public StackEditableCardViewModel ExtraNetworksStackCardViewModel { get; } =
         new(vmFactory) { Title = Resources.Label_ExtraNetworks, AvailableModules = [typeof(LoraModule)] };
@@ -595,6 +595,7 @@ public partial class ModelCardViewModel(
             var defaultCount = SelectedClipType switch
             {
                 "flux" => 2,
+                "flux2" or "stable_diffusion" => 1,
                 "sd3" => 3,
                 "HiDream" => 4,
                 _ => 2,
@@ -764,6 +765,7 @@ public partial class ModelCardViewModel(
         var targetCount = SelectedClipType switch
         {
             "flux" => 2,
+            "flux2" or "stable_diffusion" => 1,
             "sd3" => 3,
             "HiDream" => 4,
             _ => 2, // Default to 2 for unknown types
@@ -781,6 +783,7 @@ public partial class ModelCardViewModel(
         }
 
         OnPropertyChanged(nameof(CanRemoveEncoder));
+        OnPropertyChanged(nameof(TextEncodersHeader));
     }
 
     /// <summary>

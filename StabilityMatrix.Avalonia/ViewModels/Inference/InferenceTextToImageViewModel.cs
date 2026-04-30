@@ -14,6 +14,7 @@ using StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Api.Comfy;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 using StabilityMatrix.Core.Models.Inference;
 using StabilityMatrix.Core.Models.Settings;
@@ -77,6 +78,7 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
         SeedCardViewModel.GenerateNewSeed();
 
         ModelCardViewModel = vmFactory.Get<ModelCardViewModel>();
+        ModelCardViewModel.RecommendedDefaultsRequested += ApplyRecommendedDefaults;
 
         // When the model changes in the ModelCardViewModel, we'll have access to it in the TabContext
 
@@ -169,7 +171,7 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
 
         var useSd3Latent =
             SamplerCardViewModel.ModulesCardViewModel.IsModuleEnabled<FluxGuidanceModule>()
-            || (IsUnetLoader && !IsStableDiffusionUnet && !IsFlux2Unet);
+            || (IsUnetLoader && UsesSd3Latent);
         var usePlasmaNoise = SamplerCardViewModel.ModulesCardViewModel.IsModuleEnabled<PlasmaNoiseModule>();
 
         if (IsFlux2Unet)
@@ -245,16 +247,62 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
 
     protected bool IsUnetLoader => ModelCardViewModel.SelectedModelLoader is ModelLoader.Unet;
 
-    protected bool IsStableDiffusionUnet =>
-        IsUnetLoader && ModelCardViewModel.SelectedClipType is "stable_diffusion";
+    protected InferenceWorkflowProfile ResolvedWorkflowProfile => ModelCardViewModel.ResolvedWorkflowProfile;
 
-    protected bool IsFlux2Unet => IsUnetLoader && ModelCardViewModel.SelectedClipType is "flux2";
+    protected bool IsAnimaUnet =>
+        IsUnetLoader
+        && (
+            ResolvedWorkflowProfile is InferenceWorkflowProfile.Anima
+            || (
+                ResolvedWorkflowProfile is InferenceWorkflowProfile.Custom
+                && ModelCardViewModel.SelectedClipType is "stable_diffusion"
+            )
+        );
 
-    protected bool IsLumina2Unet => IsUnetLoader && ModelCardViewModel.SelectedClipType is "lumina2";
+    protected bool IsFlux2Unet =>
+        IsUnetLoader
+        && (
+            ResolvedWorkflowProfile is InferenceWorkflowProfile.Flux2
+            || (
+                ResolvedWorkflowProfile is InferenceWorkflowProfile.Custom
+                && ModelCardViewModel.SelectedClipType is "flux2"
+            )
+        );
+
+    protected bool IsZImageUnet =>
+        IsUnetLoader
+        && (
+            ResolvedWorkflowProfile
+                is InferenceWorkflowProfile.ZImageBase
+                    or InferenceWorkflowProfile.ZImageTurbo
+            || (
+                ResolvedWorkflowProfile is InferenceWorkflowProfile.Custom
+                && ModelCardViewModel.SelectedClipType is "lumina2"
+            )
+        );
+
+    protected bool UsesSd3Latent =>
+        ResolvedWorkflowProfile
+            is InferenceWorkflowProfile.Flux
+                or InferenceWorkflowProfile.ZImageBase
+                or InferenceWorkflowProfile.ZImageTurbo
+                or InferenceWorkflowProfile.HiDream
+        || (
+            ResolvedWorkflowProfile is InferenceWorkflowProfile.Custom
+            && ModelCardViewModel.SelectedClipType is not "stable_diffusion" and not "flux2"
+        );
+
+    protected bool UsesFluxGuidanceSampler =>
+        ResolvedWorkflowProfile is InferenceWorkflowProfile.Flux or InferenceWorkflowProfile.HiDream
+        || (
+            ResolvedWorkflowProfile is InferenceWorkflowProfile.Custom
+            && IsUnetLoader
+            && ModelCardViewModel.SelectedClipType is not "stable_diffusion" and not "lumina2" and not "flux2"
+        );
 
     protected void ApplyModelSamplingForCurrentWorkflow(ModuleApplyStepEventArgs applyArgs)
     {
-        if (!IsLumina2Unet)
+        if (!IsZImageUnet)
             return;
 
         var builder = applyArgs.Builder;
@@ -281,7 +329,7 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
         }
         else if (
             (includeGgufAsFluxGuidance && ModelCardViewModel.IsGguf)
-            || (IsUnetLoader && !IsStableDiffusionUnet && !IsLumina2Unet)
+            || (IsUnetLoader && UsesFluxGuidanceSampler)
         )
         {
             SamplerCardViewModel.ApplyStepsInitialCustomSampler(applyArgs, true);
@@ -293,6 +341,25 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
         else
         {
             SamplerCardViewModel.ApplyStep(applyArgs);
+        }
+    }
+
+    private void ApplyRecommendedDefaults(InferenceWorkflowProfile profile)
+    {
+        switch (profile)
+        {
+            case InferenceWorkflowProfile.ZImageTurbo:
+                SamplerCardViewModel.SelectedSampler = ComfySampler.ResMultistep;
+                SamplerCardViewModel.SelectedScheduler = ComfyScheduler.Simple;
+                SamplerCardViewModel.Steps = 8;
+                SamplerCardViewModel.CfgScale = 1.0d;
+                break;
+            case InferenceWorkflowProfile.ZImageBase:
+                SamplerCardViewModel.SelectedSampler = ComfySampler.ResMultistep;
+                SamplerCardViewModel.SelectedScheduler = ComfyScheduler.Simple;
+                SamplerCardViewModel.Steps = 30;
+                SamplerCardViewModel.CfgScale = 4.0d;
+                break;
         }
     }
 

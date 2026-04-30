@@ -153,8 +153,26 @@ public partial class ModelCardViewModel(
     public HybridModelFile? SelectedClip4 => TextEncoders.Count > 3 ? TextEncoders[3].SelectedModel : null;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsSd3Clip), nameof(IsHiDreamClip), nameof(ShowShift))]
+    [NotifyPropertyChangedFor(
+        nameof(IsSd3Clip),
+        nameof(IsHiDreamClip),
+        nameof(ResolvedWorkflowProfile),
+        nameof(IsHiDreamWorkflow),
+        nameof(ShowShift),
+        nameof(ShowEncoderTypeSelection),
+        nameof(HasRecommendedDefaults)
+    )]
     private string? selectedClipType;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(
+        nameof(ResolvedWorkflowProfile),
+        nameof(IsHiDreamWorkflow),
+        nameof(ShowShift),
+        nameof(ShowEncoderTypeSelection),
+        nameof(HasRecommendedDefaults)
+    )]
+    private InferenceWorkflowProfile selectedWorkflowProfile = InferenceWorkflowProfile.Auto;
 
     [ObservableProperty]
     private string? selectedDType;
@@ -184,6 +202,8 @@ public partial class ModelCardViewModel(
     public List<string> WeightDTypes { get; set; } = ["default", "fp8_e4m3fn", "fp8_e5m2"];
     public List<string> ClipTypes { get; set; } =
         ["flux", "flux2", "lumina2", "stable_diffusion", "sd3", "HiDream"];
+    public List<InferenceWorkflowProfile> WorkflowProfiles { get; set; } =
+        Enum.GetValues<InferenceWorkflowProfile>().ToList();
 
     public StackEditableCardViewModel ExtraNetworksStackCardViewModel { get; } =
         new(vmFactory) { Title = Resources.Label_ExtraNetworks, AvailableModules = [typeof(LoraModule)] };
@@ -203,6 +223,9 @@ public partial class ModelCardViewModel(
 
     public bool IsSd3Clip => SelectedClipType == "sd3";
     public bool IsHiDreamClip => SelectedClipType == "HiDream";
+    public bool IsHiDreamWorkflow =>
+        ResolvedWorkflowProfile is InferenceWorkflowProfile.HiDream
+        || (ResolvedWorkflowProfile is InferenceWorkflowProfile.Custom && SelectedClipType == "HiDream");
     public bool IsGguf => SelectedUnetModel?.RelativePath.EndsWith("gguf") ?? false;
 
     /// <summary>
@@ -235,7 +258,19 @@ public partial class ModelCardViewModel(
     /// <summary>
     /// Whether to show the Shift control (for HiDream clip type, only when in UNet mode).
     /// </summary>
-    public bool ShowShift => ShowEncoderSection && IsHiDreamClip;
+    public bool ShowShift => ShowEncoderSection && IsHiDreamWorkflow;
+    public bool ShowEncoderTypeSelection =>
+        ShowEncoderSection && SelectedWorkflowProfile is not InferenceWorkflowProfile.Auto;
+    public InferenceWorkflowProfile ResolvedWorkflowProfile =>
+        SelectedWorkflowProfile is InferenceWorkflowProfile.Auto
+            ? InferWorkflowProfile()
+            : SelectedWorkflowProfile;
+    public bool HasRecommendedDefaults =>
+        ResolvedWorkflowProfile
+            is InferenceWorkflowProfile.ZImageBase
+                or InferenceWorkflowProfile.ZImageTurbo;
+
+    public event Action<InferenceWorkflowProfile>? RecommendedDefaultsRequested;
 
     protected override void OnInitialLoaded()
     {
@@ -472,6 +507,7 @@ public partial class ModelCardViewModel(
                 // New field for dynamic encoders (for future proofing if > 4 encoders)
                 TextEncoderNames = encoderNames,
                 SelectedClipType = SelectedClipType,
+                SelectedWorkflowProfile = SelectedWorkflowProfile,
                 SelectedDType = SelectedDType,
                 Shift = Shift,
                 IsClipModelSelectionEnabled = IsClipModelSelectionEnabled,
@@ -523,6 +559,7 @@ public partial class ModelCardViewModel(
 
             // Load encoder type first (needed for default encoder count)
             SelectedClipType = model.SelectedClipType;
+            SelectedWorkflowProfile = model.SelectedWorkflowProfile;
 
             // Load text encoders from saved state
             LoadTextEncodersFromModel(model);
@@ -549,7 +586,65 @@ public partial class ModelCardViewModel(
         finally
         {
             isLoadingState = false;
+            RefreshWorkflowProfileState();
         }
+    }
+
+    private InferenceWorkflowProfile InferWorkflowProfile()
+    {
+        if (SelectedModelLoader is not ModelLoader.Unet)
+            return InferenceWorkflowProfile.DefaultCheckpoint;
+
+        var model = SelectedUnetModel;
+        var baseModel = model?.Local?.ConnectedModelInfo?.BaseModel;
+
+        if (!string.IsNullOrWhiteSpace(baseModel))
+        {
+            if (baseModel.Equals("ZImageTurbo", StringComparison.OrdinalIgnoreCase))
+                return InferenceWorkflowProfile.ZImageTurbo;
+
+            if (baseModel.Equals("ZImageBase", StringComparison.OrdinalIgnoreCase))
+                return InferenceWorkflowProfile.ZImageBase;
+
+            if (baseModel.Equals("Anima", StringComparison.OrdinalIgnoreCase))
+                return InferenceWorkflowProfile.Anima;
+
+            if (baseModel.StartsWith("Flux.2", StringComparison.OrdinalIgnoreCase))
+                return InferenceWorkflowProfile.Flux2;
+
+            if (baseModel.StartsWith("Flux.1", StringComparison.OrdinalIgnoreCase))
+                return InferenceWorkflowProfile.Flux;
+
+            if (baseModel.Equals("HiDream", StringComparison.OrdinalIgnoreCase))
+                return InferenceWorkflowProfile.HiDream;
+        }
+
+        var name = model?.RelativePath ?? string.Empty;
+
+        if (
+            name.Contains("z_image", StringComparison.OrdinalIgnoreCase)
+            || name.Contains("z-image", StringComparison.OrdinalIgnoreCase)
+            || name.Contains("zimage", StringComparison.OrdinalIgnoreCase)
+        )
+        {
+            return name.Contains("turbo", StringComparison.OrdinalIgnoreCase)
+                ? InferenceWorkflowProfile.ZImageTurbo
+                : InferenceWorkflowProfile.ZImageBase;
+        }
+
+        if (name.Contains("flux2", StringComparison.OrdinalIgnoreCase))
+            return InferenceWorkflowProfile.Flux2;
+
+        if (name.Contains("flux", StringComparison.OrdinalIgnoreCase))
+            return InferenceWorkflowProfile.Flux;
+
+        if (name.Contains("anima", StringComparison.OrdinalIgnoreCase))
+            return InferenceWorkflowProfile.Anima;
+
+        if (name.Contains("hidream", StringComparison.OrdinalIgnoreCase))
+            return InferenceWorkflowProfile.HiDream;
+
+        return InferenceWorkflowProfile.DefaultCheckpoint;
     }
 
     /// <summary>
@@ -714,6 +809,8 @@ public partial class ModelCardViewModel(
             if (TextEncoders.Count == 0)
                 SetDefaultEncoderCount();
         }
+
+        RefreshWorkflowProfileState();
     }
 
     partial void OnSelectedModelChanged(HybridModelFile? value)
@@ -736,7 +833,11 @@ public partial class ModelCardViewModel(
         }
     }
 
-    partial void OnSelectedUnetModelChanged(HybridModelFile? value) => OnSelectedModelChanged(value);
+    partial void OnSelectedUnetModelChanged(HybridModelFile? value)
+    {
+        OnSelectedModelChanged(value);
+        RefreshWorkflowProfileState();
+    }
 
     partial void OnSelectedClipTypeChanged(string? value)
     {
@@ -746,6 +847,52 @@ public partial class ModelCardViewModel(
         {
             SetDefaultEncoderCount(preserveUserSelections: true);
         }
+    }
+
+    partial void OnSelectedWorkflowProfileChanged(InferenceWorkflowProfile value)
+    {
+        if (!isLoadingState)
+        {
+            ApplyDefaultClipTypeForResolvedProfile(preserveUserSelections: true);
+        }
+
+        RefreshWorkflowProfileState();
+    }
+
+    private void RefreshWorkflowProfileState()
+    {
+        OnPropertyChanged(nameof(ResolvedWorkflowProfile));
+        OnPropertyChanged(nameof(IsHiDreamWorkflow));
+        OnPropertyChanged(nameof(ShowShift));
+        OnPropertyChanged(nameof(ShowEncoderTypeSelection));
+        OnPropertyChanged(nameof(HasRecommendedDefaults));
+
+        if (!isLoadingState)
+        {
+            ApplyDefaultClipTypeForResolvedProfile(preserveUserSelections: true);
+        }
+    }
+
+    private void ApplyDefaultClipTypeForResolvedProfile(bool preserveUserSelections)
+    {
+        if (SelectedWorkflowProfile is InferenceWorkflowProfile.Custom)
+            return;
+
+        var clipType = ResolvedWorkflowProfile switch
+        {
+            InferenceWorkflowProfile.Flux => "flux",
+            InferenceWorkflowProfile.Flux2 => "flux2",
+            InferenceWorkflowProfile.ZImageBase or InferenceWorkflowProfile.ZImageTurbo => "lumina2",
+            InferenceWorkflowProfile.Anima => "stable_diffusion",
+            InferenceWorkflowProfile.HiDream => "HiDream",
+            _ => SelectedClipType,
+        };
+
+        if (string.IsNullOrWhiteSpace(clipType) || SelectedClipType == clipType)
+            return;
+
+        SelectedClipType = clipType;
+        SetDefaultEncoderCount(preserveUserSelections);
     }
 
     /// <summary>
@@ -814,6 +961,15 @@ public partial class ModelCardViewModel(
         }
     }
 
+    [RelayCommand]
+    private void ApplyRecommendedDefaults()
+    {
+        if (!HasRecommendedDefaults)
+            return;
+
+        RecommendedDefaultsRequested?.Invoke(ResolvedWorkflowProfile);
+    }
+
     private void SetupStandaloneModelLoader(ModuleApplyStepEventArgs e)
     {
         if (SelectedModelLoader is ModelLoader.Unet && IsGguf)
@@ -844,7 +1000,7 @@ public partial class ModelCardViewModel(
             e.Builder.Connections.Base.Model = checkpointLoader.Output;
         }
 
-        if (SelectedModelLoader is ModelLoader.Unet && IsHiDreamClip)
+        if (SelectedModelLoader is ModelLoader.Unet && IsHiDreamWorkflow)
         {
             var modelSamplingSd3 = e.Nodes.AddTypedNode(
                 new ComfyNodeBuilder.ModelSamplingSD3
@@ -1051,6 +1207,8 @@ public partial class ModelCardViewModel(
         public List<string?>? TextEncoderNames { get; init; }
 
         public string? SelectedClipType { get; init; }
+        public InferenceWorkflowProfile SelectedWorkflowProfile { get; init; } =
+            InferenceWorkflowProfile.Auto;
         public string? SelectedDType { get; init; }
         public double Shift { get; init; } = 3.0;
         public ModelLoader ModelLoader { get; init; }

@@ -239,8 +239,46 @@
                                 </Grid>
                             </Expander.Header>
                             <StackPanel Margin="0,4,0,0" Spacing="8">
+                                <!--  Workflow Profile  -->
+                                <Grid ColumnDefinitions="90,*,Auto">
+                                    <TextBlock
+                                        Grid.Column="0"
+                                        VerticalAlignment="Center"
+                                        Text="Workflow"
+                                        TextAlignment="Left" />
+                                    <controls:BetterComboBox
+                                        Grid.Column="1"
+                                        Padding="8,6,4,6"
+                                        HorizontalAlignment="Stretch"
+                                        ItemsSource="{Binding WorkflowProfiles}"
+                                        SelectedItem="{Binding SelectedWorkflowProfile}">
+                                        <controls:BetterComboBox.Resources>
+                                            <converters:EnumStringConverter x:Key="EnumStringConverter" />
+                                        </controls:BetterComboBox.Resources>
+                                        <controls:BetterComboBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding ., Converter={StaticResource EnumStringConverter}}" />
+                                            </DataTemplate>
+                                        </controls:BetterComboBox.ItemTemplate>
+                                        <controls:BetterComboBox.SelectionBoxItemTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding ., Converter={StaticResource EnumStringConverter}}" />
+                                            </DataTemplate>
+                                        </controls:BetterComboBox.SelectionBoxItemTemplate>
+                                    </controls:BetterComboBox>
+                                    <Button
+                                        Grid.Column="2"
+                                        Margin="4,0,0,0"
+                                        VerticalAlignment="Stretch"
+                                        Command="{Binding ApplyRecommendedDefaultsCommand}"
+                                        IsEnabled="{Binding HasRecommendedDefaults}"
+                                        ToolTip.Tip="Apply recommended sampler defaults">
+                                        <fluent:SymbolIcon FontSize="16" Symbol="Sparkle" />
+                                    </Button>
+                                </Grid>
+
                                 <!--  Encoder Type  -->
-                                <Grid ColumnDefinitions="90,*">
+                                <Grid ColumnDefinitions="90,*" IsVisible="{Binding ShowEncoderTypeSelection}">
                                     <TextBlock
                                         Grid.Column="0"
                                         VerticalAlignment="Center"

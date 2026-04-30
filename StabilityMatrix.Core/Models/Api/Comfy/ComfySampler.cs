@@ -28,6 +28,7 @@ public readonly record struct ComfySampler(string Name)
     public static ComfySampler Dpmpp3MSde { get; } = new("dpmpp_3m_sde");
     public static ComfySampler Dpmpp3MSdeGpu { get; } = new("dpmpp_3m_sde_gpu");
     public static ComfySampler ErSde { get; } = new("er_sde");
+    public static ComfySampler ResMultistep { get; } = new("res_multistep");
     public static ComfySampler DDIM { get; } = new("ddim");
     public static ComfySampler DDPM { get; } = new("ddpm");
     public static ComfySampler UniPC { get; } = new("uni_pc");
@@ -56,6 +57,7 @@ public readonly record struct ComfySampler(string Name)
             [Dpmpp3MSde] = "DPM++ 3M SDE",
             [Dpmpp3MSdeGpu] = "DPM++ 3M SDE GPU",
             [ErSde] = "ER SDE",
+            [ResMultistep] = "Res Multistep",
             [DDIM] = "DDIM",
             [DDPM] = "DDPM",
             [UniPC] = "UniPC",

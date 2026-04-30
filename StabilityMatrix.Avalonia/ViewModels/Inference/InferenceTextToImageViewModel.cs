@@ -14,6 +14,7 @@ using StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 using StabilityMatrix.Core.Models.Inference;
 using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Services;
@@ -169,6 +170,7 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
         var isUnetLoader = ModelCardViewModel.SelectedModelLoader is ModelLoader.Unet;
         var isStableDiffusionUnet = isUnetLoader && ModelCardViewModel.SelectedClipType is "stable_diffusion";
         var isFlux2Unet = isUnetLoader && ModelCardViewModel.SelectedClipType is "flux2";
+        var isLumina2Unet = isUnetLoader && ModelCardViewModel.SelectedClipType is "lumina2";
         var useSd3Latent =
             SamplerCardViewModel.ModulesCardViewModel.IsModuleEnabled<FluxGuidanceModule>()
             || (isUnetLoader && !isStableDiffusionUnet && !isFlux2Unet);
@@ -229,12 +231,26 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
         // Prompts and loras
         PromptCardViewModel.ApplyStep(applyArgs);
 
+        if (isLumina2Unet)
+        {
+            var modelSampling = builder.Nodes.AddTypedNode(
+                new ComfyNodeBuilder.ModelSamplingAuraFlow
+                {
+                    Name = builder.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.ModelSamplingAuraFlow)),
+                    Model = builder.Connections.Base.Model.Unwrap(),
+                    Shift = 3.0d,
+                }
+            );
+
+            builder.Connections.Base.Model = modelSampling.Output;
+        }
+
         // Setup Sampler and Refiner if enabled
         if (isFlux2Unet)
         {
             SamplerCardViewModel.ApplyStepsInitialCustomSampler(applyArgs, false, useFlux2Scheduler: true);
         }
-        else if (isUnetLoader && !isStableDiffusionUnet)
+        else if (isUnetLoader && !isStableDiffusionUnet && !isLumina2Unet)
         {
             SamplerCardViewModel.ApplyStepsInitialCustomSampler(applyArgs, true);
         }

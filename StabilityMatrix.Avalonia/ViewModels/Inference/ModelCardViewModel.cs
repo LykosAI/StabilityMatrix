@@ -34,7 +34,6 @@ public partial class ModelCardViewModel(
 {
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(SelectedUnifiedModel))]
-    [NotifyPropertyChangedFor(nameof(WorkflowFilteredModels))]
     [NotifyPropertyChangedFor(nameof(WorkflowProfileStatusText))]
     [NotifyPropertyChangedFor(nameof(ShowWorkflowProfileStatus))]
     [NotifyPropertyChangedFor(nameof(RecommendedDefaultsToolTip))]
@@ -47,7 +46,6 @@ public partial class ModelCardViewModel(
         nameof(SelectedUnifiedModel),
         nameof(HasActiveAdvancedOptions),
         nameof(AdvancedOptionsHeader),
-        nameof(WorkflowFilteredModels),
         nameof(WorkflowProfileStatusText),
         nameof(ShowWorkflowProfileStatus),
         nameof(RecommendedDefaultsToolTip)
@@ -129,7 +127,6 @@ public partial class ModelCardViewModel(
         nameof(ShowEncoderSection),
         nameof(HasActiveAdvancedOptions),
         nameof(AdvancedOptionsHeader),
-        nameof(WorkflowFilteredModels),
         nameof(WorkflowProfileStatusText),
         nameof(ShowWorkflowProfileStatus),
         nameof(RecommendedDefaultsToolTip)
@@ -175,7 +172,6 @@ public partial class ModelCardViewModel(
         nameof(ShowShift),
         nameof(ShowEncoderTypeSelection),
         nameof(HasRecommendedDefaults),
-        nameof(WorkflowFilteredModels),
         nameof(WorkflowProfileStatusText),
         nameof(ShowWorkflowProfileStatus),
         nameof(RecommendedDefaultsToolTip)
@@ -969,7 +965,6 @@ public partial class ModelCardViewModel(
         OnPropertyChanged(nameof(ShowShift));
         OnPropertyChanged(nameof(ShowEncoderTypeSelection));
         OnPropertyChanged(nameof(HasRecommendedDefaults));
-        OnPropertyChanged(nameof(WorkflowFilteredModels));
         OnPropertyChanged(nameof(WorkflowProfileStatusText));
         OnPropertyChanged(nameof(ShowWorkflowProfileStatus));
         OnPropertyChanged(nameof(RecommendedDefaultsToolTip));

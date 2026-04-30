@@ -167,16 +167,12 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
         // Load models
         ModelCardViewModel.ApplyStep(applyArgs);
 
-        var isUnetLoader = ModelCardViewModel.SelectedModelLoader is ModelLoader.Unet;
-        var isStableDiffusionUnet = isUnetLoader && ModelCardViewModel.SelectedClipType is "stable_diffusion";
-        var isFlux2Unet = isUnetLoader && ModelCardViewModel.SelectedClipType is "flux2";
-        var isLumina2Unet = isUnetLoader && ModelCardViewModel.SelectedClipType is "lumina2";
         var useSd3Latent =
             SamplerCardViewModel.ModulesCardViewModel.IsModuleEnabled<FluxGuidanceModule>()
-            || (isUnetLoader && !isStableDiffusionUnet && !isFlux2Unet);
+            || (IsUnetLoader && !IsStableDiffusionUnet && !IsFlux2Unet);
         var usePlasmaNoise = SamplerCardViewModel.ModulesCardViewModel.IsModuleEnabled<PlasmaNoiseModule>();
 
-        if (isFlux2Unet)
+        if (IsFlux2Unet)
         {
             builder.SetupEmptyLatentSource(
                 SamplerCardViewModel.Width,
@@ -231,26 +227,62 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
         // Prompts and loras
         PromptCardViewModel.ApplyStep(applyArgs);
 
-        if (isLumina2Unet)
-        {
-            var modelSampling = builder.Nodes.AddTypedNode(
-                new ComfyNodeBuilder.ModelSamplingAuraFlow
-                {
-                    Name = builder.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.ModelSamplingAuraFlow)),
-                    Model = builder.Connections.Base.Model.Unwrap(),
-                    Shift = 3.0d,
-                }
-            );
-
-            builder.Connections.Base.Model = modelSampling.Output;
-        }
+        ApplyModelSamplingForCurrentWorkflow(applyArgs);
 
         // Setup Sampler and Refiner if enabled
-        if (isFlux2Unet)
+        ApplySamplerForCurrentWorkflow(applyArgs);
+
+        // Hires fix if enabled
+        foreach (var module in ModulesCardViewModel.Cards.OfType<ModuleBase>())
+        {
+            module.ApplyStep(applyArgs);
+        }
+
+        applyArgs.InvokeAllPreOutputActions();
+
+        builder.SetupOutputImage();
+    }
+
+    protected bool IsUnetLoader => ModelCardViewModel.SelectedModelLoader is ModelLoader.Unet;
+
+    protected bool IsStableDiffusionUnet =>
+        IsUnetLoader && ModelCardViewModel.SelectedClipType is "stable_diffusion";
+
+    protected bool IsFlux2Unet => IsUnetLoader && ModelCardViewModel.SelectedClipType is "flux2";
+
+    protected bool IsLumina2Unet => IsUnetLoader && ModelCardViewModel.SelectedClipType is "lumina2";
+
+    protected void ApplyModelSamplingForCurrentWorkflow(ModuleApplyStepEventArgs applyArgs)
+    {
+        if (!IsLumina2Unet)
+            return;
+
+        var builder = applyArgs.Builder;
+        var modelSampling = builder.Nodes.AddTypedNode(
+            new ComfyNodeBuilder.ModelSamplingAuraFlow
+            {
+                Name = builder.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.ModelSamplingAuraFlow)),
+                Model = builder.Connections.Base.Model.Unwrap(),
+                Shift = 3.0d,
+            }
+        );
+
+        builder.Connections.Base.Model = modelSampling.Output;
+    }
+
+    protected void ApplySamplerForCurrentWorkflow(
+        ModuleApplyStepEventArgs applyArgs,
+        bool includeGgufAsFluxGuidance = false
+    )
+    {
+        if (IsFlux2Unet)
         {
             SamplerCardViewModel.ApplyStepsInitialCustomSampler(applyArgs, false, useFlux2Scheduler: true);
         }
-        else if (isUnetLoader && !isStableDiffusionUnet && !isLumina2Unet)
+        else if (
+            (includeGgufAsFluxGuidance && ModelCardViewModel.IsGguf)
+            || (IsUnetLoader && !IsStableDiffusionUnet && !IsLumina2Unet)
+        )
         {
             SamplerCardViewModel.ApplyStepsInitialCustomSampler(applyArgs, true);
         }
@@ -262,16 +294,6 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
         {
             SamplerCardViewModel.ApplyStep(applyArgs);
         }
-
-        // Hires fix if enabled
-        foreach (var module in ModulesCardViewModel.Cards.OfType<ModuleBase>())
-        {
-            module.ApplyStep(applyArgs);
-        }
-
-        applyArgs.InvokeAllPreOutputActions();
-
-        builder.SetupOutputImage();
     }
 
     /// <inheritdoc />

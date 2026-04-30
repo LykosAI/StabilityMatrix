@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ## v2.16.0-pre.1
 ### Added
 - Added support for the civitai.red (mature-content) domain — NSFW CivitAI links now open and copy as civitai.red URLs, and pasting a civitai.red URL into the CivitAI model browser search works the same as a civitai.com URL
-- Added official Inference support for Z-Image/Z-Image-Turbo, Anima, and Flux.2 UNet-only text-to-image workflows, including their text encoder, latent, scheduler, and sampling requirements
+- Added official Inference support for Z-Image/Z-Image-Turbo, Anima, and Flux.2 UNet-only workflows, including their text encoder, latent, scheduler, and sampling requirements
 ### Changed
 - The CivitAI base model type filter now uses CivitAI's official `/api/v1/enums` endpoint, with fallbacks to the previous technique and a built-in list, so the filter stays populated even if the CivitAI response format changes or the service is unreachable
 ### Fixed

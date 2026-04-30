@@ -60,7 +60,7 @@ public class InferenceImageToImageViewModel : InferenceTextToImageViewModel
         builder.Connections.Seed = args.SeedOverride switch
         {
             { } seed => Convert.ToUInt64(seed),
-            _ => Convert.ToUInt64(SeedCardViewModel.Seed)
+            _ => Convert.ToUInt64(SeedCardViewModel.Seed),
         };
 
         var applyArgs = args.ToModuleApplyStepEventArgs();
@@ -76,21 +76,10 @@ public class InferenceImageToImageViewModel : InferenceTextToImageViewModel
         // Prompts and loras
         PromptCardViewModel.ApplyStep(applyArgs);
 
+        ApplyModelSamplingForCurrentWorkflow(applyArgs);
+
         // Setup Sampler and Refiner if enabled
-        var isUnetLoader =
-            ModelCardViewModel.SelectedModelLoader is ModelLoader.Unet || ModelCardViewModel.IsGguf;
-        if (isUnetLoader)
-        {
-            SamplerCardViewModel.ApplyStepsInitialCustomSampler(applyArgs, true);
-        }
-        else if (SamplerCardViewModel.SelectedScheduler?.Name is "align_your_steps")
-        {
-            SamplerCardViewModel.ApplyStepsInitialCustomSampler(applyArgs, false);
-        }
-        else
-        {
-            SamplerCardViewModel.ApplyStep(applyArgs);
-        }
+        ApplySamplerForCurrentWorkflow(applyArgs, includeGgufAsFluxGuidance: true);
 
         // Apply module steps
         foreach (var module in ModulesCardViewModel.Cards.OfType<ModuleBase>())

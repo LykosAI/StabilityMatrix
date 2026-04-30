@@ -1,5 +1,4 @@
 ﻿using System.Collections.ObjectModel;
-using System.Collections.Specialized;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Nodes;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -185,7 +184,6 @@ public partial class ModelCardViewModel(
         nameof(ShowShift),
         nameof(ShowEncoderTypeSelection),
         nameof(HasRecommendedDefaults),
-        nameof(WorkflowFilteredModels),
         nameof(WorkflowProfileStatusText),
         nameof(ShowWorkflowProfileStatus),
         nameof(RecommendedDefaultsToolTip)
@@ -313,7 +311,6 @@ public partial class ModelCardViewModel(
                 "Apply recommended sampler defaults: ER SDE / Simple / 30 steps / CFG 4",
             _ => "No recommended sampler defaults for this workflow",
         };
-    public IReadOnlyList<HybridModelFile> WorkflowFilteredModels => GetWorkflowFilteredModels();
 
     public event Action<InferenceWorkflowProfile>? RecommendedDefaultsRequested;
 
@@ -327,25 +324,17 @@ public partial class ModelCardViewModel(
         {
             SetDefaultEncoderCount();
         }
-
-        ClientManager.AllModels.CollectionChanged += AllModelsOnCollectionChanged;
     }
 
     public override void OnUnloaded()
     {
         base.OnUnloaded();
         ExtraNetworksStackCardViewModel.CardAdded -= ExtraNetworksStackCardViewModelOnCardAdded;
-        ClientManager.AllModels.CollectionChanged -= AllModelsOnCollectionChanged;
     }
 
     private void ExtraNetworksStackCardViewModelOnCardAdded(object? sender, LoadableViewModelBase e)
     {
         OnSelectedModelChanged(SelectedModel);
-    }
-
-    private void AllModelsOnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
-    {
-        OnPropertyChanged(nameof(WorkflowFilteredModels));
     }
 
     [RelayCommand]
@@ -711,39 +700,6 @@ public partial class ModelCardViewModel(
             return InferenceWorkflowProfile.HiDream;
 
         return InferenceWorkflowProfile.DefaultCheckpoint;
-    }
-
-    private IReadOnlyList<HybridModelFile> GetWorkflowFilteredModels()
-    {
-        var allModels = ClientManager.AllModels.ToList();
-
-        if (SelectedWorkflowProfile is InferenceWorkflowProfile.Auto or InferenceWorkflowProfile.Custom)
-            return allModels;
-
-        var compatibleModels = allModels
-            .Where(model => IsModelCompatibleWithWorkflow(model, SelectedWorkflowProfile))
-            .ToHashSet(HybridModelFile.Comparer);
-
-        if (compatibleModels.Count == 0)
-            return allModels;
-
-        return allModels
-            .OrderBy(model => compatibleModels.Contains(model) ? 0 : 1)
-            .ThenBy(model => model.ShortDisplayName, StringComparer.OrdinalIgnoreCase)
-            .ToList();
-    }
-
-    private static bool IsModelCompatibleWithWorkflow(HybridModelFile model, InferenceWorkflowProfile profile)
-    {
-        var isUnetModel = model.Local?.SharedFolderType is SharedFolderType.DiffusionModels;
-
-        if (profile is InferenceWorkflowProfile.DefaultCheckpoint)
-            return !isUnetModel;
-
-        if (!isUnetModel)
-            return false;
-
-        return InferWorkflowProfile(model, true) == profile;
     }
 
     /// <summary>

@@ -43,7 +43,7 @@
                 <controls:Card Padding="12">
                     <StackPanel Spacing="0">
                         <!--  Model Row  -->
-                        <Grid ColumnDefinitions="60,*,Auto">
+                        <Grid ColumnDefinitions="90,*,Auto">
                             <TextBlock
                                 Grid.Column="0"
                                 VerticalAlignment="Center"

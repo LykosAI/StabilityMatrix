@@ -724,22 +724,17 @@ public partial class ModelCardViewModel(
         if (SelectedWorkflowProfile is InferenceWorkflowProfile.Auto or InferenceWorkflowProfile.Custom)
             return allModels;
 
-        var filteredModels = allModels
+        var compatibleModels = allModels
             .Where(model => IsModelCompatibleWithWorkflow(model, SelectedWorkflowProfile))
-            .ToList();
+            .ToHashSet(HybridModelFile.Comparer);
 
-        if (filteredModels.Count == 0)
+        if (compatibleModels.Count == 0)
             return allModels;
 
-        if (
-            SelectedUnifiedModel is { } selected
-            && filteredModels.All(model => !HybridModelFile.Comparer.Equals(model, selected))
-        )
-        {
-            filteredModels.Insert(0, selected);
-        }
-
-        return filteredModels;
+        return allModels
+            .OrderBy(model => compatibleModels.Contains(model) ? 0 : 1)
+            .ThenBy(model => model.ShortDisplayName, StringComparer.OrdinalIgnoreCase)
+            .ToList();
     }
 
     private static bool IsModelCompatibleWithWorkflow(HybridModelFile model, InferenceWorkflowProfile profile)

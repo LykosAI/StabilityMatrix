@@ -56,7 +56,7 @@
                                 Grid.Column="1"
                                 Padding="8,6,4,6"
                                 HorizontalAlignment="Stretch"
-                                ItemsSource="{Binding ClientManager.AllModels}"
+                                ItemsSource="{Binding WorkflowFilteredModels}"
                                 SelectedItem="{Binding SelectedUnifiedModel}"
                                 Theme="{StaticResource BetterComboBoxHybridModelTheme}" />
 
@@ -144,10 +144,16 @@
                                 VerticalAlignment="Stretch"
                                 Command="{Binding ApplyRecommendedDefaultsCommand}"
                                 IsEnabled="{Binding HasRecommendedDefaults}"
-                                ToolTip.Tip="Apply recommended sampler defaults">
+                                ToolTip.Tip="{Binding RecommendedDefaultsToolTip}">
                                 <fluent:SymbolIcon FontSize="16" Symbol="Sparkle" />
                             </Button>
                         </Grid>
+                        <TextBlock
+                            Margin="90,4,0,0"
+                            FontSize="11"
+                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                            IsVisible="{Binding ShowWorkflowProfileStatus}"
+                            Text="{Binding WorkflowProfileStatusText}" />
 
                         <!--  Refiner (below Model, when enabled)  -->
                         <Grid

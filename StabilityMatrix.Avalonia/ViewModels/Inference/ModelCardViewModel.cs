@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Nodes;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -14,6 +15,7 @@ using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 using StabilityMatrix.Core.Models.Api.Comfy.NodeTypes;
@@ -32,6 +34,10 @@ public partial class ModelCardViewModel(
 {
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(SelectedUnifiedModel))]
+    [NotifyPropertyChangedFor(nameof(WorkflowFilteredModels))]
+    [NotifyPropertyChangedFor(nameof(WorkflowProfileStatusText))]
+    [NotifyPropertyChangedFor(nameof(ShowWorkflowProfileStatus))]
+    [NotifyPropertyChangedFor(nameof(RecommendedDefaultsToolTip))]
     private HybridModelFile? selectedModel;
 
     [ObservableProperty]
@@ -40,7 +46,11 @@ public partial class ModelCardViewModel(
         nameof(ShowPrecisionSelection),
         nameof(SelectedUnifiedModel),
         nameof(HasActiveAdvancedOptions),
-        nameof(AdvancedOptionsHeader)
+        nameof(AdvancedOptionsHeader),
+        nameof(WorkflowFilteredModels),
+        nameof(WorkflowProfileStatusText),
+        nameof(ShowWorkflowProfileStatus),
+        nameof(RecommendedDefaultsToolTip)
     )]
     private HybridModelFile? selectedUnetModel;
 
@@ -118,7 +128,11 @@ public partial class ModelCardViewModel(
         nameof(ShowPrecisionSelection),
         nameof(ShowEncoderSection),
         nameof(HasActiveAdvancedOptions),
-        nameof(AdvancedOptionsHeader)
+        nameof(AdvancedOptionsHeader),
+        nameof(WorkflowFilteredModels),
+        nameof(WorkflowProfileStatusText),
+        nameof(ShowWorkflowProfileStatus),
+        nameof(RecommendedDefaultsToolTip)
     )]
     private ModelLoader selectedModelLoader;
 
@@ -160,7 +174,11 @@ public partial class ModelCardViewModel(
         nameof(IsHiDreamWorkflow),
         nameof(ShowShift),
         nameof(ShowEncoderTypeSelection),
-        nameof(HasRecommendedDefaults)
+        nameof(HasRecommendedDefaults),
+        nameof(WorkflowFilteredModels),
+        nameof(WorkflowProfileStatusText),
+        nameof(ShowWorkflowProfileStatus),
+        nameof(RecommendedDefaultsToolTip)
     )]
     private string? selectedClipType;
 
@@ -170,7 +188,11 @@ public partial class ModelCardViewModel(
         nameof(IsHiDreamWorkflow),
         nameof(ShowShift),
         nameof(ShowEncoderTypeSelection),
-        nameof(HasRecommendedDefaults)
+        nameof(HasRecommendedDefaults),
+        nameof(WorkflowFilteredModels),
+        nameof(WorkflowProfileStatusText),
+        nameof(ShowWorkflowProfileStatus),
+        nameof(RecommendedDefaultsToolTip)
     )]
     private InferenceWorkflowProfile selectedWorkflowProfile = InferenceWorkflowProfile.Auto;
 
@@ -273,6 +295,29 @@ public partial class ModelCardViewModel(
                 or InferenceWorkflowProfile.ZImageBase
                 or InferenceWorkflowProfile.ZImageTurbo
                 or InferenceWorkflowProfile.Anima;
+    public bool ShowWorkflowProfileStatus =>
+        SelectedWorkflowProfile is InferenceWorkflowProfile.Auto
+        && SelectedUnifiedModel is not null
+        && ResolvedWorkflowProfile is not InferenceWorkflowProfile.Custom;
+    public string WorkflowProfileStatusText => $"Detected: {ResolvedWorkflowProfile.GetStringValue()}";
+    public string RecommendedDefaultsToolTip =>
+        ResolvedWorkflowProfile switch
+        {
+            InferenceWorkflowProfile.DefaultCheckpoint =>
+                "Apply recommended sampler defaults: Euler Ancestral / Normal / 30 steps / CFG 5",
+            InferenceWorkflowProfile.Flux =>
+                "Apply recommended sampler defaults: Euler / Simple / 20 steps / CFG 3.5",
+            InferenceWorkflowProfile.Flux2 =>
+                "Apply recommended sampler defaults: Euler / Flux2Scheduler / 20 steps / CFG 5",
+            InferenceWorkflowProfile.ZImageBase =>
+                "Apply recommended sampler defaults: Res Multistep / Simple / 30 steps / CFG 4",
+            InferenceWorkflowProfile.ZImageTurbo =>
+                "Apply recommended sampler defaults: Res Multistep / Simple / 8 steps / CFG 1",
+            InferenceWorkflowProfile.Anima =>
+                "Apply recommended sampler defaults: ER SDE / Simple / 30 steps / CFG 4",
+            _ => "No recommended sampler defaults for this workflow",
+        };
+    public IReadOnlyList<HybridModelFile> WorkflowFilteredModels => GetWorkflowFilteredModels();
 
     public event Action<InferenceWorkflowProfile>? RecommendedDefaultsRequested;
 
@@ -286,17 +331,25 @@ public partial class ModelCardViewModel(
         {
             SetDefaultEncoderCount();
         }
+
+        ClientManager.AllModels.CollectionChanged += AllModelsOnCollectionChanged;
     }
 
     public override void OnUnloaded()
     {
         base.OnUnloaded();
         ExtraNetworksStackCardViewModel.CardAdded -= ExtraNetworksStackCardViewModelOnCardAdded;
+        ClientManager.AllModels.CollectionChanged -= AllModelsOnCollectionChanged;
     }
 
     private void ExtraNetworksStackCardViewModelOnCardAdded(object? sender, LoadableViewModelBase e)
     {
         OnSelectedModelChanged(SelectedModel);
+    }
+
+    private void AllModelsOnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        OnPropertyChanged(nameof(WorkflowFilteredModels));
     }
 
     [RelayCommand]
@@ -327,6 +380,7 @@ public partial class ModelCardViewModel(
         using var pickerScope = vmFactory.CreateScope();
         var pickerVm = pickerScope.ServiceManager.Get<ModelPickerDialogViewModel>();
         pickerVm.Title = "Select Model";
+        pickerVm.PreferredWorkflowProfile = SelectedWorkflowProfile;
 
         if (await pickerVm.GetDialog().ShowAsync() == ContentDialogResult.Primary)
         {
@@ -596,10 +650,18 @@ public partial class ModelCardViewModel(
 
     private InferenceWorkflowProfile InferWorkflowProfile()
     {
-        if (SelectedModelLoader is not ModelLoader.Unet)
+        return InferWorkflowProfile(
+            SelectedUnifiedModel,
+            SelectedModelLoader is ModelLoader.Unet
+                || SelectedUnifiedModel?.Local?.SharedFolderType is SharedFolderType.DiffusionModels
+        );
+    }
+
+    private static InferenceWorkflowProfile InferWorkflowProfile(HybridModelFile? model, bool isUnetModel)
+    {
+        if (!isUnetModel)
             return InferenceWorkflowProfile.DefaultCheckpoint;
 
-        var model = SelectedUnetModel;
         var baseModel = model?.Local?.ConnectedModelInfo?.BaseModel;
 
         if (!string.IsNullOrWhiteSpace(baseModel))
@@ -636,7 +698,11 @@ public partial class ModelCardViewModel(
                 : InferenceWorkflowProfile.ZImageBase;
         }
 
-        if (name.Contains("flux2", StringComparison.OrdinalIgnoreCase))
+        if (
+            name.Contains("flux2", StringComparison.OrdinalIgnoreCase)
+            || name.Contains("flux-2", StringComparison.OrdinalIgnoreCase)
+            || name.Contains("flux_2", StringComparison.OrdinalIgnoreCase)
+        )
             return InferenceWorkflowProfile.Flux2;
 
         if (name.Contains("flux", StringComparison.OrdinalIgnoreCase))
@@ -649,6 +715,44 @@ public partial class ModelCardViewModel(
             return InferenceWorkflowProfile.HiDream;
 
         return InferenceWorkflowProfile.DefaultCheckpoint;
+    }
+
+    private IReadOnlyList<HybridModelFile> GetWorkflowFilteredModels()
+    {
+        var allModels = ClientManager.AllModels.ToList();
+
+        if (SelectedWorkflowProfile is InferenceWorkflowProfile.Auto or InferenceWorkflowProfile.Custom)
+            return allModels;
+
+        var filteredModels = allModels
+            .Where(model => IsModelCompatibleWithWorkflow(model, SelectedWorkflowProfile))
+            .ToList();
+
+        if (filteredModels.Count == 0)
+            return allModels;
+
+        if (
+            SelectedUnifiedModel is { } selected
+            && filteredModels.All(model => !HybridModelFile.Comparer.Equals(model, selected))
+        )
+        {
+            filteredModels.Insert(0, selected);
+        }
+
+        return filteredModels;
+    }
+
+    private static bool IsModelCompatibleWithWorkflow(HybridModelFile model, InferenceWorkflowProfile profile)
+    {
+        var isUnetModel = model.Local?.SharedFolderType is SharedFolderType.DiffusionModels;
+
+        if (profile is InferenceWorkflowProfile.DefaultCheckpoint)
+            return !isUnetModel;
+
+        if (!isUnetModel)
+            return false;
+
+        return InferWorkflowProfile(model, true) == profile;
     }
 
     /// <summary>
@@ -870,6 +974,10 @@ public partial class ModelCardViewModel(
         OnPropertyChanged(nameof(ShowShift));
         OnPropertyChanged(nameof(ShowEncoderTypeSelection));
         OnPropertyChanged(nameof(HasRecommendedDefaults));
+        OnPropertyChanged(nameof(WorkflowFilteredModels));
+        OnPropertyChanged(nameof(WorkflowProfileStatusText));
+        OnPropertyChanged(nameof(ShowWorkflowProfileStatus));
+        OnPropertyChanged(nameof(RecommendedDefaultsToolTip));
 
         if (!isLoadingState)
         {

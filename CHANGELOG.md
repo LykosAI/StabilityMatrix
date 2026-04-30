@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added an Inference workflow profile selector with recommended defaults for default checkpoints, Flux, Flux.2, Z-Image Base/Turbo, and Anima
 ### Changed
 - The CivitAI base model type filter now uses CivitAI's official `/api/v1/enums` endpoint, with fallbacks to the previous technique and a built-in list, so the filter stays populated even if the CivitAI response format changes or the service is unreachable
+- Improved the Inference workflow selector UX with Auto detection feedback, workflow-aware model lists, and recommended-default tooltips
 ### Fixed
 - Fixed CivitAI model browsing breaking during Discovery API outages — the browser now falls back to the direct CivitAI API when Discovery returns a server error, authentication failure, or times out
 - Fixed UNet-only model selection sometimes clearing during model-list refreshes, which could hide text encoder slots after generating, cancelling, or reconnecting to ComfyUI

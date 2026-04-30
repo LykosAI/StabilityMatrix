@@ -267,8 +267,12 @@ public partial class ModelCardViewModel(
             : SelectedWorkflowProfile;
     public bool HasRecommendedDefaults =>
         ResolvedWorkflowProfile
-            is InferenceWorkflowProfile.ZImageBase
-                or InferenceWorkflowProfile.ZImageTurbo;
+            is InferenceWorkflowProfile.DefaultCheckpoint
+                or InferenceWorkflowProfile.Flux
+                or InferenceWorkflowProfile.Flux2
+                or InferenceWorkflowProfile.ZImageBase
+                or InferenceWorkflowProfile.ZImageTurbo
+                or InferenceWorkflowProfile.Anima;
 
     public event Action<InferenceWorkflowProfile>? RecommendedDefaultsRequested;
 

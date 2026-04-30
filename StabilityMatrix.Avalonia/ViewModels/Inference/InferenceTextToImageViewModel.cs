@@ -348,6 +348,24 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
     {
         switch (profile)
         {
+            case InferenceWorkflowProfile.DefaultCheckpoint:
+                SamplerCardViewModel.SelectedSampler = ComfySampler.EulerAncestral;
+                SamplerCardViewModel.SelectedScheduler = ComfyScheduler.Normal;
+                SamplerCardViewModel.Steps = 30;
+                SamplerCardViewModel.CfgScale = 5.0d;
+                break;
+            case InferenceWorkflowProfile.Flux:
+                SamplerCardViewModel.SelectedSampler = ComfySampler.Euler;
+                SamplerCardViewModel.SelectedScheduler = ComfyScheduler.Simple;
+                SamplerCardViewModel.Steps = 20;
+                SamplerCardViewModel.CfgScale = 3.5d;
+                break;
+            case InferenceWorkflowProfile.Flux2:
+                SamplerCardViewModel.SelectedSampler = ComfySampler.Euler;
+                SamplerCardViewModel.SelectedScheduler = ComfyScheduler.Normal;
+                SamplerCardViewModel.Steps = 20;
+                SamplerCardViewModel.CfgScale = 5.0d;
+                break;
             case InferenceWorkflowProfile.ZImageTurbo:
                 SamplerCardViewModel.SelectedSampler = ComfySampler.ResMultistep;
                 SamplerCardViewModel.SelectedScheduler = ComfyScheduler.Simple;
@@ -356,6 +374,12 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
                 break;
             case InferenceWorkflowProfile.ZImageBase:
                 SamplerCardViewModel.SelectedSampler = ComfySampler.ResMultistep;
+                SamplerCardViewModel.SelectedScheduler = ComfyScheduler.Simple;
+                SamplerCardViewModel.Steps = 30;
+                SamplerCardViewModel.CfgScale = 4.0d;
+                break;
+            case InferenceWorkflowProfile.Anima:
+                SamplerCardViewModel.SelectedSampler = ComfySampler.ErSde;
                 SamplerCardViewModel.SelectedScheduler = ComfyScheduler.Simple;
                 SamplerCardViewModel.Steps = 30;
                 SamplerCardViewModel.CfgScale = 4.0d;

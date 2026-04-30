@@ -112,7 +112,7 @@
                         </Grid>
 
                         <!--  Workflow Profile  -->
-                        <Grid Margin="0,8,0,0" ColumnDefinitions="60,*,Auto">
+                        <Grid Margin="0,8,0,0" ColumnDefinitions="90,*,Auto">
                             <TextBlock
                                 Grid.Column="0"
                                 VerticalAlignment="Center"

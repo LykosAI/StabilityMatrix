@@ -56,11 +56,8 @@ public partial class ModelCardViewModel(
         {
             if (value is null)
             {
-                // Clear both when null is set
-                if (IsStandaloneModelLoader)
-                    SelectedUnetModel = null;
-                else
-                    SelectedModel = null;
+                // ComboBox selection can briefly report null while the model list refreshes.
+                // Keep the active model so UNet-only encoder slots do not disappear transiently.
                 return;
             }
 
@@ -675,10 +672,12 @@ public partial class ModelCardViewModel(
 
         if (model.Local?.SharedFolderType is SharedFolderType.DiffusionModels)
         {
+            SelectedModelLoader = ModelLoader.Unet;
             SelectedUnetModel = model;
         }
         else
         {
+            SelectedModelLoader = ModelLoader.Default;
             SelectedModel = model;
         }
     }
@@ -711,6 +710,9 @@ public partial class ModelCardViewModel(
 
             if (!IsClipModelSelectionEnabled)
                 IsClipModelSelectionEnabled = true;
+
+            if (TextEncoders.Count == 0)
+                SetDefaultEncoderCount();
         }
     }
 

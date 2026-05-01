@@ -1,4 +1,4 @@
-﻿<dock:DockUserControlBase
+<dock:DockUserControlBase
     x:Class="StabilityMatrix.Avalonia.Views.Inference.InferenceTextToImageView"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -105,7 +105,7 @@
                                     DataContext="{Binding ElementName=Dock, Path=DataContext}">
                                     <Grid
                                         HorizontalAlignment="Center"
-                                        ColumnDefinitions="Auto,*,Auto"
+                                        ColumnDefinitions="Auto,Auto,Auto,Auto"
                                         RowDefinitions="Auto,*">
                                         <Grid.Styles>
                                             <Style Selector="Button">
@@ -152,9 +152,26 @@
                                             Command="{Binding GenerateImageCancelCommand}"
                                             IsVisible="{Binding GenerateImageCommand.CanBeCanceled}" />
 
+                                        <!--  Queue Generation Button  -->
+                                        <StackPanel Grid.Row="1" Grid.Column="2" Orientation="Horizontal" Margin="4,0,0,0">
+                                            <Button
+                                                MinWidth="130"
+                                                MaxWidth="200"
+                                                HorizontalAlignment="Stretch"
+                                                Command="{Binding QueueGenerationCommand}"
+                                                Content="{Binding QueueGenerationText}" />
+                                            <Button
+                                                Margin="4,0,0,0"
+                                                Padding="12,8"
+                                                icons:Attached.Icon="fa-solid fa-trash"
+                                                ToolTip.Tip="Clear Queue"
+                                                IsVisible="{Binding IsQueueClearable}"
+                                                Command="{Binding ClearQueueCommand}" />
+                                        </StackPanel>
+
                                         <Button
                                             Grid.Row="1"
-                                            Grid.Column="2"
+                                            Grid.Column="3"
                                             Margin="4,0"
                                             Padding="12,8"
                                             HorizontalAlignment="Left"

@@ -22,49 +22,34 @@ namespace StabilityMatrix.Core.Services.Rocm;
 public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageHelper
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-
-    private static readonly string[] UnsupportedRdna2ModelMarkers =
-    [
-        "680m",
-        "660m",
-        "610m",
-        "rx6300",
-        "w6300",
-        "rx6400",
-        "w6400",
-        "rx6450",
-        "rx6550",
-    ];
+    private static readonly StringComparer EnvComparer = StringComparer.OrdinalIgnoreCase;
 
     /// <inheritdoc />
-    public Task<RocmCompatibilityResult> GetCompatibilityAsync(
-        RocmPackageProfile profile,
-        CancellationToken cancellationToken = default
-    )
+    public RocmCompatibilityResult GetCompatibility(RocmPackageProfile profile)
     {
-        return Task.FromResult(BuildCompatibilityResult(profile));
+        return BuildCompatibilityResult(profile);
     }
 
     /// <inheritdoc />
-    public Task<RocmRuntimeContext> ResolveRuntimeContextAsync(
+    public RocmRuntimeContext ResolveRuntimeContext(
         string installLocation,
         InstalledPackage installedPackage,
-        RocmPackageProfile profile,
-        CancellationToken cancellationToken = default
+        RocmPackageProfile profile
     )
     {
+        _ = installLocation;
+        _ = installedPackage;
+
         var compatibility = BuildCompatibilityResult(profile);
         if (!compatibility.IsCompatible)
         {
-            return Task.FromResult(
-                new RocmRuntimeContext
-                {
-                    IsSupported = false,
-                    FailureReason = compatibility.FailureReason,
-                    SelectedGpu = compatibility.SelectedGpu,
-                    RuntimeGfxArch = compatibility.ResolvedGfxArch,
-                }
-            );
+            return new RocmRuntimeContext
+            {
+                IsSupported = false,
+                FailureReason = compatibility.FailureReason,
+                SelectedGpu = compatibility.SelectedGpu,
+                RuntimeGfxArch = compatibility.ResolvedGfxArch,
+            };
         }
 
         var supportedAmdGpus = GetAmdGpuCandidates(forceRefresh: true)
@@ -81,29 +66,23 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
             ?? selectedGpu?.GetAmdGfxArch()
             ?? GetSupportedFallbackGfxArch(supportedAmdGpus);
 
-        return Task.FromResult(
-            new RocmRuntimeContext
-            {
-                IsSupported = true,
-                SelectedGpu = selectedGpu,
-                RuntimeGfxArch = runtimeGfxArch,
-                IsLegacyGpu = IsLegacyArchitecture(runtimeGfxArch),
-                IsRdna1 = IsRdna1Architecture(runtimeGfxArch),
-            }
-        );
+        return new RocmRuntimeContext
+        {
+            IsSupported = true,
+            SelectedGpu = selectedGpu,
+            RuntimeGfxArch = runtimeGfxArch,
+        };
     }
 
     /// <inheritdoc />
-    public Task<RocmInstallContext> ResolveInstallContextAsync(
+    public RocmInstallContext ResolveInstallContext(
         string installLocation,
         InstalledPackage installedPackage,
-        RocmPackageProfile profile,
-        CancellationToken cancellationToken = default
+        RocmPackageProfile profile
     )
     {
         _ = installLocation;
         _ = installedPackage;
-        _ = cancellationToken;
 
         var supportedAmdGpus = GetAmdGpuCandidates(forceRefresh: true)
             .Where(IsSupportedWindowsRocmGpu)
@@ -115,65 +94,26 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
         );
 
         var runtimeGfxArch = preferredGfxArch ?? GetSupportedFallbackGfxArch(supportedAmdGpus);
-        var windowsNativeIndexUrl = TryGetWindowsNativeRocmIndexUrl(runtimeGfxArch);
+        var windowsNativeIndexUrl = WindowsRocmSupport.TryGetPackageIndexUrl(runtimeGfxArch);
 
-        return Task.FromResult(
-            new RocmInstallContext
-            {
-                PreferredGfxArch = preferredGfxArch,
-                RuntimeGfxArch = runtimeGfxArch,
-                RocmPackageIndexUrl = windowsNativeIndexUrl,
-                RocmTorchIndexUrl = windowsNativeIndexUrl,
-            }
-        );
+        return new RocmInstallContext
+        {
+            RuntimeGfxArch = runtimeGfxArch,
+            RocmPackageIndexUrl = windowsNativeIndexUrl,
+        };
     }
 
     /// <inheritdoc />
-    public IReadOnlyDictionary<string, string> BuildInstallEnvironment(
+    public IReadOnlyDictionary<string, string> BuildLaunchEnvironment(
         string installLocation,
-        RocmInstallContext context,
+        InstalledPackage installedPackage,
         RocmPackageProfile profile
     )
     {
-        _ = installLocation;
-        _ = context;
-        _ = profile;
-        return new Dictionary<string, string>();
-    }
-
-    /// <inheritdoc />
-    public Task<RocmInstallContext> RefreshPackageAfterUpdateAsync(
-        string installLocation,
-        InstalledPackage installedPackage,
-        RocmPackageProfile profile,
-        CancellationToken cancellationToken = default
-    )
-    {
-        return ResolveInstallContextAsync(installLocation, installedPackage, profile, cancellationToken);
-    }
-
-    /// <inheritdoc />
-    public Task<IReadOnlyDictionary<string, string>> BuildLaunchEnvironmentAsync(
-        string installLocation,
-        InstalledPackage installedPackage,
-        RocmPackageProfile profile,
-        CancellationToken cancellationToken = default
-    )
-    {
-        _ = installLocation;
-        _ = installedPackage;
-
-        var runtimeContext = ResolveRuntimeContextAsync(
-                installLocation,
-                installedPackage,
-                profile,
-                cancellationToken
-            )
-            .GetAwaiter()
-            .GetResult();
+        var runtimeContext = ResolveRuntimeContext(installLocation, installedPackage, profile);
 
         if (!runtimeContext.IsSupported)
-            return Task.FromResult<IReadOnlyDictionary<string, string>>(new Dictionary<string, string>());
+            return new Dictionary<string, string>();
 
         var helperEnvironment = BuildHelperLaunchEnvironment(runtimeContext, profile);
         var packageEnvironment =
@@ -185,27 +125,7 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
             profile.EnvironmentOptions
         );
 
-        return Task.FromResult<IReadOnlyDictionary<string, string>>(mergedEnvironment);
-    }
-
-    /// <inheritdoc />
-    public async Task ApplyLaunchEnvironmentAsync(
-        IPyVenvRunner venvRunner,
-        string installLocation,
-        InstalledPackage installedPackage,
-        RocmPackageProfile profile,
-        CancellationToken cancellationToken = default
-    )
-    {
-        var environment = await BuildLaunchEnvironmentAsync(
-                installLocation,
-                installedPackage,
-                profile,
-                cancellationToken
-            )
-            .ConfigureAwait(false);
-
-        venvRunner.UpdateEnvironmentVariables(env => env.SetItems(environment));
+        return mergedEnvironment;
     }
 
     /// <inheritdoc />
@@ -219,7 +139,7 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
         CancellationToken cancellationToken = default
     )
     {
-        var compatibility = await GetCompatibilityAsync(profile, cancellationToken).ConfigureAwait(false);
+        var compatibility = GetCompatibility(profile);
         if (!compatibility.IsCompatible)
         {
             throw new ApplicationException(
@@ -228,18 +148,11 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
             );
         }
 
-        var installContext = await ResolveInstallContextAsync(
-                installLocation,
-                installedPackage,
-                profile,
-                cancellationToken
-            )
-            .ConfigureAwait(false);
+        var installContext = ResolveInstallContext(installLocation, installedPackage, profile);
 
         var rocmPackageIndexUrl = installContext.RocmPackageIndexUrl;
-        var rocmTorchIndexUrl = installContext.RocmTorchIndexUrl ?? rocmPackageIndexUrl;
 
-        if (string.IsNullOrWhiteSpace(rocmPackageIndexUrl) || string.IsNullOrWhiteSpace(rocmTorchIndexUrl))
+        if (string.IsNullOrWhiteSpace(rocmPackageIndexUrl))
         {
             throw new ApplicationException(
                 $"No Windows ROCm Technical Preview index URL is available for '{installContext.RuntimeGfxArch ?? "unknown"}'."
@@ -254,7 +167,7 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
             progress?.Report(new ProgressReport(-1f, "Installing ROCm runtime...", isIndeterminate: true));
             var rocmRuntimeArgs = new PipInstallArgs()
                 .AddKeyedArgs("--index-url", ["--index-url", rocmPackageIndexUrl])
-                .AddArgs("rocm[devel,libraries]", "--no-warn-script-location");
+                .AddArgs("rocm[devel,libraries]");
 
             if (installedPackage.PipOverrides != null)
             {
@@ -264,42 +177,9 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
             await venvRunner.PipInstall(rocmRuntimeArgs, onConsoleOutput).ConfigureAwait(false);
 
             progress?.Report(new ProgressReport(-1f, "Initializing ROCm SDK...", isIndeterminate: true));
-            var rocmSdkExe = Path.Combine(installLocation, "venv", "Scripts", "rocm-sdk.exe");
-            if (!File.Exists(rocmSdkExe))
-            {
-                throw new FileNotFoundException("rocm-sdk.exe was not installed", rocmSdkExe);
-            }
-
-            using var rocmSdkProcess = ProcessRunner.StartAnsiProcess(
-                rocmSdkExe,
-                ["init"],
-                installLocation,
-                onConsoleOutput
-            );
-
-            await rocmSdkProcess.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
-            if (rocmSdkProcess.ExitCode != 0)
-            {
-                throw new ProcessException($"rocm-sdk init failed with code {rocmSdkProcess.ExitCode}");
-            }
+            await InitializeWindowsNativeRocmSdkAsync(installLocation, onConsoleOutput, cancellationToken)
+                .ConfigureAwait(false);
         }
-
-        progress?.Report(new ProgressReport(-1f, "Installing ROCm torch...", isIndeterminate: true));
-        var torchArgs = new PipInstallArgs()
-            .AddKeyedArgs("--index-url", ["--index-url", rocmTorchIndexUrl])
-            .AddArgs("torch", "torchaudio", "torchvision", "--no-warn-script-location");
-
-        if (profile.ForceReinstallTorch)
-        {
-            torchArgs = torchArgs.AddArg("--force-reinstall");
-        }
-
-        if (installedPackage.PipOverrides != null)
-        {
-            torchArgs = torchArgs.WithUserOverrides(installedPackage.PipOverrides);
-        }
-
-        await venvRunner.PipInstall(torchArgs, onConsoleOutput).ConfigureAwait(false);
 
         progress?.Report(
             new ProgressReport(-1f, "Installing package requirements...", isIndeterminate: true)
@@ -334,18 +214,56 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
 
         await venvRunner.PipInstall(requirementsPipArgs, onConsoleOutput).ConfigureAwait(false);
 
-        if (!profile.PostInstallPipArgs.Any())
-            return;
+        progress?.Report(new ProgressReport(-1f, "Installing ROCm torch...", isIndeterminate: true));
+        var torchArgs = new PipInstallArgs()
+            .AddArg("--pre")
+            .AddArg("--upgrade")
+            .AddKeyedArgs("--index-url", ["--index-url", rocmPackageIndexUrl])
+            .WithTorch()
+            .WithTorchAudio()
+            .WithTorchVision();
 
-        var postInstallPipArgs = new PipInstallArgs([.. profile.PostInstallPipArgs]);
-        if (installedPackage.PipOverrides != null)
+        if (profile.ForceReinstallTorch)
         {
-            postInstallPipArgs = postInstallPipArgs.WithUserOverrides(installedPackage.PipOverrides);
+            torchArgs = torchArgs.AddArg("--force-reinstall");
         }
 
-        await venvRunner.PipInstall(postInstallPipArgs, onConsoleOutput).ConfigureAwait(false);
+        if (installedPackage.PipOverrides != null)
+        {
+            torchArgs = torchArgs.WithUserOverrides(installedPackage.PipOverrides);
+        }
 
-        await VerifyWindowsNativeTorchInstallAsync(venvRunner, onConsoleOutput).ConfigureAwait(false);
+        await venvRunner.PipInstall(torchArgs, onConsoleOutput).ConfigureAwait(false);
+
+        if (profile.RequiresRocmSdk)
+        {
+            await AlignRocmSdkDevelVersionAsync(venvRunner, rocmPackageIndexUrl, onConsoleOutput)
+                .ConfigureAwait(false);
+
+            progress?.Report(new ProgressReport(-1f, "Reinitializing ROCm SDK...", isIndeterminate: true));
+            await InitializeWindowsNativeRocmSdkAsync(installLocation, onConsoleOutput, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        if (profile.PostInstallPipArgs.Any())
+        {
+            var postInstallPipArgs = new PipInstallArgs([.. profile.PostInstallPipArgs]);
+            if (installedPackage.PipOverrides != null)
+            {
+                postInstallPipArgs = postInstallPipArgs.WithUserOverrides(installedPackage.PipOverrides);
+            }
+
+            await venvRunner.PipInstall(postInstallPipArgs, onConsoleOutput).ConfigureAwait(false);
+        }
+
+        await VerifyWindowsNativeTorchInstallAsync(venvRunner, onConsoleOutput, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (profile.RequiresRocmSdk)
+        {
+            await VerifyWindowsNativeRocmRuntimeAsync(installLocation, onConsoleOutput, cancellationToken)
+                .ConfigureAwait(false);
+        }
     }
 
     /// <summary>
@@ -354,15 +272,6 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
     /// </summary>
     private RocmCompatibilityResult BuildCompatibilityResult(RocmPackageProfile profile)
     {
-        if (profile.RequiresWindows && !Compat.IsWindows)
-        {
-            return new RocmCompatibilityResult
-            {
-                IsCompatible = false,
-                FailureReason = "This ROCm profile currently requires Windows.",
-            };
-        }
-
         var amdGpus = GetAmdGpuCandidates(forceRefresh: true).ToList();
         if (amdGpus.Count == 0)
         {
@@ -374,15 +283,6 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
         }
 
         var preferredGpu = settingsManager.Settings.PreferredGpu;
-        if (preferredGpu is not null && IsExplicitlyUnsupportedRdna2Gpu(preferredGpu))
-        {
-            return new RocmCompatibilityResult
-            {
-                IsCompatible = false,
-                FailureReason = $"Selected GPU '{preferredGpu.Name}' is unsupported for Windows ROCm.",
-                SelectedGpu = preferredGpu,
-            };
-        }
 
         var supportedAmdGpus = amdGpus.Where(IsSupportedWindowsRocmGpu).ToList();
         if (supportedAmdGpus.Count == 0)
@@ -471,29 +371,10 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
 
     /// <summary>
     /// Determines whether a GPU is supported by the Windows ROCm install flow currently modeled by the helper.
-    /// Unsupported low-end RDNA2/APU models are filtered explicitly even when they identify as AMD hardware.
     /// </summary>
     private static bool IsSupportedWindowsRocmGpu(GpuInfo gpu)
     {
-        if (!gpu.IsAmd || string.IsNullOrWhiteSpace(gpu.Name))
-            return false;
-
-        if (IsExplicitlyUnsupportedRdna2Gpu(gpu))
-            return false;
-
-        return TryGetWindowsNativeRocmIndexUrl(gpu.GetAmdGfxArch()) is not null;
-    }
-
-    /// <summary>
-    /// Identifies Windows ROCm-incompatible RDNA2 models that need to remain outside the supported GPU set.
-    /// </summary>
-    private static bool IsExplicitlyUnsupportedRdna2Gpu(GpuInfo gpu)
-    {
-        if (!gpu.IsAmd || string.IsNullOrWhiteSpace(gpu.Name))
-            return false;
-
-        var normalizedName = gpu.Name.Replace(" ", string.Empty, StringComparison.Ordinal).ToLowerInvariant();
-        return UnsupportedRdna2ModelMarkers.Any(normalizedName.Contains);
+        return WindowsRocmSupport.IsSupportedGpu(gpu);
     }
 
     /// <summary>
@@ -501,50 +382,7 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
     /// </summary>
     private static bool IsSupportedWindowsRocmArchitecture(string? gfxArch)
     {
-        return TryGetWindowsNativeRocmIndexUrl(gfxArch) is not null;
-    }
-
-    /// <summary>
-    /// Maps an AMD GFX architecture identifier to the Windows-native ROCm Technical Preview feed URL.
-    /// </summary>
-    private static string? TryGetWindowsNativeRocmIndexUrl(string? gfxArch)
-    {
-        return gfxArch switch
-        {
-            var s when s != null && s.StartsWith("gfx101", StringComparison.OrdinalIgnoreCase) =>
-                "https://rocm.nightlies.amd.com/v2-staging/gfx101X-dgpu/",
-            var s when s != null && s.StartsWith("gfx103", StringComparison.OrdinalIgnoreCase) =>
-                "https://rocm.nightlies.amd.com/v2-staging/gfx103X-dgpu/",
-            var s when s != null && s.StartsWith("gfx110", StringComparison.OrdinalIgnoreCase) =>
-                "https://rocm.nightlies.amd.com/v2/gfx110X-all/",
-            "gfx1150" => "https://rocm.nightlies.amd.com/v2-staging/gfx1150/",
-            "gfx1151" => "https://rocm.nightlies.amd.com/v2/gfx1151/",
-            "gfx1152" => "https://rocm.nightlies.amd.com/v2-staging/gfx1152/",
-            "gfx1153" => "https://rocm.nightlies.amd.com/v2-staging/gfx1153/",
-            var s when s != null && s.StartsWith("gfx120", StringComparison.OrdinalIgnoreCase) =>
-                "https://rocm.nightlies.amd.com/v2/gfx120X-all/",
-            _ => null,
-        };
-    }
-
-    /// <summary>
-    /// Returns true for architectures that need the legacy ROCm runtime path.
-    /// </summary>
-    private static bool IsLegacyArchitecture(string? gfxArch)
-    {
-        return gfxArch is not null
-            && (
-                gfxArch.StartsWith("gfx101", StringComparison.OrdinalIgnoreCase)
-                || gfxArch.StartsWith("gfx103", StringComparison.OrdinalIgnoreCase)
-            );
-    }
-
-    /// <summary>
-    /// Returns true for RDNA1 architectures that need dedicated override handling.
-    /// </summary>
-    private static bool IsRdna1Architecture(string? gfxArch)
-    {
-        return gfxArch?.StartsWith("gfx101", StringComparison.OrdinalIgnoreCase) == true;
+        return WindowsRocmSupport.IsSupportedArchitecture(gfxArch);
     }
 
     /// <summary>
@@ -552,20 +390,17 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
     /// </summary>
     private static string GetUnsupportedGpuReason(IReadOnlyList<GpuInfo> amdGpus)
     {
-        if (amdGpus.Any(IsExplicitlyUnsupportedRdna2Gpu))
-        {
-            return "Detected only unsupported AMD RDNA2 GPUs for Windows ROCm. Unsupported models include Radeon 680M/660M/610M and RX 6300/6400/6450/6550-class GPUs.";
-        }
-
+        _ = amdGpus;
         return "No AMD GPU with a supported Windows ROCm architecture was detected.";
     }
 
     /// <summary>
-    /// Verifies that the installed torch build still reports a usable ROCm runtime after helper-managed installs complete.
+    /// Verifies that the installed torch build still reports usable ROCm metadata after helper-managed installs complete.
     /// </summary>
     private static async Task VerifyWindowsNativeTorchInstallAsync(
         IPyVenvRunner venvRunner,
-        Action<ProcessOutput>? onConsoleOutput
+        Action<ProcessOutput>? onConsoleOutput,
+        CancellationToken cancellationToken
     )
     {
         var torchInfo = await venvRunner.PipShow("torch").ConfigureAwait(false);
@@ -586,10 +421,16 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
             throw new ApplicationException("Torch verification produced no output.");
         }
 
+        var verificationJson = TryExtractJsonObject(verificationOutput);
+        if (string.IsNullOrWhiteSpace(verificationJson))
+        {
+            throw new ApplicationException($"Unexpected torch verification output: {verificationOutput}");
+        }
+
         JsonDocument verificationDocument;
         try
         {
-            verificationDocument = JsonDocument.Parse(verificationOutput);
+            verificationDocument = JsonDocument.Parse(verificationJson);
         }
         catch (Exception exception)
         {
@@ -608,10 +449,19 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
             var hipVersion = root.TryGetProperty("hip", out var hipElement) ? hipElement.GetString() : null;
             var cudaAvailable = root.TryGetProperty("cuda", out var cudaElement) && cudaElement.GetBoolean();
 
-            if (string.IsNullOrWhiteSpace(hipVersion) || !cudaAvailable)
+            if (!IsUsableWindowsNativeTorchBuild(version, hipVersion))
             {
                 throw new ApplicationException(
                     $"Installed torch is not a usable ROCm build. Verification output: {verificationOutput}"
+                );
+            }
+
+            if (!cudaAvailable)
+            {
+                onConsoleOutput?.Invoke(
+                    ProcessOutput.FromStdErrLine(
+                        $"Torch verification warning: installed ROCm torch build reported cuda={cudaAvailable}; continuing because ROCm metadata was detected (version={version}, hip={hipVersion})."
+                    )
                 );
             }
 
@@ -621,58 +471,335 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
                 )
             );
         }
+
+        _ = cancellationToken;
+    }
+
+    /// <summary>
+    /// Runs <c>rocm-sdk init</c> after the helper-managed runtime packages are installed so the Windows ROCm SDK can prepare the venv.
+    /// </summary>
+    private static async Task InitializeWindowsNativeRocmSdkAsync(
+        string installLocation,
+        Action<ProcessOutput>? onConsoleOutput,
+        CancellationToken cancellationToken
+    )
+    {
+        var rocmSdkExe = Path.Combine(installLocation, "venv", "Scripts", "rocm-sdk.exe");
+        if (!File.Exists(rocmSdkExe))
+        {
+            throw new FileNotFoundException("rocm-sdk.exe was not installed", rocmSdkExe);
+        }
+
+        using var rocmSdkProcess = ProcessRunner.StartAnsiProcess(
+            rocmSdkExe,
+            ["init"],
+            installLocation,
+            onConsoleOutput
+        );
+
+        await rocmSdkProcess.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
+        if (rocmSdkProcess.ExitCode != 0)
+        {
+            throw new ProcessException($"rocm-sdk init failed with code {rocmSdkProcess.ExitCode}");
+        }
+    }
+
+    /// <summary>
+    /// Uses AMD's bundled <c>hipInfo.exe</c> to confirm the installed Windows ROCm runtime can enumerate a ROCm-capable GPU.
+    /// </summary>
+    private static async Task VerifyWindowsNativeRocmRuntimeAsync(
+        string installLocation,
+        Action<ProcessOutput>? onConsoleOutput,
+        CancellationToken cancellationToken
+    )
+    {
+        var rocmSdkExe = Path.Combine(installLocation, "venv", "Scripts", "rocm-sdk.exe");
+        if (!File.Exists(rocmSdkExe))
+        {
+            throw new FileNotFoundException("rocm-sdk.exe was not installed", rocmSdkExe);
+        }
+
+        var rocmBinResult = await ProcessRunner
+            .GetProcessResultAsync(rocmSdkExe, ["path", "--bin"], installLocation, useUtf8Encoding: true)
+            .ConfigureAwait(false);
+
+        var rocmBinPath = (rocmBinResult.StandardOutput ?? string.Empty).Trim();
+        if (!rocmBinResult.IsSuccessExitCode || string.IsNullOrWhiteSpace(rocmBinPath))
+        {
+            var rocmBinOutput = CombineProcessOutput(
+                rocmBinResult.StandardOutput,
+                rocmBinResult.StandardError
+            );
+            throw new ApplicationException(
+                $"ROCm runtime verification failed while resolving the ROCm SDK bin path. Output: {rocmBinOutput}"
+            );
+        }
+
+        var hipInfoExe = Path.Combine(rocmBinPath, $"hipInfo{Compat.ExeExtension}");
+        if (!File.Exists(hipInfoExe))
+        {
+            throw new FileNotFoundException(
+                "hipInfo.exe was not found in the ROCm SDK bin directory",
+                hipInfoExe
+            );
+        }
+
+        var hipInfoResult = await ProcessRunner
+            .GetProcessResultAsync(
+                hipInfoExe,
+                [],
+                installLocation,
+                new Dictionary<string, string> { ["PATH"] = rocmBinPath },
+                useUtf8Encoding: true
+            )
+            .ConfigureAwait(false);
+
+        var hipInfoOutput = CombineProcessOutput(hipInfoResult.StandardOutput, hipInfoResult.StandardError);
+        if (!hipInfoResult.IsSuccessExitCode)
+        {
+            var runtimeFailureReason = TryGetWindowsNativeRocmRuntimeFailureReason(hipInfoOutput);
+            throw new ApplicationException(
+                runtimeFailureReason is null
+                    ? $"ROCm runtime verification failed while probing the installed runtime with hipInfo.exe. Output: {hipInfoOutput}"
+                    : $"ROCm runtime verification failed: {runtimeFailureReason} Output: {hipInfoOutput}"
+            );
+        }
+
+        onConsoleOutput?.Invoke(
+            ProcessOutput.FromStdOutLine(
+                $"ROCm runtime verification succeeded via hipInfo.exe: {hipInfoOutput}"
+            )
+        );
+
+        _ = cancellationToken;
+    }
+
+    /// <summary>
+    /// Reinstalls <c>rocm-sdk-devel</c> to the resolved ROCm build version when the torch step downgrades the runtime stack.
+    /// </summary>
+    private static async Task AlignRocmSdkDevelVersionAsync(
+        IPyVenvRunner venvRunner,
+        string rocmPackageIndexUrl,
+        Action<ProcessOutput>? onConsoleOutput
+    )
+    {
+        var rocmInfo = await venvRunner.PipShow("rocm").ConfigureAwait(false);
+        var rocmSdkDevelInfo = await venvRunner.PipShow("rocm-sdk-devel").ConfigureAwait(false);
+        var torchInfo = await venvRunner.PipShow("torch").ConfigureAwait(false);
+
+        var targetVersion = GetRocmSdkDevelAlignmentVersion(
+            rocmInfo?.Version,
+            rocmSdkDevelInfo?.Version,
+            torchInfo?.Version
+        );
+
+        if (string.IsNullOrWhiteSpace(targetVersion))
+            return;
+
+        onConsoleOutput?.Invoke(
+            ProcessOutput.FromStdErrLine(
+                $"Aligning rocm-sdk-devel from version={rocmSdkDevelInfo?.Version ?? "not-installed"} to version={targetVersion} to match the resolved ROCm torch/runtime build."
+            )
+        );
+
+        var alignmentArgs = new PipInstallArgs()
+            .AddKeyedArgs("--index-url", ["--index-url", rocmPackageIndexUrl])
+            .AddArg("--force-reinstall")
+            .AddArg($"rocm-sdk-devel=={targetVersion}");
+
+        await venvRunner.PipInstall(alignmentArgs, onConsoleOutput).ConfigureAwait(false);
+    }
+
+    internal static bool IsUsableWindowsNativeTorchBuild(string? version, string? hipVersion)
+    {
+        if (!string.IsNullOrWhiteSpace(hipVersion))
+            return true;
+
+        return !string.IsNullOrWhiteSpace(version)
+            && version.Contains("rocm", StringComparison.OrdinalIgnoreCase);
+    }
+
+    internal static string? GetRocmSdkDevelAlignmentVersion(
+        string? rocmVersion,
+        string? rocmSdkDevelVersion,
+        string? torchVersion = null
+    )
+    {
+        var targetVersion = !string.IsNullOrWhiteSpace(rocmVersion)
+            ? rocmVersion
+            : TryExtractRocmBuildVersion(torchVersion);
+
+        if (string.IsNullOrWhiteSpace(targetVersion))
+            return null;
+
+        return string.Equals(targetVersion, rocmSdkDevelVersion, StringComparison.OrdinalIgnoreCase)
+            ? null
+            : targetVersion;
+    }
+
+    internal static string? TryGetWindowsNativeRocmRuntimeFailureReason(string? output)
+    {
+        if (string.IsNullOrWhiteSpace(output))
+            return null;
+
+        if (output.Contains("no ROCm-capable device is detected", StringComparison.OrdinalIgnoreCase))
+        {
+            return "the installed ROCm runtime could not detect a ROCm-capable GPU on this system.";
+        }
+
+        if (output.Contains("No WDDM adapters found", StringComparison.OrdinalIgnoreCase))
+        {
+            return "the ROCm runtime could not find any compatible WDDM adapters for the current GPU/driver stack.";
+        }
+
+        return null;
+    }
+
+    internal static string? TryExtractRocmBuildVersion(string? torchVersion)
+    {
+        if (string.IsNullOrWhiteSpace(torchVersion))
+            return null;
+
+        var rocmMarkerIndex = torchVersion.IndexOf("rocm", StringComparison.OrdinalIgnoreCase);
+        if (rocmMarkerIndex < 0)
+            return null;
+
+        var rocmBuildVersion = torchVersion[(rocmMarkerIndex + "rocm".Length)..].Trim();
+        return string.IsNullOrWhiteSpace(rocmBuildVersion) ? null : rocmBuildVersion;
+    }
+
+    internal static string? TryExtractJsonObject(string output)
+    {
+        if (string.IsNullOrWhiteSpace(output))
+            return null;
+
+        var trimmedOutput = output.Trim();
+
+        for (var index = 0; index < trimmedOutput.Length; index++)
+        {
+            if (trimmedOutput[index] != '{')
+                continue;
+
+            try
+            {
+                using var document = JsonDocument.Parse(trimmedOutput[index..]);
+                return document.RootElement.GetRawText();
+            }
+            catch (JsonException) { }
+        }
+
+        return null;
+    }
+
+    internal static string CombineProcessOutput(string? standardOutput, string? standardError)
+    {
+        var sections = new[] { standardOutput?.Trim(), standardError?.Trim() }.Where(section =>
+            !string.IsNullOrWhiteSpace(section)
+        );
+
+        return string.Join(Environment.NewLine, sections);
     }
 
     /// <summary>
     /// Builds helper-owned ROCm launch variables from the resolved runtime context and package profile.
     /// </summary>
-    private static IReadOnlyDictionary<string, string> BuildHelperLaunchEnvironment(
+    private IReadOnlyDictionary<string, string> BuildHelperLaunchEnvironment(
         RocmRuntimeContext runtimeContext,
         RocmPackageProfile profile
     )
     {
-        var environment = new Dictionary<string, string>();
+        var environment = new Dictionary<string, string>(EnvComparer);
+        var options = profile.EnvironmentOptions;
+        var gfxArch = runtimeContext.RuntimeGfxArch;
 
-        if (profile.NeedsTunableOpCache)
-        {
-            environment["PYTORCH_TUNABLEOP_ENABLED"] = "1";
-        }
-
-        if (profile.NeedsAotritonExperimental)
-        {
-            environment["TORCH_ROCM_AOTRITON_ENABLE_EXPERIMENTAL"] = "1";
-        }
-
-        if (profile.NeedsTritonOverrideArch && !string.IsNullOrWhiteSpace(runtimeContext.RuntimeGfxArch))
-        {
-            environment["HSA_OVERRIDE_GFX_VERSION"] = runtimeContext.RuntimeGfxArch;
-        }
+        ApplyPresetLaunchEnvironment(environment, gfxArch, options);
 
         return environment;
     }
 
+    private void ApplyPresetLaunchEnvironment(
+        IDictionary<string, string> environment,
+        string? gfxArch,
+        RocmEnvironmentOptions options
+    )
+    {
+        SetIfNotNull(environment, "FLASH_ATTENTION_TRITON_AMD_ENABLE", options.FlashAttentionTritonAmdEnable);
+        SetIfNotNull(environment, "MIOPEN_FIND_MODE", options.MiopenFindMode);
+        SetIfNotNull(environment, "MIOPEN_SEARCH_CUTOFF", options.MiopenSearchCutoff);
+        SetIfNotNull(environment, "MIOPEN_FIND_ENFORCE", options.MiopenFindEnforce);
+        SetIfNotNull(environment, "PYTORCH_ALLOC_CONF", options.PyTorchAllocConf);
+
+        if (options.ApplyAotritonExperimental && IsModernWindowsRocmArchitecture(gfxArch))
+        {
+            environment["TORCH_ROCM_AOTRITON_ENABLE_EXPERIMENTAL"] = "1";
+        }
+
+        if (!IsModernWindowsRocmArchitecture(gfxArch) && options.ApplyLegacySdpFallback)
+        {
+            environment["TORCH_BACKENDS_CUDA_FLASH_SDP_ENABLED"] = "0";
+            environment["TORCH_BACKENDS_CUDA_MEM_EFF_SDP_ENABLED"] = "0";
+            environment["TORCH_BACKENDS_CUDA_MATH_SDP_ENABLED"] = "1";
+        }
+
+        if (options.ApplyRdna1Override && IsRdna1Architecture(gfxArch))
+        {
+            environment["HSA_OVERRIDE_GFX_VERSION"] = "10.1.0";
+        }
+
+        if (options.Preset == RocmEnvironmentPreset.ComfyUi && IsModernWindowsRocmArchitecture(gfxArch))
+        {
+            environment["COMFYUI_ENABLE_MIOPEN"] = "1";
+        }
+    }
+
+    private static bool IsModernWindowsRocmArchitecture(string? gfxArch)
+    {
+        return gfxArch?.StartsWith("gfx110", StringComparison.OrdinalIgnoreCase) == true
+            || gfxArch?.StartsWith("gfx115", StringComparison.OrdinalIgnoreCase) == true
+            || gfxArch?.StartsWith("gfx120", StringComparison.OrdinalIgnoreCase) == true;
+    }
+
+    private static bool IsRdna1Architecture(string? gfxArch)
+    {
+        return gfxArch?.StartsWith("gfx101", StringComparison.OrdinalIgnoreCase) == true;
+    }
+
+    private static void SetIfNotNull(IDictionary<string, string> environment, string key, string? value)
+    {
+        if (!string.IsNullOrWhiteSpace(value))
+        {
+            environment[key] = value;
+        }
+    }
+
     /// <summary>
-    /// Merges helper-owned and package-specific launch environment variables using the profile overlay rules.
+    /// Merges helper-owned and package-specific launch environment variables.
     /// </summary>
-    private static IReadOnlyDictionary<string, string> MergeLaunchEnvironment(
+    private IReadOnlyDictionary<string, string> MergeLaunchEnvironment(
         IReadOnlyDictionary<string, string> helperEnvironment,
         IReadOnlyDictionary<string, string> packageEnvironment,
         RocmEnvironmentOptions options
     )
     {
-        var merged = new Dictionary<string, string>();
+        var merged = new Dictionary<string, string>(EnvComparer);
 
-        IReadOnlyDictionary<string, string>[] orderedSources =
-            options.OverlayPriority == RocmEnvironmentOverlayPriority.HelperThenUserThenPackage
-                ? new[] { helperEnvironment, packageEnvironment }
-                : new[] { helperEnvironment, packageEnvironment };
-
-        foreach (var source in orderedSources)
+        foreach (var source in new[] { helperEnvironment, packageEnvironment })
         {
             if (ReferenceEquals(source, packageEnvironment) && !options.IncludePackageOverrides)
                 continue;
 
             foreach (var pair in source)
+            {
+                merged[pair.Key] = pair.Value;
+            }
+        }
+
+        if (
+            options.IncludeUserOverrides
+            && settingsManager.Settings.EnvironmentVariables is { Count: > 0 } userOverrides
+        )
+        {
+            foreach (var pair in userOverrides)
             {
                 merged[pair.Key] = pair.Value;
             }

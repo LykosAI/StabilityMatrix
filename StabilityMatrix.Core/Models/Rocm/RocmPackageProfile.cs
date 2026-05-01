@@ -13,31 +13,7 @@ public class RocmPackageProfile
     /// </summary>
     public string PackageName { get; init; } = string.Empty;
 
-    public bool RequiresWindows { get; init; }
-
     public bool RequiresRocmSdk { get; init; }
-
-    public bool NeedsRuntimeGfxResolution { get; init; }
-
-    public bool NeedsHipPath { get; init; }
-
-    public bool NeedsRocmPath { get; init; }
-
-    public bool NeedsTritonOverrideArch { get; init; }
-
-    public bool NeedsRdna1Override { get; init; }
-
-    public bool NeedsLegacySdpFallback { get; init; }
-
-    public bool NeedsAotritonExperimental { get; init; }
-
-    public bool NeedsTunableOpCache { get; init; }
-
-    public bool NeedsTritonCache { get; init; }
-
-    public bool NeedsMIOpenDbPaths { get; init; }
-
-    public bool NeedsRocblasPaths { get; init; }
 
     /// <summary>
     /// Requirement files to install after helper-owned ROCm runtime / torch bootstrap steps complete.
@@ -70,12 +46,6 @@ public class RocmPackageProfile
     public bool ForceReinstallTorch { get; init; } = true;
 
     /// <summary>
-    /// Optional callback for package-specific cache path variables.
-    /// The helper will eventually merge these with its own defaults.
-    /// </summary>
-    public Func<string, IReadOnlyDictionary<string, string>>? CacheDirectoryFactory { get; init; }
-
-    /// <summary>
     /// Optional callback for package-specific environment variables derived from a resolved ROCm context.
     /// </summary>
     public Func<
@@ -84,12 +54,7 @@ public class RocmPackageProfile
     >? ExtraEnvironmentFactory { get; init; }
 
     /// <summary>
-    /// Optional progress message prefix or label that package code can surface during install/update work.
-    /// </summary>
-    public string? ProgressLabel { get; init; }
-
-    /// <summary>
-    /// Controls how helper, package, and user-defined environment variables should be merged.
+    /// Controls whether package-specific environment variables should be layered on top of helper defaults.
     /// </summary>
     public RocmEnvironmentOptions EnvironmentOptions { get; init; } = new();
 }

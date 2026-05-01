@@ -1,4 +1,6 @@
-﻿namespace StabilityMatrix.Core.Helper.HardwareInfo;
+﻿using StabilityMatrix.Core.Models.Rocm;
+
+namespace StabilityMatrix.Core.Helper.HardwareInfo;
 
 public record GpuInfo
 {
@@ -62,11 +64,7 @@ public record GpuInfo
 
     public bool IsWindowsRocmSupportedGpu()
     {
-        var gfx = GetAmdGfxArch();
-        if (gfx is null)
-            return false;
-
-        return gfx.StartsWith("gfx110") || gfx.StartsWith("gfx120") || gfx.Equals("gfx1151");
+        return WindowsRocmSupport.IsSupportedGpu(this);
     }
 
     public bool IsAmd => Name?.Contains("amd", StringComparison.OrdinalIgnoreCase) ?? false;
@@ -84,7 +82,7 @@ public record GpuInfo
         return name switch
         {
             // RDNA4
-            _ when Has("R9700") || Has("9070") => "gfx1201",
+            _ when Has("R9700") || Has("R9600") || Has("9070") => "gfx1201",
             _ when Has("9060") => "gfx1200",
 
             // RDNA3.5 APUs
@@ -112,6 +110,9 @@ public record GpuInfo
             _ when Has("6300") || Has("6400") || Has("6450") || Has("6500") || Has("6550") || Has("6500M") =>
                 "gfx1034",
 
+            // RDNA2 Steam Deck APU
+            _ when Has("Van Gogh") || Has("Sephiroth") => "gfx1033",
+
             // RDNA2 Navi23
             _ when Has("6600") || Has("6650") || Has("6700S") || Has("6800S") || Has("6600M") => "gfx1032",
 
@@ -121,6 +122,16 @@ public record GpuInfo
             // RDNA2 Navi21 (big die)
             _ when Has("6800") || Has("6900") || Has("6950") => "gfx1030",
 
+            // RDNA1 Navi10 XT (incl. Pro card)
+            _ when Has("5600") || Has("5700") || Has("v520") => "gfx1010",
+
+            // RDNA1 Navi10 XTX
+            _ when Has("5500") => "gfx1012",
+
+            // Vega/GCN5 Dedicated GPUs
+            _ when Has("pro vii") || HasNoSpace("provii") => "gfx90X",
+            _ when Has("rx vega") || Has("vega 64") || Has("vega 56") || Has("vega frontier") => "gfx900",
+            _ when Has("radeon vii") || HasNoSpace("radeonvii") => "gfx906",
             _ => null,
         };
 

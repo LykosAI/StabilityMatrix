@@ -45,20 +45,11 @@ public class ComfyUI(
     private static readonly RocmPackageProfile WindowsRocmProfile = new()
     {
         PackageName = "ComfyUI",
-        RequiresWindows = true,
         RequiresRocmSdk = true,
-        NeedsRuntimeGfxResolution = true,
-        NeedsAotritonExperimental = true,
-        NeedsTunableOpCache = true,
         ExtraInstallPipArgs = ["numpy<2"],
         PostInstallPipArgs = ["typing-extensions>=4.15.0"],
         UpgradePackages = true,
-        ExtraEnvironmentFactory = _ => new Dictionary<string, string>
-        {
-            ["MIOPEN_FIND_MODE"] = "2",
-            ["PYTORCH_ALLOC_CONF"] = "max_split_size_mb:512,garbage_collection_threshold:0.8",
-            ["COMFYUI_ENABLE_MIOPEN"] = "1",
-        },
+        EnvironmentOptions = new RocmEnvironmentOptions { Preset = RocmEnvironmentPreset.ComfyUi },
     };
 
     public override string Name => "ComfyUI";
@@ -287,7 +278,9 @@ public class ComfyUI(
             {
                 Name = "Cross Attention Method",
                 Type = LaunchOptionType.Bool,
-                InitialValue = "--use-pytorch-cross-attention",
+                InitialValue = ShouldDefaultToQuadCrossAttention()
+                    ? "--use-quad-cross-attention"
+                    : "--use-pytorch-cross-attention",
                 Options =
                 [
                     "--use-split-cross-attention",
@@ -626,17 +619,27 @@ public class ComfyUI(
             return false;
 
         if (rocmPackageHelper is null)
-        {
-            return SettingsManager.Settings.PreferredGpu?.IsWindowsRocmSupportedGpu()
-                ?? HardwareHelper.HasWindowsRocmSupportedGpu();
-        }
+            return false;
 
-        var compatibility = rocmPackageHelper
-            .GetCompatibilityAsync(WindowsRocmProfile)
-            .GetAwaiter()
-            .GetResult();
+        var compatibility = rocmPackageHelper.GetCompatibility(WindowsRocmProfile);
 
         return compatibility.IsCompatible;
+    }
+
+    private bool ShouldDefaultToQuadCrossAttention()
+    {
+        if (!Compat.IsWindows || !HasWindowsRocmSupport())
+            return false;
+
+        var gpu = SettingsManager.Settings.PreferredGpu;
+        var gfxArch = WindowsRocmSupport.IsSupportedGpu(gpu)
+            ? gpu?.GetAmdGfxArch()
+            : HardwareHelper.GetWindowsRocmSupportedGpu()?.GetAmdGfxArch();
+
+        return !string.IsNullOrWhiteSpace(gfxArch)
+            && !gfxArch.StartsWith("gfx110", StringComparison.OrdinalIgnoreCase)
+            && !gfxArch.StartsWith("gfx115", StringComparison.OrdinalIgnoreCase)
+            && !gfxArch.StartsWith("gfx120", StringComparison.OrdinalIgnoreCase);
     }
 
     public override IPackageExtensionManager ExtensionManager =>
@@ -1003,19 +1006,15 @@ public class ComfyUI(
 
         if (rocmPackageHelper is not null)
         {
-            var rocmEnvironment = rocmPackageHelper
-                .BuildLaunchEnvironmentAsync(installLocation, installedPackage, WindowsRocmProfile)
-                .GetAwaiter()
-                .GetResult();
+            var rocmEnvironment = rocmPackageHelper.BuildLaunchEnvironment(
+                installLocation,
+                installedPackage,
+                WindowsRocmProfile
+            );
 
             return env.SetItems(rocmEnvironment);
         }
 
-        // set some experimental speed improving env vars for Windows ROCm
-        return env.SetItem("PYTORCH_TUNABLEOP_ENABLED", "1")
-            .SetItem("MIOPEN_FIND_MODE", "2")
-            .SetItem("TORCH_ROCM_AOTRITON_ENABLE_EXPERIMENTAL", "1")
-            .SetItem("PYTORCH_ALLOC_CONF", "max_split_size_mb:6144,garbage_collection_threshold:0.8") // greatly helps prevent GPU OOM and instability/driver timeouts/OS hard locks and decreases dependency on Tiled VAE at standard res's
-            .SetItem("COMFYUI_ENABLE_MIOPEN", "1"); // re-enables "cudnn" in ComfyUI as it's needed for MiOpen to function properly
+        return env;
     }
 }

@@ -80,6 +80,15 @@ public abstract partial class InferenceGenerationViewModelBase
     private bool _isProcessingQueue;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(QueueToggleIcon))]
+    [NotifyPropertyChangedFor(nameof(QueueToggleToolTip))]
+    [property: JsonIgnore]
+    private bool isQueuePaused = true;
+
+    public string QueueToggleIcon => IsQueuePaused ? "fa-solid fa-play" : "fa-solid fa-pause";
+    public string QueueToggleToolTip => IsQueuePaused ? "Start Queue" : "Pause Queue";
+
+    [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(QueueGenerationText))]
     [NotifyPropertyChangedFor(nameof(IsQueueClearable))]
     [property: JsonIgnore]
@@ -95,7 +104,18 @@ public abstract partial class InferenceGenerationViewModelBase
     {
         _generationQueue.Clear();
         QueuedGenerationsCount = 0;
+        IsQueuePaused = true;
         Logger.Info("Generation queue cleared");
+    }
+
+    [RelayCommand]
+    private void ToggleQueueState()
+    {
+        IsQueuePaused = !IsQueuePaused;
+        if (!IsQueuePaused)
+        {
+            ProcessQueueAsync().SafeFireAndForget(ex => Logger.Error(ex, "Error processing generation queue"));
+        }
     }
 
     [RelayCommand]
@@ -106,7 +126,10 @@ public abstract partial class InferenceGenerationViewModelBase
         QueuedGenerationsCount = _generationQueue.Count;
         Logger.Info("Queued generation. Queue size: {QueueSize}", QueuedGenerationsCount);
 
-        ProcessQueueAsync().SafeFireAndForget(ex => Logger.Error(ex, "Error processing generation queue"));
+        if (!IsQueuePaused)
+        {
+            ProcessQueueAsync().SafeFireAndForget(ex => Logger.Error(ex, "Error processing generation queue"));
+        }
     }
 
     private async Task ProcessQueueAsync()
@@ -118,7 +141,7 @@ public abstract partial class InferenceGenerationViewModelBase
 
         try
         {
-            while (_generationQueue.Count > 0)
+            while (_generationQueue.Count > 0 && !IsQueuePaused)
             {
                 // Wait for any active generation to complete before starting the next
                 if (GenerateImageCommand.IsRunning)
@@ -130,8 +153,8 @@ public abstract partial class InferenceGenerationViewModelBase
                     }
                 }
 
-                // Re-check after awaiting — queue may have been cleared
-                if (_generationQueue.Count == 0)
+                // Re-check after awaiting — queue may have been cleared or paused
+                if (_generationQueue.Count == 0 || IsQueuePaused)
                     break;
 
                 // Dequeue and load state on UI thread
@@ -149,6 +172,11 @@ public abstract partial class InferenceGenerationViewModelBase
                 {
                     Logger.Error(ex, "Queued generation failed");
                 }
+            }
+
+            if (_generationQueue.Count == 0)
+            {
+                IsQueuePaused = true;
             }
         }
         finally

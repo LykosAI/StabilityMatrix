@@ -163,6 +163,13 @@
                                             <Button
                                                 Margin="4,0,0,0"
                                                 Padding="12,8"
+                                                icons:Attached.Icon="{Binding QueueToggleIcon}"
+                                                ToolTip.Tip="{Binding QueueToggleToolTip}"
+                                                IsVisible="{Binding IsQueueClearable}"
+                                                Command="{Binding ToggleQueueStateCommand}" />
+                                            <Button
+                                                Margin="4,0,0,0"
+                                                Padding="12,8"
                                                 icons:Attached.Icon="fa-solid fa-trash"
                                                 ToolTip.Tip="Clear Queue"
                                                 IsVisible="{Binding IsQueueClearable}"

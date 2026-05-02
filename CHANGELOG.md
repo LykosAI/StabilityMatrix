@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Fixed
 - Fixed CivitAI model browsing breaking during Discovery API outages — the browser now falls back to the direct CivitAI API when Discovery returns a server error, authentication failure, or times out
 - Fixed SwarmUI user settings (theme, output format, server configuration, etc.) and any user-added backend entries being overwritten when the install flow ran over an existing install — `Settings.fds` and `Backends.fds` are now merged with their existing contents instead of being rewritten from a stale template
+- Fixed pip requirements handling for environment-marker dependencies - thanks to @NeuralFault!
+- Fixed [#1608](https://github.com/LykosAI/StabilityMatrix/issues/1608) - Crash when cdn fetch fails due to error notification not being shown on UI Thread - thanks to @NeuralFault!
 
 ## v2.16.0-dev.3
 ### Added
@@ -129,6 +131,15 @@ Huge shoutout to our amazing Visionaries: **Waterclouds**, **JungleDragon**, **b
 #### 🌟 Visionaries
 A massive thank you to our esteemed Visionaries: **Waterclouds**, **JungleDragon**, **bluepopsicle**, **Bob S**, and **whudunit**! Your generosity is the powerhouse behind Stability Matrix, enabling us to keep building and refining with confidence. We are truly grateful for your partnership!
 
+## [Unreleased - v2.15.8]
+### Added
+- Added support for the civitai.red (mature-content) domain — NSFW CivitAI links now open and copy as civitai.red URLs, and pasting a civitai.red URL into the CivitAI model browser search works the same as a civitai.com URL
+### Changed
+- The CivitAI base model type filter now uses CivitAI's official `/api/v1/enums` endpoint, with fallbacks to the previous technique and a built-in list, so the filter stays populated even if the CivitAI response format changes or the service is unreachable
+### Fixed
+- Fixed CivitAI model browsing breaking during Discovery API outages — the browser now falls back to the direct CivitAI API when Discovery returns a server error, authentication failure, or times out
+- Fixed SwarmUI user settings (theme, output format, server configuration, etc.) and any user-added backend entries being overwritten when the install flow ran over an existing install — `Settings.fds` and `Backends.fds` are now merged with their existing contents instead of being rewritten from a stale template
+
 ## v2.15.7
 ### Added
 - Added single-instance window activation signaling so reopening the app restores and focuses the existing desktop window instead of launching a duplicate instance
@@ -137,9 +148,14 @@ A massive thank you to our esteemed Visionaries: **Waterclouds**, **JungleDragon
 - Added support in the Checkpoints page to distinguish standard updates from Early Access-only updates - thanks to @x0x0b!
 - Added torch index for Strix/Gorgon Point Ryzen AI APUs on Windows - thanks to @NeuralFault!
 - Added retry button to failed downloads - thanks to @NeuralFault!
+- Added new Membership support in Account Settings with Patreon migration prompt
 ### Changed
 - Settings file saves are now atomic to prevent corruption from interrupted writes
 - Updated torch indexes for A1111, ComfyUI, InvokeAI, and Forge-based UIs to rocm7.2 / cu128 depending on GPU - thanks to @NeuralFault!
+- Replaced the "Become a Patron" footer button with "Support Us", linking to the new direct Lykos support page at lykos.ai/membership
+- Updated the prompt dialog shown when enabling features like Accelerated Model Discovery to use Lykos accounts instead of Patreon linking
+- Moved the Patreon connection in Account Settings to a new "Legacy Connections" section, only shown for users with an existing Patreon link
+- Localized previously hardcoded strings on the Account Settings page (menu items, descriptions, section headers) and added Japanese, Korean, German, and French translations
 ### Fixed
 - Fixed an issue where `Align Your Steps` scheduler and Unet Loader workflows ignored Regional Prompting (and other addon) conditioning modifiers.
 - Fixed the Package Manager "Add Package" teaching tip opening inopportunely while packages were still loading or after opening the add-package dialog
@@ -159,9 +175,9 @@ A massive thank you to our esteemed Visionaries: **Waterclouds**, **JungleDragon
 - Fixed [#1397](https://github.com/LykosAI/StabilityMatrix/issues/1397), [#610](https://github.com/LykosAI/StabilityMatrix/issues/610) - duplicate pip package entries in results - thanks to @e-nord!
 ### Supporters
 #### 🌟 Visionaries
-Lifting up our legendary Visionaries: **Waterclouds**, **JungleDragon**, **bluepopsicle**, **Bob S**, and **whudunit**. Through every release, every milestone, and every twist of this wild journey, your support has been our north star. A huge welcome to our newest Visionaries **Droolguy** and **snotty** (leveling up from the Pioneer crew!), a warm welcome back to longtime Visionary **Ibixat**, and an equally huge welcome to **LG**, making their Stability Matrix debut straight at the Visionary tier - so glad to have you all on board! We cannot thank you enough for standing behind Stability Matrix!
+Lifting up our legendary Visionaries: **Waterclouds**, **JungleDragon**, **bluepopsicle**, **Bob S**, and **whudunit**. Through every release, every milestone, and every twist of this wild journey, your support has been our north star. A huge welcome to our newest Visionaries **Droolguy** and **snotty** (leveling up from the Pioneer crew!), a warm welcome back to longtime Visionary **Ibixat**, and an equally huge welcome to **LG** and **MrMxyzptlk12836**, making their Stability Matrix debut straight at the Visionary tier - so glad to have you all on board! We cannot thank you enough for standing behind Stability Matrix!
 #### 🚀 Pioneers
-And to our mighty Pioneer crew - the folks who keep the engine humming - thank you for everything! Massive shoutout to: **Szir777**, **Noah M**, **[USA]TechDude**, **Thom**, **SeraphOfSalem**, **Desert Viber**, **Adam**, **ACTUALLY_the_Real_Willem_Dafoe**, **takyamtom**, **robek**, **Ghislain G**, **Phil R**, **Tundra Everquill**, **Andrew B**, **SinthCore**, and **Ahmed S**. And a very warm welcome to our newest Pioneer **Commissar Lord Death**, plus a heartfelt shoutout to one more new Pioneer who joined us quietly through the Stripe migration - you know who you are, and we're so glad to have you!
+And to our mighty Pioneer crew - the folks who keep the engine humming - thank you for everything! Massive shoutout to: **Szir777**, **Noah M**, **[USA]TechDude**, **Thom**, **SeraphOfSalem**, **Desert Viber**, **Adam**, **ACTUALLY_the_Real_Willem_Dafoe**, **takyamtom**, **robek**, **Ghislain G**, **Phil R**, **Tundra Everquill**, **Andrew B**, **SinthCore**, and **Ahmed S**. And a very warm welcome to our newest Pioneers **Commissar Lord Death**, **Firelight**, and **jweg**, plus a heartfelt shoutout to one more new Pioneer who joined us quietly through the Stripe migration - you know who you are, and we're so glad to have you!
 
 And one more heartfelt thank you to everyone now supporting us directly through our new platform - this next chapter wouldn't be possible without your trust, and we're so grateful you've come along for the ride!
 

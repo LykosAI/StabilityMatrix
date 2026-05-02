@@ -102,7 +102,11 @@ public class ComfyZluda(
                 },
             };
 
-            options.AddRange(base.LaunchOptions.Where(x => x.Name != "Cross Attention Method"));
+            options.AddRange(
+                base.LaunchOptions.Where(x =>
+                    x.Name != "Cross Attention Method" && x.Name != "Enable Manager"
+                )
+            );
             return options;
         }
     }

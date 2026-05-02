@@ -4,6 +4,7 @@ using System.Text.Json.Serialization;
 using Semver;
 using StabilityMatrix.Core.Converters.Json;
 using StabilityMatrix.Core.Helper.HardwareInfo;
+using StabilityMatrix.Core.Models.Api.CivArchive;
 using StabilityMatrix.Core.Models.Update;
 
 namespace StabilityMatrix.Core.Models.Settings;
@@ -84,6 +85,7 @@ public class Settings
     public WindowSettings? WindowSettings { get; set; }
 
     public ModelSearchOptions? ModelSearchOptions { get; set; }
+    public CivArchiveBrowserOptions CivArchiveBrowserOptions { get; set; } = new();
 
     /// <summary>
     /// Whether prompt auto completion is enabled
@@ -248,6 +250,10 @@ public class Settings
 
     public double CivitBrowserResizeFactor { get; set; } = 1.0d;
 
+    public double CivArchiveBrowserResizeFactor { get; set; } = 1.0d;
+
+    public bool CivArchiveBrowserFitCardImages { get; set; } = true;
+
     public bool HideEarlyAccessModels { get; set; }
 
     public bool CivitUseDiscoveryApi { get; set; }
@@ -355,4 +361,5 @@ public class Settings
 [JsonSerializable(typeof(Dictionary<string, LastDownloadLocationInfo>))]
 [JsonSerializable(typeof(ModelPickerFilterState))]
 [JsonSerializable(typeof(Dictionary<string, ModelPickerFilterState>))]
+[JsonSerializable(typeof(CivArchiveBrowserOptions))]
 internal partial class SettingsSerializerContext : JsonSerializerContext;

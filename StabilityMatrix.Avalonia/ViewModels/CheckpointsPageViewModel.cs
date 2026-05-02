@@ -607,7 +607,10 @@ public partial class CheckpointsPageViewModel(
     [RelayCommand]
     private async Task ShowVersionDialog(CheckpointFileViewModel item)
     {
-        if (item.CheckpointFile is { HasCivitMetadata: false, HasOpenModelDbMetadata: false })
+        if (
+            item.CheckpointFile is
+            { HasCivitMetadata: false, HasOpenModelDbMetadata: false, HasCivArchiveMetadata: false }
+        )
         {
             notificationService.Show(
                 "Cannot show version dialog",
@@ -625,6 +628,32 @@ public partial class CheckpointsPageViewModel(
         {
             await ShowOpenModelDbDialog(item);
         }
+        else if (item.CheckpointFile.HasCivArchiveMetadata)
+        {
+            ShowCivArchiveDialog(item);
+        }
+    }
+
+    private void ShowCivArchiveDialog(CheckpointFileViewModel item)
+    {
+        var sourceUrl = item.CheckpointFile.ConnectedModelInfo?.SourceUrl;
+        if (string.IsNullOrWhiteSpace(sourceUrl))
+        {
+            notificationService.Show(
+                "CivArchive link unavailable",
+                "This model was downloaded before navigation back to CivArchive was supported. Re-download from CivArchive to enable this.",
+                NotificationType.Warning
+            );
+            return;
+        }
+
+        var newVm = dialogFactory.Get<CivArchiveDetailsPageViewModel>(vm =>
+        {
+            vm.RelativeUrl = sourceUrl;
+            return vm;
+        });
+
+        navigationService.NavigateTo(newVm, BetterSlideNavigationTransition.PageSlideFromRight);
     }
 
     private void ShowCivitVersionDialog(CheckpointFileViewModel item)

@@ -84,6 +84,23 @@ public class MockModelIndexService : IModelIndexService
         ModelIndex.Values.SelectMany(x => x).Select(x => x.HashBlake3).WhereNotNull().ToHashSet();
 
     /// <inheritdoc />
+    public IReadOnlySet<string> ModelIndexSha256Hashes =>
+        ModelIndex
+            .Values.SelectMany(x => x)
+            .Select(x => x.HashSha256)
+            .WhereNotNull()
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+    /// <inheritdoc />
+    public IReadOnlySet<string> ModelIndexCivArchiveUrls =>
+        ModelIndex
+            .Values.SelectMany(x => x)
+            .Where(x => x.HasCivArchiveMetadata)
+            .Select(x => x.ConnectedModelInfo!.SourceUrl)
+            .WhereNotNull()
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+    /// <inheritdoc />
     public Task RefreshIndex()
     {
         return Task.CompletedTask;

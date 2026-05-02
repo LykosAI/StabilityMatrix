@@ -651,8 +651,15 @@ public static class ProcessRunner
     /// </summary>
     public static string Quote(string argument)
     {
-        var inner = argument.Trim('"');
-        return inner.Contains(' ') ? $"\"{inner}\"" : argument;
+        var inner = argument.Length >= 2 && argument.StartsWith('"') && argument.EndsWith('"')
+            ? argument[1..^1]
+            : argument;
+
+        if (!inner.Contains(' ') && !inner.Contains('"'))
+            return argument;
+
+        var escaped = inner.Replace("\"", "\\\"");
+        return $"\"{escaped}\"";
     }
 
     /// <summary>

@@ -269,7 +269,7 @@ public class ComfyUI(
                 Name = "Cross Attention Method",
                 Type = LaunchOptionType.Bool,
                 InitialValue = DefaultToQuadCrossAttention()
-                    ? "--use-quad-cross-attention"
+                    ? "--use-quad-cross-attention" // For Legacy AMD GPUs.
                     : "--use-pytorch-cross-attention",
                 Options =
                 [

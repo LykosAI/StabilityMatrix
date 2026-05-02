@@ -4,6 +4,7 @@ using System.Text.Json.Serialization;
 using Semver;
 using StabilityMatrix.Core.Converters.Json;
 using StabilityMatrix.Core.Helper.HardwareInfo;
+using StabilityMatrix.Core.Models.Api.CivArchive;
 using StabilityMatrix.Core.Models.Update;
 
 namespace StabilityMatrix.Core.Models.Settings;
@@ -84,6 +85,7 @@ public class Settings
     public WindowSettings? WindowSettings { get; set; }
 
     public ModelSearchOptions? ModelSearchOptions { get; set; }
+    public CivArchiveBrowserOptions CivArchiveBrowserOptions { get; set; } = new();
 
     /// <summary>
     /// Whether prompt auto completion is enabled
@@ -151,6 +153,8 @@ public class Settings
     [JsonPropertyName("EnvironmentVariables")]
     public Dictionary<string, string>? UserEnvironmentVariables { get; set; }
 
+    public List<EnvVarKeyPair>? UserEnvironmentVariablesList { get; set; }
+
     [JsonIgnore]
     public IReadOnlyDictionary<string, string> EnvironmentVariables
     {
@@ -164,13 +168,21 @@ public class Settings
                 "cache"
             );
 
-            if (UserEnvironmentVariables is null || UserEnvironmentVariables.Count == 0)
+            // Prefer new list format, fall back to legacy dict
+            var userVars = UserEnvironmentVariablesList is { Count: > 0 }
+                ? UserEnvironmentVariablesList
+                    .Where(kvp => kvp.IsEnabled && !string.IsNullOrWhiteSpace(kvp.Key))
+                    .GroupBy(kvp => kvp.Key, StringComparer.Ordinal)
+                    .ToDictionary(g => g.Key, g => g.Last().Value, StringComparer.Ordinal)
+                : UserEnvironmentVariables;
+
+            if (userVars is null || userVars.Count == 0)
             {
                 return DefaultEnvironmentVariables;
             }
 
             return DefaultEnvironmentVariables
-                .Concat(UserEnvironmentVariables)
+                .Concat(userVars)
                 .GroupBy(pair => pair.Key)
                 // User variables override default variables with the same key
                 .ToDictionary(grouping => grouping.Key, grouping => grouping.Last().Value);
@@ -211,6 +223,9 @@ public class Settings
     public int ConsoleFontSize { get; set; } = 14;
     public bool AutoLoadCivitModels { get; set; } = true;
 
+    [JsonPropertyName("UseLegacyModelSearch")]
+    public bool UseLegacySearch { get; set; }
+
     /// <summary>
     /// When false, will copy files when drag/drop import happens
     /// Otherwise, it will move, as it states
@@ -235,6 +250,10 @@ public class Settings
 
     public double CivitBrowserResizeFactor { get; set; } = 1.0d;
 
+    public double CivArchiveBrowserResizeFactor { get; set; } = 1.0d;
+
+    public bool CivArchiveBrowserFitCardImages { get; set; } = true;
+
     public bool HideEarlyAccessModels { get; set; }
 
     public bool CivitUseDiscoveryApi { get; set; }
@@ -256,6 +275,9 @@ public class Settings
     public bool ShowTrainingDataInModelBrowser { get; set; }
 
     public string? CivitModelBrowserFileNamePattern { get; set; }
+
+    public bool ModelPickerIsGridView { get; set; }
+    public Dictionary<string, ModelPickerFilterState> ModelPickerFilterStates { get; set; } = [];
 
     public int InferenceDimensionStepChange { get; set; } = 128;
 
@@ -337,4 +359,7 @@ public class Settings
 [JsonSerializable(typeof(string))]
 [JsonSerializable(typeof(LastDownloadLocationInfo))]
 [JsonSerializable(typeof(Dictionary<string, LastDownloadLocationInfo>))]
+[JsonSerializable(typeof(ModelPickerFilterState))]
+[JsonSerializable(typeof(Dictionary<string, ModelPickerFilterState>))]
+[JsonSerializable(typeof(CivArchiveBrowserOptions))]
 internal partial class SettingsSerializerContext : JsonSerializerContext;

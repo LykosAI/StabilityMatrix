@@ -60,8 +60,8 @@ public abstract partial class InferenceGenerationViewModelBase
 
     private readonly ISettingsManager settingsManager;
     private readonly RunningPackageService runningPackageService;
-    private readonly INotificationService notificationService;
     private readonly IServiceManager<ViewModelBase> vmFactory;
+    private readonly INotificationService notificationService;
 
     [JsonPropertyName("ImageGallery")]
     public ImageGalleryCardViewModel ImageGalleryCardViewModel { get; }

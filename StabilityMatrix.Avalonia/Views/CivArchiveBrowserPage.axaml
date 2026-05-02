@@ -1,0 +1,881 @@
+﻿<controls:UserControlBase
+    x:Class="StabilityMatrix.Avalonia.Views.CivArchiveBrowserPage"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:behaviors="clr-namespace:StabilityMatrix.Avalonia.Behaviors"
+    xmlns:checkpointBrowser="clr-namespace:StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser"
+    xmlns:checkpointManager="clr-namespace:StabilityMatrix.Avalonia.ViewModels.CheckpointManager"
+    xmlns:civArchive="clr-namespace:StabilityMatrix.Core.Models.Api.CivArchive;assembly=StabilityMatrix.Core"
+    xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+    xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
+    xmlns:fa="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
+    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+    xmlns:scroll="clr-namespace:StabilityMatrix.Avalonia.Controls.Scroll"
+    xmlns:system="clr-namespace:System;assembly=System.Runtime"
+    xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+    x:Name="Root"
+    x:CompileBindings="True"
+    x:DataType="checkpointBrowser:CivArchiveBrowserViewModel">
+
+    <UserControl.Styles>
+        <!--  Card hover effects  -->
+        <Style Selector="Border#HoverBorder">
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.237" />
+                </Transitions>
+            </Setter>
+
+            <Style Selector="^ controls|BetterAdvancedImage">
+                <Setter Property="Transitions">
+                    <Transitions>
+                        <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.237">
+                            <TransformOperationsTransition.Easing>
+                                <QuadraticEaseInOut />
+                            </TransformOperationsTransition.Easing>
+                        </TransformOperationsTransition>
+                    </Transitions>
+                </Setter>
+            </Style>
+
+            <Style Selector="^:pointerover">
+                <Setter Property="BoxShadow" Value="0 0 32 0 #66000000" />
+                <Setter Property="Cursor" Value="Hand" />
+                <Style Selector="^ controls|BetterAdvancedImage">
+                    <Setter Property="RenderTransform" Value="scale(1.03, 1.03)" />
+                </Style>
+                <Style Selector="^ Border#CardBottom">
+                    <Setter Property="Background" Value="#CC000000" />
+                </Style>
+            </Style>
+
+            <Style Selector="^:not(:pointerover)">
+                <Setter Property="BoxShadow" Value="0 0 16 0 #55000000" />
+                <Style Selector="^ controls|BetterAdvancedImage">
+                    <Setter Property="RenderTransform" Value="scale(1, 1)" />
+                </Style>
+                <Style Selector="^ Border#CardBottom">
+                    <Setter Property="Background" Value="#99000000" />
+                </Style>
+            </Style>
+        </Style>
+
+        <!--  Segmented pill selector for Rating/Status  -->
+        <Style Selector="ListBox.Segmented">
+            <Setter Property="Background" Value="{DynamicResource ControlAltFillColorSecondaryBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ComboBoxBorderBrush}" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Padding" Value="2" />
+            <Setter Property="ItemsPanel">
+                <ItemsPanelTemplate>
+                    <StackPanel Orientation="Horizontal" />
+                </ItemsPanelTemplate>
+            </Setter>
+        </Style>
+        <Style Selector="ListBox.Segmented ListBoxItem">
+            <Setter Property="Padding" Value="12,4" />
+            <Setter Property="MinHeight" Value="0" />
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="Margin" Value="1,0" />
+        </Style>
+    </UserControl.Styles>
+
+    <UserControl.Resources>
+        <system:Boolean x:Key="False">False</system:Boolean>
+        <converters:KiloFormatterStringConverter x:Key="KiloFormatterConverter" />
+
+        <DataTemplate x:Key="CivArchiveCardTemplate" DataType="{x:Type civArchive:CivArchiveSearchResult}">
+            <Border
+                Name="HoverBorder"
+                Margin="8"
+                ClipToBounds="True"
+                CornerRadius="8">
+                <Border.ContextFlyout>
+                    <MenuFlyout>
+                        <MenuItem
+                            Command="{Binding #Root.((checkpointBrowser:CivArchiveBrowserViewModel)DataContext).OpenOnCivArchiveCommand}"
+                            CommandParameter="{Binding .}"
+                            Header="Open on CivArchive">
+                            <MenuItem.Icon>
+                                <ui:SymbolIcon Symbol="Open" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem
+                            Command="{Binding #Root.((checkpointBrowser:CivArchiveBrowserViewModel)DataContext).SearchByCreatorCommand}"
+                            CommandParameter="{Binding .}"
+                            Header="Browse creator"
+                            IsVisible="{Binding Username, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                            <MenuItem.Icon>
+                                <ui:SymbolIcon Symbol="Find" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem
+                            Command="{Binding #Root.((checkpointBrowser:CivArchiveBrowserViewModel)DataContext).CopySha256Command}"
+                            CommandParameter="{Binding .}"
+                            Header="Copy SHA256"
+                            IsVisible="{Binding Sha256FromUrl, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                            <MenuItem.Icon>
+                                <ui:SymbolIcon Symbol="Copy" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+                    </MenuFlyout>
+                </Border.ContextFlyout>
+                <Button
+                    Padding="0"
+                    BorderThickness="0"
+                    Classes="transparent-full"
+                    Command="{Binding #Root.((checkpointBrowser:CivArchiveBrowserViewModel)DataContext).OpenResultCommand}"
+                    CommandParameter="{Binding .}"
+                    CornerRadius="8">
+                    <LayoutTransformControl>
+                        <LayoutTransformControl.LayoutTransform>
+                            <ScaleTransform ScaleX="{Binding $parent[scroll:BetterScrollViewer].((checkpointBrowser:CivArchiveBrowserViewModel)DataContext).ResizeFactor, FallbackValue=1, TargetNullValue=1}" ScaleY="{Binding $parent[scroll:BetterScrollViewer].((checkpointBrowser:CivArchiveBrowserViewModel)DataContext).ResizeFactor, FallbackValue=1, TargetNullValue=1}" />
+                        </LayoutTransformControl.LayoutTransform>
+                        <Grid Width="330" RowDefinitions="300,Auto">
+                            <Grid ClipToBounds="True">
+                                <!--
+                                    Three image layers, mutually-exclusive based on the FitCardImages
+                                    toggle on the parent VM:
+                                    • Fit mode (default): blurred UniformToFill background +
+                                    Uniform foreground (whole image visible, no letterbox).
+                                    • Fill mode: single UniformToFill (may crop edges, original).
+                                -->
+                                <controls:BetterAdvancedImage
+                                    CornerRadius="8"
+                                    IsVisible="{Binding $parent[scroll:BetterScrollViewer].((checkpointBrowser:CivArchiveBrowserViewModel)DataContext).FitCardImages, FallbackValue=True, TargetNullValue=True}"
+                                    Source="{Binding ImageUrl}"
+                                    Stretch="UniformToFill">
+                                    <controls:BetterAdvancedImage.Effect>
+                                        <BlurEffect Radius="24" />
+                                    </controls:BetterAdvancedImage.Effect>
+                                </controls:BetterAdvancedImage>
+                                <controls:BetterAdvancedImage
+                                    CornerRadius="8"
+                                    IsVisible="{Binding $parent[scroll:BetterScrollViewer].((checkpointBrowser:CivArchiveBrowserViewModel)DataContext).FitCardImages, FallbackValue=True, TargetNullValue=True}"
+                                    Source="{Binding ImageUrl}"
+                                    Stretch="Uniform" />
+                                <controls:BetterAdvancedImage
+                                    CornerRadius="8"
+                                    IsVisible="{Binding !$parent[scroll:BetterScrollViewer].((checkpointBrowser:CivArchiveBrowserViewModel)DataContext).FitCardImages, FallbackValue=False, TargetNullValue=False}"
+                                    Source="{Binding ImageUrl}"
+                                    Stretch="UniformToFill" />
+
+                                <!--  Placeholder when no image  -->
+                                <Border Background="{DynamicResource ControlAltFillColorSecondaryBrush}" IsVisible="{Binding ImageUrl, Converter={x:Static StringConverters.IsNullOrEmpty}}">
+                                    <StackPanel
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        Opacity="0.5"
+                                        Spacing="6">
+                                        <fa:Icon
+                                            HorizontalAlignment="Center"
+                                            FontSize="36"
+                                            Value="fa-regular fa-image" />
+                                        <TextBlock HorizontalAlignment="Center" Text="No image" />
+                                    </StackPanel>
+                                </Border>
+
+                                <!--  Top-left chip stack: kind / type / base model  -->
+                                <StackPanel
+                                    Margin="8"
+                                    HorizontalAlignment="Left"
+                                    VerticalAlignment="Top"
+                                    Orientation="Horizontal"
+                                    Spacing="6">
+                                    <controls:Card
+                                        Padding="6,2"
+                                        Background="#AA000000"
+                                        BorderThickness="0"
+                                        IsVisible="{Binding ShouldShowKindBadge}">
+                                        <TextBlock
+                                            FontSize="11"
+                                            FontWeight="SemiBold"
+                                            Foreground="White"
+                                            Text="{Binding KindRaw}" />
+                                    </controls:Card>
+                                    <controls:Card
+                                        Padding="6,2"
+                                        Background="#AA000000"
+                                        BorderThickness="0"
+                                        IsVisible="{Binding Type, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                                        <TextBlock
+                                            FontSize="11"
+                                            Foreground="White"
+                                            Text="{Binding Type}" />
+                                    </controls:Card>
+                                    <controls:Card
+                                        Padding="6,2"
+                                        Background="#AA000000"
+                                        BorderThickness="0"
+                                        IsVisible="{Binding BaseModel, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                                        <TextBlock
+                                            FontSize="11"
+                                            Foreground="White"
+                                            Text="{Binding BaseModel}" />
+                                    </controls:Card>
+                                </StackPanel>
+
+                                <!--  Top-right badges (Installed / NSFW / Deleted)  -->
+                                <StackPanel
+                                    Margin="8"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Top"
+                                    Orientation="Horizontal"
+                                    Spacing="6">
+                                    <controls:Card
+                                        Padding="6,2"
+                                        Background="#AA059669"
+                                        BorderThickness="0"
+                                        IsVisible="{Binding IsInstalled}"
+                                        ToolTip.Tip="Already in your library">
+                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                            <fa:Icon
+                                                FontSize="10"
+                                                Foreground="White"
+                                                Value="fa-solid fa-check" />
+                                            <TextBlock
+                                                FontSize="11"
+                                                FontWeight="SemiBold"
+                                                Foreground="White"
+                                                Text="Installed" />
+                                        </StackPanel>
+                                    </controls:Card>
+                                    <controls:Card
+                                        Padding="6,2"
+                                        Background="#AAEA580C"
+                                        BorderThickness="0"
+                                        IsVisible="{Binding IsNsfw}"
+                                        ToolTip.Tip="Not safe for work">
+                                        <TextBlock
+                                            FontSize="11"
+                                            FontWeight="SemiBold"
+                                            Foreground="White"
+                                            Text="NSFW" />
+                                    </controls:Card>
+                                    <controls:Card
+                                        Padding="6,2"
+                                        Background="#AAB91C1C"
+                                        BorderThickness="0"
+                                        IsVisible="{Binding IsDeleted}">
+                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                            <fa:Icon
+                                                FontSize="10"
+                                                Foreground="White"
+                                                Value="fa-solid fa-trash" />
+                                            <TextBlock
+                                                FontSize="11"
+                                                FontWeight="SemiBold"
+                                                Foreground="White"
+                                                Text="Deleted" />
+                                        </StackPanel>
+                                    </controls:Card>
+                                </StackPanel>
+                            </Grid>
+
+                            <!--  Bottom info panel  -->
+                            <Border Name="CardBottom" Grid.Row="1">
+                                <Grid Margin="10" RowDefinitions="Auto,Auto,Auto">
+                                    <TextBlock
+                                        MaxWidth="300"
+                                        FontWeight="SemiBold"
+                                        Foreground="White"
+                                        Text="{Binding Name}"
+                                        TextTrimming="CharacterEllipsis"
+                                        TextWrapping="NoWrap"
+                                        ToolTip.Tip="{Binding Name}" />
+
+                                    <!--  Clickable creator pill  -->
+                                    <Button
+                                        Grid.Row="1"
+                                        Margin="-6,2,0,0"
+                                        HorizontalAlignment="Left"
+                                        Classes="transparent"
+                                        Command="{Binding #Root.((checkpointBrowser:CivArchiveBrowserViewModel)DataContext).SearchByCreatorCommand}"
+                                        CommandParameter="{Binding .}"
+                                        CornerRadius="12"
+                                        IsVisible="{Binding Username, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                        ToolTip.Tip="Browse creator">
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <fa:Icon
+                                                FontSize="11"
+                                                Foreground="#CCFFFFFF"
+                                                Value="fa-solid fa-user" />
+                                            <TextBlock
+                                                FontSize="12"
+                                                Foreground="#DDFFFFFF"
+                                                Text="{Binding Username}" />
+                                        </StackPanel>
+                                    </Button>
+
+                                    <Grid
+                                        Grid.Row="2"
+                                        Margin="0,6,0,0"
+                                        ColumnDefinitions="*,Auto,Auto">
+                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                            <fa:Icon
+                                                FontSize="11"
+                                                Foreground="#AAFFFFFF"
+                                                Value="fa-solid fa-server" />
+                                            <TextBlock
+                                                FontSize="12"
+                                                Foreground="#DDFFFFFF"
+                                                Text="{Binding Platform}" />
+                                        </StackPanel>
+                                        <StackPanel
+                                            Grid.Column="1"
+                                            Margin="8,0,0,0"
+                                            Orientation="Horizontal"
+                                            Spacing="4"
+                                            ToolTip.Tip="Downloads">
+                                            <fa:Icon
+                                                FontSize="11"
+                                                Foreground="#AAFFFFFF"
+                                                Value="fa-solid fa-download" />
+                                            <TextBlock
+                                                FontSize="12"
+                                                Foreground="#DDFFFFFF"
+                                                Text="{Binding DownloadCount, Converter={StaticResource KiloFormatterConverter}}" />
+                                        </StackPanel>
+                                        <StackPanel
+                                            Grid.Column="2"
+                                            Margin="8,0,0,0"
+                                            Orientation="Horizontal"
+                                            Spacing="4"
+                                            ToolTip.Tip="{Binding CreatedAt, StringFormat={}{0:F}}">
+                                            <fa:Icon
+                                                FontSize="11"
+                                                Foreground="#AAFFFFFF"
+                                                Value="fa-regular fa-calendar" />
+                                            <TextBlock
+                                                FontSize="12"
+                                                Foreground="#DDFFFFFF"
+                                                Text="{Binding CreatedAt, StringFormat={}{0:d}}" />
+                                        </StackPanel>
+                                    </Grid>
+                                </Grid>
+                            </Border>
+                        </Grid>
+                    </LayoutTransformControl>
+                </Button>
+            </Border>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <Grid RowDefinitions="Auto,*,Auto">
+        <StackPanel Margin="8" Spacing="8">
+            <!--  Search bar  -->
+            <Grid ColumnDefinitions="*,Auto,Auto">
+                <TextBox
+                    x:Name="SearchTextBox"
+                    KeyDown="InputElement_OnKeyDown"
+                    Text="{Binding SearchQuery, Mode=TwoWay}"
+                    ToolTip.Tip="Tip: prefix tokens with @ to filter by creator, # to filter by tag (e.g. dragon @sinatra #sdxl)"
+                    Watermark="Search by model name, filename, SHA256 hash, or CivArchive link — try @creator or #tag">
+                    <TextBox.InnerLeftContent>
+                        <fa:Icon
+                            Margin="10,0,4,0"
+                            FontSize="14"
+                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                            Value="fa-solid fa-magnifying-glass" />
+                    </TextBox.InnerLeftContent>
+                    <TextBox.InnerRightContent>
+                        <Button
+                            Margin="2"
+                            Classes="transparent-full"
+                            Command="{Binding ClearSearchQueryCommand}"
+                            IsVisible="{Binding SearchQuery.Length}"
+                            ToolTip.Tip="Clear">
+                            <ui:SymbolIcon Symbol="Cancel" />
+                        </Button>
+                    </TextBox.InnerRightContent>
+                </TextBox>
+                <Button
+                    Grid.Column="1"
+                    Width="90"
+                    Margin="8,0,0,0"
+                    Classes="accent"
+                    Command="{Binding SearchModelsCommand}"
+                    CommandParameter="{StaticResource False}"
+                    IsDefault="True">
+                    <Grid>
+                        <controls:ProgressRing
+                            MinWidth="16"
+                            MinHeight="16"
+                            VerticalAlignment="Center"
+                            BorderThickness="3"
+                            IsIndeterminate="True"
+                            IsVisible="{Binding SearchModelsCommand.IsRunning}" />
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            IsVisible="{Binding !SearchModelsCommand.IsRunning}"
+                            Text="Search" />
+                    </Grid>
+                </Button>
+
+                <!--  More Filters: explicit Tags + Username (alternative to inline @/# tokens)  -->
+                <Button
+                    Grid.Column="2"
+                    Margin="4,0,0,0"
+                    ToolTip.Tip="Advanced filters">
+                    <Grid>
+                        <fa:Icon FontSize="13" Value="fa-solid fa-sliders" />
+                        <Ellipse
+                            Width="6"
+                            Height="6"
+                            Margin="0,-6,-6,0"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Top"
+                            Fill="{DynamicResource SystemAccentColor}"
+                            IsVisible="{Binding HasAdvancedFilters}" />
+                    </Grid>
+                    <Button.Flyout>
+                        <Flyout>
+                            <StackPanel MinWidth="280" Spacing="8">
+                                <TextBlock
+                                    FontSize="13"
+                                    FontWeight="SemiBold"
+                                    Text="Advanced filters" />
+                                <TextBlock
+                                    FontSize="11"
+                                    Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                    Text="Or use @creator and #tag inline in the search box."
+                                    TextWrapping="Wrap" />
+
+                                <TextBlock
+                                    Margin="0,4,0,0"
+                                    FontSize="11"
+                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                    Text="Tags" />
+                                <TextBox Text="{Binding TagQuery, Mode=TwoWay}" Watermark="comma,separated,tags">
+                                    <TextBox.InnerLeftContent>
+                                        <fa:Icon
+                                            Margin="10,0,4,0"
+                                            FontSize="13"
+                                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                            Value="fa-solid fa-tag" />
+                                    </TextBox.InnerLeftContent>
+                                </TextBox>
+
+                                <TextBlock
+                                    Margin="0,4,0,0"
+                                    FontSize="11"
+                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                    Text="Username" />
+                                <TextBox Text="{Binding UsernameQuery, Mode=TwoWay}" Watermark="creator name">
+                                    <TextBox.InnerLeftContent>
+                                        <fa:Icon
+                                            Margin="10,0,4,0"
+                                            FontSize="13"
+                                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                            Value="fa-solid fa-user" />
+                                    </TextBox.InnerLeftContent>
+                                </TextBox>
+                            </StackPanel>
+                        </Flyout>
+                    </Button.Flyout>
+                </Button>
+            </Grid>
+
+            <!--  Result count  -->
+            <TextBlock
+                Margin="2,-2,0,0"
+                FontSize="11"
+                Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                IsVisible="{Binding HasResultCount}">
+                <Run Text="Showing" />
+                <Run Text="{Binding Results.Count, Mode=OneWay}" />
+                <Run Text="of" />
+                <Run Text="{Binding TotalHits, Mode=OneWay}" />
+                <Run Text="results" />
+            </TextBlock>
+
+            <!--  Unified filter row — wraps on narrow widths  -->
+            <WrapPanel Orientation="Horizontal">
+                <!--  Platform  -->
+                <StackPanel Margin="0,0,8,4" Spacing="2">
+                    <TextBlock
+                        Margin="2,0,0,0"
+                        FontSize="11"
+                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                        Text="Platform" />
+                    <ComboBox
+                        MinWidth="120"
+                        ItemsSource="{Binding AllPlatforms}"
+                        SelectedItem="{Binding SelectedPlatform}" />
+                </StackPanel>
+
+                <!--  Sort  -->
+                <StackPanel Margin="0,0,8,4" Spacing="2">
+                    <TextBlock
+                        Margin="2,0,0,0"
+                        FontSize="11"
+                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                        Text="{x:Static lang:Resources.Label_Sort}" />
+                    <ComboBox
+                        MinWidth="100"
+                        ItemsSource="{Binding AllSorts}"
+                        SelectedItem="{Binding SelectedSort}" />
+                </StackPanel>
+
+                <!--  Period  -->
+                <StackPanel Margin="0,0,8,4" Spacing="2">
+                    <TextBlock
+                        Margin="2,0,0,0"
+                        FontSize="11"
+                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                        Text="{x:Static lang:Resources.Label_TimePeriod}" />
+                    <ComboBox
+                        MinWidth="90"
+                        ItemsSource="{Binding AllPeriods}"
+                        SelectedItem="{Binding SelectedPeriod}" />
+                </StackPanel>
+
+                <!--  Kind  -->
+                <StackPanel Margin="0,0,8,4" Spacing="2">
+                    <TextBlock
+                        Margin="2,0,0,0"
+                        FontSize="11"
+                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                        Text="Kind" />
+                    <ComboBox
+                        MinWidth="90"
+                        ItemsSource="{Binding AllKinds}"
+                        SelectedItem="{Binding SelectedKind}" />
+                </StackPanel>
+
+                <!--  Rating segmented  -->
+                <StackPanel Margin="0,0,8,4" Spacing="2">
+                    <TextBlock
+                        Margin="2,0,0,0"
+                        FontSize="11"
+                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                        Text="Rating" />
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <fa:Icon
+                            VerticalAlignment="Center"
+                            FontSize="12"
+                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                            Value="fa-solid fa-shield-halved" />
+                        <ListBox
+                            Classes="Segmented"
+                            ItemsSource="{Binding AllRatings}"
+                            SelectedItem="{Binding SelectedRating}" />
+                    </StackPanel>
+                </StackPanel>
+
+                <!--  Status segmented  -->
+                <StackPanel Margin="0,0,8,4" Spacing="2">
+                    <TextBlock
+                        Margin="2,0,0,0"
+                        FontSize="11"
+                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                        Text="Status" />
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <fa:Icon
+                            VerticalAlignment="Center"
+                            FontSize="12"
+                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                            Value="fa-solid fa-circle-check" />
+                        <ListBox
+                            Classes="Segmented"
+                            ItemsSource="{Binding AllPlatformStatuses}"
+                            SelectedItem="{Binding SelectedPlatformStatus}" />
+                    </StackPanel>
+                </StackPanel>
+
+                <!--  Model Type multi-select  -->
+                <StackPanel Margin="0,0,8,4" Spacing="2">
+                    <TextBlock
+                        Margin="2,0,0,0"
+                        FontSize="11"
+                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                        Text="{x:Static lang:Resources.Label_ModelType}" />
+                    <Button MinWidth="130">
+                        <Grid HorizontalAlignment="Stretch" ColumnDefinitions="*,Auto">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <fa:Icon FontSize="12" Value="fa-solid fa-cube" />
+                                <TextBlock VerticalAlignment="Center" Text="{x:Static lang:Resources.Label_ModelType}" />
+                            </StackPanel>
+                            <ui:SymbolIcon
+                                Grid.Column="1"
+                                Margin="6,0,0,0"
+                                VerticalAlignment="Center"
+                                FontSize="12"
+                                Foreground="{DynamicResource TextFillColorSecondary}"
+                                Symbol="ChevronDown" />
+                        </Grid>
+                        <Button.Flyout>
+                            <Flyout>
+                                <StackPanel MaxWidth="380" Spacing="8">
+                                    <TextBox Text="{Binding ModelTypeFilter, Mode=TwoWay}" Watermark="Filter…">
+                                        <TextBox.InnerLeftContent>
+                                            <fa:Icon
+                                                Margin="10,0,4,0"
+                                                FontSize="12"
+                                                Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                Value="fa-solid fa-magnifying-glass" />
+                                        </TextBox.InnerLeftContent>
+                                    </TextBox>
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <TextBlock
+                                            VerticalAlignment="Center"
+                                            FontSize="11"
+                                            Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                            Text="{Binding ModelTypeSelectionSummary}" />
+                                        <Button
+                                            Grid.Column="1"
+                                            Classes="transparent"
+                                            Command="{Binding ToggleAllModelTypesCommand}"
+                                            Content="Toggle all" />
+                                    </Grid>
+                                    <ScrollViewer MaxHeight="400" VerticalScrollBarVisibility="Auto">
+                                        <ui:ItemsRepeater ItemsSource="{Binding FilteredModelTypes}">
+                                            <ui:ItemsRepeater.Layout>
+                                                <ui:FlowLayout
+                                                    MinColumnSpacing="4"
+                                                    MinRowSpacing="4"
+                                                    Orientation="Horizontal" />
+                                            </ui:ItemsRepeater.Layout>
+                                            <ui:ItemsRepeater.ItemTemplate>
+                                                <DataTemplate DataType="{x:Type checkpointManager:BaseModelOptionViewModel}">
+                                                    <ToggleButton Content="{Binding ModelType}" IsChecked="{Binding IsSelected}" />
+                                                </DataTemplate>
+                                            </ui:ItemsRepeater.ItemTemplate>
+                                        </ui:ItemsRepeater>
+                                    </ScrollViewer>
+                                </StackPanel>
+                            </Flyout>
+                        </Button.Flyout>
+                    </Button>
+                </StackPanel>
+
+                <!--  Base Model multi-select  -->
+                <StackPanel Margin="0,0,8,4" Spacing="2">
+                    <TextBlock
+                        Margin="2,0,0,0"
+                        FontSize="11"
+                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                        Text="{x:Static lang:Resources.Label_BaseModel}" />
+                    <Button MinWidth="130">
+                        <Grid HorizontalAlignment="Stretch" ColumnDefinitions="*,Auto">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <fa:Icon FontSize="12" Value="fa-solid fa-layer-group" />
+                                <TextBlock VerticalAlignment="Center" Text="{x:Static lang:Resources.Label_BaseModel}" />
+                            </StackPanel>
+                            <ui:SymbolIcon
+                                Grid.Column="1"
+                                Margin="6,0,0,0"
+                                VerticalAlignment="Center"
+                                FontSize="12"
+                                Foreground="{DynamicResource TextFillColorSecondary}"
+                                Symbol="ChevronDown" />
+                        </Grid>
+                        <Button.Flyout>
+                            <Flyout>
+                                <StackPanel MaxWidth="380" Spacing="8">
+                                    <TextBox Text="{Binding BaseModelFilter, Mode=TwoWay}" Watermark="Filter…">
+                                        <TextBox.InnerLeftContent>
+                                            <fa:Icon
+                                                Margin="10,0,4,0"
+                                                FontSize="12"
+                                                Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                Value="fa-solid fa-magnifying-glass" />
+                                        </TextBox.InnerLeftContent>
+                                    </TextBox>
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <TextBlock
+                                            VerticalAlignment="Center"
+                                            FontSize="11"
+                                            Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                            Text="{Binding BaseModelSelectionSummary}" />
+                                        <Button
+                                            Grid.Column="1"
+                                            Classes="transparent"
+                                            Command="{Binding ToggleAllBaseModelsCommand}"
+                                            Content="Toggle all" />
+                                    </Grid>
+                                    <ScrollViewer MaxHeight="400" VerticalScrollBarVisibility="Auto">
+                                        <ui:ItemsRepeater ItemsSource="{Binding FilteredBaseModels}">
+                                            <ui:ItemsRepeater.Layout>
+                                                <ui:FlowLayout
+                                                    MinColumnSpacing="4"
+                                                    MinRowSpacing="4"
+                                                    Orientation="Horizontal" />
+                                            </ui:ItemsRepeater.Layout>
+                                            <ui:ItemsRepeater.ItemTemplate>
+                                                <DataTemplate DataType="{x:Type checkpointManager:BaseModelOptionViewModel}">
+                                                    <ToggleButton Content="{Binding ModelType}" IsChecked="{Binding IsSelected}" />
+                                                </DataTemplate>
+                                            </ui:ItemsRepeater.ItemTemplate>
+                                        </ui:ItemsRepeater>
+                                    </ScrollViewer>
+                                </StackPanel>
+                            </Flyout>
+                        </Button.Flyout>
+                    </Button>
+                </StackPanel>
+
+                <!--  Zoom (wrapped to match labeled-unit baseline)  -->
+                <StackPanel Margin="0,0,4,4" Spacing="2">
+                    <!--  Spacer label keeps the button baseline aligned with the labeled units to the left  -->
+                    <TextBlock
+                        Margin="2,0,0,0"
+                        FontSize="11"
+                        Opacity="0"
+                        Text="." />
+                    <Button ToolTip.Tip="Card size">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <fa:Icon
+                                VerticalAlignment="Center"
+                                FontSize="12"
+                                Value="fa-solid fa-magnifying-glass" />
+                            <TextBlock VerticalAlignment="Center" Text="Zoom" />
+                        </StackPanel>
+                        <Button.Flyout>
+                            <Flyout>
+                                <StackPanel Orientation="Vertical">
+                                    <TextBlock
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        Text="Zoom" />
+                                    <Slider
+                                        MinWidth="150"
+                                        Maximum="1.5"
+                                        Minimum="0.6"
+                                        SmallChange="0.05"
+                                        Value="{Binding ResizeFactor, Mode=TwoWay}" />
+                                    <TextBlock
+                                        Margin="0,-4,0,0"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        Text="{Binding ResizeFactor, StringFormat={}{0:F2}x}" />
+                                </StackPanel>
+                            </Flyout>
+                        </Button.Flyout>
+                    </Button>
+                </StackPanel>
+
+                <!--  Hide Installed (wrapped to match labeled-unit baseline)  -->
+                <StackPanel Margin="0,0,4,4" Spacing="2">
+                    <TextBlock
+                        Margin="2,0,0,0"
+                        FontSize="11"
+                        Opacity="0"
+                        Text="." />
+                    <ToggleButton IsChecked="{Binding HideInstalledModels, Mode=TwoWay}" ToolTip.Tip="Hide models already in your library">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <fa:Icon
+                                VerticalAlignment="Center"
+                                FontSize="12"
+                                Value="fa-solid fa-database" />
+                            <TextBlock VerticalAlignment="Center" Text="Hide Installed" />
+                        </StackPanel>
+                    </ToggleButton>
+                </StackPanel>
+
+                <!--  Fit Images toggle: on = whole image with blurred edge fill, off = crop to fill  -->
+                <StackPanel Margin="0,0,4,4" Spacing="2">
+                    <TextBlock
+                        Margin="2,0,0,0"
+                        FontSize="11"
+                        Opacity="0"
+                        Text="." />
+                    <ToggleButton IsChecked="{Binding FitCardImages, Mode=TwoWay}" ToolTip.Tip="Fit: show whole image with blurred edges. Off: crop to fill (may cut off content).">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <fa:Icon
+                                VerticalAlignment="Center"
+                                FontSize="12"
+                                Value="fa-solid fa-image" />
+                            <TextBlock VerticalAlignment="Center" Text="Fit Images" />
+                        </StackPanel>
+                    </ToggleButton>
+                </StackPanel>
+
+                <!--  Reset filters  -->
+                <StackPanel Margin="0,0,0,4" Spacing="2">
+                    <TextBlock
+                        Margin="2,0,0,0"
+                        FontSize="11"
+                        Opacity="0"
+                        Text="." />
+                    <Button
+                        Classes="transparent"
+                        Command="{Binding ResetFiltersCommand}"
+                        ToolTip.Tip="Reset all filters to defaults">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <fa:Icon
+                                VerticalAlignment="Center"
+                                FontSize="12"
+                                Value="fa-solid fa-rotate-left" />
+                            <TextBlock VerticalAlignment="Center" Text="Reset" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </WrapPanel>
+
+        </StackPanel>
+
+        <scroll:BetterScrollViewer
+            Name="ImageScrollViewer"
+            Grid.Row="1"
+            ScrollChanged="ScrollViewer_OnScrollChanged">
+            <ItemsRepeater
+                HorizontalAlignment="Center"
+                ItemTemplate="{StaticResource CivArchiveCardTemplate}"
+                ItemsSource="{Binding Results}">
+                <Interaction.Behaviors>
+                    <behaviors:ResizeBehavior
+                        MaxResizeFactor="1.5"
+                        MinResizeFactor="0.6"
+                        PointerWheelTargetObject="{Binding #ImageScrollViewer}"
+                        ResizeFactor="{Binding ResizeFactor}" />
+                </Interaction.Behaviors>
+                <ItemsRepeater.Layout>
+                    <UniformGridLayout
+                        MinColumnSpacing="8"
+                        MinRowSpacing="8"
+                        Orientation="Horizontal" />
+                </ItemsRepeater.Layout>
+            </ItemsRepeater>
+        </scroll:BetterScrollViewer>
+
+        <!--  Empty state  -->
+        <StackPanel
+            Grid.Row="1"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            IsVisible="{Binding NoResultsFound}"
+            Spacing="12">
+            <fa:Icon
+                HorizontalAlignment="Center"
+                FontSize="48"
+                Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                Value="fa-solid fa-magnifying-glass" />
+            <TextBlock
+                HorizontalAlignment="Center"
+                FontSize="20"
+                Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                Text="{Binding NoResultsText}"
+                TextAlignment="Center"
+                TextWrapping="Wrap" />
+        </StackPanel>
+
+        <controls:ProgressRing
+            Grid.Row="1"
+            Width="128"
+            Height="128"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            IsIndeterminate="True"
+            IsVisible="{Binding IsLoading}" />
+
+        <TextBlock
+            Grid.Row="2"
+            Margin="0,4,0,8"
+            Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+            IsVisible="{Binding IsEndOfResults}"
+            Text="End of results"
+            TextAlignment="Center" />
+    </Grid>
+</controls:UserControlBase>

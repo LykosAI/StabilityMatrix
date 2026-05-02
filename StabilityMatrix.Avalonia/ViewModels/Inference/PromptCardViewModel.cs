@@ -280,7 +280,7 @@ public partial class PromptCardViewModel
         if (accountsService.LykosStatus is not { User: not null } status)
             return;
 
-        if (status.User.Roles.Count is 1 && status.User.Roles.Contains(LykosRole.Basic.ToString()))
+        if (status.User.Roles.Count is 1 && status.User.Roles.Contains(nameof(LykosRole.Basic)))
         {
             LowTokenThreshold = 25;
         }

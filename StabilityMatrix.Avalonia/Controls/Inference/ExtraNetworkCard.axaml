@@ -4,6 +4,7 @@
     xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:fluent="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
     xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
@@ -22,9 +23,9 @@
                 <controls:Card Padding="12">
                     <sg:SpacedGrid
                         Margin="0,0,0,0"
-                        ColumnDefinitions="Auto,*"
+                        ColumnDefinitions="Auto,*,Auto"
                         ColumnSpacing="8"
-                        RowDefinitions="*,*,*,*,*">
+                        RowDefinitions="Auto,Auto,Auto,Auto,Auto">
                         <!--  Model  -->
                         <TextBlock
                             Grid.Column="0"
@@ -41,17 +42,27 @@
                             SelectedItem="{Binding SelectedModel}"
                             Theme="{StaticResource BetterComboBoxHybridModelTheme}" />
 
+                        <!--  Browse Button  -->
+                        <Button
+                            Grid.Row="0"
+                            Grid.Column="2"
+                            Command="{Binding OpenLoraPickerCommand}"
+                            ToolTip.Tip="Browse all LoRAs">
+                            <fluent:SymbolIcon FontSize="16" Symbol="Search" />
+                        </Button>
+
                         <!--  Model Weight  -->
                         <StackPanel
                             Grid.Row="1"
                             Grid.Column="0"
-                            Grid.ColumnSpan="2"
+                            Grid.ColumnSpan="3"
                             Margin="0,8,0,0"
-                            IsVisible="{Binding IsModelWeightEnabled}">
+                            IsVisible="True">
                             <Grid ColumnDefinitions="*,Auto">
                                 <TextBlock VerticalAlignment="Center" Text="{x:Static lang:Resources.Label_Strength}" />
                                 <ui:NumberBox
                                     Grid.Column="1"
+                                    MinWidth="160"
                                     Margin="4,0,0,0"
                                     HorizontalAlignment="Stretch"
                                     LargeChange="0.1"
@@ -69,13 +80,14 @@
                         <StackPanel
                             Grid.Row="2"
                             Grid.Column="0"
-                            Grid.ColumnSpan="2"
+                            Grid.ColumnSpan="3"
                             Margin="0,8,0,0"
                             IsVisible="{Binding IsClipWeightEnabled}">
                             <Grid ColumnDefinitions="*,Auto">
                                 <TextBlock VerticalAlignment="Center" Text="{x:Static lang:Resources.Label_CLIPStrength}" />
                                 <ui:NumberBox
                                     Grid.Column="1"
+                                    MinWidth="160"
                                     Margin="4,0,0,0"
                                     HorizontalAlignment="Stretch"
                                     LargeChange="0.1"
@@ -93,7 +105,7 @@
                         <TextBlock
                             Grid.Row="3"
                             Grid.Column="0"
-                            Grid.ColumnSpan="2"
+                            Grid.ColumnSpan="3"
                             Margin="0,8,0,0"
                             VerticalAlignment="Center"
                             IsVisible="{Binding ShowTriggerWords}"
@@ -101,7 +113,7 @@
                         <TextBox
                             Grid.Row="4"
                             Grid.Column="0"
-                            Grid.ColumnSpan="2"
+                            Grid.ColumnSpan="3"
                             MaxHeight="250"
                             Margin="0,8,0,0"
                             VerticalAlignment="Stretch"

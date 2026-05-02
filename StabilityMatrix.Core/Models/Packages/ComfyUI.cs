@@ -318,7 +318,14 @@ public class ComfyUI(
     public override string MainBranch => "master";
 
     public override IEnumerable<TorchIndex> AvailableTorchIndices =>
-        [TorchIndex.Cpu, TorchIndex.Cuda, TorchIndex.DirectMl, TorchIndex.Rocm, TorchIndex.Mps];
+        [
+            TorchIndex.Cpu,
+            TorchIndex.Cuda,
+            TorchIndex.DirectMl,
+            TorchIndex.Ipex,
+            TorchIndex.Mps,
+            TorchIndex.Rocm,
+        ];
 
     public override List<ExtraPackageCommand> GetExtraCommands()
     {
@@ -432,6 +439,7 @@ public class ComfyUI(
                 TorchaudioVersion = " ", // Request torchaudio without a specific version
                 CudaIndex = isLegacyNvidia ? "cu126" : "cu130",
                 RocmIndex = "rocm7.2",
+                XpuIndex = "xpu",
                 UpgradePackages = true,
                 PostInstallPipArgs = ["typing-extensions>=4.15.0"],
             };
@@ -830,6 +838,19 @@ public class ComfyUI(
                     venvRunner.WorkingDirectory = installScript.Directory;
                     venvRunner.UpdateEnvironmentVariables(env =>
                     {
+                        // Recompute UV_BUILD_CONSTRAINT relative to the new working directory,
+                        // since the constraints file is in the ComfyUI root's venv folder.
+                        var constraintsAbsPath = Path.Combine(
+                            installedPackage.FullPath!,
+                            "venv",
+                            "uv-build-constraints.txt"
+                        );
+                        var constraintsRelPath = Path.GetRelativePath(
+                            installScript.Directory!.FullPath,
+                            constraintsAbsPath
+                        );
+                        env = env.SetItem("UV_BUILD_CONSTRAINT", constraintsRelPath);
+
                         // set env vars for Impact Pack for Face Detailer
                         env = env.SetItem("COMFYUI_PATH", installedPackage.FullPath!);
 
@@ -981,7 +1002,19 @@ public class ComfyUI(
 
     private ImmutableDictionary<string, string> GetEnvVars(ImmutableDictionary<string, string> env)
     {
-        // if we're not on windows or we don't have a windows rocm gpu, return original env
+        // Add FFmpeg to PATH if it's installed (optional - for video processing)
+        if (PrerequisiteHelper.IsFfmpegInstalled)
+        {
+            var ffmpegDir = Path.GetDirectoryName(PrerequisiteHelper.FfmpegPath);
+            if (!string.IsNullOrEmpty(ffmpegDir))
+            {
+                var currentPath =
+                    env.GetValueOrDefault("PATH") ?? Environment.GetEnvironmentVariable("PATH") ?? "";
+                env = env.SetItem("PATH", Compat.GetEnvPathWithExtensions(ffmpegDir, currentPath));
+            }
+        }
+
+        // if we're not on windows or we don't have a windows rocm gpu, return env as-is
         var hasRocmGpu =
             SettingsManager.Settings.PreferredGpu?.IsWindowsRocmSupportedGpu()
             ?? HardwareHelper.HasWindowsRocmSupportedGpu();

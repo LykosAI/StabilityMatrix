@@ -34,6 +34,8 @@ public partial class ModelIndexService : IModelIndexService
     private Dictionary<SharedFolderType, List<LocalModelFile>> _modelIndex = new();
 
     private HashSet<string>? _modelIndexBlake3Hashes;
+    private HashSet<string>? _modelIndexSha256Hashes;
+    private HashSet<string>? _modelIndexCivArchiveUrls;
 
     /// <summary>
     /// Whether the database has been initially loaded.
@@ -52,6 +54,12 @@ public partial class ModelIndexService : IModelIndexService
 
     public IReadOnlySet<string> ModelIndexBlake3Hashes =>
         _modelIndexBlake3Hashes ??= CollectModelHashes(ModelIndex.Values.SelectMany(x => x));
+
+    public IReadOnlySet<string> ModelIndexSha256Hashes =>
+        _modelIndexSha256Hashes ??= CollectModelSha256Hashes(ModelIndex.Values.SelectMany(x => x));
+
+    public IReadOnlySet<string> ModelIndexCivArchiveUrls =>
+        _modelIndexCivArchiveUrls ??= CollectCivArchiveUrls(ModelIndex.Values.SelectMany(x => x));
 
     [AutoPostConstruct]
     private void Initialize()
@@ -688,6 +696,8 @@ public partial class ModelIndexService : IModelIndexService
     private void OnModelIndexReset()
     {
         _modelIndexBlake3Hashes = null;
+        _modelIndexSha256Hashes = null;
+        _modelIndexCivArchiveUrls = null;
     }
 
     private static HashSet<string> CollectModelHashes(IEnumerable<LocalModelFile> models)
@@ -701,6 +711,32 @@ public partial class ModelIndexService : IModelIndexService
             }
         }
         return hashes;
+    }
+
+    private static HashSet<string> CollectModelSha256Hashes(IEnumerable<LocalModelFile> models)
+    {
+        var hashes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var model in models)
+        {
+            if (!string.IsNullOrWhiteSpace(model.HashSha256))
+            {
+                hashes.Add(model.HashSha256);
+            }
+        }
+        return hashes;
+    }
+
+    private static HashSet<string> CollectCivArchiveUrls(IEnumerable<LocalModelFile> models)
+    {
+        var urls = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var model in models)
+        {
+            if (model.HasCivArchiveMetadata && !string.IsNullOrWhiteSpace(model.ConnectedModelInfo.SourceUrl))
+            {
+                urls.Add(model.ConnectedModelInfo.SourceUrl);
+            }
+        }
+        return urls;
     }
 
     private static bool GetHasEarlyAccessUpdateOnly(LocalModelFile model, CivitModel? remoteModel)

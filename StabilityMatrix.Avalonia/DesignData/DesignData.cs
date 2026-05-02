@@ -13,8 +13,10 @@ using DynamicData.Binding;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
 using Semver;
+using SkiaSharp;
 using StabilityMatrix.Avalonia.Controls.CodeCompletion;
 using StabilityMatrix.Avalonia.Models;
+using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Models.TagCompletion;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels;
@@ -136,7 +138,7 @@ public static class DesignData
             .AddSingleton(Substitute.For<INotificationService>())
             .AddSingleton(Substitute.For<ISharedFolders>())
             .AddSingleton(Substitute.For<IDownloadService>())
-            .AddSingleton(Substitute.For<IHttpClientFactory>())
+            .AddSingleton(CreateHttpClientFactory())
             .AddSingleton(Substitute.For<IApiFactory>())
             .AddSingleton(Substitute.For<IDiscordRichPresenceService>())
             .AddSingleton(Substitute.For<ITrackedDownloadService>())
@@ -457,6 +459,13 @@ public static class DesignData
     [NotNull]
     public static PackageInstallBrowserViewModel? NewInstallerDialogViewModel { get; private set; }
 
+    private static IHttpClientFactory CreateHttpClientFactory()
+    {
+        var httpClientFactory = Substitute.For<IHttpClientFactory>();
+        httpClientFactory.CreateClient(Arg.Any<string>()).Returns(_ => new HttpClient());
+        return httpClientFactory;
+    }
+
     [NotNull]
     public static PackageInstallDetailViewModel? PackageInstallDetailViewModel { get; private set; }
 
@@ -574,6 +583,46 @@ public static class DesignData
                 ]
             );
         });
+
+    public static LayeredMaskEditorViewModel LayeredMaskEditorViewModel =>
+        DialogFactory.Get<LayeredMaskEditorViewModel>(vm =>
+        {
+            vm.CanvasSize = new System.Drawing.Size(1024, 1024);
+            vm.Layers.Clear();
+            vm.Layers.Add(
+                new MaskLayer
+                {
+                    Name = "Background",
+                    Prompt = "A beautiful sunset, coastal landscape, high quality",
+                    DisplayColor = MaskLayerColors.Red,
+                    Strength = 1.0f,
+                    Opacity = 0.5f,
+                }
+            );
+            vm.Layers.Add(
+                new MaskLayer
+                {
+                    Name = "Subject",
+                    Prompt = "A lonely person sitting on a rock, silhouette, detailed",
+                    DisplayColor = MaskLayerColors.Green,
+                    Strength = 1.0f,
+                    Opacity = 1.0f,
+                }
+            );
+            vm.Layers.Add(
+                new MaskLayer
+                {
+                    Name = "Extra Detail",
+                    Prompt = "Lens flare, atmospheric lighting",
+                    DisplayColor = MaskLayerColors.Blue,
+                    Strength = 0.5f,
+                    Opacity = 0.8f,
+                    IsVisible = false,
+                }
+            );
+            vm.SelectedLayer = vm.Layers[1];
+        });
+
     public static OutputsPageViewModel OutputsPageViewModel
     {
         get
@@ -976,6 +1025,9 @@ The gallery images are often inpainted, but you will get something very similar 
 
     public static MaskEditorViewModel MaskEditorViewModel => DialogFactory.Get<MaskEditorViewModel>();
 
+    public static ImageAnnotationEditorViewModel ImageAnnotationEditorViewModel =>
+        DialogFactory.Get<ImageAnnotationEditorViewModel>();
+
     public static InferenceTextToImageViewModel InferenceTextToImageViewModel =>
         DialogFactory.Get<InferenceTextToImageViewModel>(vm =>
         {
@@ -1299,7 +1351,8 @@ The gallery images are often inpainted, but you will get something very similar 
                         "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/dd9b038c-bd15-43ab-86ab-66e145ad7ff2/width=512",
                     ConnectedModelInfo = new ConnectedModelInfo
                     {
-                        ModelName = "Art Shaper (very long name example)",
+                        ModelName =
+                            "Art Shaper (very long name example) (very long name example) (very long name example)",
                         VersionName = "Style v8 (very long name)",
                         ModelId = 0,
                         VersionId = 0,
@@ -1560,6 +1613,9 @@ The gallery images are often inpainted, but you will get something very similar 
             vm.ModelType = CivitModelType.Checkpoint;
             vm.BaseModelType = "Pony";
         });
+
+    public static ModelPickerDialogViewModel ModelPickerDialogViewModel =>
+        DialogFactory.Get<ModelPickerDialogViewModel>();
 
     public static PackageInstallProgressItemViewModel PackageInstallProgressItemViewModel =>
         new(

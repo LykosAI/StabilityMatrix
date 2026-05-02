@@ -21,6 +21,7 @@ public class ImageMetadata
     private static readonly byte[] PngHeader = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
     private static readonly byte[] Idat = "IDAT"u8.ToArray();
     private static readonly byte[] Text = "tEXt"u8.ToArray();
+    private static readonly byte[] InternationalText = "iTXt"u8.ToArray();
 
     private static readonly byte[] Riff = "RIFF"u8.ToArray();
     private static readonly byte[] Webp = "WEBP"u8.ToArray();
@@ -125,7 +126,7 @@ public class ImageMetadata
     {
         // Get the PNG-tEXt directory
         return Directories
-            ?.Where(d => d.Name == "PNG-tEXt")
+            ?.Where(d => d.Name is "PNG-tEXt" or "PNG-iTXt" or "PNG-zTXt")
             .SelectMany(d => d.Tags)
             .Where(t => t.Name == "Textual Data");
     }
@@ -197,6 +198,36 @@ public class ImageMetadata
                 if (text.StartsWith($"{key}\0"))
                 {
                     return text[(key.Length + 1)..];
+                }
+            }
+            else if (chunkType == Encoding.UTF8.GetString(InternationalText))
+            {
+                var chunkBytes = byteStream.ReadBytes(chunkSize);
+                // iTXt: Keyword \0 CompressionFlag CompressionMethod LanguageTag \0 TranslatedKeyword \0 Text
+                var nullIndex = Array.IndexOf(chunkBytes, (byte)0);
+                if (nullIndex >= 0)
+                {
+                    var keyword = Encoding.Latin1.GetString(chunkBytes, 0, nullIndex);
+                    if (keyword == key && nullIndex + 3 < chunkBytes.Length)
+                    {
+                        // Skip: null separator + compression flag + compression method
+                        var pos = nullIndex + 3;
+                        // Skip language tag (to next null)
+                        var langEnd = Array.IndexOf(chunkBytes, (byte)0, pos);
+                        if (langEnd >= 0)
+                        {
+                            // Skip translated keyword (to next null)
+                            var transEnd = Array.IndexOf(chunkBytes, (byte)0, langEnd + 1);
+                            if (transEnd >= 0)
+                            {
+                                return Encoding.UTF8.GetString(
+                                    chunkBytes,
+                                    transEnd + 1,
+                                    chunkBytes.Length - transEnd - 1
+                                );
+                            }
+                        }
+                    }
                 }
             }
             else

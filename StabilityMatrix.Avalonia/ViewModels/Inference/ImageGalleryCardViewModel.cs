@@ -50,6 +50,36 @@ public partial class ImageGalleryCardViewModel : ViewModelBase
     [ObservableProperty]
     private bool isPixelGridEnabled;
 
+    /// <summary>
+    /// Synchronize SelectedImage when SelectedImageIndex changes.
+    /// </summary>
+    partial void OnSelectedImageIndexChanged(int value)
+    {
+        if (value >= 0 && value < ImageSources.Count)
+        {
+            SelectedImage = ImageSources[value];
+        }
+        else
+        {
+            SelectedImage = null;
+        }
+    }
+
+    /// <summary>
+    /// Synchronize SelectedImageIndex when SelectedImage changes (e.g., from thumbnail click).
+    /// </summary>
+    partial void OnSelectedImageChanged(ImageSource? value)
+    {
+        if (value is not null)
+        {
+            var index = ImageSources.IndexOf(value);
+            if (index >= 0 && index != SelectedImageIndex)
+            {
+                SelectedImageIndex = index;
+            }
+        }
+    }
+
     public bool HasMultipleImages => ImageSources.Count > 1;
 
     public bool CanNavigateBack => SelectedImageIndex > 0;

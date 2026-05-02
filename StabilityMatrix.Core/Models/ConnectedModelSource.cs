@@ -4,5 +4,6 @@ public enum ConnectedModelSource
 {
     Civitai,
     OpenModelDb,
-    Other
+    CivArchive,
+    Other,
 }

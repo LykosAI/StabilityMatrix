@@ -272,7 +272,7 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
     /// </summary>
     private RocmCompatibilityResult BuildCompatibilityResult(RocmPackageProfile profile)
     {
-        var amdGpus = GetAmdGpuCandidates(forceRefresh: true).ToList();
+        var amdGpus = GetAmdGpuCandidates(forceRefresh: false).ToList();
         if (amdGpus.Count == 0)
         {
             return new RocmCompatibilityResult

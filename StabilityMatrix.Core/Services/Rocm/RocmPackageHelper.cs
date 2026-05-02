@@ -712,12 +712,12 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
         var options = profile.EnvironmentOptions;
         var gfxArch = runtimeContext.RuntimeGfxArch;
 
-        ApplyPresetLaunchEnvironment(environment, gfxArch, options);
+        ApplyDefaultLaunchEnvironment(environment, gfxArch, options);
 
         return environment;
     }
 
-    private void ApplyPresetLaunchEnvironment(
+    private void ApplyDefaultLaunchEnvironment(
         IDictionary<string, string> environment,
         string? gfxArch,
         RocmEnvironmentOptions options
@@ -729,39 +729,22 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
         SetIfNotNull(environment, "MIOPEN_FIND_ENFORCE", options.MiopenFindEnforce);
         SetIfNotNull(environment, "PYTORCH_ALLOC_CONF", options.PyTorchAllocConf);
 
-        if (options.ApplyAotritonExperimental && IsModernWindowsRocmArchitecture(gfxArch))
+        if (options.ApplyAotritonExperimental && WindowsRocmSupport.IsModernArchitecture(gfxArch))
         {
             environment["TORCH_ROCM_AOTRITON_ENABLE_EXPERIMENTAL"] = "1";
         }
 
-        if (!IsModernWindowsRocmArchitecture(gfxArch) && options.ApplyLegacySdpFallback)
+        if (options.ApplyLegacySdpFallback && WindowsRocmSupport.IsLegacyArchitecture(gfxArch))
         {
             environment["TORCH_BACKENDS_CUDA_FLASH_SDP_ENABLED"] = "0";
             environment["TORCH_BACKENDS_CUDA_MEM_EFF_SDP_ENABLED"] = "0";
             environment["TORCH_BACKENDS_CUDA_MATH_SDP_ENABLED"] = "1";
         }
 
-        if (options.ApplyRdna1Override && IsRdna1Architecture(gfxArch))
+        if (options.ApplyRdna1Override && WindowsRocmSupport.IsRdna1Architecture(gfxArch))
         {
             environment["HSA_OVERRIDE_GFX_VERSION"] = "10.1.0";
         }
-
-        if (options.Preset == RocmEnvironmentPreset.ComfyUi && IsModernWindowsRocmArchitecture(gfxArch))
-        {
-            environment["COMFYUI_ENABLE_MIOPEN"] = "1";
-        }
-    }
-
-    private static bool IsModernWindowsRocmArchitecture(string? gfxArch)
-    {
-        return gfxArch?.StartsWith("gfx110", StringComparison.OrdinalIgnoreCase) == true
-            || gfxArch?.StartsWith("gfx115", StringComparison.OrdinalIgnoreCase) == true
-            || gfxArch?.StartsWith("gfx120", StringComparison.OrdinalIgnoreCase) == true;
-    }
-
-    private static bool IsRdna1Architecture(string? gfxArch)
-    {
-        return gfxArch?.StartsWith("gfx101", StringComparison.OrdinalIgnoreCase) == true;
     }
 
     private static void SetIfNotNull(IDictionary<string, string> environment, string key, string? value)

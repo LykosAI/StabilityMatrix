@@ -8,11 +8,6 @@ namespace StabilityMatrix.Core.Models.Rocm;
 /// </summary>
 public class RocmPackageProfile
 {
-    /// <summary>
-    /// Logical package name for diagnostics and profile-specific decisions.
-    /// </summary>
-    public string PackageName { get; init; } = string.Empty;
-
     public bool RequiresRocmSdk { get; init; }
 
     /// <summary>

@@ -42,16 +42,6 @@ public class ComfyUI(
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-    private static readonly RocmPackageProfile WindowsRocmProfile = new()
-    {
-        PackageName = "ComfyUI",
-        RequiresRocmSdk = true,
-        ExtraInstallPipArgs = ["numpy<2"],
-        PostInstallPipArgs = ["typing-extensions>=4.15.0"],
-        UpgradePackages = true,
-        EnvironmentOptions = new RocmEnvironmentOptions { Preset = RocmEnvironmentPreset.ComfyUi },
-    };
-
     public override string Name => "ComfyUI";
     public override string DisplayName { get; set; } = "ComfyUI";
     public override string Author => "comfyanonymous";
@@ -278,7 +268,7 @@ public class ComfyUI(
             {
                 Name = "Cross Attention Method",
                 Type = LaunchOptionType.Bool,
-                InitialValue = ShouldDefaultToQuadCrossAttention()
+                InitialValue = DefaultToQuadCrossAttention()
                     ? "--use-quad-cross-attention"
                     : "--use-pytorch-cross-attention",
                 Options =
@@ -610,9 +600,26 @@ public class ComfyUI(
         return base.GetRecommendedTorchVersion();
     }
 
-    /// <summary>
+    /// Windows ROCm install profile for ComfyUI.
+    private static readonly RocmPackageProfile WindowsRocmProfile = new()
+    {
+        RequiresRocmSdk = true,
+        ExtraInstallPipArgs = ["numpy<2"],
+        PostInstallPipArgs = ["typing-extensions>=4.15.0"],
+        UpgradePackages = true,
+        ExtraEnvironmentFactory = BuildComfyWindowsRocmEnvironment,
+    };
+
+    private static IReadOnlyDictionary<string, string> BuildComfyWindowsRocmEnvironment(
+        RocmRuntimeContext runtimeContext
+    )
+    {
+        return WindowsRocmSupport.IsModernArchitecture(runtimeContext.RuntimeGfxArch)
+            ? new Dictionary<string, string> { ["COMFYUI_ENABLE_MIOPEN"] = "1" }
+            : new Dictionary<string, string>();
+    }
+
     /// Uses the shared ROCm helper for Windows ROCm eligibility checks so ComfyUI does not maintain its own support matrix.
-    /// </summary>
     private bool HasWindowsRocmSupport()
     {
         if (!Compat.IsWindows)
@@ -626,7 +633,9 @@ public class ComfyUI(
         return compatibility.IsCompatible;
     }
 
-    private bool ShouldDefaultToQuadCrossAttention()
+    /// Defaults legacy Windows ROCm GPUs to quad cross-attention because PyTorch cross-attention is considerably slower
+    /// and not as supported on older AMD architectures.
+    private bool DefaultToQuadCrossAttention()
     {
         if (!Compat.IsWindows || !HasWindowsRocmSupport())
             return false;
@@ -636,10 +645,7 @@ public class ComfyUI(
             ? gpu?.GetAmdGfxArch()
             : HardwareHelper.GetWindowsRocmSupportedGpu()?.GetAmdGfxArch();
 
-        return !string.IsNullOrWhiteSpace(gfxArch)
-            && !gfxArch.StartsWith("gfx110", StringComparison.OrdinalIgnoreCase)
-            && !gfxArch.StartsWith("gfx115", StringComparison.OrdinalIgnoreCase)
-            && !gfxArch.StartsWith("gfx120", StringComparison.OrdinalIgnoreCase);
+        return WindowsRocmSupport.PreferLegacyAttentionFallback(gfxArch);
     }
 
     public override IPackageExtensionManager ExtensionManager =>

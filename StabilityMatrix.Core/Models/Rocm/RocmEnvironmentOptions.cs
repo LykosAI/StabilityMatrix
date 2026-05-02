@@ -16,11 +16,6 @@ public class RocmEnvironmentOptions
     public bool IncludeUserOverrides { get; init; } = true;
 
     /// <summary>
-    /// Selects a package-oriented ROCm environment preset managed by the helper.
-    /// </summary>
-    public RocmEnvironmentPreset Preset { get; init; } = RocmEnvironmentPreset.None;
-
-    /// <summary>
     /// When set, overrides the default PyTorch allocator tuning string added by the ROCm helper.
     /// </summary>
     public string? PyTorchAllocConf { get; init; } = "max_split_size_mb:512,garbage_collection_threshold:0.8";
@@ -59,10 +54,4 @@ public class RocmEnvironmentOptions
     /// When true, helper-managed defaults will apply the RDNA1 HSA override mask when needed.
     /// </summary>
     public bool ApplyRdna1Override { get; init; } = true;
-}
-
-public enum RocmEnvironmentPreset
-{
-    None,
-    ComfyUi,
 }

@@ -3,8 +3,8 @@ using StabilityMatrix.Core.Helper.HardwareInfo;
 namespace StabilityMatrix.Core.Models.Rocm;
 
 /// <summary>
-/// Centralizes Windows ROCm support policy so hardware detection, package selection,
-/// and ROCm installation all use the same architecture support map.
+/// Centralizes Windows ROCm support and architecture policy so hardware detection, package selection,
+/// installation, and shared launch decisions use the same support map.
 /// </summary>
 public static class WindowsRocmSupport
 {
@@ -19,6 +19,28 @@ public static class WindowsRocmSupport
     public static bool IsSupportedArchitecture(string? gfxArch)
     {
         return TryGetPackageIndexUrl(gfxArch) is not null;
+    }
+
+    public static bool IsModernArchitecture(string? gfxArch)
+    {
+        return gfxArch?.StartsWith("gfx110", StringComparison.OrdinalIgnoreCase) == true
+            || gfxArch?.StartsWith("gfx115", StringComparison.OrdinalIgnoreCase) == true
+            || gfxArch?.StartsWith("gfx120", StringComparison.OrdinalIgnoreCase) == true;
+    }
+
+    public static bool IsLegacyArchitecture(string? gfxArch)
+    {
+        return IsSupportedArchitecture(gfxArch) && !IsModernArchitecture(gfxArch);
+    }
+
+    public static bool PreferLegacyAttentionFallback(string? gfxArch)
+    {
+        return IsLegacyArchitecture(gfxArch);
+    }
+
+    public static bool IsRdna1Architecture(string? gfxArch)
+    {
+        return gfxArch?.StartsWith("gfx101", StringComparison.OrdinalIgnoreCase) == true;
     }
 
     public static string? TryGetPackageIndexUrl(string? gfxArch)

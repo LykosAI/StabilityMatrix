@@ -46,7 +46,6 @@ public class Wan2GP(
 {
     private static readonly RocmPackageProfile WindowsRocmProfile = new()
     {
-        PackageName = "Wan2GP",
         RequiresRocmSdk = true,
         UpgradePackages = true,
         PostInstallPipArgs = ["hf-xet", "setuptools", "numpy==1.26.4"],

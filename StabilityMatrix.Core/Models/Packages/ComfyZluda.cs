@@ -104,7 +104,7 @@ public class ComfyZluda(
 
             options.AddRange(
                 base.LaunchOptions.Where(x =>
-                    x.Name != "Cross Attention Method" && x.Name != "Enable Manager"
+                    x.Name != "Cross Attention Method" && !x.Options.Contains("--enable-manager")
                 )
             );
             return options;

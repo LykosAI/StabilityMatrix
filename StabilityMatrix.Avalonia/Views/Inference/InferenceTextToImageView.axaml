@@ -159,7 +159,9 @@
                                                 MaxWidth="200"
                                                 HorizontalAlignment="Stretch"
                                                 Command="{Binding QueueGenerationCommand}"
-                                                Content="{Binding QueueGenerationText}" />
+                                                Content="{Binding QueueGenerationText}"
+                                                HotKey="Shift+Enter"
+                                                ToolTip.Tip="{Binding $self.HotKey}" />
                                             <Button
                                                 Margin="4,0,0,0"
                                                 Padding="12,8"

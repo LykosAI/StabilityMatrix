@@ -16,6 +16,9 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed SwarmUI user settings (theme, output format, server configuration, etc.) and any user-added backend entries being overwritten when the install flow ran over an existing install — `Settings.fds` and `Backends.fds` are now merged with their existing contents instead of being rewritten from a stale template
 - Fixed pip requirements handling for environment-marker dependencies - thanks to @NeuralFault!
 - Fixed [#1608](https://github.com/LykosAI/StabilityMatrix/issues/1608) - Crash when cdn fetch fails due to error notification not being shown on UI Thread - thanks to @NeuralFault!
+### Supporters
+#### 🌟 Visionaries
+So much love to our Visionaries — **Waterclouds**, **bluepopsicle**, **Ibixat**, **Droolguy**, **snotty**, **LG**, and **whudunit** — thank you for your continued enthusiasm, kindness, and sheer staying-power. You've been with us through some big changes, and we're so lucky to have you in our corner. And the warmest welcome to our newest Visionaries **MrMxyzptlk12836**, **Psilocyfer18731**, **KalAbaddon**, **RustCupcake**, and **moon_milky2843** — we're so happy you're here, and we can't wait to get to know you. 💛
 
 ## v2.16.0-dev.3
 ### Added
@@ -131,7 +134,7 @@ Huge shoutout to our amazing Visionaries: **Waterclouds**, **JungleDragon**, **b
 #### 🌟 Visionaries
 A massive thank you to our esteemed Visionaries: **Waterclouds**, **JungleDragon**, **bluepopsicle**, **Bob S**, and **whudunit**! Your generosity is the powerhouse behind Stability Matrix, enabling us to keep building and refining with confidence. We are truly grateful for your partnership!
 
-## [Unreleased - v2.15.8]
+## v2.15.8
 ### Added
 - Added support for the civitai.red (mature-content) domain — NSFW CivitAI links now open and copy as civitai.red URLs, and pasting a civitai.red URL into the CivitAI model browser search works the same as a civitai.com URL
 ### Changed
@@ -139,6 +142,13 @@ A massive thank you to our esteemed Visionaries: **Waterclouds**, **JungleDragon
 ### Fixed
 - Fixed CivitAI model browsing breaking during Discovery API outages — the browser now falls back to the direct CivitAI API when Discovery returns a server error, authentication failure, or times out
 - Fixed SwarmUI user settings (theme, output format, server configuration, etc.) and any user-added backend entries being overwritten when the install flow ran over an existing install — `Settings.fds` and `Backends.fds` are now merged with their existing contents instead of being rewritten from a stale template
+- Fixed pip requirements handling for environment-marker dependencies - thanks to @NeuralFault!
+- Fixed [#1608](https://github.com/LykosAI/StabilityMatrix/issues/1608) - Crash when cdn fetch fails due to error notification not being shown on UI Thread - thanks to @NeuralFault!
+#### Supporters
+#### 🌟 Visionaries
+Heaps of gratitude to our Visionaries — **Waterclouds**, **bluepopsicle**, **Ibixat**, **Droolguy**, **snotty**, **LG**, and **whudunit** — for sticking with us release after release. Your encouragement, your patience while we chase down those last bugs, and the sheer fact of you being here keeps us showing up at the keyboard. We're so glad you're part of this little corner of the internet with us. And big warm welcomes again to our newest Visionaries **MrMxyzptlk12836**, **Psilocyfer18731**, **KalAbaddon**, **RustCupcake**, and **moon_milky2843** — make yourselves at home, you're among friends! 💛
+#### 🚀 Pioneers
+And the Pioneer crew — what a lineup. A massive thank-you to **Szir777**, **[USA]TechDude**, **takyamtom**, **SinthCore**, **Commissar Lord Death**, **Ahmed S**, **SeraphOfSalem**, and **Jisuren** — your steady presence, kind words, and patience as we've shifted things around mean more than you know. A heartfelt welcome back to **Tigon**, who's returned to the Pioneer ranks after a little time away — so glad you're back. 🎉 And a special hello to **jweg79**, who's been quietly supporting us for a while and just decided to step up and join the Pioneer crew this round — so happy to have you here. To our newest Pioneers, an enormous welcome: **rwx14662**, **Hurbie53**, **ahnhj.al**, **drew.lukas**, **Firelight**, **joeto332987**, **Tuskaruho**, **Cjloha**, and **Alligator1907**. We're absolutely thrilled to have you with us. (And to our anonymous Pioneer out there too, our thanks reaches you — we see you. 💛)
 
 ## v2.15.7
 ### Added

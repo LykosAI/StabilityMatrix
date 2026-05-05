@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -138,7 +138,7 @@ public static class DesignData
             .AddSingleton(Substitute.For<INotificationService>())
             .AddSingleton(Substitute.For<ISharedFolders>())
             .AddSingleton(Substitute.For<IDownloadService>())
-            .AddSingleton(Substitute.For<IHttpClientFactory>())
+            .AddSingleton(CreateHttpClientFactory())
             .AddSingleton(Substitute.For<IApiFactory>())
             .AddSingleton(Substitute.For<IDiscordRichPresenceService>())
             .AddSingleton(Substitute.For<ITrackedDownloadService>())
@@ -459,6 +459,13 @@ public static class DesignData
     [NotNull]
     public static PackageInstallBrowserViewModel? NewInstallerDialogViewModel { get; private set; }
 
+    private static IHttpClientFactory CreateHttpClientFactory()
+    {
+        var httpClientFactory = Substitute.For<IHttpClientFactory>();
+        httpClientFactory.CreateClient(Arg.Any<string>()).Returns(_ => new HttpClient());
+        return httpClientFactory;
+    }
+
     [NotNull]
     public static PackageInstallDetailViewModel? PackageInstallDetailViewModel { get; private set; }
 
@@ -476,6 +483,27 @@ public static class DesignData
 
     public static FirstLaunchSetupViewModel FirstLaunchSetupViewModel =>
         Services.GetRequiredService<FirstLaunchSetupViewModel>();
+
+    public static NotificationBannerViewModel NotificationBannerViewModel =>
+        DialogFactory.Get<NotificationBannerViewModel>(vm =>
+        {
+            vm.Show(
+                new Core.Models.Notifications.AppNotification
+                {
+                    Id = "test",
+                    Type = Core.Models.Notifications.AppNotificationType.Banner,
+                    Priority = Core.Models.Notifications.AppNotificationPriority.Normal,
+                    Message = new Dictionary<string, string> { { "en", "This is a test notification." } },
+                    Style = new Core.Models.Notifications.AppNotificationStyle { Variant = "info" },
+                    Action = new Core.Models.Notifications.AppNotificationAction
+                    {
+                        Type = Core.Models.Notifications.AppNotificationActionType.Url,
+                        Label = new Dictionary<string, string> { { "en", "Learn More" } },
+                        Url = "https://example.com",
+                    },
+                }
+            );
+        });
 
     public static LaunchPageViewModel LaunchPageViewModel =>
         Services.GetRequiredService<LaunchPageViewModel>();

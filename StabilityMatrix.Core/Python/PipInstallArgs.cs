@@ -57,7 +57,15 @@ public partial record PipInstallArgs : ProcessArgsBuilder
             requirementsEntries = requirementsEntries.Where(s => !excludeRegex.IsMatch(s));
         }
 
-        return this.AddArgs(requirementsEntries.Select(Argument.Quoted).ToArray());
+        return this.AddArgs(requirementsEntries.Select(ToRequirementArgument).ToArray());
+    }
+
+    private static Argument ToRequirementArgument(string requirementEntry)
+    {
+        if (requirementEntry.StartsWith('-'))
+            return Argument.Quoted(requirementEntry);
+
+        return new Argument(requirementEntry);
     }
 
     /// <summary>

@@ -52,7 +52,9 @@ public class InvokeAI(
     public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Advanced;
 
     public override Uri PreviewImageUri =>
-        new("https://raw.githubusercontent.com/invoke-ai/InvokeAI/main/docs/assets/canvas_preview.png");
+        new(
+            "https://raw.githubusercontent.com/invoke-ai/InvokeAI/refs/heads/main/docs-old/assets/canvas_preview.png"
+        );
 
     public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods =>
         [SharedFolderMethod.None, SharedFolderMethod.Configuration];
@@ -229,7 +231,7 @@ public class InvokeAI(
             TorchIndex.Cpu when Compat.IsLinux => "https://download.pytorch.org/whl/cpu",
             TorchIndex.Cuda when isLegacyNvidiaGpu => "https://download.pytorch.org/whl/cu126",
             TorchIndex.Cuda => "https://download.pytorch.org/whl/cu128",
-            TorchIndex.Rocm => "https://download.pytorch.org/whl/rocm6.3",
+            TorchIndex.Rocm => "https://download.pytorch.org/whl/rocm7.2",
             _ => string.Empty,
         };
 

@@ -15,7 +15,7 @@ public record PipInstallConfig
     public string TorchaudioVersion { get; init; } = "";
     public string XformersVersion { get; init; } = "";
     public string CudaIndex { get; init; } = "cu130";
-    public string RocmIndex { get; init; } = "rocm6.4";
+    public string RocmIndex { get; init; } = "rocm7.2";
     public string XpuIndex { get; init; } = "xpu";
     public bool ForceReinstallTorch { get; init; } = true;
     public bool UpgradePackages { get; init; } = false;

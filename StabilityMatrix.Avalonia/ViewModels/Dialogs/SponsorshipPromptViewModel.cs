@@ -37,7 +37,7 @@ public partial class SponsorshipPromptViewModel(
     private string? featureText;
 
     [ObservableProperty]
-    private bool isPatreonConnected;
+    private bool isLykosConnected;
 
     [ObservableProperty]
     private bool isExistingSupporter;
@@ -48,7 +48,7 @@ public partial class SponsorshipPromptViewModel(
         string? requiredTier = null
     )
     {
-        IsPatreonConnected = status.IsPatreonConnected;
+        IsLykosConnected = status.IsConnected;
         IsExistingSupporter = status.IsActiveSupporter;
 
         if (string.IsNullOrEmpty(requiredTier))
@@ -72,9 +72,9 @@ public partial class SponsorshipPromptViewModel(
 
     [Localizable(false)]
     [RelayCommand]
-    private static void OpenSupportUrl()
+    private static void OpenMembershipUrl()
     {
-        ProcessRunner.OpenUrl("https://www.patreon.com/join/StabilityMatrix");
+        ProcessRunner.OpenUrl(Assets.MembershipUrl);
     }
 
     public override TaskDialog GetDialog()
@@ -86,13 +86,13 @@ public partial class SponsorshipPromptViewModel(
             {
                 Text = Resources.Action_ViewSupportOptions,
                 IsDefault = true,
-                Command = OpenSupportUrlCommand
+                Command = OpenMembershipUrlCommand,
             },
             new TaskDialogButton
             {
                 Text = Resources.Action_MaybeLater,
-                DialogResult = TaskDialogStandardResult.Close
-            }
+                DialogResult = TaskDialogStandardResult.Close,
+            },
         ];
         return dialog;
     }

@@ -34,6 +34,8 @@ public partial class ModelIndexService : IModelIndexService
     private Dictionary<SharedFolderType, List<LocalModelFile>> _modelIndex = new();
 
     private HashSet<string>? _modelIndexBlake3Hashes;
+    private HashSet<string>? _modelIndexSha256Hashes;
+    private HashSet<string>? _modelIndexCivArchiveUrls;
 
     /// <summary>
     /// Whether the database has been initially loaded.
@@ -52,6 +54,12 @@ public partial class ModelIndexService : IModelIndexService
 
     public IReadOnlySet<string> ModelIndexBlake3Hashes =>
         _modelIndexBlake3Hashes ??= CollectModelHashes(ModelIndex.Values.SelectMany(x => x));
+
+    public IReadOnlySet<string> ModelIndexSha256Hashes =>
+        _modelIndexSha256Hashes ??= CollectModelSha256Hashes(ModelIndex.Values.SelectMany(x => x));
+
+    public IReadOnlySet<string> ModelIndexCivArchiveUrls =>
+        _modelIndexCivArchiveUrls ??= CollectCivArchiveUrls(ModelIndex.Values.SelectMany(x => x));
 
     [AutoPostConstruct]
     private void Initialize()
@@ -511,6 +519,7 @@ public partial class ModelIndexService : IModelIndexService
             if (modelsDict.TryGetValue(model.RelativePath, out var dbModel))
             {
                 model.HasUpdate = dbModel.HasUpdate;
+                model.HasEarlyAccessUpdateOnly = dbModel.HasEarlyAccessUpdateOnly;
                 model.LastUpdateCheck = dbModel.LastUpdateCheck;
                 model.LatestModelInfo = dbModel.LatestModelInfo;
             }
@@ -668,6 +677,7 @@ public partial class ModelIndexService : IModelIndexService
                 .ToList();
 
             dbModel.HasUpdate = !latestHashes.Any(hash => installedHashes.Contains(hash!));
+            dbModel.HasEarlyAccessUpdateOnly = GetHasEarlyAccessUpdateOnly(dbModel, remoteModel);
             dbModel.LastUpdateCheck = DateTimeOffset.UtcNow;
             dbModel.LatestModelInfo = remoteModel;
 
@@ -686,6 +696,8 @@ public partial class ModelIndexService : IModelIndexService
     private void OnModelIndexReset()
     {
         _modelIndexBlake3Hashes = null;
+        _modelIndexSha256Hashes = null;
+        _modelIndexCivArchiveUrls = null;
     }
 
     private static HashSet<string> CollectModelHashes(IEnumerable<LocalModelFile> models)
@@ -699,5 +711,51 @@ public partial class ModelIndexService : IModelIndexService
             }
         }
         return hashes;
+    }
+
+    private static HashSet<string> CollectModelSha256Hashes(IEnumerable<LocalModelFile> models)
+    {
+        var hashes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var model in models)
+        {
+            if (!string.IsNullOrWhiteSpace(model.HashSha256))
+            {
+                hashes.Add(model.HashSha256);
+            }
+        }
+        return hashes;
+    }
+
+    private static HashSet<string> CollectCivArchiveUrls(IEnumerable<LocalModelFile> models)
+    {
+        var urls = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var model in models)
+        {
+            if (model.HasCivArchiveMetadata && !string.IsNullOrWhiteSpace(model.ConnectedModelInfo.SourceUrl))
+            {
+                urls.Add(model.ConnectedModelInfo.SourceUrl);
+            }
+        }
+        return urls;
+    }
+
+    private static bool GetHasEarlyAccessUpdateOnly(LocalModelFile model, CivitModel? remoteModel)
+    {
+        if (!model.HasUpdate || !model.HasCivitMetadata)
+            return false;
+
+        var versions = remoteModel?.ModelVersions;
+        if (versions == null || versions.Count == 0)
+            return false;
+
+        var installedVersionId = model.ConnectedModelInfo?.VersionId;
+        if (installedVersionId == null)
+            return false;
+
+        var installedIndex = versions.FindIndex(version => version.Id == installedVersionId.Value);
+        if (installedIndex <= 0)
+            return false;
+
+        return versions.Take(installedIndex).All(version => version.IsEarlyAccess);
     }
 }

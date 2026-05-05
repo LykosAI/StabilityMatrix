@@ -274,6 +274,20 @@ public class ModelImportService(
         Action<TrackedDownload>? configureDownload = null
     )
     {
+        // Subfolder support: if the file name contains a path separator (e.g. from a
+        // user-defined FileNameFormat pattern like "{base_model}/{file_name}"), split off
+        // the directory portion and join it onto the download folder. Matches DoImport.
+        if (modelFileName.Contains('/') || modelFileName.Contains('\\'))
+        {
+            var lastIndex = modelFileName.LastIndexOfAny(['/', '\\']);
+            if (lastIndex >= 0)
+            {
+                var folderPath = modelFileName.Substring(0, lastIndex);
+                modelFileName = modelFileName.Substring(lastIndex + 1);
+                downloadFolder = downloadFolder.JoinDir(folderPath);
+            }
+        }
+
         // Folders might be missing if user didn't install any packages yet
         downloadFolder.Create();
 
@@ -285,7 +299,9 @@ public class ModelImportService(
 
         var downloadPath = downloadFolder.JoinFile(modelBaseFileName + modelFileExtension);
 
-        // Save model info and preview image first if available
+        // Save model info first if available. Preview image downloads can be slow
+        // or hosted on flaky third-party mirrors, so start the model download before
+        // fetching the preview in the background.
         var cleanupFilePaths = new List<string>();
         if (connectedModelInfo is not null)
         {
@@ -294,6 +310,8 @@ public class ModelImportService(
                 downloadFolder.JoinFile(modelBaseFileName + ConnectedModelInfo.FileExtension)
             );
         }
+
+        FilePath? previewImageDownloadPath = null;
         if (previewImageUri is not null)
         {
             if (previewImageFileExtension is null)
@@ -307,13 +325,8 @@ public class ModelImportService(
                 }
             }
 
-            var previewImageDownloadPath = downloadFolder.JoinFile(
+            previewImageDownloadPath = downloadFolder.JoinFile(
                 modelBaseFileName + ".preview" + previewImageFileExtension
-            );
-
-            await notificationService.TryAsync(
-                downloadService.DownloadToFileAsync(previewImageUri.ToString(), previewImageDownloadPath),
-                "Could not download preview image"
             );
 
             cleanupFilePaths.Add(previewImageDownloadPath);
@@ -337,6 +350,19 @@ public class ModelImportService(
         // download.ContextAction = CivitPostDownloadContextAction.FromCivitFile(modelFile);
 
         await trackedDownloadService.TryStartDownload(download);
+
+        if (previewImageUri is not null && previewImageDownloadPath is not null)
+        {
+            DownloadPreviewImageAsync(previewImageUri, previewImageDownloadPath).SafeFireAndForget();
+        }
+    }
+
+    private async Task DownloadPreviewImageAsync(Uri previewImageUri, FilePath previewImageDownloadPath)
+    {
+        await notificationService.TryAsync(
+            downloadService.DownloadToFileAsync(previewImageUri.ToString(), previewImageDownloadPath),
+            "Could not download preview image"
+        );
     }
 
     private string GenerateUniqueFileName(string folder, string fileName)

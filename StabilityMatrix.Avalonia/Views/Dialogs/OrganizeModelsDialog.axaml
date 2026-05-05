@@ -11,8 +11,8 @@
     xmlns:inference="clr-namespace:StabilityMatrix.Avalonia.Models.Inference"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:ui="using:FluentAvalonia.UI.Controls"
-    d:DesignHeight="700"
-    d:DesignWidth="900"
+    d:DesignHeight="780"
+    d:DesignWidth="1120"
     x:DataType="dialogs:OrganizeModelsDialogViewModel"
     mc:Ignorable="d">
     <controls:UserControlBase.Resources>
@@ -20,43 +20,55 @@
     </controls:UserControlBase.Resources>
 
     <controls:UserControlBase.Styles>
-        <!--  Status filter toggle: transparent base, dim when unchecked  -->
-        <Style Selector="ToggleButton.status-filter">
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Padding" Value="8,4" />
-            <Setter Property="CornerRadius" Value="6" />
-            <Setter Property="Cursor" Value="Hand" />
+        <Style Selector="ToggleButton.filter-chip">
+            <Setter Property="Padding" Value="14,7" />
+            <Setter Property="CornerRadius" Value="16" />
+            <Setter Property="MinHeight" Value="34" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
         </Style>
-        <Style Selector="ToggleButton.status-filter:not(:checked)">
-            <Setter Property="Opacity" Value="0.45" />
-            <Setter Property="Background" Value="Transparent" />
+        <!--  Unchecked: subtle outlined pill, slightly dimmed  -->
+        <Style Selector="ToggleButton.filter-chip:unchecked /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource ControlFillColorTransparentBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ControlStrokeColorDefaultBrush}" />
+            <Setter Property="BorderThickness" Value="1.5" />
         </Style>
-        <Style Selector="ToggleButton.status-filter:pointerover">
-            <Setter Property="Opacity" Value="1" />
+        <Style Selector="ToggleButton.filter-chip:unchecked">
+            <Setter Property="Opacity" Value="0.75" />
         </Style>
-        <!--  Per-status tinted backgrounds when checked  -->
-        <Style Selector="ToggleButton.status-ready:checked">
-            <Setter Property="Background" Value="#1A4CAF50" />
+        <!--  Hover (unchecked): subtle fill + brighter border  -->
+        <Style Selector="ToggleButton.filter-chip:unchecked:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource ControlFillColorDefaultBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ControlStrokeColorSecondaryBrush}" />
+            <Setter Property="TextElement.Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
         </Style>
-        <Style Selector="ToggleButton.status-ready:checked:pointerover">
-            <Setter Property="Background" Value="#2E4CAF50" />
+        <!--  Checked: neutral fill + accent border for clear "selected" signal  -->
+        <Style Selector="ToggleButton.filter-chip:checked /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource ControlFillColorSecondaryBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColor}" />
+            <Setter Property="BorderThickness" Value="1.5" />
+            <Setter Property="TextElement.Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
         </Style>
-        <Style Selector="ToggleButton.status-conflict:checked">
-            <Setter Property="Background" Value="#1AE81123" />
+        <Style Selector="ToggleButton.filter-chip:checked:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource ControlFillColorTertiaryBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColorLight1}" />
+            <Setter Property="BorderThickness" Value="1.5" />
+            <Setter Property="TextElement.Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
         </Style>
-        <Style Selector="ToggleButton.status-conflict:checked:pointerover">
-            <Setter Property="Background" Value="#2EE81123" />
+        <Style Selector="ToggleButton.filter-chip:checked:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource ControlFillColorDefaultBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColorDark1}" />
+            <Setter Property="BorderThickness" Value="1.5" />
+            <Setter Property="TextElement.Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
         </Style>
-        <Style Selector="ToggleButton.status-skipped:checked">
-            <Setter Property="Background" Value="#1AFFC107" />
-        </Style>
-        <Style Selector="ToggleButton.status-skipped:checked:pointerover">
-            <Setter Property="Background" Value="#2EFFC107" />
+        <Style Selector="Border.preview-item">
+            <Setter Property="Padding" Value="10,8" />
+            <Setter Property="Background" Value="{DynamicResource CardBackgroundFillColorDefaultBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ControlStrokeColorDefaultBrush}" />
+            <Setter Property="BorderThickness" Value="0,0,0,1" />
         </Style>
     </controls:UserControlBase.Styles>
 
-    <Grid RowDefinitions="Auto,Auto,Auto,*,Auto">
+    <Grid RowDefinitions="Auto,Auto,Auto,*,Auto" RowSpacing="12">
 
         <!--  Row 0: Header  -->
         <StackPanel Spacing="4">
@@ -67,33 +79,49 @@
                 TextWrapping="Wrap" />
         </StackPanel>
 
-        <!--  Row 1: Pattern Editor  -->
-        <controls:Card
-            Grid.Row="1"
-            Margin="0,12,0,0"
-            Padding="16">
+        <!--  Row 1: Pattern card (full width)  -->
+        <controls:Card Grid.Row="1" Padding="16">
             <StackPanel Spacing="10">
-                <TextBlock
-                    FontSize="14"
-                    FontWeight="SemiBold"
-                    Text="Naming Pattern" />
+                <Grid ColumnDefinitions="Auto,*">
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        FontSize="14"
+                        FontWeight="SemiBold"
+                        Text="Naming Pattern" />
+                    <TextBlock
+                        Grid.Column="1"
+                        Margin="12,0,0,0"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Center"
+                        FontSize="12"
+                        Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                        Text="{Binding PatternPreviewSample}"
+                        TextTrimming="CharacterEllipsis" />
+                </Grid>
 
                 <TextBox
                     Name="OrganizePatternTextBox"
-                    MinWidth="200"
                     FontFamily="Cascadia Code,Consolas,Menlo,Monospace,DejaVu Sans Mono,monospace"
                     FontSize="13"
                     Text="{Binding OrganizePattern}"
-                    Watermark="{x:Static inference:FileNameFormat.DefaultOrganizationTemplate}" />
+                    Watermark="{x:Static inference:FileNameFormat.DefaultOrganizationTemplate}">
+                    <Interaction.Behaviors>
+                        <EventTriggerBehavior EventName="GotFocus">
+                            <InvokeCommandAction Command="{Binding OpenVariablesTipCommand}" />
+                        </EventTriggerBehavior>
+                    </Interaction.Behaviors>
+                    <TextBox.InnerRightContent>
+                        <Button
+                            Margin="0,0,4,0"
+                            Padding="6"
+                            Classes="transparent-full"
+                            Command="{Binding ToggleVariablesTipCommand}"
+                            ToolTip.Tip="Show available variables">
+                            <fluentIcons:SymbolIcon FontSize="16" Symbol="QuestionCircle" />
+                        </Button>
+                    </TextBox.InnerRightContent>
+                </TextBox>
 
-                <!--  Preview  -->
-                <TextBlock
-                    FontFamily="Cascadia Code,Consolas,Menlo,Monospace,DejaVu Sans Mono,monospace"
-                    FontSize="12"
-                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                    Text="{Binding PatternPreviewSample}" />
-
-                <!--  Validation error  -->
                 <StackPanel
                     IsVisible="{Binding PatternValidationError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
                     Orientation="Horizontal"
@@ -108,189 +136,183 @@
                         Text="{Binding PatternValidationError}" />
                 </StackPanel>
 
-                <!--  Variables reference  -->
-                <Expander
-                    Padding="0"
-                    HorizontalAlignment="Stretch"
-                    Header="Available Variables">
-                    <ItemsRepeater Margin="0,6,0,0" ItemsSource="{Binding OrganizationFormatVars}">
-                        <ItemsRepeater.Layout>
-                            <StackLayout Orientation="Vertical" Spacing="6" />
-                        </ItemsRepeater.Layout>
-                        <ItemsRepeater.ItemTemplate>
-                            <DataTemplate DataType="{x:Type inference:FileNameFormatVar}">
-                                <StackPanel Orientation="Horizontal" Spacing="10">
-                                    <Border
-                                        Padding="8,3"
-                                        Background="{DynamicResource ControlFillColorDefaultBrush}"
-                                        BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
-                                        BorderThickness="1"
-                                        CornerRadius="4">
-                                        <TextBlock
-                                            FontFamily="Cascadia Code,Consolas,Menlo,Monospace,DejaVu Sans Mono,monospace"
-                                            FontSize="12"
-                                            Text="{Binding Variable}" />
-                                    </Border>
-                                    <TextBlock
-                                        VerticalAlignment="Center"
-                                        FontSize="12"
-                                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                                        Text="{Binding Example}" />
-                                </StackPanel>
-                            </DataTemplate>
-                        </ItemsRepeater.ItemTemplate>
-                    </ItemsRepeater>
-                </Expander>
             </StackPanel>
         </controls:Card>
 
-        <!--  Row 2: Summary + Warnings  -->
-        <StackPanel
-            Grid.Row="2"
-            Margin="0,12,0,0"
-            Spacing="8">
+        <!--  Row 2: Toolbar — filter chips + scope path + (optional) metadata banner  -->
+        <StackPanel Grid.Row="2" Spacing="8">
+            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                <StackPanel
+                    Grid.Column="0"
+                    Orientation="Horizontal"
+                    Spacing="8">
+                    <ToggleButton
+                        Classes="filter-chip"
+                        IsChecked="{Binding ShowReadyItems}"
+                        ToolTip.Tip="Show ready files">
+                        <StackPanel
+                            VerticalAlignment="Center"
+                            Orientation="Horizontal"
+                            Spacing="8">
+                            <Border
+                                Width="9"
+                                Height="9"
+                                Background="#4CAF50"
+                                CornerRadius="5" />
+                            <TextBlock FontWeight="SemiBold" Text="{Binding Plan.ReadyCount}" />
+                            <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="Ready" />
+                        </StackPanel>
+                    </ToggleButton>
+                    <ToggleButton
+                        Classes="filter-chip"
+                        IsChecked="{Binding ShowConflictItems}"
+                        ToolTip.Tip="Show files with conflicts">
+                        <StackPanel
+                            VerticalAlignment="Center"
+                            Orientation="Horizontal"
+                            Spacing="8">
+                            <Border
+                                Width="9"
+                                Height="9"
+                                Background="{DynamicResource SystemFillColorCriticalBrush}"
+                                CornerRadius="5" />
+                            <TextBlock FontWeight="SemiBold" Text="{Binding Plan.ConflictCount}" />
+                            <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="Conflicts" />
+                        </StackPanel>
+                    </ToggleButton>
+                    <ToggleButton
+                        Classes="filter-chip"
+                        IsChecked="{Binding ShowSkippedItems}"
+                        ToolTip.Tip="Show skipped files">
+                        <StackPanel
+                            VerticalAlignment="Center"
+                            Orientation="Horizontal"
+                            Spacing="8">
+                            <Border
+                                Width="9"
+                                Height="9"
+                                Background="{DynamicResource SystemFillColorCautionBrush}"
+                                CornerRadius="5" />
+                            <TextBlock FontWeight="SemiBold" Text="{Binding Plan.SkippedCount}" />
+                            <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="Skipped" />
+                        </StackPanel>
+                    </ToggleButton>
+                </StackPanel>
 
-            <!--  Status filter bar (clickable to show/hide each status)  -->
-            <Border
-                Padding="6,4"
-                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-                BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
-                BorderThickness="1"
-                CornerRadius="8">
-                <Grid ColumnDefinitions="Auto,*">
-                    <StackPanel Orientation="Horizontal" Spacing="4">
-                        <!--  Ready toggle  -->
-                        <ToggleButton Classes="status-filter status-ready" IsChecked="{Binding ShowReadyItems}">
-                            <StackPanel Orientation="Horizontal" Spacing="6">
-                                <fluentIcons:SymbolIcon
-                                    FontSize="16"
-                                    Foreground="#4CAF50"
-                                    Symbol="CheckmarkCircle" />
-                                <TextBlock
-                                    VerticalAlignment="Center"
-                                    FontWeight="Medium"
-                                    Text="{Binding Plan.ReadyCount, StringFormat='{}{0} ready'}" />
-                            </StackPanel>
-                        </ToggleButton>
-
-                        <!--  Conflict toggle  -->
-                        <ToggleButton Classes="status-filter status-conflict" IsChecked="{Binding ShowConflictItems}">
-                            <StackPanel Orientation="Horizontal" Spacing="6">
-                                <fluentIcons:SymbolIcon
-                                    FontSize="16"
-                                    Foreground="{DynamicResource SystemFillColorCriticalBrush}"
-                                    Symbol="DismissCircle" />
-                                <TextBlock VerticalAlignment="Center" Text="{Binding Plan.ConflictCount, StringFormat='{}{0} conflicts'}" />
-                            </StackPanel>
-                        </ToggleButton>
-
-                        <!--  Skipped toggle  -->
-                        <ToggleButton Classes="status-filter status-skipped" IsChecked="{Binding ShowSkippedItems}">
-                            <StackPanel Orientation="Horizontal" Spacing="6">
-                                <fluentIcons:SymbolIcon
-                                    FontSize="16"
-                                    Foreground="{DynamicResource SystemFillColorCautionBrush}"
-                                    Symbol="Warning" />
-                                <TextBlock VerticalAlignment="Center" Text="{Binding Plan.SkippedCount, StringFormat='{}{0} skipped'}" />
-                            </StackPanel>
-                        </ToggleButton>
-                    </StackPanel>
-
-                    <!--  Scope path  -->
+                <StackPanel
+                    Grid.Column="2"
+                    VerticalAlignment="Center"
+                    Orientation="Horizontal"
+                    Spacing="6">
+                    <fluentIcons:SymbolIcon
+                        FontSize="13"
+                        Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                        Symbol="Folder" />
                     <TextBlock
-                        Grid.Column="1"
-                        HorizontalAlignment="Right"
-                        VerticalAlignment="Center"
+                        MaxWidth="500"
                         FontSize="12"
                         Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                        Text="{Binding Plan.ScopePath}" />
+                        Text="{Binding Plan.ScopePath}"
+                        TextTrimming="CharacterEllipsis"
+                        ToolTip.Tip="{Binding Plan.ScopePath}" />
+                </StackPanel>
+            </Grid>
+
+            <!--  Metadata banner (only when needed)  -->
+            <Border
+                Padding="14,10"
+                Background="{DynamicResource ControlFillColorDefaultBrush}"
+                BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="8"
+                IsVisible="{Binding ShowMetadataActions}">
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                    <fluentIcons:SymbolIcon
+                        Grid.Column="0"
+                        VerticalAlignment="Center"
+                        FontSize="18"
+                        Foreground="{DynamicResource SystemFillColorCautionBrush}"
+                        Symbol="Info" />
+                    <StackPanel
+                        Grid.Column="1"
+                        VerticalAlignment="Center"
+                        Spacing="2">
+                        <TextBlock
+                            FontSize="13"
+                            FontWeight="SemiBold"
+                            Text="Metadata needed" />
+                        <TextBlock
+                            FontSize="12"
+                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                            IsVisible="{Binding ShowMissingMetadataWarning}"
+                            TextWrapping="Wrap">
+                            <Run Text="{Binding MissingMetadataCount}" /><Run Text=" file(s) need metadata before they can be organized." />
+                        </TextBlock>
+                        <TextBlock
+                            FontSize="12"
+                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                            IsVisible="{Binding ShowIncompleteMetadataWarning}"
+                            TextWrapping="Wrap">
+                            <Run Text="{Binding IncompleteMetadataCount}" /><Run Text=" file(s) have incomplete metadata for the current pattern." />
+                        </TextBlock>
+                    </StackPanel>
+                    <StackPanel
+                        Grid.Column="2"
+                        VerticalAlignment="Center"
+                        Orientation="Horizontal"
+                        Spacing="8">
+                        <Button
+                            Command="{Binding ScanForMetadataCommand}"
+                            Content="Find Metadata"
+                            IsVisible="{Binding ShowMissingMetadataWarning}" />
+                        <Button
+                            Command="{Binding UpdateMetadataCommand}"
+                            Content="Update Metadata"
+                            IsVisible="{Binding ShowIncompleteMetadataWarning}" />
+                    </StackPanel>
                 </Grid>
             </Border>
-
-            <!--  Missing metadata warning (no connected metadata at all)  -->
-            <ui:InfoBar
-                IsClosable="False"
-                IsOpen="{Binding ShowMissingMetadataWarning}"
-                Severity="Warning">
-                <ui:InfoBar.Title>
-                    <MultiBinding StringFormat="{}{0} models skipped — no connected metadata.">
-                        <Binding Path="MissingMetadataCount" />
-                    </MultiBinding>
-                </ui:InfoBar.Title>
-                <ui:InfoBar.ActionButton>
-                    <Button
-                        Classes="accent"
-                        Command="{Binding ScanForMetadataCommand}"
-                        Content="Find Connected Metadata" />
-                </ui:InfoBar.ActionButton>
-            </ui:InfoBar>
-
-            <!--  Incomplete metadata warning (has metadata but missing fields)  -->
-            <ui:InfoBar
-                IsClosable="False"
-                IsOpen="{Binding ShowIncompleteMetadataWarning}"
-                Severity="Informational">
-                <ui:InfoBar.Title>
-                    <MultiBinding StringFormat="{}{0} models skipped — metadata is missing fields used by the pattern.">
-                        <Binding Path="IncompleteMetadataCount" />
-                    </MultiBinding>
-                </ui:InfoBar.Title>
-                <ui:InfoBar.ActionButton>
-                    <Button Command="{Binding UpdateMetadataCommand}" Content="Update Metadata" />
-                </ui:InfoBar.ActionButton>
-            </ui:InfoBar>
         </StackPanel>
 
         <!--  Row 3: Items List  -->
         <controls:Card
             Grid.Row="3"
-            Margin="0,8,0,0"
             Padding="6"
             VerticalAlignment="Stretch">
             <Grid RowDefinitions="*,Auto">
                 <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Visible">
                     <ItemsRepeater ItemsSource="{Binding Items}">
                         <ItemsRepeater.Layout>
-                            <StackLayout Orientation="Vertical" Spacing="4" />
+                            <StackLayout Orientation="Vertical" Spacing="0" />
                         </ItemsRepeater.Layout>
                         <ItemsRepeater.ItemTemplate>
                             <DataTemplate DataType="{x:Type checkpointOrganizer:ModelOrganizationPreviewItem}">
-                                <Border
-                                    Padding="10,8"
-                                    Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-                                    CornerRadius="6">
-                                    <Grid ColumnDefinitions="28,*" ColumnSpacing="8">
-                                        <!--  Status icon  -->
-                                        <Panel
-                                            Width="24"
-                                            Height="24"
-                                            Margin="0,1,0,0"
-                                            VerticalAlignment="Top">
-                                            <fluentIcons:SymbolIcon
-                                                FontSize="18"
-                                                Foreground="#4CAF50"
-                                                IsVisible="{Binding Status, Converter={StaticResource EnumBoolConverter}, ConverterParameter={x:Static checkpointOrganizer:ModelOrganizationPreviewStatus.Ready}}"
-                                                Symbol="CheckmarkCircle" />
-                                            <fluentIcons:SymbolIcon
-                                                FontSize="18"
-                                                Foreground="{DynamicResource SystemFillColorCriticalBrush}"
-                                                IsVisible="{Binding Status, Converter={StaticResource EnumBoolConverter}, ConverterParameter={x:Static checkpointOrganizer:ModelOrganizationPreviewStatus.Conflict}}"
-                                                Symbol="DismissCircle" />
-                                            <fluentIcons:SymbolIcon
-                                                FontSize="18"
-                                                Foreground="{DynamicResource SystemFillColorCautionBrush}"
-                                                IsVisible="{Binding Status, Converter={StaticResource EnumBoolConverter}, ConverterParameter={x:Static checkpointOrganizer:ModelOrganizationPreviewStatus.Skipped}}"
-                                                Symbol="Warning" />
-                                            <fluentIcons:SymbolIcon
-                                                FontSize="18"
-                                                Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                                                IsVisible="{Binding Status, Converter={StaticResource EnumBoolConverter}, ConverterParameter={x:Static checkpointOrganizer:ModelOrganizationPreviewStatus.Unchanged}}"
-                                                Symbol="SubtractCircle" />
+                                <Border Classes="preview-item">
+                                    <Grid ColumnDefinitions="4,*" ColumnSpacing="12">
+                                        <Panel Width="4" HorizontalAlignment="Stretch">
+                                            <Border
+                                                Background="#4CAF50"
+                                                CornerRadius="2"
+                                                IsVisible="{Binding Status, Converter={StaticResource EnumBoolConverter}, ConverterParameter={x:Static checkpointOrganizer:ModelOrganizationPreviewStatus.Ready}}" />
+                                            <Border
+                                                Background="{DynamicResource SystemFillColorCriticalBrush}"
+                                                CornerRadius="2"
+                                                IsVisible="{Binding Status, Converter={StaticResource EnumBoolConverter}, ConverterParameter={x:Static checkpointOrganizer:ModelOrganizationPreviewStatus.Conflict}}" />
+                                            <Border
+                                                Background="{DynamicResource SystemFillColorCautionBrush}"
+                                                CornerRadius="2"
+                                                IsVisible="{Binding Status, Converter={StaticResource EnumBoolConverter}, ConverterParameter={x:Static checkpointOrganizer:ModelOrganizationPreviewStatus.Skipped}}" />
+                                            <Border
+                                                Background="{DynamicResource TextFillColorTertiaryBrush}"
+                                                CornerRadius="2"
+                                                IsVisible="{Binding Status, Converter={StaticResource EnumBoolConverter}, ConverterParameter={x:Static checkpointOrganizer:ModelOrganizationPreviewStatus.Unchanged}}" />
                                         </Panel>
 
-                                        <!--  Content  -->
                                         <StackPanel Grid.Column="1" Spacing="3">
-                                            <TextBlock FontWeight="SemiBold" Text="{Binding StatusText}" />
+                                            <TextBlock
+                                                FontSize="11"
+                                                Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                                Text="{Binding StatusText}" />
                                             <TextBlock
                                                 FontFamily="Cascadia Code,Consolas,Menlo,Monospace,DejaVu Sans Mono,monospace"
                                                 FontSize="12"
@@ -329,7 +351,6 @@
                     </ItemsRepeater>
                 </ScrollViewer>
 
-                <!--  Unchanged toggle  -->
                 <ToggleButton
                     Grid.Row="1"
                     Margin="0,6,0,0"
@@ -350,7 +371,6 @@
         <!--  Row 4: Action Buttons  -->
         <StackPanel
             Grid.Row="4"
-            Margin="0,12,0,-24"
             HorizontalAlignment="Right"
             Orientation="Horizontal"
             Spacing="8">
@@ -365,6 +385,15 @@
                 Content="Organize"
                 IsEnabled="{Binding CanOrganize}" />
         </StackPanel>
+
+        <ui:TeachingTip
+            Title="Format Variables"
+            Grid.Row="1"
+            IsOpen="{Binding IsVariablesTipOpen, Mode=TwoWay}"
+            PreferredPlacement="BottomLeft"
+            Target="{Binding #OrganizePatternTextBox, Mode=OneWay}">
+            <DataGrid AutoGenerateColumns="True" ItemsSource="{Binding OrganizationFormatVars}" />
+        </ui:TeachingTip>
 
     </Grid>
 </controls:UserControlBase>

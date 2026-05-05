@@ -54,11 +54,16 @@ public partial class OrganizeModelsDialogViewModel(
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ShowMissingMetadataWarning))]
+    [NotifyPropertyChangedFor(nameof(ShowMetadataActions))]
     public partial int MissingMetadataCount { get; set; }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ShowIncompleteMetadataWarning))]
+    [NotifyPropertyChangedFor(nameof(ShowMetadataActions))]
     public partial int IncompleteMetadataCount { get; set; }
+
+    [ObservableProperty]
+    public partial bool IsVariablesTipOpen { get; set; }
 
     [ObservableProperty]
     public partial bool ShowReadyItems { get; set; } = true;
@@ -82,6 +87,8 @@ public partial class OrganizeModelsDialogViewModel(
     public bool ShowMissingMetadataWarning => MissingMetadataCount > 0;
 
     public bool ShowIncompleteMetadataWarning => IncompleteMetadataCount > 0;
+
+    public bool ShowMetadataActions => ShowMissingMetadataWarning || ShowIncompleteMetadataWarning;
 
     public string ReadySummary =>
         Plan == null
@@ -205,13 +212,19 @@ public partial class OrganizeModelsDialogViewModel(
     public override BetterContentDialog GetDialog()
     {
         var dialog = base.GetDialog();
-        dialog.MinDialogWidth = 900;
-        dialog.MaxDialogHeight = 800;
+        dialog.MinDialogWidth = 1120;
+        dialog.MaxDialogHeight = 900;
         dialog.IsFooterVisible = false;
         dialog.CloseOnClickOutside = true;
         dialog.ContentVerticalScrollBarVisibility = ScrollBarVisibility.Disabled;
         return dialog;
     }
+
+    [RelayCommand]
+    private void OpenVariablesTip() => IsVariablesTipOpen = true;
+
+    [RelayCommand]
+    private void ToggleVariablesTip() => IsVariablesTipOpen = !IsVariablesTipOpen;
 
     [RelayCommand(CanExecute = nameof(CanOrganize))]
     private void ConfirmOrganize()

@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed SwarmUI user settings (theme, output format, server configuration, etc.) and any user-added backend entries being overwritten when the install flow ran over an existing install — `Settings.fds` and `Backends.fds` are now merged with their existing contents instead of being rewritten from a stale template
 - Fixed pip requirements handling for environment-marker dependencies - thanks to @NeuralFault!
 - Fixed [#1608](https://github.com/LykosAI/StabilityMatrix/issues/1608) - Crash when cdn fetch fails due to error notification not being shown on UI Thread - thanks to @NeuralFault!
+- Fixed ComfyUI-Zluda inheriting `--enable-manager` from the base ComfyUI launch options, which blocked the bundled custom-node manager from initializing - thanks to @NeuralFault!
 ### Supporters
 #### 🌟 Visionaries
 Heaps of gratitude to our Visionaries — **Waterclouds**, **bluepopsicle**, **Ibixat**, **Droolguy**, **snotty**, **LG**, and **whudunit** — for sticking with us release after release. Your encouragement, your patience while we chase down those last bugs, and the sheer fact of you being here keeps us showing up at the keyboard. We're so glad you're part of this little corner of the internet with us. And big warm welcomes again to our newest Visionaries **MrMxyzptlk12836**, **Psilocyfer18731**, **KalAbaddon**, **RustCupcake**, and **moon_milky2843** — make yourselves at home, you're among friends! 💛

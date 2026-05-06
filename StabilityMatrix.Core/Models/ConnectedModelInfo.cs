@@ -19,7 +19,10 @@ public class ConnectedModelInfo : IEquatable<ConnectedModelInfo>
     public int? VersionId { get; set; }
     public string VersionName { get; set; }
     public string? VersionDescription { get; set; }
+    public string? AuthorUsername { get; set; }
     public string? BaseModel { get; set; }
+    public string? RemoteFileName { get; set; }
+    public int? RemoteFileId { get; set; }
     public CivitFileMetadata? FileMetadata { get; set; }
     public DateTimeOffset ImportedAt { get; set; }
     public CivitFileHashes Hashes { get; set; }
@@ -48,22 +51,7 @@ public class ConnectedModelInfo : IEquatable<ConnectedModelInfo>
         DateTimeOffset importedAt
     )
     {
-        ModelId = civitModel.Id;
-        ModelName = civitModel.Name;
-        ModelDescription = civitModel.Description ?? string.Empty;
-        Nsfw = civitModel.Nsfw;
-        Tags = civitModel.Tags;
-        ModelType = civitModel.Type;
-        VersionId = civitModelVersion.Id;
-        VersionName = civitModelVersion.Name;
-        VersionDescription = civitModelVersion.Description;
-        ImportedAt = importedAt;
-        BaseModel = civitModelVersion.BaseModel;
-        FileMetadata = civitFile.Metadata;
-        Hashes = civitFile.Hashes;
-        TrainedWords = civitModelVersion.TrainedWords;
-        Stats = civitModel.Stats;
-        Source = ConnectedModelSource.Civitai;
+        ApplyCivitMetadata(civitModel, civitModelVersion, civitFile, importedAt);
     }
 
     public ConnectedModelInfo(
@@ -74,22 +62,7 @@ public class ConnectedModelInfo : IEquatable<ConnectedModelInfo>
         InferenceDefaults? inferenceDefaults
     )
     {
-        ModelId = civitModel.Id;
-        ModelName = civitModel.Name;
-        ModelDescription = civitModel.Description ?? string.Empty;
-        Nsfw = civitModel.Nsfw;
-        Tags = civitModel.Tags;
-        ModelType = civitModel.Type;
-        VersionId = civitModelVersion.Id;
-        VersionName = civitModelVersion.Name;
-        VersionDescription = civitModelVersion.Description;
-        ImportedAt = importedAt;
-        BaseModel = civitModelVersion.BaseModel;
-        FileMetadata = civitFile.Metadata;
-        Hashes = civitFile.Hashes;
-        TrainedWords = civitModelVersion.TrainedWords;
-        Stats = civitModel.Stats;
-        Source = ConnectedModelSource.Civitai;
+        ApplyCivitMetadata(civitModel, civitModelVersion, civitFile, importedAt);
         InferenceDefaults = inferenceDefaults;
     }
 
@@ -108,6 +81,34 @@ public class ConnectedModelInfo : IEquatable<ConnectedModelInfo>
         ThumbnailImageUrl = resource.Urls?.FirstOrDefault();
         ModelType = CivitModelType.Upscaler;
         Source = ConnectedModelSource.OpenModelDb;
+    }
+
+    private void ApplyCivitMetadata(
+        CivitModel civitModel,
+        CivitModelVersion civitModelVersion,
+        CivitFile civitFile,
+        DateTimeOffset importedAt
+    )
+    {
+        ModelId = civitModel.Id;
+        ModelName = civitModel.Name;
+        ModelDescription = civitModel.Description ?? string.Empty;
+        Nsfw = civitModel.Nsfw;
+        Tags = civitModel.Tags;
+        ModelType = civitModel.Type;
+        VersionId = civitModelVersion.Id;
+        VersionName = civitModelVersion.Name;
+        VersionDescription = civitModelVersion.Description;
+        AuthorUsername = civitModel.Creator?.Username;
+        ImportedAt = importedAt;
+        BaseModel = civitModelVersion.BaseModel;
+        RemoteFileName = civitFile.Name;
+        RemoteFileId = civitFile.Id;
+        FileMetadata = civitFile.Metadata;
+        Hashes = civitFile.Hashes;
+        TrainedWords = civitModelVersion.TrainedWords;
+        Stats = civitModel.Stats;
+        Source = ConnectedModelSource.Civitai;
     }
 
     public static ConnectedModelInfo? FromJson(string json)
@@ -191,7 +192,10 @@ public class ConnectedModelInfo : IEquatable<ConnectedModelInfo>
                 && x.VersionId == y.VersionId
                 && x.VersionName == y.VersionName
                 && x.VersionDescription == y.VersionDescription
+                && x.AuthorUsername == y.AuthorUsername
                 && x.BaseModel == y.BaseModel
+                && x.RemoteFileName == y.RemoteFileName
+                && x.RemoteFileId == y.RemoteFileId
                 && x.FileMetadata == y.FileMetadata
                 && x.ImportedAt.Equals(y.ImportedAt)
                 && x.Hashes == y.Hashes
@@ -215,7 +219,10 @@ public class ConnectedModelInfo : IEquatable<ConnectedModelInfo>
             hashCode.Add(obj.VersionId);
             hashCode.Add(obj.VersionName);
             hashCode.Add(obj.VersionDescription);
+            hashCode.Add(obj.AuthorUsername);
             hashCode.Add(obj.BaseModel);
+            hashCode.Add(obj.RemoteFileName);
+            hashCode.Add(obj.RemoteFileId);
             hashCode.Add(obj.FileMetadata);
             hashCode.Add(obj.ImportedAt);
             hashCode.Add(obj.Hashes);

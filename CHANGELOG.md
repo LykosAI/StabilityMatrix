@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added support for the civitai.red (mature-content) domain — NSFW CivitAI links now open and copy as civitai.red URLs, and pasting a civitai.red URL into the CivitAI model browser search works the same as a civitai.com URL
 - Added official Inference support for Z-Image/Z-Image-Turbo, Anima, and Flux.2 UNet-only workflows, including their text encoder, latent, scheduler, and sampling requirements
 - Added an Inference workflow profile selector with recommended defaults for default checkpoints, Flux, Flux.2, Z-Image Base/Turbo, and Anima
+- Added a checkpoint organizer for previewing and reorganizing local models using connected metadata-driven folder and filename patterns (requested in [#280](https://github.com/LykosAI/StabilityMatrix/issues/280), [#424](https://github.com/LykosAI/StabilityMatrix/issues/424))
 ### Changed
 - The CivitAI base model type filter now uses CivitAI's official `/api/v1/enums` endpoint, with fallbacks to the previous technique and a built-in list, so the filter stays populated even if the CivitAI response format changes or the service is unreachable
 - Improved the Inference workflow selector UX with Auto detection feedback, workflow-aware model lists, and recommended-default tooltips

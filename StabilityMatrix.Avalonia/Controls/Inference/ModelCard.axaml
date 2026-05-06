@@ -43,7 +43,7 @@
                 <controls:Card Padding="12">
                     <StackPanel Spacing="0">
                         <!--  Model Row  -->
-                        <Grid ColumnDefinitions="90,*,Auto">
+                        <Grid ColumnDefinitions="70,*,Auto">
                             <TextBlock
                                 Grid.Column="0"
                                 VerticalAlignment="Center"
@@ -112,7 +112,7 @@
                         </Grid>
 
                         <!--  Workflow Profile  -->
-                        <Grid Margin="0,8,0,0" ColumnDefinitions="90,*,Auto">
+                        <Grid Margin="0,8,0,0" ColumnDefinitions="70,*,Auto">
                             <TextBlock
                                 Grid.Column="0"
                                 VerticalAlignment="Center"
@@ -158,7 +158,7 @@
                         <!--  Refiner (below Model, when enabled)  -->
                         <Grid
                             Margin="0,8,0,0"
-                            ColumnDefinitions="60,*,Auto"
+                            ColumnDefinitions="70,*,Auto"
                             IsVisible="{Binding IsRefinerSelectionEnabled}">
                             <TextBlock
                                 Grid.Column="0"

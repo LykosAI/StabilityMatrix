@@ -9,15 +9,21 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Added
 - Added CivArchive model browser with details page, image viewer, version selector, trigger words, and in-app downloads with tracked progress
 - Added support for the civitai.red (mature-content) domain — NSFW CivitAI links now open and copy as civitai.red URLs, and pasting a civitai.red URL into the CivitAI model browser search works the same as a civitai.com URL
-- Added official Inference support for Z-Image/Z-Image-Turbo, Anima, and Flux.2 UNet-only workflows, including their text encoder, latent, scheduler, and sampling requirements
-- Added an Inference workflow profile selector with recommended defaults for default checkpoints, Flux, Flux.2, Z-Image Base/Turbo, and Anima
+- Added official Inference support for the **Z-Image** (Base + Turbo), **Anima**, and **Flux.2** model architectures — workflow-appropriate text encoders, latent shapes, schedulers, and model sampling (AuraFlow for Z-Image, `Flux2Scheduler` for Flux.2) are wired up automatically across Text-to-Image and Image-to-Image
+- Added an Inference **Workflow** selector to the Model card with profiles for Default/Checkpoint, Flux, Flux.2, Z-Image Base/Turbo, Anima, HiDream, and Custom
+  - **Auto** (default) detects the workflow from the model's CivitAI metadata, with filename fallbacks for models without metadata, and shows the resolved profile inline below the selector
+  - Sparkle button applies recommended sampler / scheduler / steps / CFG presets for the active workflow — e.g. `res_multistep` / `simple` / 8 steps / CFG 1 for Z-Image Turbo, `er_sde` / `simple` / 30 steps / CFG 4 for Anima, `euler` / 20 steps / CFG 5 for Flux.2
+  - Choosing a non-Auto profile reveals a manual Encoder Type selector for advanced overrides (e.g. running Z-Image Turbo with the `sd3` encoder)
+  - Opening the model browser from the Model card pre-filters to the workflow's compatible base models, without overwriting your saved picker filters
+- Added `er_sde` and `res_multistep` to the Inference sampler list
+- Added `stable_diffusion`, `flux2`, and `lumina2` Encoder Type options for UNet workflows
 - Added a checkpoint organizer for previewing and reorganizing local models using connected metadata-driven folder and filename patterns (requested in [#280](https://github.com/LykosAI/StabilityMatrix/issues/280), [#424](https://github.com/LykosAI/StabilityMatrix/issues/424))
 ### Changed
 - The CivitAI base model type filter now uses CivitAI's official `/api/v1/enums` endpoint, with fallbacks to the previous technique and a built-in list, so the filter stays populated even if the CivitAI response format changes or the service is unreachable
-- Improved the Inference workflow selector UX with Auto detection feedback, workflow-aware model lists, and recommended-default tooltips
+- Single-encoder UNet workflows (Anima, Flux.2, Z-Image) now use the matching CLIPLoader instead of assuming Flux-style dual encoders
 ### Fixed
 - Fixed CivitAI model browsing breaking during Discovery API outages — the browser now falls back to the direct CivitAI API when Discovery returns a server error, authentication failure, or times out
-- Fixed UNet-only model selection sometimes clearing during model-list refreshes, which could hide text encoder slots after generating, cancelling, or reconnecting to ComfyUI
+- Fixed UNet-only Inference model selection sometimes clearing during model-list refreshes — text encoder slots no longer disappear after generating, cancelling a generation, or reconnecting to ComfyUI
 - Fixed SwarmUI user settings (theme, output format, server configuration, etc.) and any user-added backend entries being overwritten when the install flow ran over an existing install — `Settings.fds` and `Backends.fds` are now merged with their existing contents instead of being rewritten from a stale template
 - Fixed pip requirements handling for environment-marker dependencies - thanks to @NeuralFault!
 - Fixed [#1608](https://github.com/LykosAI/StabilityMatrix/issues/1608) - Crash when cdn fetch fails due to error notification not being shown on UI Thread - thanks to @NeuralFault!

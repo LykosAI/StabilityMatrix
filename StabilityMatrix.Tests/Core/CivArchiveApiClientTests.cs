@@ -110,6 +110,119 @@ public class CivArchiveApiClientTests
     }
 
     [TestMethod]
+    public async Task SearchAsync_CachesIdenticalFilterRequestsWithinTtl()
+    {
+        // Two SearchAsync calls with identical filters should produce exactly one
+        // /_next/data/.../top-models.json fetch — repeated requests within the TTL hit
+        // the in-memory cache, which is the main 429 mitigation when users toggle
+        // filters back and forth.
+        var dataRequestCount = 0;
+        var listJson = ListResponseJson(
+            """{"id":"v1","name":"Cached","kind":"version","url":"/models/1?modelVersionId=2"}"""
+        );
+
+        var responses = new Queue<HttpResponseMessage>(
+            [
+                CreateJsonResponse("""<html><script>{"buildId":"test-build"}</script></html>""", "text/html"),
+                CreateJsonResponse(listJson),
+            ]
+        );
+
+        var client = CreateClient(
+            new RecordingHandler(
+                (request, _) =>
+                {
+                    if (request.RequestUri!.AbsolutePath.Contains("top-models.json"))
+                    {
+                        dataRequestCount++;
+                    }
+                    return responses.Dequeue();
+                }
+            )
+        );
+
+        var filters = new CivArchiveSearchFilters { Platform = CivArchivePlatformOption.Civitai };
+
+        var first = await client.SearchAsync(filters);
+        var second = await client.SearchAsync(filters);
+
+        Assert.AreEqual(1, dataRequestCount, "Second identical request should have been served from cache");
+        Assert.AreSame(first, second, "Cache should return the same response instance");
+    }
+
+    [TestMethod]
+    public async Task GetFilterOptionsAsync_UsesParameterlessRouteAndParsesLists()
+    {
+        // CivArchive only echoes the populated baseModels / modelTypes lists when the URL
+        // has no query string at all — we hit /top-models.json directly, no filter params.
+        var requestedUrls = new List<string>();
+        const string filterOptionsJson =
+            "{\"pageProps\":{\"filterOptions\":{"
+            + "\"baseModels\":[\"Flux.1 D\",\"Illustrious\",\"SDXL 1.0\"],"
+            + "\"modelTypes\":[\"Checkpoint\",\"LORA\",\"VAE\"]}}}";
+
+        var responses = new Queue<HttpResponseMessage>(
+            [
+                CreateJsonResponse("""<html><script>{"buildId":"test-build"}</script></html>""", "text/html"),
+                CreateJsonResponse(filterOptionsJson),
+            ]
+        );
+
+        var client = CreateClient(
+            new RecordingHandler(
+                (request, _) =>
+                {
+                    requestedUrls.Add(request.RequestUri!.ToString());
+                    return responses.Dequeue();
+                }
+            )
+        );
+
+        var options = await client.GetFilterOptionsAsync();
+
+        CollectionAssert.AreEqual(
+            new[] { "Flux.1 D", "Illustrious", "SDXL 1.0" },
+            options.BaseModels.ToArray()
+        );
+        CollectionAssert.AreEqual(new[] { "Checkpoint", "LORA", "VAE" }, options.ModelTypes.ToArray());
+
+        // Critical: no query string. If any param leaks in, the API silently returns
+        // empty arrays and the dropdowns end up blank.
+        Assert.IsTrue(
+            requestedUrls.Any(u => u.EndsWith("/_next/data/test-build/top-models.json")),
+            $"Expected parameterless top-models.json fetch, got: {string.Join(", ", requestedUrls)}"
+        );
+    }
+
+    [TestMethod]
+    public async Task SearchAsync_ParsesArrayShapedPlatformEcho()
+    {
+        // Regression: when the user picks a non-default platform, CivArchive's
+        // pageProps.filters.platform comes back as an array (["civitai"]) rather than
+        // a bare string, which used to throw a JsonException at $.pageProps.filters.platform.
+        const string listJson =
+            "{\"pageProps\":{\"canonicalUrl\":\"https://civarchive.com/top-models\",\"data\":{\"results\":[],\"hits\":0,\"totalHits\":0},"
+            + "\"filters\":{\"q\":\"\",\"type\":\"all\",\"base_model\":\"all\",\"platform\":[\"civitai\"],"
+            + "\"sort\":\"top\",\"rating\":\"safe\",\"platform_status\":\"all\",\"kind\":\"all\","
+            + "\"tags\":\"\",\"username\":\"\",\"period\":\"all\",\"page\":1},"
+            + "\"filterOptions\":{\"baseModels\":[],\"modelTypes\":[]}}}";
+
+        var responses = new Queue<HttpResponseMessage>(
+            [
+                CreateJsonResponse("""<html><script>{"buildId":"test-build"}</script></html>""", "text/html"),
+                CreateJsonResponse(listJson),
+            ]
+        );
+
+        var client = CreateClient(new RecordingHandler((_, _) => responses.Dequeue()));
+        var response = await client.SearchAsync(
+            new CivArchiveSearchFilters { Platform = CivArchivePlatformOption.Civitai }
+        );
+
+        Assert.AreEqual(CivArchivePlatformOption.Civitai, response.EffectiveFilters.Platform);
+    }
+
+    [TestMethod]
     public async Task GetModelDetailsAsync_ParsesFilesMirrorsAndSha256()
     {
         // Field naming matches the real CivArchive API (snake_case throughout)

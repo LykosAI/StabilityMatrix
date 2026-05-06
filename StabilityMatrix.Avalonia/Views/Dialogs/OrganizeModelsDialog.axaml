@@ -9,6 +9,7 @@
     xmlns:dialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
     xmlns:fluentIcons="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
     xmlns:inference="clr-namespace:StabilityMatrix.Avalonia.Models.Inference"
+    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:ui="using:FluentAvalonia.UI.Controls"
     d:DesignHeight="780"
@@ -72,10 +73,10 @@
 
         <!--  Row 0: Header  -->
         <StackPanel Spacing="4">
-            <TextBlock Text="Organize Models" Theme="{DynamicResource TitleTextBlockStyle}" />
+            <TextBlock Text="{x:Static lang:Resources.Label_OrganizeModels}" Theme="{DynamicResource TitleTextBlockStyle}" />
             <TextBlock
                 Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                Text="Reorganize model files into folders using a naming pattern. Models stay within their type folder."
+                Text="{x:Static lang:Resources.Text_OrganizeModelsDescription}"
                 TextWrapping="Wrap" />
         </StackPanel>
 
@@ -87,7 +88,7 @@
                         VerticalAlignment="Center"
                         FontSize="14"
                         FontWeight="SemiBold"
-                        Text="Naming Pattern" />
+                        Text="{x:Static lang:Resources.Label_NamingPattern}" />
                     <TextBlock
                         Grid.Column="1"
                         Margin="12,0,0,0"
@@ -116,7 +117,7 @@
                             Padding="6"
                             Classes="transparent-full"
                             Command="{Binding ToggleVariablesTipCommand}"
-                            ToolTip.Tip="Show available variables">
+                            ToolTip.Tip="{x:Static lang:Resources.Tooltip_ShowAvailableVariables}">
                             <fluentIcons:SymbolIcon FontSize="16" Symbol="QuestionCircle" />
                         </Button>
                     </TextBox.InnerRightContent>
@@ -149,7 +150,7 @@
                     <ToggleButton
                         Classes="filter-chip"
                         IsChecked="{Binding ShowReadyItems}"
-                        ToolTip.Tip="Show ready files">
+                        ToolTip.Tip="{x:Static lang:Resources.Tooltip_ShowReadyFiles}">
                         <StackPanel
                             VerticalAlignment="Center"
                             Orientation="Horizontal"
@@ -160,13 +161,13 @@
                                 Background="#4CAF50"
                                 CornerRadius="5" />
                             <TextBlock FontWeight="SemiBold" Text="{Binding Plan.ReadyCount}" />
-                            <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="Ready" />
+                            <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{x:Static lang:Resources.Label_Ready}" />
                         </StackPanel>
                     </ToggleButton>
                     <ToggleButton
                         Classes="filter-chip"
                         IsChecked="{Binding ShowConflictItems}"
-                        ToolTip.Tip="Show files with conflicts">
+                        ToolTip.Tip="{x:Static lang:Resources.Tooltip_ShowConflictFiles}">
                         <StackPanel
                             VerticalAlignment="Center"
                             Orientation="Horizontal"
@@ -177,13 +178,13 @@
                                 Background="{DynamicResource SystemFillColorCriticalBrush}"
                                 CornerRadius="5" />
                             <TextBlock FontWeight="SemiBold" Text="{Binding Plan.ConflictCount}" />
-                            <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="Conflicts" />
+                            <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{x:Static lang:Resources.Label_Conflict}" />
                         </StackPanel>
                     </ToggleButton>
                     <ToggleButton
                         Classes="filter-chip"
                         IsChecked="{Binding ShowSkippedItems}"
-                        ToolTip.Tip="Show skipped files">
+                        ToolTip.Tip="{x:Static lang:Resources.Tooltip_ShowSkippedFiles}">
                         <StackPanel
                             VerticalAlignment="Center"
                             Orientation="Horizontal"
@@ -194,7 +195,7 @@
                                 Background="{DynamicResource SystemFillColorCautionBrush}"
                                 CornerRadius="5" />
                             <TextBlock FontWeight="SemiBold" Text="{Binding Plan.SkippedCount}" />
-                            <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="Skipped" />
+                            <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{x:Static lang:Resources.Label_Skipped}" />
                         </StackPanel>
                     </ToggleButton>
                 </StackPanel>
@@ -240,21 +241,19 @@
                         <TextBlock
                             FontSize="13"
                             FontWeight="SemiBold"
-                            Text="Metadata needed" />
+                            Text="{x:Static lang:Resources.Label_MetadataNeeded}" />
                         <TextBlock
                             FontSize="12"
                             Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                             IsVisible="{Binding ShowMissingMetadataWarning}"
-                            TextWrapping="Wrap">
-                            <Run Text="{Binding MissingMetadataCount}" /><Run Text=" file(s) need metadata before they can be organized." />
-                        </TextBlock>
+                            Text="{Binding MissingMetadataText}"
+                            TextWrapping="Wrap" />
                         <TextBlock
                             FontSize="12"
                             Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                             IsVisible="{Binding ShowIncompleteMetadataWarning}"
-                            TextWrapping="Wrap">
-                            <Run Text="{Binding IncompleteMetadataCount}" /><Run Text=" file(s) have incomplete metadata for the current pattern." />
-                        </TextBlock>
+                            Text="{Binding IncompleteMetadataText}"
+                            TextWrapping="Wrap" />
                     </StackPanel>
                     <StackPanel
                         Grid.Column="2"
@@ -263,11 +262,11 @@
                         Spacing="8">
                         <Button
                             Command="{Binding ScanForMetadataCommand}"
-                            Content="Find Metadata"
+                            Content="{x:Static lang:Resources.Action_FindMetadata}"
                             IsVisible="{Binding ShowMissingMetadataWarning}" />
                         <Button
                             Command="{Binding UpdateMetadataCommand}"
-                            Content="Update Metadata"
+                            Content="{x:Static lang:Resources.Action_UpdateMetadata}"
                             IsVisible="{Binding ShowIncompleteMetadataWarning}" />
                     </StackPanel>
                 </Grid>
@@ -360,9 +359,7 @@
                     IsVisible="{Binding !!UnchangedCount}">
                     <StackPanel Orientation="Horizontal" Spacing="6">
                         <fluentIcons:SymbolIcon FontSize="14" Symbol="Eye" />
-                        <TextBlock FontSize="12">
-                            <Run Text="Show unchanged (" /><Run Text="{Binding UnchangedCount}" /><Run Text=")" />
-                        </TextBlock>
+                        <TextBlock FontSize="12" Text="{Binding ShowUnchangedLabel}" />
                     </StackPanel>
                 </ToggleButton>
             </Grid>
@@ -377,17 +374,17 @@
             <Button
                 MinWidth="80"
                 Command="{Binding OnCloseButtonClick}"
-                Content="Cancel" />
+                Content="{x:Static lang:Resources.Action_Cancel}" />
             <Button
                 MinWidth="120"
                 Classes="accent"
                 Command="{Binding ConfirmOrganizeCommand}"
-                Content="Organize"
+                Content="{x:Static lang:Resources.Action_Organize}"
                 IsEnabled="{Binding CanOrganize}" />
         </StackPanel>
 
         <ui:TeachingTip
-            Title="Format Variables"
+            Title="{x:Static lang:Resources.TeachingTip_FormatVariablesTitle}"
             Grid.Row="1"
             IsOpen="{Binding IsVariablesTipOpen, Mode=TwoWay}"
             PreferredPlacement="BottomLeft"

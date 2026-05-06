@@ -11,6 +11,7 @@ using CommunityToolkit.Mvvm.Input;
 using DynamicData.Binding;
 using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models.CheckpointOrganizer;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
@@ -55,11 +56,13 @@ public partial class OrganizeModelsDialogViewModel(
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ShowMissingMetadataWarning))]
     [NotifyPropertyChangedFor(nameof(ShowMetadataActions))]
+    [NotifyPropertyChangedFor(nameof(MissingMetadataText))]
     public partial int MissingMetadataCount { get; set; }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ShowIncompleteMetadataWarning))]
     [NotifyPropertyChangedFor(nameof(ShowMetadataActions))]
+    [NotifyPropertyChangedFor(nameof(IncompleteMetadataText))]
     public partial int IncompleteMetadataCount { get; set; }
 
     [ObservableProperty]
@@ -78,6 +81,7 @@ public partial class OrganizeModelsDialogViewModel(
     public partial bool ShowUnchangedItems { get; set; }
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowUnchangedLabel))]
     public partial int UnchangedCount { get; set; }
 
     public ObservableCollection<ModelOrganizationPreviewItem> Items { get; } = [];
@@ -94,6 +98,15 @@ public partial class OrganizeModelsDialogViewModel(
         Plan == null
             ? string.Empty
             : $"{Plan.ReadyCount} ready, {Plan.ConflictCount} conflicts, {Plan.SkippedCount} skipped";
+
+    public string MissingMetadataText =>
+        string.Format(Resources.TextTemplate_FilesNeedMetadata, MissingMetadataCount);
+
+    public string IncompleteMetadataText =>
+        string.Format(Resources.TextTemplate_FilesIncompleteMetadata, IncompleteMetadataCount);
+
+    public string ShowUnchangedLabel =>
+        string.Format(Resources.TextTemplate_ShowUnchangedCount, UnchangedCount);
 
     public IEnumerable<FileNameFormatVar> OrganizationFormatVars =>
         FileNameFormatProvider
@@ -197,16 +210,15 @@ public partial class OrganizeModelsDialogViewModel(
         var provider = FileNameFormatProvider.GetSampleForOrganization();
         var template = OrganizePattern;
 
-        if (!string.IsNullOrEmpty(template) && provider.Validate(template) == ValidationResult.Success)
-        {
-            var format = FileNameFormat.Parse(template, provider);
-            PatternPreviewSample = "Example: " + format.GetFileName() + ".safetensors";
-        }
-        else
-        {
-            var defaultFormat = FileNameFormat.Parse(FileNameFormat.DefaultOrganizationTemplate, provider);
-            PatternPreviewSample = "Example: " + defaultFormat.GetFileName() + ".safetensors";
-        }
+        var format =
+            !string.IsNullOrEmpty(template) && provider.Validate(template) == ValidationResult.Success
+                ? FileNameFormat.Parse(template, provider)
+                : FileNameFormat.Parse(FileNameFormat.DefaultOrganizationTemplate, provider);
+
+        PatternPreviewSample = string.Format(
+            Resources.TextTemplate_PatternPreviewExample,
+            format.GetFileName() + ".safetensors"
+        );
     }
 
     public override BetterContentDialog GetDialog()

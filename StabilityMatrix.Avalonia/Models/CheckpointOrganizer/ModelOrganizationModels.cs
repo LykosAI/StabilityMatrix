@@ -1,4 +1,5 @@
 using System.IO;
+using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Core.Models.Database;
 
 namespace StabilityMatrix.Avalonia.Models.CheckpointOrganizer;
@@ -53,10 +54,10 @@ public sealed record ModelOrganizationPreviewItem
     public string StatusText =>
         Status switch
         {
-            ModelOrganizationPreviewStatus.Ready => "Ready",
-            ModelOrganizationPreviewStatus.Conflict => "Conflict",
-            ModelOrganizationPreviewStatus.Skipped => "Skipped",
-            ModelOrganizationPreviewStatus.Unchanged => "Unchanged",
+            ModelOrganizationPreviewStatus.Ready => Resources.Label_Ready,
+            ModelOrganizationPreviewStatus.Conflict => Resources.Label_Conflict,
+            ModelOrganizationPreviewStatus.Skipped => Resources.Label_Skipped,
+            ModelOrganizationPreviewStatus.Unchanged => Resources.Label_Unchanged,
             _ => Status.ToString(),
         };
 }

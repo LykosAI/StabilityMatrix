@@ -20,6 +20,7 @@ using StabilityMatrix.Avalonia.Animations;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
+using StabilityMatrix.Avalonia.Models.CheckpointOrganizer;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
@@ -56,6 +57,7 @@ public partial class CheckpointsPageViewModel(
     INotificationService notificationService,
     IMetadataImportService metadataImportService,
     IModelImportService modelImportService,
+    ModelOrganizationService modelOrganizationService,
     OpenModelDbManager openModelDbManager,
     IServiceManager<ViewModelBase> dialogFactory,
     ICivitBaseModelTypeService baseModelTypeService,
@@ -588,6 +590,93 @@ public partial class CheckpointsPageViewModel(
             ? "Finished updating metadata."
             : "Finished scanning for missing metadata.";
         notificationService.Show("Scan Complete", message, NotificationType.Success);
+    }
+
+    [RelayCommand]
+    private async Task OrganizeModelsAsync()
+    {
+        if (SelectedCategory == null)
+        {
+            notificationService.Show(
+                "No Category Selected",
+                "Please select a category to organize.",
+                NotificationType.Error
+            );
+            return;
+        }
+
+        var organizeDialogVm = dialogFactory.Get<OrganizeModelsDialogViewModel>();
+        organizeDialogVm.Initialize(
+            modelIndexService.ModelIndex.Values.SelectMany(x => x),
+            settingsManager.ModelsDirectory,
+            SelectedCategory.Path,
+            ShowModelsInSubfolders,
+            settingsManager.Settings.ModelOrganizationFileNamePattern
+        );
+
+        if (organizeDialogVm.Plan?.Items.Count == 0)
+        {
+            notificationService.Show(
+                "Nothing To Organize",
+                "No indexed models matched the selected category.",
+                NotificationType.Information
+            );
+            return;
+        }
+
+        var dialogResult = await organizeDialogVm.GetDialog().ShowAsync();
+
+        if (dialogResult == ContentDialogResult.Secondary)
+        {
+            switch (organizeDialogVm.RequestedMetadataAction)
+            {
+                case ModelOrganizationMetadataAction.ScanMissing:
+                    await ScanMetadata(false);
+                    break;
+                case ModelOrganizationMetadataAction.UpdateExisting:
+                    await ScanMetadata(true);
+                    break;
+            }
+
+            return;
+        }
+
+        if (dialogResult != ContentDialogResult.Primary)
+            return;
+
+        var plan = organizeDialogVm.Plan!;
+
+        IsLoading = true;
+        Progress.Text = "Organizing models...";
+        Progress.IsIndeterminate = true;
+
+        try
+        {
+            var result = await modelOrganizationService.ApplyPlan(plan);
+            await modelIndexService.RefreshIndex();
+
+            var summary =
+                $"{result.MovedCount} moved, {result.ConflictCount} conflicts, {result.SkippedCount} skipped.";
+            notificationService.Show(
+                "Organization Complete",
+                summary,
+                result.Errors.Count == 0 ? NotificationType.Success : NotificationType.Warning
+            );
+
+            if (result.Errors.Count > 0)
+            {
+                notificationService.ShowPersistent(
+                    "Organization encountered errors",
+                    string.Join(Environment.NewLine, result.Errors.Take(5)),
+                    NotificationType.Warning
+                );
+            }
+        }
+        finally
+        {
+            IsLoading = false;
+            Progress.ClearProgress();
+        }
     }
 
     [RelayCommand]

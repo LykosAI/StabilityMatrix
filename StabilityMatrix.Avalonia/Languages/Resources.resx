@@ -1639,4 +1639,64 @@ Account tokens will not be viewable after saving, please make a note of them if 
   <data name="Label_BecomeSupporterDescription" xml:space="preserve">
     <value>Support the Stability Matrix Team and get access to early development builds and be the first to test new features.</value>
   </data>
+  <data name="Label_OrganizeModels" xml:space="preserve">
+    <value>Organize Models</value>
+  </data>
+  <data name="Text_OrganizeModelsDescription" xml:space="preserve">
+    <value>Reorganize model files into folders using a naming pattern. Models stay within their type folder.</value>
+  </data>
+  <data name="Label_NamingPattern" xml:space="preserve">
+    <value>Naming Pattern</value>
+  </data>
+  <data name="Tooltip_ShowAvailableVariables" xml:space="preserve">
+    <value>Show available variables</value>
+  </data>
+  <data name="TeachingTip_FormatVariablesTitle" xml:space="preserve">
+    <value>Format Variables</value>
+  </data>
+  <data name="Tooltip_ShowReadyFiles" xml:space="preserve">
+    <value>Show ready files</value>
+  </data>
+  <data name="Tooltip_ShowConflictFiles" xml:space="preserve">
+    <value>Show files with conflicts</value>
+  </data>
+  <data name="Tooltip_ShowSkippedFiles" xml:space="preserve">
+    <value>Show skipped files</value>
+  </data>
+  <data name="Label_Ready" xml:space="preserve">
+    <value>Ready</value>
+  </data>
+  <data name="Label_Conflict" xml:space="preserve">
+    <value>Conflict</value>
+  </data>
+  <data name="Label_Skipped" xml:space="preserve">
+    <value>Skipped</value>
+  </data>
+  <data name="Label_Unchanged" xml:space="preserve">
+    <value>Unchanged</value>
+  </data>
+  <data name="Label_MetadataNeeded" xml:space="preserve">
+    <value>Metadata needed</value>
+  </data>
+  <data name="TextTemplate_FilesNeedMetadata" xml:space="preserve">
+    <value>{0} file(s) need metadata before they can be organized.</value>
+  </data>
+  <data name="TextTemplate_FilesIncompleteMetadata" xml:space="preserve">
+    <value>{0} file(s) have incomplete metadata for the current pattern.</value>
+  </data>
+  <data name="Action_FindMetadata" xml:space="preserve">
+    <value>Find Metadata</value>
+  </data>
+  <data name="Action_UpdateMetadata" xml:space="preserve">
+    <value>Update Metadata</value>
+  </data>
+  <data name="TextTemplate_ShowUnchangedCount" xml:space="preserve">
+    <value>Show unchanged ({0})</value>
+  </data>
+  <data name="Action_Organize" xml:space="preserve">
+    <value>Organize</value>
+  </data>
+  <data name="TextTemplate_PatternPreviewExample" xml:space="preserve">
+    <value>Example: {0}</value>
+  </data>
 </root>

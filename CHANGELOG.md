@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Added
 - Added CivArchive model browser with details page, image viewer, version selector, trigger words, and in-app downloads with tracked progress
 - Added support for the civitai.red (mature-content) domain — NSFW CivitAI links now open and copy as civitai.red URLs, and pasting a civitai.red URL into the CivitAI model browser search works the same as a civitai.com URL
+- Added a checkpoint organizer for previewing and reorganizing local models using connected metadata-driven folder and filename patterns (requested in [#280](https://github.com/LykosAI/StabilityMatrix/issues/280), [#424](https://github.com/LykosAI/StabilityMatrix/issues/424))
 ### Changed
 - The CivitAI base model type filter now uses CivitAI's official `/api/v1/enums` endpoint, with fallbacks to the previous technique and a built-in list, so the filter stays populated even if the CivitAI response format changes or the service is unreachable
 ### Fixed

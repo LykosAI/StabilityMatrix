@@ -544,44 +544,78 @@
                         SelectedItem="{Binding SelectedKind}" />
                 </StackPanel>
 
-                <!--  Rating segmented  -->
+                <!--  Rating: icon button reveals segmented pills in a flyout — preserves the pill aesthetic without consuming row width  -->
                 <StackPanel Margin="0,0,8,4" Spacing="2">
                     <TextBlock
                         Margin="2,0,0,0"
                         FontSize="11"
                         Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                         Text="Rating" />
-                    <StackPanel Orientation="Horizontal" Spacing="6">
-                        <fa:Icon
-                            VerticalAlignment="Center"
-                            FontSize="12"
-                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                            Value="fa-solid fa-shield-halved" />
-                        <ListBox
-                            Classes="Segmented"
-                            ItemsSource="{Binding AllRatings}"
-                            SelectedItem="{Binding SelectedRating}" />
-                    </StackPanel>
+                    <Button MinWidth="100" ToolTip.Tip="Content rating filter">
+                        <Grid HorizontalAlignment="Stretch" ColumnDefinitions="Auto,*,Auto">
+                            <fa:Icon
+                                VerticalAlignment="Center"
+                                FontSize="12"
+                                Value="fa-solid fa-shield-halved" />
+                            <TextBlock
+                                Grid.Column="1"
+                                Margin="6,0,0,0"
+                                VerticalAlignment="Center"
+                                Text="{Binding SelectedRating.Label}" />
+                            <ui:SymbolIcon
+                                Grid.Column="2"
+                                Margin="6,0,0,0"
+                                VerticalAlignment="Center"
+                                FontSize="12"
+                                Foreground="{DynamicResource TextFillColorSecondary}"
+                                Symbol="ChevronDown" />
+                        </Grid>
+                        <Button.Flyout>
+                            <Flyout>
+                                <ListBox
+                                    Classes="Segmented"
+                                    ItemsSource="{Binding AllRatings}"
+                                    SelectedItem="{Binding SelectedRating}" />
+                            </Flyout>
+                        </Button.Flyout>
+                    </Button>
                 </StackPanel>
 
-                <!--  Status segmented  -->
+                <!--  Status: same treatment as Rating  -->
                 <StackPanel Margin="0,0,8,4" Spacing="2">
                     <TextBlock
                         Margin="2,0,0,0"
                         FontSize="11"
                         Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                         Text="Status" />
-                    <StackPanel Orientation="Horizontal" Spacing="6">
-                        <fa:Icon
-                            VerticalAlignment="Center"
-                            FontSize="12"
-                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                            Value="fa-solid fa-circle-check" />
-                        <ListBox
-                            Classes="Segmented"
-                            ItemsSource="{Binding AllPlatformStatuses}"
-                            SelectedItem="{Binding SelectedPlatformStatus}" />
-                    </StackPanel>
+                    <Button MinWidth="110" ToolTip.Tip="Platform availability filter">
+                        <Grid HorizontalAlignment="Stretch" ColumnDefinitions="Auto,*,Auto">
+                            <fa:Icon
+                                VerticalAlignment="Center"
+                                FontSize="12"
+                                Value="fa-solid fa-circle-check" />
+                            <TextBlock
+                                Grid.Column="1"
+                                Margin="6,0,0,0"
+                                VerticalAlignment="Center"
+                                Text="{Binding SelectedPlatformStatus.Label}" />
+                            <ui:SymbolIcon
+                                Grid.Column="2"
+                                Margin="6,0,0,0"
+                                VerticalAlignment="Center"
+                                FontSize="12"
+                                Foreground="{DynamicResource TextFillColorSecondary}"
+                                Symbol="ChevronDown" />
+                        </Grid>
+                        <Button.Flyout>
+                            <Flyout>
+                                <ListBox
+                                    Classes="Segmented"
+                                    ItemsSource="{Binding AllPlatformStatuses}"
+                                    SelectedItem="{Binding SelectedPlatformStatus}" />
+                            </Flyout>
+                        </Button.Flyout>
+                    </Button>
                 </StackPanel>
 
                 <!--  Model Type multi-select  -->
@@ -596,6 +630,13 @@
                             <StackPanel Orientation="Horizontal" Spacing="6">
                                 <fa:Icon FontSize="12" Value="fa-solid fa-cube" />
                                 <TextBlock VerticalAlignment="Center" Text="{x:Static lang:Resources.Label_ModelType}" />
+                                <!--  Count badge: visible only when a partial selection is active (not stock, not all-deselected)  -->
+                                <TextBlock
+                                    VerticalAlignment="Center"
+                                    FontWeight="SemiBold"
+                                    Foreground="{DynamicResource SystemAccentColorLight2}"
+                                    IsVisible="{Binding HasModelTypeFilter}"
+                                    Text="{Binding SelectedModelTypeCount, StringFormat=({0})}" />
                             </StackPanel>
                             <ui:SymbolIcon
                                 Grid.Column="1"
@@ -662,6 +703,12 @@
                             <StackPanel Orientation="Horizontal" Spacing="6">
                                 <fa:Icon FontSize="12" Value="fa-solid fa-layer-group" />
                                 <TextBlock VerticalAlignment="Center" Text="{x:Static lang:Resources.Label_BaseModel}" />
+                                <TextBlock
+                                    VerticalAlignment="Center"
+                                    FontWeight="SemiBold"
+                                    Foreground="{DynamicResource SystemAccentColorLight2}"
+                                    IsVisible="{Binding HasBaseModelFilter}"
+                                    Text="{Binding SelectedBaseModelCount, StringFormat=({0})}" />
                             </StackPanel>
                             <ui:SymbolIcon
                                 Grid.Column="1"
@@ -716,100 +763,89 @@
                     </Button>
                 </StackPanel>
 
-                <!--  Zoom (wrapped to match labeled-unit baseline)  -->
-                <StackPanel Margin="0,0,4,4" Spacing="2">
+                <!--  View overflow: card size, hide installed, fit images, reset — all behind one button  -->
+                <StackPanel Margin="0,0,0,4" Spacing="2">
                     <!--  Spacer label keeps the button baseline aligned with the labeled units to the left  -->
                     <TextBlock
                         Margin="2,0,0,0"
                         FontSize="11"
                         Opacity="0"
                         Text="." />
-                    <Button ToolTip.Tip="Card size">
+                    <Button ToolTip.Tip="View options">
                         <StackPanel Orientation="Horizontal" Spacing="6">
                             <fa:Icon
                                 VerticalAlignment="Center"
                                 FontSize="12"
-                                Value="fa-solid fa-magnifying-glass" />
-                            <TextBlock VerticalAlignment="Center" Text="Zoom" />
+                                Value="fa-solid fa-eye" />
+                            <TextBlock VerticalAlignment="Center" Text="View" />
+                            <ui:SymbolIcon
+                                Margin="2,0,0,0"
+                                VerticalAlignment="Center"
+                                FontSize="12"
+                                Foreground="{DynamicResource TextFillColorSecondary}"
+                                Symbol="ChevronDown" />
                         </StackPanel>
                         <Button.Flyout>
                             <Flyout>
-                                <StackPanel Orientation="Vertical">
-                                    <TextBlock
-                                        HorizontalAlignment="Center"
-                                        VerticalAlignment="Center"
-                                        Text="Zoom" />
-                                    <Slider
-                                        MinWidth="150"
-                                        Maximum="1.5"
-                                        Minimum="0.6"
-                                        SmallChange="0.05"
-                                        Value="{Binding ResizeFactor, Mode=TwoWay}" />
-                                    <TextBlock
-                                        Margin="0,-4,0,0"
-                                        HorizontalAlignment="Center"
-                                        VerticalAlignment="Center"
-                                        Text="{Binding ResizeFactor, StringFormat={}{0:F2}x}" />
+                                <StackPanel MinWidth="240" Spacing="12">
+                                    <!--  Card size  -->
+                                    <StackPanel Spacing="4">
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <TextBlock
+                                                VerticalAlignment="Center"
+                                                FontSize="11"
+                                                Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                Text="Card size" />
+                                            <TextBlock
+                                                Grid.Column="1"
+                                                VerticalAlignment="Center"
+                                                FontSize="11"
+                                                Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                Text="{Binding ResizeFactor, StringFormat={}{0:F2}x}" />
+                                        </Grid>
+                                        <Slider
+                                            Maximum="1.5"
+                                            Minimum="0.6"
+                                            SmallChange="0.05"
+                                            Value="{Binding ResizeFactor, Mode=TwoWay}" />
+                                    </StackPanel>
+
+                                    <!--  Toggles  -->
+                                    <ToggleButton
+                                        HorizontalAlignment="Stretch"
+                                        HorizontalContentAlignment="Left"
+                                        IsChecked="{Binding HideInstalledModels, Mode=TwoWay}"
+                                        ToolTip.Tip="Hide models already in your library">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <fa:Icon FontSize="12" Value="fa-solid fa-database" />
+                                            <TextBlock Text="Hide installed" />
+                                        </StackPanel>
+                                    </ToggleButton>
+                                    <ToggleButton
+                                        HorizontalAlignment="Stretch"
+                                        HorizontalContentAlignment="Left"
+                                        IsChecked="{Binding FitCardImages, Mode=TwoWay}"
+                                        ToolTip.Tip="Fit: show whole image with blurred edges. Off: crop to fill (may cut off content).">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <fa:Icon FontSize="12" Value="fa-solid fa-image" />
+                                            <TextBlock Text="Fit card images" />
+                                        </StackPanel>
+                                    </ToggleButton>
+
+                                    <!--  Reset  -->
+                                    <Button
+                                        HorizontalAlignment="Stretch"
+                                        HorizontalContentAlignment="Left"
+                                        Command="{Binding ResetFiltersCommand}"
+                                        ToolTip.Tip="Reset all filters to defaults">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <fa:Icon FontSize="12" Value="fa-solid fa-rotate-left" />
+                                            <TextBlock Text="Reset filters" />
+                                        </StackPanel>
+                                    </Button>
                                 </StackPanel>
                             </Flyout>
                         </Button.Flyout>
-                    </Button>
-                </StackPanel>
-
-                <!--  Hide Installed (wrapped to match labeled-unit baseline)  -->
-                <StackPanel Margin="0,0,4,4" Spacing="2">
-                    <TextBlock
-                        Margin="2,0,0,0"
-                        FontSize="11"
-                        Opacity="0"
-                        Text="." />
-                    <ToggleButton IsChecked="{Binding HideInstalledModels, Mode=TwoWay}" ToolTip.Tip="Hide models already in your library">
-                        <StackPanel Orientation="Horizontal" Spacing="6">
-                            <fa:Icon
-                                VerticalAlignment="Center"
-                                FontSize="12"
-                                Value="fa-solid fa-database" />
-                            <TextBlock VerticalAlignment="Center" Text="Hide Installed" />
-                        </StackPanel>
-                    </ToggleButton>
-                </StackPanel>
-
-                <!--  Fit Images toggle: on = whole image with blurred edge fill, off = crop to fill  -->
-                <StackPanel Margin="0,0,4,4" Spacing="2">
-                    <TextBlock
-                        Margin="2,0,0,0"
-                        FontSize="11"
-                        Opacity="0"
-                        Text="." />
-                    <ToggleButton IsChecked="{Binding FitCardImages, Mode=TwoWay}" ToolTip.Tip="Fit: show whole image with blurred edges. Off: crop to fill (may cut off content).">
-                        <StackPanel Orientation="Horizontal" Spacing="6">
-                            <fa:Icon
-                                VerticalAlignment="Center"
-                                FontSize="12"
-                                Value="fa-solid fa-image" />
-                            <TextBlock VerticalAlignment="Center" Text="Fit Images" />
-                        </StackPanel>
-                    </ToggleButton>
-                </StackPanel>
-
-                <!--  Reset filters  -->
-                <StackPanel Margin="0,0,0,4" Spacing="2">
-                    <TextBlock
-                        Margin="2,0,0,0"
-                        FontSize="11"
-                        Opacity="0"
-                        Text="." />
-                    <Button
-                        Classes="transparent"
-                        Command="{Binding ResetFiltersCommand}"
-                        ToolTip.Tip="Reset all filters to defaults">
-                        <StackPanel Orientation="Horizontal" Spacing="6">
-                            <fa:Icon
-                                VerticalAlignment="Center"
-                                FontSize="12"
-                                Value="fa-solid fa-rotate-left" />
-                            <TextBlock VerticalAlignment="Center" Text="Reset" />
-                        </StackPanel>
                     </Button>
                 </StackPanel>
             </WrapPanel>

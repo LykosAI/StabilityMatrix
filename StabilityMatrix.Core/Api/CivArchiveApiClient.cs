@@ -4,6 +4,7 @@ using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using Injectio.Attributes;
 using Microsoft.Extensions.Logging;
+using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Models.Api.CivArchive;
 
 namespace StabilityMatrix.Core.Api;
@@ -18,9 +19,27 @@ public partial class CivArchiveApiClient(
 
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
 
+    // TTLs picked per-endpoint based on how quickly the data can stale: search results
+    // change as new uploads land (short), filter-option lists rarely change (long),
+    // model details are versioned but mirror lists update occasionally (medium), and
+    // sha256→URL is a hash mapping that's effectively immutable (cap at LRU eviction).
+    private static readonly TimeSpan SearchCacheTtl = TimeSpan.FromMinutes(2);
+    private static readonly TimeSpan FilterOptionsCacheTtl = TimeSpan.FromHours(1);
+    private static readonly TimeSpan DetailsCacheTtl = TimeSpan.FromMinutes(5);
+
     private readonly HttpClient httpClient = CreateHttpClient(httpClientFactory);
     private readonly SemaphoreSlim buildIdLock = new(1, 1);
     private string? cachedBuildId;
+
+    private readonly LRUCache<string, CacheEntry<CivArchiveSearchResponse>> searchCache = new(64);
+    private readonly LRUCache<string, CacheEntry<CivArchiveModelDetailsResponse>> detailsCache = new(64);
+    private readonly LRUCache<string, CacheEntry<string?>> fileUrlCache = new(128);
+    private CacheEntry<CivArchiveFilterOptions>? cachedFilterOptions;
+
+    private sealed record CacheEntry<T>(DateTimeOffset CachedAt, T Value)
+    {
+        public bool IsFresh(TimeSpan ttl) => DateTimeOffset.UtcNow - CachedAt < ttl;
+    }
 
     public async Task<string> GetBuildIdAsync(CancellationToken cancellationToken = default)
     {
@@ -55,6 +74,12 @@ public partial class CivArchiveApiClient(
 
         var routePath = string.IsNullOrWhiteSpace(filters.RoutePath) ? "/top-models" : filters.RoutePath;
         var relativePath = BuildSearchDataPath(routePath, filters);
+
+        if (searchCache.Get(relativePath) is { } cached && cached.IsFresh(SearchCacheTtl))
+        {
+            return cached.Value;
+        }
+
         var response = await GetNextDataAsync<CivArchiveListPageResponse>(relativePath, cancellationToken);
 
         var pageProps =
@@ -63,7 +88,7 @@ public partial class CivArchiveApiClient(
 
         var effectiveFilters = pageProps.Filters?.ToSearchFilters() ?? filters;
 
-        return new CivArchiveSearchResponse
+        var result = new CivArchiveSearchResponse
         {
             Results = pageProps.Data?.Results ?? [],
             FilterOptions = new CivArchiveFilterOptions
@@ -76,6 +101,42 @@ public partial class CivArchiveApiClient(
             Hits = pageProps.Data?.Hits ?? 0,
             TotalHits = pageProps.Data?.TotalHits ?? 0,
         };
+
+        searchCache.Add(
+            relativePath,
+            new CacheEntry<CivArchiveSearchResponse>(DateTimeOffset.UtcNow, result)
+        );
+        return result;
+    }
+
+    public async Task<CivArchiveFilterOptions> GetFilterOptionsAsync(
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (cachedFilterOptions is { } cached && cached.IsFresh(FilterOptionsCacheTtl))
+        {
+            return cached.Value;
+        }
+
+        // Parameterless URL is intentional — CivArchive returns empty filter-option arrays
+        // the moment any query param is present, even if every value is the default.
+        var response = await GetNextDataAsync<CivArchiveListPageResponse>(
+            "/top-models.json",
+            cancellationToken
+        );
+
+        var pageProps =
+            response.PageProps
+            ?? throw new InvalidOperationException("CivArchive list page was missing pageProps");
+
+        var result = new CivArchiveFilterOptions
+        {
+            BaseModels = pageProps.FilterOptions?.BaseModels ?? [],
+            ModelTypes = pageProps.FilterOptions?.ModelTypes ?? [],
+        };
+
+        cachedFilterOptions = new CacheEntry<CivArchiveFilterOptions>(DateTimeOffset.UtcNow, result);
+        return result;
     }
 
     public async Task<CivArchiveModelDetailsResponse> GetModelDetailsAsync(
@@ -89,6 +150,12 @@ public partial class CivArchiveApiClient(
         }
 
         var nextDataPath = BuildDetailDataPath(relativeUrl);
+
+        if (detailsCache.Get(nextDataPath) is { } cachedDetails && cachedDetails.IsFresh(DetailsCacheTtl))
+        {
+            return cachedDetails.Value;
+        }
+
         var response = await GetNextDataAsync<CivArchiveDetailPageResponse>(nextDataPath, cancellationToken);
 
         var pageProps =
@@ -109,7 +176,12 @@ public partial class CivArchiveApiClient(
         model.Platform ??= pageProps.Platform;
         model.PlatformName ??= pageProps.PlatformName;
 
-        return new CivArchiveModelDetailsResponse { Model = model };
+        var detailsResult = new CivArchiveModelDetailsResponse { Model = model };
+        detailsCache.Add(
+            nextDataPath,
+            new CacheEntry<CivArchiveModelDetailsResponse>(DateTimeOffset.UtcNow, detailsResult)
+        );
+        return detailsResult;
     }
 
     public async Task<string?> ResolveFileUrlAsync(
@@ -124,6 +196,15 @@ public partial class CivArchiveApiClient(
 
         var nextDataPath = BuildDetailDataPath(sha256RelativeUrl);
 
+        // sha256 → model URL is essentially an immutable mapping, so no TTL check —
+        // LRU eviction handles capacity. Caches null too so orphaned hashes don't
+        // re-hit the API on every navigation attempt.
+        if (fileUrlCache.Get(nextDataPath) is { } cachedFile)
+        {
+            return cachedFile.Value;
+        }
+
+        string? resolved = null;
         try
         {
             var response = await GetNextDataAsync<CivArchiveSha256PageResponse>(
@@ -135,19 +216,21 @@ public partial class CivArchiveApiClient(
             // `version.href` is the canonical URL for the version that contains this file.
             // Fall back to the first entry in `versions[]` if `version` is missing.
             var firstModel = response.PageProps?.Models?.FirstOrDefault();
-            if (firstModel is null)
+            if (firstModel is not null)
             {
-                return null;
+                resolved = !string.IsNullOrWhiteSpace(firstModel.Version?.Href)
+                    ? firstModel.Version!.Href
+                    : firstModel.Versions.FirstOrDefault()?.Href;
             }
-
-            return !string.IsNullOrWhiteSpace(firstModel.Version?.Href)
-                ? firstModel.Version!.Href
-                : firstModel.Versions.FirstOrDefault()?.Href;
         }
         catch
         {
+            // Don't cache transient failures (e.g. 429) — let the next attempt try again.
             return null;
         }
+
+        fileUrlCache.Add(nextDataPath, new CacheEntry<string?>(DateTimeOffset.UtcNow, resolved));
+        return resolved;
     }
 
     public Uri GetAbsoluteUri(string relativeUrl)
@@ -441,6 +524,7 @@ public partial class CivArchiveApiClient(
         public List<string> BaseModels { get; set; } = [];
 
         [JsonPropertyName("platform")]
+        [JsonConverter(typeof(CivArchiveSingleStringConverter))]
         public string? Platform { get; set; }
 
         [JsonPropertyName("sort")]
@@ -541,6 +625,66 @@ public partial class CivArchiveApiClient(
                 writer.WriteStringValue(item);
             }
             writer.WriteEndArray();
+        }
+    }
+
+    /// <summary>
+    /// Reads a single string from JSON that may arrive as a bare string, a single-element
+    /// array (CivArchive echoes multi-select-shaped values like <c>platform</c> as
+    /// <c>["civitai"]</c> when filtered), or null. Returns the first string element for
+    /// arrays and skips other token shapes safely.
+    /// </summary>
+    private sealed class CivArchiveSingleStringConverter : JsonConverter<string?>
+    {
+        public override string? Read(
+            ref Utf8JsonReader reader,
+            Type typeToConvert,
+            JsonSerializerOptions options
+        )
+        {
+            if (reader.TokenType == JsonTokenType.Null)
+            {
+                return null;
+            }
+
+            if (reader.TokenType == JsonTokenType.String)
+            {
+                return reader.GetString();
+            }
+
+            if (reader.TokenType == JsonTokenType.StartArray)
+            {
+                string? first = null;
+                while (reader.Read())
+                {
+                    if (reader.TokenType == JsonTokenType.EndArray)
+                    {
+                        return first;
+                    }
+
+                    if (reader.TokenType == JsonTokenType.String && first is null)
+                    {
+                        first = reader.GetString();
+                    }
+                }
+
+                return first;
+            }
+
+            reader.Skip();
+            return null;
+        }
+
+        public override void Write(Utf8JsonWriter writer, string? value, JsonSerializerOptions options)
+        {
+            if (value is null)
+            {
+                writer.WriteNullValue();
+            }
+            else
+            {
+                writer.WriteStringValue(value);
+            }
         }
     }
 }

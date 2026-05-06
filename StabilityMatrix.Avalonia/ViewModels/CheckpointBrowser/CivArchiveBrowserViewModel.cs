@@ -36,7 +36,14 @@ public sealed partial class CivArchiveBrowserViewModel(
     private bool filterOptionsLoaded;
     private bool searchQueued;
     private int currentPage = 1;
-    private DispatcherTimer? searchDebounceTimer;
+    private CancellationTokenSource? searchDebounceCts;
+
+    /// <summary>
+    /// How long to wait after the most recent filter change before firing the search.
+    /// Kept settable (not a const) so unit tests can collapse it to <see cref="TimeSpan.Zero"/>
+    /// instead of waiting hundreds of ms per assertion.
+    /// </summary>
+    public TimeSpan SearchDebounceInterval { get; set; } = TimeSpan.FromMilliseconds(300);
 
     /// <summary>
     /// All search results we've fetched so far across pages, regardless of client-side filters.
@@ -272,16 +279,13 @@ public sealed partial class CivArchiveBrowserViewModel(
         EventManager.Instance.ModelIndexChanged += indexHandler;
         AddDisposable(Disposable.Create(() => EventManager.Instance.ModelIndexChanged -= indexHandler));
 
-        // Debounce filter-driven searches so rapid toggles (e.g. picking a dozen base
-        // models in a row) collapse into a single API call instead of N — CivArchive
-        // 429s aggressively otherwise.
-        searchDebounceTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(300) };
-        searchDebounceTimer.Tick += OnSearchDebounceElapsed;
+        // Cancel any pending debounced search when the VM is disposed.
         AddDisposable(
             Disposable.Create(() =>
             {
-                searchDebounceTimer.Stop();
-                searchDebounceTimer.Tick -= OnSearchDebounceElapsed;
+                searchDebounceCts?.Cancel();
+                searchDebounceCts?.Dispose();
+                searchDebounceCts = null;
             })
         );
 
@@ -350,16 +354,10 @@ public sealed partial class CivArchiveBrowserViewModel(
         OnPropertyChanged(nameof(IsEndOfResults));
     }
 
-    private void OnSearchDebounceElapsed(object? sender, EventArgs e)
-    {
-        searchDebounceTimer?.Stop();
-        _ = SearchModels();
-    }
-
     /// <summary>
-    /// Restart the debounce timer. The actual search runs once the user pauses for the
-    /// timer's interval — multiple rapid filter changes within that window collapse into
-    /// a single fetch.
+    /// Cancel any pending debounced search and start a new wait window. The actual
+    /// search runs once the user pauses for <see cref="SearchDebounceInterval"/> —
+    /// multiple rapid filter changes within that window collapse into a single fetch.
     /// </summary>
     private void RequestDebouncedSearch()
     {
@@ -375,16 +373,40 @@ public sealed partial class CivArchiveBrowserViewModel(
             return;
         }
 
-        searchDebounceTimer?.Stop();
-        searchDebounceTimer?.Start();
+        searchDebounceCts?.Cancel();
+        searchDebounceCts?.Dispose();
+
+        var cts = new CancellationTokenSource();
+        searchDebounceCts = cts;
+
+        _ = RunDebouncedSearchAsync(cts.Token);
+    }
+
+    private async Task RunDebouncedSearchAsync(CancellationToken token)
+    {
+        try
+        {
+            await Task.Delay(SearchDebounceInterval, token);
+        }
+        catch (TaskCanceledException)
+        {
+            return;
+        }
+
+        if (token.IsCancellationRequested)
+        {
+            return;
+        }
+
+        await SearchModels();
     }
 
     [RelayCommand]
     private async Task SearchModels(bool isInfiniteScroll = false)
     {
         // Cancel any pending debounced search so an explicit invocation (search button,
-        // ResetFilters, etc.) doesn't get shadowed by a redundant fire 300ms later.
-        searchDebounceTimer?.Stop();
+        // ResetFilters, etc.) doesn't get shadowed by a redundant fire moments later.
+        searchDebounceCts?.Cancel();
 
         if (IsLoading)
         {

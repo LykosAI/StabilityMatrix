@@ -29,6 +29,7 @@ public partial class CivArchiveApiClient(
 
     private readonly HttpClient httpClient = CreateHttpClient(httpClientFactory);
     private readonly SemaphoreSlim buildIdLock = new(1, 1);
+    private readonly SemaphoreSlim filterOptionsLock = new(1, 1);
     private string? cachedBuildId;
 
     private readonly LRUCache<string, CacheEntry<CivArchiveSearchResponse>> searchCache = new(64);
@@ -118,25 +119,41 @@ public partial class CivArchiveApiClient(
             return cached.Value;
         }
 
-        // Parameterless URL is intentional — CivArchive returns empty filter-option arrays
-        // the moment any query param is present, even if every value is the default.
-        var response = await GetNextDataAsync<CivArchiveListPageResponse>(
-            "/top-models.json",
-            cancellationToken
-        );
-
-        var pageProps =
-            response.PageProps
-            ?? throw new InvalidOperationException("CivArchive list page was missing pageProps");
-
-        var result = new CivArchiveFilterOptions
+        // Singleton API client → multiple concurrent first-load callers could otherwise
+        // fire redundant fetches before the cache is populated. Serialize them so only
+        // one request goes out per cold cache.
+        await filterOptionsLock.WaitAsync(cancellationToken);
+        try
         {
-            BaseModels = pageProps.FilterOptions?.BaseModels ?? [],
-            ModelTypes = pageProps.FilterOptions?.ModelTypes ?? [],
-        };
+            if (cachedFilterOptions is { } cachedRetry && cachedRetry.IsFresh(FilterOptionsCacheTtl))
+            {
+                return cachedRetry.Value;
+            }
 
-        cachedFilterOptions = new CacheEntry<CivArchiveFilterOptions>(DateTimeOffset.UtcNow, result);
-        return result;
+            // Parameterless URL is intentional — CivArchive returns empty filter-option arrays
+            // the moment any query param is present, even if every value is the default.
+            var response = await GetNextDataAsync<CivArchiveListPageResponse>(
+                "/top-models.json",
+                cancellationToken
+            );
+
+            var pageProps =
+                response.PageProps
+                ?? throw new InvalidOperationException("CivArchive list page was missing pageProps");
+
+            var result = new CivArchiveFilterOptions
+            {
+                BaseModels = pageProps.FilterOptions?.BaseModels ?? [],
+                ModelTypes = pageProps.FilterOptions?.ModelTypes ?? [],
+            };
+
+            cachedFilterOptions = new CacheEntry<CivArchiveFilterOptions>(DateTimeOffset.UtcNow, result);
+            return result;
+        }
+        finally
+        {
+            filterOptionsLock.Release();
+        }
     }
 
     public async Task<CivArchiveModelDetailsResponse> GetModelDetailsAsync(
@@ -654,17 +671,29 @@ public partial class CivArchiveApiClient(
 
             if (reader.TokenType == JsonTokenType.StartArray)
             {
+                // Track depth so a hypothetical nested array (e.g. [["a"]]) doesn't leave
+                // the reader stranded mid-structure for the next property to deserialize.
+                // Must return *on* the matching EndArray token (not past it) — STJ strictly
+                // verifies the converter's final cursor position.
                 string? first = null;
+                var depth = 1;
                 while (reader.Read())
                 {
-                    if (reader.TokenType == JsonTokenType.EndArray)
+                    switch (reader.TokenType)
                     {
-                        return first;
-                    }
-
-                    if (reader.TokenType == JsonTokenType.String && first is null)
-                    {
-                        first = reader.GetString();
+                        case JsonTokenType.StartArray:
+                            depth++;
+                            break;
+                        case JsonTokenType.EndArray:
+                            depth--;
+                            if (depth == 0)
+                            {
+                                return first;
+                            }
+                            break;
+                        case JsonTokenType.String when first is null:
+                            first = reader.GetString();
+                            break;
                     }
                 }
 

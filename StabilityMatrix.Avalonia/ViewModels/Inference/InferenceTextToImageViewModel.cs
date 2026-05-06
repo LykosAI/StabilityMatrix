@@ -311,7 +311,7 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
             {
                 Name = builder.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.ModelSamplingAuraFlow)),
                 Model = builder.Connections.Base.Model.Unwrap(),
-                Shift = 3.0d,
+                Shift = ModelCardViewModel.Shift,
             }
         );
 

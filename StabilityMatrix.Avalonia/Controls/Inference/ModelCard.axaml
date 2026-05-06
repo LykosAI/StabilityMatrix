@@ -111,6 +111,33 @@
                             </StackPanel>
                         </Grid>
 
+                        <!--  Refiner (below Model, when enabled)  -->
+                        <Grid
+                            Margin="0,8,0,0"
+                            ColumnDefinitions="70,*,Auto"
+                            IsVisible="{Binding IsRefinerSelectionEnabled}">
+                            <TextBlock
+                                Grid.Column="0"
+                                VerticalAlignment="Center"
+                                Text="{x:Static lang:Resources.Label_Refiner}"
+                                TextAlignment="Left" />
+                            <controls:BetterComboBox
+                                Grid.Column="1"
+                                Padding="8,6,4,6"
+                                HorizontalAlignment="Stretch"
+                                ItemsSource="{Binding ClientManager.Models}"
+                                SelectedItem="{Binding SelectedRefiner}"
+                                Theme="{StaticResource BetterComboBoxHybridModelTheme}" />
+                            <Button
+                                Grid.Column="2"
+                                Margin="4,0,0,0"
+                                VerticalAlignment="Stretch"
+                                Command="{Binding OpenRefinerPickerCommand}"
+                                ToolTip.Tip="Browse all refiner models">
+                                <fluent:SymbolIcon FontSize="16" Symbol="Search" />
+                            </Button>
+                        </Grid>
+
                         <!--  Workflow Profile  -->
                         <Grid Margin="0,8,0,0" ColumnDefinitions="70,*,Auto">
                             <TextBlock
@@ -154,33 +181,6 @@
                             Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                             IsVisible="{Binding ShowWorkflowProfileStatus}"
                             Text="{Binding WorkflowProfileStatusText}" />
-
-                        <!--  Refiner (below Model, when enabled)  -->
-                        <Grid
-                            Margin="0,8,0,0"
-                            ColumnDefinitions="70,*,Auto"
-                            IsVisible="{Binding IsRefinerSelectionEnabled}">
-                            <TextBlock
-                                Grid.Column="0"
-                                VerticalAlignment="Center"
-                                Text="{x:Static lang:Resources.Label_Refiner}"
-                                TextAlignment="Left" />
-                            <controls:BetterComboBox
-                                Grid.Column="1"
-                                Padding="8,6,4,6"
-                                HorizontalAlignment="Stretch"
-                                ItemsSource="{Binding ClientManager.Models}"
-                                SelectedItem="{Binding SelectedRefiner}"
-                                Theme="{StaticResource BetterComboBoxHybridModelTheme}" />
-                            <Button
-                                Grid.Column="2"
-                                Margin="4,0,0,0"
-                                VerticalAlignment="Stretch"
-                                Command="{Binding OpenRefinerPickerCommand}"
-                                ToolTip.Tip="Browse all refiner models">
-                                <fluent:SymbolIcon FontSize="16" Symbol="Search" />
-                            </Button>
-                        </Grid>
 
                         <!--  Advanced Options Expander (Precision, VAE, CLIP Skip)  -->
                         <Expander

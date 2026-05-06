@@ -168,6 +168,7 @@ public partial class ModelCardViewModel(
         nameof(IsHiDreamClip),
         nameof(ResolvedWorkflowProfile),
         nameof(IsHiDreamWorkflow),
+        nameof(IsZImageWorkflow),
         nameof(ShowShift),
         nameof(ShowEncoderTypeSelection),
         nameof(HasRecommendedDefaults),
@@ -181,6 +182,7 @@ public partial class ModelCardViewModel(
     [NotifyPropertyChangedFor(
         nameof(ResolvedWorkflowProfile),
         nameof(IsHiDreamWorkflow),
+        nameof(IsZImageWorkflow),
         nameof(ShowShift),
         nameof(ShowEncoderTypeSelection),
         nameof(HasRecommendedDefaults),
@@ -242,6 +244,9 @@ public partial class ModelCardViewModel(
     public bool IsHiDreamWorkflow =>
         ResolvedWorkflowProfile is InferenceWorkflowProfile.HiDream
         || (ResolvedWorkflowProfile is InferenceWorkflowProfile.Custom && SelectedClipType == "HiDream");
+    public bool IsZImageWorkflow =>
+        ResolvedWorkflowProfile is InferenceWorkflowProfile.ZImageBase or InferenceWorkflowProfile.ZImageTurbo
+        || (ResolvedWorkflowProfile is InferenceWorkflowProfile.Custom && SelectedClipType == "lumina2");
     public bool IsGguf => SelectedUnetModel?.RelativePath.EndsWith("gguf") ?? false;
 
     /// <summary>
@@ -272,9 +277,9 @@ public partial class ModelCardViewModel(
     public string TextEncodersHeader => $"Text Encoders ({TextEncoders.Count})";
 
     /// <summary>
-    /// Whether to show the Shift control (for HiDream clip type, only when in UNet mode).
+    /// Whether to show the Shift control (for HiDream and Z-Image workflows, only when in UNet mode).
     /// </summary>
-    public bool ShowShift => ShowEncoderSection && IsHiDreamWorkflow;
+    public bool ShowShift => ShowEncoderSection && (IsHiDreamWorkflow || IsZImageWorkflow);
     public bool ShowEncoderTypeSelection =>
         ShowEncoderSection && SelectedWorkflowProfile is not InferenceWorkflowProfile.Auto;
     public InferenceWorkflowProfile ResolvedWorkflowProfile =>
@@ -629,7 +634,7 @@ public partial class ModelCardViewModel(
         finally
         {
             isLoadingState = false;
-            RefreshWorkflowProfileState();
+            NotifyWorkflowProfileStateChanged();
         }
     }
 
@@ -914,16 +919,22 @@ public partial class ModelCardViewModel(
         RefreshWorkflowProfileState();
     }
 
-    private void RefreshWorkflowProfileState()
+    private void NotifyWorkflowProfileStateChanged()
     {
         OnPropertyChanged(nameof(ResolvedWorkflowProfile));
         OnPropertyChanged(nameof(IsHiDreamWorkflow));
+        OnPropertyChanged(nameof(IsZImageWorkflow));
         OnPropertyChanged(nameof(ShowShift));
         OnPropertyChanged(nameof(ShowEncoderTypeSelection));
         OnPropertyChanged(nameof(HasRecommendedDefaults));
         OnPropertyChanged(nameof(WorkflowProfileStatusText));
         OnPropertyChanged(nameof(ShowWorkflowProfileStatus));
         OnPropertyChanged(nameof(RecommendedDefaultsToolTip));
+    }
+
+    private void RefreshWorkflowProfileState()
+    {
+        NotifyWorkflowProfileStateChanged();
 
         if (!isLoadingState)
         {

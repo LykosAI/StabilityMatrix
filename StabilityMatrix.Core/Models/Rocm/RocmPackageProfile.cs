@@ -41,6 +41,13 @@ public class RocmPackageProfile
     public bool ForceReinstallTorch { get; init; } = true;
 
     /// <summary>
+    /// Optional helper-managed compatibility mode for ROCm torch installation.
+    /// The package declares the intent here while the helper resolves any architecture-specific
+    /// fallback indexes or borrowed dependency rules internally.
+    /// </summary>
+    public RocmTorchCompatibilityMode TorchCompatibilityMode { get; init; }
+
+    /// <summary>
     /// Optional callback for package-specific environment variables derived from a resolved ROCm context.
     /// </summary>
     public Func<

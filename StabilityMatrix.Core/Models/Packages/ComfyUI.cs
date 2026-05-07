@@ -561,6 +561,8 @@ public class ComfyUI(
             }
         }
 
+        var handledFirstConsoleOutput = false;
+
         VenvRunner.RunDetached(
             [Path.Combine(installLocation, options.Command ?? LaunchCommand), .. options.Arguments],
             HandleConsoleOutput,
@@ -573,6 +575,12 @@ public class ComfyUI(
         {
             onConsoleOutput?.Invoke(s);
 
+            if (!handledFirstConsoleOutput)
+            {
+                handledFirstConsoleOutput = true;
+                EmitWindowsRocmLaunchNotice(installedPackage, onConsoleOutput);
+            }
+
             if (!s.Text.Contains("To see the GUI go to", StringComparison.OrdinalIgnoreCase))
                 return;
 
@@ -584,6 +592,29 @@ public class ComfyUI(
             }
             OnStartupComplete(WebUrl);
         }
+    }
+
+    private void EmitWindowsRocmLaunchNotice(
+        InstalledPackage installedPackage,
+        Action<ProcessOutput>? onConsoleOutput
+    )
+    {
+        if (!ShouldShowWindowsRocmLaunchNotice(installedPackage) || rocmPackageHelper is null)
+            return;
+
+        foreach (var line in rocmPackageHelper.GetWindowsLaunchNoticeLines())
+        {
+            onConsoleOutput?.Invoke(ProcessOutput.FromStdOutLine($"{line}{Environment.NewLine}"));
+        }
+    }
+
+    private bool ShouldShowWindowsRocmLaunchNotice(InstalledPackage installedPackage)
+    {
+        if (!Compat.IsWindows || rocmPackageHelper is null || !HasWindowsRocmSupport())
+            return false;
+
+        var torchIndex = installedPackage.PreferredTorchIndex ?? GetRecommendedTorchVersion();
+        return torchIndex == TorchIndex.Rocm;
     }
 
     public override TorchIndex GetRecommendedTorchVersion()
@@ -607,6 +638,7 @@ public class ComfyUI(
         ExtraInstallPipArgs = ["numpy<2"],
         PostInstallPipArgs = ["typing-extensions>=4.15.0"],
         UpgradePackages = true,
+        TorchCompatibilityMode = RocmTorchCompatibilityMode.HelperManagedDependencyFallback,
         ExtraEnvironmentFactory = BuildComfyWindowsRocmEnvironment,
     };
 

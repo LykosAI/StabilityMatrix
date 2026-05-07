@@ -21,8 +21,37 @@ namespace StabilityMatrix.Core.Services.Rocm;
 [RegisterSingleton<IRocmPackageHelper, RocmPackageHelper>]
 public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageHelper
 {
+    private sealed class HelperManagedTorchInstallPolicy
+    {
+        public IReadOnlyList<string> PreInstallPackageSpecifiers { get; init; } = [];
+
+        public IReadOnlyList<string> SupplementalPackageSpecifiers { get; init; } = [];
+
+        public bool? UsePreRelease { get; init; }
+
+        public bool? ForceReinstall { get; init; }
+    }
+
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private static readonly StringComparer EnvComparer = StringComparer.OrdinalIgnoreCase;
+    private static readonly string[] WindowsLaunchNoticeLines =
+    [
+        "Stability Matrix Windows ROCm Notice: Windows AMD ROCm support is experimental. Please report any issues to Stability Matrix first so it can be determined whether the issue is package-specific.",
+        "Because this setup may not be officially supported by package developers, only contact upstream support for issues clearly caused by the package itself.",
+    ];
+    private static readonly HelperManagedTorchInstallPolicy Rdna2BorrowedDependencyFallbackPolicy = new()
+    {
+        PreInstallPackageSpecifiers =
+        [
+            "https://rocm.nightlies.amd.com/v2-staging/gfx103X-dgpu/setuptools-80.9.0-py3-none-any.whl",
+            "https://rocm.nightlies.amd.com/v2-staging/gfx103X-dgpu/mpmath-1.3.0-py3-none-any.whl",
+        ],
+        SupplementalPackageSpecifiers =
+        [
+            "setuptools @ https://rocm.nightlies.amd.com/v2-staging/gfx103X-dgpu/setuptools-80.9.0-py3-none-any.whl",
+            "mpmath @ https://rocm.nightlies.amd.com/v2-staging/gfx103X-dgpu/mpmath-1.3.0-py3-none-any.whl",
+        ],
+    };
 
     /// <inheritdoc />
     public RocmCompatibilityResult GetCompatibility(RocmPackageProfile profile)
@@ -129,6 +158,12 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
     }
 
     /// <inheritdoc />
+    public IReadOnlyList<string> GetWindowsLaunchNoticeLines()
+    {
+        return WindowsLaunchNoticeLines;
+    }
+
+    /// <inheritdoc />
     public async Task InstallWindowsNativePackageAsync(
         IPyVenvRunner venvRunner,
         string installLocation,
@@ -162,19 +197,53 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
         progress?.Report(new ProgressReport(-1f, "Upgrading pip...", isIndeterminate: true));
         await venvRunner.PipInstall("--upgrade pip wheel", onConsoleOutput).ConfigureAwait(false);
 
+        var torchInstallPolicy = GetApplicableTorchInstallPolicy(profile, installContext.RuntimeGfxArch);
+
         if (profile.RequiresRocmSdk)
         {
             progress?.Report(new ProgressReport(-1f, "Installing ROCm runtime...", isIndeterminate: true));
-            var rocmRuntimeArgs = new PipInstallArgs()
-                .AddKeyedArgs("--index-url", ["--index-url", rocmPackageIndexUrl])
-                .AddArgs("rocm[devel,libraries]");
 
-            if (installedPackage.PipOverrides != null)
-            {
-                rocmRuntimeArgs = rocmRuntimeArgs.WithUserOverrides(installedPackage.PipOverrides);
-            }
+            await WithTemporaryEnvironmentOverrideAsync(
+                    venvRunner,
+                    "SETUPTOOLS_USE_DISTUTILS",
+                    "setuptools",
+                    async () =>
+                    {
+                        if (
+                            torchInstallPolicy is not null
+                            && torchInstallPolicy.PreInstallPackageSpecifiers.Count > 0
+                        )
+                        {
+                            var runtimeBootstrapArgs = BuildSupplementalPreinstallArgs(torchInstallPolicy);
 
-            await venvRunner.PipInstall(rocmRuntimeArgs, onConsoleOutput).ConfigureAwait(false);
+                            if (installedPackage.PipOverrides != null)
+                            {
+                                runtimeBootstrapArgs = runtimeBootstrapArgs.WithUserOverrides(
+                                    installedPackage.PipOverrides
+                                );
+                            }
+
+                            await venvRunner
+                                .PipInstall(runtimeBootstrapArgs, onConsoleOutput)
+                                .ConfigureAwait(false);
+                        }
+
+                        var rocmRuntimeArgs = new PipInstallArgs()
+                            .AddKeyedArgs("--index-url", ["--index-url", rocmPackageIndexUrl])
+                            .AddArg("--no-build-isolation")
+                            .AddArgs("rocm[devel,libraries]");
+
+                        if (installedPackage.PipOverrides != null)
+                        {
+                            rocmRuntimeArgs = rocmRuntimeArgs.WithUserOverrides(
+                                installedPackage.PipOverrides
+                            );
+                        }
+
+                        await venvRunner.PipInstall(rocmRuntimeArgs, onConsoleOutput).ConfigureAwait(false);
+                    }
+                )
+                .ConfigureAwait(false);
 
             progress?.Report(new ProgressReport(-1f, "Initializing ROCm SDK...", isIndeterminate: true));
             await InitializeWindowsNativeRocmSdkAsync(installLocation, onConsoleOutput, cancellationToken)
@@ -214,16 +283,52 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
 
         await venvRunner.PipInstall(requirementsPipArgs, onConsoleOutput).ConfigureAwait(false);
 
+        if (torchInstallPolicy is not null && torchInstallPolicy.PreInstallPackageSpecifiers.Count > 0)
+        {
+            progress?.Report(
+                new ProgressReport(
+                    -1f,
+                    "Installing ROCm torch bootstrap dependencies...",
+                    isIndeterminate: true
+                )
+            );
+
+            var preinstallArgs = BuildSupplementalPreinstallArgs(torchInstallPolicy);
+
+            if (installedPackage.PipOverrides != null)
+            {
+                preinstallArgs = preinstallArgs.WithUserOverrides(installedPackage.PipOverrides);
+            }
+
+            await venvRunner.PipInstall(preinstallArgs, onConsoleOutput).ConfigureAwait(false);
+        }
+
         progress?.Report(new ProgressReport(-1f, "Installing ROCm torch...", isIndeterminate: true));
+        var usePreRelease = torchInstallPolicy?.UsePreRelease ?? true;
+        var forceReinstall = torchInstallPolicy?.ForceReinstall ?? profile.ForceReinstallTorch;
+
         var torchArgs = new PipInstallArgs()
-            .AddArg("--pre")
             .AddArg("--upgrade")
             .AddKeyedArgs("--index-url", ["--index-url", rocmPackageIndexUrl])
             .WithTorch()
             .WithTorchAudio()
             .WithTorchVision();
 
-        if (profile.ForceReinstallTorch)
+        if (usePreRelease)
+        {
+            torchArgs = torchArgs.AddArg("--pre");
+        }
+
+        if (torchInstallPolicy is not null && torchInstallPolicy.SupplementalPackageSpecifiers.Count > 0)
+        {
+            torchArgs = torchArgs.AddArgs(
+                torchInstallPolicy
+                    .SupplementalPackageSpecifiers.Select(specifier => new Argument(specifier))
+                    .ToArray()
+            );
+        }
+
+        if (forceReinstall)
         {
             torchArgs = torchArgs.AddArg("--force-reinstall");
         }
@@ -392,6 +497,81 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
     {
         _ = amdGpus;
         return "No AMD GPU with a supported Windows ROCm architecture was detected.";
+    }
+
+    /// <summary>
+    /// Returns the optional torch install policy when the resolved runtime GFX architecture matches the
+    /// declared activation prefixes.
+    /// </summary>
+    private static HelperManagedTorchInstallPolicy? GetApplicableTorchInstallPolicy(
+        RocmPackageProfile profile,
+        string? runtimeGfxArch
+    )
+    {
+        return profile.TorchCompatibilityMode switch
+        {
+            RocmTorchCompatibilityMode.None => null,
+            RocmTorchCompatibilityMode.HelperManagedDependencyFallback =>
+                GetHelperManagedDependencyFallbackPolicy(runtimeGfxArch),
+            _ => null,
+        };
+    }
+
+    /// <summary>
+    /// Resolves the helper-owned dependency fallback policy for runtime architectures that need borrowed
+    /// transitive dependencies from a supplemental TheRock index.
+    /// </summary>
+    private static HelperManagedTorchInstallPolicy? GetHelperManagedDependencyFallbackPolicy(
+        string? runtimeGfxArch
+    )
+    {
+        if (string.IsNullOrWhiteSpace(runtimeGfxArch))
+            return null;
+
+        return runtimeGfxArch.StartsWith("gfx103", StringComparison.OrdinalIgnoreCase)
+            ? Rdna2BorrowedDependencyFallbackPolicy
+            : null;
+    }
+
+    /// <summary>
+    /// Builds a deterministic preinstall step for borrowed torch bootstrap dependencies using direct
+    /// wheel URLs so the main ROCm package resolution remains on the primary index.
+    /// </summary>
+    private static PipInstallArgs BuildSupplementalPreinstallArgs(HelperManagedTorchInstallPolicy policy)
+    {
+        return new PipInstallArgs()
+            .AddArg("--upgrade")
+            .AddArgs(
+                policy.PreInstallPackageSpecifiers.Select(specifier => new Argument(specifier)).ToArray()
+            );
+    }
+
+    /// <summary>
+    /// Temporarily overrides a venv environment variable for a helper-owned install step and restores the
+    /// previous value afterward.
+    /// </summary>
+    private static async Task WithTemporaryEnvironmentOverrideAsync(
+        IPyVenvRunner venvRunner,
+        string key,
+        string value,
+        Func<Task> action
+    )
+    {
+        venvRunner.EnvironmentVariables.TryGetValue(key, out var originalValue);
+        var hadOriginalValue = venvRunner.EnvironmentVariables.ContainsKey(key);
+
+        venvRunner.UpdateEnvironmentVariables(env => env.SetItem(key, value));
+
+        try
+        {
+            await action().ConfigureAwait(false);
+        }
+        finally
+        {
+            venvRunner.UpdateEnvironmentVariables(env =>
+                hadOriginalValue ? env.SetItem(key, originalValue!) : env.Remove(key)
+            );
+        }
     }
 
     /// <summary>

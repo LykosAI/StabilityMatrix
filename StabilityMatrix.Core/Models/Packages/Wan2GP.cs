@@ -88,7 +88,7 @@ public class Wan2GP(
 
     public override string Disclaimer =>
         IsAmdRocm && Compat.IsWindows
-            ? "AMD GPU support on Windows requires RX 7000 series or newer GPU"
+            ? "Windows AMD ROCm support is experimental. Please report any issues to Stability Matrix first so it can be determined whether the issue is package-specific.\nBecause this setup may not be officially supported by package developers, only contact upstream support for issues clearly caused by the package itself."
             : string.Empty;
 
     /// <summary>

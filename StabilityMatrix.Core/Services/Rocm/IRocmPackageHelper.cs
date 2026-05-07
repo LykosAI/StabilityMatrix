@@ -44,6 +44,11 @@ public interface IRocmPackageHelper
     );
 
     /// <summary>
+    /// Returns shared Windows ROCm launch notice lines for helper-managed packages.
+    /// </summary>
+    IReadOnlyList<string> GetWindowsLaunchNoticeLines();
+
+    /// <summary>
     /// Performs the Windows-native ROCm bootstrap/install flow for a package using helper-resolved gfx-family feed URLs.
     /// </summary>
     Task InstallWindowsNativePackageAsync(

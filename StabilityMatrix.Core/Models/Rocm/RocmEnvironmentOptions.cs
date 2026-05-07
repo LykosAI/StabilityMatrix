@@ -33,7 +33,7 @@ public class RocmEnvironmentOptions
     /// <summary>
     /// When set, configures MIOpen find enforcement behavior for helper-managed ROCm defaults.
     /// </summary>
-    public string? MiopenFindEnforce { get; init; } = "3";
+    public string? MiopenFindEnforce { get; init; } = "1";
 
     /// <summary>
     /// When set, controls whether AMD Triton-backed flash attention is enabled by helper defaults.

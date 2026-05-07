@@ -8,20 +8,18 @@ namespace StabilityMatrix.Core.Models.Rocm;
 /// </summary>
 public class RocmPackageProfile
 {
-    public bool RequiresRocmSdk { get; init; }
-
     /// <summary>
-    /// Requirement files to install after helper-owned ROCm runtime / torch bootstrap steps complete.
+    /// Requirement files to install after helper-owned ROCm torch installation completes.
     /// </summary>
     public IEnumerable<string> RequirementsFilePaths { get; init; } = ["requirements.txt"];
 
     /// <summary>
-    /// Package requirement entries to exclude because the helper installs them from ROCm-specific feeds.
+    /// Package requirement entries to exclude because the helper installs them from the ROCm multi-arch feed.
     /// </summary>
     public string RequirementsExcludePattern { get; init; } = @"(torch(vision|audio)?|xformers)([^a-z].*)?";
 
     /// <summary>
-    /// Extra package-specific pip arguments to include when installing requirements after helper bootstrap.
+    /// Extra package-specific pip arguments to include when installing requirements before the helper-managed torch step.
     /// </summary>
     public IEnumerable<string> ExtraInstallPipArgs { get; init; } = [];
 
@@ -39,13 +37,6 @@ public class RocmPackageProfile
     /// When true, helper-managed torch installs should force reinstall the selected ROCm wheel set.
     /// </summary>
     public bool ForceReinstallTorch { get; init; } = true;
-
-    /// <summary>
-    /// Optional helper-managed compatibility mode for ROCm torch installation.
-    /// The package declares the intent here while the helper resolves any architecture-specific
-    /// fallback indexes or borrowed dependency rules internally.
-    /// </summary>
-    public RocmTorchCompatibilityMode TorchCompatibilityMode { get; init; }
 
     /// <summary>
     /// Optional callback for package-specific environment variables derived from a resolved ROCm context.

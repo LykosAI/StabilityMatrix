@@ -33,7 +33,7 @@ public class Wan2GP(
     IPrerequisiteHelper prerequisiteHelper,
     IPyInstallationManager pyInstallationManager,
     IPipWheelService pipWheelService,
-    IRocmPackageHelper? rocmPackageHelper = null
+    IRocmPackageHelper rocmPackageHelper
 )
     : BaseGitPackage(
         githubApi,
@@ -46,7 +46,6 @@ public class Wan2GP(
 {
     private static readonly RocmPackageProfile WindowsRocmProfile = new()
     {
-        RequiresRocmSdk = true,
         UpgradePackages = true,
         PostInstallPipArgs = ["hf-xet", "setuptools", "numpy==1.26.4"],
     };
@@ -98,13 +97,17 @@ public class Wan2GP(
 
     private bool HasWindowsRocmSupport()
     {
+        return GetWindowsRocmCompatibility().IsCompatible;
+    }
+
+    private RocmCompatibilityResult GetWindowsRocmCompatibility()
+    {
         if (!Compat.IsWindows)
-            return false;
+        {
+            return new RocmCompatibilityResult { IsCompatible = false };
+        }
 
-        if (rocmPackageHelper is null)
-            return HardwareHelper.HasWindowsRocmSupportedGpu();
-
-        return rocmPackageHelper.GetCompatibility(WindowsRocmProfile).IsCompatible;
+        return rocmPackageHelper.GetCompatibility(WindowsRocmProfile);
     }
 
     /// <summary>
@@ -231,13 +234,7 @@ public class Wan2GP(
     {
         // Check for AMD ROCm support (Windows or Linux)
         var preferRocm =
-            (
-                Compat.IsWindows
-                && (
-                    WindowsRocmSupport.IsSupportedGpu(SettingsManager.Settings.PreferredGpu)
-                    || HasWindowsRocmSupport()
-                )
-            )
+            (Compat.IsWindows && HasWindowsRocmSupport())
             || (
                 Compat.IsLinux
                 && (SettingsManager.Settings.PreferredGpu?.IsAmd ?? HardwareHelper.PreferRocm())
@@ -397,13 +394,6 @@ public class Wan2GP(
     {
         if (Compat.IsWindows)
         {
-            if (rocmPackageHelper is null)
-            {
-                throw new InvalidOperationException(
-                    "Windows ROCm installation for Wan2GP requires the shared ROCm helper."
-                );
-            }
-
             await rocmPackageHelper
                 .InstallWindowsNativePackageAsync(
                     venvRunner,
@@ -451,13 +441,9 @@ public class Wan2GP(
         await SetupVenv(installLocation, pythonVersion: PyVersion.Parse(installedPackage.PythonVersion))
             .ConfigureAwait(false);
 
-        if (Compat.IsWindows && rocmPackageHelper is not null && HasWindowsRocmSupport())
+        if (Compat.IsWindows && HasWindowsRocmSupport())
         {
-            var rocmEnvironment = rocmPackageHelper.BuildLaunchEnvironment(
-                installLocation,
-                installedPackage,
-                WindowsRocmProfile
-            );
+            var rocmEnvironment = rocmPackageHelper.BuildLaunchEnvironment(WindowsRocmProfile);
             VenvRunner.UpdateEnvironmentVariables(env => env.SetItems(rocmEnvironment));
         }
 

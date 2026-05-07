@@ -17,31 +17,9 @@ public interface IRocmPackageHelper
     RocmCompatibilityResult GetCompatibility(RocmPackageProfile profile);
 
     /// <summary>
-    /// Resolves the runtime ROCm facts needed for package launch and environment construction.
-    /// </summary>
-    RocmRuntimeContext ResolveRuntimeContext(
-        string installLocation,
-        InstalledPackage installedPackage,
-        RocmPackageProfile profile
-    );
-
-    /// <summary>
-    /// Resolves the ROCm facts needed during package installation or update operations.
-    /// </summary>
-    RocmInstallContext ResolveInstallContext(
-        string installLocation,
-        InstalledPackage installedPackage,
-        RocmPackageProfile profile
-    );
-
-    /// <summary>
     /// Builds a launch-time environment dictionary from resolved ROCm runtime data.
     /// </summary>
-    IReadOnlyDictionary<string, string> BuildLaunchEnvironment(
-        string installLocation,
-        InstalledPackage installedPackage,
-        RocmPackageProfile profile
-    );
+    IReadOnlyDictionary<string, string> BuildLaunchEnvironment(RocmPackageProfile profile);
 
     /// <summary>
     /// Returns shared Windows ROCm launch notice lines for helper-managed packages.
@@ -49,7 +27,7 @@ public interface IRocmPackageHelper
     IReadOnlyList<string> GetWindowsLaunchNoticeLines();
 
     /// <summary>
-    /// Performs the Windows-native ROCm bootstrap/install flow for a package using helper-resolved gfx-family feed URLs.
+    /// Performs the Windows-native ROCm install flow for a package using helper-resolved multi-arch device extras.
     /// </summary>
     Task InstallWindowsNativePackageAsync(
         IPyVenvRunner venvRunner,

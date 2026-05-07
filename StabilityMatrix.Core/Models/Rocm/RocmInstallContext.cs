@@ -7,5 +7,5 @@ public class RocmInstallContext
 {
     public string? RuntimeGfxArch { get; init; }
 
-    public string? RocmPackageIndexUrl { get; init; }
+    public string? MultiArchDeviceExtra { get; init; }
 }

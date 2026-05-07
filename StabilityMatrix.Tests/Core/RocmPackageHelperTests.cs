@@ -10,53 +10,27 @@ namespace StabilityMatrix.Tests.Core;
 public class RocmPackageHelperTests
 {
     [TestMethod]
-    public void GetRocmSdkDevelAlignmentVersion_ReturnsRocmVersion_WhenVersionsMismatch()
+    public void WindowsRocmSupport_TryGetMultiArchDeviceExtra_ReturnsExpectedExtra_ForSupportedArch()
     {
-        var targetVersion = RocmPackageHelper.GetRocmSdkDevelAlignmentVersion(
-            rocmVersion: "7.13.0a20260416",
-            rocmSdkDevelVersion: "7.13.0a20260501"
-        );
+        var deviceExtra = WindowsRocmSupport.TryGetMultiArchDeviceExtra("gfx1201");
 
-        Assert.AreEqual("7.13.0a20260416", targetVersion);
+        Assert.AreEqual("device-gfx1201", deviceExtra);
     }
 
     [TestMethod]
-    public void GetRocmSdkDevelAlignmentVersion_ReturnsNull_WhenVersionsAlreadyMatch()
+    public void WindowsRocmSupport_TryGetMultiArchDeviceExtra_ReturnsExpectedExtra_ForCanonicalVega20Arch()
     {
-        var targetVersion = RocmPackageHelper.GetRocmSdkDevelAlignmentVersion(
-            rocmVersion: "7.13.0a20260416",
-            rocmSdkDevelVersion: "7.13.0a20260416"
-        );
+        var deviceExtra = WindowsRocmSupport.TryGetMultiArchDeviceExtra("gfx906");
 
-        Assert.IsNull(targetVersion);
+        Assert.AreEqual("device-gfx906", deviceExtra);
     }
 
     [TestMethod]
-    public void GetRocmSdkDevelAlignmentVersion_FallsBackToTorchBuildVersion()
+    public void WindowsRocmSupport_TryGetCanonicalArchitecture_ReturnsCanonicalArch_WhenAlreadyCanonical()
     {
-        var targetVersion = RocmPackageHelper.GetRocmSdkDevelAlignmentVersion(
-            rocmVersion: null,
-            rocmSdkDevelVersion: "7.13.0a20260501",
-            torchVersion: "2.11.0+rocm7.13.0a20260416"
-        );
+        var canonicalArch = WindowsRocmSupport.TryGetCanonicalArchitecture("gfx906");
 
-        Assert.AreEqual("7.13.0a20260416", targetVersion);
-    }
-
-    [TestMethod]
-    public void TryExtractRocmBuildVersion_ReturnsNull_WhenTorchVersionHasNoRocmTag()
-    {
-        var rocmBuildVersion = RocmPackageHelper.TryExtractRocmBuildVersion("2.11.0");
-
-        Assert.IsNull(rocmBuildVersion);
-    }
-
-    [TestMethod]
-    public void TryExtractRocmBuildVersion_ReturnsVersionSuffix_WhenTorchVersionContainsRocmTag()
-    {
-        var rocmBuildVersion = RocmPackageHelper.TryExtractRocmBuildVersion("2.11.0+rocm7.13.0a20260416");
-
-        Assert.AreEqual("7.13.0a20260416", rocmBuildVersion);
+        Assert.AreEqual("gfx906", canonicalArch);
     }
 
     [TestMethod]
@@ -125,45 +99,11 @@ public class RocmPackageHelperTests
     }
 
     [TestMethod]
-    public void TryGetWindowsNativeRocmRuntimeFailureReason_ReturnsDeviceDetectionMessage()
+    public void WindowsRocmSupport_TryGetMultiArchDeviceExtra_ReturnsExpectedExtra_ForKrakenPoint()
     {
-        const string output = "checkHipErrors() HIP API error = 0100 \"no ROCm-capable device is detected\"";
+        var deviceExtra = WindowsRocmSupport.TryGetMultiArchDeviceExtra("gfx1152");
 
-        var reason = RocmPackageHelper.TryGetWindowsNativeRocmRuntimeFailureReason(output);
-
-        Assert.AreEqual(
-            "the installed ROCm runtime could not detect a ROCm-capable GPU on this system.",
-            reason
-        );
-    }
-
-    [TestMethod]
-    public void TryGetWindowsNativeRocmRuntimeFailureReason_ReturnsWddmMessage()
-    {
-        const string output = "warning: No WDDM adapters found.";
-
-        var reason = RocmPackageHelper.TryGetWindowsNativeRocmRuntimeFailureReason(output);
-
-        Assert.AreEqual(
-            "the ROCm runtime could not find any compatible WDDM adapters for the current GPU/driver stack.",
-            reason
-        );
-    }
-
-    [TestMethod]
-    public void CombineProcessOutput_JoinsStdoutAndStderr()
-    {
-        var combined = RocmPackageHelper.CombineProcessOutput("stdout line", "stderr line");
-
-        Assert.AreEqual($"stdout line{Environment.NewLine}stderr line", combined);
-    }
-
-    [TestMethod]
-    public void WindowsRocmSupport_TryGetPackageIndexUrl_ReturnsExpectedIndex_ForKrakenPoint()
-    {
-        var indexUrl = WindowsRocmSupport.TryGetPackageIndexUrl("gfx1152");
-
-        Assert.AreEqual("https://rocm.nightlies.amd.com/v2-staging/gfx1152/", indexUrl);
+        Assert.AreEqual("device-gfx1152", deviceExtra);
     }
 
     [TestMethod]

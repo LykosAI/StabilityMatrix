@@ -377,10 +377,13 @@ public class ComfyUI(
 
         if (Compat.IsWindows && torchIndex == TorchIndex.Rocm && HasWindowsRocmSupport())
         {
+            // This is an internal guard for a wiring/configuration failure.
+            // It can only trigger when Windows ROCm support was detected, but this ComfyUI instance was created
+            // without the shared ROCm helper (for example via a manual construction path that omitted the dependency).
             if (rocmPackageHelper is null)
             {
                 throw new InvalidOperationException(
-                    "Windows ROCm installation requires the shared ROCm helper to resolve gfx-specific index URLs."
+                    "Windows ROCm installation encountered an internal configuration error [rocmPackageHelper is null]. Please restart Stability Matrix and try again. If the issue persists, please report it to Stability Matrix."
                 );
             }
 
@@ -599,7 +602,10 @@ public class ComfyUI(
         Action<ProcessOutput>? onConsoleOutput
     )
     {
-        if (!ShouldShowWindowsRocmLaunchNotice(installedPackage) || rocmPackageHelper is null)
+        if (rocmPackageHelper is null)
+            return;
+
+        if (!ShouldShowWindowsRocmLaunchNotice(installedPackage))
             return;
 
         foreach (var line in rocmPackageHelper.GetWindowsLaunchNoticeLines())
@@ -610,7 +616,7 @@ public class ComfyUI(
 
     private bool ShouldShowWindowsRocmLaunchNotice(InstalledPackage installedPackage)
     {
-        if (!Compat.IsWindows || rocmPackageHelper is null || !HasWindowsRocmSupport())
+        if (!Compat.IsWindows || !HasWindowsRocmSupport())
             return false;
 
         var torchIndex = installedPackage.PreferredTorchIndex ?? GetRecommendedTorchVersion();
@@ -634,11 +640,9 @@ public class ComfyUI(
     /// Windows ROCm install profile for ComfyUI.
     private static readonly RocmPackageProfile WindowsRocmProfile = new()
     {
-        RequiresRocmSdk = true,
         ExtraInstallPipArgs = ["numpy<2"],
         PostInstallPipArgs = ["typing-extensions>=4.15.0"],
         UpgradePackages = true,
-        TorchCompatibilityMode = RocmTorchCompatibilityMode.HelperManagedDependencyFallback,
         ExtraEnvironmentFactory = BuildComfyWindowsRocmEnvironment,
     };
 
@@ -654,30 +658,28 @@ public class ComfyUI(
     /// Uses the shared ROCm helper for Windows ROCm eligibility checks so ComfyUI does not maintain its own support matrix.
     private bool HasWindowsRocmSupport()
     {
-        if (!Compat.IsWindows)
-            return false;
+        return GetWindowsRocmCompatibility().IsCompatible;
+    }
 
-        if (rocmPackageHelper is null)
-            return false;
+    private RocmCompatibilityResult GetWindowsRocmCompatibility()
+    {
+        if (!Compat.IsWindows || rocmPackageHelper is null)
+        {
+            return new RocmCompatibilityResult { IsCompatible = false };
+        }
 
-        var compatibility = rocmPackageHelper.GetCompatibility(WindowsRocmProfile);
-
-        return compatibility.IsCompatible;
+        return rocmPackageHelper.GetCompatibility(WindowsRocmProfile);
     }
 
     /// Defaults legacy Windows ROCm GPUs to quad cross-attention because PyTorch cross-attention is considerably slower
     /// and not as supported on older AMD architectures.
     private bool DefaultToQuadCrossAttention()
     {
-        if (!Compat.IsWindows || !HasWindowsRocmSupport())
+        var compatibility = GetWindowsRocmCompatibility();
+        if (!compatibility.IsCompatible)
             return false;
 
-        var gpu = SettingsManager.Settings.PreferredGpu;
-        var gfxArch = WindowsRocmSupport.IsSupportedGpu(gpu)
-            ? gpu?.GetAmdGfxArch()
-            : HardwareHelper.GetWindowsRocmSupportedGpu()?.GetAmdGfxArch();
-
-        return WindowsRocmSupport.PreferLegacyAttentionFallback(gfxArch);
+        return WindowsRocmSupport.PreferLegacyAttentionFallback(compatibility.ResolvedGfxArch);
     }
 
     public override IPackageExtensionManager ExtensionManager =>
@@ -1042,17 +1044,11 @@ public class ComfyUI(
         if (!Compat.IsWindows || !hasRocmGpu)
             return env;
 
-        if (rocmPackageHelper is not null)
-        {
-            var rocmEnvironment = rocmPackageHelper.BuildLaunchEnvironment(
-                installLocation,
-                installedPackage,
-                WindowsRocmProfile
-            );
+        if (rocmPackageHelper is null)
+            return env;
 
-            return env.SetItems(rocmEnvironment);
-        }
+        var rocmEnvironment = rocmPackageHelper.BuildLaunchEnvironment(WindowsRocmProfile);
 
-        return env;
+        return env.SetItems(rocmEnvironment);
     }
 }

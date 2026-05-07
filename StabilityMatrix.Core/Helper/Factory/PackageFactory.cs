@@ -287,7 +287,8 @@ public class PackageFactory : IPackageFactory
                 downloadService,
                 prerequisiteHelper,
                 pyInstallationManager,
-                pipWheelService
+                pipWheelService,
+                rocmPackageHelper
             ),
             _ => throw new ArgumentOutOfRangeException(nameof(installedPackage)),
         };

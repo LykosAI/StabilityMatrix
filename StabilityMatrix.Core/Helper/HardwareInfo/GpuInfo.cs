@@ -129,9 +129,9 @@ public record GpuInfo
             _ when Has("5500") => "gfx1012",
 
             // Vega/GCN5 Dedicated GPUs
-            _ when Has("pro vii") || HasNoSpace("provii") => "gfx90X",
             _ when Has("rx vega") || Has("vega 64") || Has("vega 56") || Has("vega frontier") => "gfx900",
-            _ when Has("radeon vii") || HasNoSpace("radeonvii") => "gfx906",
+            _ when Has("radeon vii") || HasNoSpace("radeonvii") || Has("pro vii") || HasNoSpace("provii") =>
+                "gfx906",
             _ => null,
         };
 

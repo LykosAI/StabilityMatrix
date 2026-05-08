@@ -115,7 +115,7 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
         var compatibility = GetCompatibility(profile);
         if (!compatibility.IsCompatible)
         {
-            throw new ApplicationException(
+            throw new InvalidOperationException(
                 compatibility.FailureReason
                     ?? "Windows ROCm installation is not supported for the current machine."
             );

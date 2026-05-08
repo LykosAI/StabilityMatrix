@@ -31,7 +31,7 @@ jobs:
           path-to-document: 'https://lykos.ai/cla'
           # branch should not be protected
           branch: 'main'
-          allowlist: ionite34,mohnjiles,claude,bot*
+          allowlist: ionite34,mohnjiles,claude,copilot,bot*
           # the followings are the optional inputs - If the optional inputs are not given, then default values will be taken
           remote-organization-name: LykosAI
           remote-repository-name: clabot-config

@@ -10,9 +10,11 @@ using StabilityMatrix.Core.Models.FDS;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Packages.Config;
 using StabilityMatrix.Core.Models.Progress;
+using StabilityMatrix.Core.Models.Rocm;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
+using StabilityMatrix.Core.Services.Rocm;
 
 namespace StabilityMatrix.Core.Models.Packages;
 
@@ -23,7 +25,8 @@ public class StableSwarm(
     IDownloadService downloadService,
     IPrerequisiteHelper prerequisiteHelper,
     IPyInstallationManager pyInstallationManager,
-    IPipWheelService pipWheelService
+    IPipWheelService pipWheelService,
+    IRocmPackageHelper rocmPackageHelper
 )
     : BaseGitPackage(
         githubApi,
@@ -407,6 +410,7 @@ public class StableSwarm(
         }
 
         aspEnvVars.Update(settingsManager.Settings.EnvironmentVariables);
+        aspEnvVars.Update(BuildLinkedComfyLaunchEnvironment()); // Windows ROCm ComfyUI env var pass-through
 
         void HandleConsoleOutput(ProcessOutput s)
         {
@@ -561,6 +565,50 @@ public class StableSwarm(
                 onProcessOutput: onConsoleOutput
             )
             .ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Resolves the Comfy backend that Swarm is expected to self-launch.
+    /// </summary>
+    private InstalledPackage? TryResolveLinkedComfyBackend()
+    {
+        return settingsManager.Settings.InstalledPackages.FirstOrDefault(x =>
+            x.PackageName is nameof(ComfyUI) or "ComfyUI-Zluda"
+        );
+    }
+
+    /// <summary>
+    /// Builds ROCm launch environment variables for Swarm so they flow through to its self-launched Comfy backend.
+    /// </summary>
+    private IReadOnlyDictionary<string, string> BuildLinkedComfyLaunchEnvironment()
+    {
+        var comfyPackage = TryResolveLinkedComfyBackend();
+        if (comfyPackage is null || !ShouldInjectLinkedComfyRocmEnvironment(comfyPackage))
+        {
+            return new Dictionary<string, string>();
+        }
+
+        return rocmPackageHelper.BuildLaunchEnvironment(ComfyWindowsRocmProfile.Profile);
+    }
+
+    /// <summary>
+    /// Returns true only when the linked backend is standard ComfyUI on a supported Windows ROCm path.
+    /// </summary>
+    private bool ShouldInjectLinkedComfyRocmEnvironment(InstalledPackage comfyPackage)
+    {
+        if (!Compat.IsWindows || comfyPackage.PackageName != nameof(ComfyUI))
+        {
+            return false;
+        }
+
+        var compatibility = rocmPackageHelper.GetCompatibility(ComfyWindowsRocmProfile.Profile);
+        if (!compatibility.IsCompatible)
+        {
+            return false;
+        }
+
+        var selectedTorchIndex = comfyPackage.PreferredTorchIndex ?? TorchIndex.Rocm;
+        return selectedTorchIndex == TorchIndex.Rocm;
     }
 
     private Task SetupModelFoldersConfig(DirectoryPath installDirectory)

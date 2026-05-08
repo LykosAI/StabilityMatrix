@@ -159,7 +159,8 @@ public class PackageFactory : IPackageFactory
                 downloadService,
                 prerequisiteHelper,
                 pyInstallationManager,
-                pipWheelService
+                pipWheelService,
+                rocmPackageHelper
             ),
             "automatic" => new VladAutomatic(
                 githubApiCache,

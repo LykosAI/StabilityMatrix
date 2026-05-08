@@ -392,7 +392,7 @@ public class ComfyUI(
                     venvRunner,
                     installLocation,
                     installedPackage,
-                    WindowsRocmProfile,
+                    ComfyWindowsRocmProfile.Profile,
                     progress,
                     onConsoleOutput,
                     cancellationToken
@@ -637,24 +637,6 @@ public class ComfyUI(
         return base.GetRecommendedTorchVersion();
     }
 
-    /// Windows ROCm install profile for ComfyUI.
-    private static readonly RocmPackageProfile WindowsRocmProfile = new()
-    {
-        ExtraInstallPipArgs = ["numpy<2"],
-        PostInstallPipArgs = ["typing-extensions>=4.15.0"],
-        UpgradePackages = true,
-        ExtraEnvironmentFactory = BuildComfyWindowsRocmEnvironment,
-    };
-
-    private static IReadOnlyDictionary<string, string> BuildComfyWindowsRocmEnvironment(
-        RocmRuntimeContext runtimeContext
-    )
-    {
-        return WindowsRocmSupport.IsModernArchitecture(runtimeContext.RuntimeGfxArch)
-            ? new Dictionary<string, string> { ["COMFYUI_ENABLE_MIOPEN"] = "1" }
-            : new Dictionary<string, string>();
-    }
-
     /// Uses the shared ROCm helper for Windows ROCm eligibility checks so ComfyUI does not maintain its own support matrix.
     private bool HasWindowsRocmSupport()
     {
@@ -668,7 +650,7 @@ public class ComfyUI(
             return new RocmCompatibilityResult { IsCompatible = false };
         }
 
-        return rocmPackageHelper.GetCompatibility(WindowsRocmProfile);
+        return rocmPackageHelper.GetCompatibility(ComfyWindowsRocmProfile.Profile);
     }
 
     /// Defaults legacy Windows ROCm GPUs to quad cross-attention because PyTorch cross-attention is considerably slower
@@ -1047,7 +1029,7 @@ public class ComfyUI(
         if (rocmPackageHelper is null)
             return env;
 
-        var rocmEnvironment = rocmPackageHelper.BuildLaunchEnvironment(WindowsRocmProfile);
+        var rocmEnvironment = rocmPackageHelper.BuildLaunchEnvironment(ComfyWindowsRocmProfile.Profile);
 
         return env.SetItems(rocmEnvironment);
     }

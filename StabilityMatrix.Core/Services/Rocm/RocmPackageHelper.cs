@@ -492,7 +492,7 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
         SetIfNotNull(environment, "MIOPEN_FIND_ENFORCE", options.MiopenFindEnforce);
         SetIfNotNull(environment, "PYTORCH_ALLOC_CONF", options.PyTorchAllocConf);
 
-        if (options.ApplyAotritonExperimental && WindowsRocmSupport.IsModernArchitecture(gfxArch))
+        if (options.ApplyAotritonExperimental && WindowsRocmSupport.SupportsAotritonExperimental(gfxArch))
         {
             environment["TORCH_ROCM_AOTRITON_ENABLE_EXPERIMENTAL"] = "1";
         }

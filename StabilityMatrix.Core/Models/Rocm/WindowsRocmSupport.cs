@@ -11,6 +11,14 @@ public static class WindowsRocmSupport
     public const string MultiArchPythonPackageIndexUrl =
         "https://rocm.nightlies.amd.com/whl-staging-multi-arch/";
 
+    // Used to exclude modern gfxarches from AOTriton activation EnVar as AOTriton does not currently support them.
+    // This is a temporary measure until AOTriton adds support for these architectures.
+    private static readonly HashSet<string> AotritonExperimentalExcludedArchitectures =
+    [
+        "gfx1152",
+        "gfx1153",
+    ];
+
     public static bool IsSupportedGpu(GpuInfo? gpu)
     {
         if (gpu is null || !gpu.IsAmd || string.IsNullOrWhiteSpace(gpu.Name))
@@ -29,6 +37,14 @@ public static class WindowsRocmSupport
         return gfxArch?.StartsWith("gfx110", StringComparison.OrdinalIgnoreCase) == true
             || gfxArch?.StartsWith("gfx115", StringComparison.OrdinalIgnoreCase) == true
             || gfxArch?.StartsWith("gfx120", StringComparison.OrdinalIgnoreCase) == true;
+    }
+
+    public static bool SupportsAotritonExperimental(string? gfxArch)
+    {
+        var canonicalArch = TryGetCanonicalArchitecture(gfxArch);
+        return canonicalArch is not null
+            && IsModernArchitecture(canonicalArch)
+            && !AotritonExperimentalExcludedArchitectures.Contains(canonicalArch);
     }
 
     public static bool IsLegacyArchitecture(string? gfxArch)

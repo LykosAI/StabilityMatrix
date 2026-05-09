@@ -36,6 +36,14 @@ public sealed partial class CivArchiveBrowserViewModel(
     private bool filterOptionsLoaded;
     private bool searchQueued;
     private int currentPage = 1;
+    private CancellationTokenSource? searchDebounceCts;
+
+    /// <summary>
+    /// How long to wait after the most recent filter change before firing the search.
+    /// Kept settable (not a const) so unit tests can collapse it to <see cref="TimeSpan.Zero"/>
+    /// instead of waiting hundreds of ms per assertion.
+    /// </summary>
+    public TimeSpan SearchDebounceInterval { get; set; } = TimeSpan.FromMilliseconds(300);
 
     /// <summary>
     /// All search results we've fetched so far across pages, regardless of client-side filters.
@@ -94,6 +102,25 @@ public sealed partial class CivArchiveBrowserViewModel(
         AllBaseModels.Count == 0
             ? string.Empty
             : $"{AllBaseModels.Count(x => x.IsSelected)} of {AllBaseModels.Count} selected";
+
+    /// <summary>
+    /// True when a partial selection is active — at least one selected and at least one
+    /// deselected. The "all selected" stock state and the "none selected" degenerate state
+    /// both render plain (no badge), since neither is a meaningful filter to surface.
+    /// </summary>
+    public bool HasModelTypeFilter =>
+        AllModelTypes.Count > 0
+        && AllModelTypes.Any(x => x.IsSelected)
+        && AllModelTypes.Any(x => !x.IsSelected);
+
+    public bool HasBaseModelFilter =>
+        AllBaseModels.Count > 0
+        && AllBaseModels.Any(x => x.IsSelected)
+        && AllBaseModels.Any(x => !x.IsSelected);
+
+    public int SelectedModelTypeCount => AllModelTypes.Count(x => x.IsSelected);
+
+    public int SelectedBaseModelCount => AllBaseModels.Count(x => x.IsSelected);
 
     [ObservableProperty]
     private string searchQuery = string.Empty;
@@ -252,7 +279,49 @@ public sealed partial class CivArchiveBrowserViewModel(
         EventManager.Instance.ModelIndexChanged += indexHandler;
         AddDisposable(Disposable.Create(() => EventManager.Instance.ModelIndexChanged -= indexHandler));
 
+        // Cancel any pending debounced search when the VM is disposed.
+        AddDisposable(
+            Disposable.Create(() =>
+            {
+                searchDebounceCts?.Cancel();
+                searchDebounceCts?.Dispose();
+                searchDebounceCts = null;
+            })
+        );
+
+        // Filter options (Model Type / Base Model dropdown contents) only come back
+        // populated when the URL has no query string, so we have to fetch them with a
+        // dedicated parameterless call before the first filtered search runs.
+        await LoadFilterOptionsAsync();
+
         await SearchModels();
+    }
+
+    private async Task LoadFilterOptionsAsync()
+    {
+        if (filterOptionsLoaded)
+        {
+            return;
+        }
+
+        try
+        {
+            var options = await civArchiveApiClient.GetFilterOptionsAsync();
+            ApplyFilterOptions(options);
+            filterOptionsLoaded = true;
+        }
+        catch (Exception ex)
+        {
+            // Don't block the search itself — failure here just means the multi-select
+            // dropdowns stay empty until the user reloads the page.
+            NoResultsText = ex.Message;
+        }
+        finally
+        {
+            // ApplyFilterOptions sets suppressSearch=true while it populates the option
+            // collections; release it before the real search runs so user input flows.
+            suppressSearch = false;
+        }
     }
 
     partial void OnHideInstalledModelsChanged(bool value) => RebuildVisibleResults();
@@ -285,9 +354,60 @@ public sealed partial class CivArchiveBrowserViewModel(
         OnPropertyChanged(nameof(IsEndOfResults));
     }
 
+    /// <summary>
+    /// Cancel any pending debounced search and start a new wait window. The actual
+    /// search runs once the user pauses for <see cref="SearchDebounceInterval"/> —
+    /// multiple rapid filter changes within that window collapse into a single fetch.
+    /// </summary>
+    private void RequestDebouncedSearch()
+    {
+        if (suppressSearch)
+        {
+            return;
+        }
+
+        SaveSettings();
+
+        if (!HasSearched)
+        {
+            return;
+        }
+
+        searchDebounceCts?.Cancel();
+        searchDebounceCts?.Dispose();
+
+        var cts = new CancellationTokenSource();
+        searchDebounceCts = cts;
+
+        _ = RunDebouncedSearchAsync(cts.Token);
+    }
+
+    private async Task RunDebouncedSearchAsync(CancellationToken token)
+    {
+        try
+        {
+            await Task.Delay(SearchDebounceInterval, token);
+        }
+        catch (TaskCanceledException)
+        {
+            return;
+        }
+
+        if (token.IsCancellationRequested)
+        {
+            return;
+        }
+
+        await SearchModels();
+    }
+
     [RelayCommand]
     private async Task SearchModels(bool isInfiniteScroll = false)
     {
+        // Cancel any pending debounced search so an explicit invocation (search button,
+        // ResetFilters, etc.) doesn't get shadowed by a redundant fire moments later.
+        searchDebounceCts?.Cancel();
+
         if (IsLoading)
         {
             if (!isInfiniteScroll)
@@ -320,31 +440,6 @@ public sealed partial class CivArchiveBrowserViewModel(
         try
         {
             var response = await civArchiveApiClient.SearchAsync(filters);
-
-            if (!filterOptionsLoaded)
-            {
-                ApplyFilterOptions(response.FilterOptions);
-                filterOptionsLoaded = true;
-
-                // ApplyFilterOptions sets suppressSearch=true while populating the option
-                // collections. Only re-fetch if the user actually has saved selections
-                // (Types/BaseModels) that we couldn't apply on the first call — for a
-                // first-run user with no saved selections the initial response is already
-                // correct and a second fetch is wasted bandwidth.
-                var savedOptions = settingsManager.Settings.CivArchiveBrowserOptions;
-                var hasSelections =
-                    savedOptions.SelectedModelTypes.Count > 0 || savedOptions.SelectedBaseModels.Count > 0;
-
-                if (!isInfiniteScroll && suppressSearch && hasSelections)
-                {
-                    suppressSearch = false;
-                    response = await civArchiveApiClient.SearchAsync(BuildFilters(currentPage));
-                }
-                else
-                {
-                    suppressSearch = false;
-                }
-            }
 
             TotalHits = response.TotalHits;
             currentPage = response.EffectiveFilters.Page;
@@ -613,11 +708,15 @@ public sealed partial class CivArchiveBrowserViewModel(
         {
             ApplyModelTypeFilter();
             OnPropertyChanged(nameof(ModelTypeSelectionSummary));
+            OnPropertyChanged(nameof(HasModelTypeFilter));
+            OnPropertyChanged(nameof(SelectedModelTypeCount));
         }
         else if (ReferenceEquals(target, AllBaseModels))
         {
             ApplyBaseModelFilter();
             OnPropertyChanged(nameof(BaseModelSelectionSummary));
+            OnPropertyChanged(nameof(HasBaseModelFilter));
+            OnPropertyChanged(nameof(SelectedBaseModelCount));
         }
     }
 
@@ -756,7 +855,7 @@ public sealed partial class CivArchiveBrowserViewModel(
         );
     }
 
-    private async void OnSelectableOptionChanged(object? sender, PropertyChangedEventArgs e)
+    private void OnSelectableOptionChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName != nameof(BaseModelOptionViewModel.IsSelected))
         {
@@ -765,18 +864,12 @@ public sealed partial class CivArchiveBrowserViewModel(
 
         OnPropertyChanged(nameof(ModelTypeSelectionSummary));
         OnPropertyChanged(nameof(BaseModelSelectionSummary));
+        OnPropertyChanged(nameof(HasModelTypeFilter));
+        OnPropertyChanged(nameof(HasBaseModelFilter));
+        OnPropertyChanged(nameof(SelectedModelTypeCount));
+        OnPropertyChanged(nameof(SelectedBaseModelCount));
 
-        if (suppressSearch)
-        {
-            return;
-        }
-
-        SaveSettings();
-
-        if (HasSearched)
-        {
-            await SearchModels();
-        }
+        RequestDebouncedSearch();
     }
 
     partial void OnSelectedPlatformChanged(NamedOption<CivArchivePlatformOption>? value) =>
@@ -793,18 +886,5 @@ public sealed partial class CivArchiveBrowserViewModel(
 
     partial void OnSelectedKindChanged(NamedOption<CivArchiveKindOption>? value) => TriggerFilterSearch();
 
-    private async void TriggerFilterSearch()
-    {
-        if (suppressSearch)
-        {
-            return;
-        }
-
-        SaveSettings();
-
-        if (HasSearched)
-        {
-            await SearchModels();
-        }
-    }
+    private void TriggerFilterSearch() => RequestDebouncedSearch();
 }

@@ -96,6 +96,17 @@ public class TestCivArchiveApiClient : ICivArchiveApiClient
         );
     }
 
+    public Task<CivArchiveFilterOptions> GetFilterOptionsAsync(CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult(
+            new CivArchiveFilterOptions
+            {
+                BaseModels = ["Illustrious", "Pony"],
+                ModelTypes = ["LORA", "Checkpoint"],
+            }
+        );
+    }
+
     public Task<CivArchiveModelDetailsResponse> GetModelDetailsAsync(
         string relativeUrl,
         CancellationToken cancellationToken = default

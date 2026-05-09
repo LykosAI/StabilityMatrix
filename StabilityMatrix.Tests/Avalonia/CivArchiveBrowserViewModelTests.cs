@@ -45,6 +45,9 @@ public class CivArchiveBrowserViewModelTests
             });
 
         var vm = CreateViewModel(apiClient, out _, out _);
+        // Collapse the debounce so the sort-change re-fetch happens within the test
+        // window instead of after the production-default 300ms idle delay.
+        vm.SearchDebounceInterval = TimeSpan.Zero;
         vm.OnLoaded();
 
         await vm.SearchModelsCommand.ExecuteAsync(false);
@@ -147,12 +150,19 @@ public class CivArchiveBrowserViewModelTests
             });
 
         var vm = CreateViewModel(apiClient, out _, out _);
+        vm.SearchDebounceInterval = TimeSpan.Zero;
         vm.OnLoaded();
 
         await vm.SearchModelsCommand.ExecuteAsync(false);
 
         var loadingSearch = vm.SearchModelsCommand.ExecuteAsync(false);
         vm.SelectedSort = vm.AllSorts.First(x => x.Value == CivArchiveSortOption.Newest);
+
+        // Let the debounced fire-and-forget task spin up: it'll await Task.Delay(0),
+        // call SearchModels, see IsLoading=true, and set searchQueued. After the
+        // delayed in-flight call completes, the queued mechanism re-fires with the
+        // newest sort.
+        await Task.Delay(50);
 
         delayedResponse.SetResult(CreateSearchResponse(1));
         await loadingSearch;

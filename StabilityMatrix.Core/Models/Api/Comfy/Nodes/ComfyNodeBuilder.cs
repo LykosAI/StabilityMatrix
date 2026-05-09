@@ -562,6 +562,18 @@ public class ComfyNodeBuilder
         public int BatchSize { get; init; } = 1;
     }
 
+    public record EmptyFlux2LatentImage : ComfyTypedNodeBase<LatentNodeConnection>
+    {
+        [Range(16, MaxResolution)]
+        public int Width { get; init; } = 1024;
+
+        [Range(16, MaxResolution)]
+        public int Height { get; init; } = 1024;
+
+        [Range(1, 4096)]
+        public int BatchSize { get; init; } = 1;
+    }
+
     public record RandomNoise : ComfyTypedNodeBase<NoiseNodeConnection>
     {
         [Range(0, int.MaxValue)]
@@ -578,6 +590,18 @@ public class ComfyNodeBuilder
 
         [Range(0.0d, 1.0d)]
         public double Denoise { get; init; } = 1.0;
+    }
+
+    public record Flux2Scheduler : ComfyTypedNodeBase<SigmasNodeConnection>
+    {
+        [Range(1, 10000)]
+        public int Steps { get; init; } = 20;
+
+        [Range(16, MaxResolution)]
+        public int Width { get; init; } = 1024;
+
+        [Range(16, MaxResolution)]
+        public int Height { get; init; } = 1024;
     }
 
     public record SamplerCustomAdvanced : ComfyTypedNodeBase<LatentNodeConnection, LatentNodeConnection>

@@ -12,6 +12,7 @@ using DynamicData.Binding;
 using FuzzySharp;
 using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
@@ -66,6 +67,11 @@ public partial class ModelPickerDialogViewModel : ContentDialogViewModelBase
     /// Gets or sets the model source to use. Set before showing the dialog.
     /// </summary>
     public ModelPickerSource Source { get; set; } = ModelPickerSource.CheckpointAndUnet;
+
+    /// <summary>
+    /// Optional workflow hint from Inference model cards. Used to open near compatible models.
+    /// </summary>
+    public InferenceWorkflowProfile PreferredWorkflowProfile { get; set; } = InferenceWorkflowProfile.Auto;
 
     [ObservableProperty]
     private string title = "Select Model";
@@ -214,6 +220,8 @@ public partial class ModelPickerDialogViewModel : ContentDialogViewModelBase
             ShowUnetsOnly = true;
         if (preShowCheckpoints)
             ShowCheckpointsOnly = true;
+
+        ApplyPreferredWorkflowProfileFilters();
 
         // Populate models in background after dialog appears to reduce opening hitch.
         Dispatcher.UIThread.Post(RefreshAllModels, DispatcherPriority.Background);
@@ -434,7 +442,7 @@ public partial class ModelPickerDialogViewModel : ContentDialogViewModelBase
 
     private void SaveFilterStateForCurrentSource()
     {
-        if (isApplyingSavedFilterState)
+        if (isApplyingSavedFilterState || PreferredWorkflowProfile is not InferenceWorkflowProfile.Auto)
             return;
 
         var selectedBaseModels =
@@ -455,6 +463,41 @@ public partial class ModelPickerDialogViewModel : ContentDialogViewModelBase
             s.ModelPickerFilterStates ??= [];
             s.ModelPickerFilterStates[GetSourceKey()] = state;
         });
+    }
+
+    private void ApplyPreferredWorkflowProfileFilters()
+    {
+        if (
+            Source is not ModelPickerSource.CheckpointAndUnet
+            || PreferredWorkflowProfile is InferenceWorkflowProfile.Auto or InferenceWorkflowProfile.Custom
+        )
+        {
+            return;
+        }
+
+        if (PreferredWorkflowProfile is InferenceWorkflowProfile.DefaultCheckpoint)
+        {
+            ShowCheckpointsOnly = true;
+            return;
+        }
+
+        ShowUnetsOnly = true;
+        pendingSelectedBaseModels = GetPreferredBaseModels(PreferredWorkflowProfile)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+    }
+
+    private static IEnumerable<string> GetPreferredBaseModels(InferenceWorkflowProfile profile)
+    {
+        return profile switch
+        {
+            InferenceWorkflowProfile.Flux => ["Flux.1"],
+            InferenceWorkflowProfile.Flux2 => ["Flux.2"],
+            InferenceWorkflowProfile.ZImageBase => ["ZImageBase"],
+            InferenceWorkflowProfile.ZImageTurbo => ["ZImageTurbo"],
+            InferenceWorkflowProfile.Anima => ["Anima"],
+            InferenceWorkflowProfile.HiDream => ["HiDream"],
+            _ => [],
+        };
     }
 
     private void UpdateFilteredModels()

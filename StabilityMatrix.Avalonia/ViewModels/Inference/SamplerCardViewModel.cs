@@ -304,7 +304,11 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
         }
     }
 
-    public void ApplyStepsInitialCustomSampler(ModuleApplyStepEventArgs e, bool useFluxGuidance)
+    public void ApplyStepsInitialCustomSampler(
+        ModuleApplyStepEventArgs e,
+        bool useFluxGuidance,
+        bool useFlux2Scheduler = false
+    )
     {
         // Provide temp values
         e.Temp = e.CreateTempFromBuilder();
@@ -342,7 +346,21 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
         e.Builder.Connections.PrimarySamplerNode = kSamplerSelect.Output;
 
         // Scheduler/Sigmas
-        if (e.Builder.Connections.PrimaryScheduler?.Name is "align_your_steps")
+        if (useFlux2Scheduler)
+        {
+            var flux2Scheduler = e.Nodes.AddTypedNode(
+                new ComfyNodeBuilder.Flux2Scheduler
+                {
+                    Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.Flux2Scheduler)),
+                    Steps = Steps,
+                    Width = Width,
+                    Height = Height,
+                }
+            );
+
+            e.Builder.Connections.PrimarySigmas = flux2Scheduler.Output;
+        }
+        else if (e.Builder.Connections.PrimaryScheduler?.Name is "align_your_steps")
         {
             var alignYourSteps = e.Nodes.AddTypedNode(
                 new ComfyNodeBuilder.AlignYourStepsScheduler

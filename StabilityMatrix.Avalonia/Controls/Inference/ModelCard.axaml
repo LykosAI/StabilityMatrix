@@ -43,7 +43,7 @@
                 <controls:Card Padding="12">
                     <StackPanel Spacing="0">
                         <!--  Model Row  -->
-                        <Grid ColumnDefinitions="60,*,Auto">
+                        <Grid ColumnDefinitions="70,*,Auto">
                             <TextBlock
                                 Grid.Column="0"
                                 VerticalAlignment="Center"
@@ -114,7 +114,7 @@
                         <!--  Refiner (below Model, when enabled)  -->
                         <Grid
                             Margin="0,8,0,0"
-                            ColumnDefinitions="60,*,Auto"
+                            ColumnDefinitions="70,*,Auto"
                             IsVisible="{Binding IsRefinerSelectionEnabled}">
                             <TextBlock
                                 Grid.Column="0"
@@ -137,6 +137,50 @@
                                 <fluent:SymbolIcon FontSize="16" Symbol="Search" />
                             </Button>
                         </Grid>
+
+                        <!--  Workflow Profile  -->
+                        <Grid Margin="0,8,0,0" ColumnDefinitions="70,*,Auto">
+                            <TextBlock
+                                Grid.Column="0"
+                                VerticalAlignment="Center"
+                                Text="Workflow"
+                                TextAlignment="Left" />
+                            <controls:BetterComboBox
+                                Grid.Column="1"
+                                Padding="8,6,4,6"
+                                HorizontalAlignment="Stretch"
+                                ItemsSource="{Binding WorkflowProfiles}"
+                                SelectedItem="{Binding SelectedWorkflowProfile}">
+                                <controls:BetterComboBox.Resources>
+                                    <converters:EnumStringConverter x:Key="EnumStringConverter" />
+                                </controls:BetterComboBox.Resources>
+                                <controls:BetterComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding ., Converter={StaticResource EnumStringConverter}}" />
+                                    </DataTemplate>
+                                </controls:BetterComboBox.ItemTemplate>
+                                <controls:BetterComboBox.SelectionBoxItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding ., Converter={StaticResource EnumStringConverter}}" />
+                                    </DataTemplate>
+                                </controls:BetterComboBox.SelectionBoxItemTemplate>
+                            </controls:BetterComboBox>
+                            <Button
+                                Grid.Column="2"
+                                Margin="4,0,0,0"
+                                VerticalAlignment="Stretch"
+                                Command="{Binding ApplyRecommendedDefaultsCommand}"
+                                IsEnabled="{Binding HasRecommendedDefaults}"
+                                ToolTip.Tip="{Binding RecommendedDefaultsToolTip}">
+                                <fluent:SymbolIcon FontSize="16" Symbol="Sparkle" />
+                            </Button>
+                        </Grid>
+                        <TextBlock
+                            Margin="90,4,0,0"
+                            FontSize="11"
+                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                            IsVisible="{Binding ShowWorkflowProfileStatus}"
+                            Text="{Binding WorkflowProfileStatusText}" />
 
                         <!--  Advanced Options Expander (Precision, VAE, CLIP Skip)  -->
                         <Expander
@@ -240,7 +284,7 @@
                             </Expander.Header>
                             <StackPanel Margin="0,4,0,0" Spacing="8">
                                 <!--  Encoder Type  -->
-                                <Grid ColumnDefinitions="90,*">
+                                <Grid ColumnDefinitions="90,*" IsVisible="{Binding ShowEncoderTypeSelection}">
                                     <TextBlock
                                         Grid.Column="0"
                                         VerticalAlignment="Center"

@@ -14,6 +14,7 @@ using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 using StabilityMatrix.Core.Models.Api.Comfy.NodeTypes;
@@ -32,6 +33,9 @@ public partial class ModelCardViewModel(
 {
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(SelectedUnifiedModel))]
+    [NotifyPropertyChangedFor(nameof(WorkflowProfileStatusText))]
+    [NotifyPropertyChangedFor(nameof(ShowWorkflowProfileStatus))]
+    [NotifyPropertyChangedFor(nameof(RecommendedDefaultsToolTip))]
     private HybridModelFile? selectedModel;
 
     [ObservableProperty]
@@ -40,7 +44,10 @@ public partial class ModelCardViewModel(
         nameof(ShowPrecisionSelection),
         nameof(SelectedUnifiedModel),
         nameof(HasActiveAdvancedOptions),
-        nameof(AdvancedOptionsHeader)
+        nameof(AdvancedOptionsHeader),
+        nameof(WorkflowProfileStatusText),
+        nameof(ShowWorkflowProfileStatus),
+        nameof(RecommendedDefaultsToolTip)
     )]
     private HybridModelFile? selectedUnetModel;
 
@@ -56,11 +63,8 @@ public partial class ModelCardViewModel(
         {
             if (value is null)
             {
-                // Clear both when null is set
-                if (IsStandaloneModelLoader)
-                    SelectedUnetModel = null;
-                else
-                    SelectedModel = null;
+                // ComboBox selection can briefly report null while the model list refreshes.
+                // Keep the active model so UNet-only encoder slots do not disappear transiently.
                 return;
             }
 
@@ -121,7 +125,10 @@ public partial class ModelCardViewModel(
         nameof(ShowPrecisionSelection),
         nameof(ShowEncoderSection),
         nameof(HasActiveAdvancedOptions),
-        nameof(AdvancedOptionsHeader)
+        nameof(AdvancedOptionsHeader),
+        nameof(WorkflowProfileStatusText),
+        nameof(ShowWorkflowProfileStatus),
+        nameof(RecommendedDefaultsToolTip)
     )]
     private ModelLoader selectedModelLoader;
 
@@ -156,8 +163,34 @@ public partial class ModelCardViewModel(
     public HybridModelFile? SelectedClip4 => TextEncoders.Count > 3 ? TextEncoders[3].SelectedModel : null;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsSd3Clip), nameof(IsHiDreamClip), nameof(ShowShift))]
+    [NotifyPropertyChangedFor(
+        nameof(IsSd3Clip),
+        nameof(IsHiDreamClip),
+        nameof(ResolvedWorkflowProfile),
+        nameof(IsHiDreamWorkflow),
+        nameof(IsZImageWorkflow),
+        nameof(ShowShift),
+        nameof(ShowEncoderTypeSelection),
+        nameof(HasRecommendedDefaults),
+        nameof(WorkflowProfileStatusText),
+        nameof(ShowWorkflowProfileStatus),
+        nameof(RecommendedDefaultsToolTip)
+    )]
     private string? selectedClipType;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(
+        nameof(ResolvedWorkflowProfile),
+        nameof(IsHiDreamWorkflow),
+        nameof(IsZImageWorkflow),
+        nameof(ShowShift),
+        nameof(ShowEncoderTypeSelection),
+        nameof(HasRecommendedDefaults),
+        nameof(WorkflowProfileStatusText),
+        nameof(ShowWorkflowProfileStatus),
+        nameof(RecommendedDefaultsToolTip)
+    )]
+    private InferenceWorkflowProfile selectedWorkflowProfile = InferenceWorkflowProfile.Auto;
 
     [ObservableProperty]
     private string? selectedDType;
@@ -185,7 +218,10 @@ public partial class ModelCardViewModel(
     private bool isTextEncodersExpanded = true;
 
     public List<string> WeightDTypes { get; set; } = ["default", "fp8_e4m3fn", "fp8_e5m2"];
-    public List<string> ClipTypes { get; set; } = ["flux", "sd3", "HiDream"];
+    public List<string> ClipTypes { get; set; } =
+        ["flux", "flux2", "lumina2", "stable_diffusion", "sd3", "HiDream"];
+    public List<InferenceWorkflowProfile> WorkflowProfiles { get; set; } =
+        Enum.GetValues<InferenceWorkflowProfile>().ToList();
 
     public StackEditableCardViewModel ExtraNetworksStackCardViewModel { get; } =
         new(vmFactory) { Title = Resources.Label_ExtraNetworks, AvailableModules = [typeof(LoraModule)] };
@@ -205,6 +241,12 @@ public partial class ModelCardViewModel(
 
     public bool IsSd3Clip => SelectedClipType == "sd3";
     public bool IsHiDreamClip => SelectedClipType == "HiDream";
+    public bool IsHiDreamWorkflow =>
+        ResolvedWorkflowProfile is InferenceWorkflowProfile.HiDream
+        || (ResolvedWorkflowProfile is InferenceWorkflowProfile.Custom && SelectedClipType == "HiDream");
+    public bool IsZImageWorkflow =>
+        ResolvedWorkflowProfile is InferenceWorkflowProfile.ZImageBase or InferenceWorkflowProfile.ZImageTurbo
+        || (ResolvedWorkflowProfile is InferenceWorkflowProfile.Custom && SelectedClipType == "lumina2");
     public bool IsGguf => SelectedUnetModel?.RelativePath.EndsWith("gguf") ?? false;
 
     /// <summary>
@@ -235,9 +277,47 @@ public partial class ModelCardViewModel(
     public string TextEncodersHeader => $"Text Encoders ({TextEncoders.Count})";
 
     /// <summary>
-    /// Whether to show the Shift control (for HiDream clip type, only when in UNet mode).
+    /// Whether to show the Shift control (for HiDream and Z-Image workflows, only when in UNet mode).
     /// </summary>
-    public bool ShowShift => ShowEncoderSection && IsHiDreamClip;
+    public bool ShowShift => ShowEncoderSection && (IsHiDreamWorkflow || IsZImageWorkflow);
+    public bool ShowEncoderTypeSelection =>
+        ShowEncoderSection && SelectedWorkflowProfile is not InferenceWorkflowProfile.Auto;
+    public InferenceWorkflowProfile ResolvedWorkflowProfile =>
+        SelectedWorkflowProfile is InferenceWorkflowProfile.Auto
+            ? InferWorkflowProfile()
+            : SelectedWorkflowProfile;
+    public bool HasRecommendedDefaults =>
+        ResolvedWorkflowProfile
+            is InferenceWorkflowProfile.DefaultCheckpoint
+                or InferenceWorkflowProfile.Flux
+                or InferenceWorkflowProfile.Flux2
+                or InferenceWorkflowProfile.ZImageBase
+                or InferenceWorkflowProfile.ZImageTurbo
+                or InferenceWorkflowProfile.Anima;
+    public bool ShowWorkflowProfileStatus =>
+        SelectedWorkflowProfile is InferenceWorkflowProfile.Auto
+        && SelectedUnifiedModel is not null
+        && ResolvedWorkflowProfile is not InferenceWorkflowProfile.Custom;
+    public string WorkflowProfileStatusText => $"Detected: {ResolvedWorkflowProfile.GetStringValue()}";
+    public string RecommendedDefaultsToolTip =>
+        ResolvedWorkflowProfile switch
+        {
+            InferenceWorkflowProfile.DefaultCheckpoint =>
+                "Apply recommended sampler defaults: Euler Ancestral / Normal / 30 steps / CFG 5",
+            InferenceWorkflowProfile.Flux =>
+                "Apply recommended sampler defaults: Euler / Simple / 20 steps / CFG 3.5",
+            InferenceWorkflowProfile.Flux2 =>
+                "Apply recommended sampler defaults: Euler / Flux2Scheduler / 20 steps / CFG 5",
+            InferenceWorkflowProfile.ZImageBase =>
+                "Apply recommended sampler defaults: Res Multistep / Simple / 30 steps / CFG 4",
+            InferenceWorkflowProfile.ZImageTurbo =>
+                "Apply recommended sampler defaults: Res Multistep / Simple / 8 steps / CFG 1",
+            InferenceWorkflowProfile.Anima =>
+                "Apply recommended sampler defaults: ER SDE / Simple / 30 steps / CFG 4",
+            _ => "No recommended sampler defaults for this workflow",
+        };
+
+    public event Action<InferenceWorkflowProfile>? RecommendedDefaultsRequested;
 
     protected override void OnInitialLoaded()
     {
@@ -290,6 +370,7 @@ public partial class ModelCardViewModel(
         using var pickerScope = vmFactory.CreateScope();
         var pickerVm = pickerScope.ServiceManager.Get<ModelPickerDialogViewModel>();
         pickerVm.Title = "Select Model";
+        pickerVm.PreferredWorkflowProfile = SelectedWorkflowProfile;
 
         if (await pickerVm.GetDialog().ShowAsync() == ContentDialogResult.Primary)
         {
@@ -474,6 +555,7 @@ public partial class ModelCardViewModel(
                 // New field for dynamic encoders (for future proofing if > 4 encoders)
                 TextEncoderNames = encoderNames,
                 SelectedClipType = SelectedClipType,
+                SelectedWorkflowProfile = SelectedWorkflowProfile,
                 SelectedDType = SelectedDType,
                 Shift = Shift,
                 IsClipModelSelectionEnabled = IsClipModelSelectionEnabled,
@@ -525,6 +607,7 @@ public partial class ModelCardViewModel(
 
             // Load encoder type first (needed for default encoder count)
             SelectedClipType = model.SelectedClipType;
+            SelectedWorkflowProfile = model.SelectedWorkflowProfile;
 
             // Load text encoders from saved state
             LoadTextEncodersFromModel(model);
@@ -551,7 +634,77 @@ public partial class ModelCardViewModel(
         finally
         {
             isLoadingState = false;
+            NotifyWorkflowProfileStateChanged();
         }
+    }
+
+    private InferenceWorkflowProfile InferWorkflowProfile()
+    {
+        return InferWorkflowProfile(
+            SelectedUnifiedModel,
+            SelectedModelLoader is ModelLoader.Unet
+                || SelectedUnifiedModel?.Local?.SharedFolderType is SharedFolderType.DiffusionModels
+        );
+    }
+
+    private static InferenceWorkflowProfile InferWorkflowProfile(HybridModelFile? model, bool isUnetModel)
+    {
+        if (!isUnetModel)
+            return InferenceWorkflowProfile.DefaultCheckpoint;
+
+        var baseModel = model?.Local?.ConnectedModelInfo?.BaseModel;
+
+        if (!string.IsNullOrWhiteSpace(baseModel))
+        {
+            if (baseModel.Equals("ZImageTurbo", StringComparison.OrdinalIgnoreCase))
+                return InferenceWorkflowProfile.ZImageTurbo;
+
+            if (baseModel.Equals("ZImageBase", StringComparison.OrdinalIgnoreCase))
+                return InferenceWorkflowProfile.ZImageBase;
+
+            if (baseModel.Equals("Anima", StringComparison.OrdinalIgnoreCase))
+                return InferenceWorkflowProfile.Anima;
+
+            if (baseModel.StartsWith("Flux.2", StringComparison.OrdinalIgnoreCase))
+                return InferenceWorkflowProfile.Flux2;
+
+            if (baseModel.StartsWith("Flux.1", StringComparison.OrdinalIgnoreCase))
+                return InferenceWorkflowProfile.Flux;
+
+            if (baseModel.Equals("HiDream", StringComparison.OrdinalIgnoreCase))
+                return InferenceWorkflowProfile.HiDream;
+        }
+
+        var name = model?.RelativePath ?? string.Empty;
+
+        if (
+            name.Contains("z_image", StringComparison.OrdinalIgnoreCase)
+            || name.Contains("z-image", StringComparison.OrdinalIgnoreCase)
+            || name.Contains("zimage", StringComparison.OrdinalIgnoreCase)
+        )
+        {
+            return name.Contains("turbo", StringComparison.OrdinalIgnoreCase)
+                ? InferenceWorkflowProfile.ZImageTurbo
+                : InferenceWorkflowProfile.ZImageBase;
+        }
+
+        if (
+            name.Contains("flux2", StringComparison.OrdinalIgnoreCase)
+            || name.Contains("flux-2", StringComparison.OrdinalIgnoreCase)
+            || name.Contains("flux_2", StringComparison.OrdinalIgnoreCase)
+        )
+            return InferenceWorkflowProfile.Flux2;
+
+        if (name.Contains("flux", StringComparison.OrdinalIgnoreCase))
+            return InferenceWorkflowProfile.Flux;
+
+        if (name.Contains("anima", StringComparison.OrdinalIgnoreCase))
+            return InferenceWorkflowProfile.Anima;
+
+        if (name.Contains("hidream", StringComparison.OrdinalIgnoreCase))
+            return InferenceWorkflowProfile.HiDream;
+
+        return InferenceWorkflowProfile.DefaultCheckpoint;
     }
 
     /// <summary>
@@ -595,6 +748,7 @@ public partial class ModelCardViewModel(
             var defaultCount = SelectedClipType switch
             {
                 "flux" => 2,
+                "flux2" or "lumina2" or "stable_diffusion" => 1,
                 "sd3" => 3,
                 "HiDream" => 4,
                 _ => 2,
@@ -673,10 +827,12 @@ public partial class ModelCardViewModel(
 
         if (model.Local?.SharedFolderType is SharedFolderType.DiffusionModels)
         {
+            SelectedModelLoader = ModelLoader.Unet;
             SelectedUnetModel = model;
         }
         else
         {
+            SelectedModelLoader = ModelLoader.Default;
             SelectedModel = model;
         }
     }
@@ -709,7 +865,12 @@ public partial class ModelCardViewModel(
 
             if (!IsClipModelSelectionEnabled)
                 IsClipModelSelectionEnabled = true;
+
+            if (TextEncoders.Count == 0)
+                SetDefaultEncoderCount();
         }
+
+        RefreshWorkflowProfileState();
     }
 
     partial void OnSelectedModelChanged(HybridModelFile? value)
@@ -732,7 +893,11 @@ public partial class ModelCardViewModel(
         }
     }
 
-    partial void OnSelectedUnetModelChanged(HybridModelFile? value) => OnSelectedModelChanged(value);
+    partial void OnSelectedUnetModelChanged(HybridModelFile? value)
+    {
+        OnSelectedModelChanged(value);
+        RefreshWorkflowProfileState();
+    }
 
     partial void OnSelectedClipTypeChanged(string? value)
     {
@@ -742,6 +907,61 @@ public partial class ModelCardViewModel(
         {
             SetDefaultEncoderCount(preserveUserSelections: true);
         }
+    }
+
+    partial void OnSelectedWorkflowProfileChanged(InferenceWorkflowProfile value)
+    {
+        if (!isLoadingState)
+        {
+            ApplyDefaultClipTypeForResolvedProfile(preserveUserSelections: true);
+        }
+
+        RefreshWorkflowProfileState();
+    }
+
+    private void NotifyWorkflowProfileStateChanged()
+    {
+        OnPropertyChanged(nameof(ResolvedWorkflowProfile));
+        OnPropertyChanged(nameof(IsHiDreamWorkflow));
+        OnPropertyChanged(nameof(IsZImageWorkflow));
+        OnPropertyChanged(nameof(ShowShift));
+        OnPropertyChanged(nameof(ShowEncoderTypeSelection));
+        OnPropertyChanged(nameof(HasRecommendedDefaults));
+        OnPropertyChanged(nameof(WorkflowProfileStatusText));
+        OnPropertyChanged(nameof(ShowWorkflowProfileStatus));
+        OnPropertyChanged(nameof(RecommendedDefaultsToolTip));
+    }
+
+    private void RefreshWorkflowProfileState()
+    {
+        NotifyWorkflowProfileStateChanged();
+
+        if (!isLoadingState)
+        {
+            ApplyDefaultClipTypeForResolvedProfile(preserveUserSelections: true);
+        }
+    }
+
+    private void ApplyDefaultClipTypeForResolvedProfile(bool preserveUserSelections)
+    {
+        if (SelectedWorkflowProfile is InferenceWorkflowProfile.Custom)
+            return;
+
+        var clipType = ResolvedWorkflowProfile switch
+        {
+            InferenceWorkflowProfile.Flux => "flux",
+            InferenceWorkflowProfile.Flux2 => "flux2",
+            InferenceWorkflowProfile.ZImageBase or InferenceWorkflowProfile.ZImageTurbo => "lumina2",
+            InferenceWorkflowProfile.Anima => "stable_diffusion",
+            InferenceWorkflowProfile.HiDream => "HiDream",
+            _ => SelectedClipType,
+        };
+
+        if (string.IsNullOrWhiteSpace(clipType) || SelectedClipType == clipType)
+            return;
+
+        SelectedClipType = clipType;
+        SetDefaultEncoderCount(preserveUserSelections);
     }
 
     /// <summary>
@@ -764,6 +984,7 @@ public partial class ModelCardViewModel(
         var targetCount = SelectedClipType switch
         {
             "flux" => 2,
+            "flux2" or "lumina2" or "stable_diffusion" => 1,
             "sd3" => 3,
             "HiDream" => 4,
             _ => 2, // Default to 2 for unknown types
@@ -781,6 +1002,7 @@ public partial class ModelCardViewModel(
         }
 
         OnPropertyChanged(nameof(CanRemoveEncoder));
+        OnPropertyChanged(nameof(TextEncodersHeader));
     }
 
     /// <summary>
@@ -806,6 +1028,15 @@ public partial class ModelCardViewModel(
             OnPropertyChanged(nameof(CanRemoveEncoder));
             OnPropertyChanged(nameof(TextEncodersHeader));
         }
+    }
+
+    [RelayCommand]
+    private void ApplyRecommendedDefaults()
+    {
+        if (!HasRecommendedDefaults)
+            return;
+
+        RecommendedDefaultsRequested?.Invoke(ResolvedWorkflowProfile);
     }
 
     private void SetupStandaloneModelLoader(ModuleApplyStepEventArgs e)
@@ -838,7 +1069,7 @@ public partial class ModelCardViewModel(
             e.Builder.Connections.Base.Model = checkpointLoader.Output;
         }
 
-        if (SelectedModelLoader is ModelLoader.Unet && IsHiDreamClip)
+        if (SelectedModelLoader is ModelLoader.Unet && IsHiDreamWorkflow)
         {
             var modelSamplingSd3 = e.Nodes.AddTypedNode(
                 new ComfyNodeBuilder.ModelSamplingSD3
@@ -1045,6 +1276,8 @@ public partial class ModelCardViewModel(
         public List<string?>? TextEncoderNames { get; init; }
 
         public string? SelectedClipType { get; init; }
+        public InferenceWorkflowProfile SelectedWorkflowProfile { get; init; } =
+            InferenceWorkflowProfile.Auto;
         public string? SelectedDType { get; init; }
         public double Shift { get; init; } = 3.0;
         public ModelLoader ModelLoader { get; init; }

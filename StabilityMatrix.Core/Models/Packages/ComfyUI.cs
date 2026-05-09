@@ -341,6 +341,17 @@ public class ComfyUI(
             );
         }
 
+        if (Compat.IsWindows && HasWindowsRocmSupport())
+        {
+            commands.Add(
+                new ExtraPackageCommand
+                {
+                    CommandName = "Install Sage Attention",
+                    Command = InstallWindowsRocmSageAttention,
+                }
+            );
+        }
+
         if (!Compat.IsMacOS && SettingsManager.Settings.PreferredGpu?.ComputeCapabilityValue is >= 7.5m)
         {
             commands.Add(
@@ -424,51 +435,55 @@ public class ComfyUI(
                 .ConfigureAwait(false);
         }
 
-        try
+        if (!(Compat.IsWindows && torchIndex == TorchIndex.Rocm && HasWindowsRocmSupport()))
         {
-            var sageVersion = await venvRunner.PipShow("sageattention").ConfigureAwait(false);
-            var torchVersion = await venvRunner.PipShow("torch").ConfigureAwait(false);
-
-            if (torchVersion is not null && sageVersion is not null)
+            try
             {
-                var version = torchVersion.Version;
-                var plusPos = version.IndexOf('+');
-                var index = plusPos >= 0 ? version[(plusPos + 1)..] : string.Empty;
-                var versionWithoutIndex = plusPos >= 0 ? version[..plusPos] : version;
+                var sageVersion = await venvRunner.PipShow("sageattention").ConfigureAwait(false);
+                var torchVersion = await venvRunner.PipShow("torch").ConfigureAwait(false);
 
-                if (
-                    !sageVersion.Version.Contains(index) || !sageVersion.Version.Contains(versionWithoutIndex)
-                )
+                if (torchVersion is not null && sageVersion is not null)
                 {
-                    progress?.Report(
-                        new ProgressReport(-1f, "Updating SageAttention...", isIndeterminate: true)
-                    );
+                    var version = torchVersion.Version;
+                    var plusPos = version.IndexOf('+');
+                    var index = plusPos >= 0 ? version[(plusPos + 1)..] : string.Empty;
+                    var versionWithoutIndex = plusPos >= 0 ? version[..plusPos] : version;
 
-                    var step = new InstallSageAttentionStep(
-                        downloadService,
-                        prerequisiteHelper,
-                        pyInstallationManager
+                    if (
+                        !sageVersion.Version.Contains(index)
+                        || !sageVersion.Version.Contains(versionWithoutIndex)
                     )
                     {
-                        InstalledPackage = installedPackage,
-                        IsBlackwellGpu =
-                            SettingsManager.Settings.PreferredGpu?.IsBlackwellGpu()
-                            ?? HardwareHelper.HasBlackwellGpu(),
-                        WorkingDirectory = installLocation,
-                        EnvironmentVariables = GetEnvVars(
-                            venvRunner.EnvironmentVariables,
-                            installLocation,
-                            installedPackage
-                        ),
-                    };
+                        progress?.Report(
+                            new ProgressReport(-1f, "Updating SageAttention...", isIndeterminate: true)
+                        );
 
-                    await step.ExecuteAsync(progress).ConfigureAwait(false);
+                        var step = new InstallSageAttentionStep(
+                            downloadService,
+                            prerequisiteHelper,
+                            pyInstallationManager
+                        )
+                        {
+                            InstalledPackage = installedPackage,
+                            IsBlackwellGpu =
+                                SettingsManager.Settings.PreferredGpu?.IsBlackwellGpu()
+                                ?? HardwareHelper.HasBlackwellGpu(),
+                            WorkingDirectory = installLocation,
+                            EnvironmentVariables = GetEnvVars(
+                                venvRunner.EnvironmentVariables,
+                                installLocation,
+                                installedPackage
+                            ),
+                        };
+
+                        await step.ExecuteAsync(progress).ConfigureAwait(false);
+                    }
                 }
             }
-        }
-        catch (Exception e)
-        {
-            Logger.Error(e, "Failed to verify/update SageAttention after installation");
+            catch (Exception e)
+            {
+                Logger.Error(e, "Failed to verify/update SageAttention after installation");
+            }
         }
 
         // Install Comfy Manager (built-in to ComfyUI)
@@ -939,11 +954,59 @@ public class ComfyUI(
         if (runner.Failed)
             return;
 
-        await using var transaction = settingsManager.BeginTransaction();
-        var attentionOptions = transaction
-            .Settings.InstalledPackages.First(x => x.Id == installedPackage.Id)
-            .LaunchArgs?.Where(opt => opt.Name.Contains("attention"));
+        await EnableSageAttentionAsync(installedPackage).ConfigureAwait(false);
+    }
 
+    private async Task InstallWindowsRocmSageAttention(InstalledPackage? installedPackage)
+    {
+        if (installedPackage?.FullPath is null)
+            return;
+
+        var runner = new PackageModificationRunner
+        {
+            ShowDialogOnStart = true,
+            ModificationCompleteMessage = "Windows ROCm SageAttention installed successfully",
+        };
+        EventManager.Instance.OnPackageInstallProgressAdded(runner);
+
+        var baseEnvironment = ImmutableDictionary.CreateRange(SettingsManager.Settings.EnvironmentVariables);
+        var environmentVariables = GetEnvVars(baseEnvironment, installedPackage.FullPath, installedPackage);
+
+        await runner
+            .ExecuteSteps(
+                [
+                    new InstallWindowsRocmSageAttentionStep(
+                        downloadService,
+                        pyInstallationManager,
+                        prerequisiteHelper,
+                        rocmPackageHelper
+                            ?? throw new InvalidOperationException(
+                                "Windows ROCm SageAttention installation encountered an internal configuration error [rocmPackageHelper is null]."
+                            )
+                    )
+                    {
+                        InstalledPackage = installedPackage,
+                        WorkingDirectory = new DirectoryPath(installedPackage.FullPath),
+                        EnvironmentVariables = environmentVariables,
+                    },
+                ]
+            )
+            .ConfigureAwait(false);
+
+        if (runner.Failed)
+            return;
+
+        await EnableSageAttentionAsync(installedPackage).ConfigureAwait(false);
+    }
+
+    private async Task EnableSageAttentionAsync(InstalledPackage installedPackage)
+    {
+        await using var transaction = settingsManager.BeginTransaction();
+        var packageInSettings = transaction.Settings.InstalledPackages.First(x =>
+            x.Id == installedPackage.Id
+        );
+
+        var attentionOptions = packageInSettings.LaunchArgs?.Where(opt => opt.Name.Contains("attention"));
         if (attentionOptions is not null)
         {
             foreach (var option in attentionOptions)
@@ -952,9 +1015,9 @@ public class ComfyUI(
             }
         }
 
-        var sageAttention = transaction
-            .Settings.InstalledPackages.First(x => x.Id == installedPackage.Id)
-            .LaunchArgs?.FirstOrDefault(opt => opt.Name.Contains("sage-attention"));
+        var sageAttention = packageInSettings.LaunchArgs?.FirstOrDefault(opt =>
+            opt.Name.Contains("sage-attention")
+        );
 
         if (sageAttention is not null)
         {
@@ -962,16 +1025,14 @@ public class ComfyUI(
         }
         else
         {
-            transaction
-                .Settings.InstalledPackages.First(x => x.Id == installedPackage.Id)
-                .LaunchArgs?.Add(
-                    new LaunchOption
-                    {
-                        Name = "--use-sage-attention",
-                        Type = LaunchOptionType.Bool,
-                        OptionValue = true,
-                    }
-                );
+            packageInSettings.LaunchArgs?.Add(
+                new LaunchOption
+                {
+                    Name = "--use-sage-attention",
+                    Type = LaunchOptionType.Bool,
+                    OptionValue = true,
+                }
+            );
         }
     }
 

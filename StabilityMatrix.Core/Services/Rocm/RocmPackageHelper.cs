@@ -22,20 +22,26 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private static readonly StringComparer EnvComparer = StringComparer.OrdinalIgnoreCase;
+    private const string RocmSdkDevelPackageName = "rocm-sdk-devel";
     private static readonly string[] WindowsLaunchNoticeLines =
     [
         "Stability Matrix Windows ROCm Notice: Windows AMD ROCm support is experimental. Please report any issues to Stability Matrix first so it can be determined whether the issue is package-specific.",
         "Because this setup may not be officially supported by package developers, only contact upstream support for issues clearly caused by the package itself.",
     ];
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Evaluates the current Windows machine state for the given package profile and returns the resolved ROCm compatibility result.
+    /// </summary>
     public RocmCompatibilityResult GetCompatibility(RocmPackageProfile profile)
     {
         _ = profile;
         return BuildCompatibilityResult(profile);
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Resolves launch-time ROCm runtime details from the current Windows machine state.
+    /// This is used to build helper-managed environment variables for package launch.
+    /// </summary>
     private RocmRuntimeContext ResolveRuntimeContext(RocmPackageProfile profile)
     {
         _ = profile;
@@ -60,7 +66,10 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
         };
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Resolves install-time ROCm package selection details from the current Windows machine state.
+    /// This includes the canonical runtime GFX architecture and the matching multi-arch device extra.
+    /// </summary>
     private RocmInstallContext ResolveInstallContext(RocmPackageProfile profile)
     {
         _ = profile;
@@ -74,7 +83,10 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
         };
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Builds the final launch environment for a ROCm-capable package by combining helper defaults,
+    /// package-specific environment values, and optional user overrides.
+    /// </summary>
     public IReadOnlyDictionary<string, string> BuildLaunchEnvironment(RocmPackageProfile profile)
     {
         var runtimeContext = ResolveRuntimeContext(profile);
@@ -95,13 +107,111 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
         return mergedEnvironment;
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Returns the shared informational notice lines shown when launching Windows ROCm packages.
+    /// </summary>
     public IReadOnlyList<string> GetWindowsLaunchNoticeLines()
     {
         return WindowsLaunchNoticeLines;
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Ensures <c>rocm-sdk-devel</c> is installed from the ROCm multi-arch index.
+    /// It prefers a build whose nightly date matches the installed ROCm torch build and falls back to the latest available build when no exact match is available.
+    /// </summary>
+    public async Task EnsureWindowsSdkDevelAsync(
+        IPyVenvRunner venvRunner,
+        IProgress<ProgressReport>? progress = null,
+        Action<ProcessOutput>? onConsoleOutput = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var torchInfo = await venvRunner.PipShow("torch").ConfigureAwait(false);
+        if (torchInfo is null)
+        {
+            throw new InvalidOperationException(
+                "torch is not installed in this environment. Install the Windows ROCm torch build first."
+            );
+        }
+
+        if (!IsUsableWindowsNativeTorchBuild(torchInfo.Version, null))
+        {
+            throw new InvalidOperationException(
+                $"Installed torch is not a usable Windows ROCm build (detected version: {torchInfo.Version})."
+            );
+        }
+
+        var nightlyBuildDateToken = TryGetNightlyBuildDateToken(torchInfo.Version);
+        var installedRocmSdkDevel = await venvRunner.PipShow(RocmSdkDevelPackageName).ConfigureAwait(false);
+        if (
+            !string.IsNullOrWhiteSpace(nightlyBuildDateToken)
+            && HasNightlyBuildDateToken(installedRocmSdkDevel?.Version, nightlyBuildDateToken)
+        )
+        {
+            return;
+        }
+
+        var indexResult = await venvRunner
+            .PipIndex(RocmSdkDevelPackageName, WindowsRocmSupport.MultiArchPythonPackageIndexUrl)
+            .ConfigureAwait(false);
+
+        var latestVersion = indexResult?.AvailableVersions.FirstOrDefault();
+        var matchingVersion = string.IsNullOrWhiteSpace(nightlyBuildDateToken)
+            ? null
+            : indexResult?.AvailableVersions.FirstOrDefault(version =>
+                HasNightlyBuildDateToken(version, nightlyBuildDateToken)
+            );
+        var versionToInstall = matchingVersion ?? latestVersion;
+
+        if (string.IsNullOrWhiteSpace(versionToInstall))
+        {
+            throw new InvalidOperationException(
+                $"No {RocmSdkDevelPackageName} builds were found on the ROCm multi-arch index."
+            );
+        }
+
+        if (!string.IsNullOrWhiteSpace(matchingVersion))
+        {
+            progress?.Report(
+                new ProgressReport(
+                    -1f,
+                    $"Installing {RocmSdkDevelPackageName} {matchingVersion} for Windows ROCm...",
+                    isIndeterminate: true
+                )
+            );
+        }
+        else
+        {
+            progress?.Report(
+                new ProgressReport(
+                    -1f,
+                    $"Falling back to latest available {RocmSdkDevelPackageName} build {versionToInstall} for Windows ROCm...",
+                    isIndeterminate: true
+                )
+            );
+        }
+
+        await venvRunner
+            .PipInstall(
+                new PipInstallArgs()
+                    .AddArg("--upgrade")
+                    .AddKeyedArgs(
+                        "--index-url",
+                        ["--index-url", WindowsRocmSupport.MultiArchPythonPackageIndexUrl]
+                    )
+                    .AddArg($"{RocmSdkDevelPackageName}=={versionToInstall}"),
+                onConsoleOutput
+            )
+            .ConfigureAwait(false);
+
+        _ = cancellationToken;
+    }
+
+    /// <summary>
+    /// Performs the shared Windows-native ROCm install flow for helper-managed packages.
+    /// This installs package requirements, the ROCm torch wheel set from the multi-arch index,
+    /// and then verifies that the resulting torch installation reports usable ROCm metadata.
+    /// </summary>
     public async Task InstallWindowsNativePackageAsync(
         IPyVenvRunner venvRunner,
         string installLocation,
@@ -438,6 +548,30 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
 
         return !string.IsNullOrWhiteSpace(version)
             && version.Contains("rocm", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string? TryGetNightlyBuildDateToken(string? version)
+    {
+        if (string.IsNullOrWhiteSpace(version))
+            return null;
+
+        var devIndex = version.IndexOf("dev", StringComparison.OrdinalIgnoreCase);
+        if (devIndex < 0)
+            return null;
+
+        var startIndex = devIndex + 3;
+        if (version.Length < startIndex + 8)
+            return null;
+
+        var token = version.Substring(startIndex, 8);
+        return token.All(char.IsDigit) ? token : null;
+    }
+
+    private static bool HasNightlyBuildDateToken(string? version, string nightlyBuildDateToken)
+    {
+        return !string.IsNullOrWhiteSpace(version)
+            && !string.IsNullOrWhiteSpace(nightlyBuildDateToken)
+            && version.Contains($"dev{nightlyBuildDateToken}", StringComparison.OrdinalIgnoreCase);
     }
 
     internal static string? TryExtractJsonObject(string output)

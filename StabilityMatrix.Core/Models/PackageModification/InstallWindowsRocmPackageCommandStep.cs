@@ -9,13 +9,27 @@ using StabilityMatrix.Core.Services.Rocm;
 
 namespace StabilityMatrix.Core.Models.PackageModification;
 
-public class InstallWindowsRocmSageAttentionStep(
+public enum WindowsRocmPackageCommandType
+{
+    SageAttention,
+    DevelopmentSdk,
+    BitsAndBytes,
+    FlashAttention,
+}
+
+public class InstallWindowsRocmPackageCommandStep(
     IDownloadService downloadService,
     IPyInstallationManager pyInstallationManager,
     IPrerequisiteHelper prerequisiteHelper,
     IRocmPackageHelper rocmPackageHelper
 ) : IPackageStep
 {
+    private const string BitsAndBytesWheelUrl =
+        "https://github.com/0xDELUXA/bitsandbytes_win_rocm/releases/download/0.50.0.dev0-py3-rocm7-win_amd64_all/bitsandbytes-0.50.0.dev0-cp312-cp312-win_amd64.whl";
+    private const string AmdAiterWheelUrl =
+        "https://github.com/0xDELUXA/flash-attention/releases/download/v2.8.4_win-rocm/amd_aiter-0.0.0-py3-none-win_amd64.whl";
+    private const string FlashAttentionWheelUrl =
+        "https://github.com/0xDELUXA/flash-attention/releases/download/v2.8.4_win-rocm/flash_attn-2.8.4-py3-none-win_amd64.whl";
     private const string TritonWindowsVersion = "3.6.0.post25";
     private const string SageAttentionVersion = "1.0.6";
 
@@ -30,32 +44,24 @@ public class InstallWindowsRocmSageAttentionStep(
 
     public required InstalledPackage InstalledPackage { get; init; }
     public required DirectoryPath WorkingDirectory { get; init; }
+    public required WindowsRocmPackageCommandType CommandType { get; init; }
     public IReadOnlyDictionary<string, string>? EnvironmentVariables { get; init; }
 
-    public string ProgressTitle => "Installing Windows ROCm SageAttention";
+    public string ProgressTitle => CommandType switch
+    {
+        WindowsRocmPackageCommandType.SageAttention => "Installing Windows ROCm SageAttention",
+        WindowsRocmPackageCommandType.DevelopmentSdk => "Installing Windows ROCm Development SDK",
+        WindowsRocmPackageCommandType.BitsAndBytes => "Installing Windows ROCm bitsandbytes",
+        WindowsRocmPackageCommandType.FlashAttention => "Installing Windows ROCm Flash Attention",
+        _ => "Running Windows ROCm package command",
+    };
 
     public async Task ExecuteAsync(IProgress<ProgressReport>? progress = null)
     {
         if (!global::System.OperatingSystem.IsWindows())
         {
             throw new PlatformNotSupportedException(
-                "Windows ROCm SageAttention installation is only supported on Windows."
-            );
-        }
-
-        if (!prerequisiteHelper.IsVcBuildToolsInstalled)
-        {
-            await prerequisiteHelper
-                .InstallPackageRequirements([PackagePrerequisite.VcBuildTools], progress: progress)
-                .ConfigureAwait(false);
-        }
-
-        var compatibility = rocmPackageHelper.GetCompatibility(ComfyWindowsRocmProfile.Profile);
-        if (!compatibility.IsCompatible)
-        {
-            throw new InvalidOperationException(
-                compatibility.FailureReason
-                    ?? "Windows ROCm SageAttention requires a supported Windows ROCm machine state."
+                "Windows ROCm package commands are only supported on Windows."
             );
         }
 
@@ -88,20 +94,66 @@ public class InstallWindowsRocmSageAttentionStep(
             environmentVariables: EnvironmentVariables
         );
 
-        var torchInfo = await venvRunner.PipShow("torch").ConfigureAwait(false);
-        if (torchInfo is null)
+        switch (CommandType)
         {
-            throw new InvalidOperationException(
-                "torch is not installed in this ComfyUI environment. Install the Windows ROCm torch build first."
-            );
+            case WindowsRocmPackageCommandType.SageAttention:
+                await ExecuteSageAttentionAsync(venvRunner, progress).ConfigureAwait(false);
+                break;
+            case WindowsRocmPackageCommandType.DevelopmentSdk:
+                await ExecuteDevelopmentSdkAsync(venvRunner, progress).ConfigureAwait(false);
+                break;
+            case WindowsRocmPackageCommandType.BitsAndBytes:
+                await ExecuteBitsAndBytesAsync(venvRunner, pyVersion, progress).ConfigureAwait(false);
+                break;
+            case WindowsRocmPackageCommandType.FlashAttention:
+                await ExecuteFlashAttentionAsync(venvRunner, progress).ConfigureAwait(false);
+                break;
+            default:
+                throw new InvalidOperationException(
+                    $"Unsupported Windows ROCm package command type: {CommandType}."
+                );
         }
+    }
 
-        if (!RocmPackageHelper.IsUsableWindowsNativeTorchBuild(torchInfo.Version, null))
+    private void EnsureRocmCompatibility()
+    {
+        var compatibility = rocmPackageHelper.GetCompatibility(ComfyWindowsRocmProfile.Profile);
+        if (!compatibility.IsCompatible)
         {
             throw new InvalidOperationException(
-                $"Installed torch is not a usable Windows ROCm build (detected version: {torchInfo.Version})."
+                compatibility.FailureReason
+                    ?? "Windows ROCm package commands require a supported Windows ROCm machine state."
             );
         }
+    }
+
+    private async Task EnsureVcBuildToolsAsync(IProgress<ProgressReport>? progress)
+    {
+        if (!prerequisiteHelper.IsVcBuildToolsInstalled)
+        {
+            await prerequisiteHelper
+                .InstallPackageRequirements([PackagePrerequisite.VcBuildTools], progress: progress)
+                .ConfigureAwait(false);
+        }
+    }
+
+    private async Task ExecuteDevelopmentSdkAsync(
+        IPyVenvRunner venvRunner,
+        IProgress<ProgressReport>? progress
+    )
+    {
+        EnsureRocmCompatibility();
+        await rocmPackageHelper.EnsureWindowsSdkDevelAsync(venvRunner, progress).ConfigureAwait(false);
+    }
+
+    private async Task ExecuteSageAttentionAsync(
+        IPyVenvRunner venvRunner,
+        IProgress<ProgressReport>? progress
+    )
+    {
+        EnsureRocmCompatibility();
+        await EnsureVcBuildToolsAsync(progress).ConfigureAwait(false);
+        await rocmPackageHelper.EnsureWindowsSdkDevelAsync(venvRunner, progress).ConfigureAwait(false);
 
         progress?.Report(
             new ProgressReport(
@@ -145,6 +197,57 @@ public class InstallWindowsRocmSageAttentionStep(
             .ConfigureAwait(false);
         await DownloadAndReplaceFileAsync(sageAttentionDir, "quant_per_block.py", QuantPerBlockUrl, progress)
             .ConfigureAwait(false);
+    }
+
+    private async Task ExecuteBitsAndBytesAsync(
+        IPyVenvRunner venvRunner,
+        PyVersion pyVersion,
+        IProgress<ProgressReport>? progress
+    )
+    {
+        EnsureRocmCompatibility();
+
+        if (pyVersion.Major != 3 || pyVersion.Minor != 12)
+        {
+            throw new InvalidOperationException(
+                $"Windows ROCm bitsandbytes is only supported on Python 3.12.x (detected version: {pyVersion})."
+            );
+        }
+
+        progress?.Report(
+            new ProgressReport(
+                -1f,
+                "Installing bitsandbytes for Windows ROCm...",
+                isIndeterminate: true
+            )
+        );
+        await venvRunner.PipInstall(BitsAndBytesWheelUrl).ConfigureAwait(false);
+    }
+
+    private async Task ExecuteFlashAttentionAsync(
+        IPyVenvRunner venvRunner,
+        IProgress<ProgressReport>? progress
+    )
+    {
+        EnsureRocmCompatibility();
+
+        progress?.Report(
+            new ProgressReport(
+                -1f,
+                "Installing Flash Attention dependencies for Windows ROCm...",
+                isIndeterminate: true
+            )
+        );
+        await venvRunner.PipInstall(AmdAiterWheelUrl).ConfigureAwait(false);
+
+        progress?.Report(
+            new ProgressReport(
+                -1f,
+                "Installing Flash Attention for Windows ROCm...",
+                isIndeterminate: true
+            )
+        );
+        await venvRunner.PipInstall(FlashAttentionWheelUrl).ConfigureAwait(false);
     }
 
     private async Task DownloadAndReplaceFileAsync(

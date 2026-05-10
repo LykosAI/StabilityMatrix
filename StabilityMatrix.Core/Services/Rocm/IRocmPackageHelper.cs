@@ -27,6 +27,17 @@ public interface IRocmPackageHelper
     IReadOnlyList<string> GetWindowsLaunchNoticeLines();
 
     /// <summary>
+    /// Ensures a usable Windows ROCm SDK devel package is installed from the ROCm multi-arch index,
+    /// preferring the same nightly build date as the installed torch build and falling back to the latest available build.
+    /// </summary>
+    Task EnsureWindowsSdkDevelAsync(
+        IPyVenvRunner venvRunner,
+        IProgress<ProgressReport>? progress = null,
+        Action<ProcessOutput>? onConsoleOutput = null,
+        CancellationToken cancellationToken = default
+    );
+
+    /// <summary>
     /// Performs the Windows-native ROCm install flow for a package using helper-resolved multi-arch device extras.
     /// </summary>
     Task InstallWindowsNativePackageAsync(

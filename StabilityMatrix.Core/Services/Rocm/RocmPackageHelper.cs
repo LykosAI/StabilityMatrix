@@ -152,7 +152,11 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
         }
 
         var indexResult = await venvRunner
-            .PipIndex(RocmSdkDevelPackageName, WindowsRocmSupport.MultiArchPythonPackageIndexUrl)
+            .PipIndex(
+                RocmSdkDevelPackageName,
+                WindowsRocmSupport.MultiArchPythonPackageIndexUrl,
+                includePrerelease: true
+            )
             .ConfigureAwait(false);
 
         var latestVersion = indexResult?.AvailableVersions.FirstOrDefault();

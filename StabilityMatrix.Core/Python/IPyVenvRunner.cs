@@ -91,7 +91,11 @@ public interface IPyVenvRunner
     /// <summary>
     /// Run a pip index command, return result as PipIndexResult.
     /// </summary>
-    Task<PipIndexResult?> PipIndex(string packageName, string? indexUrl = null);
+    Task<PipIndexResult?> PipIndex(
+        string packageName,
+        string? indexUrl = null,
+        bool includePrerelease = false
+    );
 
     /// <summary>
     /// Run a custom install command. Waits for the process to exit.

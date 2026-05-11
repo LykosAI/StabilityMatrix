@@ -98,10 +98,13 @@ public record GpuInfo
             _ when Has("7400") || Has("7500") || Has("7600") || Has("7650") || Has("7700S") => "gfx1102",
 
             // RDNA3 dGPU Navi32
-            _ when Has("7700") || Has("RX 7800") || HasNoSpace("RX7800") => "gfx1101",
+            _ when Has("7700") || Has("RX 7800") || Has("v710)") || HasNoSpace("RX7800") => "gfx1101",
 
             // RDNA3 dGPU Navi31 (incl. Pro)
             _ when Has("W7800") || Has("7900") || Has("7950") || Has("7990") => "gfx1100",
+
+            // RDNA2 Raphael APUs
+            _ when Has("Raphael") || Has("Radeon Graphics") || Has("AMD Radeon Graphics") => "gfx1036",
 
             // RDNA2 APUs (Rembrandt)
             _ when Has("660M") || Has("680M") => "gfx1035",
@@ -120,13 +123,16 @@ public record GpuInfo
             _ when Has("6700") || Has("6750") || Has("6800M") || Has("6850M") => "gfx1031",
 
             // RDNA2 Navi21 (big die)
-            _ when Has("6800") || Has("6900") || Has("6950") => "gfx1030",
-
-            // RDNA1 Navi10 XT (incl. Pro card)
-            _ when Has("5600") || Has("5700") || Has("v520") => "gfx1010",
+            _ when Has("6800") || Has("6900") || Has("6950") || Has("v620") => "gfx1030",
 
             // RDNA1 Navi10 XTX
             _ when Has("5500") => "gfx1012",
+
+            //RDNA1 Pro Card
+            _ when Has("v520") => "gfx1011",
+
+            // RDNA1 Navi10 XT
+            _ when Has("5600") || Has("5700") => "gfx1010",
 
             // Vega/GCN5 Dedicated GPUs
             _ when Has("rx vega") || Has("vega 64") || Has("vega 56") || Has("vega frontier") => "gfx900",

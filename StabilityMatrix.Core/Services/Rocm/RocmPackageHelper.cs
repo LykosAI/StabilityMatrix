@@ -641,11 +641,6 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
             environment["TORCH_BACKENDS_CUDA_MEM_EFF_SDP_ENABLED"] = "0";
             environment["TORCH_BACKENDS_CUDA_MATH_SDP_ENABLED"] = "1";
         }
-
-        if (options.ApplyRdna1Override && WindowsRocmSupport.IsRdna1Architecture(gfxArch))
-        {
-            environment["HSA_OVERRIDE_GFX_VERSION"] = "10.1.0";
-        }
     }
 
     private static void SetIfNotNull(IDictionary<string, string> environment, string key, string? value)

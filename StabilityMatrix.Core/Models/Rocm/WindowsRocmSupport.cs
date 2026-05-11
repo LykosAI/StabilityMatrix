@@ -57,11 +57,6 @@ public static class WindowsRocmSupport
         return IsLegacyArchitecture(gfxArch);
     }
 
-    public static bool IsRdna1Architecture(string? gfxArch)
-    {
-        return gfxArch?.StartsWith("gfx101", StringComparison.OrdinalIgnoreCase) == true;
-    }
-
     public static string? TryGetCanonicalArchitecture(string? gfxArch)
     {
         if (string.IsNullOrWhiteSpace(gfxArch))

@@ -49,9 +49,4 @@ public class RocmEnvironmentOptions
     /// When true, helper-managed defaults will force math SDP on legacy ROCm architectures.
     /// </summary>
     public bool ApplyLegacySdpFallback { get; init; } = true;
-
-    /// <summary>
-    /// When true, helper-managed defaults will apply the RDNA1 HSA override mask when needed.
-    /// </summary>
-    public bool ApplyRdna1Override { get; init; } = true;
 }

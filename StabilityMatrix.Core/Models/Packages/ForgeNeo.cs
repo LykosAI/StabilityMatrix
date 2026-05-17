@@ -33,9 +33,10 @@ public class ForgeNeo(
     {
         get
         {
-            var options = base.LaunchOptions;
+            var options = new List<LaunchOptionDefinition>(base.LaunchOptions);
+            var insertIndex = Math.Max(0, options.Count - 1);
             options.Insert(
-                options.Count - 1,
+                insertIndex,
                 new LaunchOptionDefinition
                 {
                     Name = "Bitsandbytes NF4",

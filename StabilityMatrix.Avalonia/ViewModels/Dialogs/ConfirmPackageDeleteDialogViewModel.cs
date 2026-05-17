@@ -24,8 +24,8 @@ public partial class ConfirmPackageDeleteDialogViewModel : ContentDialogViewMode
     public string? ExpectedPackageName => Package.DisplayName;
     public string ConfirmationText => "delete";
     public bool IsValid =>
-        PackageName.Equals(ConfirmationText, StringComparison.OrdinalIgnoreCase)
-        || PackageName.Equals("uninstall", StringComparison.OrdinalIgnoreCase);
+        string.Equals(PackageName, ConfirmationText, StringComparison.OrdinalIgnoreCase)
+        || string.Equals(PackageName, "uninstall", StringComparison.OrdinalIgnoreCase);
     public string DeleteWarningText
     {
         get

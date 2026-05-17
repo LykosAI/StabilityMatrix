@@ -719,22 +719,18 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
                 modelRequest.Sort = CivitSortMode.HighestRated;
             }
         }
-        else if (SearchQuery.StartsWith("https://civitai.com/models/"))
+        else if (CivitaiUrlHelper.TryParseModelId(SearchQuery, out var modelId))
         {
             /* extract model ID from URL, could be one of:
                 https://civitai.com/models/443821?modelVersionId=1957537
+                https://civitai.red/models/443821?modelVersionId=1957537
                 https://civitai.com/models/443821/cyberrealistic-pony
                 https://civitai.com/models/443821
             */
-            var modelId = SearchQuery
-                .Replace("https://civitai.com/models/", string.Empty)
-                .Split(['?', '/'], StringSplitOptions.RemoveEmptyEntries)
-                .FirstOrDefault();
-
             modelRequest.Period = CivitPeriod.AllTime;
             modelRequest.BaseModels = null;
             modelRequest.Types = null;
-            modelRequest.CommaSeparatedModelIds = modelId;
+            modelRequest.CommaSeparatedModelIds = modelId.ToString();
 
             if (modelRequest.Sort is CivitSortMode.Favorites or CivitSortMode.Installed)
             {

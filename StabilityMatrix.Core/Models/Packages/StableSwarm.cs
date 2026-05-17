@@ -266,44 +266,54 @@ public class StableSwarm(
 
         if (!options.IsUpdate)
         {
-            // set default settings
-            var settings = new StableSwarmSettings { IsInstalled = true };
+            // Settings.fds - merge into the existing file instead of replacing it, so user edits
+            // (and any fields added by newer SwarmUI versions) survive a re-install.
+            var settingsPath = GetSettingsPath(installLocation);
+            Directory.CreateDirectory(Path.GetDirectoryName(settingsPath)!);
+            var settingsSection = File.Exists(settingsPath)
+                ? FDSUtility.ReadFile(settingsPath)
+                : new FDSSection();
+
+            settingsSection.Set("IsInstalled", true);
 
             if (options.SharedFolderMethod is SharedFolderMethod.Configuration)
             {
-                settings.Paths = new StableSwarmSettings.PathsData
-                {
-                    ModelRoot = settingsManager.ModelsDirectory,
-                    SDModelFolder = Path.Combine(
-                        settingsManager.ModelsDirectory,
-                        SharedFolderType.StableDiffusion.ToString()
-                    ),
-                    SDLoraFolder = Path.Combine(
-                        settingsManager.ModelsDirectory,
-                        SharedFolderType.Lora.ToString()
-                    ),
-                    SDVAEFolder = Path.Combine(
-                        settingsManager.ModelsDirectory,
-                        SharedFolderType.VAE.ToString()
-                    ),
-                    SDEmbeddingFolder = Path.Combine(
-                        settingsManager.ModelsDirectory,
-                        SharedFolderType.Embeddings.ToString()
-                    ),
-                    SDControlNetsFolder = Path.Combine(
-                        settingsManager.ModelsDirectory,
-                        SharedFolderType.ControlNet.ToString()
-                    ),
-                    SDClipVisionFolder = Path.Combine(
-                        settingsManager.ModelsDirectory,
-                        SharedFolderType.ClipVision.ToString()
-                    ),
-                };
+                var pathsSection = settingsSection.GetSection("Paths") ?? new FDSSection();
+                pathsSection.Set("ModelRoot", settingsManager.ModelsDirectory);
+                pathsSection.Set(
+                    "SDModelFolder",
+                    Path.Combine(settingsManager.ModelsDirectory, SharedFolderType.StableDiffusion.ToString())
+                );
+                pathsSection.Set(
+                    "SDLoraFolder",
+                    Path.Combine(settingsManager.ModelsDirectory, SharedFolderType.Lora.ToString())
+                );
+                pathsSection.Set(
+                    "SDVAEFolder",
+                    Path.Combine(settingsManager.ModelsDirectory, SharedFolderType.VAE.ToString())
+                );
+                pathsSection.Set(
+                    "SDEmbeddingFolder",
+                    Path.Combine(settingsManager.ModelsDirectory, SharedFolderType.Embeddings.ToString())
+                );
+                pathsSection.Set(
+                    "SDControlNetsFolder",
+                    Path.Combine(settingsManager.ModelsDirectory, SharedFolderType.ControlNet.ToString())
+                );
+                pathsSection.Set(
+                    "SDClipVisionFolder",
+                    Path.Combine(settingsManager.ModelsDirectory, SharedFolderType.ClipVision.ToString())
+                );
+                settingsSection.Set("Paths", pathsSection);
             }
 
-            settings.Save(true).SaveToFile(GetSettingsPath(installLocation));
+            settingsSection.SaveToFile(settingsPath);
 
-            var backendsFile = new FDSSection();
+            // Backends.fds - same deal: preserve any user-added backend entries and only replace key "0"
+            var backendsPath = GetBackendsPath(installLocation);
+            var backendsFile = File.Exists(backendsPath)
+                ? FDSUtility.ReadFile(backendsPath)
+                : new FDSSection();
             var dataSection = new FDSSection();
             dataSection.Set("type", "comfyui_selfstart");
             dataSection.Set("title", "StabilityMatrix ComfyUI Self-Start");
@@ -374,7 +384,7 @@ public class StableSwarm(
             }
 
             backendsFile.Set("0", dataSection);
-            backendsFile.SaveToFile(GetBackendsPath(installLocation));
+            backendsFile.SaveToFile(backendsPath);
         }
     }
 

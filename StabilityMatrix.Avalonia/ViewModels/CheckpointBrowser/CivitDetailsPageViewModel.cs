@@ -55,7 +55,7 @@ public partial class CivitDetailsPageViewModel(
 ) : DisposableViewModelBase
 {
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ShowInferenceDefaultsSection))]
+    [NotifyPropertyChangedFor(nameof(ShowInferenceDefaultsSection), nameof(CivitUrl))]
     public required partial CivitModel CivitModel { get; set; }
 
     [ObservableProperty]
@@ -110,7 +110,8 @@ public partial class CivitDetailsPageViewModel(
         nameof(ShortSha256),
         nameof(BaseModelType),
         nameof(ModelFileNameFormat),
-        nameof(IsEarlyAccess)
+        nameof(IsEarlyAccess),
+        nameof(CivitUrl)
     )]
     public partial ModelVersionViewModel? SelectedVersion { get; set; }
 
@@ -172,7 +173,8 @@ public partial class CivitDetailsPageViewModel(
 
     public bool IsEarlyAccess => SelectedVersion?.ModelVersion.IsEarlyAccess ?? false;
 
-    public string CivitUrl => $@"https://civitai.com/models/{CivitModel.Id}";
+    public string CivitUrl =>
+        CivitaiUrlHelper.GetModelUrl(CivitModel.Id, CivitModel.Nsfw, SelectedVersion?.ModelVersion.Id);
 
     public int DescriptionRowSpan => string.IsNullOrWhiteSpace(ModelVersionDescription) ? 3 : 1;
 

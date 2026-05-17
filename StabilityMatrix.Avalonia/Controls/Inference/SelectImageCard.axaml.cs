@@ -50,7 +50,10 @@ public class SelectImageCard : DropTargetTemplatedControlBase
                     }
                 }
 
-                vm.CurrentBitmapSize = System.Drawing.Size.Empty;
+                if (vm.ImageSource is null)
+                {
+                    vm.CurrentBitmapSize = System.Drawing.Size.Empty;
+                }
             });
     }
 }

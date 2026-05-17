@@ -86,7 +86,7 @@
             <TextBlock
                 Cursor="Hand"
                 FontSize="16"
-                Text="{Binding ExpectedPackageName}"
+                Text="{Binding ConfirmationText}"
                 TextAlignment="Center"
                 ToolTip.Tip="Click to copy">
                 <Interaction.Behaviors>

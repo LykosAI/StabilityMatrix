@@ -5,6 +5,21 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.16.0-pre.2
+### Added
+- Added a **Source** button in the Inference SamplerCard that one-click matches your generation Width/Height to the loaded source image — available in Image-to-Image whenever a source image is selected
+- Added popularity counts to booru-style tag completions in the prompt editor; descriptions now show entries like `12.3K · artist` so the more common tags are easier to spot at a glance
+- Added a settings gear button to the CivitAI browser's Base Models filter flyout that jumps straight to the base model filter configuration in Settings
+- Added a **Bitsandbytes NF4** launch option to Stable Diffusion WebUI Forge - Neo for low-bit (`--bnb`) inference
+### Changed
+- Tidied up the Inference SamplerCard dimensions section — Source/Presets actions are shown as labeled buttons below the dimension row
+- Promoted the Encoder Type selector in the Inference Model card out of Advanced Options up to the main card body, so it's visible whenever a non-Auto workflow profile is active (and always when **Custom** is selected)
+- Local model autocomplete in the prompt editor now uses substring matching instead of prefix-only — typing any part of a model's filename surfaces it, with names that start with your search still ranked first
+- Simplified the package deletion confirmation: instead of retyping the full package display name, you now type `delete` (or `uninstall`) to confirm
+### Fixed
+- Fixed [#1585](https://github.com/LykosAI/StabilityMatrix/issues/1585) - FluxGym installs/updates pulling an incompatible `transformers` version — installs now pin `transformers==4.54.1` and exclude it from the default requirements pass
+- Fixed [#1641](https://github.com/LykosAI/StabilityMatrix/issues/1641) - Cogstudio failing to set up its `inference/gradio_composite_demo` directory when the parent path didn't already exist
+
 ## v2.16.0-pre.1
 ### Added
 - Added CivArchive model browser with details page, image viewer, version selector, trigger words, and in-app downloads with tracked progress

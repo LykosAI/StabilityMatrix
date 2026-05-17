@@ -221,10 +221,9 @@ public class ComfyUI(
                 InitialValue = HardwareHelper.IterGpuInfo().Select(gpu => gpu.MemoryLevel).Max() switch
                 {
                     MemoryLevel.Low => "--lowvram",
-                    MemoryLevel.Medium => "--normalvram",
                     _ => null,
                 },
-                Options = ["--highvram", "--normalvram", "--lowvram", "--novram"],
+                Options = ["--highvram", "--lowvram", "--novram"],
             },
             new()
             {

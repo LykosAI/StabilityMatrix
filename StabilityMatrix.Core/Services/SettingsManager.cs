@@ -460,6 +460,8 @@ public class SettingsManager(ILogger<SettingsManager> logger) : ISettingsManager
     /// </summary>
     protected virtual void LoadSettings(CancellationToken cancellationToken = default)
     {
+        var shouldPersistNormalizedSettings = false;
+
         fileLock.Wait(cancellationToken);
 
         try
@@ -478,12 +480,25 @@ public class SettingsManager(ILogger<SettingsManager> logger) : ISettingsManager
             }
 
             Settings = DeserializeOrRecoverSettings(rawBytes);
+            shouldPersistNormalizedSettings = NormalizeLoadedSettings(Settings);
         }
         finally
         {
             fileLock.Release();
 
             isLoaded = true;
+
+            if (shouldPersistNormalizedSettings)
+            {
+                try
+                {
+                    SaveSettings(cancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogWarning(ex, "Failed to persist normalized settings after load");
+                }
+            }
 
             Loaded?.Invoke(this, EventArgs.Empty);
         }
@@ -495,6 +510,8 @@ public class SettingsManager(ILogger<SettingsManager> logger) : ISettingsManager
     /// </summary>
     protected virtual async Task LoadSettingsAsync(CancellationToken cancellationToken = default)
     {
+        var shouldPersistNormalizedSettings = false;
+
         await fileLock.WaitAsync(cancellationToken).ConfigureAwait(false);
 
         try
@@ -514,6 +531,7 @@ public class SettingsManager(ILogger<SettingsManager> logger) : ISettingsManager
             }
 
             Settings = DeserializeOrRecoverSettings(rawBytes);
+            shouldPersistNormalizedSettings = NormalizeLoadedSettings(Settings);
         }
         finally
         {
@@ -521,8 +539,51 @@ public class SettingsManager(ILogger<SettingsManager> logger) : ISettingsManager
 
             isLoaded = true;
 
+            if (shouldPersistNormalizedSettings)
+            {
+                try
+                {
+                    await SaveSettingsAsync(cancellationToken).ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogWarning(ex, "Failed to persist normalized settings after load");
+                }
+            }
+
             Loaded?.Invoke(this, EventArgs.Empty);
         }
+    }
+
+    private bool NormalizeLoadedSettings(Settings settings)
+    {
+        var removedCount = 0;
+
+        foreach (var package in settings.InstalledPackages)
+        {
+            if (
+                package.PackageName?.StartsWith("ComfyUI", StringComparison.OrdinalIgnoreCase) != true
+                || package.LaunchArgs is not { Count: > 0 }
+            )
+            {
+                continue;
+            }
+
+            removedCount += package.LaunchArgs.RemoveAll(option =>
+                option.Name.Equals("--normalvram", StringComparison.OrdinalIgnoreCase)
+            );
+        }
+
+        if (removedCount > 0)
+        {
+            logger.LogInformation(
+                "Removed {RemovedCount} obsolete ComfyUI launch args from loaded settings",
+                removedCount
+            );
+            return true;
+        }
+
+        return false;
     }
 
     /// <summary>

@@ -30,7 +30,13 @@ public class WindowsPrerequisiteHelper(
         "https://github.com/git-for-windows/git/releases/download/v2.52.0.windows.1/PortableGit-2.52.0-64-bit.7z.exe";
     private const string ExpectedGitVersion = "2.52.0";
 
-    private const string VcRedistDownloadUrl = "https://aka.ms/vs/16/release/vc_redist.x64.exe";
+    // VS 2015-2022 (v17) x64 runtime - supersedes the older 2015-2019 (v16) build
+    private const string VcRedistDownloadUrl = "https://aka.ms/vs/17/release/vc_redist.x64.exe";
+
+    // Minimum required runtime build. 33810 = 14.40.33810; modern packages (PyTorch,
+    // ONNX Runtime, etc.) link against the 2015-2022 runtime, so the older 2015-2019
+    // build (14.29.30139) is no longer sufficient.
+    private const uint MinVcRedistBuild = 33810;
 
     private const string TkinterDownloadUrl =
         "https://cdn.lykos.ai/tkinter-cpython-embedded-3.10.11-win-x64.zip";
@@ -697,15 +703,18 @@ public class WindowsPrerequisiteHelper(
     [SupportedOSPlatform("windows")]
     public async Task InstallVcRedistIfNecessary(IProgress<ProgressReport>? progress = null)
     {
-        var registry = Registry.LocalMachine;
-        var key = registry.OpenSubKey(@"SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\X64", false);
-        if (key != null)
+        using var key = Registry.LocalMachine.OpenSubKey(
+            @"SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\X64",
+            false
+        );
+        if (key?.GetValue("Bld") is { } bldValue && Convert.ToUInt32(bldValue) >= MinVcRedistBuild)
         {
-            var buildId = Convert.ToUInt32(key.GetValue("Bld"));
-            if (buildId >= 30139)
-            {
-                return;
-            }
+            Logger.Debug(
+                "VC Redist build {Build} already satisfies minimum {Min}",
+                bldValue,
+                MinVcRedistBuild
+            );
+            return;
         }
 
         Logger.Info("Downloading VC Redist");

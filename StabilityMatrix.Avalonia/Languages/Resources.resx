@@ -243,6 +243,39 @@
   <data name="Label_Downloads" xml:space="preserve">
     <value>Downloads</value>
   </data>
+  <data name="Label_Activity" xml:space="preserve">
+    <value>Activity</value>
+  </data>
+  <data name="Label_InProgress" xml:space="preserve">
+    <value>In Progress</value>
+  </data>
+  <data name="Action_MarkAllRead" xml:space="preserve">
+    <value>Mark all as read</value>
+  </data>
+  <data name="Action_ClearAll" xml:space="preserve">
+    <value>Clear all</value>
+  </data>
+  <data name="Action_ToggleDetails" xml:space="preserve">
+    <value>Toggle details</value>
+  </data>
+  <data name="Action_Dismiss" xml:space="preserve">
+    <value>Dismiss</value>
+  </data>
+  <data name="Action_OpenFolder" xml:space="preserve">
+    <value>Open Folder</value>
+  </data>
+  <data name="Action_Open" xml:space="preserve">
+    <value>Open</value>
+  </data>
+  <data name="Action_ShowActivity" xml:space="preserve">
+    <value>Show Activity</value>
+  </data>
+  <data name="Label_RelativeTime_JustNow" xml:space="preserve">
+    <value>just now</value>
+  </data>
+  <data name="Label_RelativeTime_MinutesAgo" xml:space="preserve">
+    <value>{0}m ago</value>
+  </data>
   <data name="Action_Install" xml:space="preserve">
     <value>Install</value>
   </data>
@@ -956,6 +989,12 @@
   </data>
   <data name="TeachingTip_DownloadsExplanation" xml:space="preserve">
     <value>Check the progress of your package installations and model downloads here.</value>
+  </data>
+  <data name="TeachingTip_ActivityCenter_Title" xml:space="preserve">
+    <value>Notifications &amp; downloads live here</value>
+  </data>
+  <data name="TeachingTip_ActivityCenter_Subtitle" xml:space="preserve">
+    <value>Click any toast to jump straight to it, or open this panel anytime to catch up on what you missed.</value>
   </data>
   <data name="Label_RecommendedModels" xml:space="preserve">
     <value>Recommended Models</value>

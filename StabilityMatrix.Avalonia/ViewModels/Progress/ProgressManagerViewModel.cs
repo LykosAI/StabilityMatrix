@@ -145,7 +145,7 @@ public partial class ProgressManagerViewModel : PageViewModelBase
 
             // The service evicts the oldest entry (from the tail) once it hits its cap; mirror
             // that here so the UI list stays in sync instead of growing unbounded.
-            while (NotificationItems.Count > notificationHistory.Entries.Count)
+            while (NotificationItems.Count > notificationHistory.Count)
             {
                 NotificationItems.RemoveAt(NotificationItems.Count - 1);
             }

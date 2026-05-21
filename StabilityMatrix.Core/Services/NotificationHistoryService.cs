@@ -20,6 +20,15 @@ public class NotificationHistoryService : INotificationHistoryService
         }
     }
 
+    public int Count
+    {
+        get
+        {
+            lock (sync)
+                return entries.Count;
+        }
+    }
+
     public int UnreadCount
     {
         get

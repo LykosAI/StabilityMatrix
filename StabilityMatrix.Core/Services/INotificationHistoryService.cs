@@ -11,6 +11,9 @@ public interface INotificationHistoryService
 {
     IReadOnlyList<NotificationHistoryEntry> Entries { get; }
 
+    /// <summary>Total number of entries. O(1) — avoids the snapshot allocation of <see cref="Entries"/>.</summary>
+    int Count { get; }
+
     int UnreadCount { get; }
 
     event EventHandler<NotificationHistoryEntry>? EntryAdded;

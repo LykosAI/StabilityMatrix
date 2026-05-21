@@ -22,10 +22,7 @@ public partial class ConfirmPackageDeleteDialogViewModel : ContentDialogViewMode
     public partial string PackageName { get; set; } = string.Empty;
 
     public string? ExpectedPackageName => Package.DisplayName;
-    public string ConfirmationText => "delete";
-    public bool IsValid =>
-        string.Equals(PackageName, ConfirmationText, StringComparison.OrdinalIgnoreCase)
-        || string.Equals(PackageName, "uninstall", StringComparison.OrdinalIgnoreCase);
+    public bool IsValid => ExpectedPackageName?.Equals(PackageName, StringComparison.Ordinal) ?? false;
     public string DeleteWarningText
     {
         get
@@ -51,6 +48,6 @@ public partial class ConfirmPackageDeleteDialogViewModel : ContentDialogViewMode
     [RelayCommand]
     private async Task CopyExpectedPackageName()
     {
-        await App.Clipboard?.SetTextAsync(ConfirmationText);
+        await App.Clipboard?.SetTextAsync(ExpectedPackageName);
     }
 }

@@ -25,7 +25,7 @@ public class UnpackSiteCustomizeStep(DirectoryPath venvPath) : IPackageStep
         var expected = await Assets.PyScriptSiteCustomize.ReadAsStringAsync();
         if (!file.Exists || (await TryReadAsync(file)) != expected)
         {
-            await Assets.PyScriptSiteCustomize.ExtractTo(file);
+            await Assets.PyScriptSiteCustomize.ExtractTo(file, true);
         }
 
         // Drop any stale/corrupt compiled bytecode so it's regenerated from the

@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Promoted the Encoder Type selector in the Inference Model card out of Advanced Options up to the main card body, so it's visible whenever a non-Auto workflow profile is active (and always when **Custom** is selected)
 - Local model autocomplete in the prompt editor now uses substring matching instead of prefix-only — typing any part of a model's filename surfaces it, with names that start with your search still ranked first
 ### Fixed
+- Fixed Inference text encoder selections being cleared when navigating away from and back to the Inference tab — encoder slots now ignore the transient null the model dropdown reports while its list refreshes
 - Fixed [#1585](https://github.com/LykosAI/StabilityMatrix/issues/1585) - FluxGym installs/updates pulling an incompatible `transformers` version — installs now pin `transformers==4.54.1` and exclude it from the default requirements pass
 - Fixed [#1641](https://github.com/LykosAI/StabilityMatrix/issues/1641) - Cogstudio failing to set up its `inference/gradio_composite_demo` directory when the parent path didn't already exist
 

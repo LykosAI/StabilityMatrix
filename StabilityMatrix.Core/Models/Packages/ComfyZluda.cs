@@ -205,8 +205,10 @@ public class ComfyZluda(
         await SetupVenv(installLocation, pythonVersion: PyVersion.Parse(installedPackage.PythonVersion))
             .ConfigureAwait(false);
 
+        var launchArguments = NormalizeLaunchArguments(installedPackage, options.Arguments);
+
         var zludaPath = Path.Combine(installLocation, LaunchCommand);
-        ProcessArgs args = ["--", VenvRunner.PythonPath.ToString(), "main.py", .. options.Arguments];
+        ProcessArgs args = ["--", VenvRunner.PythonPath.ToString(), "main.py", .. launchArguments];
         zludaProcess = ProcessRunner.StartAnsiProcess(
             zludaPath,
             args,

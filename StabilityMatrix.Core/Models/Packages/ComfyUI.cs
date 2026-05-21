@@ -528,6 +528,8 @@ public class ComfyUI(
         await SetupVenv(installLocation, pythonVersion: PyVersion.Parse(installedPackage.PythonVersion))
             .ConfigureAwait(false);
 
+        var launchArguments = NormalizeLaunchArguments(installedPackage, options.Arguments);
+
         VenvRunner.UpdateEnvironmentVariables(GetEnvVars);
 
         // Check for old NVIDIA driver version with cu130 installations
@@ -584,7 +586,7 @@ public class ComfyUI(
         }
 
         VenvRunner.RunDetached(
-            [Path.Combine(installLocation, options.Command ?? LaunchCommand), .. options.Arguments],
+            [Path.Combine(installLocation, options.Command ?? LaunchCommand), .. launchArguments],
             HandleConsoleOutput,
             OnExit
         );
@@ -606,6 +608,34 @@ public class ComfyUI(
             }
             OnStartupComplete(WebUrl);
         }
+    }
+
+    protected ProcessArgs NormalizeLaunchArguments(
+        InstalledPackage installedPackage,
+        ProcessArgs fallbackArguments
+    )
+    {
+        if (installedPackage.LaunchArgs is not { Count: > 0 })
+        {
+            return fallbackArguments;
+        }
+
+        var removedCount = installedPackage.LaunchArgs.RemoveAll(option =>
+            string.Equals(option.Name, "--normalvram", StringComparison.OrdinalIgnoreCase)
+        );
+
+        if (removedCount == 0)
+        {
+            return fallbackArguments;
+        }
+
+        Logger.Info("Removed {RemovedCount} obsolete ComfyUI launch args before launch", removedCount);
+
+        SettingsManager.SaveLaunchArgs(installedPackage.Id, installedPackage.LaunchArgs);
+
+        return ProcessArgs.FromQuoted(
+            installedPackage.LaunchArgs.Select(option => option.ToArgString()).OfType<string>()
+        );
     }
 
     public override TorchIndex GetRecommendedTorchVersion()

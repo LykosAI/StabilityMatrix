@@ -281,8 +281,8 @@
                                     </Button>
 
                                     <Button
-                                        Grid.Column="{Binding HasSourceImageDimensions, Converter={x:Static converters:BoolToInt32Converter.OneIfTrueElseZero}}"
-                                        Grid.ColumnSpan="{Binding HasSourceImageDimensions, Converter={x:Static converters:BoolToInt32Converter.OneIfTrueElseTwo}}"
+                                        Grid.Column="{Binding HasSourceImageDimensions, Converter={x:Static converters:BoolToIntConverter.Instance}, ConverterParameter='1,0'}"
+                                        Grid.ColumnSpan="{Binding HasSourceImageDimensions, Converter={x:Static converters:BoolToIntConverter.Instance}, ConverterParameter='1,2'}"
                                         Height="36"
                                         MinWidth="0"
                                         Padding="10,4"

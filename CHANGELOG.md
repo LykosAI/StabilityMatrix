@@ -5,6 +5,12 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.16.0-pre.2
+### Fixed
+- Fixed [#1650](https://github.com/LykosAI/StabilityMatrix/issues/1650) - ComfyUI-Manager extension installs failing on Linux with `File not found: venv/uv-build-constraints.txt` by no longer leaking the relative build-constraints path into the running package's environment
+- Fixed [#1645](https://github.com/LykosAI/StabilityMatrix/issues/1645) - Strix Halo / Radeon 8060S and other `Display controller`-class integrated GPUs not appearing in the GPU list on Linux
+- Fixed [#1643](https://github.com/LykosAI/StabilityMatrix/issues/1643) - package install and launch failures when `sitecustomize.py` or its compiled bytecode was corrupted by external software (e.g. some antivirus suites); the file now self-heals when out of date and its startup actions can no longer abort interpreter startup
+
 ## v2.16.0-pre.1
 ### Added
 - Added CivArchive model browser with details page, image viewer, version selector, trigger words, and in-app downloads with tracked progress

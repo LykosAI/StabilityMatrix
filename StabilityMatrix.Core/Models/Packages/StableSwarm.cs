@@ -578,21 +578,14 @@ public class StableSwarm(
     }
 
     /// <summary>
-    /// Resolves the Comfy backend that Swarm is expected to self-launch.
-    /// </summary>
-    private InstalledPackage? TryResolveLinkedComfyBackend()
-    {
-        return settingsManager.Settings.InstalledPackages.FirstOrDefault(x =>
-            x.PackageName is nameof(ComfyUI) or "ComfyUI-Zluda"
-        );
-    }
-
-    /// <summary>
     /// Builds ROCm launch environment variables for Swarm so they flow through to its self-launched Comfy backend.
     /// </summary>
     private IReadOnlyDictionary<string, string> BuildLinkedComfyLaunchEnvironment()
     {
-        var comfyPackage = TryResolveLinkedComfyBackend();
+        var comfyPackage = settingsManager.Settings.InstalledPackages.FirstOrDefault(x =>
+            x.PackageName is nameof(ComfyUI) or "ComfyUI-Zluda"
+        );
+
         if (comfyPackage is null || !ShouldInjectLinkedComfyRocmEnvironment(comfyPackage))
         {
             return new Dictionary<string, string>();

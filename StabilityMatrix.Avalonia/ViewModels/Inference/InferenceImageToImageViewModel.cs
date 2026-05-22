@@ -46,6 +46,7 @@ public class InferenceImageToImageViewModel : InferenceTextToImageViewModel
         SelectImageCardViewModel = vmFactory.Get<SelectImageCardViewModel>(vm =>
         {
             vm.IsMaskEditorEnabled = true;
+            vm.SyncBitmapSizeToTabContext = true;
         });
 
         SamplerCardViewModel.IsDenoiseStrengthEnabled = true;

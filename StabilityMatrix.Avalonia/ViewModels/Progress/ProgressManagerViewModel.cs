@@ -9,6 +9,7 @@ using Avalonia.Collections;
 using Avalonia.Controls.Notifications;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using FluentAvalonia.UI.Media.Animation;
 using FluentIcons.Common;
@@ -23,6 +24,7 @@ using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Notifications;
 using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Models.Settings;
@@ -42,35 +44,150 @@ public partial class ProgressManagerViewModel : PageViewModelBase
     private readonly INotificationService notificationService;
     private readonly INavigationService<MainWindowViewModel> navigationService;
     private readonly INavigationService<SettingsViewModel> settingsNavService;
+    private readonly INotificationHistoryService notificationHistory;
+    private readonly INotificationActionDispatcher actionDispatcher;
 
-    public override string Title => "Download Manager";
+    public override string Title => Resources.Label_Activity;
 
     public override IconSource IconSource =>
-        new SymbolIconSource { Symbol = Symbol.ArrowCircleDown, IconVariant = IconVariant.Filled };
+        new SymbolIconSource { Symbol = Symbol.History, IconVariant = IconVariant.Filled };
 
     public AvaloniaList<ProgressItemViewModelBase> ProgressItems { get; } = new();
 
+    public AvaloniaList<NotificationItemViewModel> NotificationItems { get; } = new();
+
     [ObservableProperty]
     private bool isOpen;
+
+    [ObservableProperty]
+    private int unreadNotificationCount;
+
+    [ObservableProperty]
+    private int selectedTabIndex;
+
+    /// <summary>
+    /// Pick the most-useful tab to show on flyout open: stay on In Progress if there's any active
+    /// download/install, otherwise jump to Notifications when only history is present.
+    /// </summary>
+    public void RecomputePreferredTab()
+    {
+        if (ProgressItems.Count == 0 && NotificationItems.Count > 0)
+        {
+            SelectedTabIndex = 1;
+        }
+        else
+        {
+            SelectedTabIndex = 0;
+        }
+    }
+
+    /// <summary>True when either tab has any content — used to decide whether the footer flyout is reachable.</summary>
+    public bool HasAnyContent => ProgressItems.Count > 0 || NotificationItems.Count > 0;
+
+    /// <summary>Combined counter rendered in the footer InfoBadge.</summary>
+    public int TotalBadgeCount => ProgressItems.Count + UnreadNotificationCount;
+
+    /// <summary>Explicit bool so the InfoBadge can hide cleanly when nothing is pending.</summary>
+    public bool IsBadgeVisible => TotalBadgeCount > 0;
 
     public ProgressManagerViewModel(
         ITrackedDownloadService trackedDownloadService,
         INotificationService notificationService,
         INavigationService<MainWindowViewModel> navigationService,
-        INavigationService<SettingsViewModel> settingsNavService
+        INavigationService<SettingsViewModel> settingsNavService,
+        INotificationHistoryService notificationHistory,
+        INotificationActionDispatcher actionDispatcher
     )
     {
         this.trackedDownloadService = trackedDownloadService;
         this.notificationService = notificationService;
         this.navigationService = navigationService;
         this.settingsNavService = settingsNavService;
+        this.notificationHistory = notificationHistory;
+        this.actionDispatcher = actionDispatcher;
 
         // Attach to the event
         trackedDownloadService.DownloadAdded += TrackedDownloadService_OnDownloadAdded;
         EventManager.Instance.ToggleProgressFlyout += (_, _) => IsOpen = !IsOpen;
         EventManager.Instance.PackageInstallProgressAdded += InstanceOnPackageInstallProgressAdded;
         EventManager.Instance.RecommendedModelsDialogClosed += InstanceOnRecommendedModelsDialogClosed;
+
+        // Hydrate notifications (entries are stored newest-first)
+        foreach (var entry in notificationHistory.Entries)
+        {
+            NotificationItems.Add(
+                new NotificationItemViewModel(entry, notificationHistory, actionDispatcher)
+            );
+        }
+        notificationHistory.EntryAdded += OnHistoryEntryAdded;
+        notificationHistory.EntriesChanged += OnHistoryChanged;
+        ProgressItems.CollectionChanged += (_, _) =>
+        {
+            OnPropertyChanged(nameof(HasAnyContent));
+            OnPropertyChanged(nameof(TotalBadgeCount));
+            OnPropertyChanged(nameof(IsBadgeVisible));
+        };
+        NotificationItems.CollectionChanged += (_, _) =>
+        {
+            OnPropertyChanged(nameof(HasAnyContent));
+        };
+        UnreadNotificationCount = notificationHistory.UnreadCount;
     }
+
+    private void OnHistoryEntryAdded(object? sender, NotificationHistoryEntry entry)
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            NotificationItems.Insert(
+                0,
+                new NotificationItemViewModel(entry, notificationHistory, actionDispatcher)
+            );
+
+            // The service evicts the oldest entry (from the tail) once it hits its cap; mirror
+            // that here so the UI list stays in sync instead of growing unbounded.
+            while (NotificationItems.Count > notificationHistory.Count)
+            {
+                NotificationItems.RemoveAt(NotificationItems.Count - 1);
+            }
+
+            UnreadNotificationCount = notificationHistory.UnreadCount;
+        });
+    }
+
+    private void OnHistoryChanged(object? sender, EventArgs e)
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            // Drop any entries that were evicted from the underlying service
+            var liveIds = notificationHistory.Entries.Select(x => x.Id).ToHashSet();
+            for (var i = NotificationItems.Count - 1; i >= 0; i--)
+            {
+                if (!liveIds.Contains(NotificationItems[i].Id))
+                {
+                    NotificationItems.RemoveAt(i);
+                }
+            }
+
+            foreach (var item in NotificationItems)
+            {
+                item.RefreshReadState();
+            }
+
+            UnreadNotificationCount = notificationHistory.UnreadCount;
+        });
+    }
+
+    partial void OnUnreadNotificationCountChanged(int value)
+    {
+        OnPropertyChanged(nameof(TotalBadgeCount));
+        OnPropertyChanged(nameof(IsBadgeVisible));
+    }
+
+    [RelayCommand]
+    private void ClearNotifications() => notificationHistory.Clear();
+
+    [RelayCommand]
+    private void MarkAllNotificationsRead() => notificationHistory.MarkAllRead();
 
     private void InstanceOnRecommendedModelsDialogClosed(object? sender, EventArgs e)
     {
@@ -109,7 +226,8 @@ public partial class ProgressManagerViewModel : PageViewModelBase
                                 Title = "Download Completed",
                                 Body = $"Download of {e.FileName} completed successfully.",
                                 BodyImagePath = imageFile?.FullPath,
-                            }
+                            },
+                            action: new OpenFolderAction(e.DownloadDirectory.FullPath)
                         )
                         .SafeFireAndForget();
 
@@ -158,7 +276,8 @@ public partial class ProgressManagerViewModel : PageViewModelBase
                                         Title = "Download Disabled",
                                         Body =
                                             $"The creator of {e.FileName} has disabled downloads on this file",
-                                    }
+                                    },
+                                    action: new ToggleProgressFlyoutAction()
                                 )
                             );
                             return;
@@ -172,7 +291,8 @@ public partial class ProgressManagerViewModel : PageViewModelBase
                             {
                                 Title = "Download Failed",
                                 Body = $"Download of {e.FileName} failed: {msg}",
-                            }
+                            },
+                            action: new ToggleProgressFlyoutAction()
                         )
                     );
 

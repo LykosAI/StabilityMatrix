@@ -14,7 +14,19 @@ public static class NotificationLevelExtensions
             NotificationLevel.Success => NotificationType.Success,
             NotificationLevel.Warning => NotificationType.Warning,
             NotificationLevel.Error => NotificationType.Error,
-            _ => throw new ArgumentOutOfRangeException(nameof(level), level, null)
+            _ => throw new ArgumentOutOfRangeException(nameof(level), level, null),
+        };
+    }
+
+    public static NotificationLevel ToNotificationLevel(this NotificationType type)
+    {
+        return type switch
+        {
+            NotificationType.Information => NotificationLevel.Information,
+            NotificationType.Success => NotificationLevel.Success,
+            NotificationType.Warning => NotificationLevel.Warning,
+            NotificationType.Error => NotificationLevel.Error,
+            _ => NotificationLevel.Information,
         };
     }
 }

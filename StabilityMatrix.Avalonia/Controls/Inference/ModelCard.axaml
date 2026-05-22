@@ -182,6 +182,24 @@
                             IsVisible="{Binding ShowWorkflowProfileStatus}"
                             Text="{Binding WorkflowProfileStatusText}" />
 
+                        <!--  Encoder Type (shown for non-Auto workflows on UNet, and any time Custom is selected)  -->
+                        <Grid
+                            Margin="0,8,0,0"
+                            ColumnDefinitions="70,*"
+                            IsVisible="{Binding ShowEncoderTypeSelection}">
+                            <TextBlock
+                                Grid.Column="0"
+                                VerticalAlignment="Center"
+                                Text="Encoder"
+                                TextAlignment="Left" />
+                            <ui:FAComboBox
+                                Grid.Column="1"
+                                HorizontalAlignment="Stretch"
+                                IsTextSearchEnabled="True"
+                                ItemsSource="{Binding ClipTypes}"
+                                SelectedItem="{Binding SelectedClipType}" />
+                        </Grid>
+
                         <!--  Advanced Options Expander (Precision, VAE, CLIP Skip)  -->
                         <Expander
                             Margin="0,8,0,0"
@@ -283,21 +301,6 @@
                                 </Grid>
                             </Expander.Header>
                             <StackPanel Margin="0,4,0,0" Spacing="8">
-                                <!--  Encoder Type  -->
-                                <Grid ColumnDefinitions="90,*" IsVisible="{Binding ShowEncoderTypeSelection}">
-                                    <TextBlock
-                                        Grid.Column="0"
-                                        VerticalAlignment="Center"
-                                        Text="Encoder Type"
-                                        TextAlignment="Left" />
-                                    <ui:FAComboBox
-                                        Grid.Column="1"
-                                        HorizontalAlignment="Stretch"
-                                        IsTextSearchEnabled="True"
-                                        ItemsSource="{Binding ClipTypes}"
-                                        SelectedItem="{Binding SelectedClipType}" />
-                                </Grid>
-
                                 <!--  Dynamic Text Encoders  -->
                                 <ItemsControl ItemsSource="{Binding TextEncoders}">
                                     <ItemsControl.ItemTemplate>

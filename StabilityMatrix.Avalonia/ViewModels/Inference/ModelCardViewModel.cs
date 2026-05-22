@@ -281,7 +281,8 @@ public partial class ModelCardViewModel(
     /// </summary>
     public bool ShowShift => ShowEncoderSection && (IsHiDreamWorkflow || IsZImageWorkflow);
     public bool ShowEncoderTypeSelection =>
-        ShowEncoderSection && SelectedWorkflowProfile is not InferenceWorkflowProfile.Auto;
+        SelectedWorkflowProfile is InferenceWorkflowProfile.Custom
+        || (ShowEncoderSection && SelectedWorkflowProfile is not InferenceWorkflowProfile.Auto);
     public InferenceWorkflowProfile ResolvedWorkflowProfile =>
         SelectedWorkflowProfile is InferenceWorkflowProfile.Auto
             ? InferWorkflowProfile()

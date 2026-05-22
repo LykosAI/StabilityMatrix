@@ -122,11 +122,11 @@ public class FluxGym(
         {
             RequirementsFilePaths = ["sd-scripts/requirements.txt", "requirements.txt"],
             RequirementsExcludePattern =
-                "(diffusers\\[torch\\]==0.32.1|torch|torchvision|torchaudio|xformers|bitsandbytes|-e\\s\\.)",
+                "(diffusers\\[torch\\]==0.32.1|torch|torchvision|torchaudio|xformers|bitsandbytes|transformers.*|-e\\s\\.)",
             TorchaudioVersion = " ",
             CudaIndex = isLegacyNvidiaGpu ? "cu126" : "cu128",
             ExtraPipArgs = ["bitsandbytes>=0.46.0"],
-            PostInstallPipArgs = ["diffusers[torch]==0.32.1"],
+            PostInstallPipArgs = ["diffusers[torch]==0.32.1", "transformers==4.54.1"],
         };
 
         await StandardPipInstallProcessAsync(

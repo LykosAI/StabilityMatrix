@@ -95,6 +95,10 @@ public class AiToolkit(
             // cu128 by default; keep cu126 for legacy NVIDIA GPUs without cu128 support.
             CudaIndex = isLegacyNvidia ? "cu126" : "cu128",
             ExtraPipArgs = [Compat.IsWindows ? "triton-windows" : "triton"],
+            // ai-toolkit doesn't pin numpy, so it floats to 2.x and breaks the scipy/diffusers
+            // C-extensions (built for numpy 1.x): "numpy.dtype size changed... binary incompatibility".
+            // Pin to the last 1.x release to keep them ABI-compatible.
+            PostInstallPipArgs = ["numpy==1.26.4"],
             UpgradePackages = true,
         };
 

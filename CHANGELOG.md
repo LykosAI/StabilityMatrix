@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Tidied up the Inference SamplerCard dimensions section — Source/Presets actions are shown as labeled buttons below the dimension row
 - Promoted the Encoder Type selector in the Inference Model card out of Advanced Options up to the main card body, so it's visible whenever a non-Auto workflow profile is active (and always when **Custom** is selected)
 - Local model autocomplete in the prompt editor now uses substring matching instead of prefix-only — typing any part of a model's filename surfaces it, with names that start with your search still ranked first
-- Updated AI-Toolkit to install torch 2.9.1 / torchvision 0.24.1 / torchaudio 2.9.1 from the cu128 index to match upstream (ostris/ai-toolkit), with a cu126 fallback for legacy NVIDIA GPUs
+- Updated AI-Toolkit to install torch 2.9.1 / torchvision 0.24.1 / torchaudio 2.9.1 from the cu128 index to match upstream (ostris/ai-toolkit), with a cu126 fallback for legacy NVIDIA GPUs; also pin numpy to 1.26.4 to avoid a numpy 2.x ABI break in scipy/diffusers that crashed training runs
 - Pinned kohya_ss torch to 2.7.0 / torchvision 0.22.0 (cu128) to match upstream's requirements_pytorch_windows.txt instead of resolving an untested latest, keeping the cu126 legacy-GPU fallback
 - Pinned reForge torch to 2.9.0 to match upstream (modules/launch_utils.py)
 ### Fixed

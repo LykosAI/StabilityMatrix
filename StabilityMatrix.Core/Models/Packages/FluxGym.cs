@@ -121,12 +121,20 @@ public class FluxGym(
         var config = new PipInstallConfig
         {
             RequirementsFilePaths = ["sd-scripts/requirements.txt", "requirements.txt"],
+            // The fluxgym and sd-scripts requirements conflict on several pins, so we exclude the
+            // conflicting entries here and reinstall known-good versions via PostInstallPipArgs:
+            //  - diffusers: fluxgym pins an unpinned git+HEAD build (now resolves to a dev release
+            //    requiring safetensors>=0.8.0rc0) while sd-scripts pins safetensors==0.4.5, which is
+            //    unsatisfiable. Exclude both the git HEAD and the sd-scripts diffusers[torch]==0.32.1.
+            //  - transformers: fluxgym pins 4.49.0 and sd-scripts pins 4.54.1, also unsatisfiable.
+            // We then install the known-good diffusers[torch]==0.32.1 (compatible with safetensors
+            // 0.4.5) and transformers==4.54.1 after the requirements step.
             RequirementsExcludePattern =
-                "(diffusers\\[torch\\]==0.32.1|torch|torchvision|torchaudio|xformers|bitsandbytes|-e\\s\\.)",
+                "(diffusers\\[torch\\]==0.32.1|git\\+https://github\\.com/huggingface/diffusers\\.git|torch|torchvision|torchaudio|xformers|bitsandbytes|transformers.*|-e\\s\\.)",
             TorchaudioVersion = " ",
             CudaIndex = isLegacyNvidiaGpu ? "cu126" : "cu128",
             ExtraPipArgs = ["bitsandbytes>=0.46.0"],
-            PostInstallPipArgs = ["diffusers[torch]==0.32.1"],
+            PostInstallPipArgs = ["diffusers[torch]==0.32.1", "transformers==4.54.1"],
         };
 
         await StandardPipInstallProcessAsync(

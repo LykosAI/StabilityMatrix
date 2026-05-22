@@ -5,6 +5,12 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.16.0-pre.2
+### Changed
+- Updated AI-Toolkit to install torch 2.9.1 / torchvision 0.24.1 / torchaudio 2.9.1 from the cu128 index to match upstream (ostris/ai-toolkit), with a cu126 fallback for legacy NVIDIA GPUs
+- Pinned kohya_ss torch to 2.7.0 / torchvision 0.22.0 (cu128) to match upstream's requirements_pytorch_windows.txt instead of resolving an untested latest, keeping the cu126 legacy-GPU fallback
+- Pinned reForge torch to 2.9.0 to match upstream (modules/launch_utils.py)
+
 ## v2.16.0-pre.1
 ### Added
 - Added CivArchive model browser with details page, image viewer, version selector, trigger words, and in-app downloads with tracked progress

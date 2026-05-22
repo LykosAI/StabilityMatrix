@@ -48,6 +48,12 @@ public class SDWebForge(
     public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Simple;
     public override PackageType PackageType => PackageType.Legacy;
 
+    /// <summary>
+    /// Torch version spec used during install. Default (" ") leaves torch unpinned (resolved from
+    /// the cu* index per the requirements file). Subclasses can override to pin a specific version.
+    /// </summary>
+    protected virtual string TorchVersionSpec => " ";
+
     public override List<LaunchOptionDefinition> LaunchOptions =>
         [
             new()
@@ -183,13 +189,16 @@ public class SDWebForge(
         var torchIndex = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
         var isLegacyNvidia =
             torchIndex is TorchIndex.Cuda
-            && (SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu() ?? HardwareHelper.HasLegacyNvidiaGpu());
+            && (
+                SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu()
+                ?? HardwareHelper.HasLegacyNvidiaGpu()
+            );
 
         var config = new PipInstallConfig
         {
             PrePipInstallArgs = ["joblib"],
             RequirementsFilePaths = requirementsPaths,
-            TorchVersion = " ",
+            TorchVersion = TorchVersionSpec,
             TorchvisionVersion = " ",
             CudaIndex = isLegacyNvidia ? "cu126" : "cu128",
             RocmIndex = "rocm7.2",

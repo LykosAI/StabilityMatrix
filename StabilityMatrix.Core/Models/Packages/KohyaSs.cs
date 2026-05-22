@@ -172,10 +172,12 @@ public class KohyaSs(
             {
                 PrePipInstallArgs = ["rich", "packaging", "setuptools", "uv"],
                 RequirementsFilePaths = ["requirements_windows.txt"],
-                // Exclude torch ecosystem (default) AND the specific bitsandbytes version
-                RequirementsExcludePattern =
-                    "(torch|torchvision|torchaudio|xformers|bitsandbytes==0\\.44\\.0)",
-                TorchaudioVersion = " ",
+                // Pin torch to match upstream's requirements_pytorch_windows.txt (torch 2.7.0+cu128,
+                // torchvision 0.22.0+cu128, xformers>=0.0.30). The torch ecosystem is excluded from
+                // the requirements file via the default pattern and installed here instead.
+                TorchVersion = "==2.7.0",
+                TorchvisionVersion = "==0.22.0",
+                TorchaudioVersion = "==2.7.0",
                 XformersVersion = " ",
                 CudaIndex = isLegacyNvidia ? "cu126" : "cu128",
                 // Add back the generic bitsandbytes and the specific numpy version

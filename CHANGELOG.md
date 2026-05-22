@@ -22,6 +22,9 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed Inference text encoder selections being cleared when navigating away from and back to the Inference tab — encoder slots now ignore the transient null the model dropdown reports while its list refreshes
 - Fixed [#1585](https://github.com/LykosAI/StabilityMatrix/issues/1585) - FluxGym installs/updates pulling an incompatible `transformers` version — installs now pin `transformers==4.54.1` and exclude it from the default requirements pass
 - Fixed [#1641](https://github.com/LykosAI/StabilityMatrix/issues/1641) - Cogstudio failing to set up its `inference/gradio_composite_demo` directory when the parent path didn't already exist
+- Fixed [#1650](https://github.com/LykosAI/StabilityMatrix/issues/1650) - ComfyUI-Manager extension installs failing on Linux with `File not found: venv/uv-build-constraints.txt` by no longer leaking the relative build-constraints path into the running package's environment
+- Fixed [#1645](https://github.com/LykosAI/StabilityMatrix/issues/1645) - Strix Halo / Radeon 8060S and other `Display controller`-class integrated GPUs not appearing in the GPU list on Linux
+- Fixed [#1643](https://github.com/LykosAI/StabilityMatrix/issues/1643) - package install and launch failures when `sitecustomize.py` or its compiled bytecode was corrupted by external software (e.g. some antivirus suites); the file now self-heals when out of date and its startup actions can no longer abort interpreter startup
 
 ## v2.16.0-pre.1
 ### Added

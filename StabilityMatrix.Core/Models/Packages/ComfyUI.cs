@@ -539,6 +539,14 @@ public class ComfyUI(
 
         VenvRunner.UpdateEnvironmentVariables(GetEnvVars);
 
+        // Don't leak the build-constraints env var into the running package. It points at a
+        // path relative to the install dir (see BaseGitPackage.SetupVenvPure), which only resolves
+        // when the working directory is that install dir. ComfyUI-Manager launches `uv pip install`
+        // from a different working directory, so the inherited value breaks with
+        // "File not found: venv/uv-build-constraints.txt". The constraint is only needed for our
+        // own setup-time builds, not for the running server.
+        VenvRunner.UpdateEnvironmentVariables(env => env.Remove("UV_BUILD_CONSTRAINT"));
+
         // Check for old NVIDIA driver version with cu130 installations
         var isNvidia = SettingsManager.Settings.PreferredGpu?.IsNvidia ?? HardwareHelper.HasNvidiaGpu();
         var isLegacyNvidia =

@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added popularity counts to booru-style tag completions in the prompt editor; descriptions now show entries like `12.3K · artist` so the more common tags are easier to spot at a glance
 - Added a settings gear button to the CivitAI browser's Base Models filter flyout that jumps straight to the base model filter configuration in Settings
 - Added a **Bitsandbytes NF4** launch option to Stable Diffusion WebUI Forge - Neo for low-bit (`--bnb`) inference
+- Added an **Activity center**: the sidebar download panel now has a **Notifications** tab alongside **In Progress**. Toasts are clickable — jumping to the downloaded folder, the originating page (e.g. Inference), or the activity panel — and persist into a session notification history (every notification is recorded, even ones suppressed by your settings) with read/unread indicators and a combined unread + active-download badge on the sidebar item
 ### Changed
 - Tidied up the Inference SamplerCard dimensions section — Source/Presets actions are shown as labeled buttons below the dimension row
 - Promoted the Encoder Type selector in the Inference Model card out of Advanced Options up to the main card body, so it's visible whenever a non-Auto workflow profile is active (and always when **Custom** is selected)
@@ -18,6 +19,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Updated AI-Toolkit to install torch 2.9.1 / torchvision 0.24.1 / torchaudio 2.9.1 from the cu128 index to match upstream (ostris/ai-toolkit), with a cu126 fallback for legacy NVIDIA GPUs; also pin numpy to 1.26.4 to avoid a numpy 2.x ABI break in scipy/diffusers that crashed training runs
 - Pinned kohya_ss torch to 2.7.0 / torchvision 0.22.0 (cu128) to match upstream's requirements_pytorch_windows.txt instead of resolving an untested latest, keeping the cu126 legacy-GPU fallback
 - Pinned reForge torch to 2.9.0 to match upstream (modules/launch_utils.py)
+- Upgraded the bundled Visual C++ redistributable from 2015–2019 (v16) to 2015–2022 (v17, build 14.40.33810+), required by modern native dependencies such as PyTorch and ONNX Runtime
 ### Fixed
 - Fixed Inference text encoder selections being cleared when navigating away from and back to the Inference tab — encoder slots now ignore the transient null the model dropdown reports while its list refreshes
 - Fixed [#1585](https://github.com/LykosAI/StabilityMatrix/issues/1585) - FluxGym installs/updates pulling an incompatible `transformers` version — installs now pin `transformers==4.54.1` and exclude it from the default requirements pass

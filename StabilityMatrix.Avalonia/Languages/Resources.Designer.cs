@@ -966,6 +966,105 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Activity.
+        /// </summary>
+        public static string Label_Activity {
+            get {
+                return ResourceManager.GetString("Label_Activity", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to In Progress.
+        /// </summary>
+        public static string Label_InProgress {
+            get {
+                return ResourceManager.GetString("Label_InProgress", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Mark all as read.
+        /// </summary>
+        public static string Action_MarkAllRead {
+            get {
+                return ResourceManager.GetString("Action_MarkAllRead", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Clear all.
+        /// </summary>
+        public static string Action_ClearAll {
+            get {
+                return ResourceManager.GetString("Action_ClearAll", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Toggle details.
+        /// </summary>
+        public static string Action_ToggleDetails {
+            get {
+                return ResourceManager.GetString("Action_ToggleDetails", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Dismiss.
+        /// </summary>
+        public static string Action_Dismiss {
+            get {
+                return ResourceManager.GetString("Action_Dismiss", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Open Folder.
+        /// </summary>
+        public static string Action_OpenFolder {
+            get {
+                return ResourceManager.GetString("Action_OpenFolder", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Open.
+        /// </summary>
+        public static string Action_Open {
+            get {
+                return ResourceManager.GetString("Action_Open", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Show Activity.
+        /// </summary>
+        public static string Action_ShowActivity {
+            get {
+                return ResourceManager.GetString("Action_ShowActivity", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to just now.
+        /// </summary>
+        public static string Label_RelativeTime_JustNow {
+            get {
+                return ResourceManager.GetString("Label_RelativeTime_JustNow", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to {0}m ago.
+        /// </summary>
+        public static string Label_RelativeTime_MinutesAgo {
+            get {
+                return ResourceManager.GetString("Label_RelativeTime_MinutesAgo", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Addons.
         /// </summary>
         public static string Label_Addons {
@@ -4212,6 +4311,24 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string TabLabel_InstalledWorkflows {
             get {
                 return ResourceManager.GetString("TabLabel_InstalledWorkflows", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Click any toast to jump straight to it, or open this panel anytime to catch up on what you missed..
+        /// </summary>
+        public static string TeachingTip_ActivityCenter_Subtitle {
+            get {
+                return ResourceManager.GetString("TeachingTip_ActivityCenter_Subtitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Notifications &amp; downloads live here.
+        /// </summary>
+        public static string TeachingTip_ActivityCenter_Title {
+            get {
+                return ResourceManager.GetString("TeachingTip_ActivityCenter_Title", resourceCulture);
             }
         }
         

@@ -139,14 +139,20 @@
                         </ui:NavigationViewItem.IconSource>
                     </ui:NavigationViewItem>
 
-                    <!--  Download flyout  -->
+                    <!--  Activity flyout (downloads + notifications)  -->
                     <ui:NavigationViewItem
                         Name="FooterDownloadItem"
-                        Content="{x:Static lang:Resources.Label_Downloads}"
+                        Content="{x:Static lang:Resources.Label_Activity}"
                         DataContext="{Binding ProgressManagerViewModel}"
                         IconSource="{Binding IconSource}"
-                        IsVisible="{Binding !!ProgressItems.Count}"
                         Tapped="FooterDownloadItem_OnTapped">
+                        <ui:NavigationViewItem.Styles>
+                            <!--  Override the baked-in FlyoutPresenter MaxWidth (~456) so the activity panel can grow  -->
+                            <Style Selector="FlyoutPresenter">
+                                <Setter Property="MaxWidth" Value="800" />
+                                <Setter Property="MaxHeight" Value="600" />
+                            </Style>
+                        </ui:NavigationViewItem.Styles>
                         <ui:NavigationViewItem.ContextFlyout>
                             <controls:BetterFlyout
                                 Content="{Binding}"
@@ -155,7 +161,7 @@
                                 VerticalScrollBarVisibility="Auto" />
                         </ui:NavigationViewItem.ContextFlyout>
                         <ui:NavigationViewItem.InfoBadge>
-                            <ui:InfoBadge IsVisible="{Binding !!ProgressItems.Count}" Value="{Binding ProgressItems.Count}" />
+                            <ui:InfoBadge IsVisible="{Binding IsBadgeVisible}" Value="{Binding TotalBadgeCount}" />
                         </ui:NavigationViewItem.InfoBadge>
                     </ui:NavigationViewItem>
                 </StackPanel>
@@ -178,11 +184,12 @@
             Target="{Binding #FooterUpdateItem}" />
 
         <ui:TeachingTip
-            Name="DownloadsTeachingTip"
-            Title="{x:Static lang:Resources.Label_Downloads}"
+            Name="ActivityTeachingTip"
+            Title="{x:Static lang:Resources.TeachingTip_ActivityCenter_Title}"
             Grid.Row="2"
             Grid.RowSpan="2"
             PreferredPlacement="Right"
+            Subtitle="{x:Static lang:Resources.TeachingTip_ActivityCenter_Subtitle}"
             Target="{Binding #FooterDownloadItem}" />
     </Grid>
 </controls:AppWindowBase>

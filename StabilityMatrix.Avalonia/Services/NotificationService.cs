@@ -1,4 +1,5 @@
-﻿using Avalonia;
+using AsyncAwaitBestPractices;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Threading;
@@ -11,6 +12,7 @@ using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Notifications;
 using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Services;
 using INotificationManager = DesktopNotifications.INotificationManager;
@@ -18,9 +20,12 @@ using INotificationManager = DesktopNotifications.INotificationManager;
 namespace StabilityMatrix.Avalonia.Services;
 
 [RegisterSingleton<INotificationService, NotificationService>]
-public class NotificationService(ILogger<NotificationService> logger, ISettingsManager settingsManager)
-    : INotificationService,
-        IDisposable
+public class NotificationService(
+    ILogger<NotificationService> logger,
+    ISettingsManager settingsManager,
+    INotificationHistoryService historyService,
+    INotificationActionDispatcher actionDispatcher
+) : INotificationService, IDisposable
 {
     private WindowNotificationManager? notificationManager;
 
@@ -43,38 +48,85 @@ public class NotificationService(ILogger<NotificationService> logger, ISettingsM
         };
     }
 
+    /// <summary>
+    /// Public entry point for raw INotification toasts (debug menu, ad-hoc callers that build
+    /// their own Notification object). Writes a history entry derived from the notification and
+    /// attaches our click handler if none was already set, so these flow into the Activity panel
+    /// the same as keyed notifications.
+    /// </summary>
     public void Show(INotification notification)
+    {
+        var entry = historyService.Add(
+            new NotificationHistoryEntry
+            {
+                Title = notification.Title ?? string.Empty,
+                Body = notification.Message,
+                Level = notification.Type.ToNotificationLevel(),
+            }
+        );
+
+        // Only attach our click handler if the caller hasn't set their own
+        if (notification is Notification concrete && concrete.OnClick is null)
+        {
+            concrete.OnClick = () => OnToastClicked(entry.Id);
+        }
+
+        DispatchToWindowManager(notification);
+    }
+
+    /// <summary>Internal helper: send a toast straight to <see cref="WindowNotificationManager"/>
+    /// without re-recording history. Used by paths that already wrote an entry.</summary>
+    private void DispatchToWindowManager(INotification notification)
     {
         // Must marshal to UI thread - WindowNotificationManager requires it
         Dispatcher.UIThread.Invoke(() => notificationManager?.Show(notification));
     }
 
     /// <inheritdoc />
-    public Task ShowPersistentAsync(NotificationKey key, DesktopNotifications.Notification notification)
+    public Task ShowPersistentAsync(
+        NotificationKey key,
+        DesktopNotifications.Notification notification,
+        NotificationAction? action = null
+    )
     {
-        return ShowAsyncCore(key, notification, null, true);
+        return ShowAsyncCore(key, notification, null, true, action);
     }
 
     /// <inheritdoc />
     public Task ShowAsync(
         NotificationKey key,
         DesktopNotifications.Notification notification,
-        TimeSpan? expiration = null
+        TimeSpan? expiration = null,
+        NotificationAction? action = null
     )
     {
         // Use default expiration if not specified
         expiration ??= TimeSpan.FromSeconds(5);
 
-        return ShowAsyncCore(key, notification, expiration, false);
+        return ShowAsyncCore(key, notification, expiration, false, action);
     }
 
     private async Task ShowAsyncCore(
         NotificationKey key,
         DesktopNotifications.Notification notification,
         TimeSpan? expiration,
-        bool isPersistent
+        bool isPersistent,
+        NotificationAction? action
     )
     {
+        // Always record to history, regardless of routing — users still want to see suppressed events.
+        var entry = historyService.Add(
+            new NotificationHistoryEntry
+            {
+                Key = key,
+                Title = notification.Title ?? string.Empty,
+                Body = notification.Body,
+                BodyImagePath = notification.BodyImagePath,
+                Level = key.Level,
+                Action = action,
+            }
+        );
+
         // If settings has option preference, use that, otherwise default
         if (!settingsManager.Settings.NotificationOptions.TryGetValue(key, out var option))
         {
@@ -90,32 +142,11 @@ public class NotificationService(ILogger<NotificationService> logger, ISettingsM
                 // If native option is not supported, fallback to toast
                 if (await GetNativeNotificationManagerAsync() is not { } nativeManager)
                 {
-                    // Show app toast
-                    if (isPersistent)
-                    {
-                        Dispatcher.UIThread.Invoke(() =>
-                            ShowPersistent(
-                                notification.Title ?? "",
-                                notification.Body ?? "",
-                                key.Level.ToNotificationType()
-                            )
-                        );
-                    }
-                    else
-                    {
-                        Dispatcher.UIThread.Invoke(() =>
-                            Show(
-                                notification.Title ?? "",
-                                notification.Body ?? "",
-                                key.Level.ToNotificationType(),
-                                expiration
-                            )
-                        );
-                    }
+                    ShowToastFromEntry(entry, expiration, isPersistent);
                     return;
                 }
 
-                // Show native notification
+                // Show native notification — native click is not wired in v1; entry is still in the activity panel.
                 await nativeManager.ShowNotification(
                     notification,
                     expiration is null ? null : DateTimeOffset.Now.Add(expiration.Value)
@@ -124,29 +155,7 @@ public class NotificationService(ILogger<NotificationService> logger, ISettingsM
                 break;
             }
             case NotificationOption.AppToast:
-                // Show app toast
-                if (isPersistent)
-                {
-                    Dispatcher.UIThread.Invoke(() =>
-                        ShowPersistent(
-                            notification.Title ?? "",
-                            notification.Body ?? "",
-                            key.Level.ToNotificationType()
-                        )
-                    );
-                }
-                else
-                {
-                    Dispatcher.UIThread.Invoke(() =>
-                        Show(
-                            notification.Title ?? "",
-                            notification.Body ?? "",
-                            key.Level.ToNotificationType(),
-                            expiration
-                        )
-                    );
-                }
-
+                ShowToastFromEntry(entry, expiration, isPersistent);
                 break;
             default:
                 logger.LogError("Unknown notification option {Option}", option);
@@ -154,23 +163,80 @@ public class NotificationService(ILogger<NotificationService> logger, ISettingsM
         }
     }
 
+    private void ShowToastFromEntry(NotificationHistoryEntry entry, TimeSpan? expiration, bool isPersistent)
+    {
+        var toast = new Notification(
+            entry.Title,
+            entry.Body ?? string.Empty,
+            entry.Level.ToNotificationType(),
+            isPersistent ? TimeSpan.Zero : expiration
+        )
+        {
+            OnClick = () => OnToastClicked(entry.Id),
+        };
+
+        DispatchToWindowManager(toast);
+    }
+
+    private void OnToastClicked(Guid entryId)
+    {
+        historyService.MarkRead(entryId);
+        var entry = historyService.Find(entryId);
+        if (entry?.Action is { } action)
+        {
+            actionDispatcher.DispatchAsync(action).SafeFireAndForget();
+        }
+    }
+
     public void Show(
         string title,
         string message,
         NotificationType appearance = NotificationType.Information,
-        TimeSpan? expiration = null
+        TimeSpan? expiration = null,
+        NotificationAction? action = null
     )
     {
-        Show(new Notification(title, message, appearance, expiration));
+        var entry = historyService.Add(
+            new NotificationHistoryEntry
+            {
+                Title = title,
+                Body = message,
+                Level = appearance.ToNotificationLevel(),
+                Action = action,
+            }
+        );
+
+        var toast = new Notification(title, message, appearance, expiration)
+        {
+            OnClick = () => OnToastClicked(entry.Id),
+        };
+
+        DispatchToWindowManager(toast);
     }
 
     public void ShowPersistent(
         string title,
         string message,
-        NotificationType appearance = NotificationType.Information
+        NotificationType appearance = NotificationType.Information,
+        NotificationAction? action = null
     )
     {
-        Show(new Notification(title, message, appearance, TimeSpan.Zero));
+        var entry = historyService.Add(
+            new NotificationHistoryEntry
+            {
+                Title = title,
+                Body = message,
+                Level = appearance.ToNotificationLevel(),
+                Action = action,
+            }
+        );
+
+        var toast = new Notification(title, message, appearance, TimeSpan.Zero)
+        {
+            OnClick = () => OnToastClicked(entry.Id),
+        };
+
+        DispatchToWindowManager(toast);
     }
 
     /// <inheritdoc />
@@ -183,7 +249,7 @@ public class NotificationService(ILogger<NotificationService> logger, ISettingsM
         // Log exception
         logger.Log(logLevel, exception, "{Message}", exception.Message);
 
-        Show(new Notification(exception.Message, exception.Details, appearance, TimeSpan.Zero));
+        ShowPersistent(exception.Message, exception.Details, appearance);
     }
 
     /// <inheritdoc />
@@ -200,7 +266,7 @@ public class NotificationService(ILogger<NotificationService> logger, ISettingsM
         }
         catch (Exception e)
         {
-            Show(new Notification(title, message ?? e.Message, appearance));
+            Show(title, message ?? e.Message, appearance);
             return TaskResult<T>.FromException(e);
         }
     }
@@ -221,7 +287,7 @@ public class NotificationService(ILogger<NotificationService> logger, ISettingsM
         catch (Exception e)
         {
             logger.LogError(e, "{Exception}", e);
-            Show(new Notification(title, message ?? e.Message, appearance));
+            Show(title, message ?? e.Message, appearance);
             return new TaskResult<bool>(false, e);
         }
     }

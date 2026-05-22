@@ -43,6 +43,7 @@ public class EventManager
         Action onCompleted
     );
     public event EventHandler? ToggleProgressFlyout;
+    public event EventHandler? ShowProgressFlyout;
     public event EventHandler<CultureInfo>? CultureChanged;
     public event EventHandler? ModelIndexChanged;
     public event EventHandler<FilePath>? ImageFileAdded;
@@ -56,7 +57,6 @@ public class EventManager
     public event EventHandler<InferenceQueueCustomPromptEventArgs>? InferenceQueueCustomPrompt;
     public event EventHandler<int>? NavigateAndFindCivitModelRequested;
     public event EventHandler<string?>? NavigateAndFindCivitAuthorRequested;
-    public event EventHandler? DownloadsTeachingTipRequested;
     public event EventHandler? RecommendedModelsDialogClosed;
     public event EventHandler? WorkflowInstalled;
     public event EventHandler<string>? DeleteModelRequested;
@@ -90,6 +90,8 @@ public class EventManager
 
     public void OnToggleProgressFlyout() => ToggleProgressFlyout?.Invoke(this, EventArgs.Empty);
 
+    public void OnShowProgressFlyout() => ShowProgressFlyout?.Invoke(this, EventArgs.Empty);
+
     public void OnCultureChanged(CultureInfo culture) => CultureChanged?.Invoke(this, culture);
 
     public void OnModelIndexChanged() => ModelIndexChanged?.Invoke(this, EventArgs.Empty);
@@ -101,9 +103,6 @@ public class EventManager
 
     public void OnNavigateAndFindCivitModelRequested(int modelId) =>
         NavigateAndFindCivitModelRequested?.Invoke(this, modelId);
-
-    public void OnDownloadsTeachingTipRequested() =>
-        DownloadsTeachingTipRequested?.Invoke(this, EventArgs.Empty);
 
     public void OnRecommendedModelsDialogClosed() =>
         RecommendedModelsDialogClosed?.Invoke(this, EventArgs.Empty);

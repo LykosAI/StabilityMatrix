@@ -46,6 +46,7 @@ using StabilityMatrix.Core.Models.Api.OpenArt;
 using StabilityMatrix.Core.Models.Api.OpenModelsDb;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.Notifications;
 using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Models.Packages.Extensions;
@@ -57,6 +58,7 @@ using StabilityMatrix.Core.Updater;
 using CivitAiBrowserViewModel = StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser.CivitAiBrowserViewModel;
 using HuggingFacePageViewModel = StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser.HuggingFacePageViewModel;
 using MainPackageManagerViewModel = StabilityMatrix.Avalonia.ViewModels.PackageManager.MainPackageManagerViewModel;
+using NotificationLevel = StabilityMatrix.Core.Models.Settings.NotificationLevel;
 
 namespace StabilityMatrix.Avalonia.DesignData;
 
@@ -444,6 +446,77 @@ public static class DesignData
                     },
                 },
                 packageInstall,
+            ]
+        );
+
+        // Seed sample notifications so the Notifications tab has something to preview
+        var historyService = Services.GetRequiredService<INotificationHistoryService>();
+        var actionDispatcher = Services.GetRequiredService<INotificationActionDispatcher>();
+
+        ProgressManagerViewModel.NotificationItems.AddRange(
+            [
+                new NotificationItemViewModel(
+                    new NotificationHistoryEntry
+                    {
+                        Timestamp = DateTimeOffset.Now.AddSeconds(-10),
+                        Title = "Prompt completed",
+                        Body = "Prompt [a1b2c3d] completed successfully",
+                        Level = NotificationLevel.Success,
+                        Action = new NavigateToPageAction(typeof(InferenceViewModel).AssemblyQualifiedName!),
+                    },
+                    historyService,
+                    actionDispatcher
+                ),
+                new NotificationItemViewModel(
+                    new NotificationHistoryEntry
+                    {
+                        Timestamp = DateTimeOffset.Now.AddMinutes(-3),
+                        Title = "Download Completed",
+                        Body = "Download of sd_xl_base_1.0.safetensors completed successfully.",
+                        Level = NotificationLevel.Success,
+                        Action = new OpenFolderAction(@"C:\StabilityMatrix\Models\StableDiffusion"),
+                    },
+                    historyService,
+                    actionDispatcher
+                ),
+                new NotificationItemViewModel(
+                    new NotificationHistoryEntry
+                    {
+                        Timestamp = DateTimeOffset.Now.AddMinutes(-12),
+                        Title = "Debug options enabled",
+                        Body = "Warning: Improper use may corrupt application state or cause loss of data.",
+                        Level = NotificationLevel.Warning,
+                        IsRead = true,
+                    },
+                    historyService,
+                    actionDispatcher
+                ),
+                new NotificationItemViewModel(
+                    new NotificationHistoryEntry
+                    {
+                        Timestamp = DateTimeOffset.Now.AddHours(-1),
+                        Title = "Download Failed",
+                        Body =
+                            "Download of really_long_model_name_v2_pruned_fp16.safetensors failed: (HttpRequestException) Connection timed out after 30 seconds. Please check your network and try again.",
+                        Level = NotificationLevel.Error,
+                        Action = new ToggleProgressFlyoutAction(),
+                        IsRead = true,
+                    },
+                    historyService,
+                    actionDispatcher
+                ),
+                new NotificationItemViewModel(
+                    new NotificationHistoryEntry
+                    {
+                        Timestamp = DateTimeOffset.Now.AddHours(-2),
+                        Title = "Content dialog closed",
+                        Body = "Result: Primary",
+                        Level = NotificationLevel.Information,
+                        IsRead = true,
+                    },
+                    historyService,
+                    actionDispatcher
+                ),
             ]
         );
 

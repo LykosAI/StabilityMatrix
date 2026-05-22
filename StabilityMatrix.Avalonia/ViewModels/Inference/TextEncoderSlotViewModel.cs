@@ -20,11 +20,27 @@ public partial class TextEncoderSlotViewModel : ViewModelBase
     /// </summary>
     public string Label => $"Encoder {Index}";
 
+    private HybridModelFile? selectedModel;
+
     /// <summary>
     /// The selected CLIP/text encoder model.
     /// </summary>
-    [ObservableProperty]
-    private HybridModelFile? selectedModel;
+    public HybridModelFile? SelectedModel
+    {
+        get => selectedModel;
+        set
+        {
+            // The bound ComboBox can briefly report null while the model list refreshes
+            // (e.g. when navigating away and back to the Inference tab). Ignore the
+            // transient null so the encoder selection isn't cleared out from under the user.
+            if (value is null && selectedModel is not null)
+            {
+                return;
+            }
+
+            SetProperty(ref selectedModel, value);
+        }
+    }
 
     public TextEncoderSlotViewModel() { }
 

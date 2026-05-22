@@ -11,6 +11,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData;
 using DynamicData.Binding;
+using FluentAvalonia.UI.Media.Animation;
 using Injectio.Attributes;
 using NLog;
 using Refit;
@@ -20,6 +21,7 @@ using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
+using StabilityMatrix.Avalonia.ViewModels.Settings;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Attributes;
@@ -48,6 +50,7 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
     private readonly INotificationService notificationService;
     private readonly ICivitBaseModelTypeService baseModelTypeService;
     private readonly INavigationService<MainWindowViewModel> navigationService;
+    private readonly INavigationService<SettingsViewModel> settingsNavigationService;
     private bool dontSearch = false;
 
     private readonly SourceCache<OrderedValue<CivitModel>, int> modelCache = new(static ov => ov.Value.Id);
@@ -147,7 +150,8 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
         IConnectedServiceManager connectedServiceManager,
         INotificationService notificationService,
         ICivitBaseModelTypeService baseModelTypeService,
-        INavigationService<MainWindowViewModel> navigationService
+        INavigationService<MainWindowViewModel> navigationService,
+        INavigationService<SettingsViewModel> settingsNavigationService
     )
     {
         this.civitApi = civitApi;
@@ -158,6 +162,7 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
         this.notificationService = notificationService;
         this.baseModelTypeService = baseModelTypeService;
         this.navigationService = navigationService;
+        this.settingsNavigationService = settingsNavigationService;
 
         EventManager.Instance.NavigateAndFindCivitModelRequested += OnNavigateAndFindCivitModelRequested;
 
@@ -836,6 +841,14 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
             AllBaseModels.ForEach(x => x.IsSelected = false);
         else
             AllBaseModels.ForEach(x => x.IsSelected = true);
+    }
+
+    [RelayCommand]
+    private async Task NavigateToBaseModelSettings()
+    {
+        navigationService.NavigateTo<SettingsViewModel>(new SuppressNavigationTransitionInfo());
+        await Task.Delay(100);
+        settingsNavigationService.NavigateTo<MainSettingsViewModel>(new SuppressNavigationTransitionInfo());
     }
 
     [RelayCommand]

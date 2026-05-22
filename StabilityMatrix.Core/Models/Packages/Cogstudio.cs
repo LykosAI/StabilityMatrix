@@ -73,9 +73,9 @@ public class Cogstudio(
             .ConfigureAwait(false);
 
         progress?.Report(new ProgressReport(-1f, "Setting up Cogstudio files", isIndeterminate: true));
-        var gradioCompositeDemo = new FilePath(installLocation, "inference/gradio_composite_demo");
-        var cogstudioFile = new FilePath(gradioCompositeDemo, "cogstudio.py");
-        gradioCompositeDemo.Directory?.Create();
+        var gradioCompositeDemo = new DirectoryPath(installLocation, "inference", "gradio_composite_demo");
+        gradioCompositeDemo.Create();
+        var cogstudioFile = gradioCompositeDemo.JoinFile("cogstudio.py");
         await DownloadService
             .DownloadToFileAsync(cogstudioUrl, cogstudioFile, cancellationToken: cancellationToken)
             .ConfigureAwait(false);

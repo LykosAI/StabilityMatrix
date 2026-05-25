@@ -47,18 +47,19 @@ public class InstallWindowsRocmPackageCommandStep(
     public required WindowsRocmPackageCommandType CommandType { get; init; }
     public IReadOnlyDictionary<string, string>? EnvironmentVariables { get; init; }
 
-    public string ProgressTitle => CommandType switch
-    {
-        WindowsRocmPackageCommandType.SageAttention => "Installing Windows ROCm SageAttention",
-        WindowsRocmPackageCommandType.DevelopmentSdk => "Installing Windows ROCm Development SDK",
-        WindowsRocmPackageCommandType.BitsAndBytes => "Installing Windows ROCm bitsandbytes",
-        WindowsRocmPackageCommandType.FlashAttention => "Installing Windows ROCm Flash Attention",
-        _ => "Running Windows ROCm package command",
-    };
+    public string ProgressTitle =>
+        CommandType switch
+        {
+            WindowsRocmPackageCommandType.SageAttention => "Installing Windows ROCm SageAttention",
+            WindowsRocmPackageCommandType.DevelopmentSdk => "Installing Windows ROCm Development SDK",
+            WindowsRocmPackageCommandType.BitsAndBytes => "Installing Windows ROCm bitsandbytes",
+            WindowsRocmPackageCommandType.FlashAttention => "Installing Windows ROCm Flash Attention",
+            _ => "Running Windows ROCm package command",
+        };
 
     public async Task ExecuteAsync(IProgress<ProgressReport>? progress = null)
     {
-        if (!global::System.OperatingSystem.IsWindows())
+        if (!OperatingSystem.IsWindows())
         {
             throw new PlatformNotSupportedException(
                 "Windows ROCm package commands are only supported on Windows."
@@ -215,11 +216,7 @@ public class InstallWindowsRocmPackageCommandStep(
         }
 
         progress?.Report(
-            new ProgressReport(
-                -1f,
-                "Installing bitsandbytes for Windows ROCm...",
-                isIndeterminate: true
-            )
+            new ProgressReport(-1f, "Installing bitsandbytes for Windows ROCm...", isIndeterminate: true)
         );
         await venvRunner.PipInstall(BitsAndBytesWheelUrl).ConfigureAwait(false);
     }
@@ -241,11 +238,7 @@ public class InstallWindowsRocmPackageCommandStep(
         await venvRunner.PipInstall(AmdAiterWheelUrl).ConfigureAwait(false);
 
         progress?.Report(
-            new ProgressReport(
-                -1f,
-                "Installing Flash Attention for Windows ROCm...",
-                isIndeterminate: true
-            )
+            new ProgressReport(-1f, "Installing Flash Attention for Windows ROCm...", isIndeterminate: true)
         );
         await venvRunner.PipInstall(FlashAttentionWheelUrl).ConfigureAwait(false);
     }

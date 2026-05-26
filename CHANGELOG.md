@@ -33,7 +33,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed `$#1234` and `civitai.com/models/1234` URL searches returning zero results for some models that exist and are downloadable on the website — the app now retries via a per-model lookup when the batch search misses a requested ID
 - Fixed `$#1234` searches with non-LORA / non-Checkpoint targets returning no results when the **Model Type** dropdown wasn't set to **All** — ID searches intentionally bypass the type and base-model filters in the request, but the post-response check was still rejecting the returned model when its type didn't match the dropdown
 - Fixed clicking a CivitAI model card with an empty version list appearing to do nothing for ~1–2s while the recovery round-trip runs — the clicked card now shows a "Loading..." state during the recovery, and the recovered version data is cached on the card so subsequent clicks are instant
-- Fixed pasting newer CivitAI download links into the app — the download handler now accepts URLs that expose `fileId`, and only requires the legacy `type` / `format` / `fp` / `size` parameters when those are the only identifiers in the link
+- Fixed "Invalid download link" error when using the browser extension
 
 ## v2.16.0-pre.1
 ### Added

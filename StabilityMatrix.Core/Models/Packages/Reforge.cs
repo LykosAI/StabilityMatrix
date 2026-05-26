@@ -2,8 +2,13 @@
 using Injectio.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
+using StabilityMatrix.Core.Helper.HardwareInfo;
+using StabilityMatrix.Core.Models.Progress;
+using StabilityMatrix.Core.Models.Rocm;
+using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
+using StabilityMatrix.Core.Services.Rocm;
 
 namespace StabilityMatrix.Core.Models.Packages;
 
@@ -14,7 +19,8 @@ public class Reforge(
     IDownloadService downloadService,
     IPrerequisiteHelper prerequisiteHelper,
     IPyInstallationManager pyInstallationManager,
-    IPipWheelService pipWheelService
+    IPipWheelService pipWheelService,
+    IRocmPackageHelper? rocmPackageHelper = null
 )
     : SDWebForge(
         githubApi,
@@ -37,8 +43,157 @@ public class Reforge(
     public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Recommended;
     public override bool OfferInOneClickInstaller => true;
     public override PackageType PackageType => PackageType.SdInference;
+    public override PyVersion RecommendedPythonVersion => Python.PyInstallationManager.Python_3_12_10;
+
+    private const string StableDiffusionRepoOverride =
+        "https://github.com/joypaul162/Stability-AI-stablediffusion.git";
+
+    public override List<LaunchOptionDefinition> LaunchOptions
+    {
+        get
+        {
+            var compatibility = ReforgeWindowsRocmProfile.GetCompatibility(rocmPackageHelper);
+            var baseLaunchOptions = new List<LaunchOptionDefinition>(base.LaunchOptions);
+            var extrasIndex = baseLaunchOptions.FindIndex(x => x.Name == LaunchOptionDefinition.Extras.Name);
+
+            baseLaunchOptions.Insert(
+                extrasIndex >= 0 ? extrasIndex : baseLaunchOptions.Count,
+                new LaunchOptionDefinition
+                {
+                    Name = "Cross Attention Method",
+                    Type = LaunchOptionType.Bool,
+                    InitialValue =
+                        !compatibility.IsCompatible ? null
+                        : WindowsRocmSupport.PreferLegacyAttentionFallback(compatibility.ResolvedGfxArch)
+                            ? "--attention-quad"
+                        : "--attention-pytorch",
+                    Options = ["--attention-split", "--attention-quad", "--attention-pytorch"],
+                }
+            );
+
+            return baseLaunchOptions;
+        }
+    }
+
+    public override TorchIndex GetRecommendedTorchVersion()
+    {
+        var preferRocm =
+            (Compat.IsLinux && (SettingsManager.Settings.PreferredGpu?.IsAmd ?? HardwareHelper.PreferRocm()))
+            || (
+                Compat.IsWindows && ReforgeWindowsRocmProfile.GetCompatibility(rocmPackageHelper).IsCompatible
+            );
+
+        if (AvailableTorchIndices.Contains(TorchIndex.Rocm) && preferRocm)
+        {
+            return TorchIndex.Rocm;
+        }
+
+        return base.GetRecommendedTorchVersion();
+    }
+
+    public override async Task InstallPackage(
+        string installLocation,
+        InstalledPackage installedPackage,
+        InstallPackageOptions options,
+        IProgress<ProgressReport>? progress = null,
+        Action<ProcessOutput>? onConsoleOutput = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var torchIndex = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
+        var compatibility = ReforgeWindowsRocmProfile.GetCompatibility(rocmPackageHelper);
+
+        // Windows ROCm install path
+        if (!(Compat.IsWindows && torchIndex == TorchIndex.Rocm && compatibility.IsCompatible))
+        {
+            await base.InstallPackage(
+                    installLocation,
+                    installedPackage,
+                    options,
+                    progress,
+                    onConsoleOutput,
+                    cancellationToken
+                )
+                .ConfigureAwait(false);
+            return;
+        }
+
+        progress?.Report(new ProgressReport(-1f, "Setting up venv", isIndeterminate: true));
+        await using var venvRunner = await SetupVenvPure(
+                installLocation,
+                pythonVersion: options.PythonOptions.PythonVersion
+            )
+            .ConfigureAwait(false);
+
+        if (rocmPackageHelper is null)
+        {
+            throw new InvalidOperationException(
+                "Windows ROCm installation encountered an internal configuration error [rocmPackageHelper is null]. Please restart Stability Matrix and try again. If the issue persists, please report it to Stability Matrix."
+            );
+        }
+
+        var profile = ReforgeWindowsRocmProfile.CreateProfile(GetRequirementsPaths(installLocation));
+        var config = rocmPackageHelper.BuildWindowsNativeInstallConfig(profile);
+
+        await StandardPipInstallProcessAsync(
+                venvRunner,
+                options,
+                installedPackage,
+                config,
+                onConsoleOutput,
+                progress,
+                cancellationToken
+            )
+            .ConfigureAwait(false);
+
+        await rocmPackageHelper
+            .InstallWindowsNativeTorchAsync(
+                venvRunner,
+                installedPackage,
+                profile,
+                progress,
+                onConsoleOutput,
+                cancellationToken
+            )
+            .ConfigureAwait(false);
+
+        progress?.Report(new ProgressReport(1f, "Install complete", isIndeterminate: false));
+    }
 
     protected override ImmutableDictionary<string, string> GetEnvVars(
-        ImmutableDictionary<string, string> env
-    ) => env;
+        ImmutableDictionary<string, string> env,
+        InstalledPackage installedPackage
+    )
+    {
+        var selectedTorchIndex = installedPackage.PreferredTorchIndex ?? GetRecommendedTorchVersion();
+        var shouldApplyWindowsRocmLaunchEnvironment =
+            Compat.IsWindows
+            && selectedTorchIndex == TorchIndex.Rocm
+            && ReforgeWindowsRocmProfile.GetCompatibility(rocmPackageHelper).IsCompatible;
+
+        env = base.GetEnvVars(env, installedPackage);
+        env = env.SetItem("STABLE_DIFFUSION_REPO", StableDiffusionRepoOverride);
+
+        if (!shouldApplyWindowsRocmLaunchEnvironment)
+        {
+            return env;
+        }
+
+        return env.SetItems(
+            rocmPackageHelper?.BuildLaunchEnvironment(ReforgeWindowsRocmProfile.Profile)
+                ?? ImmutableDictionary<string, string>.Empty
+        );
+    }
+
+    protected override IReadOnlyList<string> GetLaunchNoticeLines(InstalledPackage installedPackage)
+    {
+        var selectedTorchIndex = installedPackage.PreferredTorchIndex ?? GetRecommendedTorchVersion();
+
+        return
+            Compat.IsWindows
+            && selectedTorchIndex == TorchIndex.Rocm
+            && ReforgeWindowsRocmProfile.GetCompatibility(rocmPackageHelper).IsCompatible
+            ? rocmPackageHelper?.GetWindowsLaunchNoticeLines() ?? []
+            : [];
+    }
 }

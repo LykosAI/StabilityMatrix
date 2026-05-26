@@ -221,7 +221,10 @@ public class A3WebUI(
         var torchIndex = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
         var isLegacyNvidia =
             torchIndex is TorchIndex.Cuda
-            && (SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu() ?? HardwareHelper.HasLegacyNvidiaGpu());
+            && (
+                SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu()
+                ?? HardwareHelper.HasLegacyNvidiaGpu()
+            );
 
         // 1. Configure the entire install process declaratively.
         var config = new PipInstallConfig
@@ -276,7 +279,12 @@ public class A3WebUI(
         await SetupVenv(installLocation, pythonVersion: PyVersion.Parse(installedPackage.PythonVersion))
             .ConfigureAwait(false);
 
-        VenvRunner.UpdateEnvironmentVariables(GetEnvVars);
+        VenvRunner.UpdateEnvironmentVariables(env => GetEnvVars(env, installedPackage));
+
+        foreach (var line in GetLaunchNoticeLines(installedPackage))
+        {
+            onConsoleOutput?.Invoke(ProcessOutput.FromStdOutLine($"{line}{Environment.NewLine}"));
+        }
 
         void HandleConsoleOutput(ProcessOutput s)
         {
@@ -307,6 +315,19 @@ public class A3WebUI(
 
     public override IReadOnlyList<string> ExtraLaunchArguments =>
         settingsManager.IsLibraryDirSet ? ["--gradio-allowed-path", settingsManager.ImagesDirectory] : [];
+
+    protected virtual IReadOnlyList<string> GetLaunchNoticeLines(InstalledPackage installedPackage)
+    {
+        return [];
+    }
+
+    protected virtual ImmutableDictionary<string, string> GetEnvVars(
+        ImmutableDictionary<string, string> env,
+        InstalledPackage installedPackage
+    )
+    {
+        return GetEnvVars(env);
+    }
 
     protected virtual ImmutableDictionary<string, string> GetEnvVars(ImmutableDictionary<string, string> env)
     {

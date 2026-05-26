@@ -458,7 +458,38 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
                 else
                 {
                     modelsResponse = await civitApi.GetModels(request);
-                    models = modelsResponse.Items;
+                    models = modelsResponse.Items ?? [];
+                }
+
+                // CivitAI's list endpoint (/api/v1/models?ids=...) sometimes returns zero items
+                // for models that the single-model endpoint (/api/v1/models/{id}) can find just
+                // fine — another server-side cache desync. For each requested ID that didn't
+                // come back, fall back to a per-ID lookup (which itself goes through the tRPC
+                // fallback in CivitCompatApiManager when needed).
+                var returnedIds = models.Select(m => m.Id).ToHashSet();
+                foreach (var idStr in ids)
+                {
+                    if (!int.TryParse(idStr.Trim(), out var idValue) || returnedIds.Contains(idValue))
+                        continue;
+
+                    try
+                    {
+                        var single = await civitApi.GetModelById(idValue);
+                        // GetModelById can return a default-id object on 404 with some implementations;
+                        // only accept it if it actually looks valid.
+                        if (single.Id == idValue)
+                        {
+                            models.Add(single);
+                            Logger.Info(
+                                "Recovered model {Id} via per-ID fallback after list endpoint missed it",
+                                idValue
+                            );
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Warn(ex, "Per-ID fallback failed for model {Id}; skipping", idValue);
+                    }
                 }
             }
             else
@@ -558,14 +589,32 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
 
             if (cacheNew)
             {
+                // ID-targeted searches ($#1234 / civitai.com URLs / Installed/Favorites sorts)
+                // explicitly bypass the type+base-model filters when building the request, so the
+                // post-response sanity check would otherwise reject perfectly valid results
+                // (e.g. searching $#someLoraId while SelectedModelType=Checkpoint).
+                var isIdSearch = !string.IsNullOrEmpty(request.CommaSeparatedModelIds);
+
+                // "No filter" is sent when either zero or all base models are selected — mirror that
+                // when checking the response matches the current filter state.
+                var isNoBaseModelFilter =
+                    SelectedBaseModels.Count == 0 || SelectedBaseModels.Count == AllBaseModels.Count;
                 var doesBaseModelTypeMatch =
-                    SelectedBaseModels.Count == 0
-                        ? request.BaseModels == null || request.BaseModels.Length == 0
-                        : SelectedBaseModels.SequenceEqual(request.BaseModels ?? []);
+                    isIdSearch
+                    || (
+                        isNoBaseModelFilter
+                            ? request.BaseModels == null || request.BaseModels.Length == 0
+                            : SelectedBaseModels
+                                .OrderBy(x => x)
+                                .SequenceEqual((request.BaseModels ?? []).OrderBy(x => x))
+                    );
                 var doesModelTypeMatch =
-                    SelectedModelType == CivitModelType.All
-                        ? request.Types == null || request.Types.Length == 0
-                        : SelectedModelType == request.Types?.FirstOrDefault();
+                    isIdSearch
+                    || (
+                        SelectedModelType == CivitModelType.All
+                            ? request.Types == null || request.Types.Length == 0
+                            : SelectedModelType == request.Types?.FirstOrDefault()
+                    );
 
                 if (doesBaseModelTypeMatch && doesModelTypeMatch)
                 {
@@ -852,9 +901,52 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
     }
 
     [RelayCommand]
-    private void ShowVersionDialog(CivitModel model)
+    private async Task ShowVersionDialog(CivitModel model)
     {
         var versions = model.ModelVersions;
+
+        // The CivitAI public REST API sometimes returns models with an empty modelVersions list
+        // even when versions exist on the website (server-side cache desync). Re-fetch via
+        // GetModelById — CivitCompatApiManager will transparently fall back to the tRPC endpoint
+        // to recover the missing versions when the REST response is empty.
+        if (versions is null || versions.Count == 0)
+        {
+            // Surface a loading state on the card the user clicked so they get feedback instead
+            // of staring at a frozen-looking UI for the ~1-2s round-trip.
+            var card = ModelCards.FirstOrDefault(c => c.CivitModel.Id == model.Id);
+            var previousIsLoading = card?.IsLoading ?? false;
+            var previousText = card?.Text;
+            if (card is not null)
+            {
+                card.IsLoading = true;
+                card.Text = "Loading...";
+            }
+
+            try
+            {
+                var refreshed = await civitApi.GetModelById(model.Id);
+                if (refreshed.ModelVersions is { Count: > 0 })
+                {
+                    // Mutate in place so subsequent clicks on the same card don't re-fetch —
+                    // model is the live CivitModel that the card holds via CommandParameter.
+                    model.ModelVersions = refreshed.ModelVersions;
+                    versions = refreshed.ModelVersions;
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.Warn(e, "Failed to refresh CivitModel {Id} when versions list was empty", model.Id);
+            }
+            finally
+            {
+                if (card is not null)
+                {
+                    card.IsLoading = previousIsLoading;
+                    card.Text = previousText;
+                }
+            }
+        }
+
         if (versions is null || versions.Count == 0)
         {
             notificationService.Show(

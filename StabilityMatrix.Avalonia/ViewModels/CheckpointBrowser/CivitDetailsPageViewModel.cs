@@ -65,6 +65,14 @@ public partial class CivitDetailsPageViewModel(
     [NotifyPropertyChangedFor(nameof(CanGoNext), nameof(CanGoPrevious))]
     public required partial int CurrentIndex { get; set; }
 
+    /// <summary>
+    /// True when there's at least one preview image to render. Drives layout — when false,
+    /// the page collapses the carousel row so the description fills the space (e.g. when a
+    /// model was recovered via the tRPC fallback, which doesn't return per-version images).
+    /// </summary>
+    [ObservableProperty]
+    public partial bool HasImages { get; set; }
+
     private List<string> ignoredFileNameFormatVars =
     [
         "seed",
@@ -325,6 +333,18 @@ public partial class CivitDetailsPageViewModel(
                 .ObserveOn(SynchronizationContext.Current!)
                 .DisposeMany()
                 .Subscribe()
+        );
+
+        // Mirror the same filter chain to drive HasImages — used by the view to collapse
+        // the carousel row when nothing's there to show.
+        AddDisposable(
+            imageCache
+                .Connect()
+                .Filter(showNsfwPredicate)
+                .Filter(img => img.Type == "image")
+                .ToCollection()
+                .ObserveOn(SynchronizationContext.Current!)
+                .Subscribe(c => HasImages = c.Count > 0)
         );
 
         var includeTrainingDataPredicate = Observable

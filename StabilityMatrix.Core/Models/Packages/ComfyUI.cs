@@ -433,10 +433,22 @@ public class ComfyUI(
                 );
             }
 
-            await rocmPackageHelper
-                .InstallWindowsNativePackageAsync(
+            var config = rocmPackageHelper.BuildWindowsNativeInstallConfig(ComfyWindowsRocmProfile.Profile);
+
+            await StandardPipInstallProcessAsync(
                     venvRunner,
-                    installLocation,
+                    options,
+                    installedPackage,
+                    config,
+                    onConsoleOutput,
+                    progress,
+                    cancellationToken
+                )
+                .ConfigureAwait(false);
+
+            await rocmPackageHelper
+                .InstallWindowsNativeTorchAsync(
+                    venvRunner,
                     installedPackage,
                     ComfyWindowsRocmProfile.Profile,
                     progress,
@@ -690,17 +702,12 @@ public class ComfyUI(
     /// Uses the shared ROCm helper for Windows ROCm eligibility checks so ComfyUI does not maintain its own support matrix.
     private bool HasWindowsRocmSupport()
     {
-        return GetWindowsRocmCompatibility().IsCompatible;
+        return HasWindowsRocmSupport(rocmPackageHelper, ComfyWindowsRocmProfile.Profile);
     }
 
     private RocmCompatibilityResult GetWindowsRocmCompatibility()
     {
-        if (!Compat.IsWindows || rocmPackageHelper is null)
-        {
-            return new RocmCompatibilityResult { IsCompatible = false };
-        }
-
-        return rocmPackageHelper.GetCompatibility(ComfyWindowsRocmProfile.Profile);
+        return GetWindowsRocmCompatibility(rocmPackageHelper, ComfyWindowsRocmProfile.Profile);
     }
 
     /// Defaults legacy Windows ROCm GPUs to quad cross-attention because PyTorch cross-attention is considerably slower
@@ -994,42 +1001,16 @@ public class ComfyUI(
 
     private async Task InstallWindowsRocmSageAttention(InstalledPackage? installedPackage)
     {
-        if (installedPackage?.FullPath is null)
-            return;
-
-        var runner = new PackageModificationRunner
-        {
-            ShowDialogOnStart = true,
-            ModificationCompleteMessage = "Windows ROCm SageAttention installed successfully",
-        };
-        EventManager.Instance.OnPackageInstallProgressAdded(runner);
-
-        var baseEnvironment = ImmutableDictionary.CreateRange(SettingsManager.Settings.EnvironmentVariables);
-        var environmentVariables = GetEnvVars(baseEnvironment, installedPackage.FullPath, installedPackage);
-
-        await runner
-            .ExecuteSteps(
-                [
-                    new InstallWindowsRocmPackageCommandStep(
-                        downloadService,
-                        pyInstallationManager,
-                        prerequisiteHelper,
-                        rocmPackageHelper
-                            ?? throw new InvalidOperationException(
-                                "Windows ROCm SageAttention installation encountered an internal configuration error [rocmPackageHelper is null]."
-                            )
-                    )
-                    {
-                        CommandType = WindowsRocmPackageCommandType.SageAttention,
-                        InstalledPackage = installedPackage,
-                        WorkingDirectory = new DirectoryPath(installedPackage.FullPath),
-                        EnvironmentVariables = environmentVariables,
-                    },
-                ]
+        var succeeded = await RunWindowsRocmPackageCommandAsync(
+                installedPackage,
+                WindowsRocmPackageCommandType.SageAttention,
+                "Windows ROCm SageAttention installed successfully",
+                includeEnvironmentVariables: true,
+                nullHelperMessage: "Windows ROCm SageAttention installation encountered an internal configuration error [rocmPackageHelper is null]."
             )
             .ConfigureAwait(false);
 
-        if (runner.Failed)
+        if (!succeeded || installedPackage is null)
             return;
 
         await EnableSageAttentionAsync(installedPackage).ConfigureAwait(false);
@@ -1037,90 +1018,66 @@ public class ComfyUI(
 
     private async Task InstallWindowsRocmDevelopmentSdk(InstalledPackage? installedPackage)
     {
-        if (installedPackage?.FullPath is null)
-            return;
-
-        var runner = new PackageModificationRunner
-        {
-            ShowDialogOnStart = true,
-            ModificationCompleteMessage = "Windows ROCm Development SDK installed successfully",
-        };
-        EventManager.Instance.OnPackageInstallProgressAdded(runner);
-
-        await runner
-            .ExecuteSteps(
-                [
-                    new InstallWindowsRocmPackageCommandStep(
-                        downloadService,
-                        pyInstallationManager,
-                        prerequisiteHelper,
-                        rocmPackageHelper
-                            ?? throw new InvalidOperationException(
-                                "Windows ROCm SDK installation encountered an internal configuration error [rocmPackageHelper is null]."
-                            )
-                    )
-                    {
-                        CommandType = WindowsRocmPackageCommandType.DevelopmentSdk,
-                        InstalledPackage = installedPackage,
-                        WorkingDirectory = new DirectoryPath(installedPackage.FullPath),
-                    },
-                ]
+        await RunWindowsRocmPackageCommandAsync(
+                installedPackage,
+                WindowsRocmPackageCommandType.DevelopmentSdk,
+                "Windows ROCm Development SDK installed successfully",
+                includeEnvironmentVariables: false,
+                nullHelperMessage: "Windows ROCm SDK installation encountered an internal configuration error [rocmPackageHelper is null]."
             )
             .ConfigureAwait(false);
     }
 
     private async Task InstallWindowsRocmBitsAndBytes(InstalledPackage? installedPackage)
     {
-        if (installedPackage?.FullPath is null)
-            return;
-
-        var runner = new PackageModificationRunner
-        {
-            ShowDialogOnStart = true,
-            ModificationCompleteMessage = "Windows ROCm bitsandbytes installed successfully",
-        };
-        EventManager.Instance.OnPackageInstallProgressAdded(runner);
-
-        var baseEnvironment = ImmutableDictionary.CreateRange(SettingsManager.Settings.EnvironmentVariables);
-        var environmentVariables = GetEnvVars(baseEnvironment, installedPackage.FullPath, installedPackage);
-
-        await runner
-            .ExecuteSteps(
-                [
-                    new InstallWindowsRocmPackageCommandStep(
-                        downloadService,
-                        pyInstallationManager,
-                        prerequisiteHelper,
-                        rocmPackageHelper
-                            ?? throw new InvalidOperationException(
-                                "Windows ROCm bitsandbytes installation encountered an internal configuration error [rocmPackageHelper is null]."
-                            )
-                    )
-                    {
-                        CommandType = WindowsRocmPackageCommandType.BitsAndBytes,
-                        InstalledPackage = installedPackage,
-                        WorkingDirectory = new DirectoryPath(installedPackage.FullPath),
-                        EnvironmentVariables = environmentVariables,
-                    },
-                ]
+        await RunWindowsRocmPackageCommandAsync(
+                installedPackage,
+                WindowsRocmPackageCommandType.BitsAndBytes,
+                "Windows ROCm bitsandbytes installed successfully",
+                includeEnvironmentVariables: true,
+                nullHelperMessage: "Windows ROCm bitsandbytes installation encountered an internal configuration error [rocmPackageHelper is null]."
             )
             .ConfigureAwait(false);
     }
 
     private async Task InstallWindowsRocmFlashAttention(InstalledPackage? installedPackage)
     {
+        await RunWindowsRocmPackageCommandAsync(
+                installedPackage,
+                WindowsRocmPackageCommandType.FlashAttention,
+                "Windows ROCm Flash Attention installed successfully",
+                includeEnvironmentVariables: true,
+                nullHelperMessage: "Windows ROCm Flash Attention installation encountered an internal configuration error [rocmPackageHelper is null]."
+            )
+            .ConfigureAwait(false);
+    }
+
+    private async Task<bool> RunWindowsRocmPackageCommandAsync(
+        InstalledPackage? installedPackage,
+        WindowsRocmPackageCommandType commandType,
+        string completionMessage,
+        bool includeEnvironmentVariables,
+        string nullHelperMessage
+    )
+    {
         if (installedPackage?.FullPath is null)
-            return;
+            return false;
 
         var runner = new PackageModificationRunner
         {
             ShowDialogOnStart = true,
-            ModificationCompleteMessage = "Windows ROCm Flash Attention installed successfully",
+            ModificationCompleteMessage = completionMessage,
         };
         EventManager.Instance.OnPackageInstallProgressAdded(runner);
 
-        var baseEnvironment = ImmutableDictionary.CreateRange(SettingsManager.Settings.EnvironmentVariables);
-        var environmentVariables = GetEnvVars(baseEnvironment, installedPackage.FullPath, installedPackage);
+        IReadOnlyDictionary<string, string>? environmentVariables = null;
+        if (includeEnvironmentVariables)
+        {
+            var baseEnvironment = ImmutableDictionary.CreateRange(
+                SettingsManager.Settings.EnvironmentVariables
+            );
+            environmentVariables = GetEnvVars(baseEnvironment, installedPackage.FullPath, installedPackage);
+        }
 
         await runner
             .ExecuteSteps(
@@ -1129,13 +1086,10 @@ public class ComfyUI(
                         downloadService,
                         pyInstallationManager,
                         prerequisiteHelper,
-                        rocmPackageHelper
-                            ?? throw new InvalidOperationException(
-                                "Windows ROCm Flash Attention installation encountered an internal configuration error [rocmPackageHelper is null]."
-                            )
+                        rocmPackageHelper ?? throw new InvalidOperationException(nullHelperMessage)
                     )
                     {
-                        CommandType = WindowsRocmPackageCommandType.FlashAttention,
+                        CommandType = commandType,
                         InstalledPackage = installedPackage,
                         WorkingDirectory = new DirectoryPath(installedPackage.FullPath),
                         EnvironmentVariables = environmentVariables,
@@ -1143,6 +1097,8 @@ public class ComfyUI(
                 ]
             )
             .ConfigureAwait(false);
+
+        return !runner.Failed;
     }
 
     private async Task EnableSageAttentionAsync(InstalledPackage installedPackage)

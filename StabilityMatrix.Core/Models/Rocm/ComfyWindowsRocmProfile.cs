@@ -1,3 +1,5 @@
+using StabilityMatrix.Core.Models.Packages;
+
 namespace StabilityMatrix.Core.Models.Rocm;
 
 /// <summary>
@@ -8,9 +10,13 @@ public static class ComfyWindowsRocmProfile
     public static RocmPackageProfile Profile { get; } =
         new()
         {
-            ExtraInstallPipArgs = ["numpy<2"],
-            PostInstallPipArgs = ["typing-extensions>=4.15.0"],
-            UpgradePackages = true,
+            InstallConfig = new PipInstallConfig
+            {
+                RequirementsFilePaths = ["requirements.txt"],
+                ExtraPipArgs = ["numpy<2"],
+                PostInstallPipArgs = ["typing-extensions>=4.15.0"],
+                UpgradePackages = true,
+            },
             ExtraEnvironmentFactory = BuildEnvironment,
         };
 

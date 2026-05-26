@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Pinned kohya_ss torch to 2.7.0 / torchvision 0.22.0 (cu128) to match upstream's requirements_pytorch_windows.txt instead of resolving an untested latest, keeping the cu126 legacy-GPU fallback
 - Pinned reForge torch to 2.9.0 to match upstream (modules/launch_utils.py)
 - Upgraded the bundled Visual C++ redistributable from 2015–2019 (v16) to 2015–2022 (v17, build 14.40.33810+), required by modern native dependencies such as PyTorch and ONNX Runtime
+- The CivitAI model details page now collapses the preview-image area and shows a small "No preview images available" hint when a model has no images to display, letting the description card take the full vertical space instead of leaving a large empty region above it
 ### Fixed
 - Fixed Inference text encoder selections being cleared when navigating away from and back to the Inference tab — encoder slots now ignore the transient null the model dropdown reports while its list refreshes
 - Fixed [#1585](https://github.com/LykosAI/StabilityMatrix/issues/1585) - FluxGym installs/updates pulling an incompatible `transformers` version — installs now pin `transformers==4.54.1` and exclude it from the default requirements pass
@@ -27,6 +28,12 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed [#1650](https://github.com/LykosAI/StabilityMatrix/issues/1650) - ComfyUI-Manager extension installs failing on Linux with `File not found: venv/uv-build-constraints.txt` by no longer leaking the relative build-constraints path into the running package's environment
 - Fixed [#1645](https://github.com/LykosAI/StabilityMatrix/issues/1645) - Strix Halo / Radeon 8060S and other `Display controller`-class integrated GPUs not appearing in the GPU list on Linux
 - Fixed [#1643](https://github.com/LykosAI/StabilityMatrix/issues/1643) - package install and launch failures when `sitecustomize.py` or its compiled bytecode was corrupted by external software (e.g. some antivirus suites); the file now self-heals when out of date and its startup actions can no longer abort interpreter startup
+- Fixed the CivitAI model browser requiring two clicks of Search to show results when all base-model filters were selected — a leftover post-response sanity check from the old single-select base-model UI was rejecting the response the first time, requiring a second search to surface the cached results
+- Fixed CivitAI model cards showing "No versions available" when clicked for some models (typically recently uploaded or updated) even though the model has downloadable versions on the website — the app now retries with a different lookup path when the initial response comes back missing version data
+- Fixed `$#1234` and `civitai.com/models/1234` URL searches returning zero results for some models that exist and are downloadable on the website — the app now retries via a per-model lookup when the batch search misses a requested ID
+- Fixed `$#1234` searches with non-LORA / non-Checkpoint targets returning no results when the **Model Type** dropdown wasn't set to **All** — ID searches intentionally bypass the type and base-model filters in the request, but the post-response check was still rejecting the returned model when its type didn't match the dropdown
+- Fixed clicking a CivitAI model card with an empty version list appearing to do nothing for ~1–2s while the recovery round-trip runs — the clicked card now shows a "Loading..." state during the recovery, and the recovered version data is cached on the card so subsequent clicks are instant
+- Fixed "Invalid download link" error when using the browser extension
 
 ## v2.16.0-pre.1
 ### Added

@@ -294,8 +294,25 @@
             Grid.Row="3"
             Grid.Column="0"
             Grid.ColumnSpan="2"
-            ColumnDefinitions="2*, *"
-            RowDefinitions="3*, Auto, *, Auto, *">
+            ColumnDefinitions="2*, *">
+            <Grid.RowDefinitions>
+                <!--
+                    Image carousel row: collapses to 0 when there are no images so the
+                    description card below can take all the available vertical space.
+                    This is the common case when a model was recovered via the tRPC fallback,
+                    which doesn't return per-version images.
+                -->
+                <RowDefinition Height="{Binding HasImages, Converter={x:Static converters:BoolToGridLengthConverter.Instance}, ConverterParameter=3*|0}" />
+                <!--
+                    Splitter row (Auto): hosts either the GridSplitter (when images are present)
+                    or a small "No preview images" hint (when they aren't). Only one is ever
+                    visible, so Auto sizes to whichever is showing.
+                -->
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
 
             <!--  image carousel  -->
             <scroll:BetterScrollViewer
@@ -304,6 +321,7 @@
                 Margin="0,8,0,8"
                 AllowAutoHide="True"
                 HorizontalScrollBarVisibility="Auto"
+                IsVisible="{Binding HasImages}"
                 PointerWheelChanged="InputElement_OnPointerWheelChanged"
                 VerticalScrollBarVisibility="Disabled">
                 <ItemsRepeater ItemsSource="{Binding ImageSources}">
@@ -338,7 +356,21 @@
                 Background="White"
                 BorderThickness="1"
                 CornerRadius="4"
+                IsVisible="{Binding HasImages}"
                 Opacity="0.5" />
+
+            <!--  Shown in place of the carousel/splitter when no preview images are available.  -->
+            <TextBlock
+                Grid.Row="1"
+                Grid.Column="0"
+                Margin="0,4,0,8"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                FontSize="12"
+                FontStyle="Italic"
+                Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                IsVisible="{Binding !HasImages}"
+                Text="No preview images available" />
 
             <!--  Description Card  -->
             <controls:Card

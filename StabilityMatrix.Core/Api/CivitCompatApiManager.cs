@@ -111,7 +111,19 @@ public class CivitCompatApiManager(
             );
 
             var trpcResponse = await civitTrpcApi.GetModelById(model.Id).ConfigureAwait(false);
-            var trpcModel = trpcResponse.Result.Data.Json;
+            // Even though the wrapper types declare these as `required`, System.Text.Json
+            // doesn't enforce non-null at deserialization — null-walk defensively so a missing
+            // node logs a warning instead of throwing into the outer catch.
+            var trpcModel = trpcResponse?.Result?.Data?.Json;
+            if (trpcModel is null)
+            {
+                logger.LogWarning(
+                    "tRPC fallback for model {Id} returned a malformed envelope; returning empty modelVersions",
+                    model.Id
+                );
+                return;
+            }
+
             var versions = CivitTRPCMapper.ToModelVersions(trpcModel);
 
             if (versions.Count == 0)

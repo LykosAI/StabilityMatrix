@@ -458,7 +458,10 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
                 else
                 {
                     modelsResponse = await civitApi.GetModels(request);
-                    models = modelsResponse.Items ?? [];
+                    if (modelsResponse.Items != null)
+                    {
+                        models.AddRange(modelsResponse.Items);
+                    }
                 }
 
                 // CivitAI's list endpoint (/api/v1/models?ids=...) sometimes returns zero items

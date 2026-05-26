@@ -104,9 +104,7 @@ public class ModelDownloadLinkHandler(
         modelTask.Wait();
         var model = modelTask.Result;
 
-        var useModelVersion =
-            !string.IsNullOrWhiteSpace(modelVersionIdStr) && int.TryParse(modelVersionIdStr, out _);
-        var modelVersionId = useModelVersion ? int.Parse(modelVersionIdStr) : 0;
+        var useModelVersion = int.TryParse(modelVersionIdStr, out var modelVersionId);
 
         var modelVersion = useModelVersion
             ? model.ModelVersions?.FirstOrDefault(x => x.Id == modelVersionId)

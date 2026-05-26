@@ -8,7 +8,9 @@ namespace StabilityMatrix.Core.Models.Rocm;
 /// </summary>
 public static class WindowsRocmSupport
 {
-    public const string MultiArchPythonPackageIndexUrl = "https://repo.amd.com/rocm/whl-multi-arch/";
+    public const string StableMultiArchPythonPackageIndexUrl = "https://repo.amd.com/rocm/whl-multi-arch/";
+    public const string NightlyMultiArchPythonPackageIndexUrl =
+        "https://rocm.nightlies.amd.com/whl-multi-arch/";
 
     // Used to exclude modern gfxarches from AOTriton activation EnVar as AOTriton does not currently support them.
     // This is a temporary measure until AOTriton adds support for these architectures.
@@ -56,6 +58,13 @@ public static class WindowsRocmSupport
         return IsLegacyArchitecture(gfxArch);
     }
 
+    public static bool UsesNightlyMultiArchPythonPackageIndex(string? gfxArch)
+    {
+        var canonicalArch = TryGetCanonicalArchitecture(gfxArch);
+        // TheRock currently publishes Vega multi-arch device packages on the nightly feed but not the stable one.
+        return canonicalArch is "gfx900" or "gfx906";
+    }
+
     public static string? TryGetCanonicalArchitecture(string? gfxArch)
     {
         if (string.IsNullOrWhiteSpace(gfxArch))
@@ -79,5 +88,12 @@ public static class WindowsRocmSupport
     {
         var canonicalArch = TryGetCanonicalArchitecture(gfxArch);
         return canonicalArch is null ? null : $"device-{canonicalArch}";
+    }
+
+    public static string GetMultiArchPythonPackageIndexUrl(string? gfxArch)
+    {
+        return UsesNightlyMultiArchPythonPackageIndex(gfxArch)
+            ? NightlyMultiArchPythonPackageIndexUrl
+            : StableMultiArchPythonPackageIndexUrl;
     }
 }

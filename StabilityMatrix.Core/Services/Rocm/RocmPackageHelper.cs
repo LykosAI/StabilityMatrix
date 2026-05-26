@@ -107,6 +107,11 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
         CancellationToken cancellationToken = default
     )
     {
+        var state = ResolveWindowsMachineState();
+        var multiArchPythonPackageIndexUrl = WindowsRocmSupport.GetMultiArchPythonPackageIndexUrl(
+            state.RuntimeGfxArch
+        );
+
         var torchInfo = await venvRunner.PipShow("torch").ConfigureAwait(false);
         if (torchInfo is null)
         {
@@ -133,7 +138,7 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
         }
 
         var indexResult = await venvRunner
-            .PipIndex(RocmSdkDevelPackageName, WindowsRocmSupport.MultiArchPythonPackageIndexUrl)
+            .PipIndex(RocmSdkDevelPackageName, multiArchPythonPackageIndexUrl)
             .ConfigureAwait(false);
 
         var latestVersion = indexResult?.AvailableVersions.FirstOrDefault();
@@ -176,10 +181,7 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
             .PipInstall(
                 new PipInstallArgs()
                     .AddArg("--upgrade")
-                    .AddKeyedArgs(
-                        "--index-url",
-                        ["--index-url", WindowsRocmSupport.MultiArchPythonPackageIndexUrl]
-                    )
+                    .AddKeyedArgs("--index-url", ["--index-url", multiArchPythonPackageIndexUrl])
                     .AddArg($"{RocmSdkDevelPackageName}=={versionToInstall}"),
                 onConsoleOutput
             )
@@ -228,8 +230,11 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
         progress?.Report(new ProgressReport(-1f, "Installing ROCm torch...", isIndeterminate: true));
 
         var installConfig = profile.InstallConfig;
+        var multiArchPythonPackageIndexUrl = WindowsRocmSupport.GetMultiArchPythonPackageIndexUrl(
+            state.RuntimeGfxArch
+        );
         var torchArgs = new PipInstallArgs()
-            .AddKeyedArgs("--index-url", ["--index-url", WindowsRocmSupport.MultiArchPythonPackageIndexUrl])
+            .AddKeyedArgs("--index-url", ["--index-url", multiArchPythonPackageIndexUrl])
             .AddArgs(
                 new Argument($"torch[{multiArchDeviceExtra}]"),
                 new Argument($"torchvision[{multiArchDeviceExtra}]"),

@@ -6,6 +6,7 @@ using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Models.Rocm;
 using StabilityMatrix.Core.Processes;
@@ -34,18 +35,15 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
     /// </summary>
     public RocmCompatibilityResult GetCompatibility(RocmPackageProfile profile)
     {
-        _ = profile;
-        return BuildCompatibilityResult(profile);
+        return BuildCompatibilityResult();
     }
 
     /// <summary>
     /// Resolves launch-time ROCm runtime details from the current Windows machine state.
     /// This is used to build helper-managed environment variables for package launch.
     /// </summary>
-    private RocmRuntimeContext ResolveRuntimeContext(RocmPackageProfile profile)
+    private RocmRuntimeContext ResolveRuntimeContext()
     {
-        _ = profile;
-
         var state = ResolveWindowsMachineState();
         if (!state.IsCompatible)
         {
@@ -67,29 +65,12 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
     }
 
     /// <summary>
-    /// Resolves install-time ROCm package selection details from the current Windows machine state.
-    /// This includes the canonical runtime GFX architecture and the matching multi-arch device extra.
-    /// </summary>
-    private RocmInstallContext ResolveInstallContext(RocmPackageProfile profile)
-    {
-        _ = profile;
-
-        var state = ResolveWindowsMachineState();
-
-        return new RocmInstallContext
-        {
-            RuntimeGfxArch = state.RuntimeGfxArch,
-            MultiArchDeviceExtra = state.MultiArchDeviceExtra,
-        };
-    }
-
-    /// <summary>
     /// Builds the final launch environment for a ROCm-capable package by combining helper defaults,
     /// package-specific environment values, and optional user overrides.
     /// </summary>
     public IReadOnlyDictionary<string, string> BuildLaunchEnvironment(RocmPackageProfile profile)
     {
-        var runtimeContext = ResolveRuntimeContext(profile);
+        var runtimeContext = ResolveRuntimeContext();
 
         if (!runtimeContext.IsSupported)
             return new Dictionary<string, string>();
@@ -117,7 +98,7 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
 
     /// <summary>
     /// Ensures <c>rocm-sdk-devel</c> is installed from the ROCm multi-arch index.
-    /// It prefers a build whose nightly date matches the installed ROCm torch build and falls back to the latest available build when no exact match is available.
+    /// It prefers a build whose date token matches the installed ROCm torch build and falls back to the latest available build when no exact match is available.
     /// </summary>
     public async Task EnsureWindowsSdkDevelAsync(
         IPyVenvRunner venvRunner,
@@ -152,11 +133,7 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
         }
 
         var indexResult = await venvRunner
-            .PipIndex(
-                RocmSdkDevelPackageName,
-                WindowsRocmSupport.MultiArchPythonPackageIndexUrl,
-                includePrerelease: true
-            )
+            .PipIndex(RocmSdkDevelPackageName, WindowsRocmSupport.MultiArchPythonPackageIndexUrl)
             .ConfigureAwait(false);
 
         var latestVersion = indexResult?.AvailableVersions.FirstOrDefault();
@@ -212,13 +189,18 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
     }
 
     /// <summary>
-    /// Performs the shared Windows-native ROCm install flow for helper-managed packages.
-    /// This installs package requirements, the ROCm torch wheel set from the multi-arch index,
-    /// and then verifies that the resulting torch installation reports usable ROCm metadata.
+    /// Builds the standard pip install config for helper-managed Windows ROCm package installs.
     /// </summary>
-    public async Task InstallWindowsNativePackageAsync(
+    public PipInstallConfig BuildWindowsNativeInstallConfig(RocmPackageProfile profile)
+    {
+        return profile.InstallConfig with { SkipTorchInstall = true };
+    }
+
+    /// <summary>
+    /// Installs the ROCm torch wheel set from the multi-arch index and verifies that the resulting torch installation reports usable ROCm metadata.
+    /// </summary>
+    public async Task InstallWindowsNativeTorchAsync(
         IPyVenvRunner venvRunner,
-        string installLocation,
         InstalledPackage installedPackage,
         RocmPackageProfile profile,
         IProgress<ProgressReport>? progress = null,
@@ -226,66 +208,27 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
         CancellationToken cancellationToken = default
     )
     {
-        var compatibility = GetCompatibility(profile);
-        if (!compatibility.IsCompatible)
+        var state = ResolveWindowsMachineState();
+        if (!state.IsCompatible)
         {
             throw new InvalidOperationException(
-                compatibility.FailureReason
-                    ?? "Windows ROCm installation is not supported for the current machine."
+                state.FailureReason ?? "Windows ROCm installation is not supported for the current machine."
             );
         }
 
-        var installContext = ResolveInstallContext(profile);
-
-        var multiArchDeviceExtra = installContext.MultiArchDeviceExtra;
+        var multiArchDeviceExtra = state.MultiArchDeviceExtra;
 
         if (string.IsNullOrWhiteSpace(multiArchDeviceExtra))
         {
-            throw new ApplicationException(
-                $"No Windows ROCm multi-arch device extra is available for '{installContext.RuntimeGfxArch ?? "unknown"}'."
+            throw new InvalidOperationException(
+                $"No Windows ROCm multi-arch device extra is available for '{state.RuntimeGfxArch ?? "unknown"}'."
             );
         }
-
-        progress?.Report(new ProgressReport(-1f, "Upgrading pip...", isIndeterminate: true));
-        await venvRunner.PipInstall("--upgrade pip wheel", onConsoleOutput).ConfigureAwait(false);
-
-        progress?.Report(
-            new ProgressReport(-1f, "Installing package requirements...", isIndeterminate: true)
-        );
-
-        var requirementsPipArgs = new PipInstallArgs([.. profile.ExtraInstallPipArgs]);
-        if (profile.UpgradePackages)
-        {
-            requirementsPipArgs = requirementsPipArgs.AddArg("--upgrade");
-        }
-
-        foreach (var relativePath in profile.RequirementsFilePaths)
-        {
-            var requirementsFile = new FilePath(venvRunner.WorkingDirectory ?? installLocation, relativePath);
-            if (!requirementsFile.Exists)
-                continue;
-
-            var requirementsContent = await requirementsFile
-                .ReadAllTextAsync(cancellationToken)
-                .ConfigureAwait(false);
-
-            requirementsPipArgs = requirementsPipArgs.WithParsedFromRequirementsTxt(
-                requirementsContent,
-                profile.RequirementsExcludePattern
-            );
-        }
-
-        if (installedPackage.PipOverrides != null)
-        {
-            requirementsPipArgs = requirementsPipArgs.WithUserOverrides(installedPackage.PipOverrides);
-        }
-
-        await venvRunner.PipInstall(requirementsPipArgs, onConsoleOutput).ConfigureAwait(false);
 
         progress?.Report(new ProgressReport(-1f, "Installing ROCm torch...", isIndeterminate: true));
 
+        var installConfig = profile.InstallConfig;
         var torchArgs = new PipInstallArgs()
-            .AddArg("--upgrade")
             .AddKeyedArgs("--index-url", ["--index-url", WindowsRocmSupport.MultiArchPythonPackageIndexUrl])
             .AddArgs(
                 new Argument($"torch[{multiArchDeviceExtra}]"),
@@ -293,7 +236,12 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
                 new Argument("torchaudio")
             );
 
-        if (profile.ForceReinstallTorch)
+        if (installConfig.UpgradePackages)
+        {
+            torchArgs = torchArgs.AddArg("--upgrade");
+        }
+
+        if (installConfig.ForceReinstallTorch)
         {
             torchArgs = torchArgs.AddArg("--force-reinstall");
         }
@@ -304,15 +252,19 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
         }
 
         await venvRunner.PipInstall(torchArgs, onConsoleOutput).ConfigureAwait(false);
-        if (profile.PostInstallPipArgs.Any())
+
+        if (installConfig.PostTorchInstallPipArgs.Any())
         {
-            var postInstallPipArgs = new PipInstallArgs([.. profile.PostInstallPipArgs]);
+            var postTorchInstallPipArgs = new PipInstallArgs([.. installConfig.PostTorchInstallPipArgs]);
+
             if (installedPackage.PipOverrides != null)
             {
-                postInstallPipArgs = postInstallPipArgs.WithUserOverrides(installedPackage.PipOverrides);
+                postTorchInstallPipArgs = postTorchInstallPipArgs.WithUserOverrides(
+                    installedPackage.PipOverrides
+                );
             }
 
-            await venvRunner.PipInstall(postInstallPipArgs, onConsoleOutput).ConfigureAwait(false);
+            await venvRunner.PipInstall(postTorchInstallPipArgs, onConsoleOutput).ConfigureAwait(false);
         }
 
         await VerifyWindowsNativeTorchInstallAsync(venvRunner, onConsoleOutput, cancellationToken)
@@ -323,9 +275,8 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
     /// Builds a compatibility result from the current machine state and package profile.
     /// This keeps the first ROCm helper slice focused on hardware capability and GPU selection only.
     /// </summary>
-    private RocmCompatibilityResult BuildCompatibilityResult(RocmPackageProfile profile)
+    private RocmCompatibilityResult BuildCompatibilityResult()
     {
-        _ = profile;
         var state = ResolveWindowsMachineState();
 
         return new RocmCompatibilityResult
@@ -337,12 +288,12 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
         };
     }
 
-    private ResolvedWindowsRocmState ResolveWindowsMachineState()
+    private RocmMachineState ResolveWindowsMachineState()
     {
         var amdGpus = GetAmdGpuCandidates(forceRefresh: true).ToList();
         if (amdGpus.Count == 0)
         {
-            return new ResolvedWindowsRocmState
+            return new RocmMachineState
             {
                 IsCompatible = false,
                 FailureReason = "No AMD GPU was detected for ROCm evaluation.",
@@ -352,7 +303,7 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
         var supportedAmdGpus = amdGpus.Where(IsSupportedWindowsRocmGpu).ToList();
         if (supportedAmdGpus.Count == 0)
         {
-            return new ResolvedWindowsRocmState
+            return new RocmMachineState
             {
                 IsCompatible = false,
                 FailureReason = GetUnsupportedGpuReason(amdGpus),
@@ -367,7 +318,7 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
             ?? GetSupportedFallbackGfxArch(supportedAmdGpus);
         var isCompatible = !string.IsNullOrWhiteSpace(runtimeGfxArch);
 
-        return new ResolvedWindowsRocmState
+        return new RocmMachineState
         {
             IsCompatible = isCompatible,
             FailureReason = isCompatible
@@ -476,7 +427,7 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
         var torchInfo = await venvRunner.PipShow("torch").ConfigureAwait(false);
         if (torchInfo is null)
         {
-            throw new ApplicationException("torch was not installed after Windows ROCm setup.");
+            throw new InvalidOperationException("torch was not installed after Windows ROCm setup.");
         }
 
         var verificationResult = await venvRunner
@@ -488,13 +439,15 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
         var verificationOutput = (verificationResult.StandardOutput ?? string.Empty).Trim();
         if (string.IsNullOrWhiteSpace(verificationOutput))
         {
-            throw new ApplicationException("Torch verification produced no output.");
+            throw new InvalidOperationException("Torch verification produced no output.");
         }
 
         var verificationJson = TryExtractJsonObject(verificationOutput);
         if (string.IsNullOrWhiteSpace(verificationJson))
         {
-            throw new ApplicationException($"Unexpected torch verification output: {verificationOutput}");
+            throw new InvalidOperationException(
+                $"Unexpected torch verification output: {verificationOutput}"
+            );
         }
 
         JsonDocument verificationDocument;
@@ -504,7 +457,7 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
         }
         catch (Exception exception)
         {
-            throw new ApplicationException(
+            throw new InvalidOperationException(
                 $"Unexpected torch verification output: {verificationOutput}",
                 exception
             );
@@ -521,7 +474,7 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
 
             if (!IsUsableWindowsNativeTorchBuild(version, hipVersion))
             {
-                throw new ApplicationException(
+                throw new InvalidOperationException(
                     $"Installed torch is not a usable ROCm build. Verification output: {verificationOutput}"
                 );
             }
@@ -685,18 +638,5 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
         }
 
         return merged;
-    }
-
-    private sealed class ResolvedWindowsRocmState
-    {
-        public bool IsCompatible { get; init; }
-
-        public string? FailureReason { get; init; }
-
-        public GpuInfo? SelectedGpu { get; init; }
-
-        public string? RuntimeGfxArch { get; init; }
-
-        public string? MultiArchDeviceExtra { get; init; }
     }
 }

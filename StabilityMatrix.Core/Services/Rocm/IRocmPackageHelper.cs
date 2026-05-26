@@ -1,4 +1,5 @@
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Models.Rocm;
 using StabilityMatrix.Core.Processes;
@@ -28,7 +29,7 @@ public interface IRocmPackageHelper
 
     /// <summary>
     /// Ensures a usable Windows ROCm SDK devel package is installed from the ROCm multi-arch index,
-    /// preferring the same nightly build date as the installed torch build and falling back to the latest available build.
+    /// preferring the same build date token as the installed torch build and falling back to the latest available build.
     /// </summary>
     Task EnsureWindowsSdkDevelAsync(
         IPyVenvRunner venvRunner,
@@ -38,11 +39,15 @@ public interface IRocmPackageHelper
     );
 
     /// <summary>
-    /// Performs the Windows-native ROCm install flow for a package using helper-resolved multi-arch device extras.
+    /// Builds the standard pip install config for a Windows ROCm package, ensuring torch installation stays helper-managed.
     /// </summary>
-    Task InstallWindowsNativePackageAsync(
+    PipInstallConfig BuildWindowsNativeInstallConfig(RocmPackageProfile profile);
+
+    /// <summary>
+    /// Installs the Windows-native ROCm torch wheel set for a package using helper-resolved multi-arch device extras.
+    /// </summary>
+    Task InstallWindowsNativeTorchAsync(
         IPyVenvRunner venvRunner,
-        string installLocation,
         InstalledPackage installedPackage,
         RocmPackageProfile profile,
         IProgress<ProgressReport>? progress = null,

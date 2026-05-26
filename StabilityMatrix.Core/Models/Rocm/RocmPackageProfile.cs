@@ -1,3 +1,4 @@
+using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Models.Progress;
 
 namespace StabilityMatrix.Core.Models.Rocm;
@@ -9,34 +10,9 @@ namespace StabilityMatrix.Core.Models.Rocm;
 public class RocmPackageProfile
 {
     /// <summary>
-    /// Requirement files to install after helper-owned ROCm torch installation completes.
+    /// Standard package install configuration used before the helper-managed Windows ROCm torch step.
     /// </summary>
-    public IEnumerable<string> RequirementsFilePaths { get; init; } = ["requirements.txt"];
-
-    /// <summary>
-    /// Package requirement entries to exclude because the helper installs them from the ROCm multi-arch feed.
-    /// </summary>
-    public string RequirementsExcludePattern { get; init; } = @"(torch(vision|audio)?|xformers)([^a-z].*)?";
-
-    /// <summary>
-    /// Extra package-specific pip arguments to include when installing requirements before the helper-managed torch step.
-    /// </summary>
-    public IEnumerable<string> ExtraInstallPipArgs { get; init; } = [];
-
-    /// <summary>
-    /// Extra package-specific pip arguments to install after requirements and torch are complete.
-    /// </summary>
-    public IEnumerable<string> PostInstallPipArgs { get; init; } = [];
-
-    /// <summary>
-    /// When true, helper-managed requirements installs should use --upgrade.
-    /// </summary>
-    public bool UpgradePackages { get; init; }
-
-    /// <summary>
-    /// When true, helper-managed torch installs should force reinstall the selected ROCm wheel set.
-    /// </summary>
-    public bool ForceReinstallTorch { get; init; } = true;
+    public PipInstallConfig InstallConfig { get; init; } = new();
 
     /// <summary>
     /// Optional callback for package-specific environment variables derived from a resolved ROCm context.

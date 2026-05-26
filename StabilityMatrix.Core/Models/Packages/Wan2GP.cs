@@ -44,12 +44,6 @@ public class Wan2GP(
         pipWheelService
     )
 {
-    private static readonly RocmPackageProfile WindowsRocmProfile = new()
-    {
-        UpgradePackages = true,
-        PostInstallPipArgs = ["hf-xet", "setuptools", "numpy==1.26.4"],
-    };
-
     public override string Name => "Wan2GP";
     public override string DisplayName { get; set; } = "Wan2GP";
     public override string Author => "deepbeepmeep";
@@ -97,17 +91,12 @@ public class Wan2GP(
 
     private bool HasWindowsRocmSupport()
     {
-        return GetWindowsRocmCompatibility().IsCompatible;
+        return HasWindowsRocmSupport(rocmPackageHelper, Wan2GpWindowsRocmProfile.Profile);
     }
 
     private RocmCompatibilityResult GetWindowsRocmCompatibility()
     {
-        if (!Compat.IsWindows)
-        {
-            return new RocmCompatibilityResult { IsCompatible = false };
-        }
-
-        return rocmPackageHelper.GetCompatibility(WindowsRocmProfile);
+        return GetWindowsRocmCompatibility(rocmPackageHelper, Wan2GpWindowsRocmProfile.Profile);
     }
 
     /// <summary>
@@ -276,7 +265,7 @@ public class Wan2GP(
         {
             await InstallAmdRocmAsync(
                     venvRunner,
-                    installLocation,
+                    options,
                     installedPackage,
                     progress,
                     onConsoleOutput,
@@ -385,7 +374,7 @@ public class Wan2GP(
 
     private async Task InstallAmdRocmAsync(
         IPyVenvRunner venvRunner,
-        string installLocation,
+        InstallPackageOptions options,
         InstalledPackage installedPackage,
         IProgress<ProgressReport>? progress,
         Action<ProcessOutput>? onConsoleOutput,
@@ -394,12 +383,24 @@ public class Wan2GP(
     {
         if (Compat.IsWindows)
         {
-            await rocmPackageHelper
-                .InstallWindowsNativePackageAsync(
+            var config = rocmPackageHelper.BuildWindowsNativeInstallConfig(Wan2GpWindowsRocmProfile.Profile);
+
+            await StandardPipInstallProcessAsync(
                     venvRunner,
-                    installLocation,
+                    options,
                     installedPackage,
-                    WindowsRocmProfile,
+                    config,
+                    onConsoleOutput,
+                    progress,
+                    cancellationToken
+                )
+                .ConfigureAwait(false);
+
+            await rocmPackageHelper
+                .InstallWindowsNativeTorchAsync(
+                    venvRunner,
+                    installedPackage,
+                    Wan2GpWindowsRocmProfile.Profile,
                     progress,
                     onConsoleOutput,
                     cancellationToken
@@ -443,7 +444,7 @@ public class Wan2GP(
 
         if (Compat.IsWindows && HasWindowsRocmSupport())
         {
-            var rocmEnvironment = rocmPackageHelper.BuildLaunchEnvironment(WindowsRocmProfile);
+            var rocmEnvironment = rocmPackageHelper.BuildLaunchEnvironment(Wan2GpWindowsRocmProfile.Profile);
             VenvRunner.UpdateEnvironmentVariables(env => env.SetItems(rocmEnvironment));
         }
 

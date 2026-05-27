@@ -192,6 +192,30 @@ public class ComfyUI(
                     TargetRelativePaths = ["models/diffusion_models"],
                     ConfigDocumentPaths = ["diffusion_models"],
                 },
+                new SharedFolderLayoutRule // Style Models (e.g. Flux Redux, B-Lora)
+                {
+                    SourceTypes = [SharedFolderType.StyleModels],
+                    TargetRelativePaths = ["models/style_models"],
+                    ConfigDocumentPaths = ["style_models"],
+                },
+                new SharedFolderLayoutRule // Audio Encoders
+                {
+                    SourceTypes = [SharedFolderType.AudioEncoders],
+                    TargetRelativePaths = ["models/audio_encoders"],
+                    ConfigDocumentPaths = ["audio_encoders"],
+                },
+                new SharedFolderLayoutRule // Model Patches
+                {
+                    SourceTypes = [SharedFolderType.ModelPatches],
+                    TargetRelativePaths = ["models/model_patches"],
+                    ConfigDocumentPaths = ["model_patches"],
+                },
+                new SharedFolderLayoutRule // Background Removal (e.g. BiRefNet)
+                {
+                    SourceTypes = [SharedFolderType.BackgroundRemoval],
+                    TargetRelativePaths = ["models/background_removal"],
+                    ConfigDocumentPaths = ["background_removal"],
+                },
             ],
         };
 

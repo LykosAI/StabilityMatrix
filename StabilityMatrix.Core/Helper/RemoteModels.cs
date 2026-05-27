@@ -476,11 +476,11 @@ public static class RemoteModels
     /// </summary>
     public static IReadOnlyList<RemoteResource> QwenImageEditModels { get; } =
         [
-            // Qwen Image Edit UNET model (fp8 quantized)
+            // Qwen Image Edit UNET model (fp8 quantized, 2511 build)
             new()
             {
                 Url = new Uri(
-                    "https://huggingface.co/Comfy-Org/Qwen-Image-Edit_ComfyUI/resolve/main/split_files/diffusion_models/qwen_image_edit_2509_fp8_e4m3fn.safetensors"
+                    "https://huggingface.co/Comfy-Org/Qwen-Image-Edit_ComfyUI/resolve/main/split_files/diffusion_models/qwen_image_edit_2511_fp8mixed.safetensors"
                 ),
                 InfoUrl = new Uri("https://huggingface.co/Comfy-Org/Qwen-Image-Edit_ComfyUI"),
                 Author = "Alibaba Qwen",
@@ -507,6 +507,56 @@ public static class RemoteModels
                 InfoUrl = new Uri("https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI"),
                 Author = "Alibaba Qwen",
                 LicenseType = "Qwen License",
+                ContextType = SharedFolderType.TextEncoders,
+            },
+        ];
+
+    #endregion
+
+    #region Flux.2 Klein Models
+
+    /// <summary>
+    /// All required models for Flux.2 Klein 4B image editing.
+    /// Klein 4B is Apache 2.0 licensed (commercial use free). Klein 9B users can manually
+    /// download the 9B UNET + qwen_3_8b text encoder into the same folders — the model
+    /// manager substring-matches loosely enough to pick up either variant.
+    /// </summary>
+    public static IReadOnlyList<RemoteResource> Flux2KleinModels { get; } =
+        [
+            // Flux.2 Klein 4B UNET (distilled, ~7.75 GB, Apache 2.0)
+            new()
+            {
+                Url = new Uri(
+                    "https://huggingface.co/Comfy-Org/flux2-klein-4B/resolve/main/split_files/diffusion_models/flux-2-klein-4b.safetensors"
+                ),
+                InfoUrl = new Uri("https://huggingface.co/Comfy-Org/flux2-klein-4B"),
+                Author = "Black Forest Labs",
+                LicenseType = "Apache 2.0",
+                LicenseUrl = new Uri(
+                    "https://huggingface.co/black-forest-labs/FLUX.2-klein-4B/blob/main/LICENSE.md"
+                ),
+                ContextType = SharedFolderType.DiffusionModels,
+            },
+            // Flux.2 VAE (~336 MB, shared between all Flux.2 variants)
+            new()
+            {
+                Url = new Uri(
+                    "https://huggingface.co/Comfy-Org/flux2-klein-4B/resolve/main/split_files/vae/flux2-vae.safetensors"
+                ),
+                InfoUrl = new Uri("https://huggingface.co/Comfy-Org/flux2-klein-4B"),
+                Author = "Black Forest Labs",
+                LicenseType = "Apache 2.0",
+                ContextType = SharedFolderType.VAE,
+            },
+            // Qwen3 4B text encoder (~8 GB, paired with Klein 4B)
+            new()
+            {
+                Url = new Uri(
+                    "https://huggingface.co/Comfy-Org/flux2-klein-4B/resolve/main/split_files/text_encoders/qwen_3_4b.safetensors"
+                ),
+                InfoUrl = new Uri("https://huggingface.co/Comfy-Org/flux2-klein-4B"),
+                Author = "Alibaba Qwen",
+                LicenseType = "Apache 2.0",
                 ContextType = SharedFolderType.TextEncoders,
             },
         ];

@@ -185,14 +185,62 @@ public partial class BananaVisionPageViewModel
         );
     }
 
+    /// <summary>
+    /// Loads available Flux.2 Klein models from the DiffusionModels folder using local model index.
+    /// Picks up both Klein 4B and Klein 9B variants for the dropdown selector.
+    /// </summary>
+    private void LoadAvailableKleinModels()
+    {
+        // Load UNet models - prioritize Klein, then any Flux.2 (catches future variants), then untagged
+        var (kleinModels, flux2Models, untaggedModels) = CategorizeModelsByTerms(
+            SharedFolderType.DiffusionModels,
+            ["Klein", "flux-2-klein", "flux2-klein"],
+            ["Flux.2", "flux2"]
+        );
+
+        PopulateModelCollection(AvailableKleinModels, kleinModels, flux2Models, untaggedModels);
+
+        // Auto-select first Klein model if available — prefer 4B since it's the auto-downloaded
+        // Apache 2.0 default, then any other Klein variant the user has dropped in
+        if (SelectedKleinModel == null && AvailableKleinModels.Count > 0)
+        {
+            SelectedKleinModel =
+                AvailableKleinModels.FirstOrDefault(m =>
+                    m.FileName.Contains("klein-4b", StringComparison.OrdinalIgnoreCase)
+                    || m.FileName.Contains("klein_4b", StringComparison.OrdinalIgnoreCase)
+                )
+                ?? AvailableKleinModels.FirstOrDefault(m =>
+                    m.FileName.Contains("klein", StringComparison.OrdinalIgnoreCase)
+                )
+                ?? AvailableKleinModels.First();
+        }
+
+        // Load LoRA models - prioritize Klein, then any Flux LoRA, then untagged
+        var (kleinLoras, fluxLoras, untaggedLoras) = CategorizeModelsByTerms(
+            SharedFolderType.Lora | SharedFolderType.LyCORIS,
+            ["Klein", "Flux.2"],
+            ["Flux"]
+        );
+
+        PopulateModelCollection(AvailableKleinLoras, kleinLoras, fluxLoras, untaggedLoras);
+
+        logger.LogInformation(
+            "Loaded {ModelCount} Klein models and {LoraCount} LoRAs from local index",
+            AvailableKleinModels.Count,
+            AvailableKleinLoras.Count
+        );
+    }
+
     [RelayCommand]
     private async Task AddLoraAsync()
     {
         // Get available LoRAs based on current provider
-        var availableLoras =
-            SelectedProviderId == BananaVisionProviderIds.QwenImageEdit
-                ? AvailableQwenLoras
-                : AvailableFluxLoras;
+        var availableLoras = SelectedProviderId switch
+        {
+            BananaVisionProviderIds.QwenImageEdit => AvailableQwenLoras,
+            BananaVisionProviderIds.Flux2Klein => AvailableKleinLoras,
+            _ => AvailableFluxLoras,
+        };
 
         if (availableLoras.Count == 0)
         {
@@ -271,5 +319,99 @@ public partial class BananaVisionPageViewModel
     private void ToggleQwenSettings()
     {
         IsQwenSettingsExpanded = !IsQwenSettingsExpanded;
+    }
+
+    [RelayCommand]
+    private void ToggleKleinSettings()
+    {
+        IsKleinSettingsExpanded = !IsKleinSettingsExpanded;
+    }
+
+    /// <summary>
+    /// When the user picks a different Klein model, snap Steps/CFG to the recommended
+    /// defaults for that variant. Distilled = 4 steps / CFG 1, Base = 20 steps / CFG 5.
+    /// The user can still override afterwards; this just sets sane starting values.
+    /// </summary>
+    partial void OnSelectedKleinModelChanged(HybridModelFile? value)
+    {
+        if (value == null)
+            return;
+
+        var (recommendedSteps, recommendedCfg) = DetectKleinDefaults(value);
+        KleinSteps = recommendedSteps;
+        KleinCfg = recommendedCfg;
+    }
+
+    /// <summary>
+    /// Returns the recommended Steps and CFG for a Klein UNET, based on filename and
+    /// CivitAI metadata. Base variants need 20 steps / CFG 5; distilled needs 4 / 1.
+    /// 9B models without an explicit "distilled" tag are assumed to be base, since
+    /// Klein 9B distilled isn't publicly shipped — almost all 9B installs are base
+    /// (or fine-tunes of base). 4B without signals defaults to distilled, matching
+    /// our auto-downloaded Apache 2.0 default.
+    /// </summary>
+    private static (int Steps, double Cfg) DetectKleinDefaults(HybridModelFile model)
+    {
+        var info = model.Local?.ConnectedModelInfo;
+
+        var haystacks = new List<string> { model.FileName };
+        if (info != null)
+        {
+            if (!string.IsNullOrEmpty(info.BaseModel))
+                haystacks.Add(info.BaseModel);
+            if (!string.IsNullOrEmpty(info.ModelName))
+                haystacks.Add(info.ModelName);
+            if (!string.IsNullOrEmpty(info.VersionName))
+                haystacks.Add(info.VersionName);
+            if (!string.IsNullOrEmpty(info.VersionDescription))
+                haystacks.Add(info.VersionDescription);
+            if (info.TrainedWords != null)
+                haystacks.AddRange(info.TrainedWords);
+        }
+
+        bool LooksLikeBase(string s) =>
+            s.Contains("base", StringComparison.OrdinalIgnoreCase)
+            || s.Contains("non-distilled", StringComparison.OrdinalIgnoreCase)
+            || s.Contains("non_distilled", StringComparison.OrdinalIgnoreCase)
+            || s.Contains("nondistilled", StringComparison.OrdinalIgnoreCase)
+            || s.Contains("foundation", StringComparison.OrdinalIgnoreCase);
+
+        bool LooksLikeDistilled(string s) =>
+            s.Contains("distilled", StringComparison.OrdinalIgnoreCase)
+            || s.Contains("turbo", StringComparison.OrdinalIgnoreCase);
+
+        bool LooksLikeNineB(string s) =>
+            s.Contains("9b", StringComparison.OrdinalIgnoreCase)
+            || s.Contains("9 b", StringComparison.OrdinalIgnoreCase)
+            || s.Contains("9-b", StringComparison.OrdinalIgnoreCase)
+            || s.Contains("klein 9", StringComparison.OrdinalIgnoreCase)
+            || s.Contains("klein-9", StringComparison.OrdinalIgnoreCase)
+            || s.Contains("klein_9", StringComparison.OrdinalIgnoreCase);
+
+        var hasBaseSignal = haystacks.Any(LooksLikeBase);
+        var hasDistilledSignal = haystacks.Any(LooksLikeDistilled);
+        var hasNineBSignal = haystacks.Any(LooksLikeNineB);
+
+        // Ambiguous case: BOTH "base" and "distilled" appear (common for community uploads
+        // labeled e.g. "Klein 9B Base & Distilled" that cover both variants). Prefer base
+        // for 9B (distilled 9B isn't publicly shipped) and distilled for 4B (matches our
+        // auto-download default).
+        if (hasBaseSignal && hasDistilledSignal)
+            return hasNineBSignal ? (20, 5.0) : (4, 1.0);
+
+        // Unambiguous explicit tags.
+        if (hasDistilledSignal)
+            return (4, 1.0);
+        if (hasBaseSignal)
+            return (20, 5.0);
+
+        // No explicit base/distilled signal, but it's a 9B variant — default to base.
+        // Klein 9B distilled isn't publicly shipped, so 9B installs (including merges and
+        // fine-tunes) are almost always base-derived and need 20 steps / CFG 5.
+        if (hasNineBSignal)
+            return (20, 5.0);
+
+        // Default: distilled (matches the auto-downloaded Apache 2.0 Klein 4B).
+        return (4, 1.0);
     }
 }

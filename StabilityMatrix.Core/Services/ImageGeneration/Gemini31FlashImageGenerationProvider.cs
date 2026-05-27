@@ -5,45 +5,46 @@ using StabilityMatrix.Core.Models.Api.Gemini;
 namespace StabilityMatrix.Core.Services.ImageGeneration;
 
 /// <summary>
-/// Image generation provider for Google Gemini 3 Pro (Nano Banana Pro Preview)
-/// with thinking/reasoning support
+/// Image generation provider for Google Gemini 3.1 Flash (Nano Banana 2)
+/// with thinking/reasoning support. Uses the newer thinking_level string config
+/// instead of the integer thinking_budget used by Gemini 3 Pro.
 /// </summary>
-public class Gemini3ProImageGenerationProvider(
-    ILogger<Gemini3ProImageGenerationProvider> logger,
+public class Gemini31FlashImageGenerationProvider(
+    ILogger<Gemini31FlashImageGenerationProvider> logger,
     IGeminiApi geminiApi,
     ISecretsManager secretsManager
 ) : GeminiBaseImageGenerationProvider(logger, geminiApi, secretsManager)
 {
-    private const int DefaultThinkingBudget = 2048;
+    private const string DefaultThinkingLevel = "high";
 
-    public override string ProviderId => BananaVisionProviderIds.Gemini3Pro;
-    public override string ProviderName => "Gemini 3 Pro (Nano Banana Pro)";
-    public override string DefaultModel => "gemini-3-pro-image-preview";
+    public override string ProviderId => BananaVisionProviderIds.Gemini31Flash;
+    public override string ProviderName => "Gemini 3.1 Flash (Nano Banana 2)";
+    public override string DefaultModel => "gemini-3.1-flash-image-preview";
     public override bool RequiresThoughtSignatures => true;
 
     protected override GeminiGenerateContentRequest BuildGeminiRequest(ImageGenerationRequest request)
     {
-        // Get the base request
         var geminiRequest = base.BuildGeminiRequest(request);
 
-        // Check if thinking is enabled
         var enableThinking =
             request.ProviderOptions?.TryGetValue("enableThinking", out var thinkingValue) == true
             && thinkingValue is true or "true";
 
-        var thinkingBudget =
-            request.ProviderOptions?.TryGetValue("thinkingBudget", out var budgetValue) == true
-            && budgetValue is int budget
-                ? budget
-                : DefaultThinkingBudget;
+        var thinkingLevel =
+            request.ProviderOptions?.TryGetValue("thinkingLevel", out var levelValue) == true
+            && levelValue is string level
+            && !string.IsNullOrWhiteSpace(level)
+                ? level
+                : DefaultThinkingLevel;
 
         Logger.LogInformation(
-            "Gemini 3 Pro Config - Thinking: {Thinking}, Budget: {Budget}",
+            "Gemini 3.1 Flash Config - Thinking: {Thinking}, Level: {Level}",
             enableThinking,
-            enableThinking ? thinkingBudget : 0
+            enableThinking ? thinkingLevel : "minimal"
         );
 
-        // Add thinking config if enabled
+        // Only attach a thinkingConfig when the user explicitly enabled thinking.
+        // Omitting it lets Gemini 3.1 Flash use its server-side default ("minimal").
         if (enableThinking)
         {
             var existingConfig = geminiRequest.GenerationConfig ?? new GeminiGenerationConfig();
@@ -54,7 +55,7 @@ public class Gemini3ProImageGenerationProvider(
                 {
                     ThinkingConfig = new GeminiThinkingConfig
                     {
-                        ThinkingBudget = thinkingBudget,
+                        ThinkingLevel = thinkingLevel,
                         IncludeThoughts = true,
                     },
                 },

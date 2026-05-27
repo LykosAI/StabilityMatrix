@@ -2246,7 +2246,25 @@ namespace StabilityMatrix.Avalonia.Languages {
                 return ResourceManager.GetString("Label_HolidayMode", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Always Show Scrollbars.
+        /// </summary>
+        public static string Label_AlwaysShowScrollbars {
+            get {
+                return ResourceManager.GetString("Label_AlwaysShowScrollbars", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to When on, vertical scrollbars stay visible at full thickness. When off, they fade to a thin bar that only expands on hover..
+        /// </summary>
+        public static string Label_AlwaysShowScrollbars_Details {
+            get {
+                return ResourceManager.GetString("Label_AlwaysShowScrollbars_Details", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Hugging Face.
         /// </summary>

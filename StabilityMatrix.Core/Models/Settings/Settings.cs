@@ -121,6 +121,14 @@ public class Settings
 
     public bool IsDiscordRichPresenceEnabled { get; set; }
 
+    /// <summary>
+    /// When true, vertical scrollbars stay permanently visible at their expanded
+    /// (thicker) thickness instead of fading to a thin auto-hiding bar. Default
+    /// matches the app's preferred behavior; users can toggle back to Avalonia's
+    /// auto-hide default via the Appearance settings.
+    /// </summary>
+    public bool ScrollBarsAlwaysVisible { get; set; } = true;
+
     public HashSet<string> DisabledBaseModelTypes { get; set; } = [];
 
     public HashSet<string> SavedInferenceDimensions { get; set; } =

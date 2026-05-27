@@ -376,10 +376,22 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         // Get model names
         if (await Client.GetModelNamesAsync() is { } modelNames)
         {
-            modelsSource.EditDiff(
-                modelNames.Select(HybridModelFile.FromRemote),
-                HybridModelFile.RemoteLocalComparer
-            );
+            // Build the checkpoint list (backend-reported models, preferring the local index
+            // entry for its richer metadata) and apply it as a single diff. Doing this in one
+            // pass — rather than resetting to local-only and then re-adding remote — avoids
+            // transiently removing remote-only models, which resets the scroll position of an
+            // open model dropdown while the list refreshes.
+            var localModelsById = modelIndexService
+                .FindByModelType(SharedFolderType.StableDiffusion)
+                .Select(HybridModelFile.FromLocal)
+                .GroupBy(m => m.GetId())
+                .ToDictionary(g => g.Key, g => g.First());
+
+            var combinedModels = modelNames
+                .Select(HybridModelFile.FromRemote)
+                .Select(remote => localModelsById.GetValueOrDefault(remote.GetId()) ?? remote);
+
+            modelsSource.EditDiff(combinedModels, HybridModelFile.Comparer);
         }
 
         // Get control net model names
@@ -545,13 +557,19 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
     /// </summary>
     protected void ResetSharedProperties()
     {
-        // Load local models
-        modelsSource.EditDiff(
-            modelIndexService
-                .FindByModelType(SharedFolderType.StableDiffusion)
-                .Select(HybridModelFile.FromLocal),
-            HybridModelFile.Comparer
-        );
+        // Load local models.
+        // When connected, the checkpoint list is refreshed as a single combined (local + remote)
+        // diff in LoadSharedPropertiesAsync, so skip the local-only reset here to avoid transiently
+        // removing remote-only models (which resets the scroll position of an open model dropdown).
+        if (!IsConnected)
+        {
+            modelsSource.EditDiff(
+                modelIndexService
+                    .FindByModelType(SharedFolderType.StableDiffusion)
+                    .Select(HybridModelFile.FromLocal),
+                HybridModelFile.Comparer
+            );
+        }
 
         // Load local control net models
         controlNetModelsSource.EditDiff(

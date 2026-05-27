@@ -305,6 +305,11 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
     public bool ShowQwenSettings => SelectedProviderId == BananaVisionProviderIds.QwenImageEdit;
 
     /// <summary>
+    /// Whether to show the Flux.2 Klein settings panel
+    /// </summary>
+    public bool ShowKleinSettings => SelectedProviderId == BananaVisionProviderIds.Flux2Klein;
+
+    /// <summary>
     /// Whether the Flux settings panel is expanded
     /// </summary>
     [ObservableProperty]
@@ -315,6 +320,12 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
     /// </summary>
     [ObservableProperty]
     public partial bool IsQwenSettingsExpanded { get; set; } = true;
+
+    /// <summary>
+    /// Whether the Klein settings panel is expanded
+    /// </summary>
+    [ObservableProperty]
+    public partial bool IsKleinSettingsExpanded { get; set; } = true;
 
     /// <summary>
     /// Selected Flux Kontext model
@@ -329,6 +340,26 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
     public partial HybridModelFile? SelectedQwenModel { get; set; }
 
     /// <summary>
+    /// Selected Flux.2 Klein model
+    /// </summary>
+    [ObservableProperty]
+    public partial HybridModelFile? SelectedKleinModel { get; set; }
+
+    /// <summary>
+    /// Sampling steps for Klein. Auto-set when the model changes (4 for distilled,
+    /// 20 for base); user can override via the Klein settings panel.
+    /// </summary>
+    [ObservableProperty]
+    public partial int KleinSteps { get; set; } = 4;
+
+    /// <summary>
+    /// CFG scale for Klein. Auto-set when the model changes (1 for distilled,
+    /// 5 for base); user can override via the Klein settings panel.
+    /// </summary>
+    [ObservableProperty]
+    public partial double KleinCfg { get; set; } = 1.0;
+
+    /// <summary>
     /// Available Flux Kontext models (filtered by BaseModel metadata or untagged)
     /// </summary>
     public ObservableCollection<HybridModelFile> AvailableFluxModels { get; } = [];
@@ -339,6 +370,11 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
     public ObservableCollection<HybridModelFile> AvailableQwenModels { get; } = [];
 
     /// <summary>
+    /// Available Flux.2 Klein models (filtered by BaseModel metadata or filename)
+    /// </summary>
+    public ObservableCollection<HybridModelFile> AvailableKleinModels { get; } = [];
+
+    /// <summary>
     /// Available LoRA models for Flux Kontext
     /// </summary>
     public ObservableCollection<HybridModelFile> AvailableFluxLoras { get; } = [];
@@ -347,6 +383,11 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
     /// Available LoRA models for Qwen Image Edit
     /// </summary>
     public ObservableCollection<HybridModelFile> AvailableQwenLoras { get; } = [];
+
+    /// <summary>
+    /// Available LoRA models for Flux.2 Klein
+    /// </summary>
+    public ObservableCollection<HybridModelFile> AvailableKleinLoras { get; } = [];
 
     /// <summary>
     /// Selected LoRAs with weights
@@ -835,58 +876,71 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
         const int maxRetries = 5;
         const int retryDelayMs = 1000;
 
-        for (var attempt = 1; attempt <= maxRetries; attempt++)
+        // Hold IsWaitingForConnection for the whole retry loop so the status banner and
+        // Connect button don't flicker as ClientManager.IsConnecting toggles per attempt
+        // (each failed attempt + retry delay would otherwise expose CanUserConnect briefly).
+        IsWaitingForConnection = true;
+        try
         {
-            try
+            for (var attempt = 1; attempt <= maxRetries; attempt++)
             {
-                logger.LogInformation(
-                    "Attempting to connect to ComfyUI (attempt {Attempt}/{MaxRetries})...",
-                    attempt,
-                    maxRetries
-                );
-                await ClientManager.ConnectAsync();
-                notificationService.Show(
-                    "Connected",
-                    "Successfully connected to ComfyUI",
-                    NotificationType.Success
-                );
-                return; // Success - exit the method
-            }
-            catch (HttpRequestException ex)
-                when (ex.InnerException is SocketException { SocketErrorCode: SocketError.ConnectionRefused })
-            {
-                // Connection refused - ComfyUI might still be starting up
-                if (attempt < maxRetries)
+                try
                 {
-                    logger.LogDebug(
-                        "Connection refused (attempt {Attempt}/{MaxRetries}), retrying in {Delay}ms...",
+                    logger.LogInformation(
+                        "Attempting to connect to ComfyUI (attempt {Attempt}/{MaxRetries})...",
                         attempt,
-                        maxRetries,
-                        retryDelayMs
-                    );
-                    await Task.Delay(retryDelayMs);
-                }
-                else
-                {
-                    logger.LogWarning(
-                        ex,
-                        "Failed to connect to ComfyUI after {MaxRetries} attempts",
                         maxRetries
                     );
+                    await ClientManager.ConnectAsync();
                     notificationService.Show(
-                        "Connection Failed",
-                        "Could not connect to ComfyUI. Make sure it's running and try again.",
-                        NotificationType.Warning
+                        "Connected",
+                        "Successfully connected to ComfyUI",
+                        NotificationType.Success
                     );
+                    return; // Success - exit the method
+                }
+                catch (HttpRequestException ex)
+                    when (ex.InnerException
+                            is SocketException { SocketErrorCode: SocketError.ConnectionRefused }
+                    )
+                {
+                    // Connection refused - ComfyUI might still be starting up
+                    if (attempt < maxRetries)
+                    {
+                        logger.LogDebug(
+                            "Connection refused (attempt {Attempt}/{MaxRetries}), retrying in {Delay}ms...",
+                            attempt,
+                            maxRetries,
+                            retryDelayMs
+                        );
+                        await Task.Delay(retryDelayMs);
+                    }
+                    else
+                    {
+                        logger.LogWarning(
+                            ex,
+                            "Failed to connect to ComfyUI after {MaxRetries} attempts",
+                            maxRetries
+                        );
+                        notificationService.Show(
+                            "Connection Failed",
+                            "Could not connect to ComfyUI. Make sure it's running and try again.",
+                            NotificationType.Warning
+                        );
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Other errors - don't retry
+                    logger.LogError(ex, "Failed to connect to ComfyUI");
+                    notificationService.Show("Connection Failed", ex.Message, NotificationType.Error);
+                    return;
                 }
             }
-            catch (Exception ex)
-            {
-                // Other errors - don't retry
-                logger.LogError(ex, "Failed to connect to ComfyUI");
-                notificationService.Show("Connection Failed", ex.Message, NotificationType.Error);
-                return;
-            }
+        }
+        finally
+        {
+            IsWaitingForConnection = false;
         }
     }
 
@@ -1695,12 +1749,27 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
                 providerOptions["SelectedLoras"] = SelectedLoras.ToList();
         }
 
+        if (SelectedProviderId == BananaVisionProviderIds.Flux2Klein)
+        {
+            providerOptions ??= new();
+            if (SelectedKleinModel != null)
+                providerOptions["CustomUnetModel"] = SelectedKleinModel;
+            if (SelectedLoras.Count > 0)
+                providerOptions["SelectedLoras"] = SelectedLoras.ToList();
+            providerOptions["Steps"] = KleinSteps;
+            providerOptions["CfgScale"] = KleinCfg;
+        }
+
         providerOptions ??= new();
 
         if (UseCustomResolution)
         {
             providerOptions["Width"] = CustomWidth;
             providerOptions["Height"] = CustomHeight;
+            // Marker that the user explicitly opted into a specific resolution. Providers
+            // doing img2img edits (e.g. Klein) use this to decide whether to override the
+            // reference-image-derived dimensions.
+            providerOptions["ExplicitDimensions"] = true;
         }
         else if (SelectedAspectRatio != null)
         {
@@ -2153,6 +2222,7 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
         OnPropertyChanged(nameof(IsCloudProvider));
         OnPropertyChanged(nameof(ShowFluxSettings));
         OnPropertyChanged(nameof(ShowQwenSettings));
+        OnPropertyChanged(nameof(ShowKleinSettings));
 
         // Load available Flux models when switching to Flux Kontext
         if (value == BananaVisionProviderIds.FluxKontext)
@@ -2177,6 +2247,19 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
                 .SafeFireAndForget(ex =>
                 {
                     logger.LogError(ex, "Failed to check for missing Qwen models");
+                });
+        }
+
+        // Load available Klein models when switching to Flux.2 Klein
+        if (value == BananaVisionProviderIds.Flux2Klein)
+        {
+            LoadAvailableKleinModels();
+
+            // Auto-show missing models dialog if connected and models are missing
+            CheckAndShowMissingModelsDialogAsync()
+                .SafeFireAndForget(ex =>
+                {
+                    logger.LogError(ex, "Failed to check for missing Klein models");
                 });
         }
     }
@@ -2212,6 +2295,18 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
             if (!ClientManager.IsConnected)
             {
                 ProviderStatusMessage = "⚠️ Not connected to ComfyUI. Click Connect.";
+                IsFluxKontextAvailable = false;
+                HasMissingModels = false;
+                return;
+            }
+
+            // While a model-download batch is running, show progress instead of the
+            // missing-models warning. Models are still technically missing on disk until
+            // the download finishes, but the user has already acted on that — surfacing
+            // the same warning + Download button would be misleading.
+            if (IsDownloadingModels)
+            {
+                ProviderStatusMessage = DownloadProgressText ?? "⬇️ Downloading models...";
                 IsFluxKontextAvailable = false;
                 HasMissingModels = false;
                 return;

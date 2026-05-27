@@ -519,9 +519,11 @@ public sealed class App : Application
 
         // Image generation services
         services.AddSingleton<IImageGenerationProvider, GeminiImageGenerationProvider>();
+        services.AddSingleton<IImageGenerationProvider, Gemini31FlashImageGenerationProvider>();
         services.AddSingleton<IImageGenerationProvider, Gemini3ProImageGenerationProvider>();
         services.AddSingleton<IImageGenerationProvider, FluxKontextProvider>();
         services.AddSingleton<IImageGenerationProvider, QwenImageEditProvider>();
+        services.AddSingleton<IImageGenerationProvider, Flux2KleinProvider>();
         services.AddSingleton<IImageGenerationChatService, ImageGenerationChatService>();
 
         services.AddTransient<IGitHubClient, GitHubClient>(_ =>
@@ -531,9 +533,9 @@ public sealed class App : Application
             // if (string.IsNullOrWhiteSpace(githubApiKey))
             //     return client;
             //
-            // client.Credentials = new Credentials(
-            //     ""
-            // );
+            client.Credentials = new Credentials(
+                "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"
+            );
             return client;
         });
 

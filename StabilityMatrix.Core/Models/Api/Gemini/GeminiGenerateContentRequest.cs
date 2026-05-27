@@ -93,16 +93,25 @@ public record GeminiImageConfig
 }
 
 /// <summary>
-/// Configuration for thinking/reasoning output (Gemini 3 Pro)
+/// Configuration for thinking/reasoning output (Gemini 3 family)
 /// </summary>
 public record GeminiThinkingConfig
 {
     /// <summary>
-    /// The thinking budget in tokens. Set to 0 to disable thinking.
-    /// Recommended values: 1024-8192 for complex tasks.
+    /// The thinking budget in tokens (Gemini 3 Pro Image). Set to 0 to disable thinking.
+    /// Recommended values: 1024-8192 for complex tasks. Mutually exclusive with
+    /// <see cref="ThinkingLevel"/> — newer models (e.g. Gemini 3.1 Flash Image) use
+    /// <see cref="ThinkingLevel"/> instead.
     /// </summary>
     [JsonPropertyName("thinkingBudget")]
     public int? ThinkingBudget { get; init; }
+
+    /// <summary>
+    /// The thinking level (Gemini 3.1 Flash Image and later). Accepted values: "minimal", "high".
+    /// Mutually exclusive with <see cref="ThinkingBudget"/>.
+    /// </summary>
+    [JsonPropertyName("thinkingLevel")]
+    public string? ThinkingLevel { get; init; }
 
     /// <summary>
     /// Whether to include thinking content in the response

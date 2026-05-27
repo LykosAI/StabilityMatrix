@@ -1,3 +1,4 @@
+using System.Threading;
 using AsyncAwaitBestPractices;
 using Avalonia.Controls.Notifications;
 using Avalonia.Threading;
@@ -21,6 +22,32 @@ public partial class BananaVisionPageViewModel
     /// </summary>
     [ObservableProperty]
     public partial bool HasMissingModels { get; set; }
+
+    /// <summary>
+    /// Whether a model-download batch is currently in progress.
+    /// While true, the status banner shows download progress instead of the missing-models warning.
+    /// </summary>
+    [ObservableProperty]
+    public partial bool IsDownloadingModels { get; set; }
+
+    /// <summary>
+    /// Human-readable progress text for the in-flight download batch (e.g. "Downloading models (2/4)...").
+    /// </summary>
+    [ObservableProperty]
+    public partial string? DownloadProgressText { get; set; }
+
+    partial void OnIsDownloadingModelsChanged(bool value)
+    {
+        UpdateProviderStatus();
+    }
+
+    partial void OnDownloadProgressTextChanged(string? value)
+    {
+        if (IsDownloadingModels)
+        {
+            UpdateProviderStatus();
+        }
+    }
 
     /// <summary>
     /// Check for missing models and auto-show the download dialog if needed
@@ -101,6 +128,12 @@ public partial class BananaVisionPageViewModel
 
             if (downloads.Count > 0)
             {
+                // Switch the status banner over to a download-progress view so it doesn't
+                // keep showing "⚠️ Missing: X, Y, Z" with a Download button while the
+                // download is already running.
+                DownloadProgressText = $"⬇️ Downloading models (0/{downloads.Count})...";
+                IsDownloadingModels = true;
+
                 notificationService.Show(
                     "Downloads Started",
                     $"Downloading {downloads.Count} model(s). Check the progress panel for status.",
@@ -125,16 +158,43 @@ public partial class BananaVisionPageViewModel
         string providerDisplayName
     )
     {
+        var totalCount = downloads.Count;
+        var completedCount = 0;
+
+        void BumpProgress(ProgressState state)
+        {
+            // Each terminal-state event bumps the completed count; UI update is marshaled
+            // because ProgressStateChanged may fire from a background thread.
+            var newCompleted = Interlocked.Increment(ref completedCount);
+            Dispatcher.UIThread.Post(() =>
+            {
+                if (IsDownloadingModels)
+                {
+                    DownloadProgressText = $"⬇️ Downloading models ({newCompleted}/{totalCount})...";
+                }
+            });
+        }
+
         var completionTasks = downloads
             .Select(d =>
             {
                 var tcs = new TaskCompletionSource<bool>();
+                var counted = 0; // Guard against double-counting if both handler + already-completed fire
+
+                void OnTerminal(ProgressState state)
+                {
+                    if (Interlocked.Exchange(ref counted, 1) == 0)
+                    {
+                        BumpProgress(state);
+                    }
+                    tcs.TrySetResult(state == ProgressState.Success);
+                }
 
                 d.ProgressStateChanged += (s, state) =>
                 {
                     if (state is ProgressState.Success or ProgressState.Failed or ProgressState.Cancelled)
                     {
-                        tcs.TrySetResult(state == ProgressState.Success);
+                        OnTerminal(state);
                     }
                 };
 
@@ -146,7 +206,7 @@ public partial class BananaVisionPageViewModel
                         or ProgressState.Cancelled
                 )
                 {
-                    tcs.TrySetResult(d.ProgressState == ProgressState.Success);
+                    OnTerminal(d.ProgressState);
                 }
 
                 return tcs.Task;
@@ -183,9 +243,14 @@ public partial class BananaVisionPageViewModel
         // Update status on UI thread
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
+            // Clear the download-in-progress flag before recomputing status so the banner
+            // returns to its normal state ("✅ ready" or "⚠️ Missing: ...") immediately.
+            IsDownloadingModels = false;
+            DownloadProgressText = null;
             UpdateProviderStatus();
             LoadAvailableFluxModels();
             LoadAvailableQwenModels();
+            LoadAvailableKleinModels();
         });
 
         // Show completion notification

@@ -56,6 +56,7 @@
         <StyleInclude Source="avares://Avalonia.Xaml.Interactions.Draggable/Styles.axaml" />
         <StyleInclude Source="avares://FluentAvalonia.BreadcrumbBar/Styling/Styles.axaml" />
         <StyleInclude Source="Styles/ProgressRing.axaml" />
+        <StyleInclude Source="Styles/ScrollBarStyles.axaml" />
         <StyleInclude Source="Styles/ButtonStyles.axaml" />
         <StyleInclude Source="Styles/SplitButtonStyles.axaml" />
         <StyleInclude Source="Styles/ToggleButtonStyles.axaml" />

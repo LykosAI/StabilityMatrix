@@ -225,10 +225,9 @@ public class ComfyUI(
                 InitialValue = HardwareHelper.IterGpuInfo().Select(gpu => gpu.MemoryLevel).Max() switch
                 {
                     MemoryLevel.Low => "--lowvram",
-                    MemoryLevel.Medium => "--normalvram",
                     _ => null,
                 },
-                Options = ["--highvram", "--normalvram", "--lowvram", "--novram"],
+                Options = ["--highvram", "--lowvram", "--novram"],
             },
             new()
             {
@@ -572,6 +571,9 @@ public class ComfyUI(
             .ConfigureAwait(false);
 
         VenvRunner.UpdateEnvironmentVariables(env => GetEnvVars(env, installLocation, installedPackage));
+        var launchArguments = NormalizeLaunchArguments(installedPackage, options.Arguments);
+
+        VenvRunner.UpdateEnvironmentVariables(GetEnvVars);
 
         // Check for old NVIDIA driver version with cu130 installations
         var isNvidia = SettingsManager.Settings.PreferredGpu?.IsNvidia ?? HardwareHelper.HasNvidiaGpu();
@@ -629,7 +631,7 @@ public class ComfyUI(
         var handledFirstConsoleOutput = false;
 
         VenvRunner.RunDetached(
-            [Path.Combine(installLocation, options.Command ?? LaunchCommand), .. options.Arguments],
+            [Path.Combine(installLocation, options.Command ?? LaunchCommand), .. launchArguments],
             HandleConsoleOutput,
             OnExit
         );
@@ -683,6 +685,32 @@ public class ComfyUI(
 
         var torchIndex = installedPackage.PreferredTorchIndex ?? GetRecommendedTorchVersion();
         return torchIndex == TorchIndex.Rocm;
+    protected ProcessArgs NormalizeLaunchArguments(
+        InstalledPackage installedPackage,
+        ProcessArgs fallbackArguments
+    )
+    {
+        if (installedPackage.LaunchArgs is not { Count: > 0 })
+        {
+            return fallbackArguments;
+        }
+
+        var removedCount = installedPackage.LaunchArgs.RemoveAll(option =>
+            string.Equals(option.Name, "--normalvram", StringComparison.OrdinalIgnoreCase)
+        );
+
+        if (removedCount == 0)
+        {
+            return fallbackArguments;
+        }
+
+        Logger.Info("Removed {RemovedCount} obsolete ComfyUI launch args before launch", removedCount);
+
+        SettingsManager.SaveLaunchArgs(installedPackage.Id, installedPackage.LaunchArgs);
+
+        return ProcessArgs.FromQuoted(
+            installedPackage.LaunchArgs.Select(option => option.ToArgString()).OfType<string>()
+        );
     }
 
     public override TorchIndex GetRecommendedTorchVersion()

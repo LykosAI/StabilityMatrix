@@ -1,5 +1,4 @@
-﻿using System;
-using CommunityToolkit.Mvvm.Input;
+﻿using CommunityToolkit.Mvvm.Input;
 using StabilityMatrix.Core.Processes;
 
 namespace StabilityMatrix.Avalonia.Helpers;

@@ -319,10 +319,19 @@ public class ModelImportService(
             cleanupFilePaths.Add(previewImageDownloadPath);
         }
 
-        // Create tracked download
-        // todo: support multiple uris
-        var modelUri = modelUris.First();
-        var download = trackedDownloadService.NewDownload(modelUri, downloadPath);
+        // Create tracked download with first URL, storing others as fallbacks
+        // If download fails, the TrackedDownloadService will attempt to use fallback URLs
+        var uriList = modelUris.ToList();
+        var primaryUri = uriList.First();
+        var fallbackUris = uriList.Skip(1).ToList();
+        
+        var download = trackedDownloadService.NewDownload(primaryUri, downloadPath);
+        
+        // Store fallback URLs for retry attempts
+        if (fallbackUris.Count > 0)
+        {
+            download.FallbackUris = fallbackUris;
+        }
 
         // Add hash info
         // download.ExpectedHashSha256 = modelFile.Hashes.SHA256;

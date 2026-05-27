@@ -533,9 +533,9 @@ public sealed class App : Application
             // if (string.IsNullOrWhiteSpace(githubApiKey))
             //     return client;
             //
-            client.Credentials = new Credentials(
-                "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"
-            );
+            // client.Credentials = new Credentials(
+            //     ""
+            // );
             return client;
         });
 

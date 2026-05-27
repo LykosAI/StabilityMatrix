@@ -102,7 +102,8 @@ public class PackageFactory : IPackageFactory
                 downloadService,
                 prerequisiteHelper,
                 pyInstallationManager,
-                pipWheelService
+                pipWheelService,
+                rocmPackageHelper
             ),
             "kohya_ss" => new KohyaSs(
                 githubApiCache,

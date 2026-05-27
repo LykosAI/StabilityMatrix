@@ -573,8 +573,6 @@ public class ComfyUI(
         VenvRunner.UpdateEnvironmentVariables(env => GetEnvVars(env, installLocation, installedPackage));
         var launchArguments = NormalizeLaunchArguments(installedPackage, options.Arguments);
 
-        VenvRunner.UpdateEnvironmentVariables(GetEnvVars);
-
         // Check for old NVIDIA driver version with cu130 installations
         var isNvidia = SettingsManager.Settings.PreferredGpu?.IsNvidia ?? HardwareHelper.HasNvidiaGpu();
         var isLegacyNvidia =
@@ -685,6 +683,8 @@ public class ComfyUI(
 
         var torchIndex = installedPackage.PreferredTorchIndex ?? GetRecommendedTorchVersion();
         return torchIndex == TorchIndex.Rocm;
+    }
+
     protected ProcessArgs NormalizeLaunchArguments(
         InstalledPackage installedPackage,
         ProcessArgs fallbackArguments

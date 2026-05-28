@@ -52,9 +52,13 @@ public class Reforge(
     {
         get
         {
-            var compatibility = ReforgeWindowsRocmProfile.GetCompatibility(rocmPackageHelper);
             var baseLaunchOptions = new List<LaunchOptionDefinition>(base.LaunchOptions);
             var extrasIndex = baseLaunchOptions.FindIndex(x => x.Name == LaunchOptionDefinition.Extras.Name);
+
+            // Adjust inherited launch defaults for the Windows ROCm path before inserting reForge-specific options.
+            // Makes the reForge-specific attention options visible in the UI and leaves them unset by default
+            // for non-Windows-ROCm installs so reForge can keep using its normal internal attention selection.
+            ReforgeWindowsRocmProfile.ApplyWindowsRocmLaunchDefaults(baseLaunchOptions, rocmPackageHelper);
 
             baseLaunchOptions.Insert(
                 extrasIndex >= 0 ? extrasIndex : baseLaunchOptions.Count,
@@ -62,11 +66,9 @@ public class Reforge(
                 {
                     Name = "Cross Attention Method",
                     Type = LaunchOptionType.Bool,
-                    InitialValue =
-                        !compatibility.IsCompatible ? null
-                        : WindowsRocmSupport.PreferLegacyAttentionFallback(compatibility.ResolvedGfxArch)
-                            ? "--attention-quad"
-                        : "--attention-pytorch",
+                    InitialValue = ReforgeWindowsRocmProfile.GetPreferredCrossAttentionArgument(
+                        rocmPackageHelper
+                    ),
                     Options = ["--attention-split", "--attention-quad", "--attention-pytorch"],
                 }
             );
@@ -75,13 +77,12 @@ public class Reforge(
         }
     }
 
+    // Prefer ROCm on Linux AMD systems and use the helper-managed Windows ROCm install/launch flow when supported.
     public override TorchIndex GetRecommendedTorchVersion()
     {
         var preferRocm =
             (Compat.IsLinux && (SettingsManager.Settings.PreferredGpu?.IsAmd ?? HardwareHelper.PreferRocm()))
-            || (
-                Compat.IsWindows && ReforgeWindowsRocmProfile.GetCompatibility(rocmPackageHelper).IsCompatible
-            );
+            || ReforgeWindowsRocmProfile.HasSupport(rocmPackageHelper);
 
         if (AvailableTorchIndices.Contains(TorchIndex.Rocm) && preferRocm)
         {
@@ -101,10 +102,8 @@ public class Reforge(
     )
     {
         var torchIndex = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
-        var compatibility = ReforgeWindowsRocmProfile.GetCompatibility(rocmPackageHelper);
 
-        // Windows ROCm install path
-        if (!(Compat.IsWindows && torchIndex == TorchIndex.Rocm && compatibility.IsCompatible))
+        if (!ReforgeWindowsRocmProfile.ShouldUseWindowsNativeInstall(rocmPackageHelper, torchIndex))
         {
             await base.InstallPackage(
                     installLocation,
@@ -166,34 +165,21 @@ public class Reforge(
     )
     {
         var selectedTorchIndex = installedPackage.PreferredTorchIndex ?? GetRecommendedTorchVersion();
-        var shouldApplyWindowsRocmLaunchEnvironment =
-            Compat.IsWindows
-            && selectedTorchIndex == TorchIndex.Rocm
-            && ReforgeWindowsRocmProfile.GetCompatibility(rocmPackageHelper).IsCompatible;
 
         env = base.GetEnvVars(env, installedPackage);
         env = env.SetItem("STABLE_DIFFUSION_REPO", StableDiffusionRepoOverride);
 
-        if (!shouldApplyWindowsRocmLaunchEnvironment)
+        if (!ReforgeWindowsRocmProfile.ShouldUseWindowsNativeInstall(rocmPackageHelper, selectedTorchIndex))
         {
             return env;
         }
 
-        return env.SetItems(
-            rocmPackageHelper?.BuildLaunchEnvironment(ReforgeWindowsRocmProfile.Profile)
-                ?? ImmutableDictionary<string, string>.Empty
-        );
+        return env.SetItems(ReforgeWindowsRocmProfile.BuildLaunchEnvironment(rocmPackageHelper));
     }
 
     protected override IReadOnlyList<string> GetLaunchNoticeLines(InstalledPackage installedPackage)
     {
         var selectedTorchIndex = installedPackage.PreferredTorchIndex ?? GetRecommendedTorchVersion();
-
-        return
-            Compat.IsWindows
-            && selectedTorchIndex == TorchIndex.Rocm
-            && ReforgeWindowsRocmProfile.GetCompatibility(rocmPackageHelper).IsCompatible
-            ? rocmPackageHelper?.GetWindowsLaunchNoticeLines() ?? []
-            : [];
+        return ReforgeWindowsRocmProfile.GetLaunchNoticeLines(rocmPackageHelper, selectedTorchIndex);
     }
 }

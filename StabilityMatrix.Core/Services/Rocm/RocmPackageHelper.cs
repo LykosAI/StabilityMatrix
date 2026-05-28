@@ -295,6 +295,17 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
 
     private RocmMachineState ResolveWindowsMachineState()
     {
+        if (settingsManager.Settings.PreferredGpu is { } preferredGpu && !preferredGpu.IsAmd)
+        {
+            return new RocmMachineState
+            {
+                IsCompatible = false,
+                FailureReason = !string.IsNullOrWhiteSpace(preferredGpu.Name)
+                    ? $"Preferred GPU '{preferredGpu.Name}' is not an AMD GPU."
+                    : "Preferred GPU is not an AMD GPU.",
+            };
+        }
+
         var amdGpus = GetAmdGpuCandidates(forceRefresh: true).ToList();
         if (amdGpus.Count == 0)
         {

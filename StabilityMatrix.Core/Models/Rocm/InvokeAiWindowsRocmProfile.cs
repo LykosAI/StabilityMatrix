@@ -7,12 +7,15 @@ namespace StabilityMatrix.Core.Models.Rocm;
 
 /// <summary>
 /// Shared Windows ROCm profile for InvokeAI.
-/// Phase 1 keeps InvokeAI install ownership package-local and uses the ROCm helper for compatibility and launch policy.
 /// </summary>
 public static class InvokeAiWindowsRocmProfile
 {
     public static RocmPackageProfile Profile { get; } = new();
 
+    //Restores flop counter functionality requiring triton module
+    private const string TritonWindowsPackage = "triton-windows";
+
+    // Replace upstream bitsandbytes with ROCm-aware bitsandbytes for TheRock ROCm 7.13 on Windows
     private const string BitsAndBytesWheelUrl =
         "https://github.com/0xDELUXA/bitsandbytes_win_rocm/releases/download/0.50.0.dev0-py3-rocm7-win_amd64_all/bitsandbytes-0.50.0.dev0-cp312-cp312-win_amd64.whl";
 
@@ -22,11 +25,17 @@ public static class InvokeAiWindowsRocmProfile
         {
             return new RocmPackageProfile
             {
-                InstallConfig = new PipInstallConfig { PostTorchInstallPipArgs = [BitsAndBytesWheelUrl] },
+                InstallConfig = new PipInstallConfig
+                {
+                    PostTorchInstallPipArgs = [TritonWindowsPackage, BitsAndBytesWheelUrl],
+                },
             };
         }
 
-        return Profile;
+        return new RocmPackageProfile
+        {
+            InstallConfig = new PipInstallConfig { PostTorchInstallPipArgs = [TritonWindowsPackage] },
+        };
     }
 
     public static RocmCompatibilityResult GetCompatibility(IRocmPackageHelper? rocmPackageHelper)

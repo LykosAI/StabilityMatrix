@@ -183,8 +183,12 @@ public class FluxKontextProvider(ILogger<FluxKontextProvider> logger, IInference
                     "Cancellation requested, interrupting ComfyUI prompt {PromptId}",
                     task.Id
                 );
+                // CTS holds an internal timer that needs disposing; chain dispose onto
+                // the fire-and-forget interrupt so it cleans up once the request settles.
+                var interruptCts = new CancellationTokenSource(5000);
                 clientManager
-                    .Client.InterruptPromptAsync(new CancellationTokenSource(5000).Token)
+                    .Client.InterruptPromptAsync(interruptCts.Token)
+                    .ContinueWith(_ => interruptCts.Dispose(), TaskScheduler.Default)
                     .SafeFireAndForget();
             });
 

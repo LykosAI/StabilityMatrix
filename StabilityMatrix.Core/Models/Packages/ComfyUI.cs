@@ -1213,8 +1213,9 @@ public class ComfyUI(
     {
         // if we're not on windows or we don't have a windows rocm gpu, return original env
         var hasRocmGpu = HasWindowsRocmSupport();
+        var selectedTorchIndex = installedPackage.PreferredTorchIndex ?? GetRecommendedTorchVersion();
 
-        if (!Compat.IsWindows || !hasRocmGpu)
+        if (!Compat.IsWindows || !hasRocmGpu || selectedTorchIndex != TorchIndex.Rocm)
             return env;
 
         if (rocmPackageHelper is null)

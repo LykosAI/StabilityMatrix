@@ -442,7 +442,9 @@ public class Wan2GP(
         await SetupVenv(installLocation, pythonVersion: PyVersion.Parse(installedPackage.PythonVersion))
             .ConfigureAwait(false);
 
-        if (Compat.IsWindows && HasWindowsRocmSupport())
+        var selectedTorchIndex = installedPackage.PreferredTorchIndex ?? GetRecommendedTorchVersion();
+
+        if (Compat.IsWindows && selectedTorchIndex == TorchIndex.Rocm && HasWindowsRocmSupport())
         {
             var rocmEnvironment = rocmPackageHelper.BuildLaunchEnvironment(Wan2GpWindowsRocmProfile.Profile);
             VenvRunner.UpdateEnvironmentVariables(env => env.SetItems(rocmEnvironment));

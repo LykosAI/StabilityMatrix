@@ -306,7 +306,7 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
             };
         }
 
-        var amdGpus = GetAmdGpuCandidates(forceRefresh: true).ToList();
+        var amdGpus = GetAmdGpuCandidates(forceRefresh: false).ToList();
         if (amdGpus.Count == 0)
         {
             return new RocmMachineState

@@ -306,7 +306,7 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
             };
         }
 
-        var amdGpus = GetAmdGpuCandidates(forceRefresh: false).ToList();
+        var amdGpus = GetAmdGpuCandidates().ToList();
         if (amdGpus.Count == 0)
         {
             return new RocmMachineState
@@ -350,9 +350,9 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
     /// Returns AMD GPUs from Stability Matrix's internal hardware model.
     /// This is the canonical GPU source for the ROCm helper and intentionally avoids package-local probing.
     /// </summary>
-    private static IReadOnlyList<GpuInfo> GetAmdGpuCandidates(bool forceRefresh = false)
+    private static IReadOnlyList<GpuInfo> GetAmdGpuCandidates()
     {
-        return HardwareHelper.IterGpuInfo(forceRefresh).Where(gpu => gpu.IsAmd).ToList();
+        return HardwareHelper.IterGpuInfo().Where(gpu => gpu.IsAmd).ToList();
     }
 
     /// <summary>

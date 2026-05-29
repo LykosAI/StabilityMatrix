@@ -45,7 +45,7 @@ public static class InvokeAiWindowsRocmProfile
             return new RocmCompatibilityResult { IsCompatible = false };
         }
 
-        return rocmPackageHelper.GetCompatibility(Profile);
+        return rocmPackageHelper.GetCompatibility();
     }
 
     public static bool HasSupport(IRocmPackageHelper? rocmPackageHelper)

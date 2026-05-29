@@ -730,12 +730,12 @@ public class ComfyUI(
     /// Uses the shared ROCm helper for Windows ROCm eligibility checks so ComfyUI does not maintain its own support matrix.
     private bool HasWindowsRocmSupport()
     {
-        return HasWindowsRocmSupport(rocmPackageHelper, ComfyWindowsRocmProfile.Profile);
+        return HasWindowsRocmSupport(rocmPackageHelper);
     }
 
     private RocmCompatibilityResult GetWindowsRocmCompatibility()
     {
-        return GetWindowsRocmCompatibility(rocmPackageHelper, ComfyWindowsRocmProfile.Profile);
+        return GetWindowsRocmCompatibility(rocmPackageHelper);
     }
 
     /// Defaults legacy Windows ROCm GPUs to quad cross-attention because PyTorch cross-attention is considerably slower

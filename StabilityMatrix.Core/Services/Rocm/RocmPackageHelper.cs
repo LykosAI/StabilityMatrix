@@ -19,10 +19,11 @@ namespace StabilityMatrix.Core.Services.Rocm;
 /// Provides the shared ROCm helper surface area used by ROCm-capable packages.
 /// </summary>
 [RegisterSingleton<IRocmPackageHelper, RocmPackageHelper>]
-public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageHelper
+public class RocmPackageHelper : IRocmPackageHelper
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private static readonly StringComparer EnvComparer = StringComparer.OrdinalIgnoreCase;
+
     private const string RocmSdkDevelPackageName = "rocm-sdk-devel";
     private static readonly string[] WindowsLaunchNoticeLines =
     [
@@ -30,10 +31,22 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
         "Because this setup may not be officially supported by package developers, only contact upstream support for issues clearly caused by the package itself.",
     ];
 
+    private readonly ISettingsManager settingsManager;
+
+    // Hardware enumeration is expensive and GPU state does not change during a session.
+    // Cache the resolved machine state once per singleton lifetime.
+    private readonly Lazy<RocmMachineState> machineState;
+
+    public RocmPackageHelper(ISettingsManager settingsManager)
+    {
+        this.settingsManager = settingsManager;
+        machineState = new Lazy<RocmMachineState>(ResolveWindowsMachineState);
+    }
+
     /// <summary>
-    /// Evaluates the current Windows machine state for the given package profile and returns the resolved ROCm compatibility result.
+    /// Evaluates the current Windows machine state and returns the resolved ROCm compatibility result.
     /// </summary>
-    public RocmCompatibilityResult GetCompatibility(RocmPackageProfile profile)
+    public RocmCompatibilityResult GetCompatibility()
     {
         return BuildCompatibilityResult();
     }
@@ -44,7 +57,7 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
     /// </summary>
     private RocmRuntimeContext ResolveRuntimeContext()
     {
-        var state = ResolveWindowsMachineState();
+        var state = machineState.Value;
         if (!state.IsCompatible)
         {
             return new RocmRuntimeContext
@@ -107,7 +120,7 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
         CancellationToken cancellationToken = default
     )
     {
-        var state = ResolveWindowsMachineState();
+        var state = machineState.Value;
         var multiArchPythonPackageIndexUrl = WindowsRocmSupport.GetMultiArchPythonPackageIndexUrl(
             state.RuntimeGfxArch
         );
@@ -186,8 +199,6 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
                 onConsoleOutput
             )
             .ConfigureAwait(false);
-
-        _ = cancellationToken;
     }
 
     /// <summary>
@@ -210,7 +221,7 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
         CancellationToken cancellationToken = default
     )
     {
-        var state = ResolveWindowsMachineState();
+        var state = machineState.Value;
         if (!state.IsCompatible)
         {
             throw new InvalidOperationException(
@@ -282,7 +293,7 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
     /// </summary>
     private RocmCompatibilityResult BuildCompatibilityResult()
     {
-        var state = ResolveWindowsMachineState();
+        var state = machineState.Value;
 
         return new RocmCompatibilityResult
         {
@@ -316,13 +327,13 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
             };
         }
 
-        var supportedAmdGpus = amdGpus.Where(IsSupportedWindowsRocmGpu).ToList();
+        var supportedAmdGpus = amdGpus.Where(WindowsRocmSupport.IsSupportedGpu).ToList();
         if (supportedAmdGpus.Count == 0)
         {
             return new RocmMachineState
             {
                 IsCompatible = false,
-                FailureReason = GetUnsupportedGpuReason(amdGpus),
+                FailureReason = "No AMD GPU with a supported Windows ROCm architecture was detected.",
             };
         }
 
@@ -382,53 +393,14 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
     }
 
     /// <summary>
-    /// Resolves the preferred AMD GFX architecture when the configured GPU is supported and currently present.
-    /// </summary>
-    private static string? TryResolvePreferredAmdGfxArch(
-        IEnumerable<GpuInfo> availableGpus,
-        GpuInfo? preferredGpu
-    )
-    {
-        var resolvedPreferredGpu = TryResolvePreferredAmdGpu(availableGpus, preferredGpu);
-        return resolvedPreferredGpu is not null && IsSupportedWindowsRocmGpu(resolvedPreferredGpu)
-            ? WindowsRocmSupport.TryGetCanonicalArchitecture(resolvedPreferredGpu.GetAmdGfxArch())
-            : null;
-    }
-
-    /// <summary>
     /// Resolves the first supported AMD GFX architecture from the current machine state when no preferred GPU applies.
     /// </summary>
     private static string? GetSupportedFallbackGfxArch(IEnumerable<GpuInfo> availableGpus)
     {
         return availableGpus
-            .Where(IsSupportedWindowsRocmGpu)
+            .Where(WindowsRocmSupport.IsSupportedGpu)
             .Select(gpu => WindowsRocmSupport.TryGetCanonicalArchitecture(gpu.GetAmdGfxArch()))
-            .FirstOrDefault(IsSupportedWindowsRocmArchitecture);
-    }
-
-    /// <summary>
-    /// Determines whether a GPU is supported by the Windows ROCm install flow currently modeled by the helper.
-    /// </summary>
-    private static bool IsSupportedWindowsRocmGpu(GpuInfo gpu)
-    {
-        return WindowsRocmSupport.IsSupportedGpu(gpu);
-    }
-
-    /// <summary>
-    /// Determines whether a resolved AMD GFX architecture falls inside the Windows ROCm support set currently modeled by the helper.
-    /// </summary>
-    private static bool IsSupportedWindowsRocmArchitecture(string? gfxArch)
-    {
-        return WindowsRocmSupport.IsSupportedArchitecture(gfxArch);
-    }
-
-    /// <summary>
-    /// Produces a readable incompatibility reason when AMD hardware is present but not usable for Windows ROCm.
-    /// </summary>
-    private static string GetUnsupportedGpuReason(IReadOnlyList<GpuInfo> amdGpus)
-    {
-        _ = amdGpus;
-        return "No AMD GPU with a supported Windows ROCm architecture was detected.";
+            .FirstOrDefault(WindowsRocmSupport.IsSupportedArchitecture);
     }
 
     /// <summary>
@@ -440,6 +412,8 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
         CancellationToken cancellationToken
     )
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         var torchInfo = await venvRunner.PipShow("torch").ConfigureAwait(false);
         if (torchInfo is null)
         {
@@ -510,8 +484,6 @@ public class RocmPackageHelper(ISettingsManager settingsManager) : IRocmPackageH
                 )
             );
         }
-
-        _ = cancellationToken;
     }
 
     internal static bool IsUsableWindowsNativeTorchBuild(string? version, string? hipVersion)

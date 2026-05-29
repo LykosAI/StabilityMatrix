@@ -118,7 +118,7 @@ public class InstallWindowsRocmPackageCommandStep(
 
     private void EnsureRocmCompatibility()
     {
-        var compatibility = rocmPackageHelper.GetCompatibility(ComfyWindowsRocmProfile.Profile);
+        var compatibility = rocmPackageHelper.GetCompatibility();
         if (!compatibility.IsCompatible)
         {
             throw new InvalidOperationException(

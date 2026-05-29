@@ -83,22 +83,19 @@ public abstract class BaseGitPackage : BasePackage
         PipWheelService = pipWheelService;
     }
 
-    protected bool HasWindowsRocmSupport(IRocmPackageHelper? rocmPackageHelper, RocmPackageProfile profile)
+    protected bool HasWindowsRocmSupport(IRocmPackageHelper? rocmPackageHelper)
     {
-        return GetWindowsRocmCompatibility(rocmPackageHelper, profile).IsCompatible;
+        return GetWindowsRocmCompatibility(rocmPackageHelper).IsCompatible;
     }
 
-    protected RocmCompatibilityResult GetWindowsRocmCompatibility(
-        IRocmPackageHelper? rocmPackageHelper,
-        RocmPackageProfile profile
-    )
+    protected RocmCompatibilityResult GetWindowsRocmCompatibility(IRocmPackageHelper? rocmPackageHelper)
     {
         if (!Compat.IsWindows || rocmPackageHelper is null)
         {
             return new RocmCompatibilityResult { IsCompatible = false };
         }
 
-        return rocmPackageHelper.GetCompatibility(profile);
+        return rocmPackageHelper.GetCompatibility();
     }
 
     public override async Task<DownloadPackageVersionOptions?> GetLatestVersion(

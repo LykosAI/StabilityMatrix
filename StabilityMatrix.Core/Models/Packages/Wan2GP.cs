@@ -91,12 +91,12 @@ public class Wan2GP(
 
     private bool HasWindowsRocmSupport()
     {
-        return HasWindowsRocmSupport(rocmPackageHelper, Wan2GpWindowsRocmProfile.Profile);
+        return HasWindowsRocmSupport(rocmPackageHelper);
     }
 
     private RocmCompatibilityResult GetWindowsRocmCompatibility()
     {
-        return GetWindowsRocmCompatibility(rocmPackageHelper, Wan2GpWindowsRocmProfile.Profile);
+        return GetWindowsRocmCompatibility(rocmPackageHelper);
     }
 
     /// <summary>

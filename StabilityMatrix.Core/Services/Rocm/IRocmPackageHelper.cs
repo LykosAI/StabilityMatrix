@@ -13,9 +13,9 @@ namespace StabilityMatrix.Core.Services.Rocm;
 public interface IRocmPackageHelper
 {
     /// <summary>
-    /// Evaluates whether the current machine and package profile are compatible with ROCm.
+    /// Evaluates whether the current machine is compatible with ROCm.
     /// </summary>
-    RocmCompatibilityResult GetCompatibility(RocmPackageProfile profile);
+    RocmCompatibilityResult GetCompatibility();
 
     /// <summary>
     /// Builds a launch-time environment dictionary from resolved ROCm runtime data.

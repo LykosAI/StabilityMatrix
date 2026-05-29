@@ -604,7 +604,7 @@ public class StableSwarm(
             return false;
         }
 
-        var compatibility = rocmPackageHelper.GetCompatibility(ComfyWindowsRocmProfile.Profile);
+        var compatibility = rocmPackageHelper.GetCompatibility();
         if (!compatibility.IsCompatible)
         {
             return false;

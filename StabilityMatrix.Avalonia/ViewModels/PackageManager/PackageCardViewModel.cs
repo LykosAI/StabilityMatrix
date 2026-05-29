@@ -170,7 +170,10 @@ public partial class PackageCardViewModel(
 
             // Set the extra commands if available from the package
             var packageExtraCommands = basePackage?.GetExtraCommands();
-            ExtraCommands = packageExtraCommands?.Count > 0 ? packageExtraCommands : null;
+            var visibleExtraCommands = packageExtraCommands
+                ?.Where(command => command.IsVisible?.Invoke(value) ?? true)
+                .ToList();
+            ExtraCommands = visibleExtraCommands?.Count > 0 ? visibleExtraCommands : null;
 
             runningPackageService.RunningPackages.CollectionChanged += RunningPackagesOnCollectionChanged;
             EventManager.Instance.PackageRelaunchRequested += InstanceOnPackageRelaunchRequested;

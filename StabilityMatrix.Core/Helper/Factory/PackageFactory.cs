@@ -4,6 +4,7 @@ using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
+using StabilityMatrix.Core.Services.Rocm;
 
 namespace StabilityMatrix.Core.Helper.Factory;
 
@@ -18,6 +19,7 @@ public class PackageFactory : IPackageFactory
     private readonly IUvManager uvManager;
     private readonly IPyInstallationManager pyInstallationManager;
     private readonly IPipWheelService pipWheelService;
+    private readonly IRocmPackageHelper rocmPackageHelper;
 
     /// <summary>
     /// Mapping of package.Name to package
@@ -32,7 +34,9 @@ public class PackageFactory : IPackageFactory
         IPrerequisiteHelper prerequisiteHelper,
         IPyInstallationManager pyInstallationManager,
         IPyRunner pyRunner,
-        IPipWheelService pipWheelService
+        IUvManager uvManager,
+        IPipWheelService pipWheelService,
+        IRocmPackageHelper rocmPackageHelper
     )
     {
         this.githubApiCache = githubApiCache;
@@ -40,8 +44,10 @@ public class PackageFactory : IPackageFactory
         this.downloadService = downloadService;
         this.prerequisiteHelper = prerequisiteHelper;
         this.pyRunner = pyRunner;
+        this.uvManager = uvManager;
         this.pyInstallationManager = pyInstallationManager;
         this.pipWheelService = pipWheelService;
+        this.rocmPackageHelper = rocmPackageHelper;
         this.basePackages = basePackages.ToDictionary(x => x.Name);
     }
 
@@ -55,7 +61,8 @@ public class PackageFactory : IPackageFactory
                 downloadService,
                 prerequisiteHelper,
                 pyInstallationManager,
-                pipWheelService
+                pipWheelService,
+                rocmPackageHelper
             ),
             "Fooocus" => new Fooocus(
                 githubApiCache,
@@ -95,7 +102,8 @@ public class PackageFactory : IPackageFactory
                 downloadService,
                 prerequisiteHelper,
                 pyInstallationManager,
-                pipWheelService
+                pipWheelService,
+                rocmPackageHelper
             ),
             "kohya_ss" => new KohyaSs(
                 githubApiCache,
@@ -152,7 +160,8 @@ public class PackageFactory : IPackageFactory
                 downloadService,
                 prerequisiteHelper,
                 pyInstallationManager,
-                pipWheelService
+                pipWheelService,
+                rocmPackageHelper
             ),
             "automatic" => new VladAutomatic(
                 githubApiCache,
@@ -192,7 +201,8 @@ public class PackageFactory : IPackageFactory
                 downloadService,
                 prerequisiteHelper,
                 pyInstallationManager,
-                pipWheelService
+                pipWheelService,
+                rocmPackageHelper
             ),
             "FluxGym" => new FluxGym(
                 githubApiCache,
@@ -280,7 +290,8 @@ public class PackageFactory : IPackageFactory
                 downloadService,
                 prerequisiteHelper,
                 pyInstallationManager,
-                pipWheelService
+                pipWheelService,
+                rocmPackageHelper
             ),
             _ => throw new ArgumentOutOfRangeException(nameof(installedPackage)),
         };

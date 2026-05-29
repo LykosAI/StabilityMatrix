@@ -13,9 +13,11 @@ using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Models.Packages.Config;
 using StabilityMatrix.Core.Models.Packages.Extensions;
 using StabilityMatrix.Core.Models.Progress;
+using StabilityMatrix.Core.Models.Rocm;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
+using StabilityMatrix.Core.Services.Rocm;
 
 namespace StabilityMatrix.Core.Models.Packages;
 
@@ -26,7 +28,8 @@ public class ComfyUI(
     IDownloadService downloadService,
     IPrerequisiteHelper prerequisiteHelper,
     IPyInstallationManager pyInstallationManager,
-    IPipWheelService pipWheelService
+    IPipWheelService pipWheelService,
+    IRocmPackageHelper? rocmPackageHelper = null
 )
     : BaseGitPackage(
         githubApi,
@@ -38,6 +41,7 @@ public class ComfyUI(
     )
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
     public override string Name => "ComfyUI";
     public override string DisplayName { get; set; } = "ComfyUI";
     public override string Author => "comfyanonymous";
@@ -246,7 +250,7 @@ public class ComfyUI(
                 Name = "Enable DirectML",
                 Type = LaunchOptionType.Bool,
                 InitialValue =
-                    !HardwareHelper.HasWindowsRocmSupportedGpu()
+                    !HasWindowsRocmSupport()
                     && HardwareHelper.PreferDirectMLOrZluda()
                     && this is not ComfyZluda,
                 Options = ["--directml"],
@@ -263,7 +267,9 @@ public class ComfyUI(
             {
                 Name = "Cross Attention Method",
                 Type = LaunchOptionType.Bool,
-                InitialValue = "--use-pytorch-cross-attention",
+                InitialValue = DefaultToQuadCrossAttention()
+                    ? "--use-quad-cross-attention" // For Legacy AMD GPUs.
+                    : "--use-pytorch-cross-attention",
                 Options =
                 [
                     "--use-split-cross-attention",
@@ -334,6 +340,52 @@ public class ComfyUI(
             );
         }
 
+        if (Compat.IsWindows && HasWindowsRocmSupport())
+        {
+            commands.Add(
+                new ExtraPackageCommand
+                {
+                    CommandName = "Install Triton and SageAttention (ROCm)",
+                    Command = InstallWindowsRocmSageAttention,
+                }
+            );
+
+            commands.Add(
+                new ExtraPackageCommand
+                {
+                    CommandName = "Install Flash Attention (ROCm)",
+                    Command = InstallWindowsRocmFlashAttention,
+                    IsVisible = _ =>
+                        WindowsRocmSupport.IsLegacyArchitecture(
+                            GetWindowsRocmCompatibility().ResolvedGfxArch
+                        ),
+                }
+            );
+
+            commands.Add(
+                new ExtraPackageCommand
+                {
+                    CommandName = "Install ROCm Development SDK",
+                    Command = InstallWindowsRocmDevelopmentSdk,
+                }
+            );
+
+            commands.Add(
+                new ExtraPackageCommand
+                {
+                    CommandName = "Install bitsandbytes (ROCm)",
+                    Command = InstallWindowsRocmBitsAndBytes,
+                    IsVisible = installedPackage =>
+                    {
+                        if (!PyVersion.TryParse(installedPackage.PythonVersion, out var pyVersion))
+                            return false;
+
+                        return pyVersion.Major == 3 && pyVersion.Minor == 12;
+                    },
+                }
+            );
+        }
+
         if (!Compat.IsMacOS && SettingsManager.Settings.PreferredGpu?.ComputeCapabilityValue is >= 7.5m)
         {
             commands.Add(
@@ -361,25 +413,27 @@ public class ComfyUI(
             .ConfigureAwait(false);
 
         var torchIndex = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
-        var gfxArch =
-            SettingsManager.Settings.PreferredGpu?.GetAmdGfxArch()
-            ?? HardwareHelper.GetWindowsRocmSupportedGpu()?.GetAmdGfxArch();
+        var isLegacyNvidia =
+            torchIndex == TorchIndex.Cuda
+            && (
+                SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu()
+                ?? HardwareHelper.HasLegacyNvidiaGpu()
+            );
 
-        // Special case for Windows ROCm Nightly builds
-        if (
-            Compat.IsWindows
-            && !string.IsNullOrWhiteSpace(gfxArch)
-            && torchIndex is TorchIndex.Rocm
-            && options.PythonOptions.PythonVersion >= PyVersion.Parse("3.11.0")
-        )
+        if (Compat.IsWindows && torchIndex == TorchIndex.Rocm && HasWindowsRocmSupport())
         {
-            var config = new PipInstallConfig
+            // This is an internal guard for a wiring/configuration failure.
+            // It can only trigger when Windows ROCm support was detected, but this ComfyUI instance was created
+            // without the shared ROCm helper (for example via a manual construction path that omitted the dependency).
+            if (rocmPackageHelper is null)
             {
-                RequirementsFilePaths = ["requirements.txt"],
-                ExtraPipArgs = ["numpy<2"],
-                SkipTorchInstall = true,
-                PostInstallPipArgs = ["typing-extensions>=4.15.0"],
-            };
+                throw new InvalidOperationException(
+                    "Windows ROCm installation encountered an internal configuration error [rocmPackageHelper is null]. Please restart Stability Matrix and try again. If the issue persists, please report it to Stability Matrix."
+                );
+            }
+
+            var config = rocmPackageHelper.BuildWindowsNativeInstallConfig(ComfyWindowsRocmProfile.Profile);
+
             await StandardPipInstallProcessAsync(
                     venvRunner,
                     options,
@@ -391,39 +445,19 @@ public class ComfyUI(
                 )
                 .ConfigureAwait(false);
 
-            progress?.Report(
-                new ProgressReport(-1f, "Installing ROCm nightly torch...", isIndeterminate: true)
-            );
-            var indexUrl = gfxArch switch
-            {
-                "gfx1150" => "https://rocm.nightlies.amd.com/v2-staging/gfx1150", // Strix/Gorgon Point
-                "gfx1151" => "https://rocm.nightlies.amd.com/v2/gfx1151", // Strix Halo
-                _ when gfxArch.StartsWith("gfx110") => "https://rocm.nightlies.amd.com/v2/gfx110X-all",
-                _ when gfxArch.StartsWith("gfx120") => "https://rocm.nightlies.amd.com/v2/gfx120X-all",
-                _ => throw new ArgumentOutOfRangeException(
-                    nameof(gfxArch),
-                    $"Unsupported GFX Arch: {gfxArch}"
-                ),
-            };
-
-            var torchPipArgs = new PipInstallArgs()
-                .AddArgs("--pre", "--upgrade")
-                .WithTorch()
-                .WithTorchVision()
-                .WithTorchAudio()
-                .AddArgs("--index-url", indexUrl);
-
-            await venvRunner.PipInstall(torchPipArgs, onConsoleOutput).ConfigureAwait(false);
+            await rocmPackageHelper
+                .InstallWindowsNativeTorchAsync(
+                    venvRunner,
+                    installedPackage,
+                    ComfyWindowsRocmProfile.Profile,
+                    progress,
+                    onConsoleOutput,
+                    cancellationToken
+                )
+                .ConfigureAwait(false);
         }
-        else // Standard installation path for all other cases
+        else
         {
-            var isLegacyNvidia =
-                torchIndex == TorchIndex.Cuda
-                && (
-                    SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu()
-                    ?? HardwareHelper.HasLegacyNvidiaGpu()
-                );
-
             var config = new PipInstallConfig
             {
                 RequirementsFilePaths = ["requirements.txt"],
@@ -447,47 +481,55 @@ public class ComfyUI(
                 .ConfigureAwait(false);
         }
 
-        try
+        if (!(Compat.IsWindows && torchIndex == TorchIndex.Rocm && HasWindowsRocmSupport()))
         {
-            var sageVersion = await venvRunner.PipShow("sageattention").ConfigureAwait(false);
-            var torchVersion = await venvRunner.PipShow("torch").ConfigureAwait(false);
-
-            if (torchVersion is not null && sageVersion is not null)
+            try
             {
-                var version = torchVersion.Version;
-                var plusPos = version.IndexOf('+');
-                var index = plusPos >= 0 ? version[(plusPos + 1)..] : string.Empty;
-                var versionWithoutIndex = plusPos >= 0 ? version[..plusPos] : version;
+                var sageVersion = await venvRunner.PipShow("sageattention").ConfigureAwait(false);
+                var torchVersion = await venvRunner.PipShow("torch").ConfigureAwait(false);
 
-                if (
-                    !sageVersion.Version.Contains(index) || !sageVersion.Version.Contains(versionWithoutIndex)
-                )
+                if (torchVersion is not null && sageVersion is not null)
                 {
-                    progress?.Report(
-                        new ProgressReport(-1f, "Updating SageAttention...", isIndeterminate: true)
-                    );
+                    var version = torchVersion.Version;
+                    var plusPos = version.IndexOf('+');
+                    var index = plusPos >= 0 ? version[(plusPos + 1)..] : string.Empty;
+                    var versionWithoutIndex = plusPos >= 0 ? version[..plusPos] : version;
 
-                    var step = new InstallSageAttentionStep(
-                        downloadService,
-                        prerequisiteHelper,
-                        pyInstallationManager
+                    if (
+                        !sageVersion.Version.Contains(index)
+                        || !sageVersion.Version.Contains(versionWithoutIndex)
                     )
                     {
-                        InstalledPackage = installedPackage,
-                        IsBlackwellGpu =
-                            SettingsManager.Settings.PreferredGpu?.IsBlackwellGpu()
-                            ?? HardwareHelper.HasBlackwellGpu(),
-                        WorkingDirectory = installLocation,
-                        EnvironmentVariables = GetEnvVars(venvRunner.EnvironmentVariables),
-                    };
+                        progress?.Report(
+                            new ProgressReport(-1f, "Updating SageAttention...", isIndeterminate: true)
+                        );
 
-                    await step.ExecuteAsync(progress).ConfigureAwait(false);
+                        var step = new InstallSageAttentionStep(
+                            downloadService,
+                            prerequisiteHelper,
+                            pyInstallationManager
+                        )
+                        {
+                            InstalledPackage = installedPackage,
+                            IsBlackwellGpu =
+                                SettingsManager.Settings.PreferredGpu?.IsBlackwellGpu()
+                                ?? HardwareHelper.HasBlackwellGpu(),
+                            WorkingDirectory = installLocation,
+                            EnvironmentVariables = GetEnvVars(
+                                venvRunner.EnvironmentVariables,
+                                installLocation,
+                                installedPackage
+                            ),
+                        };
+
+                        await step.ExecuteAsync(progress).ConfigureAwait(false);
+                    }
                 }
             }
-        }
-        catch (Exception e)
-        {
-            Logger.Error(e, "Failed to verify/update SageAttention after installation");
+            catch (Exception e)
+            {
+                Logger.Error(e, "Failed to verify/update SageAttention after installation");
+            }
         }
 
         // Install Comfy Manager (built-in to ComfyUI)
@@ -528,9 +570,8 @@ public class ComfyUI(
         await SetupVenv(installLocation, pythonVersion: PyVersion.Parse(installedPackage.PythonVersion))
             .ConfigureAwait(false);
 
+        VenvRunner.UpdateEnvironmentVariables(env => GetEnvVars(env, installLocation, installedPackage));
         var launchArguments = NormalizeLaunchArguments(installedPackage, options.Arguments);
-
-        VenvRunner.UpdateEnvironmentVariables(GetEnvVars);
 
         // Check for old NVIDIA driver version with cu130 installations
         var isNvidia = SettingsManager.Settings.PreferredGpu?.IsNvidia ?? HardwareHelper.HasNvidiaGpu();
@@ -585,6 +626,8 @@ public class ComfyUI(
             }
         }
 
+        var handledFirstConsoleOutput = false;
+
         VenvRunner.RunDetached(
             [Path.Combine(installLocation, options.Command ?? LaunchCommand), .. launchArguments],
             HandleConsoleOutput,
@@ -597,6 +640,12 @@ public class ComfyUI(
         {
             onConsoleOutput?.Invoke(s);
 
+            if (!handledFirstConsoleOutput)
+            {
+                handledFirstConsoleOutput = true;
+                EmitWindowsRocmLaunchNotice(installedPackage, onConsoleOutput);
+            }
+
             if (!s.Text.Contains("To see the GUI go to", StringComparison.OrdinalIgnoreCase))
                 return;
 
@@ -608,6 +657,32 @@ public class ComfyUI(
             }
             OnStartupComplete(WebUrl);
         }
+    }
+
+    private void EmitWindowsRocmLaunchNotice(
+        InstalledPackage installedPackage,
+        Action<ProcessOutput>? onConsoleOutput
+    )
+    {
+        if (rocmPackageHelper is null)
+            return;
+
+        if (!ShouldShowWindowsRocmLaunchNotice(installedPackage))
+            return;
+
+        foreach (var line in rocmPackageHelper.GetWindowsLaunchNoticeLines())
+        {
+            onConsoleOutput?.Invoke(ProcessOutput.FromStdOutLine($"{line}{Environment.NewLine}"));
+        }
+    }
+
+    private bool ShouldShowWindowsRocmLaunchNotice(InstalledPackage installedPackage)
+    {
+        if (!Compat.IsWindows || !HasWindowsRocmSupport())
+            return false;
+
+        var torchIndex = installedPackage.PreferredTorchIndex ?? GetRecommendedTorchVersion();
+        return torchIndex == TorchIndex.Rocm;
     }
 
     protected ProcessArgs NormalizeLaunchArguments(
@@ -642,13 +717,7 @@ public class ComfyUI(
     {
         var preferRocm =
             (Compat.IsLinux && (SettingsManager.Settings.PreferredGpu?.IsAmd ?? HardwareHelper.PreferRocm()))
-            || (
-                Compat.IsWindows
-                && (
-                    SettingsManager.Settings.PreferredGpu?.IsWindowsRocmSupportedGpu()
-                    ?? HardwareHelper.HasWindowsRocmSupportedGpu()
-                )
-            );
+            || HasWindowsRocmSupport();
 
         if (AvailableTorchIndices.Contains(TorchIndex.Rocm) && preferRocm)
         {
@@ -656,6 +725,28 @@ public class ComfyUI(
         }
 
         return base.GetRecommendedTorchVersion();
+    }
+
+    /// Uses the shared ROCm helper for Windows ROCm eligibility checks so ComfyUI does not maintain its own support matrix.
+    private bool HasWindowsRocmSupport()
+    {
+        return HasWindowsRocmSupport(rocmPackageHelper);
+    }
+
+    private RocmCompatibilityResult GetWindowsRocmCompatibility()
+    {
+        return GetWindowsRocmCompatibility(rocmPackageHelper);
+    }
+
+    /// Defaults legacy Windows ROCm GPUs to quad cross-attention because PyTorch cross-attention is considerably slower
+    /// and not as supported on older AMD architectures.
+    private bool DefaultToQuadCrossAttention()
+    {
+        var compatibility = GetWindowsRocmCompatibility();
+        if (!compatibility.IsCompatible)
+            return false;
+
+        return WindowsRocmSupport.PreferLegacyAttentionFallback(compatibility.ResolvedGfxArch);
     }
 
     public override IPackageExtensionManager ExtensionManager =>
@@ -933,11 +1024,119 @@ public class ComfyUI(
         if (runner.Failed)
             return;
 
-        await using var transaction = settingsManager.BeginTransaction();
-        var attentionOptions = transaction
-            .Settings.InstalledPackages.First(x => x.Id == installedPackage.Id)
-            .LaunchArgs?.Where(opt => opt.Name.Contains("attention"));
+        await EnableSageAttentionAsync(installedPackage).ConfigureAwait(false);
+    }
 
+    private async Task InstallWindowsRocmSageAttention(InstalledPackage? installedPackage)
+    {
+        var succeeded = await RunWindowsRocmPackageCommandAsync(
+                installedPackage,
+                WindowsRocmPackageCommandType.SageAttention,
+                "Windows ROCm SageAttention installed successfully",
+                includeEnvironmentVariables: true,
+                nullHelperMessage: "Windows ROCm SageAttention installation encountered an internal configuration error [rocmPackageHelper is null]."
+            )
+            .ConfigureAwait(false);
+
+        if (!succeeded || installedPackage is null)
+            return;
+
+        await EnableSageAttentionAsync(installedPackage).ConfigureAwait(false);
+    }
+
+    private async Task InstallWindowsRocmDevelopmentSdk(InstalledPackage? installedPackage)
+    {
+        await RunWindowsRocmPackageCommandAsync(
+                installedPackage,
+                WindowsRocmPackageCommandType.DevelopmentSdk,
+                "Windows ROCm Development SDK installed successfully",
+                includeEnvironmentVariables: false,
+                nullHelperMessage: "Windows ROCm SDK installation encountered an internal configuration error [rocmPackageHelper is null]."
+            )
+            .ConfigureAwait(false);
+    }
+
+    private async Task InstallWindowsRocmBitsAndBytes(InstalledPackage? installedPackage)
+    {
+        await RunWindowsRocmPackageCommandAsync(
+                installedPackage,
+                WindowsRocmPackageCommandType.BitsAndBytes,
+                "Windows ROCm bitsandbytes installed successfully",
+                includeEnvironmentVariables: true,
+                nullHelperMessage: "Windows ROCm bitsandbytes installation encountered an internal configuration error [rocmPackageHelper is null]."
+            )
+            .ConfigureAwait(false);
+    }
+
+    private async Task InstallWindowsRocmFlashAttention(InstalledPackage? installedPackage)
+    {
+        await RunWindowsRocmPackageCommandAsync(
+                installedPackage,
+                WindowsRocmPackageCommandType.FlashAttention,
+                "Windows ROCm Flash Attention installed successfully",
+                includeEnvironmentVariables: true,
+                nullHelperMessage: "Windows ROCm Flash Attention installation encountered an internal configuration error [rocmPackageHelper is null]."
+            )
+            .ConfigureAwait(false);
+    }
+
+    private async Task<bool> RunWindowsRocmPackageCommandAsync(
+        InstalledPackage? installedPackage,
+        WindowsRocmPackageCommandType commandType,
+        string completionMessage,
+        bool includeEnvironmentVariables,
+        string nullHelperMessage
+    )
+    {
+        if (installedPackage?.FullPath is null)
+            return false;
+
+        var runner = new PackageModificationRunner
+        {
+            ShowDialogOnStart = true,
+            ModificationCompleteMessage = completionMessage,
+        };
+        EventManager.Instance.OnPackageInstallProgressAdded(runner);
+
+        IReadOnlyDictionary<string, string>? environmentVariables = null;
+        if (includeEnvironmentVariables)
+        {
+            var baseEnvironment = ImmutableDictionary.CreateRange(
+                SettingsManager.Settings.EnvironmentVariables
+            );
+            environmentVariables = GetEnvVars(baseEnvironment, installedPackage.FullPath, installedPackage);
+        }
+
+        await runner
+            .ExecuteSteps(
+                [
+                    new InstallWindowsRocmPackageCommandStep(
+                        downloadService,
+                        pyInstallationManager,
+                        prerequisiteHelper,
+                        rocmPackageHelper ?? throw new InvalidOperationException(nullHelperMessage)
+                    )
+                    {
+                        CommandType = commandType,
+                        InstalledPackage = installedPackage,
+                        WorkingDirectory = new DirectoryPath(installedPackage.FullPath),
+                        EnvironmentVariables = environmentVariables,
+                    },
+                ]
+            )
+            .ConfigureAwait(false);
+
+        return !runner.Failed;
+    }
+
+    private async Task EnableSageAttentionAsync(InstalledPackage installedPackage)
+    {
+        await using var transaction = settingsManager.BeginTransaction();
+        var packageInSettings = transaction.Settings.InstalledPackages.First(x =>
+            x.Id == installedPackage.Id
+        );
+
+        var attentionOptions = packageInSettings.LaunchArgs?.Where(opt => opt.Name.Contains("attention"));
         if (attentionOptions is not null)
         {
             foreach (var option in attentionOptions)
@@ -946,9 +1145,9 @@ public class ComfyUI(
             }
         }
 
-        var sageAttention = transaction
-            .Settings.InstalledPackages.First(x => x.Id == installedPackage.Id)
-            .LaunchArgs?.FirstOrDefault(opt => opt.Name.Contains("sage-attention"));
+        var sageAttention = packageInSettings.LaunchArgs?.FirstOrDefault(opt =>
+            opt.Name.Contains("sage-attention")
+        );
 
         if (sageAttention is not null)
         {
@@ -956,16 +1155,14 @@ public class ComfyUI(
         }
         else
         {
-            transaction
-                .Settings.InstalledPackages.First(x => x.Id == installedPackage.Id)
-                .LaunchArgs?.Add(
-                    new LaunchOption
-                    {
-                        Name = "--use-sage-attention",
-                        Type = LaunchOptionType.Bool,
-                        OptionValue = true,
-                    }
-                );
+            packageInSettings.LaunchArgs?.Add(
+                new LaunchOption
+                {
+                    Name = "--use-sage-attention",
+                    Type = LaunchOptionType.Bool,
+                    OptionValue = true,
+                }
+            );
         }
     }
 
@@ -1008,21 +1205,24 @@ public class ComfyUI(
             .ConfigureAwait(false);
     }
 
-    private ImmutableDictionary<string, string> GetEnvVars(ImmutableDictionary<string, string> env)
+    private ImmutableDictionary<string, string> GetEnvVars(
+        ImmutableDictionary<string, string> env,
+        string installLocation,
+        InstalledPackage installedPackage
+    )
     {
         // if we're not on windows or we don't have a windows rocm gpu, return original env
-        var hasRocmGpu =
-            SettingsManager.Settings.PreferredGpu?.IsWindowsRocmSupportedGpu()
-            ?? HardwareHelper.HasWindowsRocmSupportedGpu();
+        var hasRocmGpu = HasWindowsRocmSupport();
+        var selectedTorchIndex = installedPackage.PreferredTorchIndex ?? GetRecommendedTorchVersion();
 
-        if (!Compat.IsWindows || !hasRocmGpu)
+        if (!Compat.IsWindows || !hasRocmGpu || selectedTorchIndex != TorchIndex.Rocm)
             return env;
 
-        // set some experimental speed improving env vars for Windows ROCm
-        return env.SetItem("PYTORCH_TUNABLEOP_ENABLED", "1")
-            .SetItem("MIOPEN_FIND_MODE", "2")
-            .SetItem("TORCH_ROCM_AOTRITON_ENABLE_EXPERIMENTAL", "1")
-            .SetItem("PYTORCH_ALLOC_CONF", "max_split_size_mb:6144,garbage_collection_threshold:0.8") // greatly helps prevent GPU OOM and instability/driver timeouts/OS hard locks and decreases dependency on Tiled VAE at standard res's
-            .SetItem("COMFYUI_ENABLE_MIOPEN", "1"); // re-enables "cudnn" in ComfyUI as it's needed for MiOpen to function properly
+        if (rocmPackageHelper is null)
+            return env;
+
+        var rocmEnvironment = rocmPackageHelper.BuildLaunchEnvironment(ComfyWindowsRocmProfile.Profile);
+
+        return env.SetItems(rocmEnvironment);
     }
 }

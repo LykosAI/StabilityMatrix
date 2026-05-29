@@ -53,7 +53,7 @@ public class InvokeAI(
 
     public override Uri PreviewImageUri =>
         new(
-            "https://raw.githubusercontent.com/invoke-ai/InvokeAI/refs/heads/main/docs-old/assets/canvas_preview.png"
+            "https://raw.githubusercontent.com/invoke-ai/InvokeAI/refs/heads/main/docs/src/content/docs/assets/invoke-web-server-1.png"
         );
 
     public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods =>

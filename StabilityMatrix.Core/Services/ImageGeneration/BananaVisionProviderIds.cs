@@ -12,6 +12,11 @@ public static class BananaVisionProviderIds
     public const string Gemini25Flash = "gemini-2.5-flash";
 
     /// <summary>
+    /// Gemini 3.1 Flash image generation provider (Nano Banana 2) with thinking support
+    /// </summary>
+    public const string Gemini31Flash = "gemini-3.1-flash";
+
+    /// <summary>
     /// Gemini 3 Pro image generation provider with thinking support
     /// </summary>
     public const string Gemini3Pro = "gemini-3-pro";
@@ -27,9 +32,15 @@ public static class BananaVisionProviderIds
     public const string QwenImageEdit = "qwen-image-edit";
 
     /// <summary>
+    /// Flux.2 Klein local image generation provider (requires ComfyUI)
+    /// </summary>
+    public const string Flux2Klein = "flux2-klein";
+
+    /// <summary>
     /// Check if a provider ID is a local provider that requires ComfyUI backend
     /// </summary>
-    public static bool IsLocalProvider(string? providerId) => providerId is FluxKontext or QwenImageEdit;
+    public static bool IsLocalProvider(string? providerId) =>
+        providerId is FluxKontext or QwenImageEdit or Flux2Klein;
 
     /// <summary>
     /// Check if a provider ID is a cloud/API provider (Gemini)
@@ -39,5 +50,5 @@ public static class BananaVisionProviderIds
     /// <summary>
     /// Check if a provider ID supports thinking/reasoning output
     /// </summary>
-    public static bool SupportsThinking(string? providerId) => providerId == Gemini3Pro;
+    public static bool SupportsThinking(string? providerId) => providerId is Gemini3Pro or Gemini31Flash;
 }

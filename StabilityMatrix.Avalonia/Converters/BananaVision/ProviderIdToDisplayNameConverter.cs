@@ -15,9 +15,11 @@ public class ProviderIdToDisplayNameConverter : IValueConverter
     private static readonly Dictionary<string, string> ProviderDisplayNames = new()
     {
         ["gemini-2.5-flash"] = "Gemini 2.5 Flash",
+        ["gemini-3.1-flash"] = "Gemini 3.1 Flash",
         ["gemini-3-pro"] = "Gemini 3 Pro",
         ["flux-kontext"] = "Flux Kontext",
         ["qwen-image-edit"] = "Qwen Image Edit",
+        ["flux2-klein"] = "Flux.2 Klein",
     };
 
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)

@@ -72,12 +72,18 @@ public abstract class GeminiBaseImageGenerationProvider(
         {
             logger.LogError(apiEx, "Gemini API error: {StatusCode}", apiEx.StatusCode);
 
+            const string keyRestrictionHint =
+                " Note: as of June 19 2026, Google blocks unrestricted Gemini API keys. "
+                + "If your key was created earlier, you may need to add API restrictions to it at "
+                + "https://aistudio.google.com/apikey.";
+
             var errorMessage = apiEx.StatusCode switch
             {
                 System.Net.HttpStatusCode.Unauthorized =>
-                    "Invalid API key. Please check your Gemini API key in Settings.",
+                    "Invalid API key. Please check your Gemini API key in Settings." + keyRestrictionHint,
                 System.Net.HttpStatusCode.Forbidden =>
-                    "Access forbidden. Your API key may not have the required permissions.",
+                    "Access forbidden. Your API key may not have the required permissions."
+                        + keyRestrictionHint,
                 System.Net.HttpStatusCode.BadRequest => $"Invalid request: {apiEx.Content}",
                 _ => $"API error ({apiEx.StatusCode}): {apiEx.Message}",
             };
@@ -211,15 +217,31 @@ public abstract class GeminiBaseImageGenerationProvider(
 
         if (candidate.Content?.Parts != null)
         {
-            foreach (var part in candidate.Content.Parts)
+            var parts = candidate.Content.Parts;
+
+            // For thinking models, images that appear between text parts are intermediate
+            // "draft" outputs from the reasoning process — only images at or after the last
+            // text part are the final result. For non-thinking models this is a no-op
+            // (a typical single-text + single-image response has lastTextPartIndex = 0
+            // and the trailing image is correctly kept).
+            var lastTextPartIndex = -1;
+            for (var i = 0; i < parts.Count; i++)
             {
-                // Capture thought signature from any part that has one
+                if (!string.IsNullOrEmpty(parts[i].Text))
+                {
+                    lastTextPartIndex = i;
+                }
+            }
+
+            for (var i = 0; i < parts.Count; i++)
+            {
+                var part = parts[i];
+
                 if (!string.IsNullOrEmpty(part.ThoughtSignature))
                 {
                     lastThoughtSignature = part.ThoughtSignature;
                 }
 
-                // Check for thinking content (Gemini 3 Pro)
                 if (part is { Thought: true, Text: not null })
                 {
                     thinkingContent = string.IsNullOrEmpty(thinkingContent)
@@ -228,12 +250,12 @@ public abstract class GeminiBaseImageGenerationProvider(
                     continue;
                 }
 
-                if (part.Text != null)
+                if (!string.IsNullOrEmpty(part.Text))
                 {
                     textResponse = part.Text;
                 }
 
-                if (part.InlineData != null)
+                if (part.InlineData != null && i >= lastTextPartIndex)
                 {
                     images.Add(
                         new GeneratedImage

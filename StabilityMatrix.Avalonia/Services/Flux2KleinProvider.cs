@@ -1,5 +1,6 @@
 using AsyncAwaitBestPractices;
 using Microsoft.Extensions.Logging;
+using Refit;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Models.BananaVision;
 using StabilityMatrix.Core.Models;
@@ -9,13 +10,15 @@ using StabilityMatrix.Core.Services.ImageGeneration;
 namespace StabilityMatrix.Avalonia.Services;
 
 /// <summary>
-/// Image generation provider for Flux Kontext using local ComfyUI backend
+/// Image generation provider for Flux.2 Klein using local ComfyUI backend.
+/// Klein 4B is Apache 2.0 licensed; the distilled variant runs at 4 steps with CFG=1
+/// making it well-suited to conversational, iterative editing.
 /// </summary>
-public class FluxKontextProvider(ILogger<FluxKontextProvider> logger, IInferenceClientManager clientManager)
+public class Flux2KleinProvider(ILogger<Flux2KleinProvider> logger, IInferenceClientManager clientManager)
     : IImageGenerationProvider
 {
-    public string ProviderId => BananaVisionProviderIds.FluxKontext;
-    public string ProviderName => "Flux Kontext (Local)";
+    public string ProviderId => BananaVisionProviderIds.Flux2Klein;
+    public string ProviderName => "Flux.2 Klein (Local)";
     public bool SupportsImageInput => true;
     public bool SupportsMultiTurn => true;
     public bool RequiresThoughtSignatures => false;
@@ -27,7 +30,6 @@ public class FluxKontextProvider(ILogger<FluxKontextProvider> logger, IInference
     {
         try
         {
-            // Check if ComfyUI is connected
             if (!clientManager.IsConnected)
             {
                 logger.LogWarning("ComfyUI is not connected");
@@ -39,8 +41,7 @@ public class FluxKontextProvider(ILogger<FluxKontextProvider> logger, IInference
                 };
             }
 
-            // Validate models are available
-            var modelManager = new FluxKontextModelManager();
+            var modelManager = new Flux2KleinModelManager();
             if (!modelManager.AreModelsAvailable(clientManager))
             {
                 var modelsList = string.Join(", ", modelManager.GetMissingModelNames(clientManager));
@@ -54,21 +55,23 @@ public class FluxKontextProvider(ILogger<FluxKontextProvider> logger, IInference
                 };
             }
 
-            // Upload images using helper
+            // Klein supports multi-reference editing; cap at 4 for predictable VRAM use.
             await ComfyImageUploadHelper.UploadImagesAsync(
                 clientManager,
                 request,
-                maxInputImages: 2,
-                providerPrefix: "flux_kontext",
+                maxInputImages: 4,
+                providerPrefix: "flux2_klein",
                 logger,
                 cancellationToken
             );
 
-            // Extract custom model, LoRA selections, and resolution from provider options
             HybridModelFile? customUnetModel = null;
             IEnumerable<SelectedLora>? loras = null;
             int? width = null;
             int? height = null;
+            int? steps = null;
+            double? cfg = null;
+            var explicitDimensions = false;
 
             if (request.ProviderOptions != null)
             {
@@ -100,24 +103,53 @@ public class FluxKontextProvider(ILogger<FluxKontextProvider> logger, IInference
                     height = h;
                 }
 
+                if (
+                    request.ProviderOptions.TryGetValue("ExplicitDimensions", out var explicitObj)
+                    && explicitObj is bool eb
+                )
+                {
+                    explicitDimensions = eb;
+                }
+
+                if (request.ProviderOptions.TryGetValue("Steps", out var stepsObj) && stepsObj is int s)
+                {
+                    steps = s;
+                }
+
+                if (request.ProviderOptions.TryGetValue("CfgScale", out var cfgObj))
+                {
+                    cfg = cfgObj switch
+                    {
+                        double d => d,
+                        float f => f,
+                        int i => i,
+                        _ => null,
+                    };
+                }
+
                 if (width.HasValue && height.HasValue)
                 {
                     logger.LogInformation("Using custom resolution: {Width}x{Height}", width, height);
                 }
+                if (steps.HasValue || cfg.HasValue)
+                {
+                    logger.LogInformation("Using Klein overrides: Steps={Steps}, Cfg={Cfg}", steps, cfg);
+                }
             }
 
-            // Build workflow nodes
-            logger.LogInformation("Building Flux Kontext workflow");
-            var nodes = FluxKontextWorkflowBuilder.Build(
+            logger.LogInformation("Building Flux.2 Klein workflow");
+            var nodes = Flux2KleinWorkflowBuilder.Build(
                 request,
                 clientManager,
                 customUnetModel,
                 loras,
                 width,
-                height
+                height,
+                steps,
+                cfg,
+                explicitDimensions
             );
 
-            // Queue the prompt
             logger.LogInformation("Queuing prompt to ComfyUI");
             var task = await clientManager.Client.QueuePromptAsync(nodes, cancellationToken);
 
@@ -176,7 +208,6 @@ public class FluxKontextProvider(ILogger<FluxKontextProvider> logger, IInference
             task.ProgressUpdate += OnProgressUpdate;
             task.RunningNodeChanged += OnRunningNodeChanged;
 
-            // Register cancellation to interrupt ComfyUI if the user cancels
             await using var promptInterrupt = cancellationToken.Register(() =>
             {
                 logger.LogInformation(
@@ -194,7 +225,6 @@ public class FluxKontextProvider(ILogger<FluxKontextProvider> logger, IInference
 
             try
             {
-                // Wait for completion
                 logger.LogInformation("Waiting for generation to complete (Prompt ID: {PromptId})", task.Id);
                 await task.Task.WaitAsync(cancellationToken);
             }
@@ -204,13 +234,11 @@ public class FluxKontextProvider(ILogger<FluxKontextProvider> logger, IInference
                 task.RunningNodeChanged -= OnRunningNodeChanged;
             }
 
-            // Get the output images
             var outputImages = await clientManager.Client.GetImagesForExecutedPromptAsync(
                 task.Id,
                 cancellationToken
             );
 
-            // Prefer the "SaveImage" output node deterministically.
             var preferredOutputKey = "SaveImage";
             string? selectedOutputKey = null;
             List<ComfyImage>? candidateImages = null;
@@ -270,7 +298,7 @@ public class FluxKontextProvider(ILogger<FluxKontextProvider> logger, IInference
             }
 
             logger.LogInformation(
-                "Successfully generated {Count} image(s) with Flux Kontext",
+                "Successfully generated {Count} image(s) with Flux.2 Klein",
                 generatedImages.Count
             );
 
@@ -289,11 +317,29 @@ public class FluxKontextProvider(ILogger<FluxKontextProvider> logger, IInference
         catch (OperationCanceledException)
         {
             logger.LogInformation("Image generation was cancelled");
-            throw; // Propagate cancellation to ViewModel for proper handling
+            throw;
+        }
+        catch (ApiException apiEx)
+        {
+            // ComfyUI returns a JSON body explaining which node validation failed when the
+            // workflow is rejected; surfacing that beats a generic 400 message by miles.
+            var detail = !string.IsNullOrWhiteSpace(apiEx.Content) ? apiEx.Content : apiEx.Message;
+            logger.LogError(
+                apiEx,
+                "ComfyUI rejected Flux.2 Klein workflow ({StatusCode}): {Detail}",
+                apiEx.StatusCode,
+                detail
+            );
+            return new ImageGenerationResponse
+            {
+                IsSuccess = false,
+                ErrorMessage =
+                    $"ComfyUI rejected the workflow ({(int)apiEx.StatusCode}): {Truncate(detail, 800)}",
+            };
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to generate image with Flux Kontext");
+            logger.LogError(ex, "Failed to generate image with Flux.2 Klein");
             return new ImageGenerationResponse
             {
                 IsSuccess = false,
@@ -301,4 +347,7 @@ public class FluxKontextProvider(ILogger<FluxKontextProvider> logger, IInference
             };
         }
     }
+
+    private static string Truncate(string value, int maxLength) =>
+        value.Length <= maxLength ? value : value[..maxLength] + "...";
 }

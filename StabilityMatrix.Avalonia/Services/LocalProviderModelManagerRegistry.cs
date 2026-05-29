@@ -15,6 +15,7 @@ public static class LocalProviderModelManagerRegistry
         // Register all local provider model managers
         Register(new FluxKontextModelManager());
         Register(new QwenImageEditModelManager());
+        Register(new Flux2KleinModelManager());
     }
 
     /// <summary>

@@ -135,6 +135,10 @@ public partial class MainSettingsViewModel : PageViewModelBase
     [ObservableProperty]
     private bool isDiscordRichPresenceEnabled;
 
+    // Appearance section
+    [ObservableProperty]
+    private bool scrollBarsAlwaysVisible = true;
+
     // Console section
     [ObservableProperty]
     private int consoleLogHistorySize;
@@ -257,6 +261,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
         RemoveSymlinksOnShutdown = settingsManager.Settings.RemoveFolderLinksOnShutdown;
         SelectedAnimationScale = settingsManager.Settings.AnimationScale;
         HolidayModeSetting = settingsManager.Settings.HolidayModeSetting;
+        ScrollBarsAlwaysVisible = settingsManager.Settings.ScrollBarsAlwaysVisible;
 
         settingsManager.RelayPropertyFor(this, vm => vm.SelectedTheme, settings => settings.Theme);
 
@@ -266,6 +271,17 @@ public partial class MainSettingsViewModel : PageViewModelBase
             settings => settings.IsDiscordRichPresenceEnabled,
             true
         );
+
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.ScrollBarsAlwaysVisible,
+            settings => settings.ScrollBarsAlwaysVisible,
+            true
+        );
+
+        // Push the initial value into the global DynamicResources that the
+        // ScrollBarStyles read from, so the loaded setting actually takes effect.
+        ApplyScrollBarSetting(ScrollBarsAlwaysVisible);
 
         settingsManager.RelayPropertyFor(
             this,
@@ -522,6 +538,28 @@ public partial class MainSettingsViewModel : PageViewModelBase
     partial void OnMaxConcurrentDownloadsChanged(int value)
     {
         trackedDownloadService.UpdateMaxConcurrentDownloads(value);
+    }
+
+    partial void OnScrollBarsAlwaysVisibleChanged(bool value)
+    {
+        ApplyScrollBarSetting(value);
+    }
+
+    /// <summary>
+    /// Pushes the scrollbar-visibility setting into the global DynamicResources that
+    /// the ScrollBarStyles consume. Called both on initial settings load and whenever
+    /// the toggle changes, so changes take effect immediately without restart.
+    /// </summary>
+    private static void ApplyScrollBarSetting(bool alwaysVisible)
+    {
+        if (Application.Current is not { } app)
+            return;
+
+        // AllowAutoHide is the inverse of "always visible". MinWidth=14 gives the
+        // thumb a comfortable hit-target when permanent; 0 lets Avalonia's default
+        // thin/expanded transition work normally in legacy mode.
+        app.Resources["ScrollBarAllowAutoHide"] = !alwaysVisible;
+        app.Resources["ScrollBarMinWidthValue"] = alwaysVisible ? 14d : 0d;
     }
 
     public async Task ResetCheckpointCache()

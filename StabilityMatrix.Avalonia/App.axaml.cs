@@ -519,9 +519,11 @@ public sealed class App : Application
 
         // Image generation services
         services.AddSingleton<IImageGenerationProvider, GeminiImageGenerationProvider>();
+        services.AddSingleton<IImageGenerationProvider, Gemini31FlashImageGenerationProvider>();
         services.AddSingleton<IImageGenerationProvider, Gemini3ProImageGenerationProvider>();
         services.AddSingleton<IImageGenerationProvider, FluxKontextProvider>();
         services.AddSingleton<IImageGenerationProvider, QwenImageEditProvider>();
+        services.AddSingleton<IImageGenerationProvider, Flux2KleinProvider>();
         services.AddSingleton<IImageGenerationChatService, ImageGenerationChatService>();
 
         services.AddTransient<IGitHubClient, GitHubClient>(_ =>

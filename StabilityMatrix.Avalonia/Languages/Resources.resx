@@ -933,6 +933,12 @@
   <data name="Label_HolidayMode" xml:space="preserve">
     <value>Holiday Mode</value>
   </data>
+  <data name="Label_AlwaysShowScrollbars" xml:space="preserve">
+    <value>Always Show Scrollbars</value>
+  </data>
+  <data name="Label_AlwaysShowScrollbars_Details" xml:space="preserve">
+    <value>When on, vertical scrollbars stay visible at full thickness. When off, they fade to a thin bar that only expands on hover.</value>
+  </data>
   <data name="Label_CLIPSkip" xml:space="preserve">
     <value>CLIP Skip</value>
   </data>

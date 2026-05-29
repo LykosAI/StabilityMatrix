@@ -544,6 +544,39 @@ public class ComfyNodeBuilder
         public required ImageNodeConnection Image { get; init; }
     }
 
+    /// <summary>
+    /// Scales an image to approximately N megapixels total, preserving aspect ratio.
+    /// Used by Flux.2 Klein image-edit workflows to normalize reference image size.
+    /// </summary>
+    public record ImageScaleToTotalPixels : ComfyTypedNodeBase<ImageNodeConnection>
+    {
+        public required ImageNodeConnection Image { get; init; }
+
+        /// <summary>
+        /// Upscale method: "nearest-exact", "bilinear", "area", "bicubic", "lanczos"
+        /// </summary>
+        public required string UpscaleMethod { get; init; }
+
+        [Range(0.01d, 16.0d)]
+        public double Megapixels { get; init; } = 1.0;
+
+        /// <summary>
+        /// Resolution snap-to-multiple step (1 = no snapping, 8/16/64 round to multiples).
+        /// Required by current ComfyUI builds; default 1 = behave as if pre-step versions.
+        /// </summary>
+        [Range(1, 256)]
+        public int ResolutionSteps { get; init; } = 1;
+    }
+
+    /// <summary>
+    /// Zeroes out a conditioning, effectively producing an empty negative prompt.
+    /// Used by workflows that want CFG=1 with no negative guidance (e.g. Flux.2 Klein).
+    /// </summary>
+    public record ConditioningZeroOut : ComfyTypedNodeBase<ConditioningNodeConnection>
+    {
+        public required ConditioningNodeConnection Conditioning { get; init; }
+    }
+
     public record BasicGuider : ComfyTypedNodeBase<GuiderNodeConnection>
     {
         public required ModelNodeConnection Model { get; init; }

@@ -12,6 +12,7 @@ using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
+using StabilityMatrix.Core.Services.Rocm;
 
 namespace StabilityMatrix.Core.Models.Packages;
 
@@ -22,7 +23,8 @@ public class ComfyZluda(
     IDownloadService downloadService,
     IPrerequisiteHelper prerequisiteHelper,
     IPyInstallationManager pyInstallationManager,
-    IPipWheelService pipWheelService
+    IPipWheelService pipWheelService,
+    IRocmPackageHelper rocmPackageHelper
 )
     : ComfyUI(
         githubApi,
@@ -30,7 +32,8 @@ public class ComfyZluda(
         downloadService,
         prerequisiteHelper,
         pyInstallationManager,
-        pipWheelService
+        pipWheelService,
+        rocmPackageHelper
     )
 {
     private const string ZludaPatchDownloadUrl =

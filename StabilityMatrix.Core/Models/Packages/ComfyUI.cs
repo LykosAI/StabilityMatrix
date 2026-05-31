@@ -29,7 +29,7 @@ public class ComfyUI(
     IPrerequisiteHelper prerequisiteHelper,
     IPyInstallationManager pyInstallationManager,
     IPipWheelService pipWheelService,
-    IRocmPackageHelper? rocmPackageHelper = null
+    IRocmPackageHelper rocmPackageHelper
 )
     : BaseGitPackage(
         githubApi,
@@ -422,16 +422,6 @@ public class ComfyUI(
 
         if (Compat.IsWindows && torchIndex == TorchIndex.Rocm && HasWindowsRocmSupport())
         {
-            // This is an internal guard for a wiring/configuration failure.
-            // It can only trigger when Windows ROCm support was detected, but this ComfyUI instance was created
-            // without the shared ROCm helper (for example via a manual construction path that omitted the dependency).
-            if (rocmPackageHelper is null)
-            {
-                throw new InvalidOperationException(
-                    "Windows ROCm installation encountered an internal configuration error [rocmPackageHelper is null]. Please restart Stability Matrix and try again. If the issue persists, please report it to Stability Matrix."
-                );
-            }
-
             var config = rocmPackageHelper.BuildWindowsNativeInstallConfig(ComfyWindowsRocmProfile.Profile);
 
             await StandardPipInstallProcessAsync(
@@ -664,9 +654,6 @@ public class ComfyUI(
         Action<ProcessOutput>? onConsoleOutput
     )
     {
-        if (rocmPackageHelper is null)
-            return;
-
         if (!ShouldShowWindowsRocmLaunchNotice(installedPackage))
             return;
 
@@ -1033,8 +1020,7 @@ public class ComfyUI(
                 installedPackage,
                 WindowsRocmPackageCommandType.SageAttention,
                 "Windows ROCm SageAttention installed successfully",
-                includeEnvironmentVariables: true,
-                nullHelperMessage: "Windows ROCm SageAttention installation encountered an internal configuration error [rocmPackageHelper is null]."
+                includeEnvironmentVariables: true
             )
             .ConfigureAwait(false);
 
@@ -1050,8 +1036,7 @@ public class ComfyUI(
                 installedPackage,
                 WindowsRocmPackageCommandType.DevelopmentSdk,
                 "Windows ROCm Development SDK installed successfully",
-                includeEnvironmentVariables: false,
-                nullHelperMessage: "Windows ROCm SDK installation encountered an internal configuration error [rocmPackageHelper is null]."
+                includeEnvironmentVariables: false
             )
             .ConfigureAwait(false);
     }
@@ -1062,8 +1047,7 @@ public class ComfyUI(
                 installedPackage,
                 WindowsRocmPackageCommandType.BitsAndBytes,
                 "Windows ROCm bitsandbytes installed successfully",
-                includeEnvironmentVariables: true,
-                nullHelperMessage: "Windows ROCm bitsandbytes installation encountered an internal configuration error [rocmPackageHelper is null]."
+                includeEnvironmentVariables: true
             )
             .ConfigureAwait(false);
     }
@@ -1074,8 +1058,7 @@ public class ComfyUI(
                 installedPackage,
                 WindowsRocmPackageCommandType.FlashAttention,
                 "Windows ROCm Flash Attention installed successfully",
-                includeEnvironmentVariables: true,
-                nullHelperMessage: "Windows ROCm Flash Attention installation encountered an internal configuration error [rocmPackageHelper is null]."
+                includeEnvironmentVariables: true
             )
             .ConfigureAwait(false);
     }
@@ -1084,8 +1067,7 @@ public class ComfyUI(
         InstalledPackage? installedPackage,
         WindowsRocmPackageCommandType commandType,
         string completionMessage,
-        bool includeEnvironmentVariables,
-        string nullHelperMessage
+        bool includeEnvironmentVariables
     )
     {
         if (installedPackage?.FullPath is null)
@@ -1114,7 +1096,7 @@ public class ComfyUI(
                         downloadService,
                         pyInstallationManager,
                         prerequisiteHelper,
-                        rocmPackageHelper ?? throw new InvalidOperationException(nullHelperMessage)
+                        rocmPackageHelper
                     )
                     {
                         CommandType = commandType,
@@ -1216,9 +1198,6 @@ public class ComfyUI(
         var selectedTorchIndex = installedPackage.PreferredTorchIndex ?? GetRecommendedTorchVersion();
 
         if (!Compat.IsWindows || !hasRocmGpu || selectedTorchIndex != TorchIndex.Rocm)
-            return env;
-
-        if (rocmPackageHelper is null)
             return env;
 
         var rocmEnvironment = rocmPackageHelper.BuildLaunchEnvironment(ComfyWindowsRocmProfile.Profile);

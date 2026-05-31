@@ -29,7 +29,7 @@ public class InvokeAI(
     IPrerequisiteHelper prerequisiteHelper,
     IPyInstallationManager pyInstallationManager,
     IPipWheelService pipWheelService,
-    IRocmPackageHelper? rocmPackageHelper = null
+    IRocmPackageHelper rocmPackageHelper
 )
     : BaseGitPackage(
         githubApi,
@@ -296,12 +296,7 @@ public class InvokeAI(
                 new ProgressReport(-1f, "Installing Windows ROCm torch...", isIndeterminate: true)
             );
 
-            await (
-                rocmPackageHelper
-                ?? throw new InvalidOperationException(
-                    "Windows ROCm installation encountered an internal configuration error [rocmPackageHelper is null]. Please restart Stability Matrix and try again. If the issue persists, please report it to Stability Matrix."
-                )
-            )
+            await rocmPackageHelper
                 .InstallWindowsNativeTorchAsync(
                     venvRunner,
                     installedPackage,

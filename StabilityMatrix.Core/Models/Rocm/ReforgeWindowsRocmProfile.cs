@@ -47,23 +47,18 @@ public static class ReforgeWindowsRocmProfile
         };
     }
 
-    public static RocmCompatibilityResult GetCompatibility(IRocmPackageHelper? rocmPackageHelper)
+    public static RocmCompatibilityResult GetCompatibility(IRocmPackageHelper rocmPackageHelper)
     {
-        if (rocmPackageHelper is null)
-        {
-            return new RocmCompatibilityResult { IsCompatible = false };
-        }
-
         return rocmPackageHelper.GetCompatibility();
     }
 
-    public static bool HasSupport(IRocmPackageHelper? rocmPackageHelper)
+    public static bool HasSupport(IRocmPackageHelper rocmPackageHelper)
     {
         return GetCompatibility(rocmPackageHelper).IsCompatible;
     }
 
     public static bool ShouldUseWindowsNativeInstall(
-        IRocmPackageHelper? rocmPackageHelper,
+        IRocmPackageHelper rocmPackageHelper,
         TorchIndex selectedTorchIndex
     )
     {
@@ -72,7 +67,7 @@ public static class ReforgeWindowsRocmProfile
 
     public static void ApplyWindowsRocmLaunchDefaults(
         List<LaunchOptionDefinition> launchOptions,
-        IRocmPackageHelper? rocmPackageHelper
+        IRocmPackageHelper rocmPackageHelper
     )
     {
         if (!(Compat.IsWindows && HasSupport(rocmPackageHelper)))
@@ -92,7 +87,7 @@ public static class ReforgeWindowsRocmProfile
         }
     }
 
-    public static string? GetPreferredCrossAttentionArgument(IRocmPackageHelper? rocmPackageHelper)
+    public static string? GetPreferredCrossAttentionArgument(IRocmPackageHelper rocmPackageHelper)
     {
         var compatibility = GetCompatibility(rocmPackageHelper);
         if (!compatibility.IsCompatible)
@@ -106,19 +101,19 @@ public static class ReforgeWindowsRocmProfile
     }
 
     public static IReadOnlyDictionary<string, string> BuildLaunchEnvironment(
-        IRocmPackageHelper? rocmPackageHelper
+        IRocmPackageHelper rocmPackageHelper
     )
     {
-        return rocmPackageHelper?.BuildLaunchEnvironment(Profile) ?? new Dictionary<string, string>();
+        return rocmPackageHelper.BuildLaunchEnvironment(Profile);
     }
 
     public static IReadOnlyList<string> GetLaunchNoticeLines(
-        IRocmPackageHelper? rocmPackageHelper,
+        IRocmPackageHelper rocmPackageHelper,
         TorchIndex selectedTorchIndex
     )
     {
         return ShouldUseWindowsNativeInstall(rocmPackageHelper, selectedTorchIndex)
-            ? rocmPackageHelper?.GetWindowsLaunchNoticeLines() ?? []
+            ? rocmPackageHelper.GetWindowsLaunchNoticeLines()
             : [];
     }
 }

@@ -234,7 +234,8 @@ public class PackageFactory : IPackageFactory
                 downloadService,
                 prerequisiteHelper,
                 pyInstallationManager,
-                pipWheelService
+                pipWheelService,
+                rocmPackageHelper
             ),
             "stable-diffusion-webui-amdgpu-forge" => new ForgeAmdGpu(
                 githubApiCache,

@@ -38,23 +38,18 @@ public static class InvokeAiWindowsRocmProfile
         };
     }
 
-    public static RocmCompatibilityResult GetCompatibility(IRocmPackageHelper? rocmPackageHelper)
+    public static RocmCompatibilityResult GetCompatibility(IRocmPackageHelper rocmPackageHelper)
     {
-        if (rocmPackageHelper is null)
-        {
-            return new RocmCompatibilityResult { IsCompatible = false };
-        }
-
         return rocmPackageHelper.GetCompatibility();
     }
 
-    public static bool HasSupport(IRocmPackageHelper? rocmPackageHelper)
+    public static bool HasSupport(IRocmPackageHelper rocmPackageHelper)
     {
         return GetCompatibility(rocmPackageHelper).IsCompatible;
     }
 
     public static bool ShouldApplyLaunchEnvironment(
-        IRocmPackageHelper? rocmPackageHelper,
+        IRocmPackageHelper rocmPackageHelper,
         TorchIndex selectedTorchIndex
     )
     {
@@ -67,19 +62,19 @@ public static class InvokeAiWindowsRocmProfile
     }
 
     public static IReadOnlyDictionary<string, string> BuildLaunchEnvironment(
-        IRocmPackageHelper? rocmPackageHelper
+        IRocmPackageHelper rocmPackageHelper
     )
     {
-        return rocmPackageHelper?.BuildLaunchEnvironment(Profile) ?? new Dictionary<string, string>();
+        return rocmPackageHelper.BuildLaunchEnvironment(Profile);
     }
 
     public static IReadOnlyList<string> GetLaunchNoticeLines(
-        IRocmPackageHelper? rocmPackageHelper,
+        IRocmPackageHelper rocmPackageHelper,
         TorchIndex selectedTorchIndex
     )
     {
         return ShouldApplyLaunchEnvironment(rocmPackageHelper, selectedTorchIndex)
-            ? rocmPackageHelper?.GetWindowsLaunchNoticeLines() ?? []
+            ? rocmPackageHelper.GetWindowsLaunchNoticeLines()
             : [];
     }
 }

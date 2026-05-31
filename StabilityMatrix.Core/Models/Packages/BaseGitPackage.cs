@@ -83,14 +83,14 @@ public abstract class BaseGitPackage : BasePackage
         PipWheelService = pipWheelService;
     }
 
-    protected bool HasWindowsRocmSupport(IRocmPackageHelper? rocmPackageHelper)
+    protected bool HasWindowsRocmSupport(IRocmPackageHelper rocmPackageHelper)
     {
         return GetWindowsRocmCompatibility(rocmPackageHelper).IsCompatible;
     }
 
-    protected RocmCompatibilityResult GetWindowsRocmCompatibility(IRocmPackageHelper? rocmPackageHelper)
+    protected RocmCompatibilityResult GetWindowsRocmCompatibility(IRocmPackageHelper rocmPackageHelper)
     {
-        if (!Compat.IsWindows || rocmPackageHelper is null)
+        if (!Compat.IsWindows)
         {
             return new RocmCompatibilityResult { IsCompatible = false };
         }

@@ -20,7 +20,7 @@ public class Reforge(
     IPrerequisiteHelper prerequisiteHelper,
     IPyInstallationManager pyInstallationManager,
     IPipWheelService pipWheelService,
-    IRocmPackageHelper? rocmPackageHelper = null
+    IRocmPackageHelper rocmPackageHelper
 )
     : SDWebForge(
         githubApi,
@@ -123,13 +123,6 @@ public class Reforge(
                 pythonVersion: options.PythonOptions.PythonVersion
             )
             .ConfigureAwait(false);
-
-        if (rocmPackageHelper is null)
-        {
-            throw new InvalidOperationException(
-                "Windows ROCm installation encountered an internal configuration error [rocmPackageHelper is null]. Please restart Stability Matrix and try again. If the issue persists, please report it to Stability Matrix."
-            );
-        }
 
         var profile = ReforgeWindowsRocmProfile.CreateProfile(GetRequirementsPaths(installLocation));
         var config = rocmPackageHelper.BuildWindowsNativeInstallConfig(profile);

@@ -47,30 +47,12 @@ public static class ReforgeWindowsRocmProfile
         };
     }
 
-    public static RocmCompatibilityResult GetCompatibility(IRocmPackageHelper rocmPackageHelper)
-    {
-        return rocmPackageHelper.GetCompatibility();
-    }
-
-    public static bool HasSupport(IRocmPackageHelper rocmPackageHelper)
-    {
-        return GetCompatibility(rocmPackageHelper).IsCompatible;
-    }
-
-    public static bool ShouldUseWindowsNativeInstall(
-        IRocmPackageHelper rocmPackageHelper,
-        TorchIndex selectedTorchIndex
-    )
-    {
-        return Compat.IsWindows && selectedTorchIndex == TorchIndex.Rocm && HasSupport(rocmPackageHelper);
-    }
-
     public static void ApplyWindowsRocmLaunchDefaults(
         List<LaunchOptionDefinition> launchOptions,
         IRocmPackageHelper rocmPackageHelper
     )
     {
-        if (!(Compat.IsWindows && HasSupport(rocmPackageHelper)))
+        if (!(Compat.IsWindows && rocmPackageHelper.GetCompatibility().IsCompatible))
         {
             return;
         }
@@ -89,7 +71,7 @@ public static class ReforgeWindowsRocmProfile
 
     public static string? GetPreferredCrossAttentionArgument(IRocmPackageHelper rocmPackageHelper)
     {
-        var compatibility = GetCompatibility(rocmPackageHelper);
+        var compatibility = rocmPackageHelper.GetCompatibility();
         if (!compatibility.IsCompatible)
         {
             return null;
@@ -98,22 +80,5 @@ public static class ReforgeWindowsRocmProfile
         return WindowsRocmSupport.PreferLegacyAttentionFallback(compatibility.ResolvedGfxArch)
             ? "--attention-quad"
             : "--attention-pytorch";
-    }
-
-    public static IReadOnlyDictionary<string, string> BuildLaunchEnvironment(
-        IRocmPackageHelper rocmPackageHelper
-    )
-    {
-        return rocmPackageHelper.BuildLaunchEnvironment(Profile);
-    }
-
-    public static IReadOnlyList<string> GetLaunchNoticeLines(
-        IRocmPackageHelper rocmPackageHelper,
-        TorchIndex selectedTorchIndex
-    )
-    {
-        return ShouldUseWindowsNativeInstall(rocmPackageHelper, selectedTorchIndex)
-            ? rocmPackageHelper.GetWindowsLaunchNoticeLines()
-            : [];
     }
 }

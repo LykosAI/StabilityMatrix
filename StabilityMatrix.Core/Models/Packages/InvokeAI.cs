@@ -120,7 +120,7 @@ public class InvokeAI(
             return TorchIndex.Mps;
         }
 
-        if (Compat.IsWindows && InvokeAiWindowsRocmProfile.HasSupport(rocmPackageHelper))
+        if (Compat.IsWindows && rocmPackageHelper.GetCompatibility().IsCompatible)
         {
             return TorchIndex.Rocm;
         }
@@ -235,7 +235,7 @@ public class InvokeAI(
         var isSupportedWindowsRocmInstall =
             Compat.IsWindows
             && torchVersion == TorchIndex.Rocm
-            && InvokeAiWindowsRocmProfile.HasSupport(rocmPackageHelper);
+            && rocmPackageHelper.GetCompatibility().IsCompatible;
         var isLegacyNvidiaGpu =
             SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu() ?? HardwareHelper.HasLegacyNvidiaGpu();
         var fallbackIndex = torchVersion switch
@@ -662,17 +662,17 @@ public class InvokeAI(
         env = GetEnvVars(env, installPath);
 
         var selectedTorchIndex = installedPackage.PreferredTorchIndex ?? GetRecommendedTorchVersion();
-        if (!InvokeAiWindowsRocmProfile.ShouldApplyLaunchEnvironment(rocmPackageHelper, selectedTorchIndex))
+        if (!rocmPackageHelper.ShouldApplyWindowsLaunchEnvironment(selectedTorchIndex))
         {
             return env;
         }
 
-        return env.SetItems(InvokeAiWindowsRocmProfile.BuildLaunchEnvironment(rocmPackageHelper));
+        return env.SetItems(rocmPackageHelper.BuildLaunchEnvironment(InvokeAiWindowsRocmProfile.Profile));
     }
 
     private IReadOnlyList<string> GetLaunchNoticeLines(InstalledPackage installedPackage)
     {
         var selectedTorchIndex = installedPackage.PreferredTorchIndex ?? GetRecommendedTorchVersion();
-        return InvokeAiWindowsRocmProfile.GetLaunchNoticeLines(rocmPackageHelper, selectedTorchIndex);
+        return rocmPackageHelper.GetWindowsLaunchNoticeLines(selectedTorchIndex);
     }
 }

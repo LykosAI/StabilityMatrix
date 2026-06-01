@@ -1,7 +1,5 @@
-using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Python;
-using StabilityMatrix.Core.Services.Rocm;
 
 namespace StabilityMatrix.Core.Models.Rocm;
 
@@ -36,45 +34,5 @@ public static class InvokeAiWindowsRocmProfile
         {
             InstallConfig = new PipInstallConfig { PostTorchInstallPipArgs = [TritonWindowsPackage] },
         };
-    }
-
-    public static RocmCompatibilityResult GetCompatibility(IRocmPackageHelper rocmPackageHelper)
-    {
-        return rocmPackageHelper.GetCompatibility();
-    }
-
-    public static bool HasSupport(IRocmPackageHelper rocmPackageHelper)
-    {
-        return GetCompatibility(rocmPackageHelper).IsCompatible;
-    }
-
-    public static bool ShouldApplyLaunchEnvironment(
-        IRocmPackageHelper rocmPackageHelper,
-        TorchIndex selectedTorchIndex
-    )
-    {
-        if (!Compat.IsWindows || selectedTorchIndex != TorchIndex.Rocm)
-        {
-            return false;
-        }
-
-        return GetCompatibility(rocmPackageHelper).IsCompatible;
-    }
-
-    public static IReadOnlyDictionary<string, string> BuildLaunchEnvironment(
-        IRocmPackageHelper rocmPackageHelper
-    )
-    {
-        return rocmPackageHelper.BuildLaunchEnvironment(Profile);
-    }
-
-    public static IReadOnlyList<string> GetLaunchNoticeLines(
-        IRocmPackageHelper rocmPackageHelper,
-        TorchIndex selectedTorchIndex
-    )
-    {
-        return ShouldApplyLaunchEnvironment(rocmPackageHelper, selectedTorchIndex)
-            ? rocmPackageHelper.GetWindowsLaunchNoticeLines()
-            : [];
     }
 }

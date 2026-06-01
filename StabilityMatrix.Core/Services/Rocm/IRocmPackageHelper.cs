@@ -23,9 +23,16 @@ public interface IRocmPackageHelper
     IReadOnlyDictionary<string, string> BuildLaunchEnvironment(RocmPackageProfile profile);
 
     /// <summary>
-    /// Returns shared Windows ROCm launch notice lines for helper-managed packages.
+    /// Returns shared Windows ROCm launch notice lines if the current machine and selected torch index
+    /// qualify for the Windows native ROCm launch environment; otherwise returns an empty list.
     /// </summary>
-    IReadOnlyList<string> GetWindowsLaunchNoticeLines();
+    IReadOnlyList<string> GetWindowsLaunchNoticeLines(TorchIndex selectedTorchIndex);
+
+    /// <summary>
+    /// Returns true when the current machine is Windows, the selected torch index is ROCm,
+    /// and the machine is compatible with Windows native ROCm.
+    /// </summary>
+    bool ShouldApplyWindowsLaunchEnvironment(TorchIndex selectedTorchIndex);
 
     /// <summary>
     /// Ensures a usable Windows ROCm SDK devel package is installed from the ROCm multi-arch index,

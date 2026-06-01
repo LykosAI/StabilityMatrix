@@ -654,22 +654,11 @@ public class ComfyUI(
         Action<ProcessOutput>? onConsoleOutput
     )
     {
-        if (!ShouldShowWindowsRocmLaunchNotice(installedPackage))
-            return;
-
-        foreach (var line in rocmPackageHelper.GetWindowsLaunchNoticeLines())
+        var torchIndex = installedPackage.PreferredTorchIndex ?? GetRecommendedTorchVersion();
+        foreach (var line in rocmPackageHelper.GetWindowsLaunchNoticeLines(torchIndex))
         {
             onConsoleOutput?.Invoke(ProcessOutput.FromStdOutLine($"{line}{Environment.NewLine}"));
         }
-    }
-
-    private bool ShouldShowWindowsRocmLaunchNotice(InstalledPackage installedPackage)
-    {
-        if (!Compat.IsWindows || !HasWindowsRocmSupport())
-            return false;
-
-        var torchIndex = installedPackage.PreferredTorchIndex ?? GetRecommendedTorchVersion();
-        return torchIndex == TorchIndex.Rocm;
     }
 
     protected ProcessArgs NormalizeLaunchArguments(

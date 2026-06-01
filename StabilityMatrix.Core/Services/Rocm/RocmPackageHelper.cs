@@ -101,12 +101,23 @@ public class RocmPackageHelper : IRocmPackageHelper
         return mergedEnvironment;
     }
 
-    /// <summary>
-    /// Returns the shared informational notice lines shown when launching Windows ROCm packages.
-    /// </summary>
-    public IReadOnlyList<string> GetWindowsLaunchNoticeLines()
+    private IReadOnlyList<string> GetWindowsLaunchNoticeLines()
     {
         return WindowsLaunchNoticeLines;
+    }
+
+    /// <inheritdoc />
+    public bool ShouldApplyWindowsLaunchEnvironment(TorchIndex selectedTorchIndex)
+    {
+        if (!Compat.IsWindows || selectedTorchIndex != TorchIndex.Rocm)
+            return false;
+        return GetCompatibility().IsCompatible;
+    }
+
+    /// <inheritdoc />
+    public IReadOnlyList<string> GetWindowsLaunchNoticeLines(TorchIndex selectedTorchIndex)
+    {
+        return ShouldApplyWindowsLaunchEnvironment(selectedTorchIndex) ? GetWindowsLaunchNoticeLines() : [];
     }
 
     /// <summary>

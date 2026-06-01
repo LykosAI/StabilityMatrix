@@ -82,7 +82,7 @@ public class Reforge(
     {
         var preferRocm =
             (Compat.IsLinux && (SettingsManager.Settings.PreferredGpu?.IsAmd ?? HardwareHelper.PreferRocm()))
-            || ReforgeWindowsRocmProfile.HasSupport(rocmPackageHelper);
+            || rocmPackageHelper.GetCompatibility().IsCompatible;
 
         if (AvailableTorchIndices.Contains(TorchIndex.Rocm) && preferRocm)
         {
@@ -103,7 +103,7 @@ public class Reforge(
     {
         var torchIndex = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
 
-        if (!ReforgeWindowsRocmProfile.ShouldUseWindowsNativeInstall(rocmPackageHelper, torchIndex))
+        if (!rocmPackageHelper.ShouldApplyWindowsLaunchEnvironment(torchIndex))
         {
             await base.InstallPackage(
                     installLocation,
@@ -162,17 +162,17 @@ public class Reforge(
         env = base.GetEnvVars(env, installedPackage);
         env = env.SetItem("STABLE_DIFFUSION_REPO", StableDiffusionRepoOverride);
 
-        if (!ReforgeWindowsRocmProfile.ShouldUseWindowsNativeInstall(rocmPackageHelper, selectedTorchIndex))
+        if (!rocmPackageHelper.ShouldApplyWindowsLaunchEnvironment(selectedTorchIndex))
         {
             return env;
         }
 
-        return env.SetItems(ReforgeWindowsRocmProfile.BuildLaunchEnvironment(rocmPackageHelper));
+        return env.SetItems(rocmPackageHelper.BuildLaunchEnvironment(ReforgeWindowsRocmProfile.Profile));
     }
 
     protected override IReadOnlyList<string> GetLaunchNoticeLines(InstalledPackage installedPackage)
     {
         var selectedTorchIndex = installedPackage.PreferredTorchIndex ?? GetRecommendedTorchVersion();
-        return ReforgeWindowsRocmProfile.GetLaunchNoticeLines(rocmPackageHelper, selectedTorchIndex);
+        return rocmPackageHelper.GetWindowsLaunchNoticeLines(selectedTorchIndex);
     }
 }

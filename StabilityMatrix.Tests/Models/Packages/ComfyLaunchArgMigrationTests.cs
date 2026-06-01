@@ -6,6 +6,7 @@ using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
+using StabilityMatrix.Core.Services.Rocm;
 
 namespace StabilityMatrix.Tests.Models.Packages;
 
@@ -22,7 +23,8 @@ public class ComfyLaunchArgMigrationTests
             Substitute.For<IDownloadService>(),
             Substitute.For<IPrerequisiteHelper>(),
             Substitute.For<IPyInstallationManager>(),
-            Substitute.For<IPipWheelService>()
+            Substitute.For<IPipWheelService>(),
+            Substitute.For<IRocmPackageHelper>()
         );
 
         var installedPackage = new InstalledPackage
@@ -69,7 +71,8 @@ public class ComfyLaunchArgMigrationTests
             IDownloadService downloadService,
             IPrerequisiteHelper prerequisiteHelper,
             IPyInstallationManager pyInstallationManager,
-            IPipWheelService pipWheelService
+            IPipWheelService pipWheelService,
+            IRocmPackageHelper rocmPackageHelper
         )
             : base(
                 githubApi,
@@ -77,7 +80,8 @@ public class ComfyLaunchArgMigrationTests
                 downloadService,
                 prerequisiteHelper,
                 pyInstallationManager,
-                pipWheelService
+                pipWheelService,
+                rocmPackageHelper
             ) { }
 
         public ProcessArgs Normalize(InstalledPackage installedPackage, ProcessArgs fallbackArguments) =>

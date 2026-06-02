@@ -44,7 +44,8 @@ public partial class PackageCardViewModel(
     INavigationService<PackageManagerViewModel> navigationService,
     IServiceManager<ViewModelBase> vmFactory,
     IPyInstallationManager pyInstallationManager,
-    RunningPackageService runningPackageService
+    RunningPackageService runningPackageService,
+    IPrerequisiteHelper prerequisiteHelper
 ) : ProgressViewModel
 {
     private string webUiUrl = string.Empty;
@@ -479,6 +480,15 @@ public partial class PackageCardViewModel(
                 versionOptions.CommitHash = latest.Sha;
             }
 
+            PyVersion? desiredPythonVersion = PyVersion.TryParse(Package.PythonVersion, out var pv)
+                ? pv
+                : null;
+            var ensurePrereqStep = new SetupPrerequisitesStep(
+                prerequisiteHelper,
+                basePackage,
+                desiredPythonVersion
+            );
+
             var updatePackageStep = new UpdatePackageStep(
                 settingsManager,
                 basePackage,
@@ -490,11 +500,11 @@ public partial class PackageCardViewModel(
                     PythonOptions =
                     {
                         TorchIndex = Package.PreferredTorchIndex,
-                        PythonVersion = PyVersion.TryParse(Package.PythonVersion, out var pv) ? pv : null,
+                        PythonVersion = desiredPythonVersion,
                     },
                 }
             );
-            var steps = new List<IPackageStep> { updatePackageStep };
+            var steps = new List<IPackageStep> { ensurePrereqStep, updatePackageStep };
 
             EventManager.Instance.OnPackageInstallProgressAdded(runner);
             await runner.ExecuteSteps(steps);
@@ -655,6 +665,15 @@ public partial class PackageCardViewModel(
                 versionOptions.CommitHash = viewModel.SelectedCommit?.Sha;
             }
 
+            PyVersion? desiredPythonVersion = PyVersion.TryParse(Package.PythonVersion, out var pyVer)
+                ? pyVer
+                : null;
+            var ensurePrereqStep = new SetupPrerequisitesStep(
+                prerequisiteHelper,
+                basePackage,
+                desiredPythonVersion
+            );
+
             var updatePackageStep = new UpdatePackageStep(
                 settingsManager,
                 basePackage,
@@ -666,13 +685,11 @@ public partial class PackageCardViewModel(
                     PythonOptions =
                     {
                         TorchIndex = Package.PreferredTorchIndex,
-                        PythonVersion = PyVersion.TryParse(Package.PythonVersion, out var pyVer)
-                            ? pyVer
-                            : null,
+                        PythonVersion = desiredPythonVersion,
                     },
                 }
             );
-            var steps = new List<IPackageStep> { updatePackageStep };
+            var steps = new List<IPackageStep> { ensurePrereqStep, updatePackageStep };
 
             EventManager.Instance.OnPackageInstallProgressAdded(runner);
             await runner.ExecuteSteps(steps);

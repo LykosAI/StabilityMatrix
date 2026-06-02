@@ -46,6 +46,13 @@ internal static class Assets
         | UnixFileMode.OtherRead
         | UnixFileMode.OtherExecute;
 
+    /// <summary>
+    /// Version of the bundled 7-Zip binaries (<see cref="SevenZipExecutable"/>).
+    /// Bump this whenever the bundled binaries are updated so that existing installs
+    /// re-unpack the new binary on next startup (see MainWindowViewModel).
+    /// </summary>
+    public const string SevenZipVersion = "26.01";
+
     [SupportedOSPlatform("windows")]
     [SupportedOSPlatform("linux")]
     [SupportedOSPlatform("macos")]

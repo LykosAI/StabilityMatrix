@@ -52,6 +52,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly IAppNotificationService appNotificationService;
     private readonly IAnalyticsHelper analyticsHelper;
     private readonly IUpdateHelper updateHelper;
+    private readonly IPrerequisiteHelper prerequisiteHelper;
     private readonly ISecretsManager secretsManager;
     private readonly INavigationService<MainWindowViewModel> navigationService;
     private readonly INavigationService<SettingsViewModel> settingsNavService;
@@ -108,10 +109,12 @@ public partial class MainWindowViewModel : ViewModelBase
         ISecretsManager secretsManager,
         INavigationService<MainWindowViewModel> navigationService,
         INavigationService<SettingsViewModel> settingsNavService,
-        IDistributedSubscriber<string, Uri> showWindowSubscriber
+        IDistributedSubscriber<string, Uri> showWindowSubscriber,
+        IPrerequisiteHelper prerequisiteHelper
     )
     {
         this.settingsManager = settingsManager;
+        this.prerequisiteHelper = prerequisiteHelper;
         this.dialogFactory = dialogFactory;
         this.discordRichPresenceService = discordRichPresenceService;
         this.trackedDownloadService = trackedDownloadService;
@@ -152,6 +155,29 @@ public partial class MainWindowViewModel : ViewModelBase
             // False if user exited dialog, shutdown app
             App.Shutdown();
             return;
+        }
+
+        // Re-unpack the bundled 7-Zip binary if this build ships a newer version than what's
+        // currently on disk. The binary lives in the library Assets dir and is otherwise only
+        // refreshed during a package install, so without this an existing install can keep a
+        // stale (e.g. security-vulnerable) binary indefinitely. Cheap version compare; only
+        // does I/O the first launch after a version bump.
+        if (
+            settingsManager.IsLibraryDirSet
+            && settingsManager.Settings.LastUnpacked7zVersion != Assets.SevenZipVersion
+        )
+        {
+            try
+            {
+                await prerequisiteHelper.UnpackResourcesIfNecessary();
+                settingsManager.Transaction(s => s.LastUnpacked7zVersion = Assets.SevenZipVersion);
+                Logger.Info("Refreshed bundled 7-Zip resources to {Version}", Assets.SevenZipVersion);
+            }
+            catch (Exception ex)
+            {
+                // Non-fatal: the install/update flows still re-unpack on demand
+                Logger.Warn(ex, "Failed to refresh bundled 7-Zip resources on startup");
+            }
         }
 
         Task.Run(() => SharedFolders.SetupSharedModelFolders(settingsManager.ModelsDirectory))

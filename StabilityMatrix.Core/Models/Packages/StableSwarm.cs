@@ -591,7 +591,7 @@ public class StableSwarm(
             return new Dictionary<string, string>();
         }
 
-        return rocmPackageHelper.BuildLaunchEnvironment(ComfyWindowsRocmProfile.Profile);
+        return rocmPackageHelper.BuildLaunchEnvironment(ComfyWindowsRocmProfile.Default);
     }
 
     /// <summary>

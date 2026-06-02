@@ -6,9 +6,9 @@ namespace StabilityMatrix.Core.Models.Rocm;
 /// <summary>
 /// Shared Windows ROCm profile for InvokeAI.
 /// </summary>
-public static class InvokeAiWindowsRocmProfile
+public class InvokeAiWindowsRocmProfile : RocmPackageProfile
 {
-    public static RocmPackageProfile Profile { get; } = new();
+    public static RocmPackageProfile Default { get; } = new InvokeAiWindowsRocmProfile();
 
     //Restores flop counter functionality requiring triton module
     private const string TritonWindowsPackage = "triton-windows";

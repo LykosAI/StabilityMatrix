@@ -667,7 +667,7 @@ public class InvokeAI(
             return env;
         }
 
-        return env.SetItems(rocmPackageHelper.BuildLaunchEnvironment(InvokeAiWindowsRocmProfile.Profile));
+        return env.SetItems(rocmPackageHelper.BuildLaunchEnvironment(InvokeAiWindowsRocmProfile.Default));
     }
 
     private IReadOnlyList<string> GetLaunchNoticeLines(InstalledPackage installedPackage)

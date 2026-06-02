@@ -422,7 +422,7 @@ public class ComfyUI(
 
         if (Compat.IsWindows && torchIndex == TorchIndex.Rocm && HasWindowsRocmSupport())
         {
-            var config = rocmPackageHelper.BuildWindowsNativeInstallConfig(ComfyWindowsRocmProfile.Profile);
+            var config = rocmPackageHelper.BuildWindowsNativeInstallConfig(ComfyWindowsRocmProfile.Default);
 
             await StandardPipInstallProcessAsync(
                     venvRunner,
@@ -439,7 +439,7 @@ public class ComfyUI(
                 .InstallWindowsNativeTorchAsync(
                     venvRunner,
                     installedPackage,
-                    ComfyWindowsRocmProfile.Profile,
+                    ComfyWindowsRocmProfile.Default,
                     progress,
                     onConsoleOutput,
                     cancellationToken
@@ -1189,7 +1189,7 @@ public class ComfyUI(
         if (!Compat.IsWindows || !hasRocmGpu || selectedTorchIndex != TorchIndex.Rocm)
             return env;
 
-        var rocmEnvironment = rocmPackageHelper.BuildLaunchEnvironment(ComfyWindowsRocmProfile.Profile);
+        var rocmEnvironment = rocmPackageHelper.BuildLaunchEnvironment(ComfyWindowsRocmProfile.Default);
 
         return env.SetItems(rocmEnvironment);
     }

@@ -1,5 +1,4 @@
 using StabilityMatrix.Core.Helper;
-using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Services.Rocm;
 
@@ -8,14 +7,14 @@ namespace StabilityMatrix.Core.Models.Rocm;
 /// <summary>
 /// Shared Windows ROCm profile for reForge.
 /// </summary>
-public static class ReforgeWindowsRocmProfile
+public class ReforgeWindowsRocmProfile : RocmPackageProfile
 {
     // reForge currently pins accelerate 0.21.0, but 0.22.0 avoids the early distributed.torch import that breaks on Windows ROCm torch builds
     // caused by the marigold depth controlnet preprocessor
     public const string WindowsRocmAccelerateVersion = "0.22.0";
     private static readonly string[] DisabledCudaLaunchOptionNames = ["CUDA Malloc", "CUDA Stream"];
 
-    public static RocmPackageProfile Profile { get; } = CreateProfile([]);
+    public static ReforgeWindowsRocmProfile Default { get; } = new ReforgeWindowsRocmProfile();
 
     public static RocmPackageProfile CreateProfile(IEnumerable<string> requirementsFilePaths)
     {
@@ -47,7 +46,7 @@ public static class ReforgeWindowsRocmProfile
         };
     }
 
-    public static void ApplyWindowsRocmLaunchDefaults(
+    public override void ApplyWindowsRocmLaunchDefaults(
         List<LaunchOptionDefinition> launchOptions,
         IRocmPackageHelper rocmPackageHelper
     )
@@ -69,7 +68,7 @@ public static class ReforgeWindowsRocmProfile
         }
     }
 
-    public static string? GetPreferredCrossAttentionArgument(IRocmPackageHelper rocmPackageHelper)
+    public override string? GetPreferredCrossAttentionArgument(IRocmPackageHelper rocmPackageHelper)
     {
         var compatibility = rocmPackageHelper.GetCompatibility();
         if (!compatibility.IsCompatible)

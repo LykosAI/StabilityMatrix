@@ -1,5 +1,6 @@
 using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Models.Progress;
+using StabilityMatrix.Core.Services.Rocm;
 
 namespace StabilityMatrix.Core.Models.Rocm;
 
@@ -26,4 +27,23 @@ public class RocmPackageProfile
     /// Controls whether package-specific environment variables should be layered on top of helper defaults.
     /// </summary>
     public RocmEnvironmentOptions EnvironmentOptions { get; init; } = new();
+
+    /// <summary>
+    /// Allows a package profile to adjust default launch options for Windows ROCm.
+    /// Default implementation is a no-op; profiles that need package-specific adjustments
+    /// should override this method.
+    /// </summary>
+    public virtual void ApplyWindowsRocmLaunchDefaults(
+        List<LaunchOptionDefinition> launchOptions,
+        IRocmPackageHelper rocmPackageHelper
+    ) { }
+
+    /// <summary>
+    /// Returns a package-specific preferred cross-attention argument for Windows ROCm launches.
+    /// Default implementation returns <c>null</c> indicating no preference.
+    /// </summary>
+    public virtual string? GetPreferredCrossAttentionArgument(IRocmPackageHelper rocmPackageHelper)
+    {
+        return null;
+    }
 }

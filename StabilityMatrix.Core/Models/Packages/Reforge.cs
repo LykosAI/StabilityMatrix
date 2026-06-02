@@ -58,7 +58,10 @@ public class Reforge(
             // Adjust inherited launch defaults for the Windows ROCm path before inserting reForge-specific options.
             // Makes the reForge-specific attention options visible in the UI and leaves them unset by default
             // for non-Windows-ROCm installs so reForge can keep using its normal internal attention selection.
-            ReforgeWindowsRocmProfile.ApplyWindowsRocmLaunchDefaults(baseLaunchOptions, rocmPackageHelper);
+            ReforgeWindowsRocmProfile.Default.ApplyWindowsRocmLaunchDefaults(
+                baseLaunchOptions,
+                rocmPackageHelper
+            );
 
             baseLaunchOptions.Insert(
                 extrasIndex >= 0 ? extrasIndex : baseLaunchOptions.Count,
@@ -66,7 +69,7 @@ public class Reforge(
                 {
                     Name = "Cross Attention Method",
                     Type = LaunchOptionType.Bool,
-                    InitialValue = ReforgeWindowsRocmProfile.GetPreferredCrossAttentionArgument(
+                    InitialValue = ReforgeWindowsRocmProfile.Default.GetPreferredCrossAttentionArgument(
                         rocmPackageHelper
                     ),
                     Options = ["--attention-split", "--attention-quad", "--attention-pytorch"],
@@ -167,7 +170,7 @@ public class Reforge(
             return env;
         }
 
-        return env.SetItems(rocmPackageHelper.BuildLaunchEnvironment(ReforgeWindowsRocmProfile.Profile));
+        return env.SetItems(rocmPackageHelper.BuildLaunchEnvironment(ReforgeWindowsRocmProfile.Default));
     }
 
     protected override IReadOnlyList<string> GetLaunchNoticeLines(InstalledPackage installedPackage)

@@ -383,7 +383,7 @@ public class Wan2GP(
     {
         if (Compat.IsWindows)
         {
-            var config = rocmPackageHelper.BuildWindowsNativeInstallConfig(Wan2GpWindowsRocmProfile.Profile);
+            var config = rocmPackageHelper.BuildWindowsNativeInstallConfig(Wan2GpWindowsRocmProfile.Default);
 
             await StandardPipInstallProcessAsync(
                     venvRunner,
@@ -400,7 +400,7 @@ public class Wan2GP(
                 .InstallWindowsNativeTorchAsync(
                     venvRunner,
                     installedPackage,
-                    Wan2GpWindowsRocmProfile.Profile,
+                    Wan2GpWindowsRocmProfile.Default,
                     progress,
                     onConsoleOutput,
                     cancellationToken
@@ -446,7 +446,7 @@ public class Wan2GP(
 
         if (Compat.IsWindows && selectedTorchIndex == TorchIndex.Rocm && HasWindowsRocmSupport())
         {
-            var rocmEnvironment = rocmPackageHelper.BuildLaunchEnvironment(Wan2GpWindowsRocmProfile.Profile);
+            var rocmEnvironment = rocmPackageHelper.BuildLaunchEnvironment(Wan2GpWindowsRocmProfile.Default);
             VenvRunner.UpdateEnvironmentVariables(env => env.SetItems(rocmEnvironment));
         }
 

@@ -150,7 +150,8 @@ public static class DesignData
             .AddSingleton<ICompletionProvider, MockCompletionProvider>()
             .AddSingleton<IModelIndexService, MockModelIndexService>()
             .AddSingleton<IImageIndexService, MockImageIndexService>()
-            .AddSingleton<IMetadataImportService, MetadataImportService>();
+            .AddSingleton<IMetadataImportService, MetadataImportService>()
+            .AddSingleton(Substitute.For<IPrerequisiteHelper>());
 
         // Placeholder services that nobody should need during design time
         services
@@ -159,7 +160,6 @@ public static class DesignData
             .AddSingleton<ICivitApi>(_ => null!)
             .AddSingleton<IGithubApiCache>(_ => null!)
             .AddSingleton<ITokenizerProvider>(_ => null!)
-            .AddSingleton<IPrerequisiteHelper>(_ => null!)
             .AddSingleton<IPyPiApi>(_ => null!)
             .AddSingleton<IPyPiCache>(_ => null!);
 

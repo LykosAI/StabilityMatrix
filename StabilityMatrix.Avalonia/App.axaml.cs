@@ -389,8 +389,7 @@ public sealed class App : Application
             provider.GetRequiredService<ISecretsManager>(),
             provider.GetRequiredService<INavigationService<MainWindowViewModel>>(),
             provider.GetRequiredService<INavigationService<SettingsViewModel>>(),
-            provider.GetRequiredService<IDistributedSubscriber<string, Uri>>(),
-            provider.GetRequiredService<IPrerequisiteHelper>()
+            provider.GetRequiredService<IDistributedSubscriber<string, Uri>>()
         )
         {
             Pages =
@@ -534,9 +533,9 @@ public sealed class App : Application
             // if (string.IsNullOrWhiteSpace(githubApiKey))
             //     return client;
             //
-            //client.Credentials = new Credentials(
-            //    ""
-            //);
+            // client.Credentials = new Credentials(
+            //     ""
+            // );
             return client;
         });
 

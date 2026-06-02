@@ -52,7 +52,6 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly IAppNotificationService appNotificationService;
     private readonly IAnalyticsHelper analyticsHelper;
     private readonly IUpdateHelper updateHelper;
-    private readonly IPrerequisiteHelper prerequisiteHelper;
     private readonly ISecretsManager secretsManager;
     private readonly INavigationService<MainWindowViewModel> navigationService;
     private readonly INavigationService<SettingsViewModel> settingsNavService;
@@ -109,12 +108,10 @@ public partial class MainWindowViewModel : ViewModelBase
         ISecretsManager secretsManager,
         INavigationService<MainWindowViewModel> navigationService,
         INavigationService<SettingsViewModel> settingsNavService,
-        IDistributedSubscriber<string, Uri> showWindowSubscriber,
-        IPrerequisiteHelper prerequisiteHelper
+        IDistributedSubscriber<string, Uri> showWindowSubscriber
     )
     {
         this.settingsManager = settingsManager;
-        this.prerequisiteHelper = prerequisiteHelper;
         this.dialogFactory = dialogFactory;
         this.discordRichPresenceService = discordRichPresenceService;
         this.trackedDownloadService = trackedDownloadService;
@@ -175,33 +172,6 @@ public partial class MainWindowViewModel : ViewModelBase
             Logger.Warn(ex, "Another instance is already running, shutting down");
             App.Shutdown();
             return;
-        }
-
-        // Re-unpack the bundled 7-Zip binary if this build ships a newer version than what's
-        // currently on disk. The binary lives in the library Assets dir and is otherwise only
-        // refreshed during a package install, so without this an existing install can keep a
-        // stale (e.g. security-vulnerable) binary indefinitely. Cheap version compare; only
-        // does I/O the first launch after a version bump.
-        //
-        // Placed after the single-instance guard above so only the surviving instance writes
-        // the binary, and before any 7z consumer (downloads loaded below, install dialogs) can
-        // be user-triggered — those all run later in this method, so the write never races.
-        if (
-            settingsManager.IsLibraryDirSet
-            && settingsManager.Settings.LastUnpacked7zVersion != Assets.SevenZipVersion
-        )
-        {
-            try
-            {
-                await prerequisiteHelper.UnpackResourcesIfNecessary();
-                settingsManager.Transaction(s => s.LastUnpacked7zVersion = Assets.SevenZipVersion);
-                Logger.Info("Refreshed bundled 7-Zip resources to {Version}", Assets.SevenZipVersion);
-            }
-            catch (Exception ex)
-            {
-                // Non-fatal: the install/update flows still re-unpack on demand
-                Logger.Warn(ex, "Failed to refresh bundled 7-Zip resources on startup");
-            }
         }
 
         settingsManager.RelayPropertyFor(

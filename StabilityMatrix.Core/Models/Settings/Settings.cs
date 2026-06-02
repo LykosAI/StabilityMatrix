@@ -13,13 +13,6 @@ public class Settings
 {
     public int? Version { get; set; } = 1;
     public bool FirstLaunchSetupComplete { get; set; }
-
-    /// <summary>
-    /// Version of the bundled 7-Zip binary last unpacked to the library Assets directory.
-    /// Used to re-unpack the binary on startup when the app ships a newer version
-    /// (e.g. for a security update). Null means it has never been stamped.
-    /// </summary>
-    public string? LastUnpacked7zVersion { get; set; }
     public string? Theme { get; set; } = "Dark";
     public string? Language { get; set; } = GetDefaultCulture().Name;
 

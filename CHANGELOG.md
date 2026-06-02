@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ## v2.16.0-pre.2
 ### Security
 - Updated the bundled 7-Zip binaries (Windows, Linux, macOS) to **26.01**, which includes the fix for the NTFS heap buffer overflow CVE-2026-48095 ([GitHub Security Lab GHSL-2026-140](https://securitylab.github.com/advisories/GHSL-2026-140_7-Zip/), CVSS 8.8) and brings years of accumulated upstream security fixes — the Windows binary in particular had been pinned at the 2018 18.01 release
-- Existing installs now refresh the bundled 7-Zip binary on startup whenever the app ships a newer version
+- Package updates now re-run the prerequisite setup step (as installs already do), so the bundled 7-Zip binary is refreshed on update instead of only on a fresh package install
 ### Added
 - Added a **Source** button in the Inference SamplerCard that one-click matches your generation Width/Height to the loaded source image — available in Image-to-Image whenever a source image is selected
 - Added popularity counts to booru-style tag completions in the prompt editor; descriptions now show entries like `12.3K · artist` so the more common tags are easier to spot at a glance

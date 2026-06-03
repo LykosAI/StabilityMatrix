@@ -7,6 +7,7 @@ using Hardware.Info;
 using Microsoft.Win32;
 using NLog;
 using StabilityMatrix.Core.Extensions;
+using StabilityMatrix.Core.Models.Rocm;
 
 namespace StabilityMatrix.Core.Helper.HardwareInfo;
 
@@ -316,12 +317,11 @@ public static partial class HardwareHelper
         return IterGpuInfo().Any(gpu => gpu.IsAmd);
     }
 
-    public static bool HasWindowsRocmSupportedGpu() =>
-        IterGpuInfo().Any(gpu => gpu is { IsAmd: true, Name: not null } && gpu.IsWindowsRocmSupportedGpu());
+    public static bool HasWindowsRocmSupportedGpu() => IterGpuInfo().Any(WindowsRocmSupport.IsSupportedGpu);
 
     public static GpuInfo? GetWindowsRocmSupportedGpu()
     {
-        return IterGpuInfo().FirstOrDefault(gpu => gpu.IsWindowsRocmSupportedGpu());
+        return IterGpuInfo().FirstOrDefault(WindowsRocmSupport.IsSupportedGpu);
     }
 
     public static bool HasIntelGpu() => IterGpuInfo().Any(gpu => gpu.IsIntel);

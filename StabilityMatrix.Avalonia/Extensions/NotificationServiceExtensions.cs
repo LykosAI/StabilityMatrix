@@ -3,6 +3,8 @@ using AsyncAwaitBestPractices;
 using DesktopNotifications;
 using NLog;
 using StabilityMatrix.Avalonia.Services;
+using StabilityMatrix.Avalonia.ViewModels;
+using StabilityMatrix.Core.Models.Notifications;
 using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Models.Settings;
 
@@ -35,8 +37,9 @@ public static class NotificationServiceExtensions
                 new Notification
                 {
                     Title = runner.ModificationFailedTitle,
-                    Body = runner.ModificationFailedMessage
-                }
+                    Body = runner.ModificationFailedMessage,
+                },
+                action: new ToggleProgressFlyoutAction()
             );
         }
         else
@@ -46,8 +49,9 @@ public static class NotificationServiceExtensions
                 new Notification
                 {
                     Title = runner.ModificationCompleteTitle,
-                    Body = runner.ModificationCompleteMessage
-                }
+                    Body = runner.ModificationCompleteMessage,
+                },
+                action: new NavigateToPageAction(typeof(PackageManagerViewModel).AssemblyQualifiedName!)
             );
         }
     }

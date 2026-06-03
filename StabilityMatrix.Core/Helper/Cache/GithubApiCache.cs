@@ -15,13 +15,85 @@ public class GithubApiCache(
 {
     private readonly TimeSpan cacheDuration = TimeSpan.FromMinutes(15);
 
+    /// <summary>
+    /// Tracks when we're rate limited until. If set and in the future, skip API calls.
+    /// </summary>
+    private DateTimeOffset? rateLimitedUntil;
+
+    /// <summary>
+    /// Lock for thread-safe rate limit state updates
+    /// </summary>
+    private readonly object rateLimitLock = new();
+
+    /// <summary>
+    /// Checks if we're currently rate limited and should skip API calls
+    /// </summary>
+    private bool IsRateLimited
+    {
+        get
+        {
+            lock (rateLimitLock)
+            {
+                if (rateLimitedUntil == null)
+                    return false;
+
+                if (DateTimeOffset.UtcNow >= rateLimitedUntil)
+                {
+                    // Rate limit has expired, clear it
+                    rateLimitedUntil = null;
+                    logger.LogInformation("GitHub API rate limit period has expired, resuming API calls");
+                    return false;
+                }
+
+                return true;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Sets the rate limited state based on the exception
+    /// </summary>
+    private void SetRateLimited(RateLimitExceededException ex)
+    {
+        lock (rateLimitLock)
+        {
+            // Use the reset time from the exception if available, otherwise default to 5 minutes
+            var resetTime =
+                ex.Reset != DateTimeOffset.MinValue ? ex.Reset : DateTimeOffset.UtcNow.AddMinutes(5);
+
+            // Only update if this extends our rate limit period
+            if (rateLimitedUntil == null || resetTime > rateLimitedUntil)
+            {
+                rateLimitedUntil = resetTime;
+                logger.LogWarning(
+                    "GitHub API rate limit exceeded. Skipping API calls until {ResetTime} ({TimeRemaining} remaining)",
+                    resetTime.LocalDateTime,
+                    resetTime - DateTimeOffset.UtcNow
+                );
+            }
+        }
+    }
+
     public async Task<IEnumerable<Release>> GetAllReleases(string username, string repository)
     {
         var cacheKey = $"Releases-{username}-{repository}";
         var cacheEntry = await dbContext.GetGithubCacheEntry(cacheKey).ConfigureAwait(false);
+
+        // Return cached data if not expired
         if (cacheEntry != null && !IsCacheExpired(cacheEntry.LastUpdated))
         {
             return cacheEntry.AllReleases.OrderByDescending(x => x.CreatedAt);
+        }
+
+        // If rate limited, return cached data without making API call
+        if (IsRateLimited)
+        {
+            logger.LogDebug(
+                "Skipping GitHub API call for {Username}/{Repository} releases due to rate limiting",
+                username,
+                repository
+            );
+            return cacheEntry?.AllReleases.OrderByDescending(x => x.CreatedAt) ?? Enumerable.Empty<Release>();
         }
 
         try
@@ -37,11 +109,16 @@ public class GithubApiCache(
             var newCacheEntry = new GithubCacheEntry
             {
                 CacheKey = cacheKey,
-                AllReleases = allReleases.OrderByDescending(x => x.CreatedAt)
+                AllReleases = allReleases.OrderByDescending(x => x.CreatedAt),
             };
             await dbContext.UpsertGithubCacheEntry(newCacheEntry).ConfigureAwait(false);
 
             return newCacheEntry.AllReleases;
+        }
+        catch (RateLimitExceededException ex)
+        {
+            SetRateLimited(ex);
+            return cacheEntry?.AllReleases.OrderByDescending(x => x.CreatedAt) ?? Enumerable.Empty<Release>();
         }
         catch (Exception ex)
         {
@@ -54,9 +131,22 @@ public class GithubApiCache(
     {
         var cacheKey = $"Branches-{username}-{repository}";
         var cacheEntry = await dbContext.GetGithubCacheEntry(cacheKey).ConfigureAwait(false);
+
+        // Return cached data if not expired
         if (cacheEntry != null && !IsCacheExpired(cacheEntry.LastUpdated))
         {
             return cacheEntry.Branches;
+        }
+
+        // If rate limited, return cached data without making API call
+        if (IsRateLimited)
+        {
+            logger.LogDebug(
+                "Skipping GitHub API call for {Username}/{Repository} branches due to rate limiting",
+                username,
+                repository
+            );
+            return cacheEntry?.Branches ?? [];
         }
 
         try
@@ -73,6 +163,11 @@ public class GithubApiCache(
             await dbContext.UpsertGithubCacheEntry(newCacheEntry).ConfigureAwait(false);
 
             return newCacheEntry.Branches;
+        }
+        catch (RateLimitExceededException ex)
+        {
+            SetRateLimited(ex);
+            return cacheEntry?.Branches ?? [];
         }
         catch (Exception ex)
         {
@@ -91,9 +186,22 @@ public class GithubApiCache(
     {
         var cacheKey = $"Commits-{username}-{repository}-{branch}-{page}-{perPage}";
         var cacheEntry = await dbContext.GetGithubCacheEntry(cacheKey).ConfigureAwait(false);
+
+        // Return cached data if not expired
         if (cacheEntry != null && !IsCacheExpired(cacheEntry.LastUpdated))
         {
             return cacheEntry.Commits;
+        }
+
+        // If rate limited, return cached data without making API call
+        if (IsRateLimited)
+        {
+            logger.LogDebug(
+                "Skipping GitHub API call for {Username}/{Repository} commits due to rate limiting",
+                username,
+                repository
+            );
+            return cacheEntry?.Commits ?? [];
         }
 
         try
@@ -107,7 +215,7 @@ public class GithubApiCache(
                     {
                         PageCount = page,
                         PageSize = perPage,
-                        StartPage = page
+                        StartPage = page,
                     }
                 )
                 .ConfigureAwait(false);
@@ -120,11 +228,16 @@ public class GithubApiCache(
             var newCacheEntry = new GithubCacheEntry
             {
                 CacheKey = cacheKey,
-                Commits = commits.Select(x => new GitCommit { Sha = x.Sha })
+                Commits = commits.Select(x => new GitCommit { Sha = x.Sha }),
             };
             await dbContext.UpsertGithubCacheEntry(newCacheEntry).ConfigureAwait(false);
 
             return newCacheEntry.Commits;
+        }
+        catch (RateLimitExceededException ex)
+        {
+            SetRateLimited(ex);
+            return cacheEntry?.Commits ?? [];
         }
         catch (Exception ex)
         {

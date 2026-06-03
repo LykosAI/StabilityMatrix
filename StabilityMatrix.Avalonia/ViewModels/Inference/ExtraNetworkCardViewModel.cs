@@ -7,10 +7,12 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData;
 using DynamicData.Binding;
+using FluentAvalonia.UI.Controls;
 using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
@@ -26,6 +28,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 public partial class ExtraNetworkCardViewModel : DisposableLoadableViewModelBase
 {
     private readonly ISettingsManager settingsManager;
+    private readonly IServiceManager<ViewModelBase> vmFactory;
     private readonly ModelCompatChecker modelCompatChecker = new();
 
     public const string ModuleKey = "ExtraNetwork";
@@ -64,9 +67,14 @@ public partial class ExtraNetworkCardViewModel : DisposableLoadableViewModelBase
     private HybridModelFile? selectedBaseModel;
 
     /// <inheritdoc/>
-    public ExtraNetworkCardViewModel(IInferenceClientManager clientManager, ISettingsManager settingsManager)
+    public ExtraNetworkCardViewModel(
+        IInferenceClientManager clientManager,
+        ISettingsManager settingsManager,
+        IServiceManager<ViewModelBase> vmFactory
+    )
     {
         this.settingsManager = settingsManager;
+        this.vmFactory = vmFactory;
         ClientManager = clientManager;
 
         // Observable signal when SelectedBaseModel changes
@@ -156,6 +164,23 @@ public partial class ExtraNetworkCardViewModel : DisposableLoadableViewModelBase
             return;
 
         App.Clipboard.SetTextAsync(TriggerWords);
+    }
+
+    [RelayCommand]
+    private async Task OpenLoraPickerAsync()
+    {
+        using var pickerScope = vmFactory.CreateScope();
+        var pickerVm = pickerScope.ServiceManager.Get<ModelPickerDialogViewModel>();
+        pickerVm.Title = "Select LoRA";
+        pickerVm.Source = ModelPickerSource.Lora;
+
+        if (await pickerVm.GetDialog().ShowAsync() == ContentDialogResult.Primary)
+        {
+            if (pickerVm.SelectedModel is { } selected)
+            {
+                SelectedModel = selected;
+            }
+        }
     }
 
     private bool FilterCompatibleLoras(HybridModelFile? lora)

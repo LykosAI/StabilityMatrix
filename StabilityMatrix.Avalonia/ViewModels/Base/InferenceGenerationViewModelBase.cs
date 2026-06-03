@@ -39,6 +39,7 @@ using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 using StabilityMatrix.Core.Models.Api.Comfy.WebSocketData;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Inference;
+using StabilityMatrix.Core.Models.Notifications;
 using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Models.Packages.Extensions;
 using StabilityMatrix.Core.Models.Settings;
@@ -60,8 +61,8 @@ public abstract partial class InferenceGenerationViewModelBase
 
     private readonly ISettingsManager settingsManager;
     private readonly RunningPackageService runningPackageService;
-    private readonly INotificationService notificationService;
     private readonly IServiceManager<ViewModelBase> vmFactory;
+    private readonly INotificationService notificationService;
 
     [JsonPropertyName("ImageGallery")]
     public ImageGalleryCardViewModel ImageGalleryCardViewModel { get; }
@@ -411,7 +412,8 @@ public abstract partial class InferenceGenerationViewModelBase
                     Title = "Prompt Completed",
                     Body = $"Prompt [{promptTask.Id[..7].ToLower()}] completed successfully",
                     BodyImagePath = notificationImage?.FullPath,
-                }
+                },
+                action: new NavigateToPageAction(typeof(InferenceViewModel).AssemblyQualifiedName!)
             );
         }
         finally

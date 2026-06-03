@@ -196,6 +196,30 @@ public class ComfyUI(
                     TargetRelativePaths = ["models/diffusion_models"],
                     ConfigDocumentPaths = ["diffusion_models"],
                 },
+                new SharedFolderLayoutRule // Style Models (e.g. Flux Redux, B-Lora)
+                {
+                    SourceTypes = [SharedFolderType.StyleModels],
+                    TargetRelativePaths = ["models/style_models"],
+                    ConfigDocumentPaths = ["style_models"],
+                },
+                new SharedFolderLayoutRule // Audio Encoders
+                {
+                    SourceTypes = [SharedFolderType.AudioEncoders],
+                    TargetRelativePaths = ["models/audio_encoders"],
+                    ConfigDocumentPaths = ["audio_encoders"],
+                },
+                new SharedFolderLayoutRule // Model Patches
+                {
+                    SourceTypes = [SharedFolderType.ModelPatches],
+                    TargetRelativePaths = ["models/model_patches"],
+                    ConfigDocumentPaths = ["model_patches"],
+                },
+                new SharedFolderLayoutRule // Background Removal (e.g. BiRefNet)
+                {
+                    SourceTypes = [SharedFolderType.BackgroundRemoval],
+                    TargetRelativePaths = ["models/background_removal"],
+                    ConfigDocumentPaths = ["background_removal"],
+                },
             ],
         };
 
@@ -323,7 +347,14 @@ public class ComfyUI(
     public override string MainBranch => "master";
 
     public override IEnumerable<TorchIndex> AvailableTorchIndices =>
-        [TorchIndex.Cpu, TorchIndex.Cuda, TorchIndex.DirectMl, TorchIndex.Rocm, TorchIndex.Mps];
+        [
+            TorchIndex.Cpu,
+            TorchIndex.Cuda,
+            TorchIndex.DirectMl,
+            TorchIndex.Ipex,
+            TorchIndex.Mps,
+            TorchIndex.Rocm,
+        ];
 
     public override List<ExtraPackageCommand> GetExtraCommands()
     {
@@ -455,6 +486,7 @@ public class ComfyUI(
                 TorchaudioVersion = " ", // Request torchaudio without a specific version
                 CudaIndex = isLegacyNvidia ? "cu126" : "cu130",
                 RocmIndex = "rocm7.2",
+                XpuIndex = "xpu",
                 UpgradePackages = true,
                 PostInstallPipArgs = ["typing-extensions>=4.15.0"],
             };
@@ -562,6 +594,14 @@ public class ComfyUI(
 
         VenvRunner.UpdateEnvironmentVariables(env => GetEnvVars(env, installLocation, installedPackage));
         var launchArguments = NormalizeLaunchArguments(installedPackage, options.Arguments);
+
+        // Don't leak the build-constraints env var into the running package. It points at a
+        // path relative to the install dir (see BaseGitPackage.SetupVenvPure), which only resolves
+        // when the working directory is that install dir. ComfyUI-Manager launches `uv pip install`
+        // from a different working directory, so the inherited value breaks with
+        // "File not found: venv/uv-build-constraints.txt". The constraint is only needed for our
+        // own setup-time builds, not for the running server.
+        VenvRunner.UpdateEnvironmentVariables(env => env.Remove("UV_BUILD_CONSTRAINT"));
 
         // Check for old NVIDIA driver version with cu130 installations
         var isNvidia = SettingsManager.Settings.PreferredGpu?.IsNvidia ?? HardwareHelper.HasNvidiaGpu();
@@ -926,6 +966,19 @@ public class ComfyUI(
                     venvRunner.WorkingDirectory = installScript.Directory;
                     venvRunner.UpdateEnvironmentVariables(env =>
                     {
+                        // Recompute UV_BUILD_CONSTRAINT relative to the new working directory,
+                        // since the constraints file is in the ComfyUI root's venv folder.
+                        var constraintsAbsPath = Path.Combine(
+                            installedPackage.FullPath!,
+                            "venv",
+                            "uv-build-constraints.txt"
+                        );
+                        var constraintsRelPath = Path.GetRelativePath(
+                            installScript.Directory!.FullPath,
+                            constraintsAbsPath
+                        );
+                        env = env.SetItem("UV_BUILD_CONSTRAINT", constraintsRelPath);
+
                         // set env vars for Impact Pack for Face Detailer
                         env = env.SetItem("COMFYUI_PATH", installedPackage.FullPath!);
 
@@ -1185,6 +1238,18 @@ public class ComfyUI(
         // if we're not on windows or we don't have a windows rocm gpu, return original env
         var hasRocmGpu = HasWindowsRocmSupport();
         var selectedTorchIndex = installedPackage.PreferredTorchIndex ?? GetRecommendedTorchVersion();
+
+        // Add FFmpeg to PATH if it's installed (optional - for video processing)
+        if (PrerequisiteHelper.IsFfmpegInstalled)
+        {
+            var ffmpegDir = Path.GetDirectoryName(PrerequisiteHelper.FfmpegPath);
+            if (!string.IsNullOrEmpty(ffmpegDir))
+            {
+                var currentPath =
+                    env.GetValueOrDefault("PATH") ?? Environment.GetEnvironmentVariable("PATH") ?? "";
+                env = env.SetItem("PATH", Compat.GetEnvPathWithExtensions(ffmpegDir, currentPath));
+            }
+        }
 
         if (!Compat.IsWindows || !hasRocmGpu || selectedTorchIndex != TorchIndex.Rocm)
             return env;

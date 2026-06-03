@@ -73,9 +73,9 @@ public class Cogstudio(
             .ConfigureAwait(false);
 
         progress?.Report(new ProgressReport(-1f, "Setting up Cogstudio files", isIndeterminate: true));
-        var gradioCompositeDemo = new FilePath(installLocation, "inference/gradio_composite_demo");
-        var cogstudioFile = new FilePath(gradioCompositeDemo, "cogstudio.py");
-        gradioCompositeDemo.Directory?.Create();
+        var gradioCompositeDemo = new DirectoryPath(installLocation, "inference", "gradio_composite_demo");
+        gradioCompositeDemo.Create();
+        var cogstudioFile = gradioCompositeDemo.JoinFile("cogstudio.py");
         await DownloadService
             .DownloadToFileAsync(cogstudioUrl, cogstudioFile, cancellationToken: cancellationToken)
             .ConfigureAwait(false);
@@ -121,12 +121,25 @@ public class Cogstudio(
         // SwissArmyTransformer is not available on Windows and DeepSpeed needs prebuilt wheels
         if (Compat.IsWindows)
         {
-            await venvRunner
-                .PipInstall(
-                    " https://github.com/daswer123/deepspeed-windows/releases/download/11.2/deepspeed-0.11.2+cuda121-cp310-cp310-win_amd64.whl",
-                    onConsoleOutput
-                )
-                .ConfigureAwait(false);
+            // This prebuilt deepspeed wheel reports an internal metadata version of "0.11.2+unknown",
+            // which doesn't match its filename's "0.11.2+cuda121". uv treats that mismatch as a
+            // malformed wheel and refuses to install it; opt out of the filename/version consistency
+            // check just for this wheel, then restore strict checking for the rest of the install.
+            venvRunner.UpdateEnvironmentVariables(env => env.SetItem("UV_SKIP_WHEEL_FILENAME_CHECK", "1"));
+            try
+            {
+                await venvRunner
+                    .PipInstall(
+                        " https://github.com/daswer123/deepspeed-windows/releases/download/11.2/deepspeed-0.11.2+cuda121-cp310-cp310-win_amd64.whl",
+                        onConsoleOutput
+                    )
+                    .ConfigureAwait(false);
+            }
+            finally
+            {
+                venvRunner.UpdateEnvironmentVariables(env => env.Remove("UV_SKIP_WHEEL_FILENAME_CHECK"));
+            }
+
             await venvRunner
                 .PipInstall("spandrel opencv-python scikit-video", onConsoleOutput)
                 .ConfigureAwait(false);

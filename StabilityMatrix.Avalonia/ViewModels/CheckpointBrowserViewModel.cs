@@ -32,13 +32,19 @@ public partial class CheckpointBrowserViewModel : PageViewModelBase
     /// <inheritdoc/>
     public CheckpointBrowserViewModel(
         CivitAiBrowserViewModel civitAiBrowserViewModel,
+        CivArchiveBrowserViewModel civArchiveBrowserViewModel,
         HuggingFacePageViewModel huggingFaceViewModel,
         OpenModelDbBrowserViewModel openModelDbBrowserViewModel
     )
     {
         Pages = new List<TabItem>(
             new List<TabViewModelBase>(
-                [civitAiBrowserViewModel, huggingFaceViewModel, openModelDbBrowserViewModel]
+                [
+                    civitAiBrowserViewModel,
+                    civArchiveBrowserViewModel,
+                    huggingFaceViewModel,
+                    openModelDbBrowserViewModel,
+                ]
             ).Select(vm => new TabItem { Header = vm.Header, Content = vm })
         );
         SelectedPage = Pages.FirstOrDefault();

@@ -40,7 +40,6 @@ public class ForgeClassic(
     public override string RepositoryName => "sd-webui-forge-classic";
     public override string DisplayName { get; set; } = "Stable Diffusion WebUI Forge - Classic";
     public override string MainBranch => "classic";
-
     public override string Blurb =>
         "This fork is focused exclusively on SD1 and SDXL checkpoints, having various optimizations implemented, with the main goal of being the lightest WebUI without any bloatwares.";
     public override string LicenseUrl =>

@@ -243,6 +243,39 @@
   <data name="Label_Downloads" xml:space="preserve">
     <value>Downloads</value>
   </data>
+  <data name="Label_Activity" xml:space="preserve">
+    <value>Activity</value>
+  </data>
+  <data name="Label_InProgress" xml:space="preserve">
+    <value>In Progress</value>
+  </data>
+  <data name="Action_MarkAllRead" xml:space="preserve">
+    <value>Mark all as read</value>
+  </data>
+  <data name="Action_ClearAll" xml:space="preserve">
+    <value>Clear all</value>
+  </data>
+  <data name="Action_ToggleDetails" xml:space="preserve">
+    <value>Toggle details</value>
+  </data>
+  <data name="Action_Dismiss" xml:space="preserve">
+    <value>Dismiss</value>
+  </data>
+  <data name="Action_OpenFolder" xml:space="preserve">
+    <value>Open Folder</value>
+  </data>
+  <data name="Action_Open" xml:space="preserve">
+    <value>Open</value>
+  </data>
+  <data name="Action_ShowActivity" xml:space="preserve">
+    <value>Show Activity</value>
+  </data>
+  <data name="Label_RelativeTime_JustNow" xml:space="preserve">
+    <value>just now</value>
+  </data>
+  <data name="Label_RelativeTime_MinutesAgo" xml:space="preserve">
+    <value>{0}m ago</value>
+  </data>
   <data name="Action_Install" xml:space="preserve">
     <value>Install</value>
   </data>
@@ -900,6 +933,12 @@
   <data name="Label_HolidayMode" xml:space="preserve">
     <value>Holiday Mode</value>
   </data>
+  <data name="Label_AlwaysShowScrollbars" xml:space="preserve">
+    <value>Always Show Scrollbars</value>
+  </data>
+  <data name="Label_AlwaysShowScrollbars_Details" xml:space="preserve">
+    <value>When on, vertical scrollbars stay visible at full thickness. When off, they fade to a thin bar that only expands on hover.</value>
+  </data>
   <data name="Label_CLIPSkip" xml:space="preserve">
     <value>CLIP Skip</value>
   </data>
@@ -956,6 +995,12 @@
   </data>
   <data name="TeachingTip_DownloadsExplanation" xml:space="preserve">
     <value>Check the progress of your package installations and model downloads here.</value>
+  </data>
+  <data name="TeachingTip_ActivityCenter_Title" xml:space="preserve">
+    <value>Notifications &amp; downloads live here</value>
+  </data>
+  <data name="TeachingTip_ActivityCenter_Subtitle" xml:space="preserve">
+    <value>Click any toast to jump straight to it, or open this panel anytime to catch up on what you missed.</value>
   </data>
   <data name="Label_RecommendedModels" xml:space="preserve">
     <value>Recommended Models</value>
@@ -1638,5 +1683,65 @@ Account tokens will not be viewable after saving, please make a note of them if 
   </data>
   <data name="Label_BecomeSupporterDescription" xml:space="preserve">
     <value>Support the Stability Matrix Team and get access to early development builds and be the first to test new features.</value>
+  </data>
+  <data name="Label_OrganizeModels" xml:space="preserve">
+    <value>Organize Models</value>
+  </data>
+  <data name="Text_OrganizeModelsDescription" xml:space="preserve">
+    <value>Reorganize model files into folders using a naming pattern. Models stay within their type folder.</value>
+  </data>
+  <data name="Label_NamingPattern" xml:space="preserve">
+    <value>Naming Pattern</value>
+  </data>
+  <data name="Tooltip_ShowAvailableVariables" xml:space="preserve">
+    <value>Show available variables</value>
+  </data>
+  <data name="TeachingTip_FormatVariablesTitle" xml:space="preserve">
+    <value>Format Variables</value>
+  </data>
+  <data name="Tooltip_ShowReadyFiles" xml:space="preserve">
+    <value>Show ready files</value>
+  </data>
+  <data name="Tooltip_ShowConflictFiles" xml:space="preserve">
+    <value>Show files with conflicts</value>
+  </data>
+  <data name="Tooltip_ShowSkippedFiles" xml:space="preserve">
+    <value>Show skipped files</value>
+  </data>
+  <data name="Label_Ready" xml:space="preserve">
+    <value>Ready</value>
+  </data>
+  <data name="Label_Conflict" xml:space="preserve">
+    <value>Conflict</value>
+  </data>
+  <data name="Label_Skipped" xml:space="preserve">
+    <value>Skipped</value>
+  </data>
+  <data name="Label_Unchanged" xml:space="preserve">
+    <value>Unchanged</value>
+  </data>
+  <data name="Label_MetadataNeeded" xml:space="preserve">
+    <value>Metadata needed</value>
+  </data>
+  <data name="TextTemplate_FilesNeedMetadata" xml:space="preserve">
+    <value>{0} file(s) need metadata before they can be organized.</value>
+  </data>
+  <data name="TextTemplate_FilesIncompleteMetadata" xml:space="preserve">
+    <value>{0} file(s) have incomplete metadata for the current pattern.</value>
+  </data>
+  <data name="Action_FindMetadata" xml:space="preserve">
+    <value>Find Metadata</value>
+  </data>
+  <data name="Action_UpdateMetadata" xml:space="preserve">
+    <value>Update Metadata</value>
+  </data>
+  <data name="TextTemplate_ShowUnchangedCount" xml:space="preserve">
+    <value>Show unchanged ({0})</value>
+  </data>
+  <data name="Action_Organize" xml:space="preserve">
+    <value>Organize</value>
+  </data>
+  <data name="TextTemplate_PatternPreviewExample" xml:space="preserve">
+    <value>Example: {0}</value>
   </data>
 </root>

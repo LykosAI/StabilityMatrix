@@ -155,6 +155,10 @@ public class Reforge(
         progress?.Report(new ProgressReport(1f, "Install complete", isIndeterminate: false));
     }
 
+    // reForge upstream pins torch==2.9.0 (modules/launch_utils.py TORCH_COMMAND); torchvision stays
+    // unpinned to match. Forge (the SDWebForge base) keeps its own default.
+    protected override string TorchVersionSpec => "==2.9.0";
+
     protected override ImmutableDictionary<string, string> GetEnvVars(
         ImmutableDictionary<string, string> env,
         InstalledPackage installedPackage

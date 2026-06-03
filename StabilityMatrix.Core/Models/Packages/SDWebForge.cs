@@ -174,17 +174,7 @@ public class SDWebForge(
             )
             .ConfigureAwait(false);
 
-        // Dynamically discover all requirements files
-        var requirementsPaths = new List<string> { "requirements_versions.txt" };
-        var extensionsBuiltinDir = new DirectoryPath(installLocation, "extensions-builtin");
-        if (extensionsBuiltinDir.Exists)
-        {
-            requirementsPaths.AddRange(
-                extensionsBuiltinDir
-                    .EnumerateFiles("requirements.txt", EnumerationOptionConstants.AllDirectories)
-                    .Select(f => Path.GetRelativePath(installLocation, f.ToString()))
-            );
-        }
+        var requirementsPaths = GetRequirementsPaths(installLocation);
 
         var torchIndex = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
         var isLegacyNvidia =
@@ -222,5 +212,23 @@ public class SDWebForge(
             .ConfigureAwait(false);
 
         progress?.Report(new ProgressReport(1f, "Install complete", isIndeterminate: false));
+    }
+
+    protected static List<string> GetRequirementsPaths(string installLocation)
+    {
+        var requirementsPaths = new List<string> { "requirements_versions.txt" };
+        var extensionsBuiltinDir = new DirectoryPath(installLocation, "extensions-builtin");
+        if (!extensionsBuiltinDir.Exists)
+        {
+            return requirementsPaths;
+        }
+
+        requirementsPaths.AddRange(
+            extensionsBuiltinDir
+                .EnumerateFiles("requirements.txt", EnumerationOptionConstants.AllDirectories)
+                .Select(f => Path.GetRelativePath(installLocation, f.ToString()))
+        );
+
+        return requirementsPaths;
     }
 }

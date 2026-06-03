@@ -24,6 +24,8 @@ public class PackageFactoryTests
             null!,
             null!,
             null!,
+            null!,
+            null!,
             null!
         );
     }

@@ -13,9 +13,11 @@ using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models.Api.Invoke;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
+using StabilityMatrix.Core.Models.Rocm;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
+using StabilityMatrix.Core.Services.Rocm;
 
 namespace StabilityMatrix.Core.Models.Packages;
 
@@ -26,7 +28,8 @@ public class InvokeAI(
     IDownloadService downloadService,
     IPrerequisiteHelper prerequisiteHelper,
     IPyInstallationManager pyInstallationManager,
-    IPipWheelService pipWheelService
+    IPipWheelService pipWheelService,
+    IRocmPackageHelper rocmPackageHelper
 )
     : BaseGitPackage(
         githubApi,
@@ -115,6 +118,11 @@ public class InvokeAI(
         if (Compat.IsMacOS && Compat.IsArm)
         {
             return TorchIndex.Mps;
+        }
+
+        if (Compat.IsWindows && rocmPackageHelper.GetCompatibility().IsCompatible)
+        {
+            return TorchIndex.Rocm;
         }
 
         return base.GetRecommendedTorchVersion();
@@ -224,6 +232,10 @@ public class InvokeAI(
         progress?.Report(new ProgressReport(-1f, "Installing Package", isIndeterminate: true));
 
         var torchVersion = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
+        var isSupportedWindowsRocmInstall =
+            Compat.IsWindows
+            && torchVersion == TorchIndex.Rocm
+            && rocmPackageHelper.GetCompatibility().IsCompatible;
         var isLegacyNvidiaGpu =
             SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu() ?? HardwareHelper.HasLegacyNvidiaGpu();
         var fallbackIndex = torchVersion switch
@@ -231,7 +243,7 @@ public class InvokeAI(
             TorchIndex.Cpu when Compat.IsLinux => "https://download.pytorch.org/whl/cpu",
             TorchIndex.Cuda when isLegacyNvidiaGpu => "https://download.pytorch.org/whl/cu126",
             TorchIndex.Cuda => "https://download.pytorch.org/whl/cu128",
-            TorchIndex.Rocm => "https://download.pytorch.org/whl/rocm7.2",
+            TorchIndex.Rocm when Compat.IsLinux => "https://download.pytorch.org/whl/rocm7.2",
             _ => string.Empty,
         };
 
@@ -256,6 +268,11 @@ public class InvokeAI(
             torchVersion.ToString().ToLowerInvariant()
         ]?.GetValue<string>();
 
+        if (isSupportedWindowsRocmInstall)
+        {
+            index = null;
+        }
+
         if (!string.IsNullOrWhiteSpace(index) && !isLegacyNvidiaGpu)
         {
             invokeInstallArgs = invokeInstallArgs.AddArg("--index").AddArg(index);
@@ -268,6 +285,29 @@ public class InvokeAI(
         invokeInstallArgs = invokeInstallArgs.AddArg("--force-reinstall");
 
         await venvRunner.PipInstall(invokeInstallArgs, onConsoleOutput).ConfigureAwait(false);
+
+        if (isSupportedWindowsRocmInstall)
+        {
+            var installProfile = InvokeAiWindowsRocmProfile.CreateInstallProfile(
+                options.PythonOptions.PythonVersion ?? RecommendedPythonVersion
+            );
+
+            progress?.Report(
+                new ProgressReport(-1f, "Installing Windows ROCm torch...", isIndeterminate: true)
+            );
+
+            await rocmPackageHelper
+                .InstallWindowsNativeTorchAsync(
+                    venvRunner,
+                    installedPackage,
+                    installProfile,
+                    progress,
+                    onConsoleOutput,
+                    cancellationToken
+                )
+                .ConfigureAwait(false);
+        }
+
         progress?.Report(new ProgressReport(1f, "Done!", isIndeterminate: false));
     }
 
@@ -305,7 +345,12 @@ public class InvokeAI(
         await SetupVenv(installedPackagePath, pythonVersion: PyVersion.Parse(installedPackage.PythonVersion))
             .ConfigureAwait(false);
 
-        VenvRunner.UpdateEnvironmentVariables(env => GetEnvVars(env, installedPackagePath));
+        VenvRunner.UpdateEnvironmentVariables(env => GetEnvVars(env, installedPackagePath, installedPackage));
+
+        foreach (var line in GetLaunchNoticeLines(installedPackage))
+        {
+            onConsoleOutput?.Invoke(ProcessOutput.FromStdOutLine($"{line}{Environment.NewLine}"));
+        }
 
         // Check for legacy Python 3.10.11 installations
         if (installedPackage.PythonVersion == Python.PyInstallationManager.Python_3_10_11.ToString())
@@ -606,5 +651,28 @@ public class InvokeAI(
         }
 
         return env.SetItem("PATH", path);
+    }
+
+    private ImmutableDictionary<string, string> GetEnvVars(
+        ImmutableDictionary<string, string> env,
+        DirectoryPath installPath,
+        InstalledPackage installedPackage
+    )
+    {
+        env = GetEnvVars(env, installPath);
+
+        var selectedTorchIndex = installedPackage.PreferredTorchIndex ?? GetRecommendedTorchVersion();
+        if (!rocmPackageHelper.ShouldApplyWindowsLaunchEnvironment(selectedTorchIndex))
+        {
+            return env;
+        }
+
+        return env.SetItems(rocmPackageHelper.BuildLaunchEnvironment(InvokeAiWindowsRocmProfile.Default));
+    }
+
+    private IReadOnlyList<string> GetLaunchNoticeLines(InstalledPackage installedPackage)
+    {
+        var selectedTorchIndex = installedPackage.PreferredTorchIndex ?? GetRecommendedTorchVersion();
+        return rocmPackageHelper.GetWindowsLaunchNoticeLines(selectedTorchIndex);
     }
 }

@@ -386,6 +386,17 @@ public class UvVenvRunner : IPyVenvRunner
             )
             .ConfigureAwait(false);
 
+        var packageNotFound =
+            result.StandardOutput?.Contains("Package(s) not found", StringComparison.OrdinalIgnoreCase)
+                == true
+            || result.StandardError?.Contains("Package(s) not found", StringComparison.OrdinalIgnoreCase)
+                == true;
+
+        if (packageNotFound)
+        {
+            return null;
+        }
+
         // Check return code
         if (result.ExitCode != 0)
         {
@@ -394,9 +405,11 @@ public class UvVenvRunner : IPyVenvRunner
             );
         }
 
-        if (result.StandardOutput!.StartsWith("WARNING: Package(s) not found:"))
+        if (string.IsNullOrWhiteSpace(result.StandardOutput))
         {
-            return null;
+            throw new ProcessException(
+                $"pip show returned no output for package '{packageName}': {result.StandardError}"
+            );
         }
 
         return PipShowResult.Parse(result.StandardOutput);
@@ -405,7 +418,11 @@ public class UvVenvRunner : IPyVenvRunner
     /// <summary>
     /// Run a pip index command, return result as PipIndexResult.
     /// </summary>
-    public async Task<PipIndexResult?> PipIndex(string packageName, string? indexUrl = null)
+    public async Task<PipIndexResult?> PipIndex(
+        string packageName,
+        string? indexUrl = null,
+        bool includePrerelease = false
+    )
     {
         if (!File.Exists(PipPath))
         {
@@ -429,9 +446,29 @@ public class UvVenvRunner : IPyVenvRunner
             args = args.AddKeyedArgs("--index-url", ["--index-url", indexUrl]);
         }
 
+        if (includePrerelease)
+        {
+            args = args.AddArg("--pre");
+        }
+
         var result = await ProcessRunner
             .GetProcessResultAsync(PythonPath, args, WorkingDirectory?.FullPath, EnvironmentVariables)
             .ConfigureAwait(false);
+
+        var noMatchingDistribution =
+            result.StandardOutput?.Contains(
+                "No matching distribution found",
+                StringComparison.OrdinalIgnoreCase
+            ) == true
+            || result.StandardError?.Contains(
+                "No matching distribution found",
+                StringComparison.OrdinalIgnoreCase
+            ) == true;
+
+        if (noMatchingDistribution || string.IsNullOrWhiteSpace(result.StandardOutput))
+        {
+            return null;
+        }
 
         // Check return code
         if (result.ExitCode != 0)
@@ -439,16 +476,6 @@ public class UvVenvRunner : IPyVenvRunner
             throw new ProcessException(
                 $"pip index failed with code {result.ExitCode}: {result.StandardOutput}, {result.StandardError}"
             );
-        }
-
-        if (
-            string.IsNullOrEmpty(result.StandardOutput)
-            || result
-                .StandardOutput!.SplitLines()
-                .Any(l => l.StartsWith("ERROR: No matching distribution found"))
-        )
-        {
-            return null;
         }
 
         return PipIndexResult.Parse(result.StandardOutput);

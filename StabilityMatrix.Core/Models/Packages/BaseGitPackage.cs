@@ -9,9 +9,11 @@ using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
+using StabilityMatrix.Core.Models.Rocm;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
+using StabilityMatrix.Core.Services.Rocm;
 
 namespace StabilityMatrix.Core.Models.Packages;
 
@@ -79,6 +81,21 @@ public abstract class BaseGitPackage : BasePackage
         PrerequisiteHelper = prerequisiteHelper;
         PyInstallationManager = pyInstallationManager;
         PipWheelService = pipWheelService;
+    }
+
+    protected bool HasWindowsRocmSupport(IRocmPackageHelper rocmPackageHelper)
+    {
+        return GetWindowsRocmCompatibility(rocmPackageHelper).IsCompatible;
+    }
+
+    protected RocmCompatibilityResult GetWindowsRocmCompatibility(IRocmPackageHelper rocmPackageHelper)
+    {
+        if (!Compat.IsWindows)
+        {
+            return new RocmCompatibilityResult { IsCompatible = false };
+        }
+
+        return rocmPackageHelper.GetCompatibility();
     }
 
     public override async Task<DownloadPackageVersionOptions?> GetLatestVersion(
@@ -909,7 +926,8 @@ public abstract class BaseGitPackage : BasePackage
     }
 
     /// <summary>
-    /// Executes a standardized pip installation workflow: requirements first, then a forced torch install.
+    /// Executes a standardized pip installation workflow: optional pre-install steps, requirements install,
+    /// optional torch install, and final post-install package pins.
     /// </summary>
     protected async Task StandardPipInstallProcessAsync(
         IPyVenvRunner venvRunner,
@@ -931,15 +949,7 @@ public abstract class BaseGitPackage : BasePackage
                 .ConfigureAwait(false);
         }
 
-        progress?.Report(
-            new ProgressReport(-1f, "Installing package requirements...", isIndeterminate: true)
-        );
         var requirementsPipArgs = new PipInstallArgs([.. config.ExtraPipArgs]);
-
-        if (config.UpgradePackages)
-        {
-            requirementsPipArgs = requirementsPipArgs.AddArg("--upgrade");
-        }
 
         foreach (var path in config.RequirementsFilePaths)
         {
@@ -959,40 +969,56 @@ public abstract class BaseGitPackage : BasePackage
             requirementsPipArgs = requirementsPipArgs.WithUserOverrides(installedPackage.PipOverrides);
         }
 
-        await venvRunner.PipInstall(requirementsPipArgs, onConsoleOutput).ConfigureAwait(false);
-
-        if (config.SkipTorchInstall)
-            return;
-
-        progress?.Report(new ProgressReport(-1f, "Installing torch...", isIndeterminate: true));
-        var torchIndex = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
-
-        var torchPipArgs = GetTorchPipArgs(
-            torchIndex,
-            config.TorchVersion,
-            config.TorchvisionVersion,
-            config.TorchaudioVersion,
-            config.XformersVersion,
-            config.CudaIndex,
-            config.RocmIndex
+        var hasRequirementTargets = requirementsPipArgs.Arguments.Any(arg =>
+            !arg.HasKey && !arg.Value.StartsWith("-", StringComparison.Ordinal)
         );
 
-        if (config.UpgradePackages)
+        if (config.UpgradePackages && hasRequirementTargets)
         {
-            torchPipArgs = torchPipArgs.AddArg("--upgrade");
+            requirementsPipArgs = requirementsPipArgs.AddArg("--upgrade");
         }
 
-        if (config.ForceReinstallTorch)
+        if (hasRequirementTargets)
         {
-            torchPipArgs = torchPipArgs.AddArg("--force-reinstall");
+            progress?.Report(
+                new ProgressReport(-1f, "Installing package requirements...", isIndeterminate: true)
+            );
+
+            await venvRunner.PipInstall(requirementsPipArgs, onConsoleOutput).ConfigureAwait(false);
         }
 
-        if (installedPackage.PipOverrides != null)
+        if (!config.SkipTorchInstall)
         {
-            torchPipArgs = torchPipArgs.WithUserOverrides(installedPackage.PipOverrides);
-        }
+            progress?.Report(new ProgressReport(-1f, "Installing torch...", isIndeterminate: true));
+            var torchIndex = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
 
-        await venvRunner.PipInstall(torchPipArgs, onConsoleOutput).ConfigureAwait(false);
+            var torchPipArgs = GetTorchPipArgs(
+                torchIndex,
+                config.TorchVersion,
+                config.TorchvisionVersion,
+                config.TorchaudioVersion,
+                config.XformersVersion,
+                config.CudaIndex,
+                config.RocmIndex
+            );
+
+            if (config.UpgradePackages)
+            {
+                torchPipArgs = torchPipArgs.AddArg("--upgrade");
+            }
+
+            if (config.ForceReinstallTorch)
+            {
+                torchPipArgs = torchPipArgs.AddArg("--force-reinstall");
+            }
+
+            if (installedPackage.PipOverrides != null)
+            {
+                torchPipArgs = torchPipArgs.WithUserOverrides(installedPackage.PipOverrides);
+            }
+
+            await venvRunner.PipInstall(torchPipArgs, onConsoleOutput).ConfigureAwait(false);
+        }
 
         if (config.PostInstallPipArgs.Any())
         {

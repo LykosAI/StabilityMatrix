@@ -6,9 +6,11 @@ using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
+using StabilityMatrix.Core.Models.Rocm;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
+using StabilityMatrix.Core.Services.Rocm;
 
 namespace StabilityMatrix.Core.Models.Packages;
 
@@ -30,7 +32,8 @@ public class Wan2GP(
     IDownloadService downloadService,
     IPrerequisiteHelper prerequisiteHelper,
     IPyInstallationManager pyInstallationManager,
-    IPipWheelService pipWheelService
+    IPipWheelService pipWheelService,
+    IRocmPackageHelper rocmPackageHelper
 )
     : BaseGitPackage(
         githubApi,
@@ -64,7 +67,7 @@ public class Wan2GP(
 
     public override bool IsCompatible =>
         HardwareHelper.HasNvidiaGpu()
-        || (Compat.IsWindows ? HardwareHelper.HasWindowsRocmSupportedGpu() : HardwareHelper.HasAmdGpu());
+        || (Compat.IsWindows ? HasWindowsRocmSupport() : HardwareHelper.HasAmdGpu());
 
     public override string MainBranch => "main";
     public override bool ShouldIgnoreReleases => true;
@@ -72,19 +75,29 @@ public class Wan2GP(
     public override Dictionary<SharedOutputType, IReadOnlyList<string>> SharedOutputFolders =>
         new() { [SharedOutputType.Img2Vid] = ["outputs"] };
 
-    // AMD ROCm requires Python 3.11, NVIDIA uses 3.10
+    // Wan2GP currently uses Python 3.11 for ROCm and 3.10 for CUDA.
     public override PyVersion RecommendedPythonVersion =>
         IsAmdRocm ? Python.PyInstallationManager.Python_3_11_13 : Python.PyInstallationManager.Python_3_10_17;
 
     public override string Disclaimer =>
         IsAmdRocm && Compat.IsWindows
-            ? "AMD GPU support on Windows requires RX 7000 series or newer GPU"
+            ? "Windows AMD ROCm support is experimental. Please report any issues to Stability Matrix first so it can be determined whether the issue is package-specific.\nBecause this setup may not be officially supported by package developers, only contact upstream support for issues clearly caused by the package itself."
             : string.Empty;
 
     /// <summary>
     /// Helper property to check if we're using AMD ROCm
     /// </summary>
     private bool IsAmdRocm => GetRecommendedTorchVersion() == TorchIndex.Rocm;
+
+    private bool HasWindowsRocmSupport()
+    {
+        return HasWindowsRocmSupport(rocmPackageHelper);
+    }
+
+    private RocmCompatibilityResult GetWindowsRocmCompatibility()
+    {
+        return GetWindowsRocmCompatibility(rocmPackageHelper);
+    }
 
     /// <summary>
     /// Python wrapper script that patches logging to also print to stdout/stderr, so
@@ -210,13 +223,7 @@ public class Wan2GP(
     {
         // Check for AMD ROCm support (Windows or Linux)
         var preferRocm =
-            (
-                Compat.IsWindows
-                && (
-                    SettingsManager.Settings.PreferredGpu?.IsWindowsRocmSupportedGpu()
-                    ?? HardwareHelper.HasWindowsRocmSupportedGpu()
-                )
-            )
+            (Compat.IsWindows && HasWindowsRocmSupport())
             || (
                 Compat.IsLinux
                 && (SettingsManager.Settings.PreferredGpu?.IsAmd ?? HardwareHelper.PreferRocm())
@@ -256,7 +263,15 @@ public class Wan2GP(
 
         if (torchIndex == TorchIndex.Rocm)
         {
-            await InstallAmdRocmAsync(venvRunner, progress, onConsoleOutput).ConfigureAwait(false);
+            await InstallAmdRocmAsync(
+                    venvRunner,
+                    options,
+                    installedPackage,
+                    progress,
+                    onConsoleOutput,
+                    cancellationToken
+                )
+                .ConfigureAwait(false);
         }
         else
         {
@@ -359,68 +374,58 @@ public class Wan2GP(
 
     private async Task InstallAmdRocmAsync(
         IPyVenvRunner venvRunner,
+        InstallPackageOptions options,
+        InstalledPackage installedPackage,
         IProgress<ProgressReport>? progress,
-        Action<ProcessOutput>? onConsoleOutput
+        Action<ProcessOutput>? onConsoleOutput,
+        CancellationToken cancellationToken
     )
     {
+        if (Compat.IsWindows)
+        {
+            var config = rocmPackageHelper.BuildWindowsNativeInstallConfig(Wan2GpWindowsRocmProfile.Default);
+
+            await StandardPipInstallProcessAsync(
+                    venvRunner,
+                    options,
+                    installedPackage,
+                    config,
+                    onConsoleOutput,
+                    progress,
+                    cancellationToken
+                )
+                .ConfigureAwait(false);
+
+            await rocmPackageHelper
+                .InstallWindowsNativeTorchAsync(
+                    venvRunner,
+                    installedPackage,
+                    Wan2GpWindowsRocmProfile.Default,
+                    progress,
+                    onConsoleOutput,
+                    cancellationToken
+                )
+                .ConfigureAwait(false);
+
+            return;
+        }
+
         progress?.Report(new ProgressReport(-1f, "Upgrading pip...", isIndeterminate: true));
         await venvRunner.PipInstall("--upgrade pip wheel", onConsoleOutput).ConfigureAwait(false);
 
-        if (Compat.IsWindows)
-        {
-            // Windows AMD ROCm - special TheRock wheels
-            progress?.Report(
-                new ProgressReport(-1f, "Installing PyTorch ROCm wheels...", isIndeterminate: true)
-            );
+        progress?.Report(new ProgressReport(-1f, "Installing requirements...", isIndeterminate: true));
+        await venvRunner.PipInstall("-r requirements.txt", onConsoleOutput).ConfigureAwait(false);
 
-            // Set environment variable for wheel filename check bypass
-            venvRunner.UpdateEnvironmentVariables(env => env.SetItem("UV_SKIP_WHEEL_FILENAME_CHECK", "1"));
+        progress?.Report(new ProgressReport(-1f, "Installing PyTorch ROCm...", isIndeterminate: true));
+        var torchArgs = new PipInstallArgs()
+            .WithTorch()
+            .WithTorchVision()
+            .WithTorchAudio()
+            .WithTorchExtraIndex("rocm7.2")
+            .AddArg("--force-reinstall")
+            .AddArg("--no-deps");
 
-            // Install PyTorch ROCm wheels from TheRock releases (Python 3.11)
-            await venvRunner
-                .PipInstall(
-                    "https://github.com/scottt/rocm-TheRock/releases/download/v6.5.0rc-pytorch-gfx110x/torch-2.7.0a0+rocm_git3f903c3-cp311-cp311-win_amd64.whl",
-                    onConsoleOutput
-                )
-                .ConfigureAwait(false);
-
-            await venvRunner
-                .PipInstall(
-                    "https://github.com/scottt/rocm-TheRock/releases/download/v6.5.0rc-pytorch-gfx110x/torchaudio-2.7.0a0+52638ef-cp311-cp311-win_amd64.whl",
-                    onConsoleOutput
-                )
-                .ConfigureAwait(false);
-
-            await venvRunner
-                .PipInstall(
-                    "https://github.com/scottt/rocm-TheRock/releases/download/v6.5.0rc-pytorch-gfx110x/torchvision-0.22.0+9eb57cd-cp311-cp311-win_amd64.whl",
-                    onConsoleOutput
-                )
-                .ConfigureAwait(false);
-
-            // Install requirements directly using -r flag (handles @ URL syntax properly)
-            progress?.Report(new ProgressReport(-1f, "Installing requirements...", isIndeterminate: true));
-            await venvRunner.PipInstall("-r requirements.txt", onConsoleOutput).ConfigureAwait(false);
-        }
-        else
-        {
-            // Linux AMD ROCm - standard PyTorch ROCm
-            // Install requirements directly using -r flag (handles @ URL syntax properly)
-            progress?.Report(new ProgressReport(-1f, "Installing requirements...", isIndeterminate: true));
-            await venvRunner.PipInstall("-r requirements.txt", onConsoleOutput).ConfigureAwait(false);
-
-            // Install torch with ROCm index (force reinstall to ensure correct version)
-            progress?.Report(new ProgressReport(-1f, "Installing PyTorch ROCm...", isIndeterminate: true));
-            var torchArgs = new PipInstallArgs()
-                .WithTorch("==2.7.0")
-                .WithTorchVision("==0.22.0")
-                .WithTorchAudio("==2.7.0")
-                .WithTorchExtraIndex("rocm6.3")
-                .AddArg("--force-reinstall")
-                .AddArg("--no-deps");
-
-            await venvRunner.PipInstall(torchArgs, onConsoleOutput).ConfigureAwait(false);
-        }
+        await venvRunner.PipInstall(torchArgs, onConsoleOutput).ConfigureAwait(false);
 
         // Install additional packages
         await venvRunner.PipInstall("hf-xet setuptools numpy==1.26.4", onConsoleOutput).ConfigureAwait(false);
@@ -436,6 +441,14 @@ public class Wan2GP(
     {
         await SetupVenv(installLocation, pythonVersion: PyVersion.Parse(installedPackage.PythonVersion))
             .ConfigureAwait(false);
+
+        var selectedTorchIndex = installedPackage.PreferredTorchIndex ?? GetRecommendedTorchVersion();
+
+        if (Compat.IsWindows && selectedTorchIndex == TorchIndex.Rocm && HasWindowsRocmSupport())
+        {
+            var rocmEnvironment = rocmPackageHelper.BuildLaunchEnvironment(Wan2GpWindowsRocmProfile.Default);
+            VenvRunner.UpdateEnvironmentVariables(env => env.SetItems(rocmEnvironment));
+        }
 
         // Fix for distutils compatibility issue with Python 3.10 and setuptools
         VenvRunner.UpdateEnvironmentVariables(env => env.SetItem("SETUPTOOLS_USE_DISTUTILS", "stdlib"));

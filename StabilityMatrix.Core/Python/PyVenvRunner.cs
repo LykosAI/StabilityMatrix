@@ -332,10 +332,9 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable, IPyVenvRunner
                 StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries
             )
             .Select(line => line.Trim())
-            .FirstOrDefault(
-                line =>
-                    line.StartsWith("[", StringComparison.OrdinalIgnoreCase)
-                    && line.EndsWith("]", StringComparison.OrdinalIgnoreCase)
+            .FirstOrDefault(line =>
+                line.StartsWith("[", StringComparison.OrdinalIgnoreCase)
+                && line.EndsWith("]", StringComparison.OrdinalIgnoreCase)
             );
 
         if (jsonLine is null)
@@ -370,6 +369,17 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable, IPyVenvRunner
             )
             .ConfigureAwait(false);
 
+        var packageNotFound =
+            result.StandardOutput?.Contains("Package(s) not found", StringComparison.OrdinalIgnoreCase)
+                == true
+            || result.StandardError?.Contains("Package(s) not found", StringComparison.OrdinalIgnoreCase)
+                == true;
+
+        if (packageNotFound)
+        {
+            return null;
+        }
+
         // Check return code
         if (result.ExitCode != 0)
         {
@@ -378,9 +388,11 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable, IPyVenvRunner
             );
         }
 
-        if (result.StandardOutput!.StartsWith("WARNING: Package(s) not found:"))
+        if (string.IsNullOrWhiteSpace(result.StandardOutput))
         {
-            return null;
+            throw new ProcessException(
+                $"pip show returned no output for package '{packageName}': {result.StandardError}"
+            );
         }
 
         return PipShowResult.Parse(result.StandardOutput);
@@ -389,7 +401,11 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable, IPyVenvRunner
     /// <summary>
     /// Run a pip index command, return result as PipIndexResult.
     /// </summary>
-    public async Task<PipIndexResult?> PipIndex(string packageName, string? indexUrl = null)
+    public async Task<PipIndexResult?> PipIndex(
+        string packageName,
+        string? indexUrl = null,
+        bool includePrerelease = false
+    )
     {
         if (!File.Exists(PipPath))
         {
@@ -413,9 +429,29 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable, IPyVenvRunner
             args = args.AddKeyedArgs("--index-url", ["--index-url", indexUrl]);
         }
 
+        if (includePrerelease)
+        {
+            args = args.AddArg("--pre");
+        }
+
         var result = await ProcessRunner
             .GetProcessResultAsync(PythonPath, args, WorkingDirectory?.FullPath, EnvironmentVariables)
             .ConfigureAwait(false);
+
+        var noMatchingDistribution =
+            result.StandardOutput?.Contains(
+                "No matching distribution found",
+                StringComparison.OrdinalIgnoreCase
+            ) == true
+            || result.StandardError?.Contains(
+                "No matching distribution found",
+                StringComparison.OrdinalIgnoreCase
+            ) == true;
+
+        if (noMatchingDistribution || string.IsNullOrWhiteSpace(result.StandardOutput))
+        {
+            return null;
+        }
 
         // Check return code
         if (result.ExitCode != 0)
@@ -423,16 +459,6 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable, IPyVenvRunner
             throw new ProcessException(
                 $"pip index failed with code {result.ExitCode}: {result.StandardOutput}, {result.StandardError}"
             );
-        }
-
-        if (
-            string.IsNullOrEmpty(result.StandardOutput)
-            || result
-                .StandardOutput!.SplitLines()
-                .Any(l => l.StartsWith("ERROR: No matching distribution found"))
-        )
-        {
-            return null;
         }
 
         return PipIndexResult.Parse(result.StandardOutput);
@@ -617,11 +643,11 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable, IPyVenvRunner
     {
         // ReSharper disable once StringLiteralTypo
         var code = $"""
-                   from importlib.metadata import entry_points
-                   
-                   results = entry_points(group='console_scripts', name='{entryPointName}')
-                   print(tuple(results)[0].value, end='')
-                   """;
+            from importlib.metadata import entry_points
+
+            results = entry_points(group='console_scripts', name='{entryPointName}')
+            print(tuple(results)[0].value, end='')
+            """;
 
         var result = await Run($"-c \"{code}\"").ConfigureAwait(false);
         if (result.ExitCode == 0 && !string.IsNullOrWhiteSpace(result.StandardOutput))

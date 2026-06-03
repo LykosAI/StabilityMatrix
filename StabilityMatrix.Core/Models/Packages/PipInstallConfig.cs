@@ -10,6 +10,7 @@ public record PipInstallConfig
     public IEnumerable<string> PrePipInstallArgs { get; init; } = [];
     public IEnumerable<string> ExtraPipArgs { get; init; } = [];
     public IEnumerable<string> PostInstallPipArgs { get; init; } = [];
+    public IEnumerable<string> PostTorchInstallPipArgs { get; init; } = [];
     public string TorchVersion { get; init; } = "";
     public string TorchvisionVersion { get; init; } = "";
     public string TorchaudioVersion { get; init; } = "";

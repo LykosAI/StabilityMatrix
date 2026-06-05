@@ -2,14 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using KGySoft.CoreLibraries;
-using StabilityMatrix.Core.Helper.Cache;
 
 namespace StabilityMatrix.Avalonia.Controls.VendorLabs.Cache;
 
@@ -23,7 +16,7 @@ public class InMemoryStorage<T>
     private readonly LinkedList<InMemoryStorageItem<T>> _lruList = [];
 
     private int _maxItemCount;
-    private object _settingMaxItemCountLocker = new();
+    private readonly Lock _settingMaxItemCountLocker = new();
 
     /// <summary>
     /// Gets or sets the maximum count of Items that can be stored in this InMemoryStorage instance.

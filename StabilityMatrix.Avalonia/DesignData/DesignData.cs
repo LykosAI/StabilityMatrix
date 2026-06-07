@@ -502,6 +502,9 @@ public static class DesignData
     public static HuggingFacePageViewModel HuggingFacePageViewModel =>
         Services.GetRequiredService<HuggingFacePageViewModel>();
 
+    public static DirectUrlImportViewModel DirectUrlImportViewModel =>
+        Services.GetRequiredService<DirectUrlImportViewModel>();
+
     public static NewOneClickInstallViewModel NewOneClickInstallViewModel =>
         Services.GetRequiredService<NewOneClickInstallViewModel>();
 

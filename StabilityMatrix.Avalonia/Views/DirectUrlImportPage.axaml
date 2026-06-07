@@ -1,0 +1,206 @@
+<controls:UserControlBase
+    x:Class="StabilityMatrix.Avalonia.Views.DirectUrlImportPage"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:checkpointBrowser="clr-namespace:StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser"
+    xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    d:DataContext="{x:Static mocks:DesignData.DirectUrlImportViewModel}"
+    d:DesignHeight="700"
+    d:DesignWidth="800"
+    x:CompileBindings="True"
+    x:DataType="checkpointBrowser:DirectUrlImportViewModel"
+    mc:Ignorable="d">
+    <ScrollViewer>
+        <StackPanel Margin="24" Spacing="16" VerticalAlignment="Top">
+            <TextBlock
+                FontSize="18"
+                FontWeight="SemiBold"
+                Text="{x:Static lang:Resources.Label_DirectUrlImport}" />
+
+            <StackPanel Spacing="8">
+                <TextBlock
+                    FontWeight="Medium"
+                    Text="{x:Static lang:Resources.Text_DirectUrlInputUrlsOnePerLine}" />
+
+                <TextBox
+                    AcceptsReturn="True"
+                    Height="150"
+                    IsEnabled="{Binding !IsImporting}"
+                    Watermark="{x:Static lang:Resources.Text_UrlImportUrlsWatermark}"
+                    Text="{Binding UrlsInput, Mode=TwoWay}"
+                    TextWrapping="Wrap"
+                    VerticalAlignment="Top" />
+            </StackPanel>
+
+            <StackPanel Spacing="8">
+                <TextBlock
+                    FontWeight="Medium"
+                    Text="{x:Static lang:Resources.Label_ModelFileNameForDirectUrls}" />
+
+                <TextBox
+                    IsEnabled="{Binding !IsImporting}"
+                    Watermark="{x:Static lang:Resources.Text_UrlImportModelFileNameWatermark}"
+                    Text="{Binding ModelFileName, Mode=TwoWay}" />
+            </StackPanel>
+
+            <StackPanel Spacing="8">
+                <TextBlock
+                    FontWeight="Medium"
+                    Text="{x:Static lang:Resources.Label_SelectDownloadLocation}" />
+
+                <StackPanel Spacing="8" Orientation="Horizontal">
+                    <ComboBox
+                        HorizontalAlignment="Stretch"
+                        IsEnabled="{Binding !IsImporting}"
+                        ItemsSource="{Binding AvailableDownloadLocations}"
+                        SelectedItem="{Binding SelectedDownloadLocation}"
+                        Width="300" />
+
+                    <Button
+                        Classes="transparent-full"
+                        Command="{Binding SelectCustomFolderCommand}"
+                        Content="{x:Static lang:Resources.Action_SelectDirectory}" />
+                </StackPanel>
+
+                <TextBlock
+                    FontSize="11"
+                    Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                    IsVisible="{Binding !!CustomDownloadLocation}"
+                    Text="{Binding CustomDownloadLocation}" />
+            </StackPanel>
+
+            <StackPanel Spacing="8">
+                <TextBlock
+                    FontSize="12"
+                    Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                    IsVisible="{Binding !!ImportStatus}"
+                    Text="{Binding ImportStatus}" />
+            </StackPanel>
+
+            <StackPanel Spacing="8" Orientation="Horizontal" IsVisible="{Binding !IsCivitAiSelectionMode}">
+                <Button
+                    Classes="accent"
+                    Command="{Binding ImportCommand}"
+                    IsEnabled="{Binding !IsImporting}"
+                    Content="{x:Static lang:Resources.Action_Download}" />
+            </StackPanel>
+
+            <Border
+                Background="{DynamicResource ColorNeutralBackground3}"
+                BorderBrush="{DynamicResource ColorNeutralStroke2}"
+                BorderThickness="1"
+                CornerRadius="6"
+                IsVisible="{Binding IsCivitAiSelectionMode}"
+                Padding="12">
+                <StackPanel Spacing="8">
+                    <TextBlock
+                        FontSize="14"
+                        FontWeight="SemiBold"
+                        Text="{x:Static lang:Resources.Label_SelectCivitAiModelsFromCurrentPage}" />
+
+                    <TextBlock
+                        FontSize="11"
+                        Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                        Text="{Binding CivitAiCurrentPageLabel}" />
+
+                    <TextBlock
+                        FontSize="11"
+                        Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                        Text="{Binding CivitAiCurrentPageUrl}" />
+
+                    <TextBlock
+                        FontSize="11"
+                        Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                        IsVisible="{Binding !!CivitAiSelectionStatus}"
+                        Text="{Binding CivitAiSelectionStatus}" />
+
+                    <ListBox
+                        ItemsSource="{Binding CivitAiCurrentPageModels}"
+                        MaxHeight="280">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <CheckBox
+                                    IsChecked="{Binding IsSelected}"
+                                    VerticalContentAlignment="Center"
+                                    HorizontalContentAlignment="Stretch">
+                                    <StackPanel Spacing="2">
+                                        <TextBlock Text="{Binding DisplayName}" TextWrapping="NoWrap" />
+                                        <TextBlock
+                                            FontSize="11"
+                                            Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                            Text="{Binding Details}" TextWrapping="NoWrap" />
+                                    </StackPanel>
+                                </CheckBox>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <StackPanel Spacing="8" Orientation="Horizontal">
+                        <Button
+                            Classes="accent"
+                            Command="{Binding ImportSelectedCivitAiModelsCommand}"
+                            IsEnabled="{Binding !IsImporting}"
+                            Content="{x:Static lang:Resources.Action_Import}" />
+
+                        <Button
+                            Command="{Binding SkipCurrentCivitAiPageCommand}"
+                            IsEnabled="{Binding !IsImporting}"
+                            Content="{x:Static lang:Resources.Action_SkipThisPage}" />
+
+                        <Button
+                            Command="{Binding ContinueNextCivitAiPageCommand}"
+                            IsEnabled="{Binding !IsImporting}"
+                            IsVisible="{Binding HasMoreCivitAiPages}"
+                            Content="{x:Static lang:Resources.Label_NextPage}" />
+
+                        <Button
+                            Command="{Binding CancelCivitAiSelectionCommand}"
+                            Content="{x:Static lang:Resources.Action_Cancel}" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <Border
+                Padding="12"
+                Background="{DynamicResource ColorNeutralBackground3}"
+                BorderBrush="{DynamicResource ColorNeutralStroke2}"
+                BorderThickness="1"
+                CornerRadius="4">
+                <StackPanel Spacing="8">
+                    <TextBlock
+                        FontSize="11"
+                        FontWeight="SemiBold"
+                        Text="{x:Static lang:Resources.Label_Tips}" />
+
+                    <TextBlock
+                        FontSize="11"
+                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                        Text="{x:Static lang:Resources.Text_DirectUrlImportTipCivitAiPage}"
+                        TextWrapping="Wrap" />
+
+                    <TextBlock
+                        FontSize="11"
+                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                        Text="{x:Static lang:Resources.Text_DirectUrlImportTipDirectUrls}"
+                        TextWrapping="Wrap" />
+
+                    <TextBlock
+                        FontSize="11"
+                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                        Text="{x:Static lang:Resources.Text_DirectUrlImportTipCivitAiModelPage}"
+                        TextWrapping="Wrap" />
+
+                    <TextBlock
+                        FontSize="11"
+                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                        Text="{x:Static lang:Resources.Text_DirectUrlImportTipSaveLocation}"
+                        TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</controls:UserControlBase>

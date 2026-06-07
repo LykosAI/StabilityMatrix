@@ -124,6 +124,14 @@ public class CivitModelsRequest
     [AliasAs("cursor")]
     public string? Cursor { get; set; }
 
+    public CivitModelsRequest Clone()
+    {
+        var clone = (CivitModelsRequest)MemberwiseClone();
+        clone.Types = Types is null ? null : (CivitModelType[])Types.Clone();
+        clone.BaseModels = BaseModels is null ? null : (string[])BaseModels.Clone();
+        return clone;
+    }
+
     public override string ToString()
     {
         return $"Page: {Page}, "

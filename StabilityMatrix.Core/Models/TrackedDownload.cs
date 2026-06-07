@@ -39,6 +39,20 @@ public class TrackedDownload
 
     public Uri? RedirectedUrl { get; init; }
 
+    /// <summary>
+    /// Optional list of fallback URLs to try if the primary download fails
+    /// </summary>
+    public List<Uri>? FallbackUris { get; set; }
+
+    /// <summary>
+    /// Gets the current URL to use for download (either SourceUrl or a fallback URL)
+    /// </summary>
+    [JsonIgnore]
+    public Uri CurrentDownloadUrl =>
+        currentUrlIndex > 0 && FallbackUris is { Count: > 0 } && currentUrlIndex - 1 < FallbackUris.Count
+            ? FallbackUris[currentUrlIndex - 1]
+            : SourceUrl;
+
     public required DirectoryPath DownloadDirectory { get; init; }
 
     public required string FileName { get; init; }
@@ -137,7 +151,7 @@ public class TrackedDownload
 
         await downloadService!
             .ResumeDownloadToFileAsync(
-                SourceUrl.ToString(),
+                CurrentDownloadUrl.ToString(),
                 DownloadDirectory.JoinFile(TempFileName),
                 resumeFromByte,
                 progress,
@@ -376,6 +390,18 @@ public class TrackedDownload
         }
     }
 
+    private void DoCleanupTempFile()
+    {
+        try
+        {
+            DownloadDirectory.JoinFile(TempFileName).Delete();
+        }
+        catch (IOException)
+        {
+            Logger.Warn("Failed to delete temp file {TempFile}", TempFileName);
+        }
+    }
+
     /// <summary>
     /// Returns true for transient network/SSL exceptions that are safe to retry (ie: VPN tunnel resets or TLS re-key failures)
     /// (IOException, AuthenticationException, or either wrapped in an AggregateException).
@@ -462,6 +488,31 @@ public class TrackedDownload
                             Resume();
                     })
                     .SafeFireAndForget();
+                return;
+            }
+
+            // If we have fallback URLs, try the next one
+            if (FallbackUris is { Count: > 0 } && currentUrlIndex < FallbackUris.Count)
+            {
+                attempts = 0;
+                var nextUrl = FallbackUris[currentUrlIndex];
+                currentUrlIndex++;
+
+                Logger.Warn(
+                    "Download {Download} failed, trying fallback URL {Url} ({Index}/{Total})",
+                    FileName,
+                    nextUrl,
+                    currentUrlIndex + 1,
+                    FallbackUris.Count + 1
+                );
+
+                // Start each fallback URL as a fresh download instead of resuming from
+                // a partial file created by the previous URL.
+                DoCleanupTempFile();
+
+                OnProgressStateChanging(ProgressState.Inactive);
+                ProgressState = ProgressState.Inactive;
+                Start();
                 return;
             }
 

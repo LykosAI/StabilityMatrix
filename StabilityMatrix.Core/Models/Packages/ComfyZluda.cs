@@ -12,6 +12,7 @@ using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
+using StabilityMatrix.Core.Services.Rocm;
 
 namespace StabilityMatrix.Core.Models.Packages;
 
@@ -22,7 +23,8 @@ public class ComfyZluda(
     IDownloadService downloadService,
     IPrerequisiteHelper prerequisiteHelper,
     IPyInstallationManager pyInstallationManager,
-    IPipWheelService pipWheelService
+    IPipWheelService pipWheelService,
+    IRocmPackageHelper rocmPackageHelper
 )
     : ComfyUI(
         githubApi,
@@ -30,7 +32,8 @@ public class ComfyZluda(
         downloadService,
         prerequisiteHelper,
         pyInstallationManager,
-        pipWheelService
+        pipWheelService,
+        rocmPackageHelper
     )
 {
     private const string ZludaPatchDownloadUrl =
@@ -102,7 +105,11 @@ public class ComfyZluda(
                 },
             };
 
-            options.AddRange(base.LaunchOptions.Where(x => x.Name != "Cross Attention Method"));
+            options.AddRange(
+                base.LaunchOptions.Where(x =>
+                    x.Name != "Cross Attention Method" && !x.Options.Contains("--enable-manager")
+                )
+            );
             return options;
         }
     }
@@ -201,8 +208,10 @@ public class ComfyZluda(
         await SetupVenv(installLocation, pythonVersion: PyVersion.Parse(installedPackage.PythonVersion))
             .ConfigureAwait(false);
 
+        var launchArguments = NormalizeLaunchArguments(installedPackage, options.Arguments);
+
         var zludaPath = Path.Combine(installLocation, LaunchCommand);
-        ProcessArgs args = ["--", VenvRunner.PythonPath.ToString(), "main.py", .. options.Arguments];
+        ProcessArgs args = ["--", VenvRunner.PythonPath.ToString(), "main.py", .. launchArguments];
         zludaProcess = ProcessRunner.StartAnsiProcess(
             zludaPath,
             args,

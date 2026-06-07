@@ -82,6 +82,26 @@ public class PipInstallArgsTests
     }
 
     [TestMethod]
+    public void TestParsedFromRequirementsTxt_KeepsEnvironmentMarkerRequirementAsSingleArgument()
+    {
+        const string requirements = """
+                                    onnxruntime-gpu==1.22.0; python_version < "3.11"
+                                    """;
+
+        var args = new PipInstallArgs().WithParsedFromRequirementsTxt(requirements).ToProcessArgs();
+
+        Assert.AreEqual(1, args.Count());
+        Assert.AreEqual(
+            "\"onnxruntime-gpu==1.22.0; python_version < \\\"3.11\\\"\"",
+            args.Single().GetQuotedValue()
+        );
+        Assert.AreEqual(
+            "\"onnxruntime-gpu==1.22.0; python_version < \\\"3.11\\\"\"",
+            args.ToString()
+        );
+    }
+
+    [TestMethod]
     public void TestWithUserOverrides()
     {
         // Arrange

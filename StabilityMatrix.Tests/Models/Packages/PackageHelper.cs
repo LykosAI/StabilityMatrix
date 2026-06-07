@@ -6,6 +6,7 @@ using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
+using StabilityMatrix.Core.Services.Rocm;
 
 namespace StabilityMatrix.Tests.Models.Packages;
 
@@ -24,7 +25,8 @@ public static class PackageHelper
             .AddSingleton(Substitute.For<IPyRunner>())
             .AddSingleton(Substitute.For<IPyInstallationManager>())
             .AddSingleton(Substitute.For<IPrerequisiteHelper>())
-            .AddSingleton(Substitute.For<IPipWheelService>());
+            .AddSingleton(Substitute.For<IPipWheelService>())
+            .AddSingleton(Substitute.For<IRocmPackageHelper>());
 
         var assembly = typeof(BasePackage).Assembly;
         var packageTypes = assembly

@@ -6,9 +6,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
 ## v2.16.0
-### Security
-- Updated the bundled 7-Zip binaries (Windows, Linux, macOS) to **26.01**, which includes the fix for the NTFS heap buffer overflow CVE-2026-48095 ([GitHub Security Lab GHSL-2026-140](https://securitylab.github.com/advisories/GHSL-2026-140_7-Zip/), CVSS 8.8) and brings years of accumulated upstream security fixes — the Windows binary in particular had been pinned at the 2018 18.01 release
-- Package updates now re-run the prerequisite setup step (as installs already do), so the bundled 7-Zip binary is refreshed on update instead of only on a fresh package install
 ### Added
 #### New Feature: 🧪 Image Lab  - Conversational Image Generation for ComfyUI
 - We've added a brand new conversational interface for image generation! Image Lab lets you iterate on images naturally through chat, rather than just one-off prompts.
@@ -82,11 +79,14 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed potential crash when adding metadata to malformed or non-PNG image data in Inference
 - Fixed non-Latin-1 characters (e.g. Japanese, Chinese, Korean, emoji) in image generation parameters being stored in PNG tEXt chunks, violating the PNG specification and causing character corruption (mojibake) in standard-compliant parsers. Non-Latin-1 content now uses spec-compliant iTXt chunks with proper UTF-8 encoding ([#1535](https://github.com/LykosAI/StabilityMatrix/issues/1535))
 - Fixed batch notification firing when only one image is generated
+### Security
+- Updated the bundled 7-Zip binaries (Windows, Linux, macOS) to **26.01**, which includes the fix for the NTFS heap buffer overflow CVE-2026-48095 ([GitHub Security Lab GHSL-2026-140](https://securitylab.github.com/advisories/GHSL-2026-140_7-Zip/), CVSS 8.8) and brings years of accumulated upstream security fixes — the Windows binary in particular had been pinned at the 2018 18.01 release
+- Package updates now re-run the prerequisite setup step (as installs already do), so the bundled 7-Zip binary is refreshed on update instead of only on a fresh package install
 ### Supporters
 #### 🌟 Visionaries
-An enormous thank you to our incredible Visionaries: **Waterclouds**, **bluepopsicle**, **Ibixat**, **Droolguy**, **snotty**, **LG**, **whudunit**, **MrMxyzptlk12836**, **Psilocyfer18731**, **KalAbaddon**, and **moon_milky2843**! This was a huge release, and every bit of it rests on your generosity. Whether you've been cheering us on for years or only just joined, having you in our corner is what makes all of this possible — we're so grateful for you. 💛
+An enormous thank you to our incredible Visionaries: **Waterclouds**, **bluepopsicle**, **Ibixat**, **Droolguy**, **snotty**, **LG**, **whudunit**, **MrMxyzptlk12836**, **Psilocyfer18731**, **KalAbaddon**, and **moon_milky2843**! This was a huge release, and every bit of it rests on your generosity. Whether you've been cheering us on for years or only just joined, having you in our corner is what makes all of this possible. We're so grateful for you. 💛
 #### 🚀 Pioneers
-And what a Pioneer crew this release! A heartfelt thank-you to the regulars who keep showing up for us — **Szir777**, **[USA]TechDude**, **SinthCore**, **Jisuren**, **Tigon**, **jweg79**, **rwx14662**, **Hurbie53**, **ahnhj.al**, **drew.lukas**, **Tuskaruho**, **Cjloha**, **Alligator1907**, **Bitti**, **damianpointdexter**, **Ghislain G**, and **tmdcks** — your steady support release after release is what keeps us at the keyboard. And the warmest of welcomes to our newest Pioneers: **CommissarGiygas16050**, **qob97515211**, **bastardofbethlehem**, and **Zombop** — we're thrilled you've joined us, and we can't wait to get to know you! (And to our anonymous Pioneer out there too — our thanks reaches you. 💛)
+And what a Pioneer crew this release! A heartfelt thank you to the regulars who keep showing up for us: **Szir777**, **[USA]TechDude**, **SinthCore**, **Jisuren**, **Tigon**, **jweg79**, **rwx14662**, **Hurbie53**, **ahnhj.al**, **drew.lukas**, **Tuskaruho**, **Cjloha**, **Alligator1907**, **Bitti**, **damianpointdexter**, **Ghislain G**, and **tmdcks**! Your steady support release after release is what keeps us at the keyboard. And the warmest of welcomes to our newest Pioneers: **CommissarGiygas16050**, **qob97515211**, **bastardofbethlehem**, and **Zombop** — we're thrilled you've joined us, and we can't wait to get to know you! (And to our anonymous Pioneer out there too — our thanks reaches you. 💛)
 
 ## v2.16.0-pre.2
 ### Security

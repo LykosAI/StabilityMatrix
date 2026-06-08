@@ -63,7 +63,7 @@ This migration prompt is mainly intended for upgrades from older legacy layouts 
 
 ## What You See Next
 
-Once the license agreement is accepted and the data directory is configured, Stability Matrix finishes loading into the main window. If the user does not already have any installed packages, the app may then offer a one-click installer to help set up an initial web UI package, with ComfyUI being the recommended choice for use with the Inference UI. After that, Stability Matrix will also offer a selection of recommended models so the user can download a usable model right away. Both steps are optional and can be skipped if the user prefers to install packages or download models manually.
+Once the license agreement is accepted and the data directory is configured, Stability Matrix finishes loading into the main window. If the user does not already have any installed packages, the app may then offer a [one-click installer](../package-manager/installing-packages.md#one-click-install) to help set up an initial web UI package. ComfyUI is recommended for use with the Inference UI. After that, Stability Matrix will also offer a selection of recommended models so the user can download a usable model right away. Both steps are optional and can be skipped if the user prefers to install packages or download models manually.
 
 From there, the usual next steps are:
 

@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 
 ## v2.16.0
 ### Added
-#### New Feature: 🧪 Image Lab  - Conversational Image Generation for ComfyUI
+#### New Feature: 🧪 Image Lab - Conversational Image Generation for ComfyUI
 - We've added a brand new conversational interface for image generation! Image Lab lets you iterate on images naturally through chat, rather than just one-off prompts.
   - Local-First Power: Native support for Flux Kontext, Qwen Image Edit, and the Apache 2.0-licensed Flux.2 Klein running entirely locally via your ComfyUI backend.
   - Smart Setup: Stability Matrix automatically detects and helps you download the specific models and LoRAs needed for these local workflows.

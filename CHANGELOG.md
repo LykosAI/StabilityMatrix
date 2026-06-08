@@ -5,6 +5,89 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.16.0
+### Security
+- Updated the bundled 7-Zip binaries (Windows, Linux, macOS) to **26.01**, which includes the fix for the NTFS heap buffer overflow CVE-2026-48095 ([GitHub Security Lab GHSL-2026-140](https://securitylab.github.com/advisories/GHSL-2026-140_7-Zip/), CVSS 8.8) and brings years of accumulated upstream security fixes — the Windows binary in particular had been pinned at the 2018 18.01 release
+- Package updates now re-run the prerequisite setup step (as installs already do), so the bundled 7-Zip binary is refreshed on update instead of only on a fresh package install
+### Added
+#### New Feature: 🧪 Image Lab  - Conversational Image Generation for ComfyUI
+- We've added a brand new conversational interface for image generation! Image Lab lets you iterate on images naturally through chat, rather than just one-off prompts.
+  - Local-First Power: Native support for Flux Kontext, Qwen Image Edit, and the Apache 2.0-licensed Flux.2 Klein running entirely locally via your ComfyUI backend.
+  - Smart Setup: Stability Matrix automatically detects and helps you download the specific models and LoRAs needed for these local workflows.
+  - Interactive Tools: Drag-and-drop image inputs, use the built-in annotation tool to draw on images, and keep persistent conversation history.
+  - Cloud Option: Includes optional support for Nano Banana (Gemini 3 Pro / 2.5) and Nano Banana 2 (Gemini 3.1 Flash) for users who want to leverage external reasoning models.
+- Added Regional Prompting addon to Inference - paint detailed masks to apply different prompts, strengths, and settings to specific regions of your image
+  - Multi-layer mask editor with Photoshop-style interface for managing layers with independent masks, prompts, colors, and opacity
+  - Professional brush tools: freehand brush/eraser with pressure sensitivity, rectangle/ellipse shapes with fill/stroke modes, paint bucket flood fill
+  - Brush feathering/softness control for smooth, blended mask edges (0 = hard edge, 1 = soft/blurred)
+  - Per-layer prompt and strength controls, export/import masks as PNG, duplicate layers, image reference layers for tracing
+  - GPU-accelerated rendering with compact gzip-compressed metadata serialization
+- Added official Inference support for the **Z-Image** (Base + Turbo), **Anima**, and **Flux.2** model architectures — workflow-appropriate text encoders, latent shapes, schedulers, and model sampling (AuraFlow for Z-Image, `Flux2Scheduler` for Flux.2) are wired up automatically across Text-to-Image and Image-to-Image
+- Added an Inference **Workflow** selector to the Model card with profiles for Default/Checkpoint, Flux, Flux.2, Z-Image Base/Turbo, Anima, HiDream, and Custom
+  - **Auto** (default) detects the workflow from the model's CivitAI metadata, with filename fallbacks for models without metadata, and shows the resolved profile inline below the selector
+  - Sparkle button applies recommended sampler / scheduler / steps / CFG presets for the active workflow — e.g. `res_multistep` / `simple` / 8 steps / CFG 1 for Z-Image Turbo, `er_sde` / `simple` / 30 steps / CFG 4 for Anima, `euler` / 20 steps / CFG 5 for Flux.2
+  - Choosing a non-Auto profile reveals a manual Encoder Type selector for advanced overrides (e.g. running Z-Image Turbo with the `sd3` encoder)
+  - Opening the model browser from the Model card pre-filters to the workflow's compatible base models, without overwriting your saved picker filters
+- Added CivArchive model browser with details page, image viewer, version selector, trigger words, and in-app downloads with tracked progress
+- Added a checkpoint organizer for previewing and reorganizing local models using connected metadata-driven folder and filename patterns (requested in [#280](https://github.com/LykosAI/StabilityMatrix/issues/280), [#424](https://github.com/LykosAI/StabilityMatrix/issues/424))
+- Added a new Model Picker dialog for Inference with grid/list views, search, filtering, and NSFW overlay
+- Added browse buttons to all model dropdowns in Inference (Model, Refiner, VAE, Text Encoders, CLIP Vision)
+- Added an inline search box to model combo box dropdowns with fuzzy matching
+- Added a **Source** button in the Inference SamplerCard that one-click matches your generation Width/Height to the loaded source image — available in Image-to-Image whenever a source image is selected
+- Added popularity counts to booru-style tag completions in the prompt editor; descriptions now show entries like `12.3K · artist` so the more common tags are easier to spot at a glance
+- Added a settings gear button to the CivitAI browser's Base Models filter flyout that jumps straight to the base model filter configuration in Settings
+- Added `er_sde` and `res_multistep` to the Inference sampler list
+- Added `stable_diffusion`, `flux2`, and `lumina2` Encoder Type options for UNet workflows
+- Added a **Bitsandbytes NF4** launch option to Stable Diffusion WebUI Forge - Neo for low-bit (`--bnb`) inference
+- Added an **Activity center**: the sidebar download panel now has a **Notifications** tab alongside **In Progress**. Toasts are clickable — jumping to the downloaded folder, the originating page (e.g. Inference), or the activity panel — and persist into a session notification history (every notification is recorded, even ones suppressed by your settings) with read/unread indicators and a combined unread + active-download badge on the sidebar item
+- Added an **"Always Show Scrollbars"** toggle under **Settings → Appearance**. Defaults on — vertical scrollbars stay visible at their full thickness and reserve real layout space instead of fading to a thin overlay-style bar that only thickens on hover. Toggle off to restore Avalonia's classic auto-hide behavior. Single-line numeric inputs (e.g. SamplerCard Width/Height) keep their auto-hide regardless so spin-buttons aren't followed by a phantom bar
+- Added new shared model folder categories — **Style Models**, **Audio Encoders**, **Model Patches**, and **Background Removal** — for ComfyUI's `style_models`, `audio_encoders`, `model_patches`, and `background_removal` directories. Models in these folders are now indexed and symlinked alongside everything else (e.g. Flux Redux / B-Lora style models, audio encoders for video/audio workflows, BiRefNet background-removal models)
+- Added Intel GPU support for ComfyUI
+- Added "Run Python Command" option to the package card's 3-dots menu for running arbitrary Python code in the package's virtual environment
+- Added a recoverable error dialog for UI thread exceptions, with option to continue instead of exiting
+- Added enable/disable toggle for environment variables in Settings, allowing variables to be temporarily disabled without deleting them
+### Changed
+- Promoted the Encoder Type selector in the Inference Model card out of Advanced Options up to the main card body, so it's visible whenever a non-Auto workflow profile is active (and always when **Custom** is selected)
+- Tidied up the Inference SamplerCard dimensions section — Source/Presets actions are shown as labeled buttons below the dimension row
+- The Inference checkpoint dropdown no longer **resets its scroll position** every time the model list refreshes. The refresh now applies a single combined (local + remote) diff to the underlying source cache, rather than first resetting to local-only and then re-adding remote entries — which previously caused the open dropdown to scroll back to the top
+- Local model autocomplete in the prompt editor now uses substring matching instead of prefix-only — typing any part of a model's filename surfaces it, with names that start with your search still ranked first
+- Single-encoder UNet workflows (Anima, Flux.2, Z-Image) now use the matching CLIPLoader instead of assuming Flux-style dual encoders
+- The CivitAI model details page now collapses the preview-image area and shows a small "No preview images available" hint when a model has no images to display, letting the description card take the full vertical space instead of leaving a large empty region above it
+- Improved the Gemini API error message in Image Lab when the API returns 401/403 to point users at Google's API key restriction policy (which starts blocking unrestricted keys on June 19 2026)
+- Improved safetensor checkpoint classification to correctly detect UNet-only models for Wan Video, HiDream, Z-Image, Hunyuan3D, and diffusers-format Flux architectures, ensuring they are routed to the DiffusionModels folder
+- GGUF checkpoint downloads now go directly to the DiffusionModels folder instead of StableDiffusion
+- Updated AI-Toolkit to install torch 2.9.1 / torchvision 0.24.1 / torchaudio 2.9.1 from the cu128 index to match upstream (ostris/ai-toolkit), with a cu126 fallback for legacy NVIDIA GPUs; also pin numpy to 1.26.4 to avoid a numpy 2.x ABI break in scipy/diffusers that crashed training runs
+- Pinned kohya_ss torch to 2.7.0 / torchvision 0.22.0 (cu128) to match upstream's requirements_pytorch_windows.txt instead of resolving an untested latest, keeping the cu126 legacy-GPU fallback
+- Pinned reForge torch to 2.9.0 to match upstream (modules/launch_utils.py)
+- Updated ComfyUI installs to cu130 (cu126 for legacy NVIDIA GPUs) / rocm7.2 torch indexes depending on GPU
+- Upgraded the bundled Visual C++ redistributable from 2015–2019 (v16) to 2015–2022 (v17, build 14.40.33810+), required by modern native dependencies such as PyTorch and ONNX Runtime
+- Video files can now be opened directly from the Output browser
+- Videos will now appear with thumbnails in the Output browser
+- Configured portable Git to suppress detached HEAD advice messages
+### Fixed
+- Fixed Inference text encoder selections being cleared when navigating away from and back to the Inference tab — encoder slots now ignore the transient null the model dropdown reports while its list refreshes
+- Fixed UNet-only Inference model selection sometimes clearing during model-list refreshes — text encoder slots no longer disappear after generating, cancelling a generation, or reconnecting to ComfyUI
+- Fixed [#1585](https://github.com/LykosAI/StabilityMatrix/issues/1585) - FluxGym installs/updates pulling an incompatible `transformers` version — installs now pin `transformers==4.54.1` and exclude it from the default requirements pass
+- Fixed [#1641](https://github.com/LykosAI/StabilityMatrix/issues/1641) - Cogstudio failing to set up its `inference/gradio_composite_demo` directory when the parent path didn't already exist
+- Fixed [#1650](https://github.com/LykosAI/StabilityMatrix/issues/1650) - ComfyUI-Manager extension installs failing on Linux with `File not found: venv/uv-build-constraints.txt` by no longer leaking the relative build-constraints path into the running package's environment
+- Fixed [#1645](https://github.com/LykosAI/StabilityMatrix/issues/1645) - Strix Halo / Radeon 8060S and other `Display controller`-class integrated GPUs not appearing in the GPU list on Linux
+- Fixed [#1643](https://github.com/LykosAI/StabilityMatrix/issues/1643) - package install and launch failures when `sitecustomize.py` or its compiled bytecode was corrupted by external software (e.g. some antivirus suites); the file now self-heals when out of date and its startup actions can no longer abort interpreter startup
+- Fixed the CivitAI model browser requiring two clicks of Search to show results when all base-model filters were selected — a leftover post-response sanity check from the old single-select base-model UI was rejecting the response the first time, requiring a second search to surface the cached results
+- Fixed CivitAI model cards showing "No versions available" when clicked for some models (typically recently uploaded or updated) even though the model has downloadable versions on the website — the app now retries with a different lookup path when the initial response comes back missing version data
+- Fixed `$#1234` and `civitai.com/models/1234` URL searches returning zero results for some models that exist and are downloadable on the website — the app now retries via a per-model lookup when the batch search misses a requested ID
+- Fixed `$#1234` searches with non-LORA / non-Checkpoint targets returning no results when the **Model Type** dropdown wasn't set to **All** — ID searches intentionally bypass the type and base-model filters in the request, but the post-response check was still rejecting the returned model when its type didn't match the dropdown
+- Fixed clicking a CivitAI model card with an empty version list appearing to do nothing for ~1–2s while the recovery round-trip runs — the clicked card now shows a "Loading..." state during the recovery, and the recovered version data is cached on the card so subsequent clicks are instant
+- Fixed "Invalid download link" error when using the browser extension
+- Fixed downloaded checkpoint going to StableDiffusion folder when a saved download preference existed, even for GGUF files that should always go to DiffusionModels
+- Fixed potential crash when adding metadata to malformed or non-PNG image data in Inference
+- Fixed non-Latin-1 characters (e.g. Japanese, Chinese, Korean, emoji) in image generation parameters being stored in PNG tEXt chunks, violating the PNG specification and causing character corruption (mojibake) in standard-compliant parsers. Non-Latin-1 content now uses spec-compliant iTXt chunks with proper UTF-8 encoding ([#1535](https://github.com/LykosAI/StabilityMatrix/issues/1535))
+- Fixed batch notification firing when only one image is generated
+### Supporters
+#### 🌟 Visionaries
+An enormous thank you to our incredible Visionaries: **Waterclouds**, **bluepopsicle**, **Ibixat**, **Droolguy**, **snotty**, **LG**, **whudunit**, **MrMxyzptlk12836**, **Psilocyfer18731**, **KalAbaddon**, and **moon_milky2843**! This was a huge release, and every bit of it rests on your generosity. Whether you've been cheering us on for years or only just joined, having you in our corner is what makes all of this possible — we're so grateful for you. 💛
+#### 🚀 Pioneers
+And what a Pioneer crew this release! A heartfelt thank-you to the regulars who keep showing up for us — **Szir777**, **[USA]TechDude**, **SinthCore**, **Jisuren**, **Tigon**, **jweg79**, **rwx14662**, **Hurbie53**, **ahnhj.al**, **drew.lukas**, **Tuskaruho**, **Cjloha**, **Alligator1907**, **Bitti**, **damianpointdexter**, **Ghislain G**, and **tmdcks** — your steady support release after release is what keeps us at the keyboard. And the warmest of welcomes to our newest Pioneers: **CommissarGiygas16050**, **qob97515211**, **bastardofbethlehem**, and **Zombop** — we're thrilled you've joined us, and we can't wait to get to know you! (And to our anonymous Pioneer out there too — our thanks reaches you. 💛)
+
 ## v2.16.0-pre.2
 ### Security
 - Updated the bundled 7-Zip binaries (Windows, Linux, macOS) to **26.01**, which includes the fix for the NTFS heap buffer overflow CVE-2026-48095 ([GitHub Security Lab GHSL-2026-140](https://securitylab.github.com/advisories/GHSL-2026-140_7-Zip/), CVSS 8.8) and brings years of accumulated upstream security fixes — the Windows binary in particular had been pinned at the 2018 18.01 release

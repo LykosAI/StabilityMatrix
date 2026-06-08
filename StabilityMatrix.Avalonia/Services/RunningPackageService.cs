@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using Nito.Disposables.Internals;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
+using StabilityMatrix.Avalonia.Models.PackageSteps;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper.Factory;
@@ -286,13 +287,8 @@ public partial class RunningPackageService(
     public RunningPackageViewModel? GetRunningPackageViewModel(Guid id) =>
         RunningPackages.TryGetValue(id, out var vm) ? vm : null;
 
-    private static async Task UnpackSiteCustomize(DirectoryPath venvPath)
-    {
-        var sitePackages = venvPath.JoinDir(PyVenvRunner.RelativeSitePackagesPath);
-        var file = sitePackages.JoinFile("sitecustomize.py");
-        file.Directory?.Create();
-        await Assets.PyScriptSiteCustomize.ExtractTo(file, true);
-    }
+    private static Task UnpackSiteCustomize(DirectoryPath venvPath) =>
+        new UnpackSiteCustomizeStep(venvPath).ExecuteAsync();
 
     public void Dispose()
     {

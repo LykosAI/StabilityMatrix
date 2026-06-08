@@ -71,7 +71,7 @@ public static partial class HardwareHelper
     [SupportedOSPlatform("linux")]
     private static IEnumerable<GpuInfo> IterGpuInfoLinux()
     {
-        var output = RunBashCommand("lspci | grep -E '(VGA|3D)'");
+        var output = RunBashCommand("lspci | grep -E '(VGA|3D|Display controller)'");
         var gpuLines = output.Split("\n");
 
         var gpuIndex = 0;
@@ -88,7 +88,10 @@ public static partial class HardwareHelper
             string? name = null;
 
             // Parse output with regex
-            var match = Regex.Match(gpuOutput, @"(VGA compatible controller|3D controller): ([^\n]*)");
+            var match = Regex.Match(
+                gpuOutput,
+                @"(VGA compatible controller|3D controller|Display controller): ([^\n]*)"
+            );
             if (match.Success)
             {
                 name = match.Groups[2].Value.Trim();
@@ -188,7 +191,7 @@ public static partial class HardwareHelper
                 }
                 catch (Exception e)
                 {
-                    Logger.Error(e, "Failed to get GPU info using nvidia-smi, falling back to registry");
+                    Logger.Warn(e, "Failed to get GPU info using nvidia-smi, falling back to registry");
 
                     var fallback = Compat.IsLinux
                         ? IterGpuInfoLinux().ToList()

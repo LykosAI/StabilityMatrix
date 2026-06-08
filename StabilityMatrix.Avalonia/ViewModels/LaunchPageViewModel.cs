@@ -20,6 +20,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Languages;
+using StabilityMatrix.Avalonia.Models.PackageSteps;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
@@ -340,13 +341,8 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
     }
 
     // Unpacks sitecustomize.py to the target venv
-    private static async Task UnpackSiteCustomize(DirectoryPath venvPath)
-    {
-        var sitePackages = venvPath.JoinDir(PyVenvRunner.RelativeSitePackagesPath);
-        var file = sitePackages.JoinFile("sitecustomize.py");
-        file.Directory?.Create();
-        await Assets.PyScriptSiteCustomize.ExtractTo(file, true);
-    }
+    private static Task UnpackSiteCustomize(DirectoryPath venvPath) =>
+        new UnpackSiteCustomizeStep(venvPath).ExecuteAsync();
 
     [RelayCommand]
     private async Task Config()

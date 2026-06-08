@@ -46,12 +46,10 @@ def audit(event: str, *args):
 
 # Reconfigure stdout to UTF-8
 # noinspection PyUnresolvedReferences
-sys.stdin.reconfigure(encoding="utf-8")
-sys.stdout.reconfigure(encoding="utf-8")
-sys.stderr.reconfigure(encoding="utf-8")
-
-# Install the audit hook
-sys.addaudithook(audit)
+def _reconfigure_streams():
+    sys.stdin.reconfigure(encoding="utf-8")
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
 
 # Patch Rich terminal detection
 def _patch_rich_console():
@@ -81,9 +79,7 @@ def _patch_rich_console():
     except ImportError:
         pass
     except Exception as e:
-        print("[sitecustomize error]:", e)    
-
-_patch_rich_console()
+        print("[sitecustomize error]:", e)
 
 # Patch tqdm to use stdout instead of stderr
 def _patch_tqdm():
@@ -97,4 +93,19 @@ def _patch_tqdm():
     except Exception as e:
         print("[sitecustomize error]:", e)
 
-_patch_tqdm()
+# Run startup customizations. Each is isolated so that a failure in one (or an
+# unusual host environment, e.g. an interpreter probe with no real stdio) can
+# never raise out of sitecustomize and abort interpreter startup.
+def _run_safely(func):
+    try:
+        func()
+    except Exception as e:
+        try:
+            print("[sitecustomize error]:", e)
+        except Exception:
+            pass
+
+_run_safely(_reconfigure_streams)
+_run_safely(lambda: sys.addaudithook(audit))
+_run_safely(_patch_rich_console)
+_run_safely(_patch_tqdm)

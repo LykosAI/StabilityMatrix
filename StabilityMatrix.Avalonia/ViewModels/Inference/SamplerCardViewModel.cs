@@ -130,6 +130,11 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
     [JsonIgnore]
     public IInferenceClientManager ClientManager { get; }
 
+    [JsonIgnore]
+    public TabContext TabContext => tabContext;
+
+    public bool HasSourceImageDimensions => tabContext.HasSourceImageDimensions;
+
     private int TotalSteps => Steps + RefinerSteps;
 
     public SamplerCardViewModel(
@@ -149,6 +154,7 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
             [
                 typeof(FreeUModule),
                 typeof(ControlNetModule),
+                typeof(RegionalPromptModule),
                 typeof(LayerDiffuseModule),
                 typeof(FluxGuidanceModule),
                 typeof(DiscreteModelSamplingModule),
@@ -178,6 +184,13 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
 
     private void TabContextOnStateChanged(object? sender, TabContext.TabStateChangedEventArgs e)
     {
+        if (e.PropertyName is nameof(tabContext.SourceImageWidth) or nameof(tabContext.SourceImageHeight))
+        {
+            OnPropertyChanged(nameof(HasSourceImageDimensions));
+            ApplySourceImageDimensionsCommand.NotifyCanExecuteChanged();
+            return;
+        }
+
         if (e.PropertyName != nameof(tabContext.SelectedModel))
             return;
 
@@ -192,10 +205,34 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
         SelectedScheduler = defaults.Scheduler;
     }
 
+    partial void OnWidthChanged(int value)
+    {
+        // Sync width to TabContext so other components can access it
+        tabContext.SamplerWidth = value;
+    }
+
+    partial void OnHeightChanged(int value)
+    {
+        // Sync height to TabContext so other components can access it
+        tabContext.SamplerHeight = value;
+    }
+
     [RelayCommand]
     private void SwapDimensions()
     {
         (Width, Height) = (Height, Width);
+    }
+
+    [RelayCommand(CanExecute = nameof(CanApplySourceImageDimensions))]
+    private void ApplySourceImageDimensions()
+    {
+        Width = tabContext.SourceImageWidth;
+        Height = tabContext.SourceImageHeight;
+    }
+
+    private bool CanApplySourceImageDimensions()
+    {
+        return tabContext.HasSourceImageDimensions;
     }
 
     [RelayCommand]
@@ -291,7 +328,11 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
         }
     }
 
-    public void ApplyStepsInitialCustomSampler(ModuleApplyStepEventArgs e, bool useFluxGuidance)
+    public void ApplyStepsInitialCustomSampler(
+        ModuleApplyStepEventArgs e,
+        bool useFluxGuidance,
+        bool useFlux2Scheduler = false
+    )
     {
         // Provide temp values
         e.Temp = e.CreateTempFromBuilder();
@@ -329,7 +370,21 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
         e.Builder.Connections.PrimarySamplerNode = kSamplerSelect.Output;
 
         // Scheduler/Sigmas
-        if (e.Builder.Connections.PrimaryScheduler?.Name is "align_your_steps")
+        if (useFlux2Scheduler)
+        {
+            var flux2Scheduler = e.Nodes.AddTypedNode(
+                new ComfyNodeBuilder.Flux2Scheduler
+                {
+                    Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.Flux2Scheduler)),
+                    Steps = Steps,
+                    Width = Width,
+                    Height = Height,
+                }
+            );
+
+            e.Builder.Connections.PrimarySigmas = flux2Scheduler.Output;
+        }
+        else if (e.Builder.Connections.PrimaryScheduler?.Name is "align_your_steps")
         {
             var alignYourSteps = e.Nodes.AddTypedNode(
                 new ComfyNodeBuilder.AlignYourStepsScheduler
@@ -377,14 +432,14 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
                 new ComfyNodeBuilder.FluxGuidance
                 {
                     Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.FluxGuidance)),
-                    Conditioning = e.Builder.Connections.GetRefinerOrBaseConditioning().Positive,
+                    Conditioning = e.Temp.GetRefinerOrBaseConditioning().Positive,
                     Guidance = CfgScale,
                 }
             );
 
             e.Builder.Connections.Base.Conditioning = new ConditioningConnections(
                 fluxGuidance.Output,
-                e.Builder.Connections.GetRefinerOrBaseConditioning().Negative
+                e.Temp.GetRefinerOrBaseConditioning().Negative
             );
 
             // Guider
@@ -401,7 +456,7 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
         }
         else
         {
-            e.Builder.Connections.Base.Conditioning = e.Builder.Connections.GetRefinerOrBaseConditioning();
+            e.Builder.Connections.Base.Conditioning = e.Temp.GetRefinerOrBaseConditioning();
 
             var cfgGuider = e.Nodes.AddTypedNode(
                 new ComfyNodeBuilder.CFGGuider

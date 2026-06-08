@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -57,6 +57,9 @@ public partial class OutputsPageViewModel : PageViewModelBase
     private readonly ILogger<OutputsPageViewModel> logger;
     private readonly List<CancellationTokenSource> cancellationTokenSources = [];
     private readonly IServiceManager<ViewModelBase> vmFactory;
+    private readonly IVideoThumbnailService videoThumbnailService;
+
+    private int pendingThumbnails = 0;
 
     public override string Title => Resources.Label_OutputsPageTitle;
 
@@ -109,7 +112,19 @@ public partial class OutputsPageViewModel : PageViewModelBase
             ? Resources.Label_OneImageSelected
             : string.Format(Resources.Label_NumImagesSelected, NumItemsSelected);
 
-    private string[] allowedExtensions = [".png", ".webp", ".jpg", ".jpeg", ".gif"];
+    private string[] allowedExtensions =
+    [
+        ".png",
+        ".webp",
+        ".jpg",
+        ".jpeg",
+        ".gif",
+        ".mp4",
+        ".webm",
+        ".mov",
+        ".avi",
+        ".mkv",
+    ];
 
     private TreeViewDirectory? lastOutputCategory;
 
@@ -119,7 +134,8 @@ public partial class OutputsPageViewModel : PageViewModelBase
         INotificationService notificationService,
         INavigationService<MainWindowViewModel> navigationService,
         ILogger<OutputsPageViewModel> logger,
-        IServiceManager<ViewModelBase> vmFactory
+        IServiceManager<ViewModelBase> vmFactory,
+        IVideoThumbnailService videoThumbnailService
     )
     {
         this.settingsManager = settingsManager;
@@ -128,6 +144,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
         this.navigationService = navigationService;
         this.logger = logger;
         this.vmFactory = vmFactory;
+        this.videoThumbnailService = videoThumbnailService;
 
         var searcher = new ImageSearcher();
 
@@ -142,7 +159,28 @@ public partial class OutputsPageViewModel : PageViewModelBase
             .Connect()
             .DeferUntilLoaded()
             .Filter(searchPredicate)
-            .Transform(file => new OutputImageViewModel(file))
+            .Transform(file =>
+            {
+                var vm = new OutputImageViewModel(file);
+                // For video files, check for existing thumbnail immediately (sync)
+                // Then kick off async generation if needed
+                if (file.IsVideo)
+                {
+                    // Check if thumbnail already exists (sync - for immediate display)
+                    var existingThumb = videoThumbnailService.GetExistingThumbnailPath(file.AbsolutePath);
+                    if (existingThumb != null)
+                    {
+                        vm.ThumbnailPath = existingThumb;
+                    }
+                    else
+                    {
+                        // Kick off async thumbnail generation
+                        GenerateVideoThumbnailAsync(vm)
+                            .SafeFireAndForget(ex => logger.LogError(ex, "Error generating video thumbnail"));
+                    }
+                }
+                return vm;
+            })
             .Sort(
                 SortExpressionComparer<OutputImageViewModel>
                     .Descending(vm => vm.ImageFile.CreatedAt)
@@ -226,7 +264,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
         var path =
             CanShowOutputTypes && SelectedOutputType != SharedOutputType.All
                 ? Path.Combine(newValue.Path, SelectedOutputType.ToString())
-                : SelectedCategory.Path;
+                : newValue.Path;
         GetOutputs(path);
         lastOutputCategory = newValue;
     }
@@ -260,6 +298,13 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
     public async Task ShowImageDialog(OutputImageViewModel item)
     {
+        // If it's a video file, open with system player
+        if (item.ImageFile.IsVideo)
+        {
+            ProcessRunner.OpenUrl(item.ImageFile.AbsolutePath);
+            return;
+        }
+
         var currentIndex = Outputs.IndexOf(item);
 
         var image = new ImageSource(new FilePath(item.ImageFile.AbsolutePath));
@@ -568,6 +613,12 @@ public partial class OutputsPageViewModel : PageViewModelBase
         if (!settingsManager.IsLibraryDirSet)
             return;
 
+        var imageLabInputsRoot = Path.Combine(settingsManager.ImagesDirectory, "ImageLab", "Inputs");
+        var imageLabInputsRootFull =
+            Path.GetFullPath(imageLabInputsRoot)
+                .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+            + Path.DirectorySeparatorChar;
+
         if (
             !Directory.Exists(directory)
             && (
@@ -605,8 +656,15 @@ public partial class OutputsPageViewModel : PageViewModelBase
                 .EnumerateFiles(directory, "*", EnumerationOptionConstants.AllDirectories)
                 .Where(file =>
                     allowedExtensions.Contains(new FilePath(file).Extension)
+                    && !Path.GetFullPath(file)
+                        .StartsWith(imageLabInputsRootFull, StringComparison.OrdinalIgnoreCase)
                     && new FilePath(file).Info.DirectoryName?.EndsWith(
                         "thumbnails",
+                        StringComparison.OrdinalIgnoreCase
+                    )
+                        is false
+                    && new FilePath(file).Info.DirectoryName?.EndsWith(
+                        ".sm-thumbs",
                         StringComparison.OrdinalIgnoreCase
                     )
                         is false
@@ -706,7 +764,14 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
         foreach (var dir in directories)
         {
-            var category = new TreeViewDirectory { Name = Path.GetFileName(dir), Path = dir };
+            // Skip thumbnail directories
+            var dirName = Path.GetFileName(dir);
+            if (dirName.Equals(".sm-thumbs", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            var category = new TreeViewDirectory { Name = dirName, Path = dir };
 
             if (Directory.GetDirectories(dir, "*", EnumerationOptionConstants.TopLevelOnly).Length > 0)
             {
@@ -790,5 +855,61 @@ public partial class OutputsPageViewModel : PageViewModelBase
         }
 
         return false; // Target was not found in this collection of nodes.
+    }
+
+    /// <summary>
+    /// Generates a thumbnail for a video file and updates the ViewModel.
+    /// </summary>
+    private async Task GenerateVideoThumbnailAsync(OutputImageViewModel vm)
+    {
+        logger.LogInformation("Starting thumbnail generation for video: {Path}", vm.ImageFile.FileName);
+
+        // Track pending thumbnails and show notification
+        var count = Interlocked.Increment(ref pendingThumbnails);
+        if (count == 1)
+        {
+            notificationService.Show(
+                "Generating Video Thumbnails",
+                "Creating thumbnails for video files...",
+                NotificationType.Information
+            );
+        }
+
+        try
+        {
+            var thumbnailPath = await videoThumbnailService
+                .GetOrCreateThumbnailAsync(vm.ImageFile.AbsolutePath)
+                .ConfigureAwait(false);
+
+            logger.LogInformation(
+                "Thumbnail result for {Video}: {ThumbnailPath}",
+                vm.ImageFile.FileName,
+                thumbnailPath ?? "(null)"
+            );
+
+            if (thumbnailPath != null)
+            {
+                // Update on UI thread
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    logger.LogInformation(
+                        "Setting ThumbnailPath for {Video} to {Path}",
+                        vm.ImageFile.FileName,
+                        thumbnailPath
+                    );
+                    vm.ThumbnailPath = thumbnailPath;
+                    logger.LogInformation("DisplayPath is now: {DisplayPath}", vm.DisplayPath);
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Failed to generate thumbnail for {Path}", vm.ImageFile.AbsolutePath);
+        }
+        finally
+        {
+            // Decrement counter
+            Interlocked.Decrement(ref pendingThumbnails);
+        }
     }
 }

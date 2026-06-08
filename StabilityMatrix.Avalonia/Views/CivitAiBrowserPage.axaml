@@ -597,12 +597,24 @@
                     <Button.Flyout>
                         <Flyout>
                             <StackPanel MaxWidth="350" Orientation="Vertical">
-                                <Button
-                                    Margin="0,0,0,8"
-                                    HorizontalAlignment="Stretch"
-                                    Classes="transparent"
-                                    Command="{Binding ClearOrSelectAllBaseModelsCommand}"
-                                    Content="{Binding ClearButtonText}" />
+                                <Grid Margin="0,0,0,8" ColumnDefinitions="*,Auto">
+                                    <Button
+                                        Grid.Column="0"
+                                        HorizontalAlignment="Stretch"
+                                        Classes="transparent"
+                                        Command="{Binding ClearOrSelectAllBaseModelsCommand}"
+                                        Content="{Binding ClearButtonText}" />
+                                    <Button
+                                        Grid.Column="1"
+                                        Width="32"
+                                        Height="32"
+                                        Margin="4,0,0,0"
+                                        Classes="transparent"
+                                        Command="{Binding NavigateToBaseModelSettingsCommand}"
+                                        ToolTip.Tip="Configure base model filters">
+                                        <ui:SymbolIcon FontSize="16" Symbol="Settings" />
+                                    </Button>
+                                </Grid>
                                 <ui:ItemsRepeater ItemsSource="{Binding AllBaseModels}">
                                     <ui:ItemsRepeater.Layout>
                                         <ui:FlowLayout

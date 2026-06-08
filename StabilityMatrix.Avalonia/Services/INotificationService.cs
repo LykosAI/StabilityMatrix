@@ -1,10 +1,9 @@
-﻿using System;
-using System.Threading.Tasks;
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Controls.Notifications;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Notifications;
 using StabilityMatrix.Core.Models.Settings;
 
 namespace StabilityMatrix.Avalonia.Services;
@@ -51,7 +50,11 @@ public interface INotificationService
     /// <summary>
     /// Show a keyed customizable persistent notification with the given parameters.
     /// </summary>
-    Task ShowPersistentAsync(NotificationKey key, DesktopNotifications.Notification notification);
+    Task ShowPersistentAsync(
+        NotificationKey key,
+        DesktopNotifications.Notification notification,
+        NotificationAction? action = null
+    );
 
     /// <summary>
     /// Show a keyed customizable notification with the given parameters.
@@ -59,7 +62,8 @@ public interface INotificationService
     Task ShowAsync(
         NotificationKey key,
         DesktopNotifications.Notification notification,
-        TimeSpan? expiration = null
+        TimeSpan? expiration = null,
+        NotificationAction? action = null
     );
 
     /// <summary>
@@ -69,7 +73,8 @@ public interface INotificationService
         string title,
         string message,
         NotificationType appearance = NotificationType.Information,
-        TimeSpan? expiration = null
+        TimeSpan? expiration = null,
+        NotificationAction? action = null
     );
 
     /// <summary>
@@ -78,10 +83,12 @@ public interface INotificationService
     /// <param name="title"></param>
     /// <param name="message"></param>
     /// <param name="appearance"></param>
+    /// <param name="action"></param>
     void ShowPersistent(
         string title,
         string message,
-        NotificationType appearance = NotificationType.Information
+        NotificationType appearance = NotificationType.Information,
+        NotificationAction? action = null
     );
 
     /// <summary>

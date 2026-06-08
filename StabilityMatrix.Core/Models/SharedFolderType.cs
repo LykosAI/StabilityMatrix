@@ -46,4 +46,16 @@ public enum SharedFolderType : ulong
 
     [Extensions.Description("Diffusion Models (UNet-only)")]
     DiffusionModels = 1ul << 31,
+
+    [Extensions.Description("Style Models")]
+    StyleModels = 1ul << 32,
+
+    [Extensions.Description("Audio Encoders")]
+    AudioEncoders = 1ul << 33,
+
+    [Extensions.Description("Model Patches")]
+    ModelPatches = 1ul << 34,
+
+    [Extensions.Description("Background Removal")]
+    BackgroundRemoval = 1ul << 35,
 }

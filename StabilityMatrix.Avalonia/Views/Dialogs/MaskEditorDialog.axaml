@@ -1,35 +1,50 @@
-﻿<controls:UserControlBase xmlns="https://github.com/avaloniaui"
-                          xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                          xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-                          xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-                          xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
-                          xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
-                          xmlns:vmDialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
-                          xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
-                          d:DataContext="{x:Static mocks:DesignData.MaskEditorViewModel}"
-                          x:DataType="vmDialogs:MaskEditorViewModel"
-                          mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-                          x:Class="StabilityMatrix.Avalonia.Views.Dialogs.MaskEditorDialog">
-    <sg:SpacedGrid RowDefinitions="Auto,*" Margin="0,8">
+﻿<controls:UserControlBase
+    x:Class="StabilityMatrix.Avalonia.Views.Dialogs.MaskEditorDialog"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
+    xmlns:vmDialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
+    d:DataContext="{x:Static mocks:DesignData.MaskEditorViewModel}"
+    d:DesignHeight="950"
+    d:DesignWidth="800"
+    x:DataType="vmDialogs:MaskEditorViewModel"
+    mc:Ignorable="d">
+    <sg:SpacedGrid
+        Margin="0,8"
+        VerticalAlignment="Stretch"
+        RowDefinitions="Auto,*">
         <controls:Card>
-            <Grid ColumnDefinitions="*,Auto" Margin="8,0">
+            <Grid Margin="8,0" ColumnDefinitions="*,Auto">
                 <ToggleSwitch
+                    Grid.Column="0"
+                    HorizontalAlignment="Left"
                     IsChecked="{Binding IsMaskEnabled}"
-                    OnContent="Enabled" OffContent="Disabled" Grid.Column="0" HorizontalAlignment="Left"/>
-                <StackPanel 
+                    OffContent="Disabled"
+                    OnContent="Enabled" />
+                <StackPanel
                     Grid.Column="1"
-                    Orientation="Horizontal" Spacing="16">
-                    <Button Content="Load Mask" Command="{Binding DebugSelectFileLoadMaskCommand}" />
-                    <Button Content="Save Mask" Command="{Binding DebugSelectFileSaveMaskCommand}" />
-                    <ToggleButton 
-                        Content="Use Image Alpha Channel as Mask" 
-                        IsVisible="False"
-                        IsChecked="{Binding UseImageAlphaAsMask}"/>
+                    Orientation="Horizontal"
+                    Spacing="16">
+                    <Button Command="{Binding DebugSelectFileLoadMaskCommand}" Content="Load Mask" />
+                    <Button Command="{Binding DebugSelectFileSaveMaskCommand}" Content="Save Mask" />
+                    <ToggleButton
+                        Content="Use Image Alpha Channel as Mask"
+                        IsChecked="{Binding UseImageAlphaAsMask}"
+                        IsVisible="False" />
                 </StackPanel>
             </Grid>
         </controls:Card>
 
-        <controls:Card Padding="8,4,8,8" Grid.Row="1">
+        <controls:Card
+            Grid.Row="1"
+            MinHeight="500"
+            Margin="0,4"
+            Padding="8,4,8,8"
+            VerticalAlignment="Top">
             <controls:PaintCanvas DataContext="{Binding PaintCanvasViewModel, Mode=OneWay}" />
         </controls:Card>
 

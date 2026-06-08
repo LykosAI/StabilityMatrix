@@ -20,6 +20,7 @@ using StabilityMatrix.Avalonia.Animations;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
+using StabilityMatrix.Avalonia.Models.CheckpointOrganizer;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
@@ -56,6 +57,7 @@ public partial class CheckpointsPageViewModel(
     INotificationService notificationService,
     IMetadataImportService metadataImportService,
     IModelImportService modelImportService,
+    ModelOrganizationService modelOrganizationService,
     OpenModelDbManager openModelDbManager,
     IServiceManager<ViewModelBase> dialogFactory,
     ICivitBaseModelTypeService baseModelTypeService,
@@ -591,6 +593,93 @@ public partial class CheckpointsPageViewModel(
     }
 
     [RelayCommand]
+    private async Task OrganizeModelsAsync()
+    {
+        if (SelectedCategory == null)
+        {
+            notificationService.Show(
+                "No Category Selected",
+                "Please select a category to organize.",
+                NotificationType.Error
+            );
+            return;
+        }
+
+        var organizeDialogVm = dialogFactory.Get<OrganizeModelsDialogViewModel>();
+        organizeDialogVm.Initialize(
+            modelIndexService.ModelIndex.Values.SelectMany(x => x),
+            settingsManager.ModelsDirectory,
+            SelectedCategory.Path,
+            ShowModelsInSubfolders,
+            settingsManager.Settings.ModelOrganizationFileNamePattern
+        );
+
+        if (organizeDialogVm.Plan?.Items.Count == 0)
+        {
+            notificationService.Show(
+                "Nothing To Organize",
+                "No indexed models matched the selected category.",
+                NotificationType.Information
+            );
+            return;
+        }
+
+        var dialogResult = await organizeDialogVm.GetDialog().ShowAsync();
+
+        if (dialogResult == ContentDialogResult.Secondary)
+        {
+            switch (organizeDialogVm.RequestedMetadataAction)
+            {
+                case ModelOrganizationMetadataAction.ScanMissing:
+                    await ScanMetadata(false);
+                    break;
+                case ModelOrganizationMetadataAction.UpdateExisting:
+                    await ScanMetadata(true);
+                    break;
+            }
+
+            return;
+        }
+
+        if (dialogResult != ContentDialogResult.Primary)
+            return;
+
+        var plan = organizeDialogVm.Plan!;
+
+        IsLoading = true;
+        Progress.Text = "Organizing models...";
+        Progress.IsIndeterminate = true;
+
+        try
+        {
+            var result = await modelOrganizationService.ApplyPlan(plan);
+            await modelIndexService.RefreshIndex();
+
+            var summary =
+                $"{result.MovedCount} moved, {result.ConflictCount} conflicts, {result.SkippedCount} skipped.";
+            notificationService.Show(
+                "Organization Complete",
+                summary,
+                result.Errors.Count == 0 ? NotificationType.Success : NotificationType.Warning
+            );
+
+            if (result.Errors.Count > 0)
+            {
+                notificationService.ShowPersistent(
+                    "Organization encountered errors",
+                    string.Join(Environment.NewLine, result.Errors.Take(5)),
+                    NotificationType.Warning
+                );
+            }
+        }
+        finally
+        {
+            IsLoading = false;
+            Progress.ClearProgress();
+        }
+    }
+
+    [RelayCommand]
     private Task OnItemClick(CheckpointFileViewModel item)
     {
         // Select item if we're in "select mode"
@@ -607,7 +696,10 @@ public partial class CheckpointsPageViewModel(
     [RelayCommand]
     private async Task ShowVersionDialog(CheckpointFileViewModel item)
     {
-        if (item.CheckpointFile is { HasCivitMetadata: false, HasOpenModelDbMetadata: false })
+        if (
+            item.CheckpointFile is
+            { HasCivitMetadata: false, HasOpenModelDbMetadata: false, HasCivArchiveMetadata: false }
+        )
         {
             notificationService.Show(
                 "Cannot show version dialog",
@@ -625,6 +717,32 @@ public partial class CheckpointsPageViewModel(
         {
             await ShowOpenModelDbDialog(item);
         }
+        else if (item.CheckpointFile.HasCivArchiveMetadata)
+        {
+            ShowCivArchiveDialog(item);
+        }
+    }
+
+    private void ShowCivArchiveDialog(CheckpointFileViewModel item)
+    {
+        var sourceUrl = item.CheckpointFile.ConnectedModelInfo?.SourceUrl;
+        if (string.IsNullOrWhiteSpace(sourceUrl))
+        {
+            notificationService.Show(
+                "CivArchive link unavailable",
+                "This model was downloaded before navigation back to CivArchive was supported. Re-download from CivArchive to enable this.",
+                NotificationType.Warning
+            );
+            return;
+        }
+
+        var newVm = dialogFactory.Get<CivArchiveDetailsPageViewModel>(vm =>
+        {
+            vm.RelativeUrl = sourceUrl;
+            return vm;
+        });
+
+        navigationService.NavigateTo(newVm, BetterSlideNavigationTransition.PageSlideFromRight);
     }
 
     private void ShowCivitVersionDialog(CheckpointFileViewModel item)

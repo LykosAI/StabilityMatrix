@@ -1,5 +1,4 @@
-﻿using System;
-using DiscordRPC;
+﻿using DiscordRPC;
 using DiscordRPC.Logging;
 using DiscordRPC.Message;
 using Microsoft.Extensions.Logging;
@@ -30,8 +29,8 @@ public class DiscordRichPresenceService : IDiscordRichPresenceService
             },
             Buttons = new[]
             {
-                new Button { Label = "GitHub", Url = "https://github.com/LykosAI/StabilityMatrix", }
-            }
+                new Button { Label = "GitHub", Url = "https://github.com/LykosAI/StabilityMatrix" },
+            },
         };
 
     public DiscordRichPresenceService(
@@ -111,7 +110,7 @@ public class DiscordRichPresenceService : IDiscordRichPresenceService
                 VoltaML => "VoltaML",
                 VladAutomatic => "SD.Next Web UI",
                 A3WebUI => "Automatic1111 Web UI",
-                _ => "Stable Diffusion"
+                _ => "Stable Diffusion",
             };
 
             presence.State = $"Running {packageTitle}";
@@ -122,13 +121,13 @@ public class DiscordRichPresenceService : IDiscordRichPresenceService
                 ComfyUI => "fa_diagram_project",
                 VoltaML => "ic_package_voltaml",
                 InvokeAI => "ic_package_invokeai",
-                _ => "ic_fluent_box_512_filled"
+                _ => "ic_fluent_box_512_filled",
             };
 
             presence.WithTimestamps(
                 new Timestamps
                 {
-                    StartUnixMilliseconds = (ulong?)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+                    StartUnixMilliseconds = (ulong?)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
                 }
             );
 

@@ -176,6 +176,11 @@ public record LocalModelFile
     public bool HasOpenModelDbMetadata =>
         HasConnectedModel && ConnectedModelInfo.Source == ConnectedModelSource.OpenModelDb;
 
+    [BsonIgnore]
+    [MemberNotNullWhen(true, nameof(ConnectedModelInfo))]
+    public bool HasCivArchiveMetadata =>
+        HasConnectedModel && ConnectedModelInfo.Source == ConnectedModelSource.CivArchive;
+
     public string GetFullPath(string rootModelDirectory)
     {
         return Path.Combine(rootModelDirectory, RelativePath);

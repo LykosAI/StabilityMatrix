@@ -1,0 +1,105 @@
+﻿<Styles
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
+    xmlns:fluentIcons="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
+    xmlns:inference="clr-namespace:StabilityMatrix.Avalonia.Models.Inference"
+    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+    xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
+    xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+    xmlns:vmInference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
+    x:DataType="vmInference:RegionalPromptCardViewModel">
+
+    <Style Selector="controls|RegionalPromptCard">
+        <Setter Property="Template">
+            <ControlTemplate>
+                <controls:Card Padding="12">
+                    <StackPanel Spacing="8">
+
+                        <!--  Open Mask Editor Button  -->
+                        <Button
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Center"
+                            Command="{Binding OpenMaskEditorCommand}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <fluentIcons:SymbolIcon FontSize="16" Symbol="PaintBrush" />
+                                <TextBlock Text="Open Layer Editor" />
+                            </StackPanel>
+                        </Button>
+
+                        <TextBlock
+                            FontSize="11"
+                            Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                            Text="Paint masks for each layer - each layer gets its own prompt"
+                            TextWrapping="Wrap" />
+
+                        <!--  Layers Summary  -->
+                        <StackPanel Spacing="4">
+                            <TextBlock FontWeight="SemiBold" Text="Layers" />
+                            <ItemsControl ItemsSource="{Binding Layers}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate DataType="inference:MaskLayer">
+                                        <Border
+                                            Margin="0,2"
+                                            Padding="8"
+                                            Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                                            CornerRadius="4">
+                                            <sg:SpacedGrid ColumnDefinitions="Auto,24,*,80" ColumnSpacing="8">
+                                                <!--  Enable checkbox  -->
+                                                <CheckBox IsChecked="{Binding IsEnabled}" ToolTip.Tip="Enable for generation" />
+
+                                                <!--  Color indicator  -->
+                                                <Border
+                                                    Grid.Column="1"
+                                                    Width="20"
+                                                    Height="20"
+                                                    Background="{Binding DisplayColorHex}"
+                                                    CornerRadius="4" />
+
+                                                <!--  Prompt preview (paint layers only)  -->
+                                                <TextBox
+                                                    Grid.Column="2"
+                                                    IsVisible="{Binding LayerType, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static inference:MaskLayerType.Paint}}"
+                                                    Text="{Binding Prompt}"
+                                                    Watermark="Enter prompt for this layer..." />
+
+                                                <!--  Reference label (image layers only)  -->
+                                                <TextBlock
+                                                    Grid.Column="2"
+                                                    VerticalAlignment="Center"
+                                                    FontSize="12"
+                                                    FontStyle="Italic"
+                                                    Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                                    IsVisible="{Binding LayerType, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static inference:MaskLayerType.Image}}"
+                                                    Text="Reference layer" />
+
+                                                <!--  Strength (paint layers only)  -->
+                                                <ui:NumberBox
+                                                    Grid.Column="3"
+                                                    IsVisible="{Binding LayerType, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static inference:MaskLayerType.Paint}}"
+                                                    Maximum="10"
+                                                    Minimum="0"
+                                                    SimpleNumberFormat="F1"
+                                                    SmallChange="0.1"
+                                                    SpinButtonPlacementMode="Compact"
+                                                    Value="{Binding Strength}" />
+                                            </sg:SpacedGrid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <!--  Empty state  -->
+                            <TextBlock
+                                FontStyle="Italic"
+                                Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                IsVisible="{Binding !Layers.Count}"
+                                Text="No layers defined. Click 'Open Layer Editor' to add layers." />
+                        </StackPanel>
+
+                    </StackPanel>
+                </controls:Card>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+</Styles>

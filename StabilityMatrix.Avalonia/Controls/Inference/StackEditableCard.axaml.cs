@@ -18,6 +18,7 @@ namespace StabilityMatrix.Avalonia.Controls;
 public class StackEditableCard : TemplatedControlBase
 {
     private ListBox? listBoxPart;
+    private Button? addButtonPart;
 
     // ReSharper disable once MemberCanBePrivate.Global
     public static readonly StyledProperty<bool> IsListBoxEditEnabledProperty = AvaloniaProperty.Register<
@@ -51,10 +52,8 @@ public class StackEditableCard : TemplatedControlBase
             };
         }
 
-        if (e.NameScope.Find<Button>("PART_AddButton") is { } addButton)
-        {
-            addButton.Flyout = GetAddButtonFlyout();
-        }
+        addButtonPart = e.NameScope.Find<Button>("PART_AddButton");
+        ConfigureAddButton();
     }
 
     /// <inheritdoc />
@@ -83,9 +82,36 @@ public class StackEditableCard : TemplatedControlBase
         }
     }
 
-    private FAMenuFlyout GetAddButtonFlyout()
+    protected override void OnDataContextChanged(EventArgs e)
     {
-        var vm = (DataContext as StackEditableCardViewModel)!;
+        base.OnDataContextChanged(e);
+        ConfigureAddButton();
+    }
+
+    private void ConfigureAddButton()
+    {
+        if (addButtonPart is null || DataContext is not StackEditableCardViewModel vm)
+            return;
+
+        addButtonPart.Command = null;
+        addButtonPart.CommandParameter = null;
+        addButtonPart.Flyout = null;
+
+        if (vm.AvailableModules.Count == 1)
+        {
+            addButtonPart.Command = vm.AddModuleCommand;
+            addButtonPart.CommandParameter = vm.AvailableModules[0];
+            return;
+        }
+
+        if (vm.AvailableModules.Count > 1)
+        {
+            addButtonPart.Flyout = GetAddButtonFlyout(vm);
+        }
+    }
+
+    private FAMenuFlyout GetAddButtonFlyout(StackEditableCardViewModel vm)
+    {
         var flyout = new FAMenuFlyout();
 
         foreach (var moduleType in vm.AvailableModules)

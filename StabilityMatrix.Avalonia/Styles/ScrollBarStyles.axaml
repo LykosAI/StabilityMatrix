@@ -1,0 +1,65 @@
+﻿<Styles
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:system="clr-namespace:System;assembly=System.Runtime">
+
+    <Styles.Resources>
+        <!--
+            Default values for the vertical-scrollbar appearance. Bound from the style
+            setters below via DynamicResource so the MainSettingsViewModel can flip them
+            at runtime when the user toggles "Always show scrollbars" in Appearance.
+            False / 14 = always-visible thick bars (app default).
+            True / 0  = Avalonia's classic auto-hide thin bars (legacy mode).
+        -->
+        <system:Boolean x:Key="ScrollBarAllowAutoHide">False</system:Boolean>
+        <system:Double x:Key="ScrollBarMinWidthValue">14</system:Double>
+    </Styles.Resources>
+    <!--
+        Global scrollbar tweaks — vertical only:
+        - Vertical bars: AllowAutoHide=False locks them into their `:expanded`
+        pseudo-class (the thicker variant) AND makes the ScrollViewer reserve real
+        layout space for them instead of overlaying content. Avalonia's default
+        fades them to a thin overlay-style bar that only thickens on hover, which
+        is awkward to grab.
+        - Horizontal bars: left at default (auto-hide). They're less commonly used
+        for navigation, push other content around when they appear, and feel more
+        natural fading away than vertical ones do.
+        - MinWidth floor ensures the thumb hit-target stays comfortable in case any
+        third-party theme tries to override the expanded size.
+    -->
+    <Design.PreviewWith>
+        <Border Padding="20">
+            <ScrollViewer Width="200" Height="120">
+                <StackPanel>
+                    <TextBlock Text="Line 1" />
+                    <TextBlock Text="Line 2" />
+                    <TextBlock Text="Line 3" />
+                    <TextBlock Text="Line 4" />
+                    <TextBlock Text="Line 5" />
+                    <TextBlock Text="Line 6" />
+                    <TextBlock Text="Line 7" />
+                    <TextBlock Text="Line 8" />
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+    </Design.PreviewWith>
+
+    <Style Selector="ScrollBar:vertical">
+        <Setter Property="AllowAutoHide" Value="{DynamicResource ScrollBarAllowAutoHide}" />
+        <Setter Property="MinWidth" Value="{DynamicResource ScrollBarMinWidthValue}" />
+    </Style>
+
+    <!--
+        Carve-outs: keep TextBox-internal ScrollBars on auto-hide. TextBox (and its
+        derivatives like AutoCompleteBox, plus controls that embed a TextBox in their
+        template such as NumberBox / NumericUpDown) have a vertical ScrollBar in their
+        ScrollViewer template that's normally invisible because the content fits.
+        With AllowAutoHide=False that bar would be permanently visible — visually
+        attaching a ghost scrollbar next to spin-button arrows or single-line input
+        fields where there's nothing to scroll.
+    -->
+    <Style Selector="TextBox ScrollBar:vertical">
+        <Setter Property="AllowAutoHide" Value="True" />
+        <Setter Property="MinWidth" Value="0" />
+    </Style>
+</Styles>

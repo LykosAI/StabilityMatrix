@@ -1,0 +1,583 @@
+﻿<controls:UserControlBase
+    x:Class="StabilityMatrix.Avalonia.Views.Dialogs.ModelPickerDialog"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:checkpointManager="clr-namespace:StabilityMatrix.Avalonia.ViewModels.CheckpointManager"
+    xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+    xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:dialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
+    xmlns:fluentIcons="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
+    xmlns:labs="clr-namespace:Avalonia.Labs.Controls;assembly=Avalonia.Labs.Controls"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
+    xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
+    xmlns:ui="using:FluentAvalonia.UI.Controls"
+    xmlns:vendorLabs="clr-namespace:StabilityMatrix.Avalonia.Controls.VendorLabs"
+    x:Name="Root"
+    d:DataContext="{x:Static mocks:DesignData.ModelPickerDialogViewModel}"
+    d:DesignHeight="600"
+    d:DesignWidth="800"
+    x:DataType="dialogs:ModelPickerDialogViewModel"
+    mc:Ignorable="d">
+
+    <controls:UserControlBase.Resources>
+        <converters:FileUriConverter x:Key="FileUriConverter" />
+        <converters:FileExistsConverter x:Key="FileExistsConverter" />
+        <converters:FileNotExistsConverter x:Key="FileNotExistsConverter" />
+        <converters:EnumToBooleanConverter x:Key="EnumToBooleanConverter" />
+        <converters:ModelPickerNsfwOverlayVisibilityConverter x:Key="ModelPickerNsfwOverlayVisibilityConverter" />
+        <converters:ObjectEqualsConverter x:Key="ObjectEqualsConverter" />
+    </controls:UserControlBase.Resources>
+
+    <controls:UserControlBase.Styles>
+        <!--  Wider scrollbar for easier grabbing  -->
+        <Style Selector="ListBox ScrollViewer">
+            <Style Selector="^ /template/ ScrollBar">
+                <Setter Property="Margin" Value="2" />
+            </Style>
+            <Style Selector="^ /template/ ScrollBar:vertical">
+                <Setter Property="Width" Value="14" />
+            </Style>
+            <Style Selector="^ /template/ ScrollBar:vertical /template/ Thumb">
+                <Setter Property="MinWidth" Value="10" />
+            </Style>
+        </Style>
+        <Style Selector="ListBoxItem">
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        </Style>
+        <Style Selector="Border.model-list-card:pointerover">
+            <Setter Property="Background" Value="{DynamicResource ControlFillColorSecondaryBrush}" />
+        </Style>
+        <Style Selector="ListBoxItem:selected Border.model-list-card">
+            <Setter Property="Background" Value="{DynamicResource ControlFillColorSecondaryBrush}" />
+        </Style>
+        <Style Selector="ToggleButton.model-view-toggle:checked">
+            <Setter Property="Foreground" Value="{DynamicResource AccentButtonForeground}" />
+        </Style>
+        <Style Selector="ToggleButton.model-view-toggle:pointerover:checked">
+            <Setter Property="Foreground" Value="{DynamicResource AccentButtonForegroundPointerOver}" />
+        </Style>
+        <Style Selector="ToggleButton.model-view-toggle:pressed:checked">
+            <Setter Property="Foreground" Value="{DynamicResource AccentButtonForegroundPressed}" />
+        </Style>
+        <Style Selector="ToggleButton.model-view-toggle PathIcon">
+            <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+        </Style>
+        <Style Selector="ToggleButton.model-view-toggle:checked PathIcon">
+            <Setter Property="Foreground" Value="#151515" />
+        </Style>
+        <Style Selector="ToggleButton.model-view-toggle:pointerover:checked PathIcon">
+            <Setter Property="Foreground" Value="#151515" />
+        </Style>
+        <Style Selector="ToggleButton.model-view-toggle:pressed:checked PathIcon">
+            <Setter Property="Foreground" Value="#151515" />
+        </Style>
+
+        <Style Selector="Border.model-grid-card">
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <Style Selector="Border.model-grid-card:pointerover">
+            <Setter Property="Background" Value="{DynamicResource ControlFillColorSecondaryBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ControlStrokeColorSecondaryBrush}" />
+        </Style>
+    </controls:UserControlBase.Styles>
+
+    <sg:SpacedGrid RowDefinitions="Auto,Auto,Auto,*,Auto" RowSpacing="12">
+        <!--  Title  -->
+        <TextBlock
+            Margin="0,0,0,4"
+            Text="{Binding Title}"
+            Theme="{DynamicResource TitleTextBlockStyle}" />
+
+        <!--  Search Box  -->
+        <TextBox
+            x:Name="SearchBox"
+            Grid.Row="1"
+            Text="{Binding SearchText, Mode=TwoWay}"
+            Watermark="Search name, base model, tags...">
+            <TextBox.InnerLeftContent>
+                <fluentIcons:SymbolIcon
+                    Margin="8,0,4,0"
+                    FontSize="16"
+                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                    Symbol="Search" />
+            </TextBox.InnerLeftContent>
+        </TextBox>
+
+        <!--  Filter Row  -->
+        <Grid
+            Grid.Row="2"
+            ColumnDefinitions="*,Auto,Auto"
+            ColumnSpacing="12">
+            <StackPanel
+                Grid.Column="0"
+                Orientation="Horizontal"
+                Spacing="8">
+                <!--  Type Filters (only for Checkpoint+UNet source)  -->
+                <ToggleButton
+                    Content="Checkpoints"
+                    IsChecked="{Binding ShowCheckpointsOnly}"
+                    IsVisible="{Binding ShowFolderTypeFilters}"
+                    ToolTip.Tip="Show only AIO checkpoint models" />
+                <ToggleButton
+                    Content="Diffusion Models"
+                    IsChecked="{Binding ShowUnetsOnly}"
+                    IsVisible="{Binding ShowFolderTypeFilters}"
+                    ToolTip.Tip="Show only UNet/diffusion models" />
+                <!--  Base Model Filter Button  -->
+                <Button
+                    Height="32"
+                    VerticalAlignment="Stretch"
+                    VerticalContentAlignment="Center"
+                    BorderBrush="{DynamicResource ComboBoxBorderBrush}"
+                    BorderThickness="1">
+                    <Button.Content>
+                        <Grid HorizontalAlignment="Stretch" ColumnDefinitions="Auto,8,Auto">
+                            <TextBlock Text="{Binding FilterButtonText}" />
+                            <ui:SymbolIcon
+                                Grid.Column="2"
+                                VerticalAlignment="Center"
+                                FontSize="12"
+                                Foreground="{DynamicResource TextFillColorSecondary}"
+                                Symbol="ChevronDown" />
+                        </Grid>
+                    </Button.Content>
+                    <Button.Flyout>
+                        <Flyout Placement="BottomEdgeAlignedLeft">
+                            <StackPanel
+                                MaxWidth="400"
+                                Orientation="Vertical"
+                                Spacing="8">
+                                <Button
+                                    HorizontalAlignment="Stretch"
+                                    Classes="transparent"
+                                    Command="{Binding ClearOrSelectAllBaseModelsCommand}"
+                                    Content="Clear / Select All" />
+                                <ui:ItemsRepeater ItemsSource="{Binding BaseModelOptions}">
+                                    <ui:ItemsRepeater.Layout>
+                                        <ui:FlowLayout
+                                            LineAlignment="Center"
+                                            MinColumnSpacing="4"
+                                            MinRowSpacing="4"
+                                            Orientation="Horizontal" />
+                                    </ui:ItemsRepeater.Layout>
+                                    <ui:ItemsRepeater.ItemTemplate>
+                                        <DataTemplate DataType="{x:Type checkpointManager:BaseModelOptionViewModel}">
+                                            <ToggleButton Content="{Binding ModelType}" IsChecked="{Binding IsSelected}" />
+                                        </DataTemplate>
+                                    </ui:ItemsRepeater.ItemTemplate>
+                                </ui:ItemsRepeater>
+                            </StackPanel>
+                        </Flyout>
+                    </Button.Flyout>
+                </Button>
+
+                <!--  Clear All Filters  -->
+                <Button
+                    Padding="8,6"
+                    Command="{Binding ClearFiltersCommand}"
+                    IsVisible="{Binding HasActiveFilters}"
+                    ToolTip.Tip="Clear all filters">
+                    <fluentIcons:SymbolIcon FontSize="14" Symbol="Dismiss" />
+                </Button>
+            </StackPanel>
+
+            <ToggleSwitch
+                Grid.Column="1"
+                VerticalAlignment="Center"
+                IsChecked="{Binding ShowNsfwContent}"
+                OffContent="NSFW Content"
+                OnContent="NSFW Content"
+                ToolTip.Tip="Show models marked as adult/NSFW" />
+
+            <Grid Grid.Column="2" ColumnDefinitions="Auto,Auto">
+                <ToggleButton
+                    Grid.Column="0"
+                    Padding="10,6"
+                    Classes="model-view-toggle"
+                    CornerRadius="8,0,0,8"
+                    IsChecked="{Binding !IsGridView}"
+                    ToolTip.Tip="List view">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <PathIcon
+                            Width="14"
+                            Height="14"
+                            Data="M3 4H7V8H3Z M9 5H21V7H9Z M3 10H7V14H3Z M9 11H21V13H9Z M3 16H7V20H3Z M9 17H21V19H9Z" />
+                        <TextBlock Text="List" />
+                    </StackPanel>
+                </ToggleButton>
+                <ToggleButton
+                    Grid.Column="1"
+                    Padding="10,6"
+                    Classes="model-view-toggle"
+                    CornerRadius="0,8,8,0"
+                    IsChecked="{Binding IsGridView}"
+                    ToolTip.Tip="Grid view">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <PathIcon
+                            Width="14"
+                            Height="14"
+                            Data="M4 4H10V10H4Z M14 4H20V10H14Z M4 14H10V20H4Z M14 14H20V20H14Z" />
+                        <TextBlock Text="Grid" />
+                    </StackPanel>
+                </ToggleButton>
+            </Grid>
+        </Grid>
+
+        <!--  Model List  -->
+        <Border
+            Grid.Row="3"
+            BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+            BorderThickness="1"
+            CornerRadius="4">
+            <Grid>
+                <ListBox
+                    HorizontalAlignment="Stretch"
+                    ItemsSource="{Binding FilteredModels}"
+                    ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                    SelectedItem="{Binding SelectedModel}"
+                    SelectionMode="Single">
+                    <ListBox.IsVisible>
+                        <MultiBinding Converter="{x:Static BoolConverters.And}">
+                            <Binding Path="!IsGridView" />
+                            <Binding Path="HasFilteredModels" />
+                        </MultiBinding>
+                    </ListBox.IsVisible>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate x:DataType="models:HybridModelFile">
+                            <Border
+                                Margin="2"
+                                Padding="8"
+                                Background="Transparent"
+                                CornerRadius="4"
+                                Cursor="Hand">
+                                <Border.HorizontalAlignment>Stretch</Border.HorizontalAlignment>
+                                <sg:SpacedGrid ColumnDefinitions="Auto,*,120" ColumnSpacing="12">
+                                    <!--  Thumbnail  -->
+                                    <vendorLabs:BetterAsyncImage
+                                        x:Name="ListPreviewImage"
+                                        Width="48"
+                                        Height="48"
+                                        CornerRadius="6"
+                                        IsVisible="{Binding Local.PreviewImageFullPathGlobal, Converter={StaticResource FileExistsConverter}, FallbackValue=False}"
+                                        RenderOptions.BitmapInterpolationMode="HighQuality"
+                                        Source="{Binding Local.PreviewImageFullPathGlobal, Converter={StaticResource FileUriConverter}, FallbackValue=''}"
+                                        Stretch="UniformToFill" />
+
+                                    <!--  Placeholder when no image  -->
+                                    <Border
+                                        Width="48"
+                                        Height="48"
+                                        Background="{DynamicResource ControlFillColorSecondaryBrush}"
+                                        CornerRadius="6">
+                                        <Border.IsVisible>
+                                            <MultiBinding Converter="{x:Static BoolConverters.Or}">
+                                                <Binding Converter="{StaticResource FileNotExistsConverter}" Path="Local.PreviewImageFullPathGlobal" />
+                                                <Binding
+                                                    Converter="{StaticResource EnumToBooleanConverter}"
+                                                    ConverterParameter="{x:Static labs:AsyncImageState.Failed}"
+                                                    ElementName="ListPreviewImage"
+                                                    Path="State" />
+                                            </MultiBinding>
+                                        </Border.IsVisible>
+                                        <fluentIcons:SymbolIcon
+                                            FontSize="20"
+                                            Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                            Symbol="Image" />
+                                    </Border>
+                                    <Border
+                                        Width="48"
+                                        Height="48"
+                                        Background="{DynamicResource SolidBackgroundFillColorBaseBrush}"
+                                        CornerRadius="6">
+                                        <Border.IsVisible>
+                                            <MultiBinding Converter="{StaticResource ModelPickerNsfwOverlayVisibilityConverter}">
+                                                <Binding ElementName="Root" Path="DataContext.ShowNsfwContent" />
+                                                <Binding Path="Local.ConnectedModelInfo.Nsfw" />
+                                                <Binding Path="Local.PreviewImageFullPathGlobal" />
+                                                <Binding ElementName="ListPreviewImage" Path="State" />
+                                            </MultiBinding>
+                                        </Border.IsVisible>
+                                        <TextBlock
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"
+                                            FontSize="10"
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                            Text="NSFW" />
+                                    </Border>
+
+                                    <!--  Model Info  -->
+                                    <Grid
+                                        Grid.Column="1"
+                                        Width="460"
+                                        MinWidth="0"
+                                        MaxWidth="460"
+                                        VerticalAlignment="Center"
+                                        RowDefinitions="Auto,Auto,Auto"
+                                        RowSpacing="2">
+                                        <TextBlock
+                                            FontWeight="SemiBold"
+                                            Text="{Binding Local.DisplayModelName, FallbackValue=''}"
+                                            TextTrimming="CharacterEllipsis"
+                                            TextWrapping="NoWrap" />
+                                        <TextBlock
+                                            Grid.Row="1"
+                                            FontSize="12"
+                                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                            Text="{Binding Local.DisplayModelVersion, FallbackValue=''}"
+                                            TextTrimming="CharacterEllipsis"
+                                            TextWrapping="NoWrap" />
+                                        <TextBlock
+                                            Grid.Row="2"
+                                            FontSize="11"
+                                            Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                            Text="{Binding FileName}"
+                                            TextTrimming="CharacterEllipsis"
+                                            TextWrapping="NoWrap" />
+                                    </Grid>
+
+                                    <!--  Badges  -->
+                                    <StackPanel
+                                        Grid.Column="2"
+                                        Width="120"
+                                        HorizontalAlignment="Right"
+                                        VerticalAlignment="Center"
+                                        Orientation="Horizontal"
+                                        Spacing="6">
+                                        <!--  Base Model Badge  -->
+                                        <Label
+                                            MinHeight="0"
+                                            Padding="8,2"
+                                            Classes="Circle LightBlue"
+                                            Content="{Binding Local.ConnectedModelInfo.BaseModel, FallbackValue=''}"
+                                            FontSize="11"
+                                            FontWeight="SemiBold"
+                                            IsVisible="{Binding Local.ConnectedModelInfo.BaseModel, Converter={x:Static StringConverters.IsNotNullOrEmpty}, FallbackValue=False}"
+                                            Theme="{StaticResource TagLabel}" />
+                                    </StackPanel>
+                                </sg:SpacedGrid>
+
+                                <Interaction.Behaviors>
+                                    <EventTriggerBehavior EventName="DoubleTapped">
+                                        <InvokeCommandAction Command="{Binding $parent[controls:UserControlBase].((dialogs:ModelPickerDialogViewModel)DataContext).SelectModelCommand}" CommandParameter="{Binding}" />
+                                    </EventTriggerBehavior>
+                                </Interaction.Behaviors>
+                            </Border>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+
+                <ScrollViewer HorizontalContentAlignment="Center" HorizontalScrollBarVisibility="Disabled">
+                    <ScrollViewer.IsVisible>
+                        <MultiBinding Converter="{x:Static BoolConverters.And}">
+                            <Binding Path="IsGridView" />
+                            <Binding Path="HasFilteredModels" />
+                        </MultiBinding>
+                    </ScrollViewer.IsVisible>
+                    <ItemsRepeater
+                        HorizontalAlignment="Center"
+                        HorizontalCacheLength="300"
+                        ItemsSource="{Binding FilteredModels}"
+                        VerticalCacheLength="500">
+                        <ItemsRepeater.Layout>
+                            <UniformGridLayout
+                                ItemsJustification="SpaceAround"
+                                ItemsStretch="None"
+                                MinColumnSpacing="12"
+                                MinItemHeight="304"
+                                MinItemWidth="188"
+                                MinRowSpacing="10" />
+                        </ItemsRepeater.Layout>
+                        <ItemsRepeater.ItemTemplate>
+                            <DataTemplate x:DataType="models:HybridModelFile">
+                                <Grid Width="188" Height="304">
+                                    <Border
+                                        Padding="8"
+                                        Classes="model-grid-card"
+                                        ClipToBounds="True"
+                                        CornerRadius="6"
+                                        Cursor="Hand">
+                                        <Grid RowDefinitions="188,*" RowSpacing="8">
+                                            <vendorLabs:BetterAsyncImage
+                                                x:Name="GridPreviewImage"
+                                                Grid.Row="0"
+                                                CornerRadius="6"
+                                                IsVisible="{Binding Local.PreviewImageFullPathGlobal, Converter={StaticResource FileExistsConverter}, FallbackValue=False}"
+                                                RenderOptions.BitmapInterpolationMode="HighQuality"
+                                                Source="{Binding Local.PreviewImageFullPathGlobal, Converter={StaticResource FileUriConverter}, FallbackValue=''}"
+                                                Stretch="UniformToFill" />
+                                            <Border
+                                                Grid.Row="0"
+                                                Background="{DynamicResource ControlFillColorSecondaryBrush}"
+                                                CornerRadius="6">
+                                                <Border.IsVisible>
+                                                    <MultiBinding Converter="{x:Static BoolConverters.Or}">
+                                                        <Binding Converter="{StaticResource FileNotExistsConverter}" Path="Local.PreviewImageFullPathGlobal" />
+                                                        <Binding
+                                                            Converter="{StaticResource EnumToBooleanConverter}"
+                                                            ConverterParameter="{x:Static labs:AsyncImageState.Failed}"
+                                                            ElementName="GridPreviewImage"
+                                                            Path="State" />
+                                                    </MultiBinding>
+                                                </Border.IsVisible>
+                                                <fluentIcons:SymbolIcon
+                                                    FontSize="24"
+                                                    Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                                    Symbol="Image" />
+                                            </Border>
+                                            <Border
+                                                Grid.Row="0"
+                                                Background="{DynamicResource SolidBackgroundFillColorBaseBrush}"
+                                                CornerRadius="6">
+                                                <Border.IsVisible>
+                                                    <MultiBinding Converter="{StaticResource ModelPickerNsfwOverlayVisibilityConverter}">
+                                                        <Binding ElementName="Root" Path="DataContext.ShowNsfwContent" />
+                                                        <Binding Path="Local.ConnectedModelInfo.Nsfw" />
+                                                        <Binding Path="Local.PreviewImageFullPathGlobal" />
+                                                        <Binding ElementName="GridPreviewImage" Path="State" />
+                                                    </MultiBinding>
+                                                </Border.IsVisible>
+                                                <StackPanel
+                                                    Margin="10"
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center"
+                                                    Spacing="4">
+                                                    <fluentIcons:SymbolIcon
+                                                        HorizontalAlignment="Center"
+                                                        FontSize="20"
+                                                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                        Symbol="Image" />
+                                                    <TextBlock
+                                                        HorizontalAlignment="Center"
+                                                        FontSize="11"
+                                                        FontWeight="SemiBold"
+                                                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                        Text="NSFW Hidden" />
+                                                    <TextBlock
+                                                        MaxWidth="160"
+                                                        HorizontalAlignment="Center"
+                                                        FontSize="11"
+                                                        Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                                        MaxLines="2"
+                                                        Text="{Binding Local.DisplayModelName, FallbackValue=''}"
+                                                        TextAlignment="Center"
+                                                        TextTrimming="CharacterEllipsis" />
+                                                </StackPanel>
+                                            </Border>
+                                            <StackPanel Grid.Row="1" Spacing="4">
+                                                <TextBlock
+                                                    FontWeight="SemiBold"
+                                                    MaxLines="2"
+                                                    Text="{Binding Local.DisplayModelName, FallbackValue=''}"
+                                                    TextTrimming="CharacterEllipsis"
+                                                    TextWrapping="Wrap" />
+                                                <TextBlock
+                                                    FontSize="12"
+                                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                    MaxLines="1"
+                                                    Text="{Binding Local.DisplayModelVersion, FallbackValue=''}"
+                                                    TextTrimming="CharacterEllipsis" />
+                                                <Label
+                                                    MinHeight="0"
+                                                    Padding="8,2"
+                                                    Classes="Circle LightBlue"
+                                                    Content="{Binding Local.ConnectedModelInfo.BaseModel, FallbackValue=''}"
+                                                    FontSize="11"
+                                                    FontWeight="SemiBold"
+                                                    IsVisible="{Binding Local.ConnectedModelInfo.BaseModel, Converter={x:Static StringConverters.IsNotNullOrEmpty}, FallbackValue=False}"
+                                                    Theme="{StaticResource TagLabel}" />
+                                            </StackPanel>
+
+                                        </Grid>
+                                        <Interaction.Behaviors>
+                                            <EventTriggerBehavior EventName="Tapped">
+                                                <InvokeCommandAction Command="{Binding $parent[ItemsRepeater].((dialogs:ModelPickerDialogViewModel)DataContext).SetSelectedModelCommand}" CommandParameter="{Binding}" />
+                                            </EventTriggerBehavior>
+                                            <EventTriggerBehavior EventName="DoubleTapped">
+                                                <InvokeCommandAction Command="{Binding $parent[ItemsRepeater].((dialogs:ModelPickerDialogViewModel)DataContext).SelectModelCommand}" CommandParameter="{Binding}" />
+                                            </EventTriggerBehavior>
+                                        </Interaction.Behaviors>
+                                    </Border>
+                                    <!--  Selection indicator  -->
+                                    <Border
+                                        Margin="-1"
+                                        BorderBrush="{DynamicResource AccentFillColorDefaultBrush}"
+                                        BorderThickness="2"
+                                        CornerRadius="7"
+                                        IsHitTestVisible="False">
+                                        <Border.IsVisible>
+                                            <MultiBinding Converter="{StaticResource ObjectEqualsConverter}">
+                                                <Binding />
+                                                <Binding ElementName="Root" Path="DataContext.SelectedModel" />
+                                            </MultiBinding>
+                                        </Border.IsVisible>
+                                    </Border>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsRepeater.ItemTemplate>
+                    </ItemsRepeater>
+                </ScrollViewer>
+
+                <StackPanel
+                    Margin="0,18"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    IsVisible="{Binding !HasFilteredModels}"
+                    Spacing="10">
+                    <TextBlock
+                        HorizontalAlignment="Center"
+                        FontSize="16"
+                        FontWeight="SemiBold"
+                        Text="No models match your filters" />
+                    <TextBlock
+                        HorizontalAlignment="Center"
+                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                        Text="Try a broader search, or clear your filters."
+                        TextAlignment="Center" />
+                    <Button
+                        HorizontalAlignment="Center"
+                        Command="{Binding ClearFiltersCommand}"
+                        Content="Clear Filters"
+                        IsVisible="{Binding HasActiveFilters}" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!--  Footer  -->
+        <sg:SpacedGrid
+            Grid.Row="4"
+            ColumnDefinitions="*,Auto,Auto,Auto"
+            ColumnSpacing="8">
+            <StackPanel Spacing="2">
+                <TextBlock
+                    VerticalAlignment="Center"
+                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                    Text="{Binding FilteredModels.Count, StringFormat='{}{0} models'}" />
+                <TextBlock
+                    FontSize="11"
+                    Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                    Text="Tips: Double-click or Enter to select, Ctrl+F to search, Esc to close." />
+            </StackPanel>
+
+            <Button
+                Grid.Column="2"
+                MinWidth="80"
+                Command="{Binding OnCloseButtonClick}"
+                Content="Cancel" />
+
+            <Button
+                Grid.Column="3"
+                MinWidth="80"
+                Classes="accent"
+                Command="{Binding SelectModelCommand}"
+                CommandParameter="{Binding SelectedModel}"
+                Content="Select"
+                IsEnabled="{Binding SelectedModel, Converter={x:Static ObjectConverters.IsNotNull}}" />
+        </sg:SpacedGrid>
+    </sg:SpacedGrid>
+</controls:UserControlBase>

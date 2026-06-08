@@ -13,8 +13,10 @@ using DynamicData.Binding;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
 using Semver;
+using SkiaSharp;
 using StabilityMatrix.Avalonia.Controls.CodeCompletion;
 using StabilityMatrix.Avalonia.Models;
+using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Models.TagCompletion;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels;
@@ -44,6 +46,7 @@ using StabilityMatrix.Core.Models.Api.OpenArt;
 using StabilityMatrix.Core.Models.Api.OpenModelsDb;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.Notifications;
 using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Models.Packages.Extensions;
@@ -55,6 +58,7 @@ using StabilityMatrix.Core.Updater;
 using CivitAiBrowserViewModel = StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser.CivitAiBrowserViewModel;
 using HuggingFacePageViewModel = StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser.HuggingFacePageViewModel;
 using MainPackageManagerViewModel = StabilityMatrix.Avalonia.ViewModels.PackageManager.MainPackageManagerViewModel;
+using NotificationLevel = StabilityMatrix.Core.Models.Settings.NotificationLevel;
 
 namespace StabilityMatrix.Avalonia.DesignData;
 
@@ -136,7 +140,7 @@ public static class DesignData
             .AddSingleton(Substitute.For<INotificationService>())
             .AddSingleton(Substitute.For<ISharedFolders>())
             .AddSingleton(Substitute.For<IDownloadService>())
-            .AddSingleton(Substitute.For<IHttpClientFactory>())
+            .AddSingleton(CreateHttpClientFactory())
             .AddSingleton(Substitute.For<IApiFactory>())
             .AddSingleton(Substitute.For<IDiscordRichPresenceService>())
             .AddSingleton(Substitute.For<ITrackedDownloadService>())
@@ -146,7 +150,8 @@ public static class DesignData
             .AddSingleton<ICompletionProvider, MockCompletionProvider>()
             .AddSingleton<IModelIndexService, MockModelIndexService>()
             .AddSingleton<IImageIndexService, MockImageIndexService>()
-            .AddSingleton<IMetadataImportService, MetadataImportService>();
+            .AddSingleton<IMetadataImportService, MetadataImportService>()
+            .AddSingleton(Substitute.For<IPrerequisiteHelper>());
 
         // Placeholder services that nobody should need during design time
         services
@@ -155,7 +160,6 @@ public static class DesignData
             .AddSingleton<ICivitApi>(_ => null!)
             .AddSingleton<IGithubApiCache>(_ => null!)
             .AddSingleton<ITokenizerProvider>(_ => null!)
-            .AddSingleton<IPrerequisiteHelper>(_ => null!)
             .AddSingleton<IPyPiApi>(_ => null!)
             .AddSingleton<IPyPiCache>(_ => null!);
 
@@ -445,6 +449,77 @@ public static class DesignData
             ]
         );
 
+        // Seed sample notifications so the Notifications tab has something to preview
+        var historyService = Services.GetRequiredService<INotificationHistoryService>();
+        var actionDispatcher = Services.GetRequiredService<INotificationActionDispatcher>();
+
+        ProgressManagerViewModel.NotificationItems.AddRange(
+            [
+                new NotificationItemViewModel(
+                    new NotificationHistoryEntry
+                    {
+                        Timestamp = DateTimeOffset.Now.AddSeconds(-10),
+                        Title = "Prompt completed",
+                        Body = "Prompt [a1b2c3d] completed successfully",
+                        Level = NotificationLevel.Success,
+                        Action = new NavigateToPageAction(typeof(InferenceViewModel).AssemblyQualifiedName!),
+                    },
+                    historyService,
+                    actionDispatcher
+                ),
+                new NotificationItemViewModel(
+                    new NotificationHistoryEntry
+                    {
+                        Timestamp = DateTimeOffset.Now.AddMinutes(-3),
+                        Title = "Download Completed",
+                        Body = "Download of sd_xl_base_1.0.safetensors completed successfully.",
+                        Level = NotificationLevel.Success,
+                        Action = new OpenFolderAction(@"C:\StabilityMatrix\Models\StableDiffusion"),
+                    },
+                    historyService,
+                    actionDispatcher
+                ),
+                new NotificationItemViewModel(
+                    new NotificationHistoryEntry
+                    {
+                        Timestamp = DateTimeOffset.Now.AddMinutes(-12),
+                        Title = "Debug options enabled",
+                        Body = "Warning: Improper use may corrupt application state or cause loss of data.",
+                        Level = NotificationLevel.Warning,
+                        IsRead = true,
+                    },
+                    historyService,
+                    actionDispatcher
+                ),
+                new NotificationItemViewModel(
+                    new NotificationHistoryEntry
+                    {
+                        Timestamp = DateTimeOffset.Now.AddHours(-1),
+                        Title = "Download Failed",
+                        Body =
+                            "Download of really_long_model_name_v2_pruned_fp16.safetensors failed: (HttpRequestException) Connection timed out after 30 seconds. Please check your network and try again.",
+                        Level = NotificationLevel.Error,
+                        Action = new ToggleProgressFlyoutAction(),
+                        IsRead = true,
+                    },
+                    historyService,
+                    actionDispatcher
+                ),
+                new NotificationItemViewModel(
+                    new NotificationHistoryEntry
+                    {
+                        Timestamp = DateTimeOffset.Now.AddHours(-2),
+                        Title = "Content dialog closed",
+                        Body = "Result: Primary",
+                        Level = NotificationLevel.Information,
+                        IsRead = true,
+                    },
+                    historyService,
+                    actionDispatcher
+                ),
+            ]
+        );
+
         UpdateViewModel = Services.GetRequiredService<UpdateViewModel>();
         UpdateViewModel.CurrentVersionText = "v2.0.0";
         UpdateViewModel.NewVersionText = "v2.0.1";
@@ -456,6 +531,13 @@ public static class DesignData
 
     [NotNull]
     public static PackageInstallBrowserViewModel? NewInstallerDialogViewModel { get; private set; }
+
+    private static IHttpClientFactory CreateHttpClientFactory()
+    {
+        var httpClientFactory = Substitute.For<IHttpClientFactory>();
+        httpClientFactory.CreateClient(Arg.Any<string>()).Returns(_ => new HttpClient());
+        return httpClientFactory;
+    }
 
     [NotNull]
     public static PackageInstallDetailViewModel? PackageInstallDetailViewModel { get; private set; }
@@ -574,6 +656,46 @@ public static class DesignData
                 ]
             );
         });
+
+    public static LayeredMaskEditorViewModel LayeredMaskEditorViewModel =>
+        DialogFactory.Get<LayeredMaskEditorViewModel>(vm =>
+        {
+            vm.CanvasSize = new System.Drawing.Size(1024, 1024);
+            vm.Layers.Clear();
+            vm.Layers.Add(
+                new MaskLayer
+                {
+                    Name = "Background",
+                    Prompt = "A beautiful sunset, coastal landscape, high quality",
+                    DisplayColor = MaskLayerColors.Red,
+                    Strength = 1.0f,
+                    Opacity = 0.5f,
+                }
+            );
+            vm.Layers.Add(
+                new MaskLayer
+                {
+                    Name = "Subject",
+                    Prompt = "A lonely person sitting on a rock, silhouette, detailed",
+                    DisplayColor = MaskLayerColors.Green,
+                    Strength = 1.0f,
+                    Opacity = 1.0f,
+                }
+            );
+            vm.Layers.Add(
+                new MaskLayer
+                {
+                    Name = "Extra Detail",
+                    Prompt = "Lens flare, atmospheric lighting",
+                    DisplayColor = MaskLayerColors.Blue,
+                    Strength = 0.5f,
+                    Opacity = 0.8f,
+                    IsVisible = false,
+                }
+            );
+            vm.SelectedLayer = vm.Layers[1];
+        });
+
     public static OutputsPageViewModel OutputsPageViewModel
     {
         get
@@ -976,6 +1098,9 @@ The gallery images are often inpainted, but you will get something very similar 
 
     public static MaskEditorViewModel MaskEditorViewModel => DialogFactory.Get<MaskEditorViewModel>();
 
+    public static ImageAnnotationEditorViewModel ImageAnnotationEditorViewModel =>
+        DialogFactory.Get<ImageAnnotationEditorViewModel>();
+
     public static InferenceTextToImageViewModel InferenceTextToImageViewModel =>
         DialogFactory.Get<InferenceTextToImageViewModel>(vm =>
         {
@@ -1299,7 +1424,8 @@ The gallery images are often inpainted, but you will get something very similar 
                         "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/dd9b038c-bd15-43ab-86ab-66e145ad7ff2/width=512",
                     ConnectedModelInfo = new ConnectedModelInfo
                     {
-                        ModelName = "Art Shaper (very long name example)",
+                        ModelName =
+                            "Art Shaper (very long name example) (very long name example) (very long name example)",
                         VersionName = "Style v8 (very long name)",
                         ModelId = 0,
                         VersionId = 0,
@@ -1560,6 +1686,9 @@ The gallery images are often inpainted, but you will get something very similar 
             vm.ModelType = CivitModelType.Checkpoint;
             vm.BaseModelType = "Pony";
         });
+
+    public static ModelPickerDialogViewModel ModelPickerDialogViewModel =>
+        DialogFactory.Get<ModelPickerDialogViewModel>();
 
     public static PackageInstallProgressItemViewModel PackageInstallProgressItemViewModel =>
         new(

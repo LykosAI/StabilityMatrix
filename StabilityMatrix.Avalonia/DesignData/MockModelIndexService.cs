@@ -22,7 +22,8 @@ public class MockModelIndexService : IModelIndexService
                         "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/dd9b038c-bd15-43ab-86ab-66e145ad7ff2/width=512/img.jpeg",
                     ConnectedModelInfo = new ConnectedModelInfo
                     {
-                        ModelName = "Art Shaper (very long name example)",
+                        ModelName =
+                            "Art Shaper (very long name example) (very long name example) (very long name example) (very long name example)",
                         VersionName = "Style v8 (very long name)",
                         ModelId = 0,
                         VersionId = 0,
@@ -81,6 +82,23 @@ public class MockModelIndexService : IModelIndexService
     /// <inheritdoc />
     public IReadOnlySet<string> ModelIndexBlake3Hashes =>
         ModelIndex.Values.SelectMany(x => x).Select(x => x.HashBlake3).WhereNotNull().ToHashSet();
+
+    /// <inheritdoc />
+    public IReadOnlySet<string> ModelIndexSha256Hashes =>
+        ModelIndex
+            .Values.SelectMany(x => x)
+            .Select(x => x.HashSha256)
+            .WhereNotNull()
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+    /// <inheritdoc />
+    public IReadOnlySet<string> ModelIndexCivArchiveUrls =>
+        ModelIndex
+            .Values.SelectMany(x => x)
+            .Where(x => x.HasCivArchiveMetadata)
+            .Select(x => x.ConnectedModelInfo!.SourceUrl)
+            .WhereNotNull()
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
     /// <inheritdoc />
     public Task RefreshIndex()

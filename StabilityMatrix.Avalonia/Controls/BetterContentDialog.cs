@@ -99,6 +99,8 @@ public class BetterContentDialog : ContentDialog
     #endregion
 
     private Border? backgroundPart;
+    private ContentDialogViewModelBase? boundDialogViewModel;
+    private ContentDialogProgressViewModelBase? boundProgressViewModel;
 
     protected override Type StyleKeyOverride { get; } = typeof(ContentDialog);
 
@@ -154,8 +156,8 @@ public class BetterContentDialog : ContentDialog
 
     public double MinDialogHeight
     {
-        get => GetValue(MaxDialogHeightProperty);
-        set => SetValue(MaxDialogHeightProperty, value);
+        get => GetValue(MinDialogHeightProperty);
+        set => SetValue(MinDialogHeightProperty, value);
     }
 
     public static readonly StyledProperty<double> MaxDialogHeightProperty = AvaloniaProperty.Register<
@@ -205,6 +207,7 @@ public class BetterContentDialog : ContentDialog
         }
 
         AddHandler(LoadedEvent, OnLoaded);
+        AddHandler(UnloadedEvent, OnUnloaded);
     }
 
     /// <inheritdoc />
@@ -283,23 +286,47 @@ public class BetterContentDialog : ContentDialog
 
     private void TryBindButtonEvents()
     {
+        UnbindButtonEvents();
+
         if ((Content as Control)?.DataContext is ContentDialogViewModelBase viewModel)
         {
             viewModel.PrimaryButtonClick += OnDialogButtonClick;
             viewModel.SecondaryButtonClick += OnDialogButtonClick;
             viewModel.CloseButtonClick += OnDialogButtonClick;
+            boundDialogViewModel = viewModel;
         }
         else if (Content is ContentDialogViewModelBase viewModelDirect)
         {
             viewModelDirect.PrimaryButtonClick += OnDialogButtonClick;
             viewModelDirect.SecondaryButtonClick += OnDialogButtonClick;
             viewModelDirect.CloseButtonClick += OnDialogButtonClick;
+            boundDialogViewModel = viewModelDirect;
         }
         else if ((Content as Control)?.DataContext is ContentDialogProgressViewModelBase progressViewModel)
         {
             progressViewModel.PrimaryButtonClick += OnDialogButtonClick;
             progressViewModel.SecondaryButtonClick += OnDialogButtonClick;
             progressViewModel.CloseButtonClick += OnDialogButtonClick;
+            boundProgressViewModel = progressViewModel;
+        }
+    }
+
+    private void UnbindButtonEvents()
+    {
+        if (boundDialogViewModel is not null)
+        {
+            boundDialogViewModel.PrimaryButtonClick -= OnDialogButtonClick;
+            boundDialogViewModel.SecondaryButtonClick -= OnDialogButtonClick;
+            boundDialogViewModel.CloseButtonClick -= OnDialogButtonClick;
+            boundDialogViewModel = null;
+        }
+
+        if (boundProgressViewModel is not null)
+        {
+            boundProgressViewModel.PrimaryButtonClick -= OnDialogButtonClick;
+            boundProgressViewModel.SecondaryButtonClick -= OnDialogButtonClick;
+            boundProgressViewModel.CloseButtonClick -= OnDialogButtonClick;
+            boundProgressViewModel = null;
         }
     }
 
@@ -405,5 +432,10 @@ public class BetterContentDialog : ContentDialog
             viewModel.OnLoaded();
             Dispatcher.UIThread.InvokeAsync(viewModel.OnLoadedAsync).SafeFireAndForget();
         }*/
+    }
+
+    private void OnUnloaded(object? sender, RoutedEventArgs? e)
+    {
+        UnbindButtonEvents();
     }
 }

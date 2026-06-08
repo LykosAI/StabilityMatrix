@@ -266,7 +266,6 @@ public partial class MainWindowViewModel : ViewModelBase
             await dialog.ShowAsync(App.TopLevel);
 
             EventManager.Instance.OnRecommendedModelsDialogClosed();
-            EventManager.Instance.OnDownloadsTeachingTipRequested();
 
             var installedPackageNameMaybe =
                 settingsManager.PackageInstallsInProgress.FirstOrDefault()

@@ -1,8 +1,5 @@
-﻿using System;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
-using System.Threading;
-using System.Threading.Tasks;
 using DynamicData;
 using DynamicData.Binding;
 using StabilityMatrix.Avalonia.Models;
@@ -39,6 +36,13 @@ public interface IInferenceClientManager : IDisposable, INotifyPropertyChanged, 
     bool CanUserDisconnect { get; }
 
     IObservableCollection<HybridModelFile> Models { get; }
+
+    /// <summary>
+    /// Unified collection of all models (Checkpoints + UNet/Diffusion models).
+    /// Use this for unified model selection with auto-detection.
+    /// </summary>
+    IObservableCollection<HybridModelFile> AllModels { get; }
+
     IObservableCollection<HybridModelFile> VaeModels { get; }
     IObservableCollection<HybridModelFile> ControlNetModels { get; }
     IObservableCollection<HybridModelFile> LoraModels { get; }
@@ -57,6 +61,19 @@ public interface IInferenceClientManager : IDisposable, INotifyPropertyChanged, 
     Task CopyImageToInputAsync(FilePath imageFile, CancellationToken cancellationToken = default);
 
     Task UploadInputImageAsync(ImageSource image, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Uploads a mask image (SKImage) to ComfyUI's input directory.
+    /// Used for regional prompting and other mask-based operations.
+    /// </summary>
+    /// <param name="maskImage">The mask image to upload.</param>
+    /// <param name="fileName">The filename to use for the uploaded mask.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    Task UploadMaskImageAsync(
+        SkiaSharp.SKImage maskImage,
+        string fileName,
+        CancellationToken cancellationToken = default
+    );
 
     Task WriteImageToInputAsync(ImageSource imageSource, CancellationToken cancellationToken = default);
 

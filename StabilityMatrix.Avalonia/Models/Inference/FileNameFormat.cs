@@ -81,4 +81,5 @@ public record FileNameFormat
 
     public const string DefaultTemplate = "{date}_{time}-{model_name}-{seed}";
     public const string DefaultModelBrowserTemplate = "{file_name}";
+    public const string DefaultOrganizationTemplate = "{file_name}";
 }

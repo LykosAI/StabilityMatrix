@@ -1,4 +1,5 @@
-﻿using Refit;
+﻿using System.Text.Json;
+using Refit;
 using StabilityMatrix.Core.Models.Api.CivitTRPC;
 
 namespace StabilityMatrix.Core.Api;
@@ -10,6 +11,36 @@ namespace StabilityMatrix.Core.Api;
 )]
 public interface ICivitTRPCApi
 {
+    /// <summary>
+    /// tRPC `model.getById` — the same endpoint the CivitAI website itself uses to load model
+    /// detail pages. Used as a fallback when the public REST API returns an empty
+    /// `modelVersions` list due to CivitAI's server-side cache desync.
+    /// <para>
+    /// NOTE: This is an unofficial/internal endpoint. CivitAI actively discourages non-website use
+    /// (returns 401 without a Referer header — which our interface-level Headers attribute already
+    /// supplies). Treat any 4xx response as a signal that they may have tightened access further.
+    /// </para>
+    /// </summary>
+    [QueryUriFormat(UriFormat.UriEscaped)]
+    [Get("/api/trpc/model.getById")]
+    Task<CivitTrpcResponse<CivitTRPCModel>> GetModelById(
+        [Query] string input,
+        CancellationToken cancellationToken = default
+    );
+
+    /// <summary>
+    /// Convenience wrapper that builds the SuperJSON `input` query string for
+    /// <see cref="GetModelById(string,CancellationToken)"/>.
+    /// </summary>
+    Task<CivitTrpcResponse<CivitTRPCModel>> GetModelById(
+        int modelId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var input = JsonSerializer.Serialize(new { json = new { id = modelId } });
+        return GetModelById(input, cancellationToken);
+    }
+
     [QueryUriFormat(UriFormat.UriEscaped)]
     [Get("/api/trpc/userProfile.get")]
     Task<CivitUserProfileResponse> GetUserProfile(

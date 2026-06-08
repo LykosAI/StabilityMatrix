@@ -1,0 +1,880 @@
+﻿<controls:UserControlBase
+    x:Class="StabilityMatrix.Avalonia.Views.Dialogs.LayeredMaskEditorDialog"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+    xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:database="clr-namespace:StabilityMatrix.Core.Models.Database;assembly=StabilityMatrix.Core"
+    xmlns:fluentIcons="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
+    xmlns:inference="clr-namespace:StabilityMatrix.Avalonia.Models.Inference"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
+    xmlns:ui="using:FluentAvalonia.UI.Controls"
+    xmlns:vendorLabs="clr-namespace:StabilityMatrix.Avalonia.Controls.VendorLabs"
+    xmlns:vmDialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
+    d:DataContext="{x:Static mocks:DesignData.LayeredMaskEditorViewModel}"
+    d:DesignHeight="1200"
+    d:DesignWidth="1200"
+    x:DataType="vmDialogs:LayeredMaskEditorViewModel"
+    mc:Ignorable="d">
+
+    <controls:UserControlBase.Resources>
+        <converters:FileUriConverter x:Key="FileUriConverter" />
+        <converters:EnumToIntConverter x:Key="ConditioningAreaModeConverter" x:TypeArguments="inference:ConditioningAreaMode" />
+    </controls:UserControlBase.Resources>
+
+    <sg:SpacedGrid
+        Margin="0,8"
+        ColumnDefinitions="*,420"
+        ColumnSpacing="12"
+        RowDefinitions="Auto,*">
+
+        <!--  Top toolbar spanning both columns  -->
+        <controls:Card Grid.ColumnSpan="2" Padding="12,8">
+            <Grid ColumnDefinitions="Auto,*,Auto">
+                <!--  Left: Global action buttons  -->
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <!--  Create group  -->
+                    <Button
+                        Classes="transparent"
+                        Command="{Binding AddLayerCommand}"
+                        ToolTip.Tip="Add Paint Layer">
+                        <fluentIcons:SymbolIcon FontSize="18" Symbol="Add" />
+                    </Button>
+                    <Button
+                        Classes="transparent"
+                        Command="{Binding AddImageLayerCommand}"
+                        ToolTip.Tip="Add Image Layer">
+                        <fluentIcons:SymbolIcon FontSize="18" Symbol="Image" />
+                    </Button>
+                    <Button
+                        Classes="transparent"
+                        Command="{Binding BrowseImageForLayerCommand}"
+                        ToolTip.Tip="Browse for Image...">
+                        <fluentIcons:SymbolIcon FontSize="18" Symbol="FolderOpen" />
+                    </Button>
+
+                    <Rectangle
+                        Width="1"
+                        Margin="4,4"
+                        VerticalAlignment="Stretch"
+                        Fill="{DynamicResource DividerStrokeColorDefaultBrush}" />
+
+                    <!--  Global operations  -->
+                    <Button
+                        Classes="transparent"
+                        Command="{Binding ClearAllLayersCommand}"
+                        ToolTip.Tip="Clear All Layers (Ctrl+Shift+Delete)">
+                        <fluentIcons:SymbolIcon FontSize="18" Symbol="DeleteDismiss" />
+                    </Button>
+
+                    <Rectangle
+                        Width="1"
+                        Margin="4,4"
+                        VerticalAlignment="Stretch"
+                        Fill="{DynamicResource DividerStrokeColorDefaultBrush}" />
+
+                    <!--  Undo stroke  -->
+                    <Button
+                        Classes="transparent"
+                        Command="{Binding PaintCanvasViewModel.UndoCommand}"
+                        ToolTip.Tip="Undo Stroke (Ctrl+Z)">
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <fluentIcons:SymbolIcon FontSize="16" Symbol="ArrowUndo" />
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                FontSize="12"
+                                Text="Stroke" />
+                        </StackPanel>
+                    </Button>
+
+                    <!--  Undo layer operation  -->
+                    <Button
+                        Classes="transparent"
+                        Command="{Binding UndoLayerOperationCommand}"
+                        ToolTip.Tip="Undo Layer Operation (Ctrl+Shift+Z)">
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <fluentIcons:SymbolIcon FontSize="16" Symbol="ArrowUndo" />
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                FontSize="12"
+                                Text="Layer" />
+                        </StackPanel>
+                    </Button>
+
+                    <Rectangle
+                        Width="1"
+                        Margin="4,4"
+                        VerticalAlignment="Stretch"
+                        Fill="{DynamicResource DividerStrokeColorDefaultBrush}" />
+
+                    <!--  Import/Export  -->
+                    <Button
+                        Classes="transparent"
+                        Command="{Binding ImportMaskAsLayerCommand}"
+                        ToolTip.Tip="Import mask image as new layer">
+                        <fluentIcons:SymbolIcon FontSize="18" Symbol="ArrowDownload" />
+                    </Button>
+
+                    <Rectangle
+                        Width="1"
+                        Margin="4,4"
+                        VerticalAlignment="Stretch"
+                        Fill="{DynamicResource DividerStrokeColorDefaultBrush}" />
+                    <!--  Quick Divisions Button with Flyout  -->
+                    <Button Classes="transparent" ToolTip.Tip="Quick Divisions - Preset region layouts">
+                        <Button.Flyout>
+                            <ui:FAMenuFlyout Placement="BottomEdgeAlignedLeft">
+                                <!--  Horizontal Splits  -->
+                                <ui:MenuFlyoutSubItem Text="Columns">
+                                    <ui:MenuFlyoutSubItem.IconSource>
+                                        <fluentIcons:SymbolIconSource Symbol="SplitVertical" />
+                                    </ui:MenuFlyoutSubItem.IconSource>
+                                    <ui:MenuFlyoutItem Command="{Binding QuickDivisionHorizontal5050Command}" Text="2 Columns (Left | Right)">
+                                        <ui:MenuFlyoutItem.IconSource>
+                                            <fluentIcons:SymbolIconSource Symbol="LayoutColumnTwoSplitLeft" />
+                                        </ui:MenuFlyoutItem.IconSource>
+                                    </ui:MenuFlyoutItem>
+                                    <ui:MenuFlyoutItem Command="{Binding QuickDivisionHorizontal333333Command}" Text="3 Columns (Thirds)">
+                                        <ui:MenuFlyoutItem.IconSource>
+                                            <fluentIcons:SymbolIconSource Symbol="LayoutColumnThree" />
+                                        </ui:MenuFlyoutItem.IconSource>
+                                    </ui:MenuFlyoutItem>
+                                </ui:MenuFlyoutSubItem>
+                                <!--  Vertical Splits  -->
+                                <ui:MenuFlyoutSubItem Text="Rows">
+                                    <ui:MenuFlyoutSubItem.IconSource>
+                                        <fluentIcons:SymbolIconSource Symbol="SplitHorizontal" />
+                                    </ui:MenuFlyoutSubItem.IconSource>
+                                    <ui:MenuFlyoutItem Command="{Binding QuickDivisionVertical5050Command}" Text="2 Rows (Top | Bottom)">
+                                        <ui:MenuFlyoutItem.IconSource>
+                                            <fluentIcons:SymbolIconSource Symbol="LayoutRowTwoSplitTop" />
+                                        </ui:MenuFlyoutItem.IconSource>
+                                    </ui:MenuFlyoutItem>
+                                    <ui:MenuFlyoutItem Command="{Binding QuickDivisionVertical333333Command}" Text="3 Rows (Thirds)">
+                                        <ui:MenuFlyoutItem.IconSource>
+                                            <fluentIcons:SymbolIconSource Symbol="LayoutRowThree" />
+                                        </ui:MenuFlyoutItem.IconSource>
+                                    </ui:MenuFlyoutItem>
+                                </ui:MenuFlyoutSubItem>
+                                <!--  Grids  -->
+                                <ui:MenuFlyoutSubItem Text="Grid Layouts">
+                                    <ui:MenuFlyoutSubItem.IconSource>
+                                        <fluentIcons:SymbolIconSource Symbol="Grid" />
+                                    </ui:MenuFlyoutSubItem.IconSource>
+                                    <ui:MenuFlyoutItem Command="{Binding QuickDivisionQuadrantsCommand}" Text="2×2 Quadrants">
+                                        <ui:MenuFlyoutItem.IconSource>
+                                            <fluentIcons:SymbolIconSource Symbol="LayoutCellFour" />
+                                        </ui:MenuFlyoutItem.IconSource>
+                                    </ui:MenuFlyoutItem>
+                                    <ui:MenuFlyoutItem Command="{Binding QuickDivision3x3GridCommand}" Text="3×3 Grid">
+                                        <ui:MenuFlyoutItem.IconSource>
+                                            <fluentIcons:SymbolIconSource Symbol="TableSimple" />
+                                        </ui:MenuFlyoutItem.IconSource>
+                                    </ui:MenuFlyoutItem>
+                                </ui:MenuFlyoutSubItem>
+                                <ui:MenuFlyoutSeparator />
+                                <!--  Composition Presets  -->
+                                <ui:MenuFlyoutSubItem Text="Compositions">
+                                    <ui:MenuFlyoutSubItem.IconSource>
+                                        <fluentIcons:SymbolIconSource Symbol="ImageMultiple" />
+                                    </ui:MenuFlyoutSubItem.IconSource>
+                                    <ui:MenuFlyoutItem Command="{Binding QuickDivisionCenterFocusCommand}" Text="Center Focus">
+                                        <ui:MenuFlyoutItem.IconSource>
+                                            <fluentIcons:SymbolIconSource Symbol="CenterHorizontal" />
+                                        </ui:MenuFlyoutItem.IconSource>
+                                    </ui:MenuFlyoutItem>
+                                    <ui:MenuFlyoutItem Command="{Binding QuickDivisionPortraitCommand}" Text="Portrait (Subject + Background)">
+                                        <ui:MenuFlyoutItem.IconSource>
+                                            <fluentIcons:SymbolIconSource Symbol="Person" />
+                                        </ui:MenuFlyoutItem.IconSource>
+                                    </ui:MenuFlyoutItem>
+                                    <ui:MenuFlyoutItem Command="{Binding QuickDivisionLandscapeCommand}" Text="Landscape (Sky, Horizon, Ground)">
+                                        <ui:MenuFlyoutItem.IconSource>
+                                            <fluentIcons:SymbolIconSource Symbol="ImageAltText" />
+                                        </ui:MenuFlyoutItem.IconSource>
+                                    </ui:MenuFlyoutItem>
+                                </ui:MenuFlyoutSubItem>
+                            </ui:FAMenuFlyout>
+                        </Button.Flyout>
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <fluentIcons:SymbolIcon FontSize="18" Symbol="GridKanban" />
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                FontSize="12"
+                                Text="Quick Divisions" />
+                            <fluentIcons:SymbolIcon
+                                FontSize="10"
+                                Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                Symbol="ChevronDown" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+
+                <!--  Right: Canvas size  -->
+                <StackPanel
+                    Grid.Column="2"
+                    Orientation="Horizontal"
+                    Spacing="8">
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                        Text="{Binding CanvasSize, StringFormat='{}{0}'}" />
+                </StackPanel>
+            </Grid>
+        </controls:Card>
+
+        <!--  Paint Canvas (left side)  -->
+        <controls:Card
+            Grid.Row="1"
+            Grid.Column="0"
+            Margin="0,16,0,0"
+            Padding="8,4,8,8"
+            VerticalAlignment="Top">
+            <controls:PaintCanvas DataContext="{Binding PaintCanvasViewModel, Mode=OneWay}" />
+        </controls:Card>
+
+        <!--  Layer Panel (right side)  -->
+        <controls:Card
+            Grid.Row="1"
+            Grid.Column="1"
+            Margin="0,16,0,0"
+            Padding="8"
+            VerticalAlignment="Stretch"
+            VerticalContentAlignment="Stretch">
+            <Grid RowDefinitions="Auto,*,Auto">
+                <!--  Header with Expand/Collapse All buttons  -->
+                <Grid ColumnDefinitions="*,Auto,Auto">
+                    <TextBlock
+                        Margin="4,0,0,8"
+                        VerticalAlignment="Center"
+                        FontSize="12"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                        Text="LAYERS" />
+                    <Button
+                        Grid.Column="1"
+                        Margin="0,0,4,0"
+                        Padding="4"
+                        VerticalAlignment="Center"
+                        Classes="transparent"
+                        Command="{Binding ExpandAllLayersCommand}"
+                        ToolTip.Tip="Expand all layers">
+                        <fluentIcons:SymbolIcon FontSize="14" Symbol="ChevronDoubleDown" />
+                    </Button>
+                    <Button
+                        Grid.Column="2"
+                        Padding="4"
+                        VerticalAlignment="Center"
+                        Classes="transparent"
+                        Command="{Binding CollapseAllLayersCommand}"
+                        ToolTip.Tip="Collapse all layers">
+                        <fluentIcons:SymbolIcon FontSize="14" Symbol="ChevronDoubleUp" />
+                    </Button>
+                </Grid>
+
+                <!--  Layer list - ScrollViewer fills available space dynamically  -->
+                <ScrollViewer
+                    Grid.Row="1"
+                    HorizontalScrollBarVisibility="Disabled"
+                    VerticalScrollBarVisibility="Auto">
+                    <ListBox
+                        x:Name="LayerItemsControl"
+                        VerticalAlignment="Top"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Classes="draggable"
+                        ItemsSource="{Binding Layers}"
+                        SelectedItem="{Binding SelectedLayer}"
+                        SelectionMode="AlwaysSelected"
+                        Theme="{StaticResource DraggableListBoxTheme}">
+                        <ListBox.Styles>
+                            <Style Selector="ListBoxItem">
+                                <Setter Property="Padding" Value="0" />
+                                <Setter Property="Margin" Value="0,4" />
+                                <Setter Property="Background" Value="Transparent" />
+                            </Style>
+                            <!--  Selection Highlight for the Border inside ListBoxItem  -->
+                            <Style Selector="ListBoxItem:selected Border#LayerItemBorder">
+                                <Setter Property="BorderBrush" Value="{DynamicResource AccentFillColorDefaultBrush}" />
+                                <Setter Property="BorderThickness" Value="2" />
+                            </Style>
+
+                        </ListBox.Styles>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate DataType="inference:MaskLayer">
+                                <Border
+                                    x:Name="LayerItemBorder"
+                                    Margin="0,6,6,0"
+                                    Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                                    BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="6">
+                                    <Border.Styles>
+                                        <Style Selector="Border#LayerItemBorder:pointerover">
+                                            <Setter Property="Background" Value="{DynamicResource CardBackgroundFillColorSecondaryBrush}" />
+                                        </Style>
+                                    </Border.Styles>
+
+                                    <!--  Right-click context menu  -->
+                                    <Border.ContextFlyout>
+                                        <ui:FAMenuFlyout Placement="BottomEdgeAlignedLeft">
+                                            <ui:MenuFlyoutItem
+                                                Command="{Binding $parent[controls:UserControlBase].((vmDialogs:LayeredMaskEditorViewModel)DataContext).DuplicateLayerCommand}"
+                                                CommandParameter="{Binding}"
+                                                InputGesture="Ctrl+D"
+                                                Text="Duplicate">
+                                                <ui:MenuFlyoutItem.IconSource>
+                                                    <fluentIcons:SymbolIconSource Symbol="Copy" />
+                                                </ui:MenuFlyoutItem.IconSource>
+                                            </ui:MenuFlyoutItem>
+                                            <ui:MenuFlyoutItem
+                                                Command="{Binding $parent[controls:UserControlBase].((vmDialogs:LayeredMaskEditorViewModel)DataContext).FillLayerCommand}"
+                                                CommandParameter="{Binding}"
+                                                InputGesture="Ctrl+F"
+                                                Text="Fill Layer">
+                                                <ui:MenuFlyoutItem.IconSource>
+                                                    <fluentIcons:SymbolIconSource Symbol="PaintBucket" />
+                                                </ui:MenuFlyoutItem.IconSource>
+                                            </ui:MenuFlyoutItem>
+                                            <ui:MenuFlyoutItem
+                                                Command="{Binding $parent[controls:UserControlBase].((vmDialogs:LayeredMaskEditorViewModel)DataContext).InvertLayerCommand}"
+                                                CommandParameter="{Binding}"
+                                                InputGesture="Ctrl+I"
+                                                Text="Invert Mask">
+                                                <ui:MenuFlyoutItem.IconSource>
+                                                    <fluentIcons:SymbolIconSource Symbol="SelectAllOn" />
+                                                </ui:MenuFlyoutItem.IconSource>
+                                            </ui:MenuFlyoutItem>
+                                            <ui:MenuFlyoutSeparator />
+                                            <ui:MenuFlyoutItem
+                                                Command="{Binding $parent[controls:UserControlBase].((vmDialogs:LayeredMaskEditorViewModel)DataContext).ExportLayerAsMaskCommand}"
+                                                CommandParameter="{Binding}"
+                                                Text="Export as Mask">
+                                                <ui:MenuFlyoutItem.IconSource>
+                                                    <fluentIcons:SymbolIconSource Symbol="ArrowExportUp" />
+                                                </ui:MenuFlyoutItem.IconSource>
+                                            </ui:MenuFlyoutItem>
+                                            <ui:MenuFlyoutSeparator />
+                                            <ui:MenuFlyoutItem
+                                                Command="{Binding $parent[controls:UserControlBase].((vmDialogs:LayeredMaskEditorViewModel)DataContext).DeleteLayerCommand}"
+                                                CommandParameter="{Binding}"
+                                                InputGesture="Delete"
+                                                Text="Delete">
+                                                <ui:MenuFlyoutItem.IconSource>
+                                                    <fluentIcons:SymbolIconSource Symbol="Delete" />
+                                                </ui:MenuFlyoutItem.IconSource>
+                                            </ui:MenuFlyoutItem>
+                                        </ui:FAMenuFlyout>
+                                    </Border.ContextFlyout>
+
+                                    <Panel>
+                                        <!--  Editing Badge - corner overlay  -->
+                                        <Border
+                                            Margin="0,-6,-6,0"
+                                            Padding="6,2"
+                                            HorizontalAlignment="Right"
+                                            VerticalAlignment="Top"
+                                            Background="{DynamicResource AccentFillColorDefaultBrush}"
+                                            CornerRadius="6,6,6,6"
+                                            IsVisible="{Binding $parent[ListBoxItem].IsSelected}"
+                                            ZIndex="1">
+                                            <TextBlock FontSize="10" Text="Editing" />
+                                        </Border>
+
+                                        <Grid RowDefinitions="Auto,Auto">
+                                            <!--  Row 0: Title bar with drag handle and controls  -->
+                                            <!--  Layer header with two rows for better spacing  -->
+                                            <Border
+                                                x:Name="LayerHeaderBorder"
+                                                Padding="4"
+                                                Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}"
+                                                CornerRadius="6,6,0,0"
+                                                Cursor="SizeAll"
+                                                ToolTip.Tip="Drag to reorder">
+                                                <Grid RowDefinitions="Auto,Auto" RowSpacing="6">
+                                                    <!--  Row 0: Core controls and name  -->
+                                                    <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,*,Auto">
+                                                        <!--  Drag grip icon  -->
+                                                        <!--  Symbol is 'ReOrder' but is ambiguous reference  -->
+                                                        <fluentIcons:SymbolIcon
+                                                            Margin="4,0,4,0"
+                                                            VerticalAlignment="Center"
+                                                            FontSize="16"
+                                                            Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                                            Symbol="990684" />
+
+                                                        <!--  Enable for generation  -->
+                                                        <ToggleButton
+                                                            Grid.Column="1"
+                                                            Margin="4,0,0,0"
+                                                            Padding="4"
+                                                            Classes="transparent"
+                                                            IsChecked="{Binding IsEnabled}"
+                                                            ToolTip.Tip="Enable for generation">
+                                                            <Panel>
+                                                                <fluentIcons:SymbolIcon
+                                                                    FontSize="16"
+                                                                    IsVisible="{Binding IsEnabled}"
+                                                                    Symbol="CheckmarkCircle" />
+                                                                <fluentIcons:SymbolIcon
+                                                                    FontSize="16"
+                                                                    Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                                                    IsVisible="{Binding !IsEnabled}"
+                                                                    Symbol="DismissCircle" />
+                                                            </Panel>
+                                                        </ToggleButton>
+
+                                                        <!--  Visibility toggle  -->
+                                                        <ToggleButton
+                                                            Grid.Column="2"
+                                                            Margin="4,0"
+                                                            Padding="4"
+                                                            Classes="transparent"
+                                                            IsChecked="{Binding IsVisible}"
+                                                            ToolTip.Tip="Toggle visibility">
+                                                            <Panel>
+                                                                <fluentIcons:SymbolIcon
+                                                                    FontSize="16"
+                                                                    IsVisible="{Binding IsVisible}"
+                                                                    Symbol="Eye" />
+                                                                <fluentIcons:SymbolIcon
+                                                                    FontSize="16"
+                                                                    IsVisible="{Binding !IsVisible}"
+                                                                    Symbol="EyeOff" />
+                                                            </Panel>
+                                                        </ToggleButton>
+
+                                                        <!--  Lock toggle  -->
+                                                        <ToggleButton
+                                                            Grid.Column="3"
+                                                            Margin="0,0,4,0"
+                                                            Padding="4"
+                                                            Classes="transparent"
+                                                            IsChecked="{Binding IsLocked}"
+                                                            ToolTip.Tip="Lock layer (prevent drawing)">
+                                                            <Panel>
+                                                                <fluentIcons:SymbolIcon
+                                                                    FontSize="16"
+                                                                    IsVisible="{Binding IsLocked}"
+                                                                    Symbol="LockClosed" />
+                                                                <fluentIcons:SymbolIcon
+                                                                    FontSize="16"
+                                                                    IsVisible="{Binding !IsLocked}"
+                                                                    Symbol="LockOpen" />
+                                                            </Panel>
+                                                        </ToggleButton>
+
+                                                        <!--  Layer name - now gets full remaining width  -->
+                                                        <TextBox
+                                                            Grid.Column="4"
+                                                            MinHeight="0"
+                                                            Margin="4,0"
+                                                            Padding="9,3"
+                                                            VerticalAlignment="Center"
+                                                            Text="{Binding Name}"
+                                                            Watermark="Layer name" />
+
+                                                        <!--  Expand/Collapse toggle  -->
+                                                        <ToggleButton
+                                                            Grid.Column="5"
+                                                            Margin="4,0,0,0"
+                                                            Padding="4"
+                                                            Classes="transparent"
+                                                            IsChecked="{Binding IsExpanded}"
+                                                            ToolTip.Tip="Expand/Collapse layer details">
+                                                            <Panel>
+                                                                <fluentIcons:SymbolIcon
+                                                                    FontSize="14"
+                                                                    IsVisible="{Binding IsExpanded}"
+                                                                    Symbol="ChevronUp" />
+                                                                <fluentIcons:SymbolIcon
+                                                                    FontSize="14"
+                                                                    IsVisible="{Binding !IsExpanded}"
+                                                                    Symbol="ChevronDown" />
+                                                            </Panel>
+                                                        </ToggleButton>
+                                                    </Grid>
+
+                                                    <!--  Row 1: Badge, quick actions, color picker, and overflow  -->
+                                                    <Grid
+                                                        Grid.Row="1"
+                                                        Margin="4,0,0,0"
+                                                        ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,*,Auto"
+                                                        Cursor="Arrow">
+                                                        <!--  Layer type badge  -->
+                                                        <Border
+                                                            Padding="8,4"
+                                                            VerticalAlignment="Center"
+                                                            Background="{DynamicResource ControlFillColorSecondaryBrush}"
+                                                            CornerRadius="4"
+                                                            IsVisible="{Binding LayerType, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static inference:MaskLayerType.Image}}">
+                                                            <TextBlock
+                                                                FontSize="12"
+                                                                Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                                Text="Image" />
+                                                        </Border>
+
+                                                        <!--  Fill button  -->
+                                                        <Button
+                                                            Grid.Column="1"
+                                                            Margin="8,0,0,0"
+                                                            Padding="8,6"
+                                                            Classes="transparent"
+                                                            Command="{Binding $parent[controls:UserControlBase].((vmDialogs:LayeredMaskEditorViewModel)DataContext).FillLayerCommand}"
+                                                            CommandParameter="{Binding}"
+                                                            Cursor="Arrow"
+                                                            ToolTip.Tip="Fill Layer (Ctrl+F)">
+                                                            <fluentIcons:SymbolIcon FontSize="16" Symbol="PaintBucket" />
+                                                        </Button>
+
+                                                        <!--  Invert button  -->
+                                                        <Button
+                                                            Grid.Column="2"
+                                                            Margin="4,0,0,0"
+                                                            Padding="8,6"
+                                                            Classes="transparent"
+                                                            Command="{Binding $parent[controls:UserControlBase].((vmDialogs:LayeredMaskEditorViewModel)DataContext).InvertLayerCommand}"
+                                                            CommandParameter="{Binding}"
+                                                            Cursor="Arrow"
+                                                            ToolTip.Tip="Invert Mask (Ctrl+I)">
+                                                            <fluentIcons:SymbolIcon FontSize="16" Symbol="SelectAllOn" />
+                                                        </Button>
+
+                                                        <!--  Duplicate button  -->
+                                                        <Button
+                                                            Grid.Column="3"
+                                                            Margin="4,0,0,0"
+                                                            Padding="8,6"
+                                                            Classes="transparent"
+                                                            Command="{Binding $parent[controls:UserControlBase].((vmDialogs:LayeredMaskEditorViewModel)DataContext).DuplicateLayerCommand}"
+                                                            CommandParameter="{Binding}"
+                                                            Cursor="Arrow"
+                                                            ToolTip.Tip="Duplicate Layer (Ctrl+D)">
+                                                            <fluentIcons:SymbolIcon FontSize="16" Symbol="Copy" />
+                                                        </Button>
+
+                                                        <!--  Export as Mask button  -->
+                                                        <Button
+                                                            Grid.Column="4"
+                                                            Margin="4,0,0,0"
+                                                            Padding="8,6"
+                                                            Classes="transparent"
+                                                            Command="{Binding $parent[controls:UserControlBase].((vmDialogs:LayeredMaskEditorViewModel)DataContext).ExportLayerAsMaskCommand}"
+                                                            CommandParameter="{Binding}"
+                                                            Cursor="Arrow"
+                                                            ToolTip.Tip="Export as Mask">
+                                                            <fluentIcons:SymbolIcon FontSize="16" Symbol="ArrowExportUp" />
+                                                        </Button>
+
+                                                        <!--  Delete Button  -->
+                                                        <Button
+                                                            Grid.Column="5"
+                                                            Margin="4,0,0,0"
+                                                            Padding="8,6"
+                                                            Classes="transparent"
+                                                            Command="{Binding $parent[controls:UserControlBase].((vmDialogs:LayeredMaskEditorViewModel)DataContext).DeleteLayerCommand}"
+                                                            CommandParameter="{Binding}"
+                                                            Cursor="Arrow"
+                                                            ToolTip.Tip="Delete Layer (Del)">
+                                                            <fluentIcons:SymbolIcon FontSize="16" Symbol="Delete" />
+                                                        </Button>
+
+                                                        <!--  Color Picker  -->
+                                                        <ui:ColorPickerButton
+                                                            Grid.Column="7"
+                                                            Margin="0,0,8,0"
+                                                            VerticalAlignment="Center"
+                                                            Cursor="Arrow"
+                                                            ToolTip.Tip="Choose layer color"
+                                                            Color="{Binding AvaloniaDisplayColor}" />
+                                                    </Grid>
+                                                </Grid>
+                                            </Border>
+
+                                            <!--  Row 1: Layer content (collapsible)  -->
+                                            <Grid
+                                                Grid.Row="1"
+                                                Margin="10,8,10,10"
+                                                IsVisible="{Binding IsExpanded}"
+                                                RowDefinitions="Auto,Auto"
+                                                RowSpacing="8">
+                                                <!--  Row 0: Layer-type-specific content  -->
+                                                <!--  Paint layer: Prompt textbox  -->
+                                                <StackPanel
+                                                    Grid.Row="0"
+                                                    IsVisible="{Binding LayerType, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static inference:MaskLayerType.Paint}}"
+                                                    Spacing="8">
+                                                    <TextBox
+                                                        MinHeight="50"
+                                                        MaxHeight="100"
+                                                        AcceptsReturn="True"
+                                                        Text="{Binding Prompt}"
+                                                        TextWrapping="Wrap"
+                                                        Watermark="Prompt for this region..." />
+                                                    <TextBox
+                                                        MinHeight="32"
+                                                        MaxHeight="60"
+                                                        AcceptsReturn="True"
+                                                        Text="{Binding NegativePrompt}"
+                                                        TextWrapping="Wrap"
+                                                        Watermark="Negative prompt (optional)..." />
+                                                </StackPanel>
+
+                                                <!--  Image layer: Image info and controls  -->
+                                                <StackPanel
+                                                    Grid.Row="0"
+                                                    IsVisible="{Binding LayerType, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static inference:MaskLayerType.Image}}"
+                                                    Spacing="8">
+                                                    <TextBlock
+                                                        FontSize="11"
+                                                        FontStyle="Italic"
+                                                        Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                                        Text="Reference layer - visible on canvas for alignment, not used in generation."
+                                                        TextWrapping="Wrap" />
+                                                    <Grid ColumnDefinitions="*,Auto">
+                                                        <TextBlock
+                                                            VerticalAlignment="Center"
+                                                            FontSize="12"
+                                                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                            IsVisible="{Binding !HasImage}"
+                                                            Text="No image selected. Click an image below or use Browse." />
+                                                        <TextBlock
+                                                            VerticalAlignment="Center"
+                                                            FontSize="12"
+                                                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                            IsVisible="{Binding HasImage}"
+                                                            Text="{Binding SourceImagePath}"
+                                                            TextTrimming="CharacterEllipsis"
+                                                            ToolTip.Tip="{Binding SourceImagePath}" />
+                                                        <Button
+                                                            Grid.Column="1"
+                                                            Padding="8,4"
+                                                            Classes="transparent"
+                                                            Command="{Binding $parent[controls:UserControlBase].((vmDialogs:LayeredMaskEditorViewModel)DataContext).CenterImageLayerCommand}"
+                                                            CommandParameter="{Binding}"
+                                                            IsVisible="{Binding HasImage}"
+                                                            ToolTip.Tip="Center image (reset position)">
+                                                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                                                <fluentIcons:SymbolIcon FontSize="14" Symbol="ArrowMinimize" />
+                                                                <TextBlock FontSize="11" Text="Center" />
+                                                            </StackPanel>
+                                                        </Button>
+                                                    </Grid>
+                                                    <!--  Flip and Fit buttons row  -->
+                                                    <StackPanel
+                                                        IsVisible="{Binding HasImage}"
+                                                        Orientation="Horizontal"
+                                                        Spacing="4">
+                                                        <Button
+                                                            Padding="8,4"
+                                                            Classes="transparent"
+                                                            Command="{Binding $parent[controls:UserControlBase].((vmDialogs:LayeredMaskEditorViewModel)DataContext).FlipImageHorizontallyCommand}"
+                                                            CommandParameter="{Binding}"
+                                                            ToolTip.Tip="Flip horizontally (mirror)">
+                                                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                                                <fluentIcons:SymbolIcon FontSize="14" Symbol="FlipHorizontal" />
+                                                                <TextBlock FontSize="11" Text="Flip H" />
+                                                            </StackPanel>
+                                                        </Button>
+                                                        <Button
+                                                            Padding="8,4"
+                                                            Classes="transparent"
+                                                            Command="{Binding $parent[controls:UserControlBase].((vmDialogs:LayeredMaskEditorViewModel)DataContext).FlipImageVerticallyCommand}"
+                                                            CommandParameter="{Binding}"
+                                                            ToolTip.Tip="Flip vertically">
+                                                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                                                <fluentIcons:SymbolIcon FontSize="14" Symbol="FlipVertical" />
+                                                                <TextBlock FontSize="11" Text="Flip V" />
+                                                            </StackPanel>
+                                                        </Button>
+                                                        <Button
+                                                            Padding="8,4"
+                                                            Classes="transparent"
+                                                            Command="{Binding $parent[controls:UserControlBase].((vmDialogs:LayeredMaskEditorViewModel)DataContext).FitImageToCanvasCommand}"
+                                                            CommandParameter="{Binding}"
+                                                            ToolTip.Tip="Fit image to canvas size">
+                                                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                                                <fluentIcons:SymbolIcon FontSize="14" Symbol="FullScreenMaximize" />
+                                                                <TextBlock FontSize="11" Text="Fit" />
+                                                            </StackPanel>
+                                                        </Button>
+                                                    </StackPanel>
+                                                </StackPanel>
+
+                                                <!--  Row 1: Paint layer: Strength + Opacity + Cond Area  -->
+                                                <sg:SpacedGrid
+                                                    Grid.Row="1"
+                                                    ColumnDefinitions="*,*,Auto"
+                                                    ColumnSpacing="8"
+                                                    IsVisible="{Binding LayerType, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static inference:MaskLayerType.Paint}}">
+                                                    <StackPanel Spacing="2">
+                                                        <TextBlock
+                                                            FontSize="11"
+                                                            Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                                            Text="Strength" />
+                                                        <ui:NumberBox
+                                                            HorizontalAlignment="Stretch"
+                                                            Maximum="10"
+                                                            Minimum="0"
+                                                            SimpleNumberFormat="F2"
+                                                            SmallChange="0.1"
+                                                            SpinButtonPlacementMode="Compact"
+                                                            Value="{Binding Strength}" />
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Column="1" Spacing="2">
+                                                        <TextBlock
+                                                            FontSize="11"
+                                                            Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                                            Text="Opacity" />
+                                                        <ui:NumberBox
+                                                            HorizontalAlignment="Stretch"
+                                                            Maximum="1"
+                                                            Minimum="0"
+                                                            SimpleNumberFormat="F2"
+                                                            SmallChange="0.1"
+                                                            SpinButtonPlacementMode="Compact"
+                                                            Value="{Binding Opacity}" />
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Column="2" Spacing="2">
+                                                        <TextBlock
+                                                            FontSize="11"
+                                                            Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                                            Text="Cond. Area"
+                                                            ToolTip.Tip="Conditioning Area Mode: How the prompt is applied to the region" />
+                                                        <ComboBox
+                                                            MinWidth="90"
+                                                            Padding="8,5,4,5"
+                                                            SelectedIndex="{Binding ConditioningArea, Converter={StaticResource ConditioningAreaModeConverter}}"
+                                                            ToolTip.Tip="Bounds: Apply to bounding box of mask (sharper control)&#x0a;Full: Apply to entire image (softer transitions)">
+                                                            <ComboBox.Styles>
+                                                                <Style Selector="ComboBoxItem">
+                                                                    <Setter Property="Background" Value="{DynamicResource ComboBoxDropDownBackground}" />
+                                                                </Style>
+                                                                <Style Selector="ComboBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+                                                                    <Setter Property="Background" Value="{DynamicResource ControlFillColorSecondaryBrush}" />
+                                                                </Style>
+                                                            </ComboBox.Styles>
+                                                            <ComboBoxItem Content="Bounds" ToolTip.Tip="Apply to mask bounding box - sharper regional control" />
+                                                            <ComboBoxItem Content="Full" ToolTip.Tip="Apply to entire image - softer transitions" />
+                                                        </ComboBox>
+                                                    </StackPanel>
+                                                </sg:SpacedGrid>
+
+                                                <!--  Row 1: Image layer: Scale + Offset X/Y + Opacity  -->
+                                                <sg:SpacedGrid
+                                                    Grid.Row="1"
+                                                    ColumnDefinitions="*,*,*,*"
+                                                    ColumnSpacing="8"
+                                                    IsVisible="{Binding LayerType, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static inference:MaskLayerType.Image}}">
+                                                    <StackPanel Spacing="2">
+                                                        <TextBlock
+                                                            FontSize="11"
+                                                            Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                                            Text="Scale" />
+                                                        <ui:NumberBox
+                                                            HorizontalAlignment="Stretch"
+                                                            Maximum="3"
+                                                            Minimum="0.1"
+                                                            SimpleNumberFormat="F2"
+                                                            SmallChange="0.1"
+                                                            SpinButtonPlacementMode="Compact"
+                                                            Value="{Binding ImageScale}" />
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Column="1" Spacing="2">
+                                                        <TextBlock
+                                                            FontSize="11"
+                                                            Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                                            Text="Offset X"
+                                                            ToolTip.Tip="Horizontal offset from center (positive = right)" />
+                                                        <ui:NumberBox
+                                                            HorizontalAlignment="Stretch"
+                                                            Maximum="2000"
+                                                            Minimum="-2000"
+                                                            SimpleNumberFormat="F0"
+                                                            SmallChange="10"
+                                                            SpinButtonPlacementMode="Compact"
+                                                            Value="{Binding ImageOffsetX}" />
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Column="2" Spacing="2">
+                                                        <TextBlock
+                                                            FontSize="11"
+                                                            Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                                            Text="Offset Y"
+                                                            ToolTip.Tip="Vertical offset from center (positive = down)" />
+                                                        <ui:NumberBox
+                                                            HorizontalAlignment="Stretch"
+                                                            Maximum="2000"
+                                                            Minimum="-2000"
+                                                            SimpleNumberFormat="F0"
+                                                            SmallChange="10"
+                                                            SpinButtonPlacementMode="Compact"
+                                                            Value="{Binding ImageOffsetY}" />
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Column="3" Spacing="2">
+                                                        <TextBlock
+                                                            FontSize="11"
+                                                            Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                                            Text="Opacity" />
+                                                        <ui:NumberBox
+                                                            HorizontalAlignment="Stretch"
+                                                            Maximum="1"
+                                                            Minimum="0"
+                                                            SimpleNumberFormat="F2"
+                                                            SmallChange="0.1"
+                                                            SpinButtonPlacementMode="Compact"
+                                                            Value="{Binding Opacity}" />
+                                                    </StackPanel>
+                                                </sg:SpacedGrid>
+                                            </Grid>
+                                        </Grid>
+                                    </Panel>
+                                </Border>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </ScrollViewer>
+
+                <!--  Recent Images Section (inside right panel)  -->
+                <Expander
+                    Grid.Row="2"
+                    Margin="0,8,0,0"
+                    Header="Recent Images"
+                    IsExpanded="{Binding IsRecentImagesPanelExpanded}">
+                    <ScrollViewer
+                        MaxHeight="180"
+                        HorizontalScrollBarVisibility="Disabled"
+                        VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding LocalImages}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel Orientation="Horizontal" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="database:LocalImageFile">
+                                    <Button
+                                        Margin="2"
+                                        Padding="2"
+                                        Classes="transparent"
+                                        Command="{Binding $parent[controls:UserControlBase].((vmDialogs:LayeredMaskEditorViewModel)DataContext).SelectImageFromRecentCommand}"
+                                        CommandParameter="{Binding .}"
+                                        ToolTip.Tip="{Binding FileName}">
+                                        <vendorLabs:BetterAsyncImage
+                                            Width="60"
+                                            Height="60"
+                                            CornerRadius="4"
+                                            Source="{Binding AbsolutePath, Converter={StaticResource FileUriConverter}}"
+                                            Stretch="UniformToFill" />
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Expander>
+            </Grid>
+        </controls:Card>
+    </sg:SpacedGrid>
+</controls:UserControlBase>

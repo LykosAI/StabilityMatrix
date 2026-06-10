@@ -4834,5 +4834,113 @@ namespace StabilityMatrix.Avalonia.Languages {
                 return ResourceManager.GetString("Watermark_EnterPackageName", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The {0} workflow expects a model from DiffusionModels, but this file is in {1}. It may not load correctly..
+        /// </summary>
+        public static string TextTemplate_WorkflowNeedsDiffusionModelsFile {
+            get {
+                return ResourceManager.GetString("TextTemplate_WorkflowNeedsDiffusionModelsFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This file is in DiffusionModels and can't load as an all-in-one checkpoint. It may not load correctly..
+        /// </summary>
+        public static string Text_FileInDiffusionModelsNotCheckpoint {
+            get {
+                return ResourceManager.GetString("Text_FileInDiffusionModelsNotCheckpoint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This looks like {0}, which loads from DiffusionModels, but the file is in {1}. It may not load correctly..
+        /// </summary>
+        public static string TextTemplate_FileLooksLikeStandaloneModel {
+            get {
+                return ResourceManager.GetString("TextTemplate_FileLooksLikeStandaloneModel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Move to {0}.
+        /// </summary>
+        public static string TextTemplate_MoveToFolder {
+            get {
+                return ResourceManager.GetString("TextTemplate_MoveToFolder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Move.
+        /// </summary>
+        public static string Action_Move {
+            get {
+                return ResourceManager.GetString("Action_Move", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not move model.
+        /// </summary>
+        public static string Label_CouldNotMoveModel {
+            get {
+                return ResourceManager.GetString("Label_CouldNotMoveModel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A file named '{0}' already exists in the {1} folder..
+        /// </summary>
+        public static string TextTemplate_FileAlreadyExistsInFolder {
+            get {
+                return ResourceManager.GetString("TextTemplate_FileAlreadyExistsInFolder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Model moved.
+        /// </summary>
+        public static string Label_ModelMoved {
+            get {
+                return ResourceManager.GetString("Label_ModelMoved", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Moved '{0}' to the {1} folder..
+        /// </summary>
+        public static string TextTemplate_MovedFileToFolder {
+            get {
+                return ResourceManager.GetString("TextTemplate_MovedFileToFolder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Comfy Error.
+        /// </summary>
+        public static string Label_ComfyError {
+            get {
+                return ResourceManager.GetString("Label_ComfyError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ComfyUI reported an error during generation.
+        /// </summary>
+        public static string Text_ComfyReportedGenerationError {
+            get {
+                return ResourceManager.GetString("Text_ComfyReportedGenerationError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Generation Failed.
+        /// </summary>
+        public static string Label_GenerationFailed {
+            get {
+                return ResourceManager.GetString("Label_GenerationFailed", resourceCulture);
+            }
+        }
     }
 }

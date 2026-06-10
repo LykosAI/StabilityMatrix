@@ -215,7 +215,7 @@
                                     Padding="8,3"
                                     VerticalAlignment="Center"
                                     Command="{Binding MoveModelToRecommendedFolderCommand}"
-                                    Content="Move"
+                                    Content="{x:Static lang:Resources.Action_Move}"
                                     FontSize="11"
                                     ToolTip.Tip="{Binding MoveModelToRecommendedFolderText}" />
                                 <Button
@@ -224,7 +224,7 @@
                                     Padding="5,3"
                                     VerticalAlignment="Center"
                                     Command="{Binding DismissWorkflowProfileWarningCommand}"
-                                    ToolTip.Tip="Dismiss">
+                                    ToolTip.Tip="{x:Static lang:Resources.Action_Dismiss}">
                                     <fluent:SymbolIcon FontSize="11" Symbol="Dismiss" />
                                 </Button>
                             </Grid>

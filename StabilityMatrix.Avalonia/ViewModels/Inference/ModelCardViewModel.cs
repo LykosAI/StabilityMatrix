@@ -361,19 +361,18 @@ public partial class ModelCardViewModel(
             if (profileWantsStandalone is true && !isStandaloneFile)
             {
                 return (
-                    $"The {SelectedWorkflowProfile.GetStringValue()} workflow expects a model from "
-                        + $"DiffusionModels, but this file is in {local.SharedFolderType}. It may not load correctly.",
+                    string.Format(
+                        Resources.TextTemplate_WorkflowNeedsDiffusionModelsFile,
+                        SelectedWorkflowProfile.GetStringValue(),
+                        local.SharedFolderType
+                    ),
                     SharedFolderType.DiffusionModels
                 );
             }
 
             if (profileWantsStandalone is false && isStandaloneFile)
             {
-                return (
-                    "This file is in DiffusionModels and can't load as an all-in-one checkpoint. "
-                        + "It may not load correctly.",
-                    SharedFolderType.StableDiffusion
-                );
+                return (Resources.Text_FileInDiffusionModelsNotCheckpoint, SharedFolderType.StableDiffusion);
             }
         }
         else if (SelectedWorkflowProfile is InferenceWorkflowProfile.Auto && !isStandaloneFile)
@@ -400,8 +399,11 @@ public partial class ModelCardViewModel(
             )
             {
                 return (
-                    $"This looks like {impliedProfile.GetStringValue()}, which loads from DiffusionModels, "
-                        + $"but the file is in {local.SharedFolderType}. It may not load correctly.",
+                    string.Format(
+                        Resources.TextTemplate_FileLooksLikeStandaloneModel,
+                        impliedProfile.GetStringValue(),
+                        local.SharedFolderType
+                    ),
                     SharedFolderType.DiffusionModels
                 );
             }
@@ -444,7 +446,7 @@ public partial class ModelCardViewModel(
     /// </summary>
     public string? MoveModelToRecommendedFolderText =>
         GetProfileFolderMismatch() is { } mismatch
-            ? $"Move to {mismatch.TargetFolder.GetStringValue()}"
+            ? string.Format(Resources.TextTemplate_MoveToFolder, mismatch.TargetFolder.GetStringValue())
             : null;
 
     /// <summary>
@@ -474,8 +476,12 @@ public partial class ModelCardViewModel(
         catch (FileTransferExistsException)
         {
             notificationService.Show(
-                "Could not move model",
-                $"A file named '{fileName}' already exists in the {mismatch.TargetFolder.GetStringValue()} folder.",
+                Resources.Label_CouldNotMoveModel,
+                string.Format(
+                    Resources.TextTemplate_FileAlreadyExistsInFolder,
+                    fileName,
+                    mismatch.TargetFolder.GetStringValue()
+                ),
                 NotificationType.Error
             );
             return;
@@ -483,7 +489,7 @@ public partial class ModelCardViewModel(
         catch (Exception e)
         {
             notificationService.Show(
-                "Could not move model",
+                Resources.Label_CouldNotMoveModel,
                 $"[{e.GetType().Name}] {e.Message}",
                 NotificationType.Error
             );
@@ -516,8 +522,12 @@ public partial class ModelCardViewModel(
         );
 
         notificationService.Show(
-            "Model moved",
-            $"Moved '{fileName}' to the {mismatch.TargetFolder.GetStringValue()} folder.",
+            Resources.Label_ModelMoved,
+            string.Format(
+                Resources.TextTemplate_MovedFileToFolder,
+                fileName,
+                mismatch.TargetFolder.GetStringValue()
+            ),
             NotificationType.Success
         );
     }

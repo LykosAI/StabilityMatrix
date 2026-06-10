@@ -1744,4 +1744,40 @@ Account tokens will not be viewable after saving, please make a note of them if 
   <data name="TextTemplate_PatternPreviewExample" xml:space="preserve">
     <value>Example: {0}</value>
   </data>
+  <data name="TextTemplate_WorkflowNeedsDiffusionModelsFile" xml:space="preserve">
+    <value>The {0} workflow expects a model from DiffusionModels, but this file is in {1}. It may not load correctly.</value>
+  </data>
+  <data name="Text_FileInDiffusionModelsNotCheckpoint" xml:space="preserve">
+    <value>This file is in DiffusionModels and can't load as an all-in-one checkpoint. It may not load correctly.</value>
+  </data>
+  <data name="TextTemplate_FileLooksLikeStandaloneModel" xml:space="preserve">
+    <value>This looks like {0}, which loads from DiffusionModels, but the file is in {1}. It may not load correctly.</value>
+  </data>
+  <data name="TextTemplate_MoveToFolder" xml:space="preserve">
+    <value>Move to {0}</value>
+  </data>
+  <data name="Action_Move" xml:space="preserve">
+    <value>Move</value>
+  </data>
+  <data name="Label_CouldNotMoveModel" xml:space="preserve">
+    <value>Could not move model</value>
+  </data>
+  <data name="TextTemplate_FileAlreadyExistsInFolder" xml:space="preserve">
+    <value>A file named '{0}' already exists in the {1} folder.</value>
+  </data>
+  <data name="Label_ModelMoved" xml:space="preserve">
+    <value>Model moved</value>
+  </data>
+  <data name="TextTemplate_MovedFileToFolder" xml:space="preserve">
+    <value>Moved '{0}' to the {1} folder.</value>
+  </data>
+  <data name="Label_ComfyError" xml:space="preserve">
+    <value>Comfy Error</value>
+  </data>
+  <data name="Text_ComfyReportedGenerationError" xml:space="preserve">
+    <value>ComfyUI reported an error during generation</value>
+  </data>
+  <data name="Label_GenerationFailed" xml:space="preserve">
+    <value>Generation Failed</value>
+  </data>
 </root>

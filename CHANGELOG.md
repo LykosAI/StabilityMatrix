@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Renamed the "Anima / SD" workflow profile to **"Anima"**. Anima has no all-in-one version, so it's now handled like Z-Image: standalone model in DiffusionModels with a separate text encoder and VAE
 - Image Lab's Flux.2 Klein model checks now match the text encoder to your selected UNET variant (4B vs 9B), and switching variants updates the status banner immediately
 ### Fixed
+- Fixed [#1659](https://github.com/LykosAI/StabilityMatrix/issues/1659) - Z-Image and Anima workflows hiding the Text Encoder selectors and passing an invalid `None` CLIP input to ComfyUI; standalone workflows now expose and automatically fill compatible text encoders and VAEs
 - Fixed **"No text encoders configured"** errors when generating with an all-in-one checkpoint after a UNet model had been selected in the same tab
 - Fixed Qwen Image Edit in Image Lab failing mid-generation when a wrong-size Qwen2.5-VL text encoder was installed. The **7B** encoder is now required, and the correct download is offered when it's missing
 - Fixed Image Lab reporting "all models present" for Flux.2 Klein 9B setups that only had the 4B text encoder (and vice versa). The matching encoder download is now offered

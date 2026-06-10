@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Refit;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Models.BananaVision;
+using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Services.ImageGeneration;
 
@@ -220,23 +221,16 @@ public class QwenImageEditProvider(
             logger.LogInformation("Image generation was cancelled");
             throw; // Propagate cancellation to ViewModel for proper handling
         }
+        catch (ComfyNodeException nodeEx)
+        {
+            // Execution-time node failure (e.g. tensor-shape mismatch from a wrong encoder
+            // pairing). Carries ComfyUI's full error JSON for the detail dialog.
+            return ComfyGenerationHelper.CreateNodeErrorResponse(nodeEx, "Qwen Image Edit", logger);
+        }
         catch (ApiException apiEx)
         {
-            // ComfyUI returns a JSON body explaining which node validation failed when the
-            // workflow is rejected; surfacing that beats a generic 400 message by miles.
-            var detail = !string.IsNullOrWhiteSpace(apiEx.Content) ? apiEx.Content : apiEx.Message;
-            logger.LogError(
-                apiEx,
-                "ComfyUI rejected Qwen Image Edit workflow ({StatusCode}): {Detail}",
-                apiEx.StatusCode,
-                detail
-            );
-            return new ImageGenerationResponse
-            {
-                IsSuccess = false,
-                ErrorMessage =
-                    $"ComfyUI rejected the workflow ({(int)apiEx.StatusCode}): {ComfyGenerationHelper.Truncate(detail, 800)}",
-            };
+            // Queue-time rejection; ComfyUI's JSON body explains which node validation failed.
+            return ComfyGenerationHelper.CreateWorkflowRejectedResponse(apiEx, "Qwen Image Edit", logger);
         }
         catch (Exception ex)
         {

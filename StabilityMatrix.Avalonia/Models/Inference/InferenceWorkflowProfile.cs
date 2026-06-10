@@ -22,7 +22,7 @@ public enum InferenceWorkflowProfile
     [StringValue("Z-Image Turbo")]
     ZImageTurbo,
 
-    [StringValue("Anima / SD")]
+    [StringValue("Anima")]
     Anima,
 
     [StringValue("HiDream")]

@@ -2313,10 +2313,9 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
             }
 
             // Check if required models are available
-            if (!modelManager.AreModelsAvailable(ClientManager))
+            if (!AreProviderModelsAvailable(modelManager))
             {
-                var missingModelNames = modelManager.GetMissingModelNames(ClientManager).ToList();
-                var modelsList = string.Join(", ", missingModelNames);
+                var modelsList = string.Join(", ", GetProviderMissingModelNames(modelManager));
                 ProviderStatusMessage = $"⚠️ Missing: {modelsList}";
                 IsFluxKontextAvailable = false;
                 HasMissingModels = true;

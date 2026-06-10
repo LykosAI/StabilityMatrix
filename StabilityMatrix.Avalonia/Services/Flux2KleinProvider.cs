@@ -41,10 +41,26 @@ public class Flux2KleinProvider(ILogger<Flux2KleinProvider> logger, IInferenceCl
                 };
             }
 
-            var modelManager = new Flux2KleinModelManager();
-            if (!modelManager.AreModelsAvailable(clientManager))
+            // Resolve the user's UNET selection first — the availability check below is
+            // variant-aware (a 9B UNET needs the qwen_3_8b encoder, 4B needs qwen_3_4b),
+            // so it has to know which UNET the workflow will actually use.
+            HybridModelFile? customUnetModel = null;
+            if (
+                request.ProviderOptions?.TryGetValue("CustomUnetModel", out var modelObj) == true
+                && modelObj is HybridModelFile model
+            )
             {
-                var modelsList = string.Join(", ", modelManager.GetMissingModelNames(clientManager));
+                customUnetModel = model;
+                logger.LogInformation("Using custom UNet model: {ModelPath}", model.RelativePath);
+            }
+
+            var modelManager = new Flux2KleinModelManager();
+            if (!modelManager.AreModelsAvailable(clientManager, customUnetModel))
+            {
+                var modelsList = string.Join(
+                    ", ",
+                    modelManager.GetMissingModelNames(clientManager, customUnetModel)
+                );
 
                 logger.LogWarning("Required models not found: {Models}", modelsList);
                 return new ImageGenerationResponse
@@ -65,7 +81,6 @@ public class Flux2KleinProvider(ILogger<Flux2KleinProvider> logger, IInferenceCl
                 cancellationToken
             );
 
-            HybridModelFile? customUnetModel = null;
             IEnumerable<SelectedLora>? loras = null;
             int? width = null;
             int? height = null;
@@ -75,15 +90,6 @@ public class Flux2KleinProvider(ILogger<Flux2KleinProvider> logger, IInferenceCl
 
             if (request.ProviderOptions != null)
             {
-                if (
-                    request.ProviderOptions.TryGetValue("CustomUnetModel", out var modelObj)
-                    && modelObj is HybridModelFile model
-                )
-                {
-                    customUnetModel = model;
-                    logger.LogInformation("Using custom UNet model: {ModelPath}", model.RelativePath);
-                }
-
                 if (
                     request.ProviderOptions.TryGetValue("SelectedLoras", out var lorasObj)
                     && lorasObj is IEnumerable<SelectedLora> loraList

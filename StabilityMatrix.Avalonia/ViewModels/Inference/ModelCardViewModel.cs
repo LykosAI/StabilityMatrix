@@ -524,11 +524,11 @@ public partial class ModelCardViewModel(
 
     internal static HybridModelFile? FindMovedModel(
         IEnumerable<HybridModelFile> models,
-        string destinationRelativePath
+        string pathRelativeToSharedFolder
     ) =>
         models.FirstOrDefault(m =>
             m.Local != null
-            && string.Equals(m.RelativePath, destinationRelativePath, StringComparison.OrdinalIgnoreCase)
+            && string.Equals(m.RelativePath, pathRelativeToSharedFolder, StringComparison.OrdinalIgnoreCase)
         );
 
     public event Action<InferenceWorkflowProfile>? RecommendedDefaultsRequested;

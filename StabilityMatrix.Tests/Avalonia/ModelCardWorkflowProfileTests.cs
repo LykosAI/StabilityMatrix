@@ -410,6 +410,9 @@ public class ModelCardWorkflowProfileTests
 
         var selected = ModelCardViewModel.FindMovedModel([nested, moved], "model.safetensors");
 
+        // HybridModelFile.RelativePath is relative to DiffusionModels, unlike
+        // LocalModelFile.RelativePath which includes the shared-folder prefix.
+        Assert.AreEqual("model.safetensors", moved.RelativePath);
         Assert.AreSame(moved, selected);
     }
 

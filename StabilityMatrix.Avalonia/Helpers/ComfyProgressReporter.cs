@@ -24,6 +24,9 @@ public sealed class ComfyProgressReporter : IDisposable
         IProgress<ImageGenerationProgress>? progress
     )
     {
+        ArgumentNullException.ThrowIfNull(task);
+        ArgumentNullException.ThrowIfNull(providerId);
+
         this.task = task;
         this.providerId = providerId;
         this.progress = progress;

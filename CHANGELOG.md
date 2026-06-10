@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - The Inference **Workflow** selector now switches the model loader to match the chosen profile, showing or hiding the separate encoder and VAE fields as appropriate. It will never switch to a loader that can't load the selected file; you get the warning above instead
 - Renamed the "Anima / SD" workflow profile to **"Anima"**. Anima has no all-in-one version, so it's now handled like Z-Image: standalone model in DiffusionModels with a separate text encoder and VAE
 - Image Lab's Flux.2 Klein model checks now match the text encoder to your selected UNET variant (4B vs 9B), and switching variants updates the status banner immediately
+- Image Lab's Flux Kontext and Qwen Image Edit providers now show ComfyUI's actual workflow rejection message instead of a generic "Generation failed" (Flux.2 Klein already did this)
 ### Fixed
 - Fixed [#1659](https://github.com/LykosAI/StabilityMatrix/issues/1659) - Z-Image and Anima workflows hiding the Text Encoder selectors and passing an invalid `None` CLIP input to ComfyUI; standalone workflows now expose and automatically fill compatible text encoders and VAEs
 - Fixed **"No text encoders configured"** errors when generating with an all-in-one checkpoint after a UNet model had been selected in the same tab

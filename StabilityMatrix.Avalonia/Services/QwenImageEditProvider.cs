@@ -1,5 +1,6 @@
 using AsyncAwaitBestPractices;
 using Microsoft.Extensions.Logging;
+using Refit;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Models.BananaVision;
 using StabilityMatrix.Core.Models;
@@ -293,6 +294,24 @@ public class QwenImageEditProvider(
             logger.LogInformation("Image generation was cancelled");
             throw; // Propagate cancellation to ViewModel for proper handling
         }
+        catch (ApiException apiEx)
+        {
+            // ComfyUI returns a JSON body explaining which node validation failed when the
+            // workflow is rejected; surfacing that beats a generic 400 message by miles.
+            var detail = !string.IsNullOrWhiteSpace(apiEx.Content) ? apiEx.Content : apiEx.Message;
+            logger.LogError(
+                apiEx,
+                "ComfyUI rejected Qwen Image Edit workflow ({StatusCode}): {Detail}",
+                apiEx.StatusCode,
+                detail
+            );
+            return new ImageGenerationResponse
+            {
+                IsSuccess = false,
+                ErrorMessage =
+                    $"ComfyUI rejected the workflow ({(int)apiEx.StatusCode}): {Truncate(detail, 800)}",
+            };
+        }
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to generate image with Qwen Image Edit");
@@ -303,4 +322,7 @@ public class QwenImageEditProvider(
             };
         }
     }
+
+    private static string Truncate(string value, int maxLength) =>
+        value.Length <= maxLength ? value : value[..maxLength] + "...";
 }

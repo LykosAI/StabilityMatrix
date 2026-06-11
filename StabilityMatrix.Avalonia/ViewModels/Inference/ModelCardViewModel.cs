@@ -364,7 +364,7 @@ public partial class ModelCardViewModel(
                     string.Format(
                         Resources.TextTemplate_WorkflowNeedsDiffusionModelsFile,
                         SelectedWorkflowProfile.GetStringValue(),
-                        local.SharedFolderType
+                        local.SharedFolderType.GetStringValue()
                     ),
                     SharedFolderType.DiffusionModels
                 );
@@ -402,7 +402,7 @@ public partial class ModelCardViewModel(
                     string.Format(
                         Resources.TextTemplate_FileLooksLikeStandaloneModel,
                         impliedProfile.GetStringValue(),
-                        local.SharedFolderType
+                        local.SharedFolderType.GetStringValue()
                     ),
                     SharedFolderType.DiffusionModels
                 );

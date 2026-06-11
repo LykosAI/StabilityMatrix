@@ -19,6 +19,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Helpers;
+using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.BananaVision;
 using StabilityMatrix.Avalonia.Services;
@@ -1113,8 +1114,7 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
             }
             else
             {
-                ErrorMessage = ex.Message;
-                notificationService.Show("Generation Failed", ex.Message, NotificationType.Warning);
+                await ShowGenerationFailedAsync(ex);
                 CanRetryLastMessage = true;
             }
         }
@@ -1137,6 +1137,31 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
                 Messages.Remove(currentLoadingMessage);
                 currentLoadingMessage = null;
             }
+        }
+    }
+
+    /// <summary>
+    /// Surfaces a failed generation: short message in the chat error banner, plus the same
+    /// JSON detail dialog Inference uses when the failure carries ComfyUI's error body
+    /// (workflow rejection or node execution error), or a plain toast otherwise.
+    /// </summary>
+    private async Task ShowGenerationFailedAsync(ImageGenerationException ex)
+    {
+        ErrorMessage = ex.Message;
+
+        if (!string.IsNullOrWhiteSpace(ex.DetailJson))
+        {
+            await DialogHelper
+                .CreateJsonDialog(
+                    ex.DetailJson,
+                    Resources.Label_ComfyError,
+                    Resources.Text_ComfyReportedGenerationError
+                )
+                .ShowAsync();
+        }
+        else
+        {
+            notificationService.Show(Resources.Label_GenerationFailed, ex.Message, NotificationType.Warning);
         }
     }
 
@@ -1264,8 +1289,7 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
             }
             else
             {
-                ErrorMessage = ex.Message;
-                notificationService.Show("Generation Failed", ex.Message, NotificationType.Warning);
+                await ShowGenerationFailedAsync(ex);
                 CanRetryLastMessage = true;
             }
         }
@@ -1456,8 +1480,7 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
             }
             else
             {
-                ErrorMessage = ex.Message;
-                notificationService.Show("Generation Failed", ex.Message, NotificationType.Warning);
+                await ShowGenerationFailedAsync(ex);
                 CanRetryLastMessage = true;
             }
         }
@@ -1698,8 +1721,7 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
             }
             else
             {
-                ErrorMessage = ex.Message;
-                notificationService.Show("Generation Failed", ex.Message, NotificationType.Warning);
+                await ShowGenerationFailedAsync(ex);
                 CanRetryLastMessage = true;
             }
         }

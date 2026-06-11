@@ -261,9 +261,6 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
     public partial string? ProviderStatusMessage { get; set; }
 
     [ObservableProperty]
-    public partial bool IsFluxKontextAvailable { get; set; }
-
-    [ObservableProperty]
     public partial bool CanRetryLastMessage { get; set; }
 
     /// <summary>
@@ -2277,7 +2274,6 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
             if (!IsComfyRunning)
             {
                 ProviderStatusMessage = "⚠️ ComfyUI is not running. Click Launch to start.";
-                IsFluxKontextAvailable = false;
                 HasMissingModels = false;
                 return;
             }
@@ -2286,7 +2282,6 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
             if (IsWaitingForConnection)
             {
                 ProviderStatusMessage = "🔄 Connecting to ComfyUI...";
-                IsFluxKontextAvailable = false;
                 HasMissingModels = false;
                 return;
             }
@@ -2295,7 +2290,6 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
             if (!ClientManager.IsConnected)
             {
                 ProviderStatusMessage = "⚠️ Not connected to ComfyUI. Click Connect.";
-                IsFluxKontextAvailable = false;
                 HasMissingModels = false;
                 return;
             }
@@ -2307,7 +2301,6 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
             if (IsDownloadingModels)
             {
                 ProviderStatusMessage = DownloadProgressText ?? "⬇️ Downloading models...";
-                IsFluxKontextAvailable = false;
                 HasMissingModels = false;
                 return;
             }
@@ -2317,21 +2310,18 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
             {
                 var modelsList = string.Join(", ", GetProviderMissingModelNames(modelManager));
                 ProviderStatusMessage = $"⚠️ Missing: {modelsList}";
-                IsFluxKontextAvailable = false;
                 HasMissingModels = true;
                 return;
             }
 
             // All good
             ProviderStatusMessage = $"✅ {modelManager.ProviderDisplayName} is ready";
-            IsFluxKontextAvailable = true;
             HasMissingModels = false;
         }
         else
         {
             // Cloud providers or providers without model requirements
             ProviderStatusMessage = null;
-            IsFluxKontextAvailable = false;
             HasMissingModels = false;
         }
     }

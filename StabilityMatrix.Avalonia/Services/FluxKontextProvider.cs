@@ -4,7 +4,6 @@ using Refit;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Models.BananaVision;
 using StabilityMatrix.Core.Models;
-using StabilityMatrix.Core.Models.Api.Comfy;
 using StabilityMatrix.Core.Services.ImageGeneration;
 
 namespace StabilityMatrix.Avalonia.Services;
@@ -122,60 +121,8 @@ public class FluxKontextProvider(ILogger<FluxKontextProvider> logger, IInference
             logger.LogInformation("Queuing prompt to ComfyUI");
             var task = await clientManager.Client.QueuePromptAsync(nodes, cancellationToken);
 
-            request.Progress?.Report(
-                new ImageGenerationProgress(
-                    ProviderId,
-                    task.Id,
-                    Value: null,
-                    Maximum: null,
-                    RunningNode: null,
-                    Stage: "Queued"
-                )
-            );
-
-            int? lastPercent = null;
-            string? lastRunningNode = null;
-
-            void ReportProgress(int? value, int? maximum, string? runningNode, string? stage)
-            {
-                int? percent = value is >= 0 && maximum is > 0 ? (value.Value * 100) / maximum.Value : null;
-
-                if (
-                    percent == lastPercent
-                    && string.Equals(lastRunningNode, runningNode, StringComparison.Ordinal)
-                )
-                {
-                    return;
-                }
-
-                lastPercent = percent;
-                lastRunningNode = runningNode;
-
-                request.Progress?.Report(
-                    new ImageGenerationProgress(ProviderId, task.Id, value, maximum, runningNode, stage)
-                );
-            }
-
-            void OnProgressUpdate(
-                object? sender,
-                StabilityMatrix.Core.Inference.ComfyProgressUpdateEventArgs args
-            )
-            {
-                ReportProgress(args.Value, args.Maximum, args.RunningNode, "Generating");
-            }
-
-            void OnRunningNodeChanged(object? sender, string? node)
-            {
-                ReportProgress(
-                    task.LastProgressUpdate?.Value,
-                    task.LastProgressUpdate?.Maximum,
-                    node,
-                    "Generating"
-                );
-            }
-
-            task.ProgressUpdate += OnProgressUpdate;
-            task.RunningNodeChanged += OnRunningNodeChanged;
+            // Reports "Queued" now, then deduplicated progress updates until disposed
+            using var progressReporter = new ComfyProgressReporter(task, ProviderId, request.Progress);
 
             // Register cancellation to interrupt ComfyUI if the user cancels
             await using var promptInterrupt = cancellationToken.Register(() =>
@@ -189,21 +136,27 @@ public class FluxKontextProvider(ILogger<FluxKontextProvider> logger, IInference
                 var interruptCts = new CancellationTokenSource(5000);
                 clientManager
                     .Client.InterruptPromptAsync(interruptCts.Token)
-                    .ContinueWith(_ => interruptCts.Dispose(), TaskScheduler.Default)
+                    .ContinueWith(
+                        t =>
+                        {
+                            if (t.IsFaulted)
+                            {
+                                logger.LogWarning(
+                                    t.Exception,
+                                    "Failed to interrupt ComfyUI prompt {PromptId}",
+                                    task.Id
+                                );
+                            }
+                            interruptCts.Dispose();
+                        },
+                        TaskScheduler.Default
+                    )
                     .SafeFireAndForget();
             });
 
-            try
-            {
-                // Wait for completion
-                logger.LogInformation("Waiting for generation to complete (Prompt ID: {PromptId})", task.Id);
-                await task.Task.WaitAsync(cancellationToken);
-            }
-            finally
-            {
-                task.ProgressUpdate -= OnProgressUpdate;
-                task.RunningNodeChanged -= OnRunningNodeChanged;
-            }
+            // Wait for completion
+            logger.LogInformation("Waiting for generation to complete (Prompt ID: {PromptId})", task.Id);
+            await task.Task.WaitAsync(cancellationToken);
 
             // Get the output images
             var outputImages = await clientManager.Client.GetImagesForExecutedPromptAsync(
@@ -211,28 +164,7 @@ public class FluxKontextProvider(ILogger<FluxKontextProvider> logger, IInference
                 cancellationToken
             );
 
-            // Prefer the "SaveImage" output node deterministically.
-            var preferredOutputKey = "SaveImage";
-            string? selectedOutputKey = null;
-            List<ComfyImage>? candidateImages = null;
-
-            if (
-                outputImages.TryGetValue(preferredOutputKey, out var preferredImages)
-                && preferredImages is { Count: > 0 }
-            )
-            {
-                selectedOutputKey = preferredOutputKey;
-                candidateImages = preferredImages;
-            }
-            else
-            {
-                var selected = outputImages
-                    .OrderBy(kvp => kvp.Key, StringComparer.Ordinal)
-                    .FirstOrDefault(kvp => kvp.Value is { Count: > 0 });
-
-                selectedOutputKey = string.IsNullOrEmpty(selected.Key) ? null : selected.Key;
-                candidateImages = selected.Value;
-            }
+            var (selectedOutputKey, candidateImages) = ComfyGenerationHelper.SelectOutputImages(outputImages);
 
             if (candidateImages is null || candidateImages.Count == 0)
             {
@@ -259,13 +191,7 @@ public class FluxKontextProvider(ILogger<FluxKontextProvider> logger, IInference
                 var imageBytes = memoryStream.ToArray();
                 var base64Image = Convert.ToBase64String(imageBytes);
 
-                var mimeType =
-                    comfyImage.FileName.EndsWith(".png", StringComparison.OrdinalIgnoreCase) ? "image/png"
-                    : comfyImage.FileName.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase)
-                    || comfyImage.FileName.EndsWith(".jpeg", StringComparison.OrdinalIgnoreCase)
-                        ? "image/jpeg"
-                    : comfyImage.FileName.EndsWith(".webp", StringComparison.OrdinalIgnoreCase) ? "image/webp"
-                    : "image/png";
+                var mimeType = ComfyGenerationHelper.GetMimeTypeForFileName(comfyImage.FileName);
 
                 generatedImages.Add(new GeneratedImage { Base64Data = base64Image, MimeType = mimeType });
             }
@@ -307,7 +233,7 @@ public class FluxKontextProvider(ILogger<FluxKontextProvider> logger, IInference
             {
                 IsSuccess = false,
                 ErrorMessage =
-                    $"ComfyUI rejected the workflow ({(int)apiEx.StatusCode}): {Truncate(detail, 800)}",
+                    $"ComfyUI rejected the workflow ({(int)apiEx.StatusCode}): {ComfyGenerationHelper.Truncate(detail, 800)}",
             };
         }
         catch (Exception ex)
@@ -320,7 +246,4 @@ public class FluxKontextProvider(ILogger<FluxKontextProvider> logger, IInference
             };
         }
     }
-
-    private static string Truncate(string value, int maxLength) =>
-        value.Length <= maxLength ? value : value[..maxLength] + "...";
 }

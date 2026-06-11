@@ -1,10 +1,6 @@
-using AsyncAwaitBestPractices;
 using Microsoft.Extensions.Logging;
-using Refit;
-using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Models.BananaVision;
-using StabilityMatrix.Core.Exceptions;
-using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 using StabilityMatrix.Core.Services.ImageGeneration;
 
 namespace StabilityMatrix.Avalonia.Services;
@@ -13,231 +9,38 @@ namespace StabilityMatrix.Avalonia.Services;
 /// Image generation provider for Flux Kontext using local ComfyUI backend
 /// </summary>
 public class FluxKontextProvider(ILogger<FluxKontextProvider> logger, IInferenceClientManager clientManager)
-    : IImageGenerationProvider
+    : ComfyImageGenerationProviderBase(logger, clientManager)
 {
-    public string ProviderId => BananaVisionProviderIds.FluxKontext;
-    public string ProviderName => "Flux Kontext (Local)";
-    public bool SupportsImageInput => true;
-    public bool SupportsMultiTurn => true;
-    public bool RequiresThoughtSignatures => false;
+    public override string ProviderId => BananaVisionProviderIds.FluxKontext;
+    public override string ProviderName => "Flux Kontext (Local)";
 
-    public async Task<ImageGenerationResponse> GenerateAsync(
-        ImageGenerationRequest request,
-        CancellationToken cancellationToken = default
-    )
+    protected override string LogName => "Flux Kontext";
+    protected override int MaxInputImages => 2;
+    protected override string ProviderPrefix => "flux_kontext";
+
+    protected override IReadOnlyList<string> GetMissingModels(ImageGenerationRequest request)
     {
-        try
+        var modelManager = new FluxKontextModelManager();
+        if (modelManager.AreModelsAvailable(ClientManager))
         {
-            // Check if ComfyUI is connected
-            if (!clientManager.IsConnected)
-            {
-                logger.LogWarning("ComfyUI is not connected");
-                return new ImageGenerationResponse
-                {
-                    IsSuccess = false,
-                    ErrorMessage =
-                        "ComfyUI is not connected. Use the Launch button in the header to start and connect to ComfyUI.",
-                };
-            }
-
-            // Validate models are available
-            var modelManager = new FluxKontextModelManager();
-            if (!modelManager.AreModelsAvailable(clientManager))
-            {
-                var modelsList = string.Join(", ", modelManager.GetMissingModelNames(clientManager));
-
-                logger.LogWarning("Required models not found: {Models}", modelsList);
-                return new ImageGenerationResponse
-                {
-                    IsSuccess = false,
-                    ErrorMessage =
-                        $"Required models not found: {modelsList}. Please download them from the HuggingFace model browser.",
-                };
-            }
-
-            // Upload images using helper
-            await ComfyImageUploadHelper.UploadImagesAsync(
-                clientManager,
-                request,
-                maxInputImages: 2,
-                providerPrefix: "flux_kontext",
-                logger,
-                cancellationToken
-            );
-
-            // Extract custom model, LoRA selections, and resolution from provider options
-            HybridModelFile? customUnetModel = null;
-            IEnumerable<SelectedLora>? loras = null;
-            int? width = null;
-            int? height = null;
-
-            if (request.ProviderOptions != null)
-            {
-                if (
-                    request.ProviderOptions.TryGetValue("CustomUnetModel", out var modelObj)
-                    && modelObj is HybridModelFile model
-                )
-                {
-                    customUnetModel = model;
-                    logger.LogInformation("Using custom UNet model: {ModelPath}", model.RelativePath);
-                }
-
-                if (
-                    request.ProviderOptions.TryGetValue("SelectedLoras", out var lorasObj)
-                    && lorasObj is IEnumerable<SelectedLora> loraList
-                )
-                {
-                    loras = loraList;
-                    logger.LogInformation("Using {Count} LoRAs", loraList.Count());
-                }
-
-                if (request.ProviderOptions.TryGetValue("Width", out var widthObj) && widthObj is int w)
-                {
-                    width = w;
-                }
-
-                if (request.ProviderOptions.TryGetValue("Height", out var heightObj) && heightObj is int h)
-                {
-                    height = h;
-                }
-
-                if (width.HasValue && height.HasValue)
-                {
-                    logger.LogInformation("Using custom resolution: {Width}x{Height}", width, height);
-                }
-            }
-
-            // Build workflow nodes
-            logger.LogInformation("Building Flux Kontext workflow");
-            var nodes = FluxKontextWorkflowBuilder.Build(
-                request,
-                clientManager,
-                customUnetModel,
-                loras,
-                width,
-                height
-            );
-
-            // Queue the prompt
-            logger.LogInformation("Queuing prompt to ComfyUI");
-            var task = await clientManager.Client.QueuePromptAsync(nodes, cancellationToken);
-
-            // Reports "Queued" now, then deduplicated progress updates until disposed
-            using var progressReporter = new ComfyProgressReporter(task, ProviderId, request.Progress);
-
-            // Register cancellation to interrupt ComfyUI if the user cancels
-            await using var promptInterrupt = cancellationToken.Register(() =>
-            {
-                logger.LogInformation(
-                    "Cancellation requested, interrupting ComfyUI prompt {PromptId}",
-                    task.Id
-                );
-                // CTS holds an internal timer that needs disposing; chain dispose onto
-                // the fire-and-forget interrupt so it cleans up once the request settles.
-                var interruptCts = new CancellationTokenSource(5000);
-                clientManager
-                    .Client.InterruptPromptAsync(interruptCts.Token)
-                    .ContinueWith(
-                        t =>
-                        {
-                            if (t.IsFaulted)
-                            {
-                                logger.LogWarning(
-                                    t.Exception,
-                                    "Failed to interrupt ComfyUI prompt {PromptId}",
-                                    task.Id
-                                );
-                            }
-                            interruptCts.Dispose();
-                        },
-                        TaskScheduler.Default
-                    )
-                    .SafeFireAndForget();
-            });
-
-            // Wait for completion
-            logger.LogInformation("Waiting for generation to complete (Prompt ID: {PromptId})", task.Id);
-            await task.Task.WaitAsync(cancellationToken);
-
-            // Get the output images
-            var outputImages = await clientManager.Client.GetImagesForExecutedPromptAsync(
-                task.Id,
-                cancellationToken
-            );
-
-            var (selectedOutputKey, candidateImages) = ComfyGenerationHelper.SelectOutputImages(outputImages);
-
-            if (candidateImages is null || candidateImages.Count == 0)
-            {
-                logger.LogWarning("No output images found from generation");
-                return new ImageGenerationResponse
-                {
-                    IsSuccess = false,
-                    ErrorMessage = "No output images were generated",
-                };
-            }
-
-            var generatedImages = new List<GeneratedImage>();
-
-            foreach (var comfyImage in candidateImages)
-            {
-                logger.LogInformation("Downloading generated image: {FileName}", comfyImage.FileName);
-
-                await using var imageStream = await clientManager.Client.GetImageStreamAsync(
-                    comfyImage,
-                    cancellationToken
-                );
-                using var memoryStream = new MemoryStream();
-                await imageStream.CopyToAsync(memoryStream, cancellationToken);
-                var imageBytes = memoryStream.ToArray();
-                var base64Image = Convert.ToBase64String(imageBytes);
-
-                var mimeType = ComfyGenerationHelper.GetMimeTypeForFileName(comfyImage.FileName);
-
-                generatedImages.Add(new GeneratedImage { Base64Data = base64Image, MimeType = mimeType });
-            }
-
-            logger.LogInformation(
-                "Successfully generated {Count} image(s) with Flux Kontext",
-                generatedImages.Count
-            );
-
-            return new ImageGenerationResponse
-            {
-                IsSuccess = true,
-                Images = generatedImages,
-                TextResponse = null,
-                Metadata = new Dictionary<string, object>
-                {
-                    ["promptId"] = task.Id,
-                    ["outputNode"] = selectedOutputKey ?? "unknown",
-                },
-            };
+            return [];
         }
-        catch (OperationCanceledException)
-        {
-            logger.LogInformation("Image generation was cancelled");
-            throw; // Propagate cancellation to ViewModel for proper handling
-        }
-        catch (ComfyNodeException nodeEx)
-        {
-            // Execution-time node failure (e.g. tensor-shape mismatch from a wrong encoder
-            // pairing). Carries ComfyUI's full error JSON for the detail dialog.
-            return ComfyGenerationHelper.CreateNodeErrorResponse(nodeEx, "Flux Kontext", logger);
-        }
-        catch (ApiException apiEx)
-        {
-            // Queue-time rejection; ComfyUI's JSON body explains which node validation failed.
-            return ComfyGenerationHelper.CreateWorkflowRejectedResponse(apiEx, "Flux Kontext", logger);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Failed to generate image with Flux Kontext");
-            return new ImageGenerationResponse
-            {
-                IsSuccess = false,
-                ErrorMessage = $"Generation failed: {ex.Message}",
-            };
-        }
+        return modelManager.GetMissingModelNames(ClientManager).ToList();
+    }
+
+    protected override Dictionary<string, ComfyNode> BuildWorkflow(ImageGenerationRequest request)
+    {
+        var customUnetModel = GetCustomUnetModel(request);
+        var loras = GetSelectedLoras(request);
+        var (width, height) = GetDimensions(request);
+
+        return FluxKontextWorkflowBuilder.Build(
+            request,
+            ClientManager,
+            customUnetModel,
+            loras,
+            width,
+            height
+        );
     }
 }

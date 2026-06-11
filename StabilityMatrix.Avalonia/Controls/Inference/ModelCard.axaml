@@ -182,6 +182,54 @@
                             IsVisible="{Binding ShowWorkflowProfileStatus}"
                             Text="{Binding WorkflowProfileStatusText}" />
 
+                        <!--
+                            Profile / folder mismatch warning (e.g. UNet-only model placed in the StableDiffusion folder).
+                            Custom compact strip — the stock InfoBar's padding + stacked action button eat too much
+                            vertical space in this card.
+                        -->
+                        <Border
+                            Margin="0,8,0,0"
+                            Padding="8,5"
+                            Background="{DynamicResource SystemFillColorCautionBackgroundBrush}"
+                            BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                            BorderThickness="1"
+                            CornerRadius="4"
+                            IsVisible="{Binding ShowWorkflowProfileWarning}">
+                            <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+                                <fluent:SymbolIcon
+                                    Grid.Column="0"
+                                    Margin="0,1,6,0"
+                                    VerticalAlignment="Top"
+                                    FontSize="14"
+                                    Foreground="{DynamicResource SystemFillColorCautionBrush}"
+                                    Symbol="Warning" />
+                                <TextBlock
+                                    Grid.Column="1"
+                                    VerticalAlignment="Center"
+                                    FontSize="11"
+                                    Text="{Binding WorkflowProfileWarningText}"
+                                    TextWrapping="Wrap" />
+                                <Button
+                                    Grid.Column="2"
+                                    Margin="8,0,0,0"
+                                    Padding="8,3"
+                                    VerticalAlignment="Center"
+                                    Command="{Binding MoveModelToRecommendedFolderCommand}"
+                                    Content="Move"
+                                    FontSize="11"
+                                    ToolTip.Tip="{Binding MoveModelToRecommendedFolderText}" />
+                                <Button
+                                    Grid.Column="3"
+                                    Margin="4,0,0,0"
+                                    Padding="5,3"
+                                    VerticalAlignment="Center"
+                                    Command="{Binding DismissWorkflowProfileWarningCommand}"
+                                    ToolTip.Tip="Dismiss">
+                                    <fluent:SymbolIcon FontSize="11" Symbol="Dismiss" />
+                                </Button>
+                            </Grid>
+                        </Border>
+
                         <!--  Encoder Type (shown for non-Auto workflows on UNet, and any time Custom is selected)  -->
                         <Grid
                             Margin="0,8,0,0"

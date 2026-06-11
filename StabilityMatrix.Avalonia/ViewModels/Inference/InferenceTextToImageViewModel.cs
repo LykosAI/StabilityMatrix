@@ -249,16 +249,6 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
 
     protected InferenceWorkflowProfile ResolvedWorkflowProfile => ModelCardViewModel.ResolvedWorkflowProfile;
 
-    protected bool IsAnimaUnet =>
-        IsUnetLoader
-        && (
-            ResolvedWorkflowProfile is InferenceWorkflowProfile.Anima
-            || (
-                ResolvedWorkflowProfile is InferenceWorkflowProfile.Custom
-                && ModelCardViewModel.SelectedClipType is "stable_diffusion"
-            )
-        );
-
     protected bool IsFlux2Unet =>
         IsUnetLoader
         && (

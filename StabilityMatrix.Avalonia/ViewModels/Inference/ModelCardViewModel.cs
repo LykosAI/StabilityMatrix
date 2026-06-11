@@ -1,6 +1,9 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Nodes;
+using System.Text.RegularExpressions;
+using Avalonia.Controls.Notifications;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
@@ -14,11 +17,14 @@ using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 using StabilityMatrix.Core.Models.Api.Comfy.NodeTypes;
 using StabilityMatrix.Core.Models.Inference;
+using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
@@ -28,7 +34,11 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 public partial class ModelCardViewModel(
     IInferenceClientManager clientManager,
     IServiceManager<ViewModelBase> vmFactory,
-    TabContext tabContext
+    TabContext tabContext,
+    ISettingsManager settingsManager,
+    IModelIndexService modelIndexService,
+    INotificationService notificationService,
+    ModelOrganizationService modelOrganizationService
 ) : LoadableViewModelBase, IParametersLoadableState, IComfyStep
 {
     [ObservableProperty]
@@ -36,6 +46,9 @@ public partial class ModelCardViewModel(
     [NotifyPropertyChangedFor(nameof(WorkflowProfileStatusText))]
     [NotifyPropertyChangedFor(nameof(ShowWorkflowProfileStatus))]
     [NotifyPropertyChangedFor(nameof(RecommendedDefaultsToolTip))]
+    [NotifyPropertyChangedFor(nameof(WorkflowProfileWarningText))]
+    [NotifyPropertyChangedFor(nameof(ShowWorkflowProfileWarning))]
+    [NotifyPropertyChangedFor(nameof(MoveModelToRecommendedFolderText))]
     private HybridModelFile? selectedModel;
 
     [ObservableProperty]
@@ -317,6 +330,206 @@ public partial class ModelCardViewModel(
                 "Apply recommended sampler defaults: ER SDE / Simple / 30 steps / CFG 4",
             _ => "No recommended sampler defaults for this workflow",
         };
+
+    /// <summary>
+    /// Describes a mismatch between the selected model's physical folder and the selected
+    /// workflow. ComfyUI resolves each loader's paths relative to its own folder, so a
+    /// checkpoint-folder file can never load through UNETLoader (and vice versa) — without
+    /// this hint the user only finds out via a cryptic node-validation error at generation.
+    /// <c>TargetFolder</c> is where the file should live if the profile is right.
+    /// </summary>
+    private (string Message, SharedFolderType TargetFolder)? GetProfileFolderMismatch()
+    {
+        if (SelectedUnifiedModel?.Local is not { } local)
+            return null;
+
+        var isStandaloneFile = local.SharedFolderType is SharedFolderType.DiffusionModels;
+
+        // Explicit profile that disagrees with the file's folder. Auto follows the
+        // folder and Custom is the user's business.
+        if (SelectedWorkflowProfile is not (InferenceWorkflowProfile.Auto or InferenceWorkflowProfile.Custom))
+        {
+            // Flux.1 is packaging-flexible: users commonly have either a split UNet in
+            // DiffusionModels or an all-in-one checkpoint in StableDiffusion.
+            var profileWantsStandalone = SelectedWorkflowProfile switch
+            {
+                InferenceWorkflowProfile.DefaultCheckpoint => false,
+                InferenceWorkflowProfile.Flux => (bool?)null,
+                _ => true,
+            };
+
+            if (profileWantsStandalone is true && !isStandaloneFile)
+            {
+                return (
+                    $"The {SelectedWorkflowProfile.GetStringValue()} workflow expects a model from "
+                        + $"DiffusionModels, but this file is in {local.SharedFolderType}. It may not load correctly.",
+                    SharedFolderType.DiffusionModels
+                );
+            }
+
+            if (profileWantsStandalone is false && isStandaloneFile)
+            {
+                return (
+                    "This file is in DiffusionModels and can't load as an all-in-one checkpoint. "
+                        + "It may not load correctly.",
+                    SharedFolderType.StableDiffusion
+                );
+            }
+        }
+        else if (SelectedWorkflowProfile is InferenceWorkflowProfile.Auto && !isStandaloneFile)
+        {
+            // Respect explicit metadata: an SDXL-tagged checkpoint that merely contains
+            // "anima" or "flux2" in its filename is not a misplaced standalone model.
+            var taggedBase = local.ConnectedModelInfo?.BaseModel;
+            if (!string.IsNullOrWhiteSpace(taggedBase) && IsKnownCheckpointBaseModelTag(taggedBase))
+                return null;
+
+            // Checkpoint-folder file whose name/metadata implies a UNet-only architecture
+            // (the classic "z-image in the StableDiffusion folder" support thread). Anima is
+            // UNet-only too — it always pairs with a separate qwen_3_06b encoder + Qwen Image
+            // VAE; the Civitai "Checkpoint" category on Anima models does not mean all-in-one.
+            // Flux is excluded since Flux.1 all-in-one checkpoints are common and valid.
+            var impliedProfile = InferWorkflowProfile(SelectedUnifiedModel, isUnetModel: true);
+            if (
+                impliedProfile
+                is InferenceWorkflowProfile.Flux2
+                    or InferenceWorkflowProfile.ZImageBase
+                    or InferenceWorkflowProfile.ZImageTurbo
+                    or InferenceWorkflowProfile.HiDream
+                    or InferenceWorkflowProfile.Anima
+            )
+            {
+                return (
+                    $"This looks like {impliedProfile.GetStringValue()}, which loads from DiffusionModels, "
+                        + $"but the file is in {local.SharedFolderType}. It may not load correctly.",
+                    SharedFolderType.DiffusionModels
+                );
+            }
+        }
+
+        return null;
+    }
+
+    public string? WorkflowProfileWarningText => GetProfileFolderMismatch()?.Message;
+
+    /// <summary>
+    /// RelativePath of the model whose folder-mismatch warning the user dismissed.
+    /// Selecting a different mismatched model shows the warning again; re-selecting the
+    /// dismissed one stays quiet.
+    /// </summary>
+    private string? dismissedWarningModelPath;
+
+    public bool ShowWorkflowProfileWarning =>
+        WorkflowProfileWarningText is not null
+        && !string.Equals(
+            dismissedWarningModelPath,
+            SelectedUnifiedModel?.Local?.RelativePath,
+            StringComparison.OrdinalIgnoreCase
+        );
+
+    [RelayCommand]
+    private void DismissWorkflowProfileWarning()
+    {
+        if (SelectedUnifiedModel?.Local?.RelativePath is { } path)
+        {
+            dismissedWarningModelPath = path;
+        }
+
+        OnPropertyChanged(nameof(ShowWorkflowProfileWarning));
+    }
+
+    /// <summary>
+    /// Label for the one-click fix button next to the mismatch warning, e.g.
+    /// "Move to DiffusionModels".
+    /// </summary>
+    public string? MoveModelToRecommendedFolderText =>
+        GetProfileFolderMismatch() is { } mismatch
+            ? $"Move to {mismatch.TargetFolder.GetStringValue()}"
+            : null;
+
+    /// <summary>
+    /// Moves the selected model (and its metadata sidecars) into the folder the current
+    /// workflow expects, refreshes the model index, and re-selects the moved file.
+    /// </summary>
+    [RelayCommand]
+    private async Task MoveModelToRecommendedFolderAsync()
+    {
+        if (GetProfileFolderMismatch() is not { } mismatch || SelectedUnifiedModel?.Local is not { } local)
+            return;
+
+        var fileName = local.FileName;
+        var destinationDir = Path.Combine(
+            settingsManager.ModelsDirectory,
+            mismatch.TargetFolder.GetStringValue()
+        );
+
+        try
+        {
+            await modelOrganizationService.MoveModelFileAsync(
+                local,
+                settingsManager.ModelsDirectory,
+                destinationDir
+            );
+        }
+        catch (FileTransferExistsException)
+        {
+            notificationService.Show(
+                "Could not move model",
+                $"A file named '{fileName}' already exists in the {mismatch.TargetFolder.GetStringValue()} folder.",
+                NotificationType.Error
+            );
+            return;
+        }
+        catch (Exception e)
+        {
+            notificationService.Show(
+                "Could not move model",
+                $"[{e.GetType().Name}] {e.Message}",
+                NotificationType.Error
+            );
+            return;
+        }
+
+        await modelIndexService.RefreshIndex();
+
+        // The index-changed handler posts the refreshed model collections to the UI thread,
+        // so re-select at Background priority to run after those updates have landed —
+        // selecting before the item exists in the ComboBox items would reset it to null.
+        Dispatcher.UIThread.Post(
+            () =>
+            {
+                var movedModel = FindMovedModel(
+                    mismatch.TargetFolder is SharedFolderType.DiffusionModels
+                        ? ClientManager.UnetModels
+                        : ClientManager.Models,
+                    fileName
+                );
+
+                if (movedModel is not null)
+                {
+                    SelectedUnifiedModel = movedModel;
+                }
+
+                NotifyWorkflowProfileStateChanged();
+            },
+            DispatcherPriority.Background
+        );
+
+        notificationService.Show(
+            "Model moved",
+            $"Moved '{fileName}' to the {mismatch.TargetFolder.GetStringValue()} folder.",
+            NotificationType.Success
+        );
+    }
+
+    internal static HybridModelFile? FindMovedModel(
+        IEnumerable<HybridModelFile> models,
+        string pathRelativeToSharedFolder
+    ) =>
+        models.FirstOrDefault(m =>
+            m.Local != null
+            && string.Equals(m.RelativePath, pathRelativeToSharedFolder, StringComparison.OrdinalIgnoreCase)
+        );
 
     public event Action<InferenceWorkflowProfile>? RecommendedDefaultsRequested;
 
@@ -699,7 +912,7 @@ public partial class ModelCardViewModel(
         if (name.Contains("flux", StringComparison.OrdinalIgnoreCase))
             return InferenceWorkflowProfile.Flux;
 
-        if (name.Contains("anima", StringComparison.OrdinalIgnoreCase))
+        if (IsAnimaName(name))
             return InferenceWorkflowProfile.Anima;
 
         if (name.Contains("hidream", StringComparison.OrdinalIgnoreCase))
@@ -707,6 +920,27 @@ public partial class ModelCardViewModel(
 
         return InferenceWorkflowProfile.DefaultCheckpoint;
     }
+
+    /// <summary>
+    /// Matches "anima" only as its own token — "animagine" / "animaPencil" are SDXL models
+    /// that must not be detected as the Anima architecture.
+    /// </summary>
+    private static bool IsAnimaName(string name) => AnimaNameRegex().IsMatch(name);
+
+    /// <summary>
+    /// Whether a CivitAI BaseModel tag is specific enough to override filename heuristics for
+    /// a checkpoint-folder file. "Other" remains inconclusive, while known UNet-only tags are
+    /// allowed to proceed to the misplaced-model check.
+    /// </summary>
+    private static bool IsKnownCheckpointBaseModelTag(string baseModel) =>
+        Enum.GetValues<CivitBaseModelType>()
+            .Any(type =>
+                type is not (CivitBaseModelType.Other or CivitBaseModelType.HiDream)
+                && type.GetStringValue().Equals(baseModel, StringComparison.OrdinalIgnoreCase)
+            );
+
+    [GeneratedRegex(@"(?<![\p{L}])anima(?![\p{L}])", RegexOptions.IgnoreCase)]
+    private static partial Regex AnimaNameRegex();
 
     /// <summary>
     /// Loads text encoders from the saved model state, supporting both new and legacy formats.
@@ -870,6 +1104,16 @@ public partial class ModelCardViewModel(
             if (TextEncoders.Count == 0)
                 SetDefaultEncoderCount();
         }
+        else if (value is ModelLoader.Default or ModelLoader.Nf4 && !isLoadingState)
+        {
+            // The separate text-encoder UI is only reachable for standalone loaders, so a
+            // stale true here (left over from a previously selected UNet model) makes
+            // generation demand encoders the user can't even see. Also drop any encoder /
+            // VAE values WE auto-filled for the previous UNet workflow — a Flux.2 VAE
+            // override on an all-in-one checkpoint would just corrupt its output.
+            IsClipModelSelectionEnabled = false;
+            ClearAutoSelectedComponents();
+        }
 
         RefreshWorkflowProfileState();
     }
@@ -914,10 +1158,101 @@ public partial class ModelCardViewModel(
     {
         if (!isLoadingState)
         {
+            SyncModelLoaderToProfile(value);
             ApplyDefaultClipTypeForResolvedProfile(preserveUserSelections: true);
         }
 
         RefreshWorkflowProfileState();
+    }
+
+    /// <summary>
+    /// Keeps <see cref="SelectedModelLoader"/> in sync with the user-facing Workflow dropdown.
+    /// The encoder / precision / text-encoder fields (and the generated workflow itself) key off
+    /// the model loader, so without this, picking "Default / Checkpoint" on a model that was
+    /// auto-detected as a UNet workflow leaves those separate-component fields visible and still
+    /// required at generation time. All-in-one checkpoints bundle their own VAE + text encoder,
+    /// so switching to one also drops the VAE / text-encoder selectors the UNet profile turned on.
+    /// </summary>
+    private void SyncModelLoaderToProfile(InferenceWorkflowProfile profile)
+    {
+        // Whether the profile uses separate diffusion-model + encoder + VAE files (true) or an
+        // all-in-one checkpoint (false). Null = leave the loader alone (Custom, or Auto with
+        // no model yet to infer from).
+        var wantStandalone = profile switch
+        {
+            InferenceWorkflowProfile.DefaultCheckpoint => false,
+            InferenceWorkflowProfile.Flux
+            or InferenceWorkflowProfile.Flux2
+            or InferenceWorkflowProfile.Anima
+            or InferenceWorkflowProfile.ZImageBase
+            or InferenceWorkflowProfile.ZImageTurbo
+            or InferenceWorkflowProfile.HiDream => true,
+            // Auto follows the selected model's folder (diffusion_models -> UNet); Custom is
+            // left entirely to the user.
+            InferenceWorkflowProfile.Auto when SelectedUnifiedModel is not null => SelectedUnifiedModel
+                .Local
+                ?.SharedFolderType is SharedFolderType.DiffusionModels,
+            _ => (bool?)null,
+        };
+
+        if (wantStandalone is not { } standalone)
+            return;
+
+        var currentlyStandalone = SelectedModelLoader is ModelLoader.Unet or ModelLoader.Gguf;
+        var currentModel = SelectedUnifiedModel;
+
+        // A local file can only be loaded by the loader matching its physical folder — ComfyUI
+        // resolves CheckpointLoader paths against the checkpoints folder and UNETLoader paths
+        // against diffusion_models, so carrying a model across to the other loader is a
+        // guaranteed node-validation error. When the profile disagrees with the file's folder,
+        // keep the current loader and let WorkflowProfileWarningText explain the mismatch.
+        var canSwitchLoader =
+            currentModel?.Local is not { } local
+            || (local.SharedFolderType is SharedFolderType.DiffusionModels) == standalone;
+
+        // The loader this card will actually end on after this call.
+        var effectiveStandalone = canSwitchLoader ? standalone : currentlyStandalone;
+
+        // Reconcile the encoder-selection flag with that loader IN BOTH DIRECTIONS, even when
+        // no loader flip happens below. The encoder UI only exists for standalone loaders, so
+        // a mismatched flag strands the user either way: stuck true on a checkpoint makes
+        // generation demand encoders the UI doesn't show, and stuck false on a UNet loader
+        // hides the encoder slots with no profile toggle able to bring them back.
+        if (effectiveStandalone)
+        {
+            if (!IsClipModelSelectionEnabled)
+                IsClipModelSelectionEnabled = true;
+
+            if (!IsVaeSelectionEnabled)
+                IsVaeSelectionEnabled = true;
+
+            if (TextEncoders.Count == 0)
+                SetDefaultEncoderCount();
+        }
+        else if (IsClipModelSelectionEnabled)
+        {
+            IsClipModelSelectionEnabled = false;
+        }
+
+        // Only flip between the checkpoint-style (Default/Nf4) and UNet-style (Unet/Gguf) groups
+        // when they actually disagree — this preserves Nf4/Gguf nuances when already on the
+        // correct side.
+        if (!canSwitchLoader || standalone == currentlyStandalone)
+            return;
+
+        // The two loaders read different backing fields (SelectedUnetModel vs SelectedModel), so
+        // carry the current selection across so the model picker doesn't blank out on the switch.
+        if (standalone)
+        {
+            SelectedModelLoader = ModelLoader.Unet;
+            SelectedUnetModel = currentModel;
+        }
+        else
+        {
+            IsVaeSelectionEnabled = false;
+            SelectedModelLoader = ModelLoader.Default;
+            SelectedModel = currentModel;
+        }
     }
 
     private void NotifyWorkflowProfileStateChanged()
@@ -931,6 +1266,9 @@ public partial class ModelCardViewModel(
         OnPropertyChanged(nameof(WorkflowProfileStatusText));
         OnPropertyChanged(nameof(ShowWorkflowProfileStatus));
         OnPropertyChanged(nameof(RecommendedDefaultsToolTip));
+        OnPropertyChanged(nameof(WorkflowProfileWarningText));
+        OnPropertyChanged(nameof(ShowWorkflowProfileWarning));
+        OnPropertyChanged(nameof(MoveModelToRecommendedFolderText));
     }
 
     private void RefreshWorkflowProfileState()
@@ -940,6 +1278,7 @@ public partial class ModelCardViewModel(
         if (!isLoadingState)
         {
             ApplyDefaultClipTypeForResolvedProfile(preserveUserSelections: true);
+            AutoSelectComponentsForResolvedProfile();
         }
     }
 
@@ -961,6 +1300,11 @@ public partial class ModelCardViewModel(
         if (string.IsNullOrWhiteSpace(clipType) || SelectedClipType == clipType)
             return;
 
+        // The resolved profile genuinely changed. Selections WE made for the previous
+        // profile are defaults, not user choices — drop them so the slot count can resize
+        // and the new profile's defaults can fill in. Manual picks are left untouched.
+        ClearAutoSelectedComponents();
+
         SelectedClipType = clipType;
         SetDefaultEncoderCount(preserveUserSelections);
     }
@@ -969,6 +1313,207 @@ public partial class ModelCardViewModel(
     /// Flag to prevent auto-adjustment during state loading.
     /// </summary>
     private bool isLoadingState;
+
+    /// <summary>
+    /// RelativePaths of encoder / VAE selections this card filled in automatically. When the
+    /// resolved profile or model changes, selections still in this set are treated as
+    /// replaceable defaults; anything else is a user choice and is never touched.
+    /// </summary>
+    private readonly HashSet<string> autoSelectedComponentPaths = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// Fills empty text-encoder slots and the default VAE with known-compatible local files
+    /// for the resolved workflow profile (e.g. qwen_3_4b for Flux.2 Klein 4B, clip_l + t5xxl
+    /// for Flux.1). Saves users from having to know which encoder file pairs with which
+    /// model architecture — the top "where has the text encoder gone" support question.
+    /// </summary>
+    private void AutoSelectComponentsForResolvedProfile()
+    {
+        if (isLoadingState || !IsStandaloneModelLoader || SelectedUnetModel is null)
+            return;
+
+        var profile = ResolvedWorkflowProfile;
+
+        AutoSelectVae(profile);
+
+        var matchers = GetDefaultEncoderMatchersForProfile(profile);
+        for (var i = 0; i < TextEncoders.Count && i < matchers.Count; i++)
+        {
+            AutoSelectEncoderSlot(TextEncoders[i], matchers[i]);
+        }
+    }
+
+    private void AutoSelectVae(InferenceWorkflowProfile profile)
+    {
+        var current = SelectedVae;
+        var isEmpty = current is null || current.IsDefault || current.IsNone;
+        var isAutoSelected =
+            !isEmpty && current!.RelativePath is { } path && autoSelectedComponentPaths.Contains(path);
+
+        if (!isEmpty && !isAutoSelected)
+            return; // explicit user pick — never override
+
+        if (isAutoSelected && MatchesDefaultVaeForProfile(profile, current!.FileName))
+            return; // our earlier pick is still correct for this profile
+
+        var vae = ClientManager.VaeModels.FirstOrDefault(m =>
+            m.Local != null && MatchesDefaultVaeForProfile(profile, m.FileName)
+        );
+
+        if (vae is null)
+            return;
+
+        if (isAutoSelected)
+            autoSelectedComponentPaths.Remove(current!.RelativePath);
+
+        SelectedVae = vae;
+        autoSelectedComponentPaths.Add(vae.RelativePath);
+    }
+
+    private void AutoSelectEncoderSlot(TextEncoderSlotViewModel slot, Func<string, bool> matcher)
+    {
+        var current = slot.SelectedModel;
+        var isEmpty = current is null || current.IsNone;
+        var isAutoSelected =
+            !isEmpty && current!.RelativePath is { } path && autoSelectedComponentPaths.Contains(path);
+
+        if (!isEmpty && !isAutoSelected)
+            return; // explicit user pick — never override
+
+        if (isAutoSelected && matcher(current!.FileName))
+            return; // our earlier pick is still correct (e.g. same encoder across profiles)
+
+        var encoder = ClientManager.ClipModels.FirstOrDefault(m => m.Local != null && matcher(m.FileName));
+
+        if (encoder is null)
+            return;
+
+        if (isAutoSelected)
+            autoSelectedComponentPaths.Remove(current!.RelativePath);
+
+        slot.SelectedModel = encoder;
+        autoSelectedComponentPaths.Add(encoder.RelativePath);
+    }
+
+    /// <summary>
+    /// Clears encoder / VAE selections that were auto-filled (leaving user picks alone) so a
+    /// profile switch can resize the slots and re-derive defaults for the new profile.
+    /// </summary>
+    private void ClearAutoSelectedComponents()
+    {
+        if (autoSelectedComponentPaths.Count == 0)
+            return;
+
+        foreach (var slot in TextEncoders)
+        {
+            if (
+                slot.SelectedModel is { IsNone: false, IsDefault: false } model
+                && autoSelectedComponentPaths.Contains(model.RelativePath)
+            )
+            {
+                // The slot setter ignores null (transient ComboBox refresh guard), so clear
+                // with the None sentinel which the empty-slot checks already understand.
+                slot.SelectedModel = HybridModelFile.None;
+            }
+        }
+
+        if (
+            SelectedVae is { IsNone: false, IsDefault: false } vae
+            && autoSelectedComponentPaths.Contains(vae.RelativePath)
+        )
+        {
+            SelectedVae = HybridModelFile.Default;
+        }
+
+        autoSelectedComponentPaths.Clear();
+    }
+
+    /// <summary>
+    /// Per-slot filename matchers for the encoder files each profile expects, in slot order.
+    /// Empty for profiles where the encoder is baked into the checkpoint or unknown.
+    /// </summary>
+    private IReadOnlyList<Func<string, bool>> GetDefaultEncoderMatchersForProfile(
+        InferenceWorkflowProfile profile
+    )
+    {
+        switch (profile)
+        {
+            case InferenceWorkflowProfile.Flux2:
+                // Klein 4B pairs with qwen_3_4b, Klein 9B with qwen_3_8b — picking the wrong
+                // size fails at sampling with a tensor-shape mismatch.
+                var encoderSize = SelectedUnetModel is { } unet
+                    ? Flux2KleinModelManager.GetExpectedEncoderSize(unet)
+                    : "4b";
+                return
+                [
+                    name =>
+                        Flux2KleinModelManager.IsKleinTextEncoder(name)
+                        && Flux2KleinModelManager.MatchesEncoderSize(name, encoderSize),
+                ];
+            case InferenceWorkflowProfile.Flux:
+                return
+                [
+                    name => name.Contains("clip_l", StringComparison.OrdinalIgnoreCase),
+                    name =>
+                        name.Contains("t5xxl", StringComparison.OrdinalIgnoreCase)
+                        || name.Contains("t5-xxl", StringComparison.OrdinalIgnoreCase),
+                ];
+            case InferenceWorkflowProfile.ZImageBase:
+            case InferenceWorkflowProfile.ZImageTurbo:
+                // Z-Image uses the Qwen3 4B encoder (the same qwen_3_4b.safetensors file
+                // Flux.2 Klein 4B uses).
+                return
+                [
+                    name =>
+                        Flux2KleinModelManager.IsKleinTextEncoder(name)
+                        && Flux2KleinModelManager.MatchesEncoderSize(name, "4b"),
+                ];
+            case InferenceWorkflowProfile.Anima:
+                // Official Anima encoder is qwen_3_06b_base.safetensors (Qwen3 0.6B).
+                return
+                [
+                    name =>
+                        name.Contains("qwen_3_06b", StringComparison.OrdinalIgnoreCase)
+                        || name.Contains("qwen3_06b", StringComparison.OrdinalIgnoreCase)
+                        || name.Contains("qwen_3_0.6b", StringComparison.OrdinalIgnoreCase),
+                ];
+            case InferenceWorkflowProfile.HiDream:
+                return
+                [
+                    name => name.Contains("clip_l", StringComparison.OrdinalIgnoreCase),
+                    name => name.Contains("clip_g", StringComparison.OrdinalIgnoreCase),
+                    name =>
+                        name.Contains("t5xxl", StringComparison.OrdinalIgnoreCase)
+                        || name.Contains("t5-xxl", StringComparison.OrdinalIgnoreCase),
+                    name => name.Contains("llama", StringComparison.OrdinalIgnoreCase),
+                ];
+            default:
+                return [];
+        }
+    }
+
+    /// <summary>
+    /// Whether <paramref name="fileName"/> is the known-default VAE for the profile.
+    /// Flux.1, Z-Image and HiDream all use the Flux.1 VAE (ae.safetensors); Flux.2 has its
+    /// own VAE; Anima reuses the Qwen Image VAE.
+    /// </summary>
+    private static bool MatchesDefaultVaeForProfile(InferenceWorkflowProfile profile, string fileName) =>
+        profile switch
+        {
+            InferenceWorkflowProfile.Flux2 => Flux2KleinModelManager.IsFlux2Vae(fileName),
+            InferenceWorkflowProfile.Flux
+            or InferenceWorkflowProfile.ZImageBase
+            or InferenceWorkflowProfile.ZImageTurbo
+            or InferenceWorkflowProfile.HiDream => fileName.Equals(
+                "ae.safetensors",
+                StringComparison.OrdinalIgnoreCase
+            ),
+            InferenceWorkflowProfile.Anima => fileName.Contains(
+                "qwen_image_vae",
+                StringComparison.OrdinalIgnoreCase
+            ),
+            _ => false,
+        };
 
     /// <summary>
     /// Sets the default number of encoder slots based on the selected clip type.
@@ -1137,7 +1682,11 @@ public partial class ModelCardViewModel(
         e.Builder.Connections.Base.Model = baseLoader.Output1;
         e.Builder.Connections.Base.VAE = baseLoader.Output3;
 
-        if (IsClipModelSelectionEnabled)
+        // Use separate clip loaders only when an encoder is actually configured. The flag can
+        // be a stale leftover (e.g. an old saved project from a UNet workflow) and checkpoints
+        // always bundle their own text encoder, so falling back to it beats failing validation
+        // for encoder slots the checkpoint UI doesn't even show.
+        if (IsClipModelSelectionEnabled && TextEncoders.Any(slot => slot.SelectedModel is { IsNone: false }))
         {
             SetupClipLoaders(e);
         }

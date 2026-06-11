@@ -18,23 +18,56 @@ public class Flux2KleinModelManager : ILocalProviderModelManager
     public string DownloadDialogDescription =>
         "Flux.2 Klein requires the following models to run. You can deselect any you already have installed elsewhere:";
 
-    public bool AreModelsAvailable(IInferenceClientManager clientManager)
+    public bool AreModelsAvailable(IInferenceClientManager clientManager) =>
+        AreModelsAvailable(clientManager, preferredUnet: null);
+
+    /// <summary>
+    /// Variant-aware availability check. The text encoder only counts as available when its
+    /// size matches the UNET it will be paired with (<paramref name="preferredUnet"/> when the
+    /// caller knows the user's selection, otherwise the installed Klein UNET) — a qwen_3_4b
+    /// encoder next to a 9B UNET loads fine but fails at sampling with a tensor-shape
+    /// mismatch, so it must be reported as missing rather than "ready".
+    /// </summary>
+    public bool AreModelsAvailable(IInferenceClientManager clientManager, HybridModelFile? preferredUnet)
     {
         var hasUnet = clientManager.UnetModels.Any(m => m.Local != null && IsKleinUnet(m.FileName));
         var hasVae = clientManager.VaeModels.Any(m => m.Local != null && IsFlux2Vae(m.FileName));
-        var hasClip = clientManager.ClipModels.Any(m => m.Local != null && IsKleinTextEncoder(m.FileName));
+
+        var encoderSize = GetInstalledKleinVariant(clientManager, preferredUnet);
+        var hasClip = clientManager.ClipModels.Any(m =>
+            m.Local != null && IsKleinTextEncoder(m.FileName) && MatchesEncoderSize(m.FileName, encoderSize)
+        );
 
         return hasUnet && hasVae && hasClip;
     }
 
-    public IEnumerable<RemoteResource> GetMissingModels(IInferenceClientManager clientManager)
+    public IEnumerable<RemoteResource> GetMissingModels(IInferenceClientManager clientManager) =>
+        GetMissingModels(clientManager, preferredUnet: null);
+
+    public IEnumerable<RemoteResource> GetMissingModels(
+        IInferenceClientManager clientManager,
+        HybridModelFile? preferredUnet
+    )
     {
-        var allModels = RemoteModels.Flux2KleinModels;
         var missing = new List<RemoteResource>();
 
+        // Pick the variant to offer downloads for based on the UNET the encoder will pair with
+        // (the user's dropdown selection when provided, otherwise whatever is installed).
+        // A 9B UNET pairs with the qwen_3_8b encoder, a 4B UNET with qwen_3_4b — offering the
+        // wrong size just wastes an 8-16 GB download and still fails to generate (the sampler
+        // hits a tensor-shape mismatch), so we match the encoder/VAE to that UNET.
+        var encoderSize = GetInstalledKleinVariant(clientManager, preferredUnet);
+        var variantModels =
+            encoderSize == "8b" ? RemoteModels.Flux2Klein9BModels : RemoteModels.Flux2KleinModels;
+
+        // The 9B UNET is gated and can't be redistributed for one-click download, so we only
+        // ever auto-offer the Apache 2.0 4B UNET — and only when no Klein UNET is present at all.
+        // A user who already has the 9B UNET keeps it; we just fill in the encoder/VAE around it.
         if (!clientManager.UnetModels.Any(m => m.Local != null && IsKleinUnet(m.FileName)))
         {
-            var unet = allModels.FirstOrDefault(m => m.ContextType is SharedFolderType.DiffusionModels);
+            var unet = RemoteModels.Flux2KleinModels.FirstOrDefault(m =>
+                m.ContextType is SharedFolderType.DiffusionModels
+            );
             if (unet.Url != null)
             {
                 missing.Add(unet);
@@ -43,16 +76,24 @@ public class Flux2KleinModelManager : ILocalProviderModelManager
 
         if (!clientManager.VaeModels.Any(m => m.Local != null && IsFlux2Vae(m.FileName)))
         {
-            var vae = allModels.FirstOrDefault(m => m.ContextType is SharedFolderType.VAE);
+            var vae = variantModels.FirstOrDefault(m => m.ContextType is SharedFolderType.VAE);
             if (vae.Url != null)
             {
                 missing.Add(vae);
             }
         }
 
-        if (!clientManager.ClipModels.Any(m => m.Local != null && IsKleinTextEncoder(m.FileName)))
+        // Size-aware: an installed encoder of the WRONG size (e.g. qwen_3_4b next to a 9B
+        // UNET) still means the matching encoder is missing and should be offered.
+        if (
+            !clientManager.ClipModels.Any(m =>
+                m.Local != null
+                && IsKleinTextEncoder(m.FileName)
+                && MatchesEncoderSize(m.FileName, encoderSize)
+            )
+        )
         {
-            var clip = allModels.FirstOrDefault(m => m.ContextType is SharedFolderType.TextEncoders);
+            var clip = variantModels.FirstOrDefault(m => m.ContextType is SharedFolderType.TextEncoders);
             if (clip.Url != null)
             {
                 missing.Add(clip);
@@ -62,19 +103,49 @@ public class Flux2KleinModelManager : ILocalProviderModelManager
         return missing;
     }
 
-    public IEnumerable<string> GetMissingModelNames(IInferenceClientManager clientManager)
+    public IEnumerable<string> GetMissingModelNames(IInferenceClientManager clientManager) =>
+        GetMissingModelNames(clientManager, preferredUnet: null);
+
+    public IEnumerable<string> GetMissingModelNames(
+        IInferenceClientManager clientManager,
+        HybridModelFile? preferredUnet
+    )
     {
-        foreach (var model in GetMissingModels(clientManager))
+        var encoderSize = GetInstalledKleinVariant(clientManager, preferredUnet);
+
+        foreach (var model in GetMissingModels(clientManager, preferredUnet))
         {
             var name = model.ContextType switch
             {
+                // Only the 4B UNET is ever auto-offered (the 9B UNET is gated), so this label
+                // is always accurate.
                 SharedFolderType.DiffusionModels => "Flux.2 Klein 4B UNET",
                 SharedFolderType.VAE => "Flux.2 VAE",
-                SharedFolderType.TextEncoders => "Qwen3 4B text encoder",
+                SharedFolderType.TextEncoders => encoderSize == "8b"
+                    ? "Qwen3 8B text encoder"
+                    : "Qwen3 4B text encoder",
                 _ => model.FileName,
             };
             yield return name;
         }
+    }
+
+    /// <summary>
+    /// Returns the encoder size ("8b" or "4b") implied by <paramref name="preferredUnet"/>
+    /// (the user's dropdown selection, when the caller has one) or by the Klein UNET that's
+    /// currently installed, or "4b" when neither is present (the Apache 2.0 default for fresh
+    /// installs). Used to offer the matching text encoder rather than blindly pushing 4B.
+    /// </summary>
+    private static string GetInstalledKleinVariant(
+        IInferenceClientManager clientManager,
+        HybridModelFile? preferredUnet = null
+    )
+    {
+        var unet =
+            preferredUnet
+            ?? clientManager.UnetModels.FirstOrDefault(m => m.Local != null && IsKleinUnet(m.FileName));
+
+        return unet != null ? GetExpectedEncoderSize(unet) : "4b";
     }
 
     /// <summary>
@@ -125,7 +196,7 @@ public class Flux2KleinModelManager : ILocalProviderModelManager
     /// community merges often don't include a "9b" / "4b" hint. Falls back to the filename,
     /// then defaults to "4b" (matches the auto-downloaded Apache 2.0 Klein 4B variant).
     /// </summary>
-    private static string GetExpectedEncoderSize(HybridModelFile unetModel)
+    internal static string GetExpectedEncoderSize(HybridModelFile unetModel)
     {
         var info = unetModel.Local?.ConnectedModelInfo;
 
@@ -175,7 +246,7 @@ public class Flux2KleinModelManager : ILocalProviderModelManager
         || text.Contains("klein-4", StringComparison.OrdinalIgnoreCase)
         || text.Contains("klein_4", StringComparison.OrdinalIgnoreCase);
 
-    private static bool MatchesEncoderSize(string encoderFileName, string size) =>
+    internal static bool MatchesEncoderSize(string encoderFileName, string size) =>
         size switch
         {
             "8b" => encoderFileName.Contains("qwen_3_8b", StringComparison.OrdinalIgnoreCase)
@@ -189,7 +260,7 @@ public class Flux2KleinModelManager : ILocalProviderModelManager
         fileName.Contains("flux-2-klein", StringComparison.OrdinalIgnoreCase)
         || fileName.Contains("flux2-klein", StringComparison.OrdinalIgnoreCase);
 
-    private static bool IsFlux2Vae(string fileName) =>
+    internal static bool IsFlux2Vae(string fileName) =>
         // Distilled variants use flux2-vae.safetensors; base variants use
         // full_encoder_small_decoder.safetensors. Both are valid Flux.2 VAEs.
         fileName.Contains("flux2-vae", StringComparison.OrdinalIgnoreCase)
@@ -199,7 +270,7 @@ public class Flux2KleinModelManager : ILocalProviderModelManager
     // Match the Qwen3 text encoders that Klein uses (qwen_3_4b for 4B model, qwen_3_8b for 9B).
     // Note: deliberately excludes Qwen 2.5 VL encoders used by Qwen Image Edit
     // (those have "vl" in the filename and use the older "_2.5_" version tag).
-    private static bool IsKleinTextEncoder(string fileName) =>
+    internal static bool IsKleinTextEncoder(string fileName) =>
         (
             fileName.Contains("qwen_3_4b", StringComparison.OrdinalIgnoreCase)
             || fileName.Contains("qwen_3_8b", StringComparison.OrdinalIgnoreCase)

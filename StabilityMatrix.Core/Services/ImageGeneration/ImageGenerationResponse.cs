@@ -38,6 +38,11 @@ public record ImageGenerationResponse
     public string? ErrorMessage { get; init; }
 
     /// <summary>
+    /// Machine-readable error code used by clients to present a localized message.
+    /// </summary>
+    public ImageGenerationErrorCode? ErrorCode { get; init; }
+
+    /// <summary>
     /// Raw machine-readable error detail if generation failed (e.g. ComfyUI's JSON body
     /// for a rejected workflow or node execution error). Shown to the user in a detail
     /// dialog; <see cref="ErrorMessage"/> remains the short human-readable summary.

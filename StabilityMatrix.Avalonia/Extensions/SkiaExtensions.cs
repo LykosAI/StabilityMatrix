@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.InteropServices;
 using Avalonia;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
@@ -110,7 +111,7 @@ public static class SkiaExtensions
         {
             SKColorType.Rgba8888 => PixelFormat.Rgba8888,
             SKColorType.Bgra8888 => PixelFormat.Bgra8888,
-            _ => throw new NotSupportedException($"Unsupported SKColorType: {bitmap.ColorType}")
+            _ => throw new NotSupportedException($"Unsupported SKColorType: {bitmap.ColorType}"),
         };
 
         // ReSharper disable once SwitchExpressionHandlesSomeKnownEnumValuesWithExceptionInDefault
@@ -119,19 +120,25 @@ public static class SkiaExtensions
             SKAlphaType.Opaque => AlphaFormat.Opaque,
             SKAlphaType.Premul => AlphaFormat.Premul,
             SKAlphaType.Unpremul => AlphaFormat.Unpremul,
-            _ => throw new NotSupportedException($"Unsupported SKAlphaType: {bitmap.AlphaType}")
+            _ => throw new NotSupportedException($"Unsupported SKAlphaType: {bitmap.AlphaType}"),
         };
 
-        var dataPointer = bitmap.GetPixels();
-
-        return new Bitmap(
-            avaloniaColorFormat,
-            avaloniaAlphaFormat,
-            dataPointer,
+        var result = new WriteableBitmap(
             new PixelSize(bitmap.Width, bitmap.Height),
             dpi,
-            bitmap.RowBytes
+            avaloniaColorFormat,
+            avaloniaAlphaFormat
         );
+
+        using var framebuffer = result.Lock();
+        CopyPixelRows(
+            bitmap.GetPixels(),
+            bitmap.RowBytes,
+            framebuffer.Address,
+            framebuffer.RowBytes,
+            bitmap.Height
+        );
+        return result;
     }
 
     public static Bitmap ToAvaloniaBitmap(this SKImage image)
@@ -143,34 +150,26 @@ public static class SkiaExtensions
     {
         ArgumentNullException.ThrowIfNull(image, nameof(image));
 
-        // ReSharper disable once SwitchExpressionHandlesSomeKnownEnumValuesWithExceptionInDefault
-        var avaloniaColorFormat = image.ColorType switch
+        using var bitmap = SKBitmap.FromImage(image);
+        return bitmap.ToAvaloniaBitmap(dpi);
+    }
+
+    private static void CopyPixelRows(
+        IntPtr source,
+        int sourceRowBytes,
+        IntPtr destination,
+        int destinationRowBytes,
+        int height
+    )
+    {
+        var bytesPerRow = Math.Min(sourceRowBytes, destinationRowBytes);
+        var buffer = new byte[bytesPerRow];
+
+        for (var row = 0; row < height; row++)
         {
-            SKColorType.Rgba8888 => PixelFormat.Rgba8888,
-            SKColorType.Bgra8888 => PixelFormat.Bgra8888,
-            _ => throw new NotSupportedException($"Unsupported SKColorType: {image.ColorType}")
-        };
-
-        // ReSharper disable once SwitchExpressionHandlesSomeKnownEnumValuesWithExceptionInDefault
-        var avaloniaAlphaFormat = image.AlphaType switch
-        {
-            SKAlphaType.Opaque => AlphaFormat.Opaque,
-            SKAlphaType.Premul => AlphaFormat.Premul,
-            SKAlphaType.Unpremul => AlphaFormat.Unpremul,
-            _ => throw new NotSupportedException($"Unsupported SKAlphaType: {image.AlphaType}")
-        };
-
-        var pixmap = image.PeekPixels();
-        var dataPointer = pixmap.GetPixels();
-
-        return new Bitmap(
-            avaloniaColorFormat,
-            avaloniaAlphaFormat,
-            dataPointer,
-            new PixelSize(image.Width, image.Height),
-            dpi,
-            pixmap.RowBytes
-        );
+            Marshal.Copy(IntPtr.Add(source, row * sourceRowBytes), buffer, 0, bytesPerRow);
+            Marshal.Copy(buffer, 0, IntPtr.Add(destination, row * destinationRowBytes), bytesPerRow);
+        }
     }
 
     public static PixelFormat ToAvaloniaPixelFormat(this SKColorType colorType)
@@ -180,7 +179,7 @@ public static class SkiaExtensions
         {
             SKColorType.Rgba8888 => PixelFormat.Rgba8888,
             SKColorType.Bgra8888 => PixelFormat.Bgra8888,
-            _ => throw new NotSupportedException($"Unsupported SKColorType: {colorType}")
+            _ => throw new NotSupportedException($"Unsupported SKColorType: {colorType}"),
         };
     }
 }

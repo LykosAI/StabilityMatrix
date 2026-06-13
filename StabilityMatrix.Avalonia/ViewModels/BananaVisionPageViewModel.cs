@@ -1107,9 +1107,9 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
             logger.LogWarning("Image generation failed: {Message}", ex.Message);
 
             // Check if this is an API key error
-            if (ex.Message.Contains("API key", StringComparison.OrdinalIgnoreCase))
+            if (IsGeminiSetupError(ex))
             {
-                await ShowApiKeyRequiredDialogAsync();
+                await ShowApiKeyRequiredDialogAsync(ex);
                 CanRetryLastMessage = true;
             }
             else
@@ -1147,7 +1147,8 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
     /// </summary>
     private async Task ShowGenerationFailedAsync(ImageGenerationException ex)
     {
-        ErrorMessage = ex.Message;
+        var errorMessage = GetLocalizedGenerationError(ex);
+        ErrorMessage = errorMessage;
 
         if (!string.IsNullOrWhiteSpace(ex.DetailJson))
         {
@@ -1161,22 +1162,52 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
         }
         else
         {
-            notificationService.Show(Resources.Label_GenerationFailed, ex.Message, NotificationType.Warning);
+            notificationService.Show(
+                Resources.Label_GenerationFailed,
+                errorMessage,
+                NotificationType.Warning
+            );
         }
     }
 
     /// <summary>
     /// Shows a dialog prompting the user to add their Gemini API key in settings
     /// </summary>
-    private async Task ShowApiKeyRequiredDialogAsync()
+    private static bool IsGeminiSetupError(ImageGenerationException exception) =>
+        exception.ErrorCode
+            is ImageGenerationErrorCode.GeminiApiKeyNotConfigured
+                or ImageGenerationErrorCode.GeminiQuotaExceeded
+                or ImageGenerationErrorCode.GeminiInvalidApiKey
+                or ImageGenerationErrorCode.GeminiAccessForbidden
+        || exception.Message.Contains("API key", StringComparison.OrdinalIgnoreCase)
+        || exception.Message.Contains("billing", StringComparison.OrdinalIgnoreCase)
+        || exception.Message.Contains("quota", StringComparison.OrdinalIgnoreCase);
+
+    private static string GetLocalizedGenerationError(ImageGenerationException exception) =>
+        exception.ErrorCode switch
+        {
+            ImageGenerationErrorCode.GeminiApiKeyNotConfigured => Resources.Error_GeminiApiKeyNotConfigured,
+            ImageGenerationErrorCode.GeminiQuotaExceeded => Resources.Error_GeminiQuotaExceeded,
+            ImageGenerationErrorCode.GeminiInvalidApiKey => Resources.Error_GeminiInvalidApiKey,
+            ImageGenerationErrorCode.GeminiAccessForbidden => Resources.Error_GeminiAccessForbidden,
+            _ => exception.Message,
+        };
+
+    private async Task ShowApiKeyRequiredDialogAsync(ImageGenerationException exception)
     {
+        var errorMessage = GetLocalizedGenerationError(exception);
+        var content = exception.ErrorCode
+            is ImageGenerationErrorCode.GeminiQuotaExceeded
+                or ImageGenerationErrorCode.GeminiAccessForbidden
+            ? errorMessage
+            : errorMessage + "\n\n" + Resources.Text_GeminiPaidTierRequired;
+
         var dialog = new ContentDialog
         {
-            Title = "API Key Required",
-            Content =
-                "Gemini API key not configured. Please add your Gemini API key in Account Settings to use cloud providers.",
-            PrimaryButtonText = "Open Settings",
-            CloseButtonText = "Cancel",
+            Title = Resources.Label_GeminiApiSetupRequired,
+            Content = content,
+            PrimaryButtonText = Resources.Action_GoToSettings,
+            CloseButtonText = Resources.Action_Cancel,
             DefaultButton = ContentDialogButton.Primary,
         };
 
@@ -1191,6 +1222,24 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
                 new SuppressNavigationTransitionInfo()
             );
         }
+    }
+
+    /// <summary>
+    /// Debug-only: routes a synthetic <see cref="ImageGenerationException"/> through the same
+    /// handlers a real failed generation uses, so the error banner, setup dialog, and
+    /// notifications can be previewed without triggering an actual API failure. A null
+    /// <paramref name="errorCode"/> exercises the generic (non-Gemini) failure path.
+    /// </summary>
+    public Task DebugSimulateGenerationErrorAsync(ImageGenerationErrorCode? errorCode)
+    {
+        var exception = new ImageGenerationException("Debug simulated image generation error")
+        {
+            ErrorCode = errorCode,
+        };
+
+        return IsGeminiSetupError(exception)
+            ? ShowApiKeyRequiredDialogAsync(exception)
+            : ShowGenerationFailedAsync(exception);
     }
 
     [RelayCommand(IncludeCancelCommand = true)]
@@ -1282,9 +1331,9 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
             logger.LogWarning("Retry generation failed: {Message}", ex.Message);
 
             // Check if this is an API key error
-            if (ex.Message.Contains("API key", StringComparison.OrdinalIgnoreCase))
+            if (IsGeminiSetupError(ex))
             {
-                await ShowApiKeyRequiredDialogAsync();
+                await ShowApiKeyRequiredDialogAsync(ex);
                 CanRetryLastMessage = true;
             }
             else
@@ -1473,9 +1522,9 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
             logger.LogWarning("Regenerate failed: {Message}", ex.Message);
 
             // Check if this is an API key error
-            if (ex.Message.Contains("API key", StringComparison.OrdinalIgnoreCase))
+            if (IsGeminiSetupError(ex))
             {
-                await ShowApiKeyRequiredDialogAsync();
+                await ShowApiKeyRequiredDialogAsync(ex);
                 CanRetryLastMessage = true;
             }
             else
@@ -1714,9 +1763,9 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
         {
             logger.LogWarning("Failed to regenerate after edit: {Message}", ex.Message);
 
-            if (ex.Message.Contains("API key", StringComparison.OrdinalIgnoreCase))
+            if (IsGeminiSetupError(ex))
             {
-                await ShowApiKeyRequiredDialogAsync();
+                await ShowApiKeyRequiredDialogAsync(ex);
                 CanRetryLastMessage = true;
             }
             else

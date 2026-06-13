@@ -232,7 +232,23 @@ public partial class ModelCardViewModel(
 
     public List<string> WeightDTypes { get; set; } = ["default", "fp8_e4m3fn", "fp8_e5m2"];
     public List<string> ClipTypes { get; set; } =
-        ["flux", "flux2", "lumina2", "stable_diffusion", "sd3", "HiDream"];
+        [
+            "sdxl",
+            "sd3",
+            "flux",
+            "hunyuan_video",
+            "hidream",
+            "hunyuan_image",
+            "hunyuan_video_15",
+            "kandinsky5",
+            "kandinsky5_image",
+            "ltxv",
+            "newbie",
+            "ace",
+            "flux2",
+            "lumina2",
+            "stable_diffusion",
+        ];
     public List<InferenceWorkflowProfile> WorkflowProfiles { get; set; } =
         Enum.GetValues<InferenceWorkflowProfile>().ToList();
 
@@ -253,10 +269,10 @@ public partial class ModelCardViewModel(
     public bool ShowEncoderSection => IsClipModelSelectionEnabled && IsStandaloneModelLoader;
 
     public bool IsSd3Clip => SelectedClipType == "sd3";
-    public bool IsHiDreamClip => SelectedClipType == "HiDream";
+    public bool IsHiDreamClip => SelectedClipType == "hidream";
     public bool IsHiDreamWorkflow =>
         ResolvedWorkflowProfile is InferenceWorkflowProfile.HiDream
-        || (ResolvedWorkflowProfile is InferenceWorkflowProfile.Custom && SelectedClipType == "HiDream");
+        || (ResolvedWorkflowProfile is InferenceWorkflowProfile.Custom && SelectedClipType == "hidream");
     public bool IsZImageWorkflow =>
         ResolvedWorkflowProfile is InferenceWorkflowProfile.ZImageBase or InferenceWorkflowProfile.ZImageTurbo
         || (ResolvedWorkflowProfile is InferenceWorkflowProfile.Custom && SelectedClipType == "lumina2");
@@ -830,7 +846,7 @@ public partial class ModelCardViewModel(
                 : ClientManager.Models.FirstOrDefault(x => x.RelativePath == model.SelectedRefinerName);
 
             // Load encoder type first (needed for default encoder count)
-            SelectedClipType = model.SelectedClipType;
+            SelectedClipType = model.SelectedClipType == "HiDream" ? "hidream" : model.SelectedClipType;
             SelectedWorkflowProfile = model.SelectedWorkflowProfile;
 
             // Load text encoders from saved state
@@ -995,7 +1011,7 @@ public partial class ModelCardViewModel(
                 "flux" => 2,
                 "flux2" or "lumina2" or "stable_diffusion" => 1,
                 "sd3" => 3,
-                "HiDream" => 4,
+                "hidream" => 4,
                 _ => 2,
             };
             encoderCount = Math.Max(encoderCount, defaultCount);
@@ -1303,7 +1319,7 @@ public partial class ModelCardViewModel(
             InferenceWorkflowProfile.Flux2 => "flux2",
             InferenceWorkflowProfile.ZImageBase or InferenceWorkflowProfile.ZImageTurbo => "lumina2",
             InferenceWorkflowProfile.Anima => "stable_diffusion",
-            InferenceWorkflowProfile.HiDream => "HiDream",
+            InferenceWorkflowProfile.HiDream => "hidream",
             _ => SelectedClipType,
         };
 
@@ -1542,7 +1558,7 @@ public partial class ModelCardViewModel(
             "flux" => 2,
             "flux2" or "lumina2" or "stable_diffusion" => 1,
             "sd3" => 3,
-            "HiDream" => 4,
+            "hidream" => 4,
             _ => 2, // Default to 2 for unknown types
         };
 

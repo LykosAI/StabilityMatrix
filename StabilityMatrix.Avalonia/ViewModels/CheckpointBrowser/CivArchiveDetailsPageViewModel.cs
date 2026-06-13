@@ -5,6 +5,7 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Threading;
 using AsyncAwaitBestPractices;
+using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -13,6 +14,7 @@ using FluentAvalonia.Core;
 using FluentAvalonia.UI.Controls;
 using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Extensions;
+using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
@@ -108,6 +110,7 @@ public partial class CivArchiveDetailsPageViewModel(
     public ObservableCollection<CivArchiveModelImage> Images { get; } = [];
     public ObservableCollection<CivArchiveModelFile> Files { get; } = [];
     public ObservableCollection<CivArchiveVersionMirror> Mirrors { get; } = [];
+    public ObservableCollection<InstallLocationOption> InstallLocations { get; } = [];
 
     private static readonly Dictionary<
         string,
@@ -327,6 +330,7 @@ public partial class CivArchiveDetailsPageViewModel(
             Mirrors.Add(mirror);
         }
 
+        RefreshInstallLocations();
         UpdateInstalledStatus(version);
     }
 
@@ -525,6 +529,48 @@ public partial class CivArchiveDetailsPageViewModel(
     }
 
     [RelayCommand]
+    private async Task DownloadModelToLocation(InstallLocationOption? location)
+    {
+        var version = Model?.Version;
+        if (version is null || location is null)
+            return;
+
+        DirectoryPath destinationDir;
+        if (location.Directory is { } existingDirectory)
+        {
+            destinationDir = existingDirectory;
+        }
+        else
+        {
+            // No directory means the "Custom..." entry — prompt for a folder.
+            var folders = await App.StorageProvider.OpenFolderPickerAsync(
+                new FolderPickerOpenOptions
+                {
+                    Title = "Select Download Folder",
+                    AllowMultiple = false,
+                    SuggestedStartLocation = await App.StorageProvider.TryGetFolderFromPathAsync(
+                        GetDefaultDownloadFolder()
+                    ),
+                }
+            );
+
+            if (folders.FirstOrDefault()?.TryGetLocalPath() is not { } customPath)
+                return;
+
+            destinationDir = new DirectoryPath(customPath);
+        }
+
+        var primaryFile = GetPrimaryFile(version);
+        await ExecuteDownloadAsync(
+            version,
+            primaryFile,
+            GetDownloadUris(version),
+            sourceLabel: null,
+            destinationDir
+        );
+    }
+
+    [RelayCommand]
     private async Task DeleteModel()
     {
         var localFiles = FindLocallyInstalledFiles();
@@ -663,7 +709,8 @@ public partial class CivArchiveDetailsPageViewModel(
         CivArchiveModelVersion version,
         CivArchiveModelFile? file,
         IReadOnlyList<Uri> downloadUris,
-        string? sourceLabel
+        string? sourceLabel,
+        DirectoryPath? destinationOverride = null
     )
     {
         if (Model is null)
@@ -684,7 +731,7 @@ public partial class CivArchiveDetailsPageViewModel(
             return;
         }
 
-        var destinationDir = GetDefaultDownloadFolder();
+        var destinationDir = destinationOverride ?? GetDefaultDownloadFolder();
         var fileName = BuildDownloadFileName(version, file);
 
         Uri? previewImageUri = null;
@@ -850,6 +897,63 @@ public partial class CivArchiveDetailsPageViewModel(
         }
 
         return new DirectoryPath(settingsManager.ModelsDirectory);
+    }
+
+    private void RefreshInstallLocations()
+    {
+        var modelsDirectory = new DirectoryPath(settingsManager.ModelsDirectory);
+        var defaultDirectory = GetDefaultDownloadFolder();
+        LoadInstallLocationsAsync(modelsDirectory, defaultDirectory).SafeFireAndForget();
+    }
+
+    private async Task LoadInstallLocationsAsync(
+        DirectoryPath modelsDirectory,
+        DirectoryPath defaultDirectory
+    )
+    {
+        // Enumerate off the UI thread — a deeply-nested models folder can hold many subdirectories.
+        var options = await Task.Run(() =>
+        {
+            var results = new List<InstallLocationOption>();
+
+            if (defaultDirectory.Exists)
+            {
+                results.Add(
+                    new InstallLocationOption(
+                        Path.Combine("Models", Path.GetRelativePath(modelsDirectory, defaultDirectory)),
+                        defaultDirectory
+                    )
+                );
+
+                foreach (
+                    var directory in defaultDirectory.EnumerateDirectories(
+                        "*",
+                        EnumerationOptionConstants.AllDirectories
+                    )
+                )
+                {
+                    results.Add(
+                        new InstallLocationOption(
+                            Path.Combine("Models", Path.GetRelativePath(modelsDirectory, directory)),
+                            directory
+                        )
+                    );
+                }
+            }
+
+            return results;
+        });
+
+        // Repopulate atomically on the UI thread; the last completed refresh wins.
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            InstallLocations.Clear();
+            foreach (var option in options)
+            {
+                InstallLocations.Add(option);
+            }
+            InstallLocations.Add(new InstallLocationOption(Resources.Action_CustomFolderEllipsis, null));
+        });
     }
 
     private static ConnectedModelInfo BuildConnectedModelInfo(

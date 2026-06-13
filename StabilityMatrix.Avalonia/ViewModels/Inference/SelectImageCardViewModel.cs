@@ -46,15 +46,15 @@ public partial class SelectImageCardViewModel(
             MimeTypes = new[] { "image/jpeg", "image/png" },
         };
 
-    private readonly Lazy<MaskEditorViewModel> _lazyMaskEditorViewModel = new(
-        vmFactory.Get<MaskEditorViewModel>
-    );
+    private MaskEditorViewModel? maskEditorViewModel;
 
     /// <summary>
     /// When true, enables a button to open a mask editor for the image.
     /// This is not saved or loaded from state.
     /// </summary>
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(MaskEditorViewModel))]
+    [NotifyPropertyChangedFor(nameof(MaskOverlayImage))]
     [property: JsonIgnore]
     [property: MemberNotNull(nameof(MaskEditorViewModel))]
     private bool isMaskEditorEnabled;
@@ -100,14 +100,37 @@ public partial class SelectImageCardViewModel(
 
     [JsonInclude]
     public MaskEditorViewModel? MaskEditorViewModel =>
-        IsMaskEditorEnabled ? _lazyMaskEditorViewModel.Value : null;
+        IsMaskEditorEnabled ? maskEditorViewModel ??= CreateMaskEditorViewModel() : null;
+
+    [JsonIgnore]
+    public global::Avalonia.Media.IImage? MaskOverlayImage =>
+        MaskEditorViewModel?.CachedOrNewMaskRenderImage?.Bitmap;
 
     [JsonIgnore]
     public ImageSource? LastMaskImage { get; private set; }
 
+    private MaskEditorViewModel CreateMaskEditorViewModel()
+    {
+        var viewModel = vmFactory.Get<MaskEditorViewModel>();
+        viewModel.PropertyChanged += (_, args) =>
+        {
+            if (args.PropertyName == nameof(MaskEditorViewModel.CachedOrNewMaskRenderImage))
+            {
+                OnPropertyChanged(nameof(MaskOverlayImage));
+            }
+        };
+        return viewModel;
+    }
+
     partial void OnCurrentBitmapSizeChanged(Size value)
     {
         PublishCurrentBitmapSizeToTabContext();
+
+        if (maskEditorViewModel is not null && !value.IsEmpty)
+        {
+            maskEditorViewModel.PaintCanvasViewModel.CanvasSize = value;
+            maskEditorViewModel.InvalidateCachedMaskRenderImage();
+        }
     }
 
     partial void OnSyncBitmapSizeToTabContextChanged(bool value)
@@ -252,6 +275,7 @@ public partial class SelectImageCardViewModel(
         if (await MaskEditorViewModel.GetDialog().ShowAsync() == ContentDialogResult.Primary)
         {
             MaskEditorViewModel.InvalidateCachedMaskRenderImage();
+            OnPropertyChanged(nameof(MaskOverlayImage));
         }
         else
         {

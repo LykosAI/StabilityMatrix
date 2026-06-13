@@ -150,8 +150,47 @@ public static class SkiaExtensions
     {
         ArgumentNullException.ThrowIfNull(image, nameof(image));
 
-        using var bitmap = SKBitmap.FromImage(image);
-        return bitmap.ToAvaloniaBitmap(dpi);
+        // PeekPixels returns null for GPU-backed images; only then do we need the extra copy.
+        using var pixmap = image.PeekPixels();
+        if (pixmap is null)
+        {
+            using var bitmap = SKBitmap.FromImage(image);
+            return bitmap.ToAvaloniaBitmap(dpi);
+        }
+
+        // ReSharper disable once SwitchExpressionHandlesSomeKnownEnumValuesWithExceptionInDefault
+        var avaloniaColorFormat = image.ColorType switch
+        {
+            SKColorType.Rgba8888 => PixelFormat.Rgba8888,
+            SKColorType.Bgra8888 => PixelFormat.Bgra8888,
+            _ => throw new NotSupportedException($"Unsupported SKColorType: {image.ColorType}"),
+        };
+
+        // ReSharper disable once SwitchExpressionHandlesSomeKnownEnumValuesWithExceptionInDefault
+        var avaloniaAlphaFormat = image.AlphaType switch
+        {
+            SKAlphaType.Opaque => AlphaFormat.Opaque,
+            SKAlphaType.Premul => AlphaFormat.Premul,
+            SKAlphaType.Unpremul => AlphaFormat.Unpremul,
+            _ => throw new NotSupportedException($"Unsupported SKAlphaType: {image.AlphaType}"),
+        };
+
+        var result = new WriteableBitmap(
+            new PixelSize(image.Width, image.Height),
+            dpi,
+            avaloniaColorFormat,
+            avaloniaAlphaFormat
+        );
+
+        using var framebuffer = result.Lock();
+        CopyPixelRows(
+            pixmap.GetPixels(),
+            pixmap.RowBytes,
+            framebuffer.Address,
+            framebuffer.RowBytes,
+            image.Height
+        );
+        return result;
     }
 
     private static void CopyPixelRows(

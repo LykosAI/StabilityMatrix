@@ -925,19 +925,27 @@ public partial class CivArchiveDetailsPageViewModel(
                     )
                 );
 
-                foreach (
-                    var directory in defaultDirectory.EnumerateDirectories(
-                        "*",
-                        EnumerationOptionConstants.AllDirectories
-                    )
-                )
+                try
                 {
-                    results.Add(
-                        new InstallLocationOption(
-                            Path.Combine("Models", Path.GetRelativePath(modelsDirectory, directory)),
-                            directory
+                    foreach (
+                        var directory in defaultDirectory.EnumerateDirectories(
+                            "*",
+                            EnumerationOptionConstants.AllDirectories
                         )
-                    );
+                    )
+                    {
+                        results.Add(
+                            new InstallLocationOption(
+                                Path.Combine("Models", Path.GetRelativePath(modelsDirectory, directory)),
+                                directory
+                            )
+                        );
+                    }
+                }
+                catch (Exception)
+                {
+                    // Ignore enumeration failures (e.g. an unauthorized subdirectory) so the
+                    // default and custom options remain available.
                 }
             }
 

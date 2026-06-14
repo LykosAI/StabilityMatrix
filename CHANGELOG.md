@@ -9,12 +9,14 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Added
 - Added **automatic text encoder and VAE selection** to the Inference Model card. Selecting a model now fills any empty encoder slots and the default VAE with the matching local files for the detected workflow, so you don't need to know which files pair with which architecture (e.g. `qwen_3_4b` or `qwen_3_8b` + Flux.2 VAE for Flux.2 Klein, `clip_l` + `t5xxl` for Flux, `qwen_3_06b` + `qwen_image_vae` for Anima). Anything you pick manually is never overridden
 - Added a **misplaced-model warning** to the Inference Model card with a one-click **Move** button. If a model sits in a folder that can't work with the selected workflow (like a Z-Image or Anima file in the StableDiffusion folder), a compact warning explains the problem instead of letting generation fail with a cryptic ComfyUI error. The Move button relocates the file and its metadata to the right folder, then re-selects it. Dismissible per model
+- Added a **native macOS menu bar** with the standard application menu — About Stability Matrix, **Settings… (⌘,)**, and the usual Services / Hide / **Quit (⌘Q)** items
 ### Changed
 - The Inference **Workflow** selector now switches the model loader to match the chosen profile, showing or hiding the separate encoder and VAE fields as appropriate. It will never switch to a loader that can't load the selected file; you get the warning above instead
 - Renamed the "Anima / SD" workflow profile to **"Anima"**. Anima has no all-in-one version, so it's now handled like Z-Image: standalone model in DiffusionModels with a separate text encoder and VAE
 - Image Lab's Flux.2 Klein model checks now match the text encoder to your selected UNET variant (4B vs 9B), and switching variants updates the status banner immediately
 - Image Lab's Flux Kontext and Qwen Image Edit providers now show ComfyUI's actual workflow rejection message instead of a generic "Generation failed" (Flux.2 Klein already did this)
 - Image Lab now opens the same ComfyUI error detail dialog that Inference uses when a workflow is rejected or a node fails mid-generation, showing the full error JSON instead of a truncated toast
+- Keyboard shortcuts now use **⌘ (Command)** instead of Ctrl on macOS — save/open, Generate, undo/redo, copy/paste/cut, tab navigation, and the mask editor all follow the platform convention, and context menus show the ⌘ glyph
 ### Fixed
 - Fixed [#1659](https://github.com/LykosAI/StabilityMatrix/issues/1659) - Z-Image and Anima workflows hiding the Text Encoder selectors and passing an invalid `None` CLIP input to ComfyUI; standalone workflows now expose and automatically fill compatible text encoders and VAEs
 - Fixed **"No text encoders configured"** errors when generating with an all-in-one checkpoint after a UNet model had been selected in the same tab
@@ -22,6 +24,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed Image Lab reporting "all models present" for Flux.2 Klein 9B setups that only had the 4B text encoder (and vice versa). The matching encoder download is now offered
 - Fixed Image Lab model and LoRA dropdowns hiding files whose CivitAI base model tag is unrecognized (commonly "Other"), even when the filename clearly matches the provider
 - Fixed Animagine XL and other SDXL models with "anima" in the name being misdetected as the Anima architecture
+- Fixed the running-package exit confirmation not appearing when quitting via **⌘Q, the macOS app menu, or the Dock** — it previously only showed when closing the window directly, so those paths could tear down running packages without warning. All quit paths now prompt
 
 ## v2.16.0
 ### Added

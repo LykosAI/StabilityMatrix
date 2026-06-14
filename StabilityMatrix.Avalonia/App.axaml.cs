@@ -3,6 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Reflection;
+using System.Runtime.Versioning;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Apizr;
@@ -12,6 +13,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Core.Plugins;
+using Avalonia.Input;
 using Avalonia.Input.Platform;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
@@ -140,6 +142,13 @@ public sealed class App : Application
 
         SetFontFamily(GetPlatformDefaultFontFamily());
 
+        // macOS app menu must be set here (before AppBuilder's AfterSetup creates the menu
+        // exporter) so it becomes the app menu and Avalonia appends the standard Services/Hide/Quit
+        if (Compat.IsMacOS && !Design.IsDesignMode)
+        {
+            SetupMacOsApplicationMenu();
+        }
+
         // Set design theme
         if (Design.IsDesignMode)
         {
@@ -218,6 +227,47 @@ public sealed class App : Application
                 ShowMainWindow();
             }
         }
+    }
+
+    /// <summary>
+    /// Sets the native macOS application menu. Avalonia's native backend reads the app menu (the
+    /// bold app-name menu) from <see cref="NativeMenu"/> attached to the <see cref="Application"/>
+    /// during AppBuilder's AfterSetup phase, then appends the standard Services / Hide / Quit (⌘Q)
+    /// items. We add About and Settings… (⌘,) above those. Called from <see cref="Initialize"/>,
+    /// which runs just before that phase, so it must not be moved any later or Avalonia falls back
+    /// to its default "About Avalonia" menu.
+    /// </summary>
+    [SupportedOSPlatform("macos")]
+    private void SetupMacOsApplicationMenu()
+    {
+        var aboutItem = new NativeMenuItem("About Stability Matrix");
+        aboutItem.Click += (_, _) => ShowAboutDialog();
+
+        var settingsItem = new NativeMenuItem("Settings…")
+        {
+            Gesture = new KeyGesture(Key.OemComma, KeyModifiers.Meta),
+        };
+        settingsItem.Click += (_, _) =>
+            Services
+                .GetRequiredService<INavigationService<MainWindowViewModel>>()
+                .NavigateTo<SettingsViewModel>();
+
+        var appMenu = new NativeMenu { Items = { aboutItem, new NativeMenuItemSeparator(), settingsItem } };
+
+        NativeMenu.SetMenu(this, appMenu);
+    }
+
+    private static void ShowAboutDialog()
+    {
+        var dialog = DialogHelper.CreateTaskDialog(
+            "Stability Matrix",
+            $"Version {Compat.AppVersion.ToDisplayString()}"
+        );
+        dialog.ShowProgressBar = false;
+        dialog.FooterVisibility = TaskDialogFooterVisibility.Never;
+        dialog.Buttons = new List<TaskDialogButton> { TaskDialogButton.CloseButton };
+
+        dialog.ShowAsync(true).SafeFireAndForget();
     }
 
     /// <summary>

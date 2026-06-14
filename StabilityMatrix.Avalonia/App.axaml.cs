@@ -108,6 +108,12 @@ public sealed class App : Application
     /// </summary>
     private bool isExitConfirmed;
 
+    /// <summary>
+    /// True while the exit confirmation dialog is open, to avoid stacking dialogs if more
+    /// shutdown requests arrive (e.g. ⌘Q pressed repeatedly).
+    /// </summary>
+    private bool isConfirmingExit;
+
     private ServiceProvider? serviceProvider;
 
     [NotNull]
@@ -986,22 +992,35 @@ public sealed class App : Application
         // close button, ⌘Q, the app menu Quit, and dock Quit — since they all end up here.
         if (!isExitConfirmed && !isAsyncDisposeStarted && serviceProvider is not null)
         {
-            var runningPackageService = Services.GetRequiredService<RunningPackageService>();
+            var runningPackageService = serviceProvider.GetRequiredService<RunningPackageService>();
             if (runningPackageService.RunningPackages.Count > 0)
             {
                 e.Cancel = true;
+
+                // Avoid stacking dialogs if another shutdown request arrives while this one is open
+                if (isConfirmingExit)
+                    return;
+
+                isConfirmingExit = true;
                 Dispatcher
                     .UIThread.InvokeAsync(async () =>
                     {
-                        var dialog = CreateExitConfirmDialog();
-                        if (
-                            (TaskDialogStandardResult)await dialog.ShowAsync(true)
-                            == TaskDialogStandardResult.Yes
-                        )
+                        try
                         {
-                            isExitConfirmed = true;
-                            DesktopLifetime?.MainWindow?.Hide();
-                            Shutdown();
+                            var dialog = CreateExitConfirmDialog();
+                            if (
+                                (TaskDialogStandardResult)await dialog.ShowAsync(true)
+                                == TaskDialogStandardResult.Yes
+                            )
+                            {
+                                isExitConfirmed = true;
+                                DesktopLifetime?.MainWindow?.Hide();
+                                Shutdown();
+                            }
+                        }
+                        finally
+                        {
+                            isConfirmingExit = false;
                         }
                     })
                     .SafeFireAndForget();
@@ -1009,9 +1028,14 @@ public sealed class App : Application
             }
         }
 
-        // Skip if Async Dispose already started, shutdown will be handled by it
+        // If an async dispose is already running, cancel until it completes so we don't
+        // Environment.Exit before settings/database flushes finish
         if (isAsyncDisposeStarted)
+        {
+            if (!isAsyncDisposeComplete)
+                e.Cancel = true;
             return;
+        }
 
         // Cancel shutdown for now to dispose
         e.Cancel = true;

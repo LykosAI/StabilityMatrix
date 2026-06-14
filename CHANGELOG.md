@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed Image Lab reporting "all models present" for Flux.2 Klein 9B setups that only had the 4B text encoder (and vice versa). The matching encoder download is now offered
 - Fixed Image Lab model and LoRA dropdowns hiding files whose CivitAI base model tag is unrecognized (commonly "Other"), even when the filename clearly matches the provider
 - Fixed Animagine XL and other SDXL models with "anima" in the name being misdetected as the Anima architecture
+- Fixed an empty strip of space appearing below the native window title bar on macOS and Linux; the Windows-only caption area (icon, title, and min/max/close buttons) is now collapsed on those platforms so content sits directly under the system title bar
 
 ## v2.16.0
 ### Added

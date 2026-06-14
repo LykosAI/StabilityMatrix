@@ -102,6 +102,12 @@ public sealed class App : Application
 
     private bool isOnExitComplete;
 
+    /// <summary>
+    /// True once the user has confirmed exiting while packages are running, so
+    /// <see cref="OnShutdownRequested"/> doesn't prompt again on the follow-up shutdown.
+    /// </summary>
+    private bool isExitConfirmed;
+
     private ServiceProvider? serviceProvider;
 
     [NotNull]
@@ -949,12 +955,59 @@ public sealed class App : Application
         }
     }
 
+    private static TaskDialog CreateExitConfirmDialog()
+    {
+        var dialog = DialogHelper.CreateTaskDialog(
+            Languages.Resources.Label_ConfirmExit,
+            Languages.Resources.Label_ConfirmExitDetail
+        );
+
+        dialog.ShowProgressBar = false;
+        dialog.FooterVisibility = TaskDialogFooterVisibility.Never;
+
+        dialog.Buttons = new List<TaskDialogButton>
+        {
+            new("Exit", TaskDialogStandardResult.Yes),
+            TaskDialogButton.CancelButton,
+        };
+        dialog.Buttons[0].IsDefault = true;
+
+        return dialog;
+    }
+
     private void OnShutdownRequested(object? sender, ShutdownRequestedEventArgs e)
     {
         Logger.Trace("Start OnShutdownRequested");
 
         if (e.Cancel)
             return;
+
+        // Confirm exit while packages are running. This covers every quit path — the window
+        // close button, ⌘Q, the app menu Quit, and dock Quit — since they all end up here.
+        if (!isExitConfirmed && !isAsyncDisposeStarted && serviceProvider is not null)
+        {
+            var runningPackageService = Services.GetRequiredService<RunningPackageService>();
+            if (runningPackageService.RunningPackages.Count > 0)
+            {
+                e.Cancel = true;
+                Dispatcher
+                    .UIThread.InvokeAsync(async () =>
+                    {
+                        var dialog = CreateExitConfirmDialog();
+                        if (
+                            (TaskDialogStandardResult)await dialog.ShowAsync(true)
+                            == TaskDialogStandardResult.Yes
+                        )
+                        {
+                            isExitConfirmed = true;
+                            DesktopLifetime?.MainWindow?.Hide();
+                            Shutdown();
+                        }
+                    })
+                    .SafeFireAndForget();
+                return;
+            }
+        }
 
         // Skip if Async Dispose already started, shutdown will be handled by it
         if (isAsyncDisposeStarted)

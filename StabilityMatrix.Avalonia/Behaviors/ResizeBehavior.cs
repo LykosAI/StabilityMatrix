@@ -7,6 +7,7 @@ using Avalonia.Input;
 using Avalonia.Media;
 using Avalonia.Xaml.Interactivity;
 using FluentAvalonia.UI.Controls;
+using StabilityMatrix.Avalonia.Helpers;
 
 namespace StabilityMatrix.Avalonia.Behaviors;
 
@@ -109,7 +110,7 @@ public class ResizeBehavior : Behavior<Control>
 
     private void OnPointerWheelChanged(object? sender, PointerWheelEventArgs e)
     {
-        if (e.KeyModifiers != KeyModifiers.Control)
+        if (e.KeyModifiers != PlatformKeyModifiers.CommandModifier)
             return;
 
         if (!UseMouseWheelResize)

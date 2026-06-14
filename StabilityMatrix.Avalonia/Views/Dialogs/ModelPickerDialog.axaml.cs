@@ -2,6 +2,7 @@ using System.Linq;
 using Avalonia.Input;
 using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
 namespace StabilityMatrix.Avalonia.Views.Dialogs;
@@ -20,7 +21,7 @@ public partial class ModelPickerDialog : UserControlBase
         if (DataContext is not ModelPickerDialogViewModel viewModel)
             return;
 
-        if (e.Key == Key.F && e.KeyModifiers.HasFlag(KeyModifiers.Control))
+        if (e.Key == Key.F && e.KeyModifiers.HasFlag(PlatformKeyModifiers.CommandModifier))
         {
             SearchBox?.Focus();
             SearchBox?.SelectAll();

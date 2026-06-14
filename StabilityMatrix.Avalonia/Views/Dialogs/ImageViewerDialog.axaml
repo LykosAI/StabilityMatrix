@@ -13,6 +13,7 @@
     xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
     xmlns:input="clr-namespace:FluentAvalonia.UI.Input;assembly=FluentAvalonia"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+    xmlns:markupExtensions="clr-namespace:StabilityMatrix.Avalonia.MarkupExtensions"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
     xmlns:models="clr-namespace:StabilityMatrix.Avalonia.Models"
@@ -87,14 +88,14 @@
                                         x:Name="CopyMenuItem"
                                         Command="{StaticResource CopyImageCommand}"
                                         CommandParameter="{Binding}"
-                                        HotKey="Ctrl+C"
+                                        HotKey="{markupExtensions:PlatformGesture Ctrl+C}"
                                         IconSource="Copy"
                                         Text="{x:Static lang:Resources.Action_Copy}" />
                                     <ui:MenuFlyoutItem
                                         x:Name="CopyAsBitmapMenuItem"
                                         Command="{StaticResource CopyImageAsBitmapCommand}"
                                         CommandParameter="{Binding}"
-                                        HotKey="Shift+Ctrl+C"
+                                        HotKey="{markupExtensions:PlatformGesture Shift+Ctrl+C}"
                                         IsVisible="{OnPlatform Windows=True,
                                                                Default=False}"
                                         Text="{x:Static lang:Resources.Action_CopyAsBitmap}" />

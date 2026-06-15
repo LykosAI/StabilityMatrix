@@ -204,6 +204,14 @@ public static class SkiaExtensions
         var src = (byte*)source;
         var dest = (byte*)destination;
 
+        // When strides match the buffer is contiguous, so copy it all in one shot.
+        if (sourceRowBytes == destinationRowBytes)
+        {
+            var totalBytes = (long)sourceRowBytes * height;
+            Buffer.MemoryCopy(src, dest, totalBytes, totalBytes);
+            return;
+        }
+
         for (var row = 0; row < height; row++)
         {
             Buffer.MemoryCopy(

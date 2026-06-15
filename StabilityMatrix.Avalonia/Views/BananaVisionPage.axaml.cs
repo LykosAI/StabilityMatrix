@@ -9,6 +9,7 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Platform.Storage;
 using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.ViewModels;
 
 namespace StabilityMatrix.Avalonia.Views;
@@ -288,7 +289,7 @@ public partial class BananaVisionPage : UserControlBase
     private async void OnKeyDown(object? sender, KeyEventArgs e)
     {
         // Check for Ctrl+V (paste)
-        if (e.Key == Key.V && e.KeyModifiers.HasFlag(KeyModifiers.Control))
+        if (e.Key == Key.V && e.KeyModifiers.HasFlag(PlatformKeyModifiers.CommandModifier))
         {
             if (DataContext is BananaVisionPageViewModel viewModel)
             {

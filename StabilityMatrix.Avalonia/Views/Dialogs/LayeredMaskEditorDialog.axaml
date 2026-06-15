@@ -8,6 +8,7 @@
     xmlns:database="clr-namespace:StabilityMatrix.Core.Models.Database;assembly=StabilityMatrix.Core"
     xmlns:fluentIcons="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
     xmlns:inference="clr-namespace:StabilityMatrix.Avalonia.Models.Inference"
+    xmlns:markupExtensions="clr-namespace:StabilityMatrix.Avalonia.MarkupExtensions"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
     xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
@@ -324,7 +325,7 @@
                                             <ui:MenuFlyoutItem
                                                 Command="{Binding $parent[controls:UserControlBase].((vmDialogs:LayeredMaskEditorViewModel)DataContext).DuplicateLayerCommand}"
                                                 CommandParameter="{Binding}"
-                                                InputGesture="Ctrl+D"
+                                                InputGesture="{markupExtensions:PlatformGesture Ctrl+D}"
                                                 Text="Duplicate">
                                                 <ui:MenuFlyoutItem.IconSource>
                                                     <fluentIcons:SymbolIconSource Symbol="Copy" />
@@ -333,7 +334,7 @@
                                             <ui:MenuFlyoutItem
                                                 Command="{Binding $parent[controls:UserControlBase].((vmDialogs:LayeredMaskEditorViewModel)DataContext).FillLayerCommand}"
                                                 CommandParameter="{Binding}"
-                                                InputGesture="Ctrl+F"
+                                                InputGesture="{markupExtensions:PlatformGesture Ctrl+F}"
                                                 Text="Fill Layer">
                                                 <ui:MenuFlyoutItem.IconSource>
                                                     <fluentIcons:SymbolIconSource Symbol="PaintBucket" />
@@ -342,7 +343,7 @@
                                             <ui:MenuFlyoutItem
                                                 Command="{Binding $parent[controls:UserControlBase].((vmDialogs:LayeredMaskEditorViewModel)DataContext).InvertLayerCommand}"
                                                 CommandParameter="{Binding}"
-                                                InputGesture="Ctrl+I"
+                                                InputGesture="{markupExtensions:PlatformGesture Ctrl+I}"
                                                 Text="Invert Mask">
                                                 <ui:MenuFlyoutItem.IconSource>
                                                     <fluentIcons:SymbolIconSource Symbol="SelectAllOn" />

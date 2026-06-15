@@ -7,6 +7,7 @@ using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
@@ -109,7 +110,7 @@ public partial class LayeredMaskEditorDialog : UserControlBase
         if (e.Source is TextBox)
             return;
 
-        var ctrl = e.KeyModifiers.HasFlag(KeyModifiers.Control);
+        var ctrl = e.KeyModifiers.HasFlag(PlatformKeyModifiers.CommandModifier);
         var shift = e.KeyModifiers.HasFlag(KeyModifiers.Shift);
 
         // Throttle rapid-fire events for navigation keys

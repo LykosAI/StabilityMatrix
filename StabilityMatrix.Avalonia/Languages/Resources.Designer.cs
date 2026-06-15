@@ -103,7 +103,16 @@ namespace StabilityMatrix.Avalonia.Languages {
                 return ResourceManager.GetString("Action_Cancel", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Custom....
+        /// </summary>
+        public static string Action_CustomFolderEllipsis {
+            get {
+                return ResourceManager.GetString("Action_CustomFolderEllipsis", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Check for Updates.
         /// </summary>
@@ -4940,6 +4949,96 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_GenerationFailed {
             get {
                 return ResourceManager.GetString("Label_GenerationFailed", resourceCulture);
+            }
+        }
+
+        public static string Label_Success {
+            get {
+                return ResourceManager.GetString("Label_Success", resourceCulture);
+            }
+        }
+
+        public static string Label_GeminiApiKey {
+            get {
+                return ResourceManager.GetString("Label_GeminiApiKey", resourceCulture);
+            }
+        }
+
+        public static string Validation_ApiKeyRequired {
+            get {
+                return ResourceManager.GetString("Validation_ApiKeyRequired", resourceCulture);
+            }
+        }
+
+        public static string Label_SetGeminiApiKey {
+            get {
+                return ResourceManager.GetString("Label_SetGeminiApiKey", resourceCulture);
+            }
+        }
+
+        public static string Text_SetGeminiApiKeyDescription {
+            get {
+                return ResourceManager.GetString("Text_SetGeminiApiKeyDescription", resourceCulture);
+            }
+        }
+
+        public static string Text_GeminiApiKeySaved {
+            get {
+                return ResourceManager.GetString("Text_GeminiApiKeySaved", resourceCulture);
+            }
+        }
+
+        public static string Label_RemoveGeminiApiKey {
+            get {
+                return ResourceManager.GetString("Label_RemoveGeminiApiKey", resourceCulture);
+            }
+        }
+
+        public static string Text_ConfirmRemoveGeminiApiKey {
+            get {
+                return ResourceManager.GetString("Text_ConfirmRemoveGeminiApiKey", resourceCulture);
+            }
+        }
+
+        public static string Text_GeminiApiKeyRemoved {
+            get {
+                return ResourceManager.GetString("Text_GeminiApiKeyRemoved", resourceCulture);
+            }
+        }
+
+        public static string Label_GeminiApiSetupRequired {
+            get {
+                return ResourceManager.GetString("Label_GeminiApiSetupRequired", resourceCulture);
+            }
+        }
+
+        public static string Text_GeminiPaidTierRequired {
+            get {
+                return ResourceManager.GetString("Text_GeminiPaidTierRequired", resourceCulture);
+            }
+        }
+
+        public static string Error_GeminiApiKeyNotConfigured {
+            get {
+                return ResourceManager.GetString("Error_GeminiApiKeyNotConfigured", resourceCulture);
+            }
+        }
+
+        public static string Error_GeminiQuotaExceeded {
+            get {
+                return ResourceManager.GetString("Error_GeminiQuotaExceeded", resourceCulture);
+            }
+        }
+
+        public static string Error_GeminiInvalidApiKey {
+            get {
+                return ResourceManager.GetString("Error_GeminiInvalidApiKey", resourceCulture);
+            }
+        }
+
+        public static string Error_GeminiAccessForbidden {
+            get {
+                return ResourceManager.GetString("Error_GeminiAccessForbidden", resourceCulture);
             }
         }
     }

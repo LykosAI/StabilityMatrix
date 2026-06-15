@@ -1500,7 +1500,17 @@ Sparkは兆レベルのパラメータを持つ基盤モデルで、膨大なパ
     <value>画像生成API</value>
   </data>
   <data name="Label_GeminiOffDescription" xml:space="preserve">
-    <value>Gemini APIキーを追加して、Image LabでNano Bananaを使用して画像を生成します</value>
+    <value>Image LabでNano Bananaを使用するには、課金が有効な有料Gemini APIキーを追加してください</value>
+  </data>
+  <data name="Text_SetGeminiApiKeyDescription" xml:space="preserve">
+    <value>Image Lab の Nano Banana モデルでは、**有料版**の Gemini API キーが必要です。無料版のキーでは画像を生成できません。
+
+1. [Google AI Studio](https://aistudio.google.com/apikey) でキーを作成します。
+2. [Cloud Console](https://console.cloud.google.com/billing) で、そのキーの Google Cloud プロジェクトの課金を有効にします。
+3. 下にキーを貼り付けます。</value>
+  </data>
+  <data name="Action_CustomFolderEllipsis" xml:space="preserve">
+    <value>カスタム...</value>
   </data>
   <data name="Label_AboutAccountCredentials" xml:space="preserve">
     <value>アカウント認証情報について</value>

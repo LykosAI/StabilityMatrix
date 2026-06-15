@@ -17,11 +17,16 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Image Lab now opens the same ComfyUI error detail dialog that Inference uses when a workflow is rejected or a node fails mid-generation, showing the full error JSON instead of a truncated toast
 ### Fixed
 - Fixed [#1659](https://github.com/LykosAI/StabilityMatrix/issues/1659) - Z-Image and Anima workflows hiding the Text Encoder selectors and passing an invalid `None` CLIP input to ComfyUI; standalone workflows now expose and automatically fill compatible text encoders and VAEs
+- Fixed [#1654](https://github.com/LykosAI/StabilityMatrix/issues/1654) and [#1658](https://github.com/LykosAI/StabilityMatrix/issues/1658) - Inference Image-to-Image masks could disappear in Linux AppImage builds, fail to appear in the image-card preview, or crash the app when saving an enabled clipping mask because Avalonia retained pixels owned by a disposed Skia image; converted mask bitmaps now own their pixel data and previews refresh after editing, restoring a project, or loading image dimensions
+- Fixed [#1660](https://github.com/LykosAI/StabilityMatrix/issues/1660) - CivArchive downloads always saving to the model folder root; the primary Download button now offers the inferred folder, existing subdirectories, and a custom folder picker, while filename patterns containing path separators create missing nested subfolders and keep downloads inside the selected models directory
+- Fixed [#1661](https://github.com/LykosAI/StabilityMatrix/issues/1661) - Custom UNet workflows missing current ComfyUI encoder types such as `sdxl`; the selector now includes current CLIP loader values while retaining single-encoder compatibility and migrating legacy `HiDream` casing
+- Fixed [#1664](https://github.com/LykosAI/StabilityMatrix/issues/1664) - Gemini failures with a saved key being misreported as "API key not configured"; Image Lab now shows the actual invalid-key, billing, quota, or permission error and explains that Nano Banana image generation requires a paid-tier API key from a Google AI project with billing enabled
 - Fixed **"No text encoders configured"** errors when generating with an all-in-one checkpoint after a UNet model had been selected in the same tab
 - Fixed Qwen Image Edit in Image Lab failing mid-generation when a wrong-size Qwen2.5-VL text encoder was installed. The **7B** encoder is now required, and the correct download is offered when it's missing
 - Fixed Image Lab reporting "all models present" for Flux.2 Klein 9B setups that only had the 4B text encoder (and vice versa). The matching encoder download is now offered
 - Fixed Image Lab model and LoRA dropdowns hiding files whose CivitAI base model tag is unrecognized (commonly "Other"), even when the filename clearly matches the provider
 - Fixed Animagine XL and other SDXL models with "anima" in the name being misdetected as the Anima architecture
+- Fixed an empty strip of space appearing below the native window title bar on macOS and Linux; the Windows-only caption area (icon, title, and min/max/close buttons) is now collapsed on those platforms so content sits directly under the system title bar
 
 ## v2.16.0
 ### Added

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Runtime.InteropServices;
 using Avalonia;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
@@ -193,7 +192,7 @@ public static class SkiaExtensions
         return result;
     }
 
-    private static void CopyPixelRows(
+    private static unsafe void CopyPixelRows(
         IntPtr source,
         int sourceRowBytes,
         IntPtr destination,
@@ -202,12 +201,17 @@ public static class SkiaExtensions
     )
     {
         var bytesPerRow = Math.Min(sourceRowBytes, destinationRowBytes);
-        var buffer = new byte[bytesPerRow];
+        var src = (byte*)source;
+        var dest = (byte*)destination;
 
         for (var row = 0; row < height; row++)
         {
-            Marshal.Copy(IntPtr.Add(source, row * sourceRowBytes), buffer, 0, bytesPerRow);
-            Marshal.Copy(buffer, 0, IntPtr.Add(destination, row * destinationRowBytes), bytesPerRow);
+            Buffer.MemoryCopy(
+                src + ((long)row * sourceRowBytes),
+                dest + ((long)row * destinationRowBytes),
+                bytesPerRow,
+                bytesPerRow
+            );
         }
     }
 

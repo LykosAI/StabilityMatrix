@@ -30,6 +30,11 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed Animagine XL and other SDXL models with "anima" in the name being misdetected as the Anima architecture
 - Fixed the running-package exit confirmation not appearing when quitting via **⌘Q, the macOS app menu, or the Dock** — it previously only showed when closing the window directly, so those paths could tear down running packages without warning. All quit paths now prompt
 - Fixed an empty strip of space appearing below the native window title bar on macOS and Linux; the Windows-only caption area (icon, title, and min/max/close buttons) is now collapsed on those platforms so content sits directly under the system title bar
+### Supporters
+#### 🌟 Visionaries
+A massive thank you to our brilliant Visionaries: **Waterclouds**, **bluepopsicle**, **Ibixat**, **Droolguy**, **snotty**, **LG**, **whudunit**, **MrMxyzptlk12836**, **Psilocyfer18731**, **KalAbaddon**, and **moon_milky2843**! There's a little of your support behind every fix and refinement in this update, and we're grateful for all of it. A warm welcome to our newest Visionary, **cusalapapen1481**; it's wonderful to have you with us! 💛
+#### 🚀 Pioneers
+And an equally big thank you to our fantastic Pioneer crew, all familiar faces this time around: **Szir777**, **[USA]TechDude**, **SinthCore**, **Jisuren**, **Tigon**, **jweg79**, **rwx14662**, **Hurbie53**, **ahnhj.al**, **drew.lukas**, **Tuskaruho**, **Cjloha**, **Alligator1907**, **Bitti**, **Ghislain G**, **CommissarGiygas16050**, **qob97515211**, **bastardofbethlehem**, and **Zombop**! You keep showing up for us, and that steadiness is a big part of how this project keeps moving forward. Thank you, truly, every one of you. 💛
 
 ## v2.16.0
 ### Added

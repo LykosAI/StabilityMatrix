@@ -113,6 +113,18 @@ public class ModelCardWorkflowProfileTests
     }
 
     [TestMethod]
+    public void CustomProfile_OffersCurrentComfyDualClipTypes()
+    {
+        var vm = CreateViewModel();
+
+        CollectionAssert.Contains(vm.ClipTypes, "sdxl");
+        CollectionAssert.Contains(vm.ClipTypes, "hunyuan_video");
+        CollectionAssert.Contains(vm.ClipTypes, "hidream");
+        CollectionAssert.Contains(vm.ClipTypes, "ace");
+        CollectionAssert.DoesNotContain(vm.ClipTypes, "HiDream");
+    }
+
+    [TestMethod]
     public void AnimaProfile_WithCheckpointFolderModel_KeepsLoaderAndWarns()
     {
         // Anima is UNet-only (separate qwen_3_06b encoder + Qwen Image VAE) — there is no

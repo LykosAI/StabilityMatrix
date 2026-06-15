@@ -17,4 +17,6 @@ public class ImageGenerationException : Exception
     /// detail dialog alongside the short message.
     /// </summary>
     public string? DetailJson { get; init; }
+
+    public ImageGenerationErrorCode? ErrorCode { get; init; }
 }

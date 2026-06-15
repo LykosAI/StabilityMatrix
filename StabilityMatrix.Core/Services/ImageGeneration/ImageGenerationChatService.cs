@@ -711,6 +711,7 @@ public class ImageGenerationChatService(
             throw new ImageGenerationException(response.ErrorMessage ?? "Image generation failed")
             {
                 DetailJson = response.ErrorDetailJson,
+                ErrorCode = response.ErrorCode,
             };
         }
 
@@ -1004,6 +1005,7 @@ public class ImageGenerationChatService(
             throw new ImageGenerationException(response.ErrorMessage ?? "Image generation failed")
             {
                 DetailJson = response.ErrorDetailJson,
+                ErrorCode = response.ErrorCode,
             };
         }
 

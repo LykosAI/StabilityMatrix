@@ -274,27 +274,37 @@ public class ModelImportService(
         Action<TrackedDownload>? configureDownload = null
     )
     {
-        // Subfolder support: if the file name contains a path separator (e.g. from a
-        // user-defined FileNameFormat pattern like "{base_model}/{file_name}"), split off
-        // the directory portion and join it onto the download folder. Matches DoImport.
-        if (modelFileName.Contains('/') || modelFileName.Contains('\\'))
+        // Subfolder support for user-defined patterns such as
+        // "{base_model}/{model_name}/{file_name}". Treat every component as relative so
+        // rooted or traversal input cannot escape the selected models folder.
+        var pathSegments = modelFileName
+            .Split(['/', '\\'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Where(segment => segment is not "." and not "..")
+            .Select(SanitizePathSegment)
+            .Where(segment => !string.IsNullOrWhiteSpace(segment))
+            .ToArray();
+
+        if (pathSegments.Length == 0)
         {
-            var lastIndex = modelFileName.LastIndexOfAny(['/', '\\']);
-            if (lastIndex >= 0)
-            {
-                var folderPath = modelFileName.Substring(0, lastIndex);
-                modelFileName = modelFileName.Substring(lastIndex + 1);
-                downloadFolder = downloadFolder.JoinDir(folderPath);
-            }
+            throw new ArgumentException(
+                "Model file name must contain a valid file name.",
+                nameof(modelFileName)
+            );
+        }
+
+        modelFileName = pathSegments[^1];
+        if (pathSegments.Length > 1)
+        {
+            downloadFolder = new DirectoryPath(
+                [downloadFolder.FullPath, .. pathSegments.Take(pathSegments.Length - 1)]
+            );
         }
 
         // Folders might be missing if user didn't install any packages yet
         downloadFolder.Create();
 
         // Fix invalid chars in FileName
-        var modelBaseFileName = Path.GetFileNameWithoutExtension(modelFileName);
-        modelBaseFileName = Path.GetInvalidFileNameChars()
-            .Aggregate(modelBaseFileName, (current, c) => current.Replace(c, '_'));
+        var modelBaseFileName = SanitizePathSegment(Path.GetFileNameWithoutExtension(modelFileName));
         var modelFileExtension = Path.GetExtension(modelFileName);
 
         var downloadPath = downloadFolder.JoinFile(modelBaseFileName + modelFileExtension);
@@ -356,6 +366,9 @@ public class ModelImportService(
             DownloadPreviewImageAsync(previewImageUri, previewImageDownloadPath).SafeFireAndForget();
         }
     }
+
+    private static string SanitizePathSegment(string segment) =>
+        Path.GetInvalidFileNameChars().Aggregate(segment, (current, c) => current.Replace(c, '_'));
 
     private async Task DownloadPreviewImageAsync(Uri previewImageUri, FilePath previewImageDownloadPath)
     {

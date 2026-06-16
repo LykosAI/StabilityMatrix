@@ -151,26 +151,43 @@
                         Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                         Text="{Binding Model.DownloadCount, Converter={StaticResource KiloFormatterConverter}}" />
                 </StackPanel>
-                <Button
+                <SplitButton
                     Classes.accent="{Binding !IsInstalled}"
                     Command="{Binding DownloadModelCommand}"
                     IsVisible="{Binding HasDownloadUrl}"
                     ToolTip.Tip="Download primary file to default location">
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <avalonia:Icon
-                            VerticalAlignment="Center"
-                            FontSize="12"
-                            Value="fa-solid fa-download" />
-                        <TextBlock
-                            VerticalAlignment="Center"
-                            IsVisible="{Binding !IsInstalled}"
-                            Text="Download" />
-                        <TextBlock
-                            VerticalAlignment="Center"
-                            IsVisible="{Binding IsInstalled}"
-                            Text="Download again" />
-                    </StackPanel>
-                </Button>
+                    <SplitButton.Resources>
+                        <input:StandardUICommand x:Key="DownloadModelToLocationCommand" Command="{Binding DownloadModelToLocationCommand}" />
+                    </SplitButton.Resources>
+                    <SplitButton.Content>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <avalonia:Icon
+                                VerticalAlignment="Center"
+                                FontSize="12"
+                                Value="fa-solid fa-download" />
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                IsVisible="{Binding !IsInstalled}"
+                                Text="Download" />
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                IsVisible="{Binding IsInstalled}"
+                                Text="Download again" />
+                        </StackPanel>
+                    </SplitButton.Content>
+                    <SplitButton.Flyout>
+                        <ui:FAMenuFlyout ItemsSource="{Binding InstallLocations}" Placement="BottomEdgeAlignedRight">
+                            <ui:FAMenuFlyout.ItemTemplate>
+                                <DataTemplate x:DataType="checkpointBrowser:InstallLocationOption">
+                                    <ui:MenuFlyoutItem
+                                        Command="{StaticResource DownloadModelToLocationCommand}"
+                                        CommandParameter="{Binding}"
+                                        Text="{Binding DisplayName}" />
+                                </DataTemplate>
+                            </ui:FAMenuFlyout.ItemTemplate>
+                        </ui:FAMenuFlyout>
+                    </SplitButton.Flyout>
+                </SplitButton>
                 <Button Command="{Binding OpenOnCivArchiveCommand}">
                     <StackPanel Orientation="Horizontal" Spacing="8">
                         <avalonia:Icon

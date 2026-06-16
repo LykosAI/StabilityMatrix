@@ -65,6 +65,7 @@ using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
+using StabilityMatrix.Core.Services.ImageGeneration;
 using Symbol = FluentIcons.Common.Symbol;
 using SymbolIconSource = FluentIcons.Avalonia.Fluent.SymbolIconSource;
 
@@ -1093,6 +1094,21 @@ public partial class MainSettingsViewModel : PageViewModelBase
 
         var result = await dialog.ShowAsync();
         notificationService.Show(new Notification("Content dialog closed", $"Result: {result}"));
+    }
+
+    /// <summary>
+    /// Debug: previews an Image Lab / Nano Banana generation error through the real
+    /// BananaVision handlers. <paramref name="errorCode"/> is an <see cref="ImageGenerationErrorCode"/>
+    /// name, or any unparseable value (e.g. "Generic") to preview the generic failure path.
+    /// </summary>
+    [RelayCommand]
+    private Task DebugShowGeminiErrorDialog(string? errorCode)
+    {
+        var code = Enum.TryParse<ImageGenerationErrorCode>(errorCode, out var parsed)
+            ? parsed
+            : (ImageGenerationErrorCode?)null;
+
+        return dialogFactory.Get<BananaVisionPageViewModel>().DebugSimulateGenerationErrorAsync(code);
     }
 
     [RelayCommand]

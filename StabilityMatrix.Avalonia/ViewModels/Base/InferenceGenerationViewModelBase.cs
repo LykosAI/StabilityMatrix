@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
@@ -42,6 +43,7 @@ using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Inference;
 using StabilityMatrix.Core.Models.Notifications;
 using StabilityMatrix.Core.Models.PackageModification;
+using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Models.Packages.Extensions;
 using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Services;
@@ -666,7 +668,8 @@ public abstract partial class InferenceGenerationViewModelBase
     /// <summary>
     /// Waits for the ClientManager to become connected, showing indeterminate progress.
     /// Used after launching ComfyUI from the connection prompt so a queued generation can
-    /// resume automatically once the backend is ready.
+    /// resume automatically once the backend is ready. Stops waiting early if ComfyUI is
+    /// shut down or crashes before connecting (it is removed from RunningPackages either way).
     /// </summary>
     private async Task<bool> WaitForConnectedAsync(CancellationToken cancellationToken)
     {
@@ -674,8 +677,11 @@ public abstract partial class InferenceGenerationViewModelBase
             return true;
 
         // RunContinuationsAsynchronously so the await resumption (and UI updates in finally)
-        // don't run synchronously on the thread that raised PropertyChanged.
+        // don't run synchronously on the thread that raised the completing event.
         var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        bool IsAnyComfyRunning() =>
+            runningPackageService.RunningPackages.Values.Any(vm => vm.RunningPackage.BasePackage is ComfyUI);
 
         void OnPropertyChanged(object? sender, PropertyChangedEventArgs args)
         {
@@ -689,12 +695,25 @@ public abstract partial class InferenceGenerationViewModelBase
             }
         }
 
+        void OnRunningPackagesChanged(object? sender, NotifyCollectionChangedEventArgs args)
+        {
+            // ComfyUI was shut down or crashed before connecting - stop waiting
+            if (!IsAnyComfyRunning())
+            {
+                tcs.TrySetResult();
+            }
+        }
+
         ClientManager.PropertyChanged += OnPropertyChanged;
+        runningPackageService.RunningPackages.CollectionChanged += OnRunningPackagesChanged;
         try
         {
-            // Re-check in case it connected between the initial check and subscribing
+            // Re-check in case it connected, or the package already stopped, between the
+            // initial checks and subscribing
             if (ClientManager.IsConnected)
                 return true;
+            if (!IsAnyComfyRunning())
+                return false;
 
             // Give up waiting after a generous timeout in case startup never completes
             using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
@@ -717,6 +736,7 @@ public abstract partial class InferenceGenerationViewModelBase
         finally
         {
             ClientManager.PropertyChanged -= OnPropertyChanged;
+            runningPackageService.RunningPackages.CollectionChanged -= OnRunningPackagesChanged;
             OutputProgress.ClearProgress();
         }
     }

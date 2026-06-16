@@ -673,11 +673,17 @@ public abstract partial class InferenceGenerationViewModelBase
         if (ClientManager.IsConnected)
             return true;
 
-        var tcs = new TaskCompletionSource();
+        // RunContinuationsAsynchronously so the await resumption (and UI updates in finally)
+        // don't run synchronously on the thread that raised PropertyChanged.
+        var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
         void OnPropertyChanged(object? sender, PropertyChangedEventArgs args)
         {
-            if (args.PropertyName is nameof(ClientManager.IsConnected) or null && ClientManager.IsConnected)
+            // null/empty PropertyName means "all properties changed" per INotifyPropertyChanged
+            if (
+                args.PropertyName is nameof(ClientManager.IsConnected) or null or ""
+                && ClientManager.IsConnected
+            )
             {
                 tcs.TrySetResult();
             }

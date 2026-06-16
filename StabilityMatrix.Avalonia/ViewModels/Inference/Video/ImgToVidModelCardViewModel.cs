@@ -6,6 +6,7 @@ using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
+using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference.Video;
 
@@ -17,9 +18,21 @@ public class ImgToVidModelCardViewModel : ModelCardViewModel
     public ImgToVidModelCardViewModel(
         IInferenceClientManager clientManager,
         IServiceManager<ViewModelBase> vmFactory,
-        TabContext tabContext
+        TabContext tabContext,
+        ISettingsManager settingsManager,
+        IModelIndexService modelIndexService,
+        INotificationService notificationService,
+        ModelOrganizationService modelOrganizationService
     )
-        : base(clientManager, vmFactory, tabContext)
+        : base(
+            clientManager,
+            vmFactory,
+            tabContext,
+            settingsManager,
+            modelIndexService,
+            notificationService,
+            modelOrganizationService
+        )
     {
         DisableSettings = true;
     }

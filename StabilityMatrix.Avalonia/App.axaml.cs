@@ -3,6 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Reflection;
+using System.Runtime.Versioning;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Apizr;
@@ -12,6 +13,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Core.Plugins;
+using Avalonia.Input;
 using Avalonia.Input.Platform;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
@@ -100,6 +102,18 @@ public sealed class App : Application
 
     private bool isOnExitComplete;
 
+    /// <summary>
+    /// True once the user has confirmed exiting while packages are running, so
+    /// <see cref="OnShutdownRequested"/> doesn't prompt again on the follow-up shutdown.
+    /// </summary>
+    private bool isExitConfirmed;
+
+    /// <summary>
+    /// True while the exit confirmation dialog is open, to avoid stacking dialogs if more
+    /// shutdown requests arrive (e.g. ⌘Q pressed repeatedly).
+    /// </summary>
+    private bool isConfirmingExit;
+
     private ServiceProvider? serviceProvider;
 
     [NotNull]
@@ -139,6 +153,13 @@ public sealed class App : Application
         AvaloniaXamlLoader.Load(this);
 
         SetFontFamily(GetPlatformDefaultFontFamily());
+
+        // macOS app menu must be set here (before AppBuilder's AfterSetup creates the menu
+        // exporter) so it becomes the app menu and Avalonia appends the standard Services/Hide/Quit
+        if (Compat.IsMacOS && !Design.IsDesignMode)
+        {
+            SetupMacOsApplicationMenu();
+        }
 
         // Set design theme
         if (Design.IsDesignMode)
@@ -218,6 +239,47 @@ public sealed class App : Application
                 ShowMainWindow();
             }
         }
+    }
+
+    /// <summary>
+    /// Sets the native macOS application menu. Avalonia's native backend reads the app menu (the
+    /// bold app-name menu) from <see cref="NativeMenu"/> attached to the <see cref="Application"/>
+    /// during AppBuilder's AfterSetup phase, then appends the standard Services / Hide / Quit (⌘Q)
+    /// items. We add About and Settings… (⌘,) above those. Called from <see cref="Initialize"/>,
+    /// which runs just before that phase, so it must not be moved any later or Avalonia falls back
+    /// to its default "About Avalonia" menu.
+    /// </summary>
+    [SupportedOSPlatform("macos")]
+    private void SetupMacOsApplicationMenu()
+    {
+        var aboutItem = new NativeMenuItem("About Stability Matrix");
+        aboutItem.Click += (_, _) => ShowAboutDialog();
+
+        var settingsItem = new NativeMenuItem("Settings…")
+        {
+            Gesture = new KeyGesture(Key.OemComma, KeyModifiers.Meta),
+        };
+        settingsItem.Click += (_, _) =>
+            Services
+                .GetRequiredService<INavigationService<MainWindowViewModel>>()
+                .NavigateTo<SettingsViewModel>();
+
+        var appMenu = new NativeMenu { Items = { aboutItem, new NativeMenuItemSeparator(), settingsItem } };
+
+        NativeMenu.SetMenu(this, appMenu);
+    }
+
+    private static void ShowAboutDialog()
+    {
+        var dialog = DialogHelper.CreateTaskDialog(
+            "Stability Matrix",
+            $"Version {Compat.AppVersion.ToDisplayString()}"
+        );
+        dialog.ShowProgressBar = false;
+        dialog.FooterVisibility = TaskDialogFooterVisibility.Never;
+        dialog.Buttons = new List<TaskDialogButton> { TaskDialogButton.CloseButton };
+
+        dialog.ShowAsync(true).SafeFireAndForget();
     }
 
     /// <summary>
@@ -899,6 +961,26 @@ public sealed class App : Application
         }
     }
 
+    private static TaskDialog CreateExitConfirmDialog()
+    {
+        var dialog = DialogHelper.CreateTaskDialog(
+            Languages.Resources.Label_ConfirmExit,
+            Languages.Resources.Label_ConfirmExitDetail
+        );
+
+        dialog.ShowProgressBar = false;
+        dialog.FooterVisibility = TaskDialogFooterVisibility.Never;
+
+        dialog.Buttons = new List<TaskDialogButton>
+        {
+            new("Exit", TaskDialogStandardResult.Yes),
+            TaskDialogButton.CancelButton,
+        };
+        dialog.Buttons[0].IsDefault = true;
+
+        return dialog;
+    }
+
     private void OnShutdownRequested(object? sender, ShutdownRequestedEventArgs e)
     {
         Logger.Trace("Start OnShutdownRequested");
@@ -906,9 +988,54 @@ public sealed class App : Application
         if (e.Cancel)
             return;
 
-        // Skip if Async Dispose already started, shutdown will be handled by it
+        // Confirm exit while packages are running. This covers every quit path — the window
+        // close button, ⌘Q, the app menu Quit, and dock Quit — since they all end up here.
+        if (!isExitConfirmed && !isAsyncDisposeStarted && serviceProvider is not null)
+        {
+            var runningPackageService = serviceProvider.GetRequiredService<RunningPackageService>();
+            if (runningPackageService.RunningPackages.Count > 0)
+            {
+                e.Cancel = true;
+
+                // Avoid stacking dialogs if another shutdown request arrives while this one is open
+                if (isConfirmingExit)
+                    return;
+
+                isConfirmingExit = true;
+                Dispatcher
+                    .UIThread.InvokeAsync(async () =>
+                    {
+                        try
+                        {
+                            var dialog = CreateExitConfirmDialog();
+                            if (
+                                (TaskDialogStandardResult)await dialog.ShowAsync(true)
+                                == TaskDialogStandardResult.Yes
+                            )
+                            {
+                                isExitConfirmed = true;
+                                DesktopLifetime?.MainWindow?.Hide();
+                                Shutdown();
+                            }
+                        }
+                        finally
+                        {
+                            isConfirmingExit = false;
+                        }
+                    })
+                    .SafeFireAndForget();
+                return;
+            }
+        }
+
+        // If an async dispose is already running, cancel until it completes so we don't
+        // Environment.Exit before settings/database flushes finish
         if (isAsyncDisposeStarted)
+        {
+            if (!isAsyncDisposeComplete)
+                e.Cancel = true;
             return;
+        }
 
         // Cancel shutdown for now to dispose
         e.Cancel = true;

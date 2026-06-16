@@ -1,3 +1,4 @@
+using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Models.BananaVision;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
@@ -89,29 +90,12 @@ public static class FluxKontextWorkflowBuilder
         );
 
         // Apply LoRAs if any
-        var currentModel = unetOutput;
-        var currentClip = clipLoader.Output;
-
-        var loraList = loras?.ToList() ?? [];
-        if (loraList.Count > 0)
-        {
-            for (var i = 0; i < loraList.Count; i++)
-            {
-                var lora = loraList[i];
-                var loraLoader = nodes.AddNamedNode(
-                    ComfyNodeBuilder.LoraLoader(
-                        nodes.GetUniqueName($"LoraLoader_{i + 1}"),
-                        currentModel,
-                        currentClip,
-                        lora.Model.RelativePath,
-                        (double)lora.ModelWeight,
-                        (double)lora.ClipWeight
-                    )
-                );
-                currentModel = loraLoader.Output1;
-                currentClip = loraLoader.Output2;
-            }
-        }
+        var (currentModel, currentClip) = ComfyWorkflowHelper.ApplyLoras(
+            nodes,
+            loras,
+            unetOutput,
+            clipLoader.Output
+        );
 
         // 2. Encode text prompt
         var positivePrompt = request.TextPrompt ?? "a beautiful image";
@@ -130,7 +114,11 @@ public static class FluxKontextWorkflowBuilder
         ConditioningNodeConnection conditioningForGuidance;
 
         // Collect reference images (from input and conversation history)
-        var referenceImageNames = GetReferenceImageNames(request);
+        var referenceImageNames = ComfyWorkflowHelper.GetReferenceImageNames(
+            request,
+            maxImages: 2,
+            providerPrefix: "flux_kontext"
+        );
 
         if (referenceImageNames.Count > 0)
         {
@@ -322,44 +310,6 @@ public static class FluxKontextWorkflowBuilder
 
         // Return the node dictionary directly
         return nodes;
-    }
-
-    /// <summary>
-    /// Get reference image filenames from the request (input images + conversation history)
-    /// Note: Images uploaded via ComfyClient.UploadImageAsync go to the "Inference" subfolder
-    /// </summary>
-    private static List<string> GetReferenceImageNames(ImageGenerationRequest request)
-    {
-        var imageNames = new List<string>();
-
-        // Priority 1: Current input images (will be uploaded with known names)
-        if (request.InputImages?.Count > 0)
-        {
-            for (var i = 0; i < Math.Min(request.InputImages.Count, 2); i++) // Max 2 images
-            {
-                // Include the "Inference/" subfolder prefix since that's where UploadImageAsync uploads to
-                imageNames.Add($"Inference/flux_kontext_input_{i}.png");
-            }
-        }
-
-        // Priority 2: Most recent image from conversation history (previous generation)
-        // Only include if we actually have the image content to upload
-        if (imageNames.Count < 2 && request.ConversationHistory != null)
-        {
-            var lastAssistantImage = request.ConversationHistory.LastOrDefault(m =>
-                m is { Role: MessageRole.Assistant, ImageContent: not null }
-            );
-
-            // Only add the filename if we found an image with content
-            // (the provider will have uploaded it)
-            if (lastAssistantImage?.ImageContent != null)
-            {
-                // Include the "Inference/" subfolder prefix
-                imageNames.Add("Inference/flux_kontext_history_latest.png");
-            }
-        }
-
-        return imageNames;
     }
 
     /// <summary>

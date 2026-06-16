@@ -2,6 +2,7 @@
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Injectio.Attributes;
+using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
 using StabilityMatrix.Core.Models.Settings;
 
@@ -34,7 +35,7 @@ public class ImageFolderCard : DropTargetTemplatedControlBase
 
     protected override void OnPointerWheelChanged(PointerWheelEventArgs e)
     {
-        if (e.KeyModifiers != KeyModifiers.Control)
+        if (e.KeyModifiers != PlatformKeyModifiers.CommandModifier)
             return;
         if (DataContext is not ImageFolderCardViewModel vm)
             return;

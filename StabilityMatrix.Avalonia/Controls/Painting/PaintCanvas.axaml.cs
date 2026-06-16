@@ -18,6 +18,7 @@ using CommunityToolkit.Mvvm.Input;
 using DynamicData.Binding;
 using SkiaSharp;
 using StabilityMatrix.Avalonia.Controls.Models;
+using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.ViewModels.Controls;
 
@@ -410,7 +411,7 @@ public class PaintCanvas : TemplatedControlBase
             return;
 
         // Check for modifier keys
-        var isCtrl = e.KeyModifiers.HasFlag(KeyModifiers.Control);
+        var isCtrl = e.KeyModifiers.HasFlag(PlatformKeyModifiers.CommandModifier);
 
         // Ctrl+Z: Undo
         if (isCtrl && e.Key == Key.Z && !e.KeyModifiers.HasFlag(KeyModifiers.Shift))

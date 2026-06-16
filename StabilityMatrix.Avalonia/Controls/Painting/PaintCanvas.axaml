@@ -5,6 +5,7 @@
     xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
     xmlns:fluentIcons="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
     xmlns:input="clr-namespace:FluentAvalonia.UI.Input;assembly=FluentAvalonia"
+    xmlns:markupExtensions="clr-namespace:StabilityMatrix.Avalonia.MarkupExtensions"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
     xmlns:models="clr-namespace:StabilityMatrix.Avalonia.Models"
     xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
@@ -32,7 +33,7 @@
                         <input:StandardUICommand
                             x:Key="UndoCommand"
                             Command="{Binding UndoCommand}"
-                            HotKey="Ctrl+Z"
+                            HotKey="{markupExtensions:PlatformGesture Ctrl+Z}"
                             IconSource="Undo"
                             Label="Undo" />
                     </Grid.Resources>

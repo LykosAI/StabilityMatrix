@@ -19,6 +19,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Helpers;
+using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.BananaVision;
 using StabilityMatrix.Avalonia.Services;
@@ -259,9 +260,6 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
 
     [ObservableProperty]
     public partial string? ProviderStatusMessage { get; set; }
-
-    [ObservableProperty]
-    public partial bool IsFluxKontextAvailable { get; set; }
 
     [ObservableProperty]
     public partial bool CanRetryLastMessage { get; set; }
@@ -1109,15 +1107,14 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
             logger.LogWarning("Image generation failed: {Message}", ex.Message);
 
             // Check if this is an API key error
-            if (ex.Message.Contains("API key", StringComparison.OrdinalIgnoreCase))
+            if (IsGeminiSetupError(ex))
             {
-                await ShowApiKeyRequiredDialogAsync();
+                await ShowApiKeyRequiredDialogAsync(ex);
                 CanRetryLastMessage = true;
             }
             else
             {
-                ErrorMessage = ex.Message;
-                notificationService.Show("Generation Failed", ex.Message, NotificationType.Warning);
+                await ShowGenerationFailedAsync(ex);
                 CanRetryLastMessage = true;
             }
         }
@@ -1144,17 +1141,73 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
     }
 
     /// <summary>
+    /// Surfaces a failed generation: short message in the chat error banner, plus the same
+    /// JSON detail dialog Inference uses when the failure carries ComfyUI's error body
+    /// (workflow rejection or node execution error), or a plain toast otherwise.
+    /// </summary>
+    private async Task ShowGenerationFailedAsync(ImageGenerationException ex)
+    {
+        var errorMessage = GetLocalizedGenerationError(ex);
+        ErrorMessage = errorMessage;
+
+        if (!string.IsNullOrWhiteSpace(ex.DetailJson))
+        {
+            await DialogHelper
+                .CreateJsonDialog(
+                    ex.DetailJson,
+                    Resources.Label_ComfyError,
+                    Resources.Text_ComfyReportedGenerationError
+                )
+                .ShowAsync();
+        }
+        else
+        {
+            notificationService.Show(
+                Resources.Label_GenerationFailed,
+                errorMessage,
+                NotificationType.Warning
+            );
+        }
+    }
+
+    /// <summary>
     /// Shows a dialog prompting the user to add their Gemini API key in settings
     /// </summary>
-    private async Task ShowApiKeyRequiredDialogAsync()
+    private static bool IsGeminiSetupError(ImageGenerationException exception) =>
+        exception.ErrorCode
+            is ImageGenerationErrorCode.GeminiApiKeyNotConfigured
+                or ImageGenerationErrorCode.GeminiQuotaExceeded
+                or ImageGenerationErrorCode.GeminiInvalidApiKey
+                or ImageGenerationErrorCode.GeminiAccessForbidden
+        || exception.Message.Contains("API key", StringComparison.OrdinalIgnoreCase)
+        || exception.Message.Contains("billing", StringComparison.OrdinalIgnoreCase)
+        || exception.Message.Contains("quota", StringComparison.OrdinalIgnoreCase);
+
+    private static string GetLocalizedGenerationError(ImageGenerationException exception) =>
+        exception.ErrorCode switch
+        {
+            ImageGenerationErrorCode.GeminiApiKeyNotConfigured => Resources.Error_GeminiApiKeyNotConfigured,
+            ImageGenerationErrorCode.GeminiQuotaExceeded => Resources.Error_GeminiQuotaExceeded,
+            ImageGenerationErrorCode.GeminiInvalidApiKey => Resources.Error_GeminiInvalidApiKey,
+            ImageGenerationErrorCode.GeminiAccessForbidden => Resources.Error_GeminiAccessForbidden,
+            _ => exception.Message,
+        };
+
+    private async Task ShowApiKeyRequiredDialogAsync(ImageGenerationException exception)
     {
+        var errorMessage = GetLocalizedGenerationError(exception);
+        var content = exception.ErrorCode
+            is ImageGenerationErrorCode.GeminiQuotaExceeded
+                or ImageGenerationErrorCode.GeminiAccessForbidden
+            ? errorMessage
+            : errorMessage + "\n\n" + Resources.Text_GeminiPaidTierRequired;
+
         var dialog = new ContentDialog
         {
-            Title = "API Key Required",
-            Content =
-                "Gemini API key not configured. Please add your Gemini API key in Account Settings to use cloud providers.",
-            PrimaryButtonText = "Open Settings",
-            CloseButtonText = "Cancel",
+            Title = Resources.Label_GeminiApiSetupRequired,
+            Content = content,
+            PrimaryButtonText = Resources.Action_GoToSettings,
+            CloseButtonText = Resources.Action_Cancel,
             DefaultButton = ContentDialogButton.Primary,
         };
 
@@ -1169,6 +1222,24 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
                 new SuppressNavigationTransitionInfo()
             );
         }
+    }
+
+    /// <summary>
+    /// Debug-only: routes a synthetic <see cref="ImageGenerationException"/> through the same
+    /// handlers a real failed generation uses, so the error banner, setup dialog, and
+    /// notifications can be previewed without triggering an actual API failure. A null
+    /// <paramref name="errorCode"/> exercises the generic (non-Gemini) failure path.
+    /// </summary>
+    public Task DebugSimulateGenerationErrorAsync(ImageGenerationErrorCode? errorCode)
+    {
+        var exception = new ImageGenerationException("Debug simulated image generation error")
+        {
+            ErrorCode = errorCode,
+        };
+
+        return IsGeminiSetupError(exception)
+            ? ShowApiKeyRequiredDialogAsync(exception)
+            : ShowGenerationFailedAsync(exception);
     }
 
     [RelayCommand(IncludeCancelCommand = true)]
@@ -1260,15 +1331,14 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
             logger.LogWarning("Retry generation failed: {Message}", ex.Message);
 
             // Check if this is an API key error
-            if (ex.Message.Contains("API key", StringComparison.OrdinalIgnoreCase))
+            if (IsGeminiSetupError(ex))
             {
-                await ShowApiKeyRequiredDialogAsync();
+                await ShowApiKeyRequiredDialogAsync(ex);
                 CanRetryLastMessage = true;
             }
             else
             {
-                ErrorMessage = ex.Message;
-                notificationService.Show("Generation Failed", ex.Message, NotificationType.Warning);
+                await ShowGenerationFailedAsync(ex);
                 CanRetryLastMessage = true;
             }
         }
@@ -1452,15 +1522,14 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
             logger.LogWarning("Regenerate failed: {Message}", ex.Message);
 
             // Check if this is an API key error
-            if (ex.Message.Contains("API key", StringComparison.OrdinalIgnoreCase))
+            if (IsGeminiSetupError(ex))
             {
-                await ShowApiKeyRequiredDialogAsync();
+                await ShowApiKeyRequiredDialogAsync(ex);
                 CanRetryLastMessage = true;
             }
             else
             {
-                ErrorMessage = ex.Message;
-                notificationService.Show("Generation Failed", ex.Message, NotificationType.Warning);
+                await ShowGenerationFailedAsync(ex);
                 CanRetryLastMessage = true;
             }
         }
@@ -1694,15 +1763,14 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
         {
             logger.LogWarning("Failed to regenerate after edit: {Message}", ex.Message);
 
-            if (ex.Message.Contains("API key", StringComparison.OrdinalIgnoreCase))
+            if (IsGeminiSetupError(ex))
             {
-                await ShowApiKeyRequiredDialogAsync();
+                await ShowApiKeyRequiredDialogAsync(ex);
                 CanRetryLastMessage = true;
             }
             else
             {
-                ErrorMessage = ex.Message;
-                notificationService.Show("Generation Failed", ex.Message, NotificationType.Warning);
+                await ShowGenerationFailedAsync(ex);
                 CanRetryLastMessage = true;
             }
         }
@@ -2277,7 +2345,6 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
             if (!IsComfyRunning)
             {
                 ProviderStatusMessage = "⚠️ ComfyUI is not running. Click Launch to start.";
-                IsFluxKontextAvailable = false;
                 HasMissingModels = false;
                 return;
             }
@@ -2286,7 +2353,6 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
             if (IsWaitingForConnection)
             {
                 ProviderStatusMessage = "🔄 Connecting to ComfyUI...";
-                IsFluxKontextAvailable = false;
                 HasMissingModels = false;
                 return;
             }
@@ -2295,7 +2361,6 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
             if (!ClientManager.IsConnected)
             {
                 ProviderStatusMessage = "⚠️ Not connected to ComfyUI. Click Connect.";
-                IsFluxKontextAvailable = false;
                 HasMissingModels = false;
                 return;
             }
@@ -2307,32 +2372,27 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
             if (IsDownloadingModels)
             {
                 ProviderStatusMessage = DownloadProgressText ?? "⬇️ Downloading models...";
-                IsFluxKontextAvailable = false;
                 HasMissingModels = false;
                 return;
             }
 
             // Check if required models are available
-            if (!modelManager.AreModelsAvailable(ClientManager))
+            if (!AreProviderModelsAvailable(modelManager))
             {
-                var missingModelNames = modelManager.GetMissingModelNames(ClientManager).ToList();
-                var modelsList = string.Join(", ", missingModelNames);
+                var modelsList = string.Join(", ", GetProviderMissingModelNames(modelManager));
                 ProviderStatusMessage = $"⚠️ Missing: {modelsList}";
-                IsFluxKontextAvailable = false;
                 HasMissingModels = true;
                 return;
             }
 
             // All good
             ProviderStatusMessage = $"✅ {modelManager.ProviderDisplayName} is ready";
-            IsFluxKontextAvailable = true;
             HasMissingModels = false;
         }
         else
         {
             // Cloud providers or providers without model requirements
             ProviderStatusMessage = null;
-            IsFluxKontextAvailable = false;
             HasMissingModels = false;
         }
     }

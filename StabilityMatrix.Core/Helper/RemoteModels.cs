@@ -562,4 +562,42 @@ public static class RemoteModels
         ];
 
     #endregion
+
+    #region Flux.2 Klein 9B Models
+
+    /// <summary>
+    /// Freely downloadable models for Flux.2 Klein 9B image editing.
+    /// The 9B UNET itself is gated under the FLUX.2 license and can't be redistributed for
+    /// one-click download, so 9B users supply that file manually. This list covers the
+    /// pieces that <em>are</em> downloadable (the qwen_3_8b text encoder + shared Flux.2 VAE)
+    /// so a 9B install missing only its encoder is offered the matching 8B encoder rather
+    /// than the 4B one from <see cref="Flux2KleinModels"/>.
+    /// </summary>
+    public static IReadOnlyList<RemoteResource> Flux2Klein9BModels { get; } =
+        [
+            // Flux.2 VAE (~336 MB, shared between all Flux.2 variants)
+            new()
+            {
+                Url = new Uri(
+                    "https://huggingface.co/Comfy-Org/flux2-klein-9B/resolve/main/split_files/vae/flux2-vae.safetensors"
+                ),
+                InfoUrl = new Uri("https://huggingface.co/Comfy-Org/flux2-klein-9B"),
+                Author = "Black Forest Labs",
+                LicenseType = "Apache 2.0",
+                ContextType = SharedFolderType.VAE,
+            },
+            // Qwen3 8B text encoder (~16.4 GB, paired with Klein 9B)
+            new()
+            {
+                Url = new Uri(
+                    "https://huggingface.co/Comfy-Org/flux2-klein-9B/resolve/main/split_files/text_encoders/qwen_3_8b.safetensors"
+                ),
+                InfoUrl = new Uri("https://huggingface.co/Comfy-Org/flux2-klein-9B"),
+                Author = "Alibaba Qwen",
+                LicenseType = "Apache 2.0",
+                ContextType = SharedFolderType.TextEncoders,
+            },
+        ];
+
+    #endregion
 }

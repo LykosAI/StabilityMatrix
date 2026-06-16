@@ -110,7 +110,7 @@ public static class SkiaExtensions
         {
             SKColorType.Rgba8888 => PixelFormat.Rgba8888,
             SKColorType.Bgra8888 => PixelFormat.Bgra8888,
-            _ => throw new NotSupportedException($"Unsupported SKColorType: {bitmap.ColorType}")
+            _ => throw new NotSupportedException($"Unsupported SKColorType: {bitmap.ColorType}"),
         };
 
         // ReSharper disable once SwitchExpressionHandlesSomeKnownEnumValuesWithExceptionInDefault
@@ -119,19 +119,25 @@ public static class SkiaExtensions
             SKAlphaType.Opaque => AlphaFormat.Opaque,
             SKAlphaType.Premul => AlphaFormat.Premul,
             SKAlphaType.Unpremul => AlphaFormat.Unpremul,
-            _ => throw new NotSupportedException($"Unsupported SKAlphaType: {bitmap.AlphaType}")
+            _ => throw new NotSupportedException($"Unsupported SKAlphaType: {bitmap.AlphaType}"),
         };
 
-        var dataPointer = bitmap.GetPixels();
-
-        return new Bitmap(
-            avaloniaColorFormat,
-            avaloniaAlphaFormat,
-            dataPointer,
+        var result = new WriteableBitmap(
             new PixelSize(bitmap.Width, bitmap.Height),
             dpi,
-            bitmap.RowBytes
+            avaloniaColorFormat,
+            avaloniaAlphaFormat
         );
+
+        using var framebuffer = result.Lock();
+        CopyPixelRows(
+            bitmap.GetPixels(),
+            bitmap.RowBytes,
+            framebuffer.Address,
+            framebuffer.RowBytes,
+            bitmap.Height
+        );
+        return result;
     }
 
     public static Bitmap ToAvaloniaBitmap(this SKImage image)
@@ -143,12 +149,20 @@ public static class SkiaExtensions
     {
         ArgumentNullException.ThrowIfNull(image, nameof(image));
 
+        // PeekPixels returns null for GPU-backed images; only then do we need the extra copy.
+        using var pixmap = image.PeekPixels();
+        if (pixmap is null)
+        {
+            using var bitmap = SKBitmap.FromImage(image);
+            return bitmap.ToAvaloniaBitmap(dpi);
+        }
+
         // ReSharper disable once SwitchExpressionHandlesSomeKnownEnumValuesWithExceptionInDefault
         var avaloniaColorFormat = image.ColorType switch
         {
             SKColorType.Rgba8888 => PixelFormat.Rgba8888,
             SKColorType.Bgra8888 => PixelFormat.Bgra8888,
-            _ => throw new NotSupportedException($"Unsupported SKColorType: {image.ColorType}")
+            _ => throw new NotSupportedException($"Unsupported SKColorType: {image.ColorType}"),
         };
 
         // ReSharper disable once SwitchExpressionHandlesSomeKnownEnumValuesWithExceptionInDefault
@@ -157,20 +171,56 @@ public static class SkiaExtensions
             SKAlphaType.Opaque => AlphaFormat.Opaque,
             SKAlphaType.Premul => AlphaFormat.Premul,
             SKAlphaType.Unpremul => AlphaFormat.Unpremul,
-            _ => throw new NotSupportedException($"Unsupported SKAlphaType: {image.AlphaType}")
+            _ => throw new NotSupportedException($"Unsupported SKAlphaType: {image.AlphaType}"),
         };
 
-        var pixmap = image.PeekPixels();
-        var dataPointer = pixmap.GetPixels();
-
-        return new Bitmap(
-            avaloniaColorFormat,
-            avaloniaAlphaFormat,
-            dataPointer,
+        var result = new WriteableBitmap(
             new PixelSize(image.Width, image.Height),
             dpi,
-            pixmap.RowBytes
+            avaloniaColorFormat,
+            avaloniaAlphaFormat
         );
+
+        using var framebuffer = result.Lock();
+        CopyPixelRows(
+            pixmap.GetPixels(),
+            pixmap.RowBytes,
+            framebuffer.Address,
+            framebuffer.RowBytes,
+            image.Height
+        );
+        return result;
+    }
+
+    private static unsafe void CopyPixelRows(
+        IntPtr source,
+        int sourceRowBytes,
+        IntPtr destination,
+        int destinationRowBytes,
+        int height
+    )
+    {
+        var bytesPerRow = Math.Min(sourceRowBytes, destinationRowBytes);
+        var src = (byte*)source;
+        var dest = (byte*)destination;
+
+        // When strides match the buffer is contiguous, so copy it all in one shot.
+        if (sourceRowBytes == destinationRowBytes)
+        {
+            var totalBytes = (long)sourceRowBytes * height;
+            Buffer.MemoryCopy(src, dest, totalBytes, totalBytes);
+            return;
+        }
+
+        for (var row = 0; row < height; row++)
+        {
+            Buffer.MemoryCopy(
+                src + ((long)row * sourceRowBytes),
+                dest + ((long)row * destinationRowBytes),
+                bytesPerRow,
+                bytesPerRow
+            );
+        }
     }
 
     public static PixelFormat ToAvaloniaPixelFormat(this SKColorType colorType)
@@ -180,7 +230,7 @@ public static class SkiaExtensions
         {
             SKColorType.Rgba8888 => PixelFormat.Rgba8888,
             SKColorType.Bgra8888 => PixelFormat.Bgra8888,
-            _ => throw new NotSupportedException($"Unsupported SKColorType: {colorType}")
+            _ => throw new NotSupportedException($"Unsupported SKColorType: {colorType}"),
         };
     }
 }

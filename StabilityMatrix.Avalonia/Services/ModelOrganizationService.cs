@@ -68,6 +68,28 @@ public class ModelOrganizationService
         };
     }
 
+    /// <summary>
+    /// Moves a single model file into <paramref name="destinationDirectory"/>, keeping its file
+    /// name and bringing the .cm-info.json / preview / .yaml sidecars along. Rolls back any
+    /// already-moved sidecars on failure. Throws <see cref="FileTransferExistsException"/> when
+    /// a destination file already exists.
+    /// </summary>
+    public async Task MoveModelFileAsync(LocalModelFile model, string modelsRoot, string destinationDirectory)
+    {
+        var sourcePath = model.GetFullPath(modelsRoot);
+        if (!File.Exists(sourcePath))
+        {
+            throw new FileNotFoundException("Model file no longer exists", sourcePath);
+        }
+
+        Directory.CreateDirectory(destinationDirectory);
+
+        var targetPath = Path.Combine(destinationDirectory, Path.GetFileName(sourcePath));
+        var moves = BuildFileMoves(sourcePath, targetPath);
+
+        await ApplyFileMovesAsync(moves).ConfigureAwait(false);
+    }
+
     public async Task<ModelOrganizationApplyResult> ApplyPlan(ModelOrganizationPlan plan)
     {
         var movedCount = 0;

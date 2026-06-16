@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -640,15 +641,78 @@ public abstract partial class InferenceGenerationViewModelBase
     /// <summary>
     /// Shows a prompt and return false if client not connected
     /// </summary>
-    protected async Task<bool> CheckClientConnectedWithPrompt()
+    protected async Task<bool> CheckClientConnectedWithPrompt(CancellationToken cancellationToken = default)
     {
         if (ClientManager.IsConnected)
             return true;
 
         var vm = vmFactory.Get<InferenceConnectionHelpViewModel>();
-        await vm.CreateDialog().ShowAsync();
+        var result = await vm.CreateDialog().ShowAsync();
+
+        if (ClientManager.IsConnected)
+            return true;
+
+        // If the user chose to launch ComfyUI, the package is now starting up. The connection
+        // is established automatically by InferenceViewModel once startup completes, so wait for
+        // it here and let the generation resume instead of forcing the user to press Generate again.
+        if (result == ContentDialogResult.Primary && vm.IsLaunchMode)
+        {
+            return await WaitForConnectedAsync(cancellationToken);
+        }
 
         return ClientManager.IsConnected;
+    }
+
+    /// <summary>
+    /// Waits for the ClientManager to become connected, showing indeterminate progress.
+    /// Used after launching ComfyUI from the connection prompt so a queued generation can
+    /// resume automatically once the backend is ready.
+    /// </summary>
+    private async Task<bool> WaitForConnectedAsync(CancellationToken cancellationToken)
+    {
+        if (ClientManager.IsConnected)
+            return true;
+
+        var tcs = new TaskCompletionSource();
+
+        void OnPropertyChanged(object? sender, PropertyChangedEventArgs args)
+        {
+            if (args.PropertyName is nameof(ClientManager.IsConnected) or null && ClientManager.IsConnected)
+            {
+                tcs.TrySetResult();
+            }
+        }
+
+        ClientManager.PropertyChanged += OnPropertyChanged;
+        try
+        {
+            // Re-check in case it connected between the initial check and subscribing
+            if (ClientManager.IsConnected)
+                return true;
+
+            // Give up waiting after a generous timeout in case startup never completes
+            using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            timeoutCts.CancelAfter(TimeSpan.FromMinutes(5));
+
+            OutputProgress.IsIndeterminate = true;
+            OutputProgress.Text = "Waiting for ComfyUI to start...";
+
+            await using (timeoutCts.Token.Register(() => tcs.TrySetCanceled(timeoutCts.Token)))
+            {
+                await tcs.Task;
+            }
+
+            return ClientManager.IsConnected;
+        }
+        catch (OperationCanceledException)
+        {
+            return ClientManager.IsConnected;
+        }
+        finally
+        {
+            ClientManager.PropertyChanged -= OnPropertyChanged;
+            OutputProgress.ClearProgress();
+        }
     }
 
     /// <summary>

@@ -200,19 +200,14 @@ public partial class BetterAsyncImage : TemplatedControlBase
 
     private void AttachSource(IImage? image, CancellationToken cancellationToken)
     {
-        // When caching is disabled the image is owned solely by this control (not shared via the cache),
-        // so dispose the previous one on swap/unload. Avalonia/Skia bitmaps hold native memory the GC can't
-        // see, so relying on finalization causes large memory growth during rapid scrolling.
-        var oldImage = ImagePart?.Source as IDisposable;
-
+        // NOTE: Do NOT dispose the previous ImagePart.Source here. Our AvaloniaImage is an
+        // ICustomDrawOperation that holds the SKBitmap and is rendered asynchronously on the compositor
+        // render thread; disposing it on source swap frees the bitmap mid-frame and causes a native
+        // use-after-free crash (sk_image_new_from_bitmap) during fast scrolling. Bitmap lifetime is left
+        // to the GC. A render-safe disposal scheme would be needed to reclaim native memory sooner.
         if (ImagePart != null)
         {
             ImagePart.Source = image;
-        }
-
-        if (!IsCacheEnabled && !ReferenceEquals(oldImage, image))
-        {
-            oldImage?.Dispose();
         }
 
         // Get new animation token source, cancel previous ones

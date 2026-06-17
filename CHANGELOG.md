@@ -5,6 +5,12 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.16.2
+### Performance
+- The **Checkpoints** and **Outputs** galleries now load thumbnails at display size instead of full resolution, using far less memory and scrolling much more smoothly with large libraries
+- The **CivitAI** and **OpenModelDB** browsers now keep card images in memory, so scrolling back over models you've already seen no longer re-loads them from disk
+- Lightened the CivitAI model cards so they render faster while scrolling
+
 ## v2.16.1
 ### Added
 - Added **automatic text encoder and VAE selection** to the Inference Model card. Selecting a model now fills any empty encoder slots and the default VAE with the matching local files for the detected workflow, so you don't need to know which files pair with which architecture (e.g. `qwen_3_4b` or `qwen_3_8b` + Flux.2 VAE for Flux.2 Klein, `clip_l` + `t5xxl` for Flux, `qwen_3_06b` + `qwen_image_vae` for Anima). Anything you pick manually is never overridden

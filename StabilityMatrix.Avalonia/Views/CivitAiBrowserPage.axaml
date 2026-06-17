@@ -141,6 +141,7 @@
                                 Width="330"
                                 Height="400"
                                 CornerRadius="8"
+                                DecodeWidth="450"
                                 IsCacheEnabled="True"
                                 Source="{Binding CardImage, Converter={StaticResource CivitImageWidthConverter}, ConverterParameter=450}"
                                 Stretch="UniformToFill" />
@@ -182,20 +183,8 @@
                             Margin="4"
                             HorizontalAlignment="Left"
                             VerticalAlignment="Bottom"
-                            BoxShadow="inset 1.2 0 80 1.8 #66000000"
+                            Background="#99000000"
                             CornerRadius="16">
-                            <Border.Resources>
-                                <DropShadowEffect
-                                    x:Key="TextDropShadowEffect"
-                                    BlurRadius="12"
-                                    Opacity="0.9"
-                                    Color="#FF000000" />
-                                <DropShadowEffect
-                                    x:Key="ImageDropShadowEffect"
-                                    BlurRadius="12"
-                                    Opacity="0.2"
-                                    Color="#FF000000" />
-                            </Border.Resources>
                             <Button
                                 Padding="10,4"
                                 Classes="transparent"
@@ -216,14 +205,10 @@
                                         Width="22"
                                         Height="22"
                                         CornerRadius="11"
-                                        Effect="{StaticResource ImageDropShadowEffect}"
                                         IsCacheEnabled="True"
                                         IsVisible="{Binding CivitModel.Creator.Image, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
                                         Source="{Binding CivitModel.Creator.Image, Converter={StaticResource CivitImageWidthConverter}, ConverterParameter=32}" />
-                                    <TextBlock
-                                        VerticalAlignment="Center"
-                                        Effect="{StaticResource TextDropShadowEffect}"
-                                        Text="{Binding CivitModel.Creator.Username}" />
+                                    <TextBlock VerticalAlignment="Center" Text="{Binding CivitModel.Creator.Username}" />
                                 </StackPanel>
                             </Button>
                         </Border>

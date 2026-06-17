@@ -262,6 +262,7 @@
                                 vendorLabs:BetterAsyncImage.ImageCache="{x:Static controls:ImageLoaders.OutputsPageImageCache}"
                                 Command="{Binding $parent[ItemsRepeater].((vm:OutputsPageViewModel)DataContext).OnImageClick}"
                                 CommandParameter="{Binding}"
+                                DecodeWidth="600"
                                 ImageHeight="300"
                                 ImageWidth="300"
                                 IsSelected="{Binding IsSelected}"

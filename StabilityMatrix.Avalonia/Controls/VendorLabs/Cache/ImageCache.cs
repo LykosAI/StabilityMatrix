@@ -4,6 +4,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
+using SkiaSharp;
+using StabilityMatrix.Avalonia.Extensions;
 
 namespace StabilityMatrix.Avalonia.Controls.VendorLabs.Cache;
 
@@ -12,6 +14,11 @@ namespace StabilityMatrix.Avalonia.Controls.VendorLabs.Cache;
 /// </summary>
 internal class ImageCache(CacheOptions? options = null) : CacheBase<Bitmap>(options), IImageCache
 {
+    // Carries the requested decode width into ConvertFromAsync without threading it through the generic
+    // CacheBase. Note the in-memory cache in CacheBase is keyed by Uri only, so a given Uri is cached at the
+    // first width it was requested with; this cache is used for remote images displayed at a consistent size.
+    private static readonly AsyncLocal<int> CurrentDecodeWidth = new();
+
     /// <summary>
     /// Creates a bitmap from a stream
     /// </summary>
@@ -24,7 +31,45 @@ internal class ImageCache(CacheOptions? options = null) : CacheBase<Bitmap>(opti
             throw new FileNotFoundException();
         }
 
-        return new Bitmap(stream);
+        return DecodeBitmap(stream, CurrentDecodeWidth.Value);
+    }
+
+    /// <summary>
+    /// Decodes a stream into a bitmap, downscaling to <paramref name="decodeWidth"/> (px) if it is wider.
+    /// </summary>
+    private static Bitmap DecodeBitmap(Stream stream, int decodeWidth)
+    {
+        if (decodeWidth <= 0)
+        {
+            return new Bitmap(stream);
+        }
+
+        var original = stream.ToSKBitmap();
+        if (original is null)
+        {
+            stream.Position = 0;
+            return new Bitmap(stream);
+        }
+
+        using (original)
+        {
+            if (original.Width <= decodeWidth)
+            {
+                return original.ToAvaloniaBitmap();
+            }
+
+            var targetHeight = Math.Max(
+                1,
+                (int)Math.Round(original.Height * ((double)decodeWidth / original.Width))
+            );
+
+            using var resized = original.Resize(
+                new SKImageInfo(decodeWidth, targetHeight),
+                new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.Linear)
+            );
+
+            return (resized ?? original).ToAvaloniaBitmap();
+        }
     }
 
     /// <summary>
@@ -34,10 +79,8 @@ internal class ImageCache(CacheOptions? options = null) : CacheBase<Bitmap>(opti
     /// <returns>awaitable task</returns>
     protected override async Task<Bitmap> ConvertFromAsync(string baseFile)
     {
-        using (var stream = File.OpenRead(baseFile))
-        {
-            return await ConvertFromAsync(stream).ConfigureAwait(false);
-        }
+        await using var stream = File.OpenRead(baseFile);
+        return await ConvertFromAsync(stream).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -70,13 +113,23 @@ internal class ImageCache(CacheOptions? options = null) : CacheBase<Bitmap>(opti
         return PreCacheAsync(uri, true, true, cancellationToken);
     }
 
-    public async Task<IImage?> GetAsync(Uri uri, CancellationToken cancellationToken = default)
+    public async Task<IImage?> GetAsync(
+        Uri uri,
+        int decodeWidth = 0,
+        CancellationToken cancellationToken = default
+    )
     {
+        CurrentDecodeWidth.Value = decodeWidth;
         return await GetFromCacheAsync(uri, false, cancellationToken).ConfigureAwait(false);
     }
 
-    public async Task<IImage?> GetWithCacheAsync(Uri uri, CancellationToken cancellationToken = default)
+    public async Task<IImage?> GetWithCacheAsync(
+        Uri uri,
+        int decodeWidth = 0,
+        CancellationToken cancellationToken = default
+    )
     {
+        CurrentDecodeWidth.Value = decodeWidth;
         return await GetFromCacheAsync(uri, true, cancellationToken).ConfigureAwait(false);
     }
 

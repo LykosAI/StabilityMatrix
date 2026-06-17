@@ -200,9 +200,19 @@ public partial class BetterAsyncImage : TemplatedControlBase
 
     private void AttachSource(IImage? image, CancellationToken cancellationToken)
     {
+        // When caching is disabled the image is owned solely by this control (not shared via the cache),
+        // so dispose the previous one on swap/unload. Avalonia/Skia bitmaps hold native memory the GC can't
+        // see, so relying on finalization causes large memory growth during rapid scrolling.
+        var oldImage = ImagePart?.Source as IDisposable;
+
         if (ImagePart != null)
         {
             ImagePart.Source = image;
+        }
+
+        if (!IsCacheEnabled && !ReferenceEquals(oldImage, image))
+        {
+            oldImage?.Dispose();
         }
 
         // Get new animation token source, cancel previous ones

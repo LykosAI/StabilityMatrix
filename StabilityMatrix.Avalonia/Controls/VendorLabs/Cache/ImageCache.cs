@@ -15,8 +15,8 @@ namespace StabilityMatrix.Avalonia.Controls.VendorLabs.Cache;
 internal class ImageCache(CacheOptions? options = null) : CacheBase<Bitmap>(options), IImageCache
 {
     // Carries the requested decode width into ConvertFromAsync without threading it through the generic
-    // CacheBase. Note the in-memory cache in CacheBase is keyed by Uri only, so a given Uri is cached at the
-    // first width it was requested with; this cache is used for remote images displayed at a consistent size.
+    // CacheBase (which can't pass extra arguments to the decode step). The cache key itself is made
+    // width-aware via WithDecodeWidthKey so different sizes of the same Uri never collide.
     private static readonly AsyncLocal<int> CurrentDecodeWidth = new();
 
     /// <summary>
@@ -120,7 +120,8 @@ internal class ImageCache(CacheOptions? options = null) : CacheBase<Bitmap>(opti
     )
     {
         CurrentDecodeWidth.Value = decodeWidth;
-        return await GetFromCacheAsync(uri, false, cancellationToken).ConfigureAwait(false);
+        return await GetFromCacheAsync(WithDecodeWidthKey(uri, decodeWidth), false, cancellationToken)
+            .ConfigureAwait(false);
     }
 
     public async Task<IImage?> GetWithCacheAsync(
@@ -130,7 +131,19 @@ internal class ImageCache(CacheOptions? options = null) : CacheBase<Bitmap>(opti
     )
     {
         CurrentDecodeWidth.Value = decodeWidth;
-        return await GetFromCacheAsync(uri, true, cancellationToken).ConfigureAwait(false);
+        return await GetFromCacheAsync(WithDecodeWidthKey(uri, decodeWidth), true, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Returns a Uri that includes the decode width as a fragment so the underlying cache (keyed by Uri)
+    /// keeps a separate entry per size — e.g. a 450px thumbnail decode can't be served for a later
+    /// full-resolution request of the same image. Uri fragments are not sent in HTTP requests, so the
+    /// actual download is unaffected.
+    /// </summary>
+    private static Uri WithDecodeWidthKey(Uri uri, int decodeWidth)
+    {
+        return decodeWidth <= 0 ? uri : new UriBuilder(uri) { Fragment = $"sm-decode={decodeWidth}" }.Uri;
     }
 
     public int ClearMemoryCache()

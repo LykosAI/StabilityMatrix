@@ -5,6 +5,12 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.16.2
+### Added
+- Added **Linux desktop integration for AppImage builds** — on first launch the app now writes a `.desktop` entry (with the extracted app icon) so Stability Matrix appears in your application launcher/menu, and reports a matching `WM_CLASS` so the running window shows the Stability Matrix icon in the dock/taskbar instead of a generic one. Only applies to AppImage runs; deb/rpm/flatpak installs keep their package-managed entries
+### Fixed
+- Fixed `stabilitymatrix://` deep links (e.g. CivitAI "Download with Stability Matrix" buttons) being ignored on Linux AppImage builds — the URI is now forwarded to the running instance and the download starts, instead of just opening another window
+
 ## v2.16.1
 ### Added
 - Added **automatic text encoder and VAE selection** to the Inference Model card. Selecting a model now fills any empty encoder slots and the default VAE with the matching local files for the detected workflow, so you don't need to know which files pair with which architecture (e.g. `qwen_3_4b` or `qwen_3_8b` + Flux.2 VAE for Flux.2 Klein, `clip_l` + `t5xxl` for Flux, `qwen_3_06b` + `qwen_image_vae` for Anima). Anything you pick manually is never overridden

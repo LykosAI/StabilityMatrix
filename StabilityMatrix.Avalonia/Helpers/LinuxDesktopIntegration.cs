@@ -120,6 +120,10 @@ StartupWMClass=stabilitymatrix
             var desktopEnv = GetCurrentDesktopEnvironment();
             if (!string.IsNullOrEmpty(desktopEnv))
             {
+                // The base template's last line has no trailing newline (raw string literals drop
+                // the final newline before the closing quotes), so add one here - otherwise the
+                // entry below would be concatenated onto the StartupWMClass line.
+                desktopFileBuilder.AppendLine();
                 switch (desktopEnv)
                 {
                     case "KDE":

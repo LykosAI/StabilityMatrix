@@ -94,8 +94,16 @@ public static class Program
         }
 
         // Launched for custom URI scheme, handle and
-        // on macOS we use activation events so ignore this
-        if (!Compat.IsMacOS && Args.Uri is { } uriArg)
+        // on macOS we use activation events so ignore this.
+        // Windows registers the scheme handler with --uri, but on Linux the .desktop handler
+        // invokes us with the URI as a bare positional argument (%u), so accept that form too.
+        var uriArg =
+            Args.Uri
+            ?? args.FirstOrDefault(a =>
+                a.StartsWith($"{UriHandler.Scheme}://", StringComparison.OrdinalIgnoreCase)
+            );
+
+        if (!Compat.IsMacOS && uriArg is not null)
         {
             if (Uri.TryCreate(uriArg, UriKind.Absolute, out var uri))
             {
@@ -230,7 +238,7 @@ public static class Program
 
         if (Compat.IsLinux)
         {
-            app = app.With(new X11PlatformOptions { OverlayPopups = true });
+            app = app.With(new X11PlatformOptions { OverlayPopups = true, WmClass = "stabilitymatrix" });
         }
         else if (Compat.IsMacOS)
         {
@@ -249,14 +257,26 @@ public static class Program
 
         if (Args.UseVulkanRendering)
         {
-            app = app.With(new X11PlatformOptions { RenderingMode = [X11RenderingMode.Vulkan] })
+            app = app.With(
+                    new X11PlatformOptions
+                    {
+                        RenderingMode = [X11RenderingMode.Vulkan],
+                        WmClass = "stabilitymatrix",
+                    }
+                )
                 .With(new Win32PlatformOptions { RenderingMode = [Win32RenderingMode.Vulkan] });
         }
 
         if (Args.DisableGpuRendering)
         {
             app = app.With(new Win32PlatformOptions { RenderingMode = new[] { Win32RenderingMode.Software } })
-                .With(new X11PlatformOptions { RenderingMode = new[] { X11RenderingMode.Software } })
+                .With(
+                    new X11PlatformOptions
+                    {
+                        RenderingMode = new[] { X11RenderingMode.Software },
+                        WmClass = "stabilitymatrix",
+                    }
+                )
                 .With(
                     new AvaloniaNativePlatformOptions
                     {

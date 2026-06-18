@@ -36,23 +36,24 @@ StartupWMClass=stabilitymatrix
     {
         try
         {
-            // First check XDG_CURRENT_DESKTOP
-            var xdgCurrentDesktop = Environment.GetEnvironmentVariable("XDG_CURRENT_DESKTOP");
-            if (!string.IsNullOrEmpty(xdgCurrentDesktop))
+            // XDG_CURRENT_DESKTOP can contain multiple colon-separated values (e.g. "ubuntu:GNOME"),
+            // so match by substring rather than taking only the first element. DESKTOP_SESSION is a
+            // fallback for environments that don't set XDG_CURRENT_DESKTOP.
+            foreach (var envVar in new[] { "XDG_CURRENT_DESKTOP", "DESKTOP_SESSION" })
             {
-                // XDG_CURRENT_DESKTOP can contain multiple values separated by colon
-                var desktops = xdgCurrentDesktop.Split(':', StringSplitOptions.RemoveEmptyEntries);
-                if (desktops.Length > 0)
+                var value = Environment.GetEnvironmentVariable(envVar);
+                if (string.IsNullOrEmpty(value))
                 {
-                    return desktops[0].ToUpperInvariant();
+                    continue;
                 }
-            }
 
-            // Fallback to DESKTOP_SESSION
-            var desktopSession = Environment.GetEnvironmentVariable("DESKTOP_SESSION");
-            if (!string.IsNullOrEmpty(desktopSession))
-            {
-                return desktopSession.ToUpperInvariant();
+                var upper = value.ToUpperInvariant();
+                if (upper.Contains("KDE"))
+                    return "KDE";
+                if (upper.Contains("GNOME"))
+                    return "GNOME";
+                if (upper.Contains("XFCE"))
+                    return "XFCE";
             }
 
             return null;
@@ -85,15 +86,19 @@ StartupWMClass=stabilitymatrix
 
         try
         {
-            var desktopFilePath = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-                ".local/share/applications/stabilitymatrix-app.desktop"
-            );
+            // Respect XDG_DATA_HOME per the XDG Base Directory Specification, falling back to
+            // ~/.local/share when unset.
+            var xdgDataHome = Environment.GetEnvironmentVariable("XDG_DATA_HOME");
+            var dataHome = !string.IsNullOrEmpty(xdgDataHome)
+                ? xdgDataHome
+                : Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                    ".local/share"
+                );
 
-            var iconPath = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-                ".local/share/icons/hicolor/256x256/apps/stabilitymatrix.png"
-            );
+            var desktopFilePath = Path.Combine(dataHome, "applications/stabilitymatrix-app.desktop");
+
+            var iconPath = Path.Combine(dataHome, "icons/hicolor/256x256/apps/stabilitymatrix.png");
 
             // Ensure directories exist
             Directory.CreateDirectory(Path.GetDirectoryName(desktopFilePath)!);
@@ -129,7 +134,8 @@ StartupWMClass=stabilitymatrix
                 }
             }
 
-            File.WriteAllText(desktopFilePath, desktopFileBuilder.ToString(), Encoding.UTF8);
+            // UTF-8 without BOM - some .desktop parsers choke on a leading BOM
+            File.WriteAllText(desktopFilePath, desktopFileBuilder.ToString(), new UTF8Encoding(false));
 
             // Make executable
             var unixFileMode =

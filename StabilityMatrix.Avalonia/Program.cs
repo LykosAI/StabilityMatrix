@@ -94,8 +94,16 @@ public static class Program
         }
 
         // Launched for custom URI scheme, handle and
-        // on macOS we use activation events so ignore this
-        if (!Compat.IsMacOS && Args.Uri is { } uriArg)
+        // on macOS we use activation events so ignore this.
+        // Windows registers the scheme handler with --uri, but on Linux the .desktop handler
+        // invokes us with the URI as a bare positional argument (%u), so accept that form too.
+        var uriArg =
+            Args.Uri
+            ?? args.FirstOrDefault(a =>
+                a.StartsWith($"{UriHandler.Scheme}://", StringComparison.OrdinalIgnoreCase)
+            );
+
+        if (!Compat.IsMacOS && uriArg is not null)
         {
             if (Uri.TryCreate(uriArg, UriKind.Absolute, out var uri))
             {

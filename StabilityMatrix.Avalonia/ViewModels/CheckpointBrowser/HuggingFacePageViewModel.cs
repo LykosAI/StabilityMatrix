@@ -241,6 +241,9 @@ public partial class HuggingFacePageViewModel : TabViewModelBase
         if (string.IsNullOrWhiteSpace(value))
         {
             Mode = HuggingFaceBrowserMode.Curated;
+            // No request runs here, and a superseded request won't clear this (see finally guards),
+            // so clear it explicitly.
+            IsLoading = false;
             return;
         }
 
@@ -311,7 +314,10 @@ public partial class HuggingFacePageViewModel : TabViewModelBase
         }
         finally
         {
-            IsLoading = false;
+            // Only clear the spinner if we're still the active request — a superseded
+            // (cancelled) request must not turn off loading while a newer one runs.
+            if (ct == queryCts?.Token)
+                IsLoading = false;
         }
     }
 
@@ -392,7 +398,10 @@ public partial class HuggingFacePageViewModel : TabViewModelBase
         }
         finally
         {
-            IsLoading = false;
+            // Only clear the spinner if we're still the active request — a superseded
+            // (cancelled) request must not turn off loading while a newer one runs.
+            if (ct == queryCts?.Token)
+                IsLoading = false;
         }
     }
 

@@ -29,18 +29,26 @@ public partial class HuggingFaceTreeNodeViewModel : ViewModelBase
     [ObservableProperty]
     private bool isChecked;
 
+    // The file set is static once the tree is built, so compute the summary once.
+    // (The UI binding engine evaluates this repeatedly per realized row.)
+    private string? folderSummary;
+
     /// <summary>Summary shown next to a folder, e.g. <c>"8 files · 30.5 GB"</c>.</summary>
     public string FolderSummary
     {
         get
         {
-            var files = DescendantFiles().ToList();
+            if (folderSummary is not null)
+                return folderSummary;
+
+            var files = new List<HuggingFaceFileViewModel>();
+            CollectFiles(files);
             var totalSize = files.Sum(f => f.Size);
             var sizeText =
                 totalSize > 0
                     ? $" · {StabilityMatrix.Core.Helper.Size.FormatBase10Bytes(totalSize)}"
                     : string.Empty;
-            return $"{files.Count} {(files.Count == 1 ? "file" : "files")}{sizeText}";
+            return folderSummary = $"{files.Count} {(files.Count == 1 ? "file" : "files")}{sizeText}";
         }
     }
 
@@ -62,18 +70,24 @@ public partial class HuggingFaceTreeNodeViewModel : ViewModelBase
     }
 
     /// <summary>All file leaves under this node (recursively).</summary>
-    public IEnumerable<HuggingFaceFileViewModel> DescendantFiles()
+    public IReadOnlyList<HuggingFaceFileViewModel> DescendantFiles()
+    {
+        var result = new List<HuggingFaceFileViewModel>();
+        CollectFiles(result);
+        return result;
+    }
+
+    // Recursive list-populating walk — avoids the nested-iterator state machines
+    // (and per-level allocations) of a recursive yield.
+    private void CollectFiles(List<HuggingFaceFileViewModel> result)
     {
         if (File is not null)
         {
-            yield return File;
-            yield break;
+            result.Add(File);
+            return;
         }
 
         foreach (var child in Children)
-        {
-            foreach (var file in child.DescendantFiles())
-                yield return file;
-        }
+            child.CollectFiles(result);
     }
 }

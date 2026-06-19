@@ -45,6 +45,9 @@ public class HuggingFaceFolderInferenceTests
     [DataRow("singleword")]
     [DataRow("https://example.com/owner/name")]
     [DataRow("https://huggingface.co/owner")]
+    [DataRow("https://not-huggingface.co/owner/name")]
+    [DataRow("https://huggingface.co.evil.com/owner/name")]
+    [DataRow("not-huggingface.co/owner/name")]
     public void TryParseRepoId_RejectsInvalidInput(string input)
     {
         Assert.IsFalse(HuggingFaceFolderInference.TryParseRepoId(input, out _));

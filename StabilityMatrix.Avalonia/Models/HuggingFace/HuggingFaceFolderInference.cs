@@ -38,8 +38,11 @@ public static class HuggingFaceFolderInference
     /// Guess the most appropriate destination folder for a file based on its path/name.
     /// Falls back to <see cref="SharedFolderType.StableDiffusion"/> for generic checkpoints.
     /// </summary>
-    public static SharedFolderType Infer(string path)
+    public static SharedFolderType Infer(string? path)
     {
+        if (string.IsNullOrEmpty(path))
+            return SharedFolderType.StableDiffusion;
+
         var p = path.Replace('\\', '/').ToLowerInvariant();
         var name = p.Contains('/') ? p[(p.LastIndexOf('/') + 1)..] : p;
 
@@ -101,16 +104,21 @@ public static class HuggingFaceFolderInference
 
         var value = input.Trim();
 
-        // Strip a URL scheme + host if present.
-        if (value.Contains("huggingface.co", StringComparison.OrdinalIgnoreCase))
+        // If it looks like a URL, validate the host is really huggingface.co and take the path.
+        // (A naive Contains check would accept e.g. not-huggingface.co or huggingface.co.evil.com.)
+        if (value.Contains("://") || value.Contains("huggingface.co", StringComparison.OrdinalIgnoreCase))
         {
-            var idx = value.IndexOf("huggingface.co", StringComparison.OrdinalIgnoreCase);
-            value = value[(idx + "huggingface.co".Length)..].TrimStart('/');
-        }
-        else if (value.Contains("://"))
-        {
-            // Some other URL - not a HF repo.
-            return false;
+            var urlToParse = value.Contains("://") ? value : $"https://{value}";
+            if (
+                !Uri.TryCreate(urlToParse, UriKind.Absolute, out var uri)
+                || !(
+                    uri.Host.Equals("huggingface.co", StringComparison.OrdinalIgnoreCase)
+                    || uri.Host.EndsWith(".huggingface.co", StringComparison.OrdinalIgnoreCase)
+                )
+            )
+                return false;
+
+            value = uri.AbsolutePath;
         }
 
         // Drop any query/fragment.

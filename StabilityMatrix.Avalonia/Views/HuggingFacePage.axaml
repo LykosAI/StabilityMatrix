@@ -228,17 +228,26 @@
                     IsVisible="{Binding !!ErrorMessage}"
                     Text="{Binding ErrorMessage}"
                     TextWrapping="Wrap" />
-                <ItemsRepeater ItemsSource="{Binding SearchResults}">
+                <ItemsRepeater Margin="0,0,14,0" ItemsSource="{Binding SearchResults}">
                     <ItemsRepeater.Layout>
-                        <StackLayout Orientation="Vertical" Spacing="6" />
+                        <UniformGridLayout
+                            ItemsJustification="Center"
+                            MinColumnSpacing="14"
+                            MinItemHeight="158"
+                            MinItemWidth="248"
+                            MinRowSpacing="14"
+                            Orientation="Horizontal" />
                     </ItemsRepeater.Layout>
                     <ItemsRepeater.ItemTemplate>
                         <DataTemplate DataType="{x:Type huggingFacePage:HuggingFaceSearchResultViewModel}">
                             <Button
-                                HorizontalAlignment="Stretch"
+                                Width="248"
+                                Height="158"
+                                Padding="12"
                                 HorizontalContentAlignment="Stretch"
+                                VerticalContentAlignment="Stretch"
                                 Command="{Binding SelectCommand}"
-                                CornerRadius="8">
+                                CornerRadius="10">
                                 <Button.ContextFlyout>
                                     <MenuFlyout>
                                         <MenuItem
@@ -251,52 +260,97 @@
                                         </MenuItem>
                                     </MenuFlyout>
                                 </Button.ContextFlyout>
-                                <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
-                                    <StackPanel
+                                <Grid RowDefinitions="Auto,*,Auto,Auto">
+                                    <!--  Pipeline tag chip  -->
+                                    <Border
                                         Grid.Row="0"
-                                        Grid.Column="0"
-                                        Orientation="Horizontal"
-                                        Spacing="6">
-                                        <Border
-                                            Padding="6,1"
-                                            VerticalAlignment="Center"
-                                            Background="{DynamicResource SubtleFillColorSecondaryBrush}"
-                                            CornerRadius="4"
-                                            IsVisible="{Binding HasPipelineTag}">
-                                            <TextBlock
-                                                FontSize="11"
-                                                Opacity="0.8"
-                                                Text="{Binding PipelineTag}" />
-                                        </Border>
+                                        Padding="6,1"
+                                        HorizontalAlignment="Left"
+                                        Background="{DynamicResource SubtleFillColorSecondaryBrush}"
+                                        CornerRadius="4"
+                                        IsVisible="{Binding HasPipelineTag}">
                                         <TextBlock
-                                            VerticalAlignment="Center"
-                                            FontWeight="SemiBold"
-                                            Text="{Binding Id}"
-                                            TextTrimming="CharacterEllipsis" />
-                                    </StackPanel>
-                                    <TextBlock
-                                        Grid.Row="0"
-                                        Grid.Column="1"
-                                        Margin="8,0,0,0"
-                                        VerticalAlignment="Center"
-                                        Opacity="0.8"
-                                        Text="{Binding StatsText}" />
-                                    <TextBlock
+                                            FontSize="11"
+                                            Opacity="0.85"
+                                            Text="{Binding PipelineTag}" />
+                                    </Border>
+
+                                    <!--  Author + model name  -->
+                                    <StackPanel
                                         Grid.Row="1"
-                                        Grid.Column="0"
-                                        Margin="0,2,0,0"
-                                        FontSize="12"
-                                        Opacity="0.6"
+                                        Margin="0,8,0,0"
+                                        VerticalAlignment="Top"
+                                        Orientation="Vertical">
+                                        <TextBlock
+                                            FontSize="11"
+                                            IsVisible="{Binding HasAuthor}"
+                                            Opacity="0.6"
+                                            Text="{Binding Author}"
+                                            TextTrimming="CharacterEllipsis" />
+                                        <TextBlock
+                                            FontSize="14"
+                                            FontWeight="SemiBold"
+                                            MaxLines="2"
+                                            Text="{Binding ModelName}"
+                                            TextTrimming="CharacterEllipsis"
+                                            TextWrapping="Wrap"
+                                            ToolTip.Tip="{Binding Id}" />
+                                    </StackPanel>
+
+                                    <!--  Tags  -->
+                                    <TextBlock
+                                        Grid.Row="2"
+                                        Margin="0,6,0,0"
+                                        FontSize="11"
+                                        Opacity="0.5"
                                         Text="{Binding TagsText}"
                                         TextTrimming="CharacterEllipsis" />
-                                    <TextBlock
-                                        Grid.Row="1"
-                                        Grid.Column="1"
-                                        Margin="8,2,0,0"
-                                        VerticalAlignment="Center"
-                                        FontSize="12"
-                                        Opacity="0.5"
-                                        Text="{Binding LastUpdatedText}" />
+
+                                    <!--  Stats footer  -->
+                                    <Grid
+                                        Grid.Row="3"
+                                        Margin="0,8,0,0"
+                                        ColumnDefinitions="Auto,Auto,*">
+                                        <StackPanel
+                                            Grid.Column="0"
+                                            VerticalAlignment="Center"
+                                            Orientation="Horizontal"
+                                            Spacing="4"
+                                            ToolTip.Tip="Downloads">
+                                            <avalonia:Icon
+                                                FontSize="11"
+                                                Opacity="0.7"
+                                                Value="fa-solid fa-download" />
+                                            <TextBlock
+                                                FontSize="12"
+                                                Opacity="0.85"
+                                                Text="{Binding DownloadsText}" />
+                                        </StackPanel>
+                                        <StackPanel
+                                            Grid.Column="1"
+                                            Margin="12,0,0,0"
+                                            VerticalAlignment="Center"
+                                            Orientation="Horizontal"
+                                            Spacing="4"
+                                            ToolTip.Tip="Likes">
+                                            <avalonia:Icon
+                                                FontSize="11"
+                                                Opacity="0.7"
+                                                Value="fa-solid fa-heart" />
+                                            <TextBlock
+                                                FontSize="12"
+                                                Opacity="0.85"
+                                                Text="{Binding LikesText}" />
+                                        </StackPanel>
+                                        <TextBlock
+                                            Grid.Column="2"
+                                            HorizontalAlignment="Right"
+                                            VerticalAlignment="Center"
+                                            FontSize="11"
+                                            Opacity="0.45"
+                                            Text="{Binding LastUpdatedText}"
+                                            TextTrimming="CharacterEllipsis" />
+                                    </Grid>
                                 </Grid>
                             </Button>
                         </DataTemplate>

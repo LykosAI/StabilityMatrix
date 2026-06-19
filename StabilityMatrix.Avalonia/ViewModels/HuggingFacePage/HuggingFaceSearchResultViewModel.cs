@@ -20,9 +20,19 @@ public partial class HuggingFaceSearchResultViewModel : ViewModelBase
 
     public string Id => Entry.Id;
 
+    /// <summary>The owner/org portion of the id (before the slash), or null if none.</summary>
+    public string? Author => Entry.Id.Contains('/') ? Entry.Id[..Entry.Id.IndexOf('/')] : null;
+
+    public bool HasAuthor => Author is not null;
+
+    /// <summary>The model name portion of the id (after the slash).</summary>
+    public string ModelName => Entry.Id.Contains('/') ? Entry.Id[(Entry.Id.IndexOf('/') + 1)..] : Entry.Id;
+
     public string RepoUrl => $"https://huggingface.co/{Entry.Id}";
 
-    public string StatsText => $"↓ {FormatCount(Entry.Downloads)}   ♥ {FormatCount(Entry.Likes)}";
+    public string DownloadsText => FormatCount(Entry.Downloads);
+
+    public string LikesText => FormatCount(Entry.Likes);
 
     public string? TagsText => Entry.Tags is { Count: > 0 } tags ? string.Join("  ", tags.Take(4)) : null;
 

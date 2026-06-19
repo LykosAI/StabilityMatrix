@@ -220,7 +220,10 @@
         </ScrollViewer>
 
         <!--  Live search results  -->
-        <ScrollViewer Grid.Row="3" IsVisible="{Binding IsSearchResultsVisible}">
+        <ScrollViewer
+            Grid.Row="3"
+            IsVisible="{Binding IsSearchResultsVisible}"
+            ScrollChanged="SearchResults_OnScrollChanged">
             <StackPanel Orientation="Vertical">
                 <TextBlock
                     Margin="4,8"
@@ -356,6 +359,22 @@
                         </DataTemplate>
                     </ItemsRepeater.ItemTemplate>
                 </ItemsRepeater>
+
+                <!--  Infinite-scroll loading-more spinner + end-of-results marker  -->
+                <controls:ProgressRing
+                    Width="28"
+                    Height="28"
+                    Margin="0,12"
+                    HorizontalAlignment="Center"
+                    IsIndeterminate="True"
+                    IsVisible="{Binding IsLoadingMore}" />
+                <TextBlock
+                    Margin="0,8,0,12"
+                    HorizontalAlignment="Center"
+                    FontSize="12"
+                    IsVisible="{Binding ShowEndOfResults}"
+                    Opacity="0.5"
+                    Text="End of results" />
             </StackPanel>
         </ScrollViewer>
 

@@ -19,6 +19,7 @@ public interface IHuggingFaceApi
     /// <param name="direction"><c>-1</c> for descending.</param>
     /// <param name="limit">Maximum number of results.</param>
     /// <param name="filter">Optional tag filter (e.g. a pipeline tag).</param>
+    /// <param name="cursor">Opaque pagination cursor (from the previous response's <c>Link: rel="next"</c> header).</param>
     /// <param name="authorization">Optional <c>Bearer {token}</c> header.</param>
     [Get("/api/models")]
     Task<IApiResponse<List<HuggingFaceSearchEntry>>> SearchModelsAsync(
@@ -27,6 +28,7 @@ public interface IHuggingFaceApi
         [Query] int direction,
         [Query] int limit,
         [Query] string? filter,
+        [Query] string? cursor,
         [Header("Authorization")] string? authorization,
         CancellationToken cancellationToken = default
     );

@@ -1,8 +1,11 @@
+using System;
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
 using StabilityMatrix.Avalonia.ViewModels.HuggingFacePage;
 
@@ -45,6 +48,17 @@ public partial class HuggingFacePage : UserControlBase
             vm.SelectRangeTo(file);
             e.Handled = true;
         }
+    }
+
+    private void SearchResults_OnScrollChanged(object? sender, ScrollChangedEventArgs e)
+    {
+        if (sender is not ScrollViewer scrollViewer || scrollViewer.Offset.Y == 0)
+            return;
+
+        var isAtEnd = Math.Abs(scrollViewer.Offset.Y - scrollViewer.ScrollBarMaximum.Y) < 1f;
+
+        if (isAtEnd && DataContext is IInfinitelyScroll scroll)
+            _ = scroll.LoadNextPageAsync();
     }
 
     private static HuggingFaceFileViewModel? GetFile(object? source) =>

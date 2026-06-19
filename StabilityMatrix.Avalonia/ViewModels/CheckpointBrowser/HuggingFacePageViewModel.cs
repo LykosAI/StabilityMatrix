@@ -20,6 +20,7 @@ using DynamicData;
 using DynamicData.Binding;
 using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Languages;
+using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.HuggingFace;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -53,7 +54,7 @@ public enum HuggingFaceBrowserMode
 
 [View(typeof(Views.HuggingFacePage))]
 [RegisterSingleton<HuggingFacePageViewModel>]
-public partial class HuggingFacePageViewModel : TabViewModelBase, IHandleNavigation
+public partial class HuggingFacePageViewModel : TabViewModelBase, IHandleNavigation, IInfinitelyScroll
 {
     private readonly ITrackedDownloadService trackedDownloadService;
     private readonly ISettingsManager settingsManager;
@@ -121,6 +122,23 @@ public partial class HuggingFacePageViewModel : TabViewModelBase, IHandleNavigat
 
     [ObservableProperty]
     private bool isLoading;
+
+    /// <summary>True while an additional page of search results is being appended (infinite scroll).</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowEndOfResults))]
+    private bool isLoadingMore;
+
+    /// <summary>Opaque cursor for the next page of search results, or null when there are no more.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowEndOfResults))]
+    private string? nextCursor;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowEndOfResults))]
+    private bool hasSearchResults;
+
+    /// <summary>Shown at the bottom of the results once everything has been loaded.</summary>
+    public bool ShowEndOfResults => HasSearchResults && !IsLoadingMore && string.IsNullOrEmpty(NextCursor);
 
     [ObservableProperty]
     private string? errorMessage;
@@ -221,7 +239,7 @@ public partial class HuggingFacePageViewModel : TabViewModelBase, IHandleNavigat
         {
             queryCts?.Cancel();
             queryCts = new CancellationTokenSource();
-            _ = PerformSearchAsync(SearchQuery.Trim(), queryCts.Token);
+            _ = PerformSearchAsync(SearchQuery.Trim(), append: false, queryCts.Token);
         }
     }
 
@@ -247,6 +265,9 @@ public partial class HuggingFacePageViewModel : TabViewModelBase, IHandleNavigat
             // No request runs here, and a superseded request won't clear this (see finally guards),
             // so clear it explicitly.
             IsLoading = false;
+            IsLoadingMore = false;
+            NextCursor = null;
+            HasSearchResults = false;
             return;
         }
 
@@ -256,7 +277,7 @@ public partial class HuggingFacePageViewModel : TabViewModelBase, IHandleNavigat
         }
         else
         {
-            await PerformSearchAsync(value.Trim(), ct);
+            await PerformSearchAsync(value.Trim(), append: false, ct);
         }
     }
 
@@ -268,9 +289,19 @@ public partial class HuggingFacePageViewModel : TabViewModelBase, IHandleNavigat
             : $"Bearer {secrets.HuggingFaceToken}";
     }
 
-    private async Task PerformSearchAsync(string query, CancellationToken ct)
+    private async Task PerformSearchAsync(string query, bool append, CancellationToken ct)
     {
-        IsLoading = true;
+        if (append)
+        {
+            IsLoadingMore = true;
+        }
+        else
+        {
+            IsLoading = true;
+            IsLoadingMore = false;
+            NextCursor = null;
+        }
+
         try
         {
             var auth = await GetAuthHeaderAsync();
@@ -280,6 +311,7 @@ public partial class HuggingFacePageViewModel : TabViewModelBase, IHandleNavigat
                 -1,
                 SearchResultLimit,
                 null,
+                append ? NextCursor : null,
                 auth,
                 ct
             );
@@ -287,16 +319,27 @@ public partial class HuggingFacePageViewModel : TabViewModelBase, IHandleNavigat
             if (ct.IsCancellationRequested)
                 return;
 
-            SearchResults.Clear();
-
             if (!response.IsSuccessStatusCode || response.Content is null)
             {
-                ErrorMessage = $"Search failed ({(int)response.StatusCode})";
+                NextCursor = null;
+                if (!append)
+                {
+                    SearchResults.Clear();
+                    ErrorMessage = $"Search failed ({(int)response.StatusCode})";
+                }
             }
             else
             {
+                if (!append)
+                    SearchResults.Clear();
+
+                var existingIds = append ? SearchResults.Select(r => r.Id).ToHashSet() : null;
+
                 foreach (var entry in response.Content)
                 {
+                    if (existingIds is not null && !existingIds.Add(entry.Id))
+                        continue;
+
                     SearchResults.Add(
                         new HuggingFaceSearchResultViewModel
                         {
@@ -305,23 +348,81 @@ public partial class HuggingFacePageViewModel : TabViewModelBase, IHandleNavigat
                         }
                     );
                 }
+
+                NextCursor = ParseNextCursor(response.Headers);
             }
 
+            HasSearchResults = SearchResults.Count > 0;
             Mode = HuggingFaceBrowserMode.SearchResults;
         }
         catch (OperationCanceledException) { }
         catch (Exception e)
         {
-            ErrorMessage = e.Message;
-            Mode = HuggingFaceBrowserMode.SearchResults;
+            if (!append)
+            {
+                ErrorMessage = e.Message;
+                Mode = HuggingFaceBrowserMode.SearchResults;
+            }
         }
         finally
         {
             // Only clear the spinner if we're still the active request — a superseded
             // (cancelled) request must not turn off loading while a newer one runs.
             if (ct == queryCts?.Token)
+            {
                 IsLoading = false;
+                IsLoadingMore = false;
+            }
         }
+    }
+
+    /// <summary>Load the next page of search results (infinite scroll). No-op when there are none.</summary>
+    public async Task LoadNextPageAsync()
+    {
+        if (
+            Mode != HuggingFaceBrowserMode.SearchResults
+            || IsLoadingMore
+            || string.IsNullOrEmpty(NextCursor)
+            || string.IsNullOrWhiteSpace(SearchQuery)
+            || queryCts is not { } cts
+        )
+            return;
+
+        await PerformSearchAsync(SearchQuery.Trim(), append: true, cts.Token);
+    }
+
+    /// <summary>Extract the <c>cursor</c> query value from the response's <c>Link: rel="next"</c> header.</summary>
+    private static string? ParseNextCursor(System.Net.Http.Headers.HttpResponseHeaders headers)
+    {
+        if (!headers.TryGetValues("Link", out var values))
+            return null;
+
+        foreach (var header in values)
+        {
+            foreach (var part in header.Split(','))
+            {
+                if (!part.Contains("rel=\"next\"", StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                var start = part.IndexOf('<');
+                var end = part.IndexOf('>');
+                if (start < 0 || end <= start)
+                    continue;
+
+                var url = part.Substring(start + 1, end - start - 1);
+                if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
+                    continue;
+
+                foreach (var kv in uri.Query.TrimStart('?').Split('&', StringSplitOptions.RemoveEmptyEntries))
+                {
+                    var eq = kv.IndexOf('=');
+                    if (eq > 0 && kv[..eq] == "cursor")
+                        return Uri.UnescapeDataString(kv[(eq + 1)..]);
+                }
+            }
+        }
+
+        return null;
     }
 
     private static string MapSort(HuggingFaceSearchSort sort) =>

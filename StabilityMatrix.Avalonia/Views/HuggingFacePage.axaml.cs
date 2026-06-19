@@ -52,12 +52,17 @@ public partial class HuggingFacePage : UserControlBase
 
     private void SearchResults_OnScrollChanged(object? sender, ScrollChangedEventArgs e)
     {
-        if (sender is not ScrollViewer scrollViewer || scrollViewer.Offset.Y == 0)
+        if (sender is not ScrollViewer scrollViewer)
             return;
 
-        var isAtEnd = Math.Abs(scrollViewer.Offset.Y - scrollViewer.ScrollBarMaximum.Y) < 1f;
+        // Load the next page when scrolled to the bottom, OR when the content doesn't fill the
+        // viewport (e.g. few results on a large/4K screen, so there's no scrollbar to reach the
+        // bottom). Adding items raises ScrollChanged again, so this keeps filling until the
+        // viewport is scrollable or there are no more results (LoadNextPageAsync no-ops then).
+        var notScrollable = scrollViewer.Extent.Height <= scrollViewer.Viewport.Height;
+        var atBottom = Math.Abs(scrollViewer.Offset.Y - scrollViewer.ScrollBarMaximum.Y) < 1f;
 
-        if (isAtEnd && DataContext is IInfinitelyScroll scroll)
+        if ((notScrollable || atBottom) && DataContext is IInfinitelyScroll scroll)
             _ = scroll.LoadNextPageAsync();
     }
 

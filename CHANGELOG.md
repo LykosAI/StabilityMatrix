@@ -5,6 +5,19 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.17.0-dev.1
+### Added
+#### New Feature: 🤗 Live HuggingFace Model Browser
+- Overhauled the HuggingFace tab from a fixed list of curated checkbox links into a full repository browser, while keeping the curated picks as the default view:
+  - **Search HuggingFace** for models by name right from the tab, sortable by most downloads, most likes, or recently updated, with result cards showing the pipeline tag, download/like counts, and last-updated time
+  - **Paste a repository URL or `owner/name`** to browse that repo's files directly
+  - View files as a **flat list or an expandable folder tree** (your choice is remembered between sessions), with an in-repo name filter and a **Hide installed** toggle to declutter
+  - Each file's **destination folder** is inferred from its path and editable from a dropdown before importing; files you already have are marked **Installed** instead
+  - **Multi-select** with shift/ctrl-click ranges, plus folder checkboxes that select everything inside them
+  - The import bar shows the **total download size** and warns when the selection won't fit in your models directory's free space
+  - Gated or private repositories load once you add a HuggingFace token in **Settings → Accounts**
+  - Downloads run through the existing tracked download queue (visible in the Downloads tab) with a **Download Started** notification
+
 ## v2.16.2
 ### Fixed
 - Fixed [#1666](https://github.com/LykosAI/StabilityMatrix/issues/1666) - AppImage builds creating a broken `.desktop` entry (`NoDisplay=true`, missing icon) that never showed up in the application launcher and reverted any manual edits on the next launch. AppImage runs now write a correct `.desktop` entry with the extracted app icon so Stability Matrix appears in your launcher/menu, and report a matching `WM_CLASS` so the running window shows the Stability Matrix icon in the dock/taskbar instead of a generic one. Only applies to AppImage runs; deb/rpm/flatpak installs keep their package-managed entries

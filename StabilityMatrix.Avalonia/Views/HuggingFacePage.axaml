@@ -5,12 +5,15 @@
     xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
     xmlns:checkpointBrowser="clr-namespace:StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser"
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+    xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:helpers="clr-namespace:StabilityMatrix.Avalonia.Helpers"
+    xmlns:huggingFace="clr-namespace:StabilityMatrix.Core.Models.Api.HuggingFace;assembly=StabilityMatrix.Core"
     xmlns:huggingFacePage="clr-namespace:StabilityMatrix.Avalonia.ViewModels.HuggingFacePage"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
     xmlns:ui="using:FluentAvalonia.UI.Controls"
     d:DataContext="{x:Static mocks:DesignData.HuggingFacePageViewModel}"
     d:DesignHeight="650"
@@ -19,13 +22,62 @@
     x:DataType="checkpointBrowser:HuggingFacePageViewModel"
     Focusable="True"
     mc:Ignorable="d">
+    <controls:UserControlBase.Resources>
+        <converters:EnumDescriptionConverter x:Key="EnumDescriptionConverter" />
+    </controls:UserControlBase.Resources>
     <Grid
         Margin="8"
         HorizontalAlignment="Stretch"
-        RowDefinitions="Auto,Auto,*">
-        <ui:CommandBar
+        RowDefinitions="Auto,Auto,Auto,*">
+
+        <!--  Search bar  -->
+        <Grid
             Grid.Row="0"
-            Grid.Column="0"
+            Margin="0,0,0,4"
+            ColumnDefinitions="*,Auto">
+            <TextBox
+                Grid.Column="0"
+                VerticalAlignment="Center"
+                Text="{Binding SearchQuery}"
+                Watermark="Search HuggingFace, or paste a repo URL / id (owner/name)…">
+                <TextBox.InnerLeftContent>
+                    <avalonia:Icon Margin="8,0,0,0" Value="fa-solid fa-magnifying-glass" />
+                </TextBox.InnerLeftContent>
+                <TextBox.InnerRightContent>
+                    <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
+                        <Button
+                            Margin="0,0,4,0"
+                            Padding="4"
+                            VerticalAlignment="Center"
+                            BorderThickness="0"
+                            Classes="transparent"
+                            Command="{Binding ClearSearchCommand}"
+                            IsVisible="{Binding !!SearchQuery}">
+                            <ui:SymbolIcon Symbol="Cancel" />
+                        </Button>
+                    </StackPanel>
+                </TextBox.InnerRightContent>
+            </TextBox>
+            <ComboBox
+                Grid.Column="1"
+                MinWidth="160"
+                Margin="8,0,0,0"
+                VerticalAlignment="Stretch"
+                VerticalContentAlignment="Center"
+                IsVisible="{Binding IsSearchResultsVisible}"
+                ItemsSource="{Binding SearchSortOptions}"
+                SelectedItem="{Binding SearchSort}"
+                ToolTip.Tip="Sort results">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="huggingFace:HuggingFaceSearchSort">
+                        <TextBlock Text="{Binding Converter={StaticResource EnumDescriptionConverter}}" />
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+        </Grid>
+
+        <ui:CommandBar
+            Grid.Row="1"
             Margin="0,-1,0,0"
             HorizontalAlignment="Left"
             VerticalAlignment="Center"
@@ -56,25 +108,8 @@
             </ui:CommandBar.PrimaryCommands>
         </ui:CommandBar>
 
-        <StackPanel
-            Grid.Row="1"
-            Grid.Column="0"
-            Margin="0,8"
-            VerticalAlignment="Bottom"
-            Orientation="Vertical">
-            <TextBlock
-                Margin="0,4"
-                HorizontalAlignment="Stretch"
-                IsVisible="{Binding !!TotalProgress.Total}"
-                Text="{Binding DownloadPercentText}"
-                TextAlignment="Center" />
-            <ProgressBar
-                IsIndeterminate="False"
-                IsVisible="{Binding !!TotalProgress.Total}"
-                Maximum="{Binding TotalProgress.Total}"
-                Value="{Binding TotalProgress.Current}" />
-        </StackPanel>
-        <ScrollViewer Grid.Row="2">
+        <!--  Curated (default / empty search)  -->
+        <ScrollViewer Grid.Row="3" IsVisible="{Binding IsCuratedVisible}">
             <ItemsRepeater ItemsSource="{Binding Categories}">
                 <ItemsRepeater.Layout>
                     <StackLayout Orientation="Vertical" />
@@ -184,8 +219,373 @@
             </ItemsRepeater>
         </ScrollViewer>
 
+        <!--  Live search results  -->
+        <ScrollViewer Grid.Row="3" IsVisible="{Binding IsSearchResultsVisible}">
+            <StackPanel Orientation="Vertical">
+                <TextBlock
+                    Margin="4,8"
+                    Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+                    IsVisible="{Binding !!ErrorMessage}"
+                    Text="{Binding ErrorMessage}"
+                    TextWrapping="Wrap" />
+                <ItemsRepeater ItemsSource="{Binding SearchResults}">
+                    <ItemsRepeater.Layout>
+                        <StackLayout Orientation="Vertical" Spacing="6" />
+                    </ItemsRepeater.Layout>
+                    <ItemsRepeater.ItemTemplate>
+                        <DataTemplate DataType="{x:Type huggingFacePage:HuggingFaceSearchResultViewModel}">
+                            <Button
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Stretch"
+                                Command="{Binding SelectCommand}"
+                                CornerRadius="8">
+                                <Button.ContextFlyout>
+                                    <MenuFlyout>
+                                        <MenuItem
+                                            Command="{x:Static helpers:IOCommands.OpenUrlCommand}"
+                                            CommandParameter="{Binding RepoUrl}"
+                                            Header="{x:Static lang:Resources.Action_OpenOnHuggingFace}">
+                                            <MenuItem.Icon>
+                                                <ui:SymbolIcon Symbol="Open" />
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                    </MenuFlyout>
+                                </Button.ContextFlyout>
+                                <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+                                    <StackPanel
+                                        Grid.Row="0"
+                                        Grid.Column="0"
+                                        Orientation="Horizontal"
+                                        Spacing="6">
+                                        <Border
+                                            Padding="6,1"
+                                            VerticalAlignment="Center"
+                                            Background="{DynamicResource SubtleFillColorSecondaryBrush}"
+                                            CornerRadius="4"
+                                            IsVisible="{Binding HasPipelineTag}">
+                                            <TextBlock
+                                                FontSize="11"
+                                                Opacity="0.8"
+                                                Text="{Binding PipelineTag}" />
+                                        </Border>
+                                        <TextBlock
+                                            VerticalAlignment="Center"
+                                            FontWeight="SemiBold"
+                                            Text="{Binding Id}"
+                                            TextTrimming="CharacterEllipsis" />
+                                    </StackPanel>
+                                    <TextBlock
+                                        Grid.Row="0"
+                                        Grid.Column="1"
+                                        Margin="8,0,0,0"
+                                        VerticalAlignment="Center"
+                                        Opacity="0.8"
+                                        Text="{Binding StatsText}" />
+                                    <TextBlock
+                                        Grid.Row="1"
+                                        Grid.Column="0"
+                                        Margin="0,2,0,0"
+                                        FontSize="12"
+                                        Opacity="0.6"
+                                        Text="{Binding TagsText}"
+                                        TextTrimming="CharacterEllipsis" />
+                                    <TextBlock
+                                        Grid.Row="1"
+                                        Grid.Column="1"
+                                        Margin="8,2,0,0"
+                                        VerticalAlignment="Center"
+                                        FontSize="12"
+                                        Opacity="0.5"
+                                        Text="{Binding LastUpdatedText}" />
+                                </Grid>
+                            </Button>
+                        </DataTemplate>
+                    </ItemsRepeater.ItemTemplate>
+                </ItemsRepeater>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!--  Repo file tree  -->
+        <Grid
+            Grid.Row="3"
+            IsVisible="{Binding IsRepoFilesVisible}"
+            RowDefinitions="Auto,Auto,Auto,*">
+            <Grid
+                Grid.Row="0"
+                Margin="2,0,2,8"
+                ColumnDefinitions="*,Auto">
+                <StackPanel
+                    Grid.Column="0"
+                    Orientation="Horizontal"
+                    Spacing="6">
+                    <avalonia:Icon VerticalAlignment="Center" Value="fa-solid fa-folder-tree" />
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        FontWeight="SemiBold"
+                        Text="{Binding CurrentRepoId}" />
+                    <Button
+                        Padding="4"
+                        VerticalAlignment="Center"
+                        Classes="transparent"
+                        Command="{x:Static helpers:IOCommands.OpenUrlCommand}"
+                        CommandParameter="{Binding CurrentRepoId, StringFormat='https://huggingface.co/{0}'}"
+                        ToolTip.Tip="{x:Static lang:Resources.Action_OpenOnHuggingFace}">
+                        <ui:SymbolIcon Symbol="Open" />
+                    </Button>
+                </StackPanel>
+                <StackPanel
+                    Grid.Column="1"
+                    VerticalAlignment="Center"
+                    Orientation="Horizontal"
+                    Spacing="12">
+                    <CheckBox
+                        VerticalAlignment="Center"
+                        Content="Hide installed"
+                        IsChecked="{Binding HideInstalled}" />
+                    <ToggleSwitch
+                        MinWidth="0"
+                        VerticalAlignment="Center"
+                        IsChecked="{Binding IsStructuredView}"
+                        ToolTip.Tip="Toggle between a flat list and a folder tree">
+                        <ToggleSwitch.Resources>
+                            <!--  No header here, so drop the reserved header margin that offsets the knob downward.  -->
+                            <Thickness x:Key="ToggleSwitchTopHeaderMargin">0</Thickness>
+                        </ToggleSwitch.Resources>
+                        <ToggleSwitch.OffContent>
+                            <avalonia:Icon VerticalAlignment="Center" Value="fa-solid fa-list" />
+                        </ToggleSwitch.OffContent>
+                        <ToggleSwitch.OnContent>
+                            <avalonia:Icon VerticalAlignment="Center" Value="fa-solid fa-folder-tree" />
+                        </ToggleSwitch.OnContent>
+                    </ToggleSwitch>
+                </StackPanel>
+            </Grid>
+
+            <TextBox
+                Grid.Row="1"
+                Margin="0,0,0,8"
+                VerticalAlignment="Center"
+                Text="{Binding RepoFilter}"
+                Watermark="Filter files by name…">
+                <TextBox.InnerLeftContent>
+                    <avalonia:Icon
+                        Margin="8,0,0,0"
+                        Opacity="0.6"
+                        Value="fa-solid fa-filter" />
+                </TextBox.InnerLeftContent>
+            </TextBox>
+
+            <TextBlock
+                Grid.Row="2"
+                Margin="4,8"
+                Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+                IsVisible="{Binding !!ErrorMessage}"
+                Text="{Binding ErrorMessage}"
+                TextWrapping="Wrap" />
+
+            <!--  Flat list  -->
+            <ScrollViewer Grid.Row="3" IsVisible="{Binding !IsStructuredView}">
+                <ItemsRepeater Margin="0,0,14,0" ItemsSource="{Binding RepoFiles}">
+                    <ItemsRepeater.Layout>
+                        <StackLayout Orientation="Vertical" Spacing="2" />
+                    </ItemsRepeater.Layout>
+                    <ItemsRepeater.ItemTemplate>
+                        <DataTemplate DataType="{x:Type huggingFacePage:HuggingFaceFileViewModel}">
+                            <Border
+                                Padding="8,4"
+                                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                                CornerRadius="6">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <CheckBox
+                                        Grid.Column="0"
+                                        VerticalAlignment="Center"
+                                        IsChecked="{Binding IsSelected}"
+                                        IsEnabled="{Binding !Exists}">
+                                        <StackPanel Orientation="Vertical">
+                                            <TextBlock
+                                                Text="{Binding Path}"
+                                                TextTrimming="CharacterEllipsis"
+                                                ToolTip.Tip="{Binding Path}" />
+                                            <TextBlock
+                                                FontSize="11"
+                                                Opacity="0.6"
+                                                Text="{Binding SizeText}" />
+                                        </StackPanel>
+                                    </CheckBox>
+                                    <ComboBox
+                                        Grid.Column="1"
+                                        MinWidth="170"
+                                        Margin="8,0"
+                                        VerticalAlignment="Center"
+                                        IsVisible="{Binding !Exists}"
+                                        ItemsSource="{Binding AvailableFolders}"
+                                        SelectedItem="{Binding SelectedFolder}"
+                                        ToolTip.Tip="Destination folder">
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate x:DataType="models:SharedFolderType">
+                                                <TextBlock Text="{Binding Converter={StaticResource EnumDescriptionConverter}}" />
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                    </ComboBox>
+                                    <StackPanel
+                                        Grid.Column="1"
+                                        Margin="8,0"
+                                        HorizontalAlignment="Right"
+                                        VerticalAlignment="Center"
+                                        IsVisible="{Binding Exists}"
+                                        Orientation="Horizontal"
+                                        Spacing="5"
+                                        ToolTip.Tip="{Binding SelectedFolder, Converter={StaticResource EnumDescriptionConverter}, StringFormat='Installed in {0}'}">
+                                        <avalonia:Icon
+                                            VerticalAlignment="Center"
+                                            Foreground="{DynamicResource SystemFillColorSuccessBrush}"
+                                            Value="fa-solid fa-circle-check" />
+                                        <TextBlock
+                                            VerticalAlignment="Center"
+                                            Opacity="0.7"
+                                            Text="Installed" />
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsRepeater.ItemTemplate>
+                </ItemsRepeater>
+            </ScrollViewer>
+
+            <!--  Structured folder tree  -->
+            <TreeView
+                Grid.Row="3"
+                Margin="0,0,8,0"
+                IsVisible="{Binding IsStructuredView}"
+                ItemsSource="{Binding RepoTreeRoot}">
+                <TreeView.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <VirtualizingStackPanel />
+                    </ItemsPanelTemplate>
+                </TreeView.ItemsPanel>
+                <TreeView.Styles>
+                    <Style x:DataType="huggingFacePage:HuggingFaceTreeNodeViewModel" Selector="TreeViewItem">
+                        <Setter Property="HorizontalAlignment" Value="Stretch" />
+                        <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
+                    </Style>
+                    <!--
+                        Selection is meaningless here (checkboxes drive actions), so make a selected
+                        row look identical to a normal one. These mirror FluentAvalonia's own :selected
+                        selectors (TreeViewStyles.axaml) and win by being applied after the control theme.
+                    -->
+                    <Style Selector="TreeViewItem:selected /template/ Rectangle#SelectionIndicator">
+                        <Setter Property="IsVisible" Value="False" />
+                    </Style>
+                    <Style Selector="TreeViewItem:selected /template/ Border#PART_LayoutRoot">
+                        <Setter Property="Background" Value="Transparent" />
+                        <Setter Property="BorderBrush" Value="Transparent" />
+                    </Style>
+                    <Style Selector="TreeViewItem:selected /template/ Border#PART_LayoutRoot:pointerover">
+                        <Setter Property="Background" Value="{DynamicResource TreeViewItemBackgroundPointerOver}" />
+                        <Setter Property="BorderBrush" Value="{DynamicResource TreeViewItemBorderBrushPointerOver}" />
+                    </Style>
+                </TreeView.Styles>
+                <TreeView.ItemTemplate>
+                    <TreeDataTemplate DataType="{x:Type huggingFacePage:HuggingFaceTreeNodeViewModel}" ItemsSource="{Binding Children}">
+                        <Grid
+                            Height="36"
+                            Margin="0,1,18,1"
+                            ColumnDefinitions="*,Auto">
+                            <!--  Folder row (chevron or double-click to expand)  -->
+                            <StackPanel
+                                Grid.Column="0"
+                                IsVisible="{Binding IsFolder}"
+                                Orientation="Horizontal"
+                                Spacing="6">
+                                <CheckBox
+                                    MinWidth="0"
+                                    Padding="0"
+                                    VerticalAlignment="Center"
+                                    IsChecked="{Binding IsChecked}"
+                                    ToolTip.Tip="Select all files in this folder" />
+                                <avalonia:Icon VerticalAlignment="Center" Value="fa-solid fa-folder" />
+                                <TextBlock
+                                    VerticalAlignment="Center"
+                                    FontWeight="SemiBold"
+                                    Text="{Binding Name}" />
+                                <TextBlock
+                                    VerticalAlignment="Center"
+                                    FontSize="11"
+                                    Opacity="0.5"
+                                    Text="{Binding FolderSummary}" />
+                            </StackPanel>
+
+                            <!--  File row  -->
+                            <CheckBox
+                                Grid.Column="0"
+                                VerticalAlignment="Center"
+                                IsChecked="{Binding File.IsSelected}"
+                                IsEnabled="{Binding !File.Exists}"
+                                IsVisible="{Binding !IsFolder}">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <avalonia:Icon
+                                        VerticalAlignment="Center"
+                                        Opacity="0.6"
+                                        Value="fa-regular fa-file" />
+                                    <TextBlock VerticalAlignment="Center" Text="{Binding Name}" />
+                                    <TextBlock
+                                        VerticalAlignment="Center"
+                                        FontSize="11"
+                                        Opacity="0.5"
+                                        Text="{Binding File.SizeText}" />
+                                </StackPanel>
+                            </CheckBox>
+                            <ComboBox
+                                Grid.Column="1"
+                                MinWidth="170"
+                                Margin="8,0"
+                                VerticalAlignment="Center"
+                                IsVisible="{Binding !File.Exists, FallbackValue=False}"
+                                ItemsSource="{Binding File.AvailableFolders}"
+                                SelectedItem="{Binding File.SelectedFolder}"
+                                ToolTip.Tip="Destination folder">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate x:DataType="models:SharedFolderType">
+                                        <TextBlock Text="{Binding Converter={StaticResource EnumDescriptionConverter}}" />
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                            <StackPanel
+                                Grid.Column="1"
+                                Margin="8,0"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Center"
+                                IsVisible="{Binding File.Exists, FallbackValue=False, TargetNullValue=False}"
+                                Orientation="Horizontal"
+                                Spacing="5"
+                                ToolTip.Tip="{Binding File.SelectedFolder, Converter={StaticResource EnumDescriptionConverter}, StringFormat='Installed in {0}'}">
+                                <avalonia:Icon
+                                    VerticalAlignment="Center"
+                                    Foreground="{DynamicResource SystemFillColorSuccessBrush}"
+                                    Value="fa-solid fa-circle-check" />
+                                <TextBlock
+                                    VerticalAlignment="Center"
+                                    Opacity="0.7"
+                                    Text="Installed" />
+                            </StackPanel>
+                        </Grid>
+                    </TreeDataTemplate>
+                </TreeView.ItemTemplate>
+            </TreeView>
+        </Grid>
+
+        <controls:ProgressRing
+            Grid.Row="3"
+            Width="96"
+            Height="96"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            IsIndeterminate="True"
+            IsVisible="{Binding IsLoading}" />
+
         <ui:InfoBar
-            Grid.Row="2"
+            Title="{Binding SelectionSummary}"
+            Grid.Row="3"
             Margin="0,0,8,8"
             HorizontalAlignment="Right"
             VerticalAlignment="Bottom"
@@ -195,17 +595,32 @@
             CornerRadius="8"
             IsIconVisible="False"
             IsOpen="{Binding !!NumSelected}">
-            <ui:InfoBar.Title>
-                <MultiBinding StringFormat="{}{0} Selected">
-                    <Binding Path="NumSelected" />
-                </MultiBinding>
-            </ui:InfoBar.Title>
             <ui:InfoBar.ActionButton>
-                <Button
-                    VerticalAlignment="Center"
-                    Classes="accent"
-                    Command="{Binding ImportSelectedCommand}"
-                    Content="{x:Static lang:Resources.Action_Import}" />
+                <StackPanel Orientation="Vertical" Spacing="4">
+                    <Button
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Center"
+                        Classes="accent"
+                        Command="{Binding ImportSelectedCommand}"
+                        Content="{x:Static lang:Resources.Action_Import}" />
+                    <StackPanel
+                        MaxWidth="320"
+                        HorizontalAlignment="Right"
+                        IsVisible="{Binding !!DiskSpaceWarning}"
+                        Orientation="Horizontal"
+                        Spacing="5">
+                        <avalonia:Icon
+                            VerticalAlignment="Center"
+                            Foreground="{DynamicResource SystemFillColorCautionBrush}"
+                            Value="fa-solid fa-triangle-exclamation" />
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            FontSize="12"
+                            Foreground="{DynamicResource SystemFillColorCautionBrush}"
+                            Text="{Binding DiskSpaceWarning}"
+                            TextWrapping="Wrap" />
+                    </StackPanel>
+                </StackPanel>
             </ui:InfoBar.ActionButton>
         </ui:InfoBar>
     </Grid>

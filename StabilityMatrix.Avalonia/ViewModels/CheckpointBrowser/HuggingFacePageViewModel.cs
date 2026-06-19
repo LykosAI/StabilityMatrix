@@ -53,7 +53,7 @@ public enum HuggingFaceBrowserMode
 
 [View(typeof(Views.HuggingFacePage))]
 [RegisterSingleton<HuggingFacePageViewModel>]
-public partial class HuggingFacePageViewModel : TabViewModelBase
+public partial class HuggingFacePageViewModel : TabViewModelBase, IHandleNavigation
 {
     private readonly ITrackedDownloadService trackedDownloadService;
     private readonly ISettingsManager settingsManager;
@@ -133,6 +133,9 @@ public partial class HuggingFacePageViewModel : TabViewModelBase
     public bool IsRepoFilesVisible => Mode == HuggingFaceBrowserMode.RepoFiles;
 
     private CancellationTokenSource? queryCts;
+
+    /// <summary>Number of search results to request (HuggingFace has no offset paging; see notes).</summary>
+    private const int SearchResultLimit = 50;
 
     public HuggingFacePageViewModel(
         ITrackedDownloadService trackedDownloadService,
@@ -275,7 +278,7 @@ public partial class HuggingFacePageViewModel : TabViewModelBase
                 query,
                 MapSort(SearchSort),
                 -1,
-                30,
+                SearchResultLimit,
                 null,
                 auth,
                 ct
@@ -804,6 +807,21 @@ public partial class HuggingFacePageViewModel : TabViewModelBase
 
             file.IsSelected = false;
         }
+    }
+
+    /// <summary>
+    /// Intercept "back" so that, when viewing a repo we reached from a search, the back button
+    /// returns to the search results instead of leaving the page entirely.
+    /// </summary>
+    public bool GoBack()
+    {
+        if (Mode == HuggingFaceBrowserMode.RepoFiles && SearchResults.Count > 0)
+        {
+            Mode = HuggingFaceBrowserMode.SearchResults;
+            return true;
+        }
+
+        return false;
     }
 
     public override string Header => Resources.Label_HuggingFace;

@@ -39,7 +39,7 @@
                 Grid.Column="0"
                 VerticalAlignment="Center"
                 Text="{Binding SearchQuery}"
-                Watermark="Search HuggingFace, or paste a repo URL / id (owner/name)…">
+                Watermark="{x:Static lang:Resources.Label_HuggingFaceSearchWatermark}">
                 <TextBox.InnerLeftContent>
                     <avalonia:Icon Margin="8,0,0,0" Value="fa-solid fa-magnifying-glass" />
                 </TextBox.InnerLeftContent>
@@ -67,7 +67,7 @@
                 IsVisible="{Binding IsSearchResultsVisible}"
                 ItemsSource="{Binding SearchSortOptions}"
                 SelectedItem="{Binding SearchSort}"
-                ToolTip.Tip="Sort results">
+                ToolTip.Tip="{x:Static lang:Resources.Label_SortResults}">
                 <ComboBox.ItemTemplate>
                     <DataTemplate x:DataType="huggingFace:HuggingFaceSearchSort">
                         <TextBlock Text="{Binding Converter={StaticResource EnumDescriptionConverter}}" />
@@ -319,7 +319,7 @@
                                             VerticalAlignment="Center"
                                             Orientation="Horizontal"
                                             Spacing="4"
-                                            ToolTip.Tip="Downloads">
+                                            ToolTip.Tip="{x:Static lang:Resources.Label_Downloads}">
                                             <avalonia:Icon
                                                 FontSize="11"
                                                 Opacity="0.7"
@@ -335,7 +335,7 @@
                                             VerticalAlignment="Center"
                                             Orientation="Horizontal"
                                             Spacing="4"
-                                            ToolTip.Tip="Likes">
+                                            ToolTip.Tip="{x:Static lang:Resources.Label_Likes}">
                                             <avalonia:Icon
                                                 FontSize="11"
                                                 Opacity="0.7"
@@ -374,7 +374,7 @@
                     FontSize="12"
                     IsVisible="{Binding ShowEndOfResults}"
                     Opacity="0.5"
-                    Text="End of results" />
+                    Text="{x:Static lang:Resources.Label_EndOfResults}" />
             </StackPanel>
         </ScrollViewer>
 
@@ -413,13 +413,13 @@
                     Spacing="12">
                     <CheckBox
                         VerticalAlignment="Center"
-                        Content="Hide installed"
+                        Content="{x:Static lang:Resources.Label_HideInstalled}"
                         IsChecked="{Binding HideInstalled}" />
                     <ToggleSwitch
                         MinWidth="0"
                         VerticalAlignment="Center"
                         IsChecked="{Binding IsStructuredView}"
-                        ToolTip.Tip="Toggle between a flat list and a folder tree">
+                        ToolTip.Tip="{x:Static lang:Resources.Label_ToggleFlatOrTree}">
                         <ToggleSwitch.Resources>
                             <!--  No header here, so drop the reserved header margin that offsets the knob downward.  -->
                             <Thickness x:Key="ToggleSwitchTopHeaderMargin">0</Thickness>
@@ -439,7 +439,7 @@
                 Margin="0,0,0,8"
                 VerticalAlignment="Center"
                 Text="{Binding RepoFilter}"
-                Watermark="Filter files by name…">
+                Watermark="{x:Static lang:Resources.Label_FilterFilesByName}">
                 <TextBox.InnerLeftContent>
                     <avalonia:Icon
                         Margin="8,0,0,0"
@@ -493,7 +493,7 @@
                                         IsVisible="{Binding !Exists}"
                                         ItemsSource="{Binding AvailableFolders}"
                                         SelectedItem="{Binding SelectedFolder}"
-                                        ToolTip.Tip="Destination folder">
+                                        ToolTip.Tip="{x:Static lang:Resources.Label_DestinationFolder}">
                                         <ComboBox.ItemTemplate>
                                             <DataTemplate x:DataType="models:SharedFolderType">
                                                 <TextBlock Text="{Binding Converter={StaticResource EnumDescriptionConverter}}" />
@@ -508,7 +508,7 @@
                                         IsVisible="{Binding Exists}"
                                         Orientation="Horizontal"
                                         Spacing="5"
-                                        ToolTip.Tip="{Binding SelectedFolder, Converter={StaticResource EnumDescriptionConverter}, StringFormat='Installed in {0}'}">
+                                        ToolTip.Tip="{Binding SelectedFolder, Converter={StaticResource EnumDescriptionConverter}, StringFormat={x:Static lang:Resources.Label_InstalledInFolder}}">
                                         <avalonia:Icon
                                             VerticalAlignment="Center"
                                             Foreground="{DynamicResource SystemFillColorSuccessBrush}"
@@ -516,7 +516,7 @@
                                         <TextBlock
                                             VerticalAlignment="Center"
                                             Opacity="0.7"
-                                            Text="Installed" />
+                                            Text="{x:Static lang:Resources.Label_Installed}" />
                                     </StackPanel>
                                 </Grid>
                             </Border>
@@ -575,7 +575,7 @@
                                     Padding="0"
                                     VerticalAlignment="Center"
                                     IsChecked="{Binding IsChecked}"
-                                    ToolTip.Tip="Select all files in this folder" />
+                                    ToolTip.Tip="{x:Static lang:Resources.Label_SelectAllFilesInFolder}" />
                                 <avalonia:Icon VerticalAlignment="Center" Value="fa-solid fa-folder" />
                                 <TextBlock
                                     VerticalAlignment="Center"
@@ -616,7 +616,7 @@
                                 IsVisible="{Binding !File.Exists, FallbackValue=False}"
                                 ItemsSource="{Binding File.AvailableFolders}"
                                 SelectedItem="{Binding File.SelectedFolder}"
-                                ToolTip.Tip="Destination folder">
+                                ToolTip.Tip="{x:Static lang:Resources.Label_DestinationFolder}">
                                 <ComboBox.ItemTemplate>
                                     <DataTemplate x:DataType="models:SharedFolderType">
                                         <TextBlock Text="{Binding Converter={StaticResource EnumDescriptionConverter}}" />
@@ -631,7 +631,7 @@
                                 IsVisible="{Binding File.Exists, FallbackValue=False, TargetNullValue=False}"
                                 Orientation="Horizontal"
                                 Spacing="5"
-                                ToolTip.Tip="{Binding File.SelectedFolder, Converter={StaticResource EnumDescriptionConverter}, StringFormat='Installed in {0}'}">
+                                ToolTip.Tip="{Binding File.SelectedFolder, Converter={StaticResource EnumDescriptionConverter}, StringFormat={x:Static lang:Resources.Label_InstalledInFolder}}">
                                 <avalonia:Icon
                                     VerticalAlignment="Center"
                                     Foreground="{DynamicResource SystemFillColorSuccessBrush}"
@@ -639,7 +639,7 @@
                                 <TextBlock
                                     VerticalAlignment="Center"
                                     Opacity="0.7"
-                                    Text="Installed" />
+                                    Text="{x:Static lang:Resources.Label_Installed}" />
                             </StackPanel>
                         </Grid>
                     </TreeDataTemplate>
@@ -680,9 +680,9 @@
                             VerticalAlignment="Center"
                             IsVisible="{Binding IsRepoFilesVisible}"
                             ItemsSource="{Binding BulkDestinationOptions}"
-                            PlaceholderText="Set destination…"
+                            PlaceholderText="{x:Static lang:Resources.Label_SetDestination}"
                             SelectedItem="{Binding BulkDestination}"
-                            ToolTip.Tip="Set the destination folder for all selected files">
+                            ToolTip.Tip="{x:Static lang:Resources.Label_SetDestinationTooltip}">
                             <ComboBox.ItemTemplate>
                                 <DataTemplate x:DataType="checkpointBrowser:BulkDestinationOption">
                                     <TextBlock Text="{Binding Label}" />
@@ -697,7 +697,7 @@
                             IsVisible="{Binding IsRepoFilesVisible}">
                             <StackPanel Orientation="Horizontal" Spacing="6">
                                 <avalonia:Icon VerticalAlignment="Center" Value="fa-solid fa-folder-plus" />
-                                <TextBlock Text="Import to folder" />
+                                <TextBlock Text="{x:Static lang:Resources.Action_ImportToFolder}" />
                                 <ui:SymbolIcon FontSize="12" Symbol="ChevronDown" />
                             </StackPanel>
                             <Button.Flyout>
@@ -705,7 +705,7 @@
                                     <StackPanel Width="320" Spacing="8">
                                         <TextBlock
                                             Opacity="0.8"
-                                            Text="Download the selected files into one folder, keeping the repo's structure (needed for diffusers / multi-file models)."
+                                            Text="{x:Static lang:Resources.Label_ImportToFolderDescription}"
                                             TextWrapping="Wrap" />
                                         <StackPanel
                                             IsVisible="{Binding IsDiffusersRepo}"
@@ -718,7 +718,7 @@
                                             <TextBlock
                                                 VerticalAlignment="Center"
                                                 FontSize="12"
-                                                Text="Detected a diffusers model — recommended." />
+                                                Text="{x:Static lang:Resources.Label_DiffusersDetected}" />
                                         </StackPanel>
 
                                         <!--  Type + subfolder  -->
@@ -726,7 +726,7 @@
                                             <TextBlock
                                                 FontSize="12"
                                                 Opacity="0.7"
-                                                Text="Folder" />
+                                                Text="{x:Static lang:Resources.Label_Folder}" />
                                             <ComboBox
                                                 HorizontalAlignment="Stretch"
                                                 ItemsSource="{Binding SelectableFolders}"
@@ -740,8 +740,8 @@
                                             <TextBlock
                                                 FontSize="12"
                                                 Opacity="0.7"
-                                                Text="Subfolder" />
-                                            <TextBox Text="{Binding FolderImportSubfolder}" Watermark="repo name" />
+                                                Text="{x:Static lang:Resources.Label_Subfolder}" />
+                                            <TextBox Text="{Binding FolderImportSubfolder}" Watermark="{x:Static lang:Resources.Label_RepoNameWatermark}" />
                                         </StackPanel>
 
                                         <!--  Custom folder (from Browse)  -->
@@ -749,7 +749,7 @@
                                             <TextBlock
                                                 FontSize="12"
                                                 Opacity="0.7"
-                                                Text="Custom folder" />
+                                                Text="{x:Static lang:Resources.Label_CustomFolder}" />
                                             <Grid ColumnDefinitions="*,Auto">
                                                 <TextBlock
                                                     VerticalAlignment="Center"
@@ -761,7 +761,7 @@
                                                     Padding="4"
                                                     Classes="transparent"
                                                     Command="{Binding ClearCustomFolderCommand}"
-                                                    ToolTip.Tip="Clear custom folder">
+                                                    ToolTip.Tip="{x:Static lang:Resources.Action_ClearCustomFolder}">
                                                     <ui:SymbolIcon Symbol="Cancel" />
                                                 </Button>
                                             </Grid>
@@ -770,13 +770,13 @@
                                         <Button
                                             HorizontalAlignment="Left"
                                             Click="BrowseFolder_OnClick"
-                                            Content="Browse…" />
+                                            Content="{x:Static lang:Resources.Action_Browse}" />
                                         <Button
                                             HorizontalAlignment="Stretch"
                                             HorizontalContentAlignment="Center"
                                             Classes="accent"
                                             Command="{Binding ImportSelectedToFolderCommand}"
-                                            Content="Import to folder" />
+                                            Content="{x:Static lang:Resources.Action_ImportToFolder}" />
                                     </StackPanel>
                                 </Flyout>
                             </Button.Flyout>

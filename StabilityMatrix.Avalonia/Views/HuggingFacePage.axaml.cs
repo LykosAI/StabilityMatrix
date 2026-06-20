@@ -61,7 +61,11 @@ public partial class HuggingFacePage : UserControlBase
             return;
 
         var folders = await storageProvider.OpenFolderPickerAsync(
-            new FolderPickerOpenOptions { Title = "Choose destination folder", AllowMultiple = false }
+            new FolderPickerOpenOptions
+            {
+                Title = Languages.Resources.Label_ChooseDestinationFolder,
+                AllowMultiple = false,
+            }
         );
 
         if (folders.Count > 0)

@@ -5041,5 +5041,245 @@ namespace StabilityMatrix.Avalonia.Languages {
                 return ResourceManager.GetString("Error_GeminiAccessForbidden", resourceCulture);
             }
         }
+
+        public static string Label_HuggingFaceSearchWatermark {
+            get {
+                return ResourceManager.GetString("Label_HuggingFaceSearchWatermark", resourceCulture);
+            }
+        }
+
+        public static string Label_SortResults {
+            get {
+                return ResourceManager.GetString("Label_SortResults", resourceCulture);
+            }
+        }
+
+        public static string Label_HideInstalled {
+            get {
+                return ResourceManager.GetString("Label_HideInstalled", resourceCulture);
+            }
+        }
+
+        public static string Label_ToggleFlatOrTree {
+            get {
+                return ResourceManager.GetString("Label_ToggleFlatOrTree", resourceCulture);
+            }
+        }
+
+        public static string Label_FlatList {
+            get {
+                return ResourceManager.GetString("Label_FlatList", resourceCulture);
+            }
+        }
+
+        public static string Label_FolderTree {
+            get {
+                return ResourceManager.GetString("Label_FolderTree", resourceCulture);
+            }
+        }
+
+        public static string Label_FilterFilesByName {
+            get {
+                return ResourceManager.GetString("Label_FilterFilesByName", resourceCulture);
+            }
+        }
+
+        public static string Label_SelectAllFilesInFolder {
+            get {
+                return ResourceManager.GetString("Label_SelectAllFilesInFolder", resourceCulture);
+            }
+        }
+
+        public static string Label_DestinationFolder {
+            get {
+                return ResourceManager.GetString("Label_DestinationFolder", resourceCulture);
+            }
+        }
+
+        public static string Label_InstalledInFolder {
+            get {
+                return ResourceManager.GetString("Label_InstalledInFolder", resourceCulture);
+            }
+        }
+
+        public static string Label_EndOfResults {
+            get {
+                return ResourceManager.GetString("Label_EndOfResults", resourceCulture);
+            }
+        }
+
+        public static string Label_Likes {
+            get {
+                return ResourceManager.GetString("Label_Likes", resourceCulture);
+            }
+        }
+
+        public static string Label_SetDestination {
+            get {
+                return ResourceManager.GetString("Label_SetDestination", resourceCulture);
+            }
+        }
+
+        public static string Label_SetDestinationTooltip {
+            get {
+                return ResourceManager.GetString("Label_SetDestinationTooltip", resourceCulture);
+            }
+        }
+
+        public static string Action_ImportToFolder {
+            get {
+                return ResourceManager.GetString("Action_ImportToFolder", resourceCulture);
+            }
+        }
+
+        public static string Label_ImportToFolderDescription {
+            get {
+                return ResourceManager.GetString("Label_ImportToFolderDescription", resourceCulture);
+            }
+        }
+
+        public static string Label_DiffusersDetected {
+            get {
+                return ResourceManager.GetString("Label_DiffusersDetected", resourceCulture);
+            }
+        }
+
+        public static string Label_Subfolder {
+            get {
+                return ResourceManager.GetString("Label_Subfolder", resourceCulture);
+            }
+        }
+
+        public static string Label_CustomFolder {
+            get {
+                return ResourceManager.GetString("Label_CustomFolder", resourceCulture);
+            }
+        }
+
+        public static string Action_ClearCustomFolder {
+            get {
+                return ResourceManager.GetString("Action_ClearCustomFolder", resourceCulture);
+            }
+        }
+
+        public static string Action_Browse {
+            get {
+                return ResourceManager.GetString("Action_Browse", resourceCulture);
+            }
+        }
+
+        public static string Label_RepoNameWatermark {
+            get {
+                return ResourceManager.GetString("Label_RepoNameWatermark", resourceCulture);
+            }
+        }
+
+        public static string Label_AutoDetected {
+            get {
+                return ResourceManager.GetString("Label_AutoDetected", resourceCulture);
+            }
+        }
+
+        public static string Label_ChooseDestinationFolder {
+            get {
+                return ResourceManager.GetString("Label_ChooseDestinationFolder", resourceCulture);
+            }
+        }
+
+        public static string Label_HuggingFaceRepoGated {
+            get {
+                return ResourceManager.GetString("Label_HuggingFaceRepoGated", resourceCulture);
+            }
+        }
+
+        public static string Label_HuggingFaceRepoNotFound {
+            get {
+                return ResourceManager.GetString("Label_HuggingFaceRepoNotFound", resourceCulture);
+            }
+        }
+
+        public static string Label_HuggingFaceRepoLoadFailed {
+            get {
+                return ResourceManager.GetString("Label_HuggingFaceRepoLoadFailed", resourceCulture);
+            }
+        }
+
+        public static string Label_HuggingFaceSearchFailed {
+            get {
+                return ResourceManager.GetString("Label_HuggingFaceSearchFailed", resourceCulture);
+            }
+        }
+
+        public static string Label_NumSelected {
+            get {
+                return ResourceManager.GetString("Label_NumSelected", resourceCulture);
+            }
+        }
+
+        public static string Label_NumFilesWithSize {
+            get {
+                return ResourceManager.GetString("Label_NumFilesWithSize", resourceCulture);
+            }
+        }
+
+        public static string Label_NotEnoughFreeSpace {
+            get {
+                return ResourceManager.GetString("Label_NotEnoughFreeSpace", resourceCulture);
+            }
+        }
+
+        public static string Label_AddedToDownloadQueue {
+            get {
+                return ResourceManager.GetString("Label_AddedToDownloadQueue", resourceCulture);
+            }
+        }
+
+        public static string Label_AddedToDownloadQueueFormat {
+            get {
+                return ResourceManager.GetString("Label_AddedToDownloadQueueFormat", resourceCulture);
+            }
+        }
+
+        public static string Label_JustNow {
+            get {
+                return ResourceManager.GetString("Label_JustNow", resourceCulture);
+            }
+        }
+
+        public static string Label_TimeYearsAgo {
+            get {
+                return ResourceManager.GetString("Label_TimeYearsAgo", resourceCulture);
+            }
+        }
+
+        public static string Label_TimeMonthsAgo {
+            get {
+                return ResourceManager.GetString("Label_TimeMonthsAgo", resourceCulture);
+            }
+        }
+
+        public static string Label_TimeDaysAgo {
+            get {
+                return ResourceManager.GetString("Label_TimeDaysAgo", resourceCulture);
+            }
+        }
+
+        public static string Label_TimeHoursAgo {
+            get {
+                return ResourceManager.GetString("Label_TimeHoursAgo", resourceCulture);
+            }
+        }
+
+        public static string Label_TimeMinutesAgo {
+            get {
+                return ResourceManager.GetString("Label_TimeMinutesAgo", resourceCulture);
+            }
+        }
+
+        public static string Label_UpdatedAgo {
+            get {
+                return ResourceManager.GetString("Label_UpdatedAgo", resourceCulture);
+            }
+        }
     }
 }

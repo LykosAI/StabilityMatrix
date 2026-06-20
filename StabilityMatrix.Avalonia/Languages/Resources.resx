@@ -1832,4 +1832,124 @@ Account tokens will not be viewable after saving, please make a note of them if 
   <data name="Action_CustomFolderEllipsis" xml:space="preserve">
     <value>Custom...</value>
   </data>
+  <data name="Label_HuggingFaceSearchWatermark" xml:space="preserve">
+    <value>Search HuggingFace, or paste a repo URL / id (owner/name)…</value>
+  </data>
+  <data name="Label_SortResults" xml:space="preserve">
+    <value>Sort results</value>
+  </data>
+  <data name="Label_HideInstalled" xml:space="preserve">
+    <value>Hide installed</value>
+  </data>
+  <data name="Label_ToggleFlatOrTree" xml:space="preserve">
+    <value>Toggle between a flat list and a folder tree</value>
+  </data>
+  <data name="Label_FlatList" xml:space="preserve">
+    <value>Flat list</value>
+  </data>
+  <data name="Label_FolderTree" xml:space="preserve">
+    <value>Folder tree</value>
+  </data>
+  <data name="Label_FilterFilesByName" xml:space="preserve">
+    <value>Filter files by name…</value>
+  </data>
+  <data name="Label_SelectAllFilesInFolder" xml:space="preserve">
+    <value>Select all files in this folder</value>
+  </data>
+  <data name="Label_DestinationFolder" xml:space="preserve">
+    <value>Destination folder</value>
+  </data>
+  <data name="Label_InstalledInFolder" xml:space="preserve">
+    <value>Installed in {0}</value>
+  </data>
+  <data name="Label_EndOfResults" xml:space="preserve">
+    <value>End of results</value>
+  </data>
+  <data name="Label_Likes" xml:space="preserve">
+    <value>Likes</value>
+  </data>
+  <data name="Label_SetDestination" xml:space="preserve">
+    <value>Set destination…</value>
+  </data>
+  <data name="Label_SetDestinationTooltip" xml:space="preserve">
+    <value>Set the destination folder for all selected files</value>
+  </data>
+  <data name="Action_ImportToFolder" xml:space="preserve">
+    <value>Import to folder</value>
+  </data>
+  <data name="Label_ImportToFolderDescription" xml:space="preserve">
+    <value>Download the selected files into one folder, keeping the repo's structure (needed for diffusers / multi-file models).</value>
+  </data>
+  <data name="Label_DiffusersDetected" xml:space="preserve">
+    <value>Detected a diffusers model — recommended.</value>
+  </data>
+  <data name="Label_Subfolder" xml:space="preserve">
+    <value>Subfolder</value>
+  </data>
+  <data name="Label_CustomFolder" xml:space="preserve">
+    <value>Custom folder</value>
+  </data>
+  <data name="Action_ClearCustomFolder" xml:space="preserve">
+    <value>Clear custom folder</value>
+  </data>
+  <data name="Action_Browse" xml:space="preserve">
+    <value>Browse…</value>
+  </data>
+  <data name="Label_RepoNameWatermark" xml:space="preserve">
+    <value>repo name</value>
+  </data>
+  <data name="Label_AutoDetected" xml:space="preserve">
+    <value>Auto (detected)</value>
+  </data>
+  <data name="Label_ChooseDestinationFolder" xml:space="preserve">
+    <value>Choose destination folder</value>
+  </data>
+  <data name="Label_HuggingFaceRepoGated" xml:space="preserve">
+    <value>This repository is gated or private. Add your HuggingFace token in Settings → Accounts to access it.</value>
+  </data>
+  <data name="Label_HuggingFaceRepoNotFound" xml:space="preserve">
+    <value>Repository '{0}' was not found.</value>
+  </data>
+  <data name="Label_HuggingFaceRepoLoadFailed" xml:space="preserve">
+    <value>Couldn't load '{0}' ({1})</value>
+  </data>
+  <data name="Label_HuggingFaceSearchFailed" xml:space="preserve">
+    <value>Search failed ({0})</value>
+  </data>
+  <data name="Label_NumSelected" xml:space="preserve">
+    <value>{0} selected</value>
+  </data>
+  <data name="Label_NumFilesWithSize" xml:space="preserve">
+    <value>{0} files · {1}</value>
+  </data>
+  <data name="Label_NotEnoughFreeSpace" xml:space="preserve">
+    <value>Not enough free space — need {0}, only {1} available.</value>
+  </data>
+  <data name="Label_AddedToDownloadQueue" xml:space="preserve">
+    <value>Added to the download queue.</value>
+  </data>
+  <data name="Label_AddedToDownloadQueueFormat" xml:space="preserve">
+    <value>{0} added to the download queue.</value>
+  </data>
+  <data name="Label_JustNow" xml:space="preserve">
+    <value>just now</value>
+  </data>
+  <data name="Label_TimeYearsAgo" xml:space="preserve">
+    <value>{0}y ago</value>
+  </data>
+  <data name="Label_TimeMonthsAgo" xml:space="preserve">
+    <value>{0}mo ago</value>
+  </data>
+  <data name="Label_TimeDaysAgo" xml:space="preserve">
+    <value>{0}d ago</value>
+  </data>
+  <data name="Label_TimeHoursAgo" xml:space="preserve">
+    <value>{0}h ago</value>
+  </data>
+  <data name="Label_TimeMinutesAgo" xml:space="preserve">
+    <value>{0}m ago</value>
+  </data>
+  <data name="Label_UpdatedAgo" xml:space="preserve">
+    <value>updated {0}</value>
+  </data>
 </root>

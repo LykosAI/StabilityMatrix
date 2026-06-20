@@ -111,7 +111,7 @@ public partial class HuggingFacePageViewModel : TabViewModelBase, IHandleNavigat
 
     /// <summary>Options for the "set destination" dropdown: "Auto (detected)" plus each folder type.</summary>
     public IReadOnlyList<BulkDestinationOption> BulkDestinationOptions { get; } =
-        new[] { new BulkDestinationOption("Auto (detected)", null) }
+        new[] { new BulkDestinationOption(Resources.Label_AutoDetected, null) }
             .Concat(
                 HuggingFaceFolderInference.SelectableFolders.Select(f => new BulkDestinationOption(
                     f.GetDescription() ?? f.ToString(),
@@ -365,7 +365,10 @@ public partial class HuggingFacePageViewModel : TabViewModelBase, IHandleNavigat
                 if (!append)
                 {
                     SearchResults.Clear();
-                    ErrorMessage = $"Search failed ({(int)response.StatusCode})";
+                    ErrorMessage = string.Format(
+                        Resources.Label_HuggingFaceSearchFailed,
+                        (int)response.StatusCode
+                    );
                 }
             }
             else
@@ -501,16 +504,19 @@ public partial class HuggingFacePageViewModel : TabViewModelBase, IHandleNavigat
 
             if (response.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden)
             {
-                ErrorMessage =
-                    "This repository is gated or private. Add your HuggingFace token in Settings → Accounts to access it.";
+                ErrorMessage = Resources.Label_HuggingFaceRepoGated;
             }
             else if (response.StatusCode == HttpStatusCode.NotFound)
             {
-                ErrorMessage = $"Repository '{repoId}' was not found.";
+                ErrorMessage = string.Format(Resources.Label_HuggingFaceRepoNotFound, repoId);
             }
             else if (!response.IsSuccessStatusCode || response.Content is null)
             {
-                ErrorMessage = $"Couldn't load '{repoId}' ({(int)response.StatusCode})";
+                ErrorMessage = string.Format(
+                    Resources.Label_HuggingFaceRepoLoadFailed,
+                    repoId,
+                    (int)response.StatusCode
+                );
             }
             else
             {
@@ -783,14 +789,17 @@ public partial class HuggingFacePageViewModel : TabViewModelBase, IHandleNavigat
 
         if (Mode != HuggingFaceBrowserMode.RepoFiles)
         {
-            SelectionSummary = $"{NumSelected} selected";
+            SelectionSummary = string.Format(Resources.Label_NumSelected, NumSelected);
             DiskSpaceWarning = null;
             return;
         }
 
-        var fileWord = NumSelected == 1 ? "file" : "files";
         var totalBytes = allRepoFiles.Where(f => f.IsSelected).Sum(f => f.Size);
-        SelectionSummary = $"{NumSelected} {fileWord} · {Size.FormatBase10Bytes(totalBytes)}";
+        SelectionSummary = string.Format(
+            Resources.Label_NumFilesWithSize,
+            NumSelected,
+            Size.FormatBase10Bytes(totalBytes)
+        );
 
         if (
             !Design.IsDesignMode
@@ -798,9 +807,11 @@ public partial class HuggingFacePageViewModel : TabViewModelBase, IHandleNavigat
             && totalBytes > freeBytes
         )
         {
-            DiskSpaceWarning =
-                $"Not enough free space — need {Size.FormatBase10Bytes(totalBytes)}, "
-                + $"only {Size.FormatBase10Bytes(freeBytes)} available.";
+            DiskSpaceWarning = string.Format(
+                Resources.Label_NotEnoughFreeSpace,
+                Size.FormatBase10Bytes(totalBytes),
+                Size.FormatBase10Bytes(freeBytes)
+            );
         }
         else
         {
@@ -877,7 +888,9 @@ public partial class HuggingFacePageViewModel : TabViewModelBase, IHandleNavigat
 
         notificationService.Show(
             Resources.Label_DownloadStarted,
-            summary is null ? "Added to the download queue." : $"{summary} added to the download queue.",
+            summary is null
+                ? Resources.Label_AddedToDownloadQueue
+                : string.Format(Resources.Label_AddedToDownloadQueueFormat, summary),
             NotificationType.Information
         );
     }
@@ -970,7 +983,9 @@ public partial class HuggingFacePageViewModel : TabViewModelBase, IHandleNavigat
 
         notificationService.Show(
             Resources.Label_DownloadStarted,
-            summary is null ? "Added to the download queue." : $"{summary} added to the download queue.",
+            summary is null
+                ? Resources.Label_AddedToDownloadQueue
+                : string.Format(Resources.Label_AddedToDownloadQueueFormat, summary),
             NotificationType.Information
         );
     }

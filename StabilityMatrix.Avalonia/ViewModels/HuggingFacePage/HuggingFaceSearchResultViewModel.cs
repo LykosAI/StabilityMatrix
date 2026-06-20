@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Models.Api.HuggingFace;
 
@@ -40,7 +41,8 @@ public partial class HuggingFaceSearchResultViewModel : ViewModelBase
 
     public bool HasPipelineTag => !string.IsNullOrWhiteSpace(Entry.PipelineTag);
 
-    public string? LastUpdatedText => Entry.LastModified is { } t ? $"updated {FormatRelativeTime(t)}" : null;
+    public string? LastUpdatedText =>
+        Entry.LastModified is { } t ? string.Format(Resources.Label_UpdatedAgo, FormatRelativeTime(t)) : null;
 
     [RelayCommand]
     private void Select() => OnSelected?.Invoke(Entry.Id);
@@ -58,12 +60,12 @@ public partial class HuggingFaceSearchResultViewModel : ViewModelBase
         var span = DateTimeOffset.UtcNow - time;
         return span switch
         {
-            { TotalDays: >= 365 } => $"{(int)(span.TotalDays / 365)}y ago",
-            { TotalDays: >= 30 } => $"{(int)(span.TotalDays / 30)}mo ago",
-            { TotalDays: >= 1 } => $"{(int)span.TotalDays}d ago",
-            { TotalHours: >= 1 } => $"{(int)span.TotalHours}h ago",
-            { TotalMinutes: >= 1 } => $"{(int)span.TotalMinutes}m ago",
-            _ => "just now",
+            { TotalDays: >= 365 } => string.Format(Resources.Label_TimeYearsAgo, (int)(span.TotalDays / 365)),
+            { TotalDays: >= 30 } => string.Format(Resources.Label_TimeMonthsAgo, (int)(span.TotalDays / 30)),
+            { TotalDays: >= 1 } => string.Format(Resources.Label_TimeDaysAgo, (int)span.TotalDays),
+            { TotalHours: >= 1 } => string.Format(Resources.Label_TimeHoursAgo, (int)span.TotalHours),
+            { TotalMinutes: >= 1 } => string.Format(Resources.Label_TimeMinutesAgo, (int)span.TotalMinutes),
+            _ => Resources.Label_JustNow,
         };
     }
 }

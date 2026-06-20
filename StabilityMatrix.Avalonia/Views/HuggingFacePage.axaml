@@ -669,13 +669,122 @@
             IsIconVisible="False"
             IsOpen="{Binding !!NumSelected}">
             <ui:InfoBar.ActionButton>
-                <StackPanel Orientation="Vertical" Spacing="4">
-                    <Button
+                <StackPanel Orientation="Vertical" Spacing="6">
+                    <StackPanel
                         HorizontalAlignment="Right"
-                        VerticalAlignment="Center"
-                        Classes="accent"
-                        Command="{Binding ImportSelectedCommand}"
-                        Content="{x:Static lang:Resources.Action_Import}" />
+                        Orientation="Horizontal"
+                        Spacing="6">
+                        <!--  Bulk-set destination for all selected files (repo files only)  -->
+                        <ComboBox
+                            MinWidth="150"
+                            VerticalAlignment="Center"
+                            IsVisible="{Binding IsRepoFilesVisible}"
+                            ItemsSource="{Binding SelectableFolders}"
+                            PlaceholderText="Set destination…"
+                            SelectedItem="{Binding BulkDestination}"
+                            ToolTip.Tip="Set the destination folder for all selected files">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate x:DataType="models:SharedFolderType">
+                                    <TextBlock Text="{Binding Converter={StaticResource EnumDescriptionConverter}}" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+
+                        <!--  Structure-preserving "import to folder" (repo files only)  -->
+                        <Button VerticalAlignment="Center" IsVisible="{Binding IsRepoFilesVisible}">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <avalonia:Icon VerticalAlignment="Center" Value="fa-solid fa-folder-plus" />
+                                <TextBlock Text="Import to folder" />
+                                <ui:SymbolIcon FontSize="12" Symbol="ChevronDown" />
+                            </StackPanel>
+                            <Button.Flyout>
+                                <Flyout Placement="Top">
+                                    <StackPanel Width="320" Spacing="8">
+                                        <TextBlock
+                                            Opacity="0.8"
+                                            Text="Download the selected files into one folder, keeping the repo's structure (needed for diffusers / multi-file models)."
+                                            TextWrapping="Wrap" />
+                                        <StackPanel
+                                            IsVisible="{Binding IsDiffusersRepo}"
+                                            Orientation="Horizontal"
+                                            Spacing="6">
+                                            <avalonia:Icon
+                                                VerticalAlignment="Center"
+                                                Foreground="{DynamicResource SystemFillColorSuccessBrush}"
+                                                Value="fa-solid fa-circle-info" />
+                                            <TextBlock
+                                                VerticalAlignment="Center"
+                                                FontSize="12"
+                                                Text="Detected a diffusers model — recommended." />
+                                        </StackPanel>
+
+                                        <!--  Type + subfolder  -->
+                                        <StackPanel IsVisible="{Binding !HasCustomFolderPath}" Spacing="6">
+                                            <TextBlock
+                                                FontSize="12"
+                                                Opacity="0.7"
+                                                Text="Folder" />
+                                            <ComboBox
+                                                HorizontalAlignment="Stretch"
+                                                ItemsSource="{Binding SelectableFolders}"
+                                                SelectedItem="{Binding FolderImportType}">
+                                                <ComboBox.ItemTemplate>
+                                                    <DataTemplate x:DataType="models:SharedFolderType">
+                                                        <TextBlock Text="{Binding Converter={StaticResource EnumDescriptionConverter}}" />
+                                                    </DataTemplate>
+                                                </ComboBox.ItemTemplate>
+                                            </ComboBox>
+                                            <TextBlock
+                                                FontSize="12"
+                                                Opacity="0.7"
+                                                Text="Subfolder" />
+                                            <TextBox Text="{Binding FolderImportSubfolder}" Watermark="repo name" />
+                                        </StackPanel>
+
+                                        <!--  Custom folder (from Browse)  -->
+                                        <StackPanel IsVisible="{Binding HasCustomFolderPath}" Spacing="4">
+                                            <TextBlock
+                                                FontSize="12"
+                                                Opacity="0.7"
+                                                Text="Custom folder" />
+                                            <Grid ColumnDefinitions="*,Auto">
+                                                <TextBlock
+                                                    VerticalAlignment="Center"
+                                                    Text="{Binding FolderImportCustomPath}"
+                                                    TextTrimming="CharacterEllipsis"
+                                                    ToolTip.Tip="{Binding FolderImportCustomPath}" />
+                                                <Button
+                                                    Grid.Column="1"
+                                                    Padding="4"
+                                                    Classes="transparent"
+                                                    Command="{Binding ClearCustomFolderCommand}"
+                                                    ToolTip.Tip="Clear custom folder">
+                                                    <ui:SymbolIcon Symbol="Cancel" />
+                                                </Button>
+                                            </Grid>
+                                        </StackPanel>
+
+                                        <Button
+                                            HorizontalAlignment="Left"
+                                            Click="BrowseFolder_OnClick"
+                                            Content="Browse…" />
+                                        <Button
+                                            HorizontalAlignment="Stretch"
+                                            HorizontalContentAlignment="Center"
+                                            Classes="accent"
+                                            Command="{Binding ImportSelectedToFolderCommand}"
+                                            Content="Import to folder" />
+                                    </StackPanel>
+                                </Flyout>
+                            </Button.Flyout>
+                        </Button>
+
+                        <Button
+                            VerticalAlignment="Center"
+                            Classes="accent"
+                            Command="{Binding ImportSelectedCommand}"
+                            Content="{x:Static lang:Resources.Action_Import}" />
+                    </StackPanel>
                     <StackPanel
                         MaxWidth="320"
                         HorizontalAlignment="Right"

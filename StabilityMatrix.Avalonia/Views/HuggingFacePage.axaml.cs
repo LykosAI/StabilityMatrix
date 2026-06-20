@@ -3,6 +3,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Platform.Storage;
 using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Models;
@@ -48,6 +49,23 @@ public partial class HuggingFacePage : UserControlBase
             vm.SelectRangeTo(file);
             e.Handled = true;
         }
+    }
+
+    private async void BrowseFolder_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is not HuggingFacePageViewModel vm)
+            return;
+
+        var storageProvider = TopLevel.GetTopLevel(this)?.StorageProvider;
+        if (storageProvider is null)
+            return;
+
+        var folders = await storageProvider.OpenFolderPickerAsync(
+            new FolderPickerOpenOptions { Title = "Choose destination folder", AllowMultiple = false }
+        );
+
+        if (folders.Count > 0)
+            vm.FolderImportCustomPath = folders[0].Path.LocalPath;
     }
 
     private void SearchResults_OnScrollChanged(object? sender, ScrollChangedEventArgs e)

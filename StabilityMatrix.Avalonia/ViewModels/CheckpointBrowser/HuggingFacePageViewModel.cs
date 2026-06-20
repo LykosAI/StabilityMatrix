@@ -84,6 +84,32 @@ public partial class HuggingFacePageViewModel : TabViewModelBase, IHandleNavigat
     public IReadOnlyList<HuggingFaceSearchSort> SearchSortOptions { get; } =
         Enum.GetValues<HuggingFaceSearchSort>();
 
+    /// <summary>Destination folder types offered in the dropdowns.</summary>
+    public IReadOnlyList<SharedFolderType> SelectableFolders => HuggingFaceFolderInference.SelectableFolders;
+
+    /// <summary>True when the repo looks like a diffusers model (has a root <c>model_index.json</c>).</summary>
+    [ObservableProperty]
+    private bool isDiffusersRepo;
+
+    /// <summary>Destination folder type for the structured "import to folder" action.</summary>
+    [ObservableProperty]
+    private SharedFolderType folderImportType = SharedFolderType.Diffusers;
+
+    /// <summary>Subfolder name for "import to folder" (defaults to the repo name).</summary>
+    [ObservableProperty]
+    private string? folderImportSubfolder;
+
+    /// <summary>When set (via Browse), a custom absolute destination that overrides type + subfolder.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasCustomFolderPath))]
+    private string? folderImportCustomPath;
+
+    public bool HasCustomFolderPath => !string.IsNullOrEmpty(FolderImportCustomPath);
+
+    /// <summary>Bound to the "set destination" dropdown; applies to all selected files on pick.</summary>
+    [ObservableProperty]
+    private SharedFolderType? bulkDestination;
+
     /// <summary>When true, the repo is shown as an expandable folder tree; otherwise a flat list.</summary>
     [ObservableProperty]
     private bool isStructuredView = true;
@@ -489,6 +515,17 @@ public partial class HuggingFacePageViewModel : TabViewModelBase, IHandleNavigat
                     allRepoFiles.Add(vm);
                 }
 
+                // Diffusers repos are a tree of loose files (model_index.json at the root) that must
+                // keep their structure, so default such repos to a folder import under Diffusers/<repo>.
+                IsDiffusersRepo = allRepoFiles.Any(f =>
+                    f.Path.Equals("model_index.json", StringComparison.OrdinalIgnoreCase)
+                );
+                FolderImportCustomPath = null;
+                FolderImportSubfolder = parts[1];
+                FolderImportType = IsDiffusersRepo
+                    ? SharedFolderType.Diffusers
+                    : HuggingFaceFolderInference.Infer(allRepoFiles.FirstOrDefault()?.Path ?? string.Empty);
+
                 RebuildRepoViews();
             }
 
@@ -861,18 +898,7 @@ public partial class HuggingFacePageViewModel : TabViewModelBase, IHandleNavigat
                     )
                 );
 
-                downloadPath.Directory?.Create();
-                var download = trackedDownloadService.NewDownload(url, downloadPath);
-                download.ProgressStateChanged += (_, e) =>
-                {
-                    if (e == ProgressState.Success)
-                    {
-                        viewModel.NotifyExistsChanged();
-                    }
-                };
-                await trackedDownloadService.TryStartDownload(download);
-
-                await Task.Delay(Random.Shared.Next(50, 100));
+                await StartFileDownloadAsync(url, downloadPath, viewModel.NotifyExistsChanged);
             }
 
             viewModel.IsSelected = false;
@@ -893,21 +919,77 @@ public partial class HuggingFacePageViewModel : TabViewModelBase, IHandleNavigat
                 )
             );
 
-            downloadPath.Directory?.Create();
-            var download = trackedDownloadService.NewDownload(file.DownloadUrl, downloadPath);
-            download.ProgressStateChanged += (_, e) =>
-            {
-                if (e == ProgressState.Success)
-                {
-                    file.NotifyExistsChanged();
-                }
-            };
-            await trackedDownloadService.TryStartDownload(download);
-
-            await Task.Delay(Random.Shared.Next(50, 100));
-
+            await StartFileDownloadAsync(file.DownloadUrl, downloadPath, file.NotifyExistsChanged);
             file.IsSelected = false;
         }
+    }
+
+    /// <summary>
+    /// Download the selected repo files into a single base folder, preserving each file's relative
+    /// path. This is the correct way to grab diffusers / multi-file models (which are a tree of loose
+    /// files), and avoids setting a per-file destination on every row.
+    /// </summary>
+    [RelayCommand]
+    private async Task ImportSelectedToFolder()
+    {
+        var selected = allRepoFiles.Where(f => f.IsSelected).ToArray();
+        if (selected.Length == 0)
+            return;
+
+        var summary = SelectionSummary;
+        var baseDir = HasCustomFolderPath
+            ? FolderImportCustomPath!
+            : Path.Combine(
+                Design.IsDesignMode ? string.Empty : settingsManager.ModelsDirectory,
+                FolderImportType.ToString(),
+                FolderImportSubfolder?.Trim() ?? string.Empty
+            );
+
+        foreach (var file in selected)
+        {
+            var relativePath = file.Path.Replace('/', Path.DirectorySeparatorChar);
+            var downloadPath = new FilePath(Path.Combine(baseDir, relativePath));
+
+            await StartFileDownloadAsync(file.DownloadUrl, downloadPath, file.NotifyExistsChanged);
+            file.IsSelected = false;
+        }
+
+        notificationService.Show(
+            Resources.Label_DownloadStarted,
+            summary is null ? "Added to the download queue." : $"{summary} added to the download queue.",
+            NotificationType.Information
+        );
+    }
+
+    [RelayCommand]
+    private void ClearCustomFolder() => FolderImportCustomPath = null;
+
+    /// <summary>
+    /// Picking a value in the "set destination" dropdown applies it to every selected
+    /// (not-yet-installed) repo file at once, then resets so the box reads as an action prompt.
+    /// </summary>
+    partial void OnBulkDestinationChanged(SharedFolderType? value)
+    {
+        if (value is not { } folder)
+            return;
+
+        foreach (var file in allRepoFiles.Where(f => f.IsSelected && !f.Exists))
+            file.SelectedFolder = folder;
+
+        BulkDestination = null;
+    }
+
+    private async Task StartFileDownloadAsync(string url, FilePath path, Action onSuccess)
+    {
+        path.Directory?.Create();
+        var download = trackedDownloadService.NewDownload(url, path);
+        download.ProgressStateChanged += (_, e) =>
+        {
+            if (e == ProgressState.Success)
+                onSuccess();
+        };
+        await trackedDownloadService.TryStartDownload(download);
+        await Task.Delay(Random.Shared.Next(50, 100));
     }
 
     /// <summary>

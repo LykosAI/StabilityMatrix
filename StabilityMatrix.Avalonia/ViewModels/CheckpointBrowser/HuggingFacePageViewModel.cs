@@ -52,6 +52,9 @@ public enum HuggingFaceBrowserMode
     RepoFiles,
 }
 
+/// <summary>An entry in the "set destination" dropdown. A null <see cref="Folder"/> means "Auto (detected)".</summary>
+public record BulkDestinationOption(string Label, SharedFolderType? Folder);
+
 [View(typeof(Views.HuggingFacePage))]
 [RegisterSingleton<HuggingFacePageViewModel>]
 public partial class HuggingFacePageViewModel : TabViewModelBase, IHandleNavigation, IInfinitelyScroll
@@ -106,9 +109,20 @@ public partial class HuggingFacePageViewModel : TabViewModelBase, IHandleNavigat
 
     public bool HasCustomFolderPath => !string.IsNullOrEmpty(FolderImportCustomPath);
 
+    /// <summary>Options for the "set destination" dropdown: "Auto (detected)" plus each folder type.</summary>
+    public IReadOnlyList<BulkDestinationOption> BulkDestinationOptions { get; } =
+        new[] { new BulkDestinationOption("Auto (detected)", null) }
+            .Concat(
+                HuggingFaceFolderInference.SelectableFolders.Select(f => new BulkDestinationOption(
+                    f.GetDescription() ?? f.ToString(),
+                    f
+                ))
+            )
+            .ToList();
+
     /// <summary>Bound to the "set destination" dropdown; applies to all selected files on pick.</summary>
     [ObservableProperty]
-    private SharedFolderType? bulkDestination;
+    private BulkDestinationOption? bulkDestination;
 
     /// <summary>When true, the repo is shown as an expandable folder tree; otherwise a flat list.</summary>
     [ObservableProperty]
@@ -967,14 +981,16 @@ public partial class HuggingFacePageViewModel : TabViewModelBase, IHandleNavigat
     /// <summary>
     /// Picking a value in the "set destination" dropdown applies it to every selected
     /// (not-yet-installed) repo file at once, then resets so the box reads as an action prompt.
+    /// "Auto (detected)" (a null <see cref="BulkDestinationOption.Folder"/>) re-applies each file's
+    /// inferred folder, reverting manual changes.
     /// </summary>
-    partial void OnBulkDestinationChanged(SharedFolderType? value)
+    partial void OnBulkDestinationChanged(BulkDestinationOption? value)
     {
-        if (value is not { } folder)
+        if (value is null)
             return;
 
         foreach (var file in allRepoFiles.Where(f => f.IsSelected && !f.Exists))
-            file.SelectedFolder = folder;
+            file.SelectedFolder = value.Folder ?? HuggingFaceFolderInference.Infer(file.Path);
 
         BulkDestination = null;
     }

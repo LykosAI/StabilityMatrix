@@ -679,13 +679,13 @@
                             MinWidth="150"
                             VerticalAlignment="Center"
                             IsVisible="{Binding IsRepoFilesVisible}"
-                            ItemsSource="{Binding SelectableFolders}"
+                            ItemsSource="{Binding BulkDestinationOptions}"
                             PlaceholderText="Set destination…"
                             SelectedItem="{Binding BulkDestination}"
                             ToolTip.Tip="Set the destination folder for all selected files">
                             <ComboBox.ItemTemplate>
-                                <DataTemplate x:DataType="models:SharedFolderType">
-                                    <TextBlock Text="{Binding Converter={StaticResource EnumDescriptionConverter}}" />
+                                <DataTemplate x:DataType="checkpointBrowser:BulkDestinationOption">
+                                    <TextBlock Text="{Binding Label}" />
                                 </DataTemplate>
                             </ComboBox.ItemTemplate>
                         </ComboBox>

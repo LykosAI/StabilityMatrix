@@ -5,6 +5,12 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.17.0-dev.1
+### Added
+- Added Inference support for the **Wan 2.2 14B** mixture-of-experts video models. Enable **Low Noise Model** from the Wan model card's options menu (⚙️) to load a second low-noise expert alongside the high-noise model; generation then runs the two-pass high-noise → low-noise sampling the 14B architecture expects, switching at a configurable **Boundary** (the fraction of steps handled by the high-noise expert, default 0.5). Works in both Wan Text to Video and Image to Video, and leaving the low-noise slot empty keeps the existing single-model Wan behavior unchanged
+  - Added a separate **Low-Noise LoRAs** list so per-expert speed LoRAs (such as Wan 2.2-Lightning's high/low-noise pair) land on the correct model — the existing Extra Networks list applies to the high-noise/primary model, and the new Low-Noise LoRAs list applies to the low-noise expert
+  - Added hover tooltips to the Wan model card fields (Precision, VAE, Text Encoder, Shift, Low-Noise, Boundary) explaining what each one does
+
 ## v2.16.2
 ### Fixed
 - Fixed [#1666](https://github.com/LykosAI/StabilityMatrix/issues/1666) - AppImage builds creating a broken `.desktop` entry (`NoDisplay=true`, missing icon) that never showed up in the application launcher and reverted any manual edits on the next launch. AppImage runs now write a correct `.desktop` entry with the extracted app icon so Stability Matrix appears in your launcher/menu, and report a matching `WM_CLASS` so the running window shows the Stability Matrix icon in the dock/taskbar instead of a generic one. Only applies to AppImage runs; deb/rpm/flatpak installs keep their package-managed entries

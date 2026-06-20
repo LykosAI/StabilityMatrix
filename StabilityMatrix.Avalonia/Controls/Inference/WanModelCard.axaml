@@ -38,8 +38,8 @@
                 <controls:Card Padding="12">
                     <sg:SpacedGrid
                         ColumnDefinitions="90,*,Auto"
-                        ColumnSpacing="8"
-                        RowDefinitions="*,*,*,*,*,*,*"
+                        ColumnSpacing="4"
+                        RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
                         RowSpacing="0">
                         <!--  Model  -->
                         <TextBlock
@@ -57,15 +57,31 @@
                             SelectedItem="{Binding SelectedModel}"
                             Theme="{StaticResource BetterComboBoxHybridModelTheme}" />
 
-                        <!--  Browse Button  -->
-                        <Button
+                        <!--  Browse + Settings  -->
+                        <StackPanel
                             Grid.Row="0"
                             Grid.Column="2"
                             VerticalAlignment="Stretch"
-                            Command="{Binding OpenModelPickerCommand}"
-                            ToolTip.Tip="Browse all models">
-                            <fluent:SymbolIcon FontSize="16" Symbol="Search" />
-                        </Button>
+                            Orientation="Horizontal"
+                            Spacing="4">
+                            <Button
+                                VerticalAlignment="Stretch"
+                                Command="{Binding OpenModelPickerCommand}"
+                                ToolTip.Tip="Browse all models">
+                                <fluent:SymbolIcon FontSize="16" Symbol="Search" />
+                            </Button>
+                            <Button VerticalAlignment="Stretch" ToolTip.Tip="Model options">
+                                <ui:SymbolIcon FontSize="16" Symbol="Setting" />
+                                <Button.Flyout>
+                                    <ui:FAMenuFlyout Placement="BottomEdgeAlignedLeft">
+                                        <ui:ToggleMenuFlyoutItem
+                                            IconSource="{StaticResource IconCube}"
+                                            IsChecked="{Binding IsLowNoiseModelEnabled}"
+                                            Text="Low Noise Model" />
+                                    </ui:FAMenuFlyout>
+                                </Button.Flyout>
+                            </Button>
+                        </StackPanel>
 
                         <!--  model precision  -->
                         <TextBlock
@@ -74,7 +90,8 @@
                             Margin="0,8,0,0"
                             VerticalAlignment="Center"
                             Text="Precision"
-                            TextAlignment="Left" />
+                            TextAlignment="Left"
+                            ToolTip.Tip="Weight precision the model loads at. fp8 variants use much less VRAM with a small quality tradeoff; 'default' loads at full precision." />
 
                         <ui:FAComboBox
                             Grid.Row="1"
@@ -93,7 +110,8 @@
                             Margin="0,8,0,0"
                             VerticalAlignment="Center"
                             Text="{x:Static lang:Resources.Label_VAE}"
-                            TextAlignment="Left" />
+                            TextAlignment="Left"
+                            ToolTip.Tip="Decodes the generated latents into the final video frames. Use the VAE that matches your model (e.g. the Wan VAE)." />
 
                         <ui:FAComboBox
                             Grid.Row="2"
@@ -107,7 +125,7 @@
                         <Button
                             Grid.Row="2"
                             Grid.Column="2"
-                            Margin="4,8,0,0"
+                            Margin="0,8,0,0"
                             VerticalAlignment="Stretch"
                             Command="{Binding OpenVaePickerCommand}"
                             ToolTip.Tip="Browse all VAE models">
@@ -121,7 +139,8 @@
                             Margin="0,8,0,0"
                             VerticalAlignment="Center"
                             Text="Text Encoder"
-                            TextAlignment="Left" />
+                            TextAlignment="Left"
+                            ToolTip.Tip="Turns your prompt text into conditioning the model understands (the Wan UMT5 text encoder)." />
 
                         <controls:BetterDownloadableComboBox
                             Grid.Row="3"
@@ -135,7 +154,7 @@
                         <Button
                             Grid.Row="3"
                             Grid.Column="2"
-                            Margin="4,8,0,0"
+                            Margin="0,8,0,0"
                             VerticalAlignment="Stretch"
                             Command="{Binding OpenClipPickerCommand}"
                             ToolTip.Tip="Browse all CLIP models">
@@ -165,7 +184,7 @@
                         <Button
                             Grid.Row="4"
                             Grid.Column="2"
-                            Margin="4,8,0,0"
+                            Margin="0,8,0,0"
                             VerticalAlignment="Stretch"
                             Command="{Binding OpenClipVisionPickerCommand}"
                             IsVisible="{Binding IsClipVisionEnabled}"
@@ -179,7 +198,8 @@
                             Grid.Column="0"
                             Margin="0,8,0,0"
                             VerticalAlignment="Center"
-                            Text="Shift" />
+                            Text="Shift"
+                            ToolTip.Tip="Shifts the noise schedule (ModelSamplingSD3). Higher values spend more sampling on the high-noise (motion/structure) stage. 8.0 is the Wan default." />
                         <ui:NumberBox
                             Grid.Row="5"
                             Grid.Column="1"
@@ -192,12 +212,77 @@
                             SpinButtonPlacementMode="Inline"
                             Value="{Binding Shift}" />
 
-                        <!--  Extra Networks  -->
-                        <Panel
+                        <!--  Low-noise model (Wan 2.2 14B MoE, toggled from the model options menu)  -->
+                        <TextBlock
                             Grid.Row="6"
+                            Grid.Column="0"
+                            Margin="0,8,0,0"
+                            VerticalAlignment="Center"
+                            IsVisible="{Binding IsLowNoiseModelEnabled}"
+                            Text="Low-Noise"
+                            TextAlignment="Left"
+                            ToolTip.Tip="Optional second Wan 2.2 14B expert that refines the high-noise pass. Leave empty to generate with a single model." />
+                        <controls:BetterComboBox
+                            Grid.Row="6"
+                            Grid.Column="1"
+                            Margin="0,8,0,0"
+                            Padding="8,6,4,6"
+                            HorizontalAlignment="Stretch"
+                            IsVisible="{Binding IsLowNoiseModelEnabled}"
+                            ItemsSource="{Binding ClientManager.UnetModels}"
+                            SelectedItem="{Binding SelectedLowNoiseModel}"
+                            Theme="{StaticResource BetterComboBoxHybridModelTheme}" />
+                        <Button
+                            Grid.Row="6"
+                            Grid.Column="2"
+                            Margin="0,8,0,0"
+                            VerticalAlignment="Stretch"
+                            Command="{Binding OpenLowNoiseModelPickerCommand}"
+                            IsVisible="{Binding IsLowNoiseModelEnabled}"
+                            ToolTip.Tip="Browse all models">
+                            <fluent:SymbolIcon FontSize="16" Symbol="Search" />
+                        </Button>
+
+                        <!--  MoE boundary  -->
+                        <TextBlock
+                            Grid.Row="7"
+                            Grid.Column="0"
+                            Margin="0,8,0,0"
+                            VerticalAlignment="Center"
+                            IsVisible="{Binding IsLowNoiseModelEnabled}"
+                            Text="Boundary"
+                            ToolTip.Tip="Fraction of sampling steps run by the high-noise expert before handing off to the low-noise expert. 0.5 splits the steps evenly." />
+                        <ui:NumberBox
+                            Grid.Row="7"
+                            Grid.Column="1"
+                            Grid.ColumnSpan="2"
+                            Margin="0,8,0,0"
+                            HorizontalAlignment="Stretch"
+                            IsVisible="{Binding IsLowNoiseModelEnabled}"
+                            Maximum="1"
+                            Minimum="0"
+                            SelectionHighlightColor="Transparent"
+                            SimpleNumberFormat="F2"
+                            SmallChange="0.05"
+                            SpinButtonPlacementMode="Inline"
+                            ToolTip.Tip="Fraction of steps run by the high-noise expert before switching to the low-noise expert."
+                            Value="{Binding MoeBoundary}" />
+
+                        <!--  Extra Networks (high-noise / primary model)  -->
+                        <Panel
+                            Grid.Row="8"
                             Grid.Column="0"
                             Grid.ColumnSpan="3">
                             <controls:StackEditableCard Margin="0,8,0,0" DataContext="{Binding ExtraNetworksStackCardViewModel}" />
+                        </Panel>
+
+                        <!--  Low-Noise LoRAs (low-noise expert, Wan 2.2 14B)  -->
+                        <Panel
+                            Grid.Row="9"
+                            Grid.Column="0"
+                            Grid.ColumnSpan="3"
+                            IsVisible="{Binding IsLowNoiseModelEnabled}">
+                            <controls:StackEditableCard Margin="0,8,0,0" DataContext="{Binding LowNoiseExtraNetworksStackCardViewModel}" />
                         </Panel>
                     </sg:SpacedGrid>
                 </controls:Card>

@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Controls;
@@ -10,6 +11,7 @@ using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models.Api.Comfy;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
+using StabilityMatrix.Core.Models.Api.Comfy.NodeTypes;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
@@ -60,6 +62,84 @@ public class WanSamplerCardViewModel : SamplerCardViewModel
 
         var conditioning = e.Temp.Base.Conditioning.Unwrap();
 
+        // Builds the final sampler for the given conditioning + latent. Runs a single KSampler, or,
+        // when a Wan 2.2 14B low-noise expert is loaded, a two-pass high-noise -> low-noise KSamplerAdvanced.
+        LatentNodeConnection BuildVideoSampler(
+            ConditioningNodeConnection positive,
+            ConditioningNodeConnection negative,
+            LatentNodeConnection latentImage
+        )
+        {
+            var highNoiseModel = e.Temp.Base.Model!.Unwrap();
+            var lowNoiseModel = e.Builder.Connections.WanLowNoiseModel;
+
+            if (lowNoiseModel is null)
+            {
+                var kSampler = e.Nodes.AddTypedNode(
+                    new ComfyNodeBuilder.KSampler
+                    {
+                        Name = "Sampler",
+                        Model = highNoiseModel,
+                        Seed = e.Builder.Connections.Seed,
+                        SamplerName = primarySampler.Name,
+                        Scheduler = primaryScheduler.Name,
+                        Steps = Steps,
+                        Cfg = CfgScale,
+                        Positive = positive,
+                        Negative = negative,
+                        LatentImage = latentImage,
+                        Denoise = DenoiseStrength,
+                    }
+                );
+                return kSampler.Output;
+            }
+
+            // Wan 2.2 14B MoE: high-noise expert handles the first fraction of steps, low-noise the rest.
+            var boundary = e.Builder.Connections.WanMoeBoundary ?? 0.5d;
+            var switchStep = Math.Clamp((int)Math.Round(Steps * boundary), 1, Steps - 1);
+
+            var highNoisePass = e.Nodes.AddTypedNode(
+                new ComfyNodeBuilder.KSamplerAdvanced
+                {
+                    Name = e.Nodes.GetUniqueName("WanHighNoiseSampler"),
+                    Model = highNoiseModel,
+                    AddNoise = true,
+                    NoiseSeed = e.Builder.Connections.Seed,
+                    Steps = Steps,
+                    Cfg = CfgScale,
+                    SamplerName = primarySampler.Name,
+                    Scheduler = primaryScheduler.Name,
+                    Positive = positive,
+                    Negative = negative,
+                    LatentImage = latentImage,
+                    StartAtStep = 0,
+                    EndAtStep = switchStep,
+                    ReturnWithLeftoverNoise = true,
+                }
+            );
+
+            var lowNoisePass = e.Nodes.AddTypedNode(
+                new ComfyNodeBuilder.KSamplerAdvanced
+                {
+                    Name = "Sampler",
+                    Model = lowNoiseModel,
+                    AddNoise = false,
+                    NoiseSeed = e.Builder.Connections.Seed,
+                    Steps = Steps,
+                    Cfg = CfgScale,
+                    SamplerName = primarySampler.Name,
+                    Scheduler = primaryScheduler.Name,
+                    Positive = positive,
+                    Negative = negative,
+                    LatentImage = highNoisePass.Output,
+                    StartAtStep = switchStep,
+                    EndAtStep = Steps,
+                    ReturnWithLeftoverNoise = false,
+                }
+            );
+            return lowNoisePass.Output;
+        }
+
         var isImgToVid = IsDenoiseStrengthEnabled;
 
         if (isImgToVid)
@@ -92,23 +172,11 @@ public class WanSamplerCardViewModel : SamplerCardViewModel
                 }
             );
 
-            var kSampler = e.Nodes.AddTypedNode(
-                new ComfyNodeBuilder.KSampler
-                {
-                    Name = "Sampler",
-                    Model = e.Temp.Base.Model!.Unwrap(),
-                    Seed = e.Builder.Connections.Seed,
-                    SamplerName = primarySampler.Name,
-                    Scheduler = primaryScheduler.Name,
-                    Steps = Steps,
-                    Cfg = CfgScale,
-                    Positive = wanImageToVideo.Output1,
-                    Negative = wanImageToVideo.Output2,
-                    LatentImage = wanImageToVideo.Output3,
-                    Denoise = DenoiseStrength,
-                }
+            e.Builder.Connections.Primary = BuildVideoSampler(
+                wanImageToVideo.Output1,
+                wanImageToVideo.Output2,
+                wanImageToVideo.Output3
             );
-            e.Builder.Connections.Primary = kSampler.Output;
         }
         else
         {
@@ -117,23 +185,11 @@ public class WanSamplerCardViewModel : SamplerCardViewModel
                 e.Builder.Connections.GetDefaultVAE()
             );
 
-            var kSampler = e.Nodes.AddTypedNode(
-                new ComfyNodeBuilder.KSampler
-                {
-                    Name = "Sampler",
-                    Model = e.Temp.Base.Model!.Unwrap(),
-                    Seed = e.Builder.Connections.Seed,
-                    SamplerName = primarySampler.Name,
-                    Scheduler = primaryScheduler.Name,
-                    Steps = Steps,
-                    Cfg = CfgScale,
-                    Positive = conditioning.Positive,
-                    Negative = conditioning.Negative,
-                    LatentImage = primaryLatent,
-                    Denoise = DenoiseStrength,
-                }
+            e.Builder.Connections.Primary = BuildVideoSampler(
+                conditioning.Positive,
+                conditioning.Negative,
+                primaryLatent
             );
-            e.Builder.Connections.Primary = kSampler.Output;
         }
     }
 }

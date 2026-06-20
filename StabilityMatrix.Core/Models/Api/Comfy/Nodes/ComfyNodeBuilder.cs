@@ -1761,6 +1761,18 @@ public class ComfyNodeBuilder
         public ComfySampler? PrimarySampler { get; set; }
         public ComfyScheduler? PrimaryScheduler { get; set; }
 
+        /// <summary>
+        /// The Wan 2.2 14B low-noise expert model (post-LoRA), set by the Wan model card when its
+        /// low-noise slot is filled. The Wan sampler runs a second low-noise pass on this model.
+        /// </summary>
+        public ModelNodeConnection? WanLowNoiseModel { get; set; }
+
+        /// <summary>
+        /// Fraction of sampling steps handled by the high-noise expert before switching to the
+        /// low-noise expert (Wan 2.2 14B MoE). Range 0-1; defaults to 0.5 when unset.
+        /// </summary>
+        public double? WanMoeBoundary { get; set; }
+
         public GuiderNodeConnection PrimaryGuider { get; set; }
         public NoiseNodeConnection PrimaryNoise { get; set; }
         public SigmasNodeConnection PrimarySigmas { get; set; }

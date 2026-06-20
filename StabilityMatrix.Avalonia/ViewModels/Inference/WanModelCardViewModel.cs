@@ -29,6 +29,24 @@ public partial class WanModelCardViewModel(
     [ObservableProperty]
     private HybridModelFile? selectedModel;
 
+    /// <summary>
+    /// Optional low-noise expert model for the Wan 2.2 14B MoE. When <see cref="IsLowNoiseModelEnabled"/>
+    /// is set and this is selected, <see cref="SelectedModel"/> acts as the high-noise expert and the
+    /// sampler runs a two-pass high-noise -> low-noise generation.
+    /// </summary>
+    [ObservableProperty]
+    private HybridModelFile? selectedLowNoiseModel;
+
+    [ObservableProperty]
+    private bool isLowNoiseModelEnabled;
+
+    /// <summary>
+    /// Fraction of sampling steps handled by the high-noise expert before switching to the low-noise
+    /// expert (Wan 2.2 14B MoE). 0.5 splits the steps evenly, matching the native ComfyUI template.
+    /// </summary>
+    [ObservableProperty]
+    private double moeBoundary = 0.5d;
+
     [ObservableProperty]
     private HybridModelFile? selectedClipModel;
 
@@ -52,6 +70,13 @@ public partial class WanModelCardViewModel(
     public StackEditableCardViewModel ExtraNetworksStackCardViewModel { get; } =
         new(vmFactory) { Title = Resources.Label_ExtraNetworks, AvailableModules = [typeof(LoraModule)] };
 
+    /// <summary>
+    /// LoRAs applied to the Wan 2.2 14B low-noise expert only. The main
+    /// <see cref="ExtraNetworksStackCardViewModel"/> targets the high-noise (primary) model.
+    /// </summary>
+    public StackEditableCardViewModel LowNoiseExtraNetworksStackCardViewModel { get; } =
+        new(vmFactory) { Title = "Low-Noise LoRAs", AvailableModules = [typeof(LoraModule)] };
+
     public List<string> WeightDTypes { get; set; } = ["default", "fp8_e4m3fn", "fp8_e4m3fn_fast", "fp8_e5m2"];
 
     [RelayCommand]
@@ -69,6 +94,24 @@ public partial class WanModelCardViewModel(
             if (pickerVm.SelectedModel is { } selected)
             {
                 SelectedModel = selected;
+            }
+        }
+    }
+
+    [RelayCommand]
+    private async Task OpenLowNoiseModelPickerAsync()
+    {
+        using var pickerScope = vmFactory.CreateScope();
+        var pickerVm = pickerScope.ServiceManager.Get<ModelPickerDialogViewModel>();
+        pickerVm.Title = "Select Low-Noise Model";
+        pickerVm.Source = ModelPickerSource.CheckpointAndUnet;
+        pickerVm.ShowUnetsOnly = true;
+
+        if (await pickerVm.GetDialog().ShowAsync() == ContentDialogResult.Primary)
+        {
+            if (pickerVm.SelectedModel is { } selected)
+            {
+                SelectedLowNoiseModel = selected;
             }
         }
     }
@@ -166,46 +209,82 @@ public partial class WanModelCardViewModel(
             return false;
         }
 
+        if (IsLowNoiseModelEnabled && SelectedLowNoiseModel == null)
+        {
+            var dialog = DialogHelper.CreateMarkdownDialog(
+                "Please select a low-noise model to continue, or disable the low-noise expert.",
+                "No Low-Noise Model Selected"
+            );
+            await dialog.ShowAsync();
+            return false;
+        }
+
         return true;
     }
 
+    /// <summary>
+    /// Key under which the optional Wan 2.2 14B low-noise expert is stored in the builder's
+    /// model connections, so shared model patches (LoRAs etc.) apply to it.
+    /// </summary>
+    public const string LowNoiseModelKey = "WanLowNoise";
+
     public void ApplyStep(ModuleApplyStepEventArgs e)
     {
-        ComfyTypedNodeBase<ModelNodeConnection> modelLoader;
-        if (SelectedModel?.RelativePath.EndsWith("gguf", StringComparison.OrdinalIgnoreCase) is true)
+        // Loads a UNet (GGUF or safetensors) and applies the Wan ModelSamplingSD3 shift.
+        // Used for both the high-noise and (optional) low-noise expert of the Wan 2.2 14B MoE.
+        ModelNodeConnection LoadUnetModel(HybridModelFile model)
         {
-            modelLoader = e.Nodes.AddTypedNode(
-                new ComfyNodeBuilder.UnetLoaderGGUF
-                {
-                    Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.UnetLoaderGGUF)),
-                    UnetName =
-                        SelectedModel?.RelativePath ?? throw new ValidationException("Model not selected"),
-                }
-            );
-        }
-        else
-        {
-            modelLoader = e.Nodes.AddTypedNode(
-                new ComfyNodeBuilder.UNETLoader
-                {
-                    Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.UNETLoader)),
-                    UnetName =
-                        SelectedModel?.RelativePath ?? throw new ValidationException("Model not selected"),
-                    WeightDtype = SelectedDType ?? "fp8_e4m3fn_fast",
-                }
-            );
-        }
-
-        var modelSamplingSd3 = e.Nodes.AddTypedNode(
-            new ComfyNodeBuilder.ModelSamplingSD3
+            ComfyTypedNodeBase<ModelNodeConnection> modelLoader;
+            if (model.RelativePath.EndsWith("gguf", StringComparison.OrdinalIgnoreCase))
             {
-                Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.ModelSamplingSD3)),
-                Model = modelLoader.Output,
-                Shift = Shift,
+                modelLoader = e.Nodes.AddTypedNode(
+                    new ComfyNodeBuilder.UnetLoaderGGUF
+                    {
+                        Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.UnetLoaderGGUF)),
+                        UnetName = model.RelativePath,
+                    }
+                );
             }
-        );
+            else
+            {
+                modelLoader = e.Nodes.AddTypedNode(
+                    new ComfyNodeBuilder.UNETLoader
+                    {
+                        Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.UNETLoader)),
+                        UnetName = model.RelativePath,
+                        WeightDtype = SelectedDType ?? "fp8_e4m3fn_fast",
+                    }
+                );
+            }
 
-        e.Builder.Connections.Base.Model = modelSamplingSd3.Output;
+            var modelSamplingSd3 = e.Nodes.AddTypedNode(
+                new ComfyNodeBuilder.ModelSamplingSD3
+                {
+                    Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.ModelSamplingSD3)),
+                    Model = modelLoader.Output,
+                    Shift = Shift,
+                }
+            );
+
+            return modelSamplingSd3.Output;
+        }
+
+        var highNoiseModel = SelectedModel ?? throw new ValidationException("Model not selected");
+        e.Builder.Connections.Base.Model = LoadUnetModel(highNoiseModel);
+
+        // Wan 2.2 14B MoE: load the optional low-noise expert. Kept OUT of the shared model
+        // dictionary so the main Extra Networks LoRAs target only the high-noise (primary) model;
+        // the low-noise expert gets its own LoRA stack applied below. Its Clip is wired up after the
+        // CLIP loader. The Wan sampler reads the final model from Connections.WanLowNoiseModel.
+        ModelConnections? lowNoiseConnections = null;
+        if (IsLowNoiseModelEnabled && SelectedLowNoiseModel is { } lowNoiseModel)
+        {
+            lowNoiseConnections = new ModelConnections(LowNoiseModelKey)
+            {
+                Model = LoadUnetModel(lowNoiseModel),
+            };
+            e.Builder.Connections.WanMoeBoundary = MoeBoundary;
+        }
 
         var clipLoader = e.Nodes.AddTypedNode(
             new ComfyNodeBuilder.CLIPLoader
@@ -220,6 +299,12 @@ public partial class WanModelCardViewModel(
 
         e.Builder.Connections.Base.Clip = clipLoader.Output;
 
+        // Share the text encoder with the low-noise expert so its model-side LoRA patches apply.
+        if (lowNoiseConnections is not null)
+        {
+            lowNoiseConnections.Clip = clipLoader.Output;
+        }
+
         var vaeLoader = e.Nodes.AddTypedNode(
             new ComfyNodeBuilder.VAELoader
             {
@@ -230,9 +315,33 @@ public partial class WanModelCardViewModel(
         e.Builder.Connections.Base.VAE = vaeLoader.Output;
         e.Builder.Connections.PrimaryVAE = vaeLoader.Output;
 
+        // High-noise / primary model LoRAs (low-noise expert isn't in Models, so it's untouched here).
         if (ExtraNetworksStackCardViewModel.Cards.OfType<LoraModule>().Any(x => x.IsEnabled))
         {
             ExtraNetworksStackCardViewModel.ApplyStep(e);
+        }
+
+        // Apply the low-noise expert's own LoRAs to that model only, then hand the patched model to
+        // the sampler. The generic LoRA module patches every model in the builder dictionary, so we
+        // briefly swap in just the low-noise model around the call.
+        if (lowNoiseConnections is not null)
+        {
+            if (LowNoiseExtraNetworksStackCardViewModel.Cards.OfType<LoraModule>().Any(x => x.IsEnabled))
+            {
+                var savedModels = e.Builder.Connections.Models.ToList();
+                e.Builder.Connections.Models.Clear();
+                e.Builder.Connections.Models[LowNoiseModelKey] = lowNoiseConnections;
+
+                LowNoiseExtraNetworksStackCardViewModel.ApplyStep(e);
+
+                e.Builder.Connections.Models.Clear();
+                foreach (var (key, value) in savedModels)
+                {
+                    e.Builder.Connections.Models[key] = value;
+                }
+            }
+
+            e.Builder.Connections.WanLowNoiseModel = lowNoiseConnections.Model;
         }
 
         if (!IsClipVisionEnabled)

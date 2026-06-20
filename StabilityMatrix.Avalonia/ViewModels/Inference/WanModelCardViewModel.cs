@@ -329,15 +329,22 @@ public partial class WanModelCardViewModel(
             if (LowNoiseExtraNetworksStackCardViewModel.Cards.OfType<LoraModule>().Any(x => x.IsEnabled))
             {
                 var savedModels = e.Builder.Connections.Models.ToList();
-                e.Builder.Connections.Models.Clear();
-                e.Builder.Connections.Models[LowNoiseModelKey] = lowNoiseConnections;
-
-                LowNoiseExtraNetworksStackCardViewModel.ApplyStep(e);
-
-                e.Builder.Connections.Models.Clear();
-                foreach (var (key, value) in savedModels)
+                try
                 {
-                    e.Builder.Connections.Models[key] = value;
+                    e.Builder.Connections.Models.Clear();
+                    e.Builder.Connections.Models[LowNoiseModelKey] = lowNoiseConnections;
+
+                    LowNoiseExtraNetworksStackCardViewModel.ApplyStep(e);
+                }
+                finally
+                {
+                    // Always restore the original models, even if lora application throws,
+                    // so the builder dictionary isn't left in the temporary swapped state.
+                    e.Builder.Connections.Models.Clear();
+                    foreach (var (key, value) in savedModels)
+                    {
+                        e.Builder.Connections.Models[key] = value;
+                    }
                 }
             }
 

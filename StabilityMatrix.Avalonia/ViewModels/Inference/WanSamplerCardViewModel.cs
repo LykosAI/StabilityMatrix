@@ -96,7 +96,7 @@ public class WanSamplerCardViewModel : SamplerCardViewModel
 
             // Wan 2.2 14B MoE: high-noise expert handles the first fraction of steps, low-noise the rest.
             var boundary = e.Builder.Connections.WanMoeBoundary ?? 0.5d;
-            var switchStep = Math.Clamp((int)Math.Round(Steps * boundary), 1, Steps - 1);
+            var switchStep = Math.Clamp((int)Math.Round(Steps * boundary), 1, Math.Max(1, Steps - 1));
 
             var highNoisePass = e.Nodes.AddTypedNode(
                 new ComfyNodeBuilder.KSamplerAdvanced

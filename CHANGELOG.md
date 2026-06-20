@@ -8,15 +8,13 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ## v2.17.0-dev.1
 ### Added
 #### New Feature: 🤗 Live HuggingFace Model Browser
-- Overhauled the HuggingFace tab from a fixed list of curated checkbox links into a full repository browser, while keeping the curated picks as the default view:
-  - **Search HuggingFace** for models by name right from the tab, sortable by most downloads, most likes, or recently updated, with result cards showing the pipeline tag, download/like counts, and last-updated time
-  - **Paste a repository URL or `owner/name`** to browse that repo's files directly
-  - View files as a **flat list or an expandable folder tree** (your choice is remembered between sessions), with an in-repo name filter and a **Hide installed** toggle to declutter
-  - Each file's **destination folder** is inferred from its path and editable from a dropdown before importing; files you already have are marked **Installed** instead
-  - **Multi-select** with shift/ctrl-click ranges, plus folder checkboxes that select everything inside them
-  - The import bar shows the **total download size** and warns when the selection won't fit in your models directory's free space
-  - Gated or private repositories load once you add a HuggingFace token in **Settings → Accounts**
-  - Downloads run through the existing tracked download queue (visible in the Downloads tab) with a **Download Started** notification
+- Reworked the HuggingFace tab into a full browser instead of a fixed list of links — the curated picks are still there as the default view:
+  - Search HuggingFace for models right from the tab, sorted by downloads, likes, or most recently updated
+  - Paste a repository link to browse all of its files directly
+  - Browse files as a flat list or a folder tree, with a quick name filter and a **Hide installed** toggle
+  - Choose where each file goes (auto-detected and editable), or send a whole multi-file model such as a diffusers repo into one folder with its structure intact
+  - Select multiple files at once and see the total download size before you start, with a warning if there isn't enough free space
+  - Gated or private repositories work once you add a HuggingFace token in **Settings → Accounts**
 
 ## v2.16.2
 ### Fixed

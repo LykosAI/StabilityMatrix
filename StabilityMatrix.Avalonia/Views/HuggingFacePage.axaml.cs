@@ -66,6 +66,9 @@ public partial class HuggingFacePage : UserControlBase
 
         if (folders.Count > 0)
             vm.FolderImportCustomPath = folders[0].Path.LocalPath;
+
+        // The picker dismissed the flyout, so re-open it to show the result / let them import.
+        ImportToFolderButton.Flyout?.ShowAt(ImportToFolderButton);
     }
 
     private void SearchResults_OnScrollChanged(object? sender, ScrollChangedEventArgs e)

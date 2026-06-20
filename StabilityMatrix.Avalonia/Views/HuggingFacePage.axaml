@@ -691,7 +691,10 @@
                         </ComboBox>
 
                         <!--  Structure-preserving "import to folder" (repo files only)  -->
-                        <Button VerticalAlignment="Center" IsVisible="{Binding IsRepoFilesVisible}">
+                        <Button
+                            x:Name="ImportToFolderButton"
+                            VerticalAlignment="Center"
+                            IsVisible="{Binding IsRepoFilesVisible}">
                             <StackPanel Orientation="Horizontal" Spacing="6">
                                 <avalonia:Icon VerticalAlignment="Center" Value="fa-solid fa-folder-plus" />
                                 <TextBlock Text="Import to folder" />

@@ -708,7 +708,7 @@
                                             Text="{x:Static lang:Resources.Label_ImportToFolderDescription}"
                                             TextWrapping="Wrap" />
                                         <StackPanel
-                                            IsVisible="{Binding IsDiffusersRepo}"
+                                            IsVisible="{Binding IsMultiFileModel}"
                                             Orientation="Horizontal"
                                             Spacing="6">
                                             <avalonia:Icon
@@ -718,7 +718,7 @@
                                             <TextBlock
                                                 VerticalAlignment="Center"
                                                 FontSize="12"
-                                                Text="{x:Static lang:Resources.Label_DiffusersDetected}" />
+                                                Text="{Binding MultiFileHint}" />
                                         </StackPanel>
 
                                         <!--  Type + subfolder  -->

@@ -1883,6 +1883,9 @@ Account tokens will not be viewable after saving, please make a note of them if 
   <data name="Label_DiffusersDetected" xml:space="preserve">
     <value>Detected a diffusers model — recommended.</value>
   </data>
+  <data name="Label_MultiFileModelDetected" xml:space="preserve">
+    <value>Looks like a multi-file model — recommended.</value>
+  </data>
   <data name="Label_Subfolder" xml:space="preserve">
     <value>Subfolder</value>
   </data>

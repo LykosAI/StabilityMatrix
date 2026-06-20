@@ -5144,6 +5144,12 @@ namespace StabilityMatrix.Avalonia.Languages {
             }
         }
 
+        public static string Label_MultiFileModelDetected {
+            get {
+                return ResourceManager.GetString("Label_MultiFileModelDetected", resourceCulture);
+            }
+        }
+
         public static string Label_Subfolder {
             get {
                 return ResourceManager.GetString("Label_Subfolder", resourceCulture);

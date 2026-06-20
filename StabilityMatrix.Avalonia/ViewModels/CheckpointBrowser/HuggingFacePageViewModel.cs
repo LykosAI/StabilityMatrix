@@ -90,9 +90,20 @@ public partial class HuggingFacePageViewModel : TabViewModelBase, IHandleNavigat
     /// <summary>Destination folder types offered in the dropdowns.</summary>
     public IReadOnlyList<SharedFolderType> SelectableFolders => HuggingFaceFolderInference.SelectableFolders;
 
-    /// <summary>True when the repo looks like a diffusers model (has a root <c>model_index.json</c>).</summary>
+    /// <summary>True when the repo is a diffusers pipeline (has a root <c>model_index.json</c>).</summary>
     [ObservableProperty]
     private bool isDiffusersRepo;
+
+    /// <summary>True when the repo is a multi-file model (diffusers or transformers) best kept together.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(MultiFileHint))]
+    private bool isMultiFileModel;
+
+    /// <summary>Recommendation hint shown in the import-to-folder flyout, or null when not applicable.</summary>
+    public string? MultiFileHint =>
+        !IsMultiFileModel ? null
+        : IsDiffusersRepo ? Resources.Label_DiffusersDetected
+        : Resources.Label_MultiFileModelDetected;
 
     /// <summary>Destination folder type for the structured "import to folder" action.</summary>
     [ObservableProperty]
@@ -535,11 +546,25 @@ public partial class HuggingFacePageViewModel : TabViewModelBase, IHandleNavigat
                     allRepoFiles.Add(vm);
                 }
 
-                // Diffusers repos are a tree of loose files (model_index.json at the root) that must
-                // keep their structure, so default such repos to a folder import under Diffusers/<repo>.
+                // Multi-file models (a tree of loose files that must stay together) should use the
+                // folder import. Diffusers pipelines have model_index.json; transformers models
+                // (GPT / text encoders / etc.) have a config.json alongside tokenizer files.
                 IsDiffusersRepo = allRepoFiles.Any(f =>
                     f.Path.Equals("model_index.json", StringComparison.OrdinalIgnoreCase)
                 );
+                var looksLikeTransformers =
+                    allRepoFiles.Any(f => f.Path.Equals("config.json", StringComparison.OrdinalIgnoreCase))
+                    && allRepoFiles.Any(f =>
+                        f.Path is var p
+                        && (
+                            p.Equals("tokenizer_config.json", StringComparison.OrdinalIgnoreCase)
+                            || p.Equals("tokenizer.json", StringComparison.OrdinalIgnoreCase)
+                            || p.Equals("vocab.json", StringComparison.OrdinalIgnoreCase)
+                            || p.Equals("tokenizer.model", StringComparison.OrdinalIgnoreCase)
+                        )
+                    );
+                IsMultiFileModel = IsDiffusersRepo || looksLikeTransformers;
+
                 FolderImportCustomPath = null;
                 FolderImportSubfolder = parts[1];
                 FolderImportType = IsDiffusersRepo

@@ -47,7 +47,7 @@
                                         HorizontalContentAlignment="Stretch"
                                         VerticalContentAlignment="Stretch"
                                         Classes="transparent-full"
-                                        Command="{Binding $parent[controls:UserControlBase].((dialogs:InferenceProjectTypePickerViewModel)DataContext).SelectTypeCommand}"
+                                        Command="{Binding #Root.((dialogs:InferenceProjectTypePickerViewModel)DataContext).SelectTypeCommand}"
                                         CommandParameter="{Binding}"
                                         Cursor="Hand"
                                         ToolTip.Tip="{Binding Description}">

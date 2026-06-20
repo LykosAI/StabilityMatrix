@@ -391,6 +391,7 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
 
         // Create a new scope for this tab
         var scope = vmFactory.CreateScope();
+        scopes.Add(scope);
 
         // Get the view model using the scope's service provider
         var tab =

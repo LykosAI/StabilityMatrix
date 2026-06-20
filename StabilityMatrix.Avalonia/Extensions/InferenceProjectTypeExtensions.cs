@@ -40,8 +40,7 @@ public static class InferenceProjectTypeExtensions
                 Type = InferenceProjectType.TextToImage,
                 DisplayName = Resources.Label_TextToImage,
                 Icon = Symbol.Image,
-                Description =
-                    "Generate images from a text prompt. Works with SD1.5, SDXL, Pony, Flux and more.",
+                Description = Resources.Label_TextToImageDescription,
                 Category = InferenceProjectCategory.Image,
             },
             new()
@@ -49,7 +48,7 @@ public static class InferenceProjectTypeExtensions
                 Type = InferenceProjectType.ImageToImage,
                 DisplayName = Resources.Label_ImageToImage,
                 Icon = Symbol.ImageMultiple,
-                Description = "Transform an existing image using a text prompt.",
+                Description = Resources.Label_ImageToImageDescription,
                 Category = InferenceProjectCategory.Image,
             },
             new()
@@ -57,41 +56,39 @@ public static class InferenceProjectTypeExtensions
                 Type = InferenceProjectType.Upscale,
                 DisplayName = Resources.Label_Upscale,
                 Icon = Symbol.ResizeImage,
-                Description = "Increase the resolution of an image with an upscaling model.",
+                Description = Resources.Label_UpscaleDescription,
                 Category = InferenceProjectCategory.Image,
             },
             new()
             {
                 Type = InferenceProjectType.WanTextToVideo,
-                DisplayName = "Wan Text to Video",
+                DisplayName = Resources.Label_WanTextToVideo,
                 Icon = Symbol.Video,
-                Description = "Generate a video from a text prompt using Wan.",
+                Description = Resources.Label_WanTextToVideoDescription,
                 Category = InferenceProjectCategory.Video,
             },
             new()
             {
                 Type = InferenceProjectType.WanImageToVideo,
-                DisplayName = "Wan Image to Video",
+                DisplayName = Resources.Label_WanImageToVideo,
                 Icon = Symbol.VideoAdd,
-                Description = "Animate an input image into a video using Wan.",
+                Description = Resources.Label_WanImageToVideoDescription,
                 Category = InferenceProjectCategory.Video,
             },
             new()
             {
                 Type = InferenceProjectType.FluxTextToImage,
-                DisplayName = "Flux Text to Image",
+                DisplayName = Resources.Label_FluxTextToImage,
                 Icon = Symbol.Sparkle,
-                Description =
-                    "Standalone Flux text-to-image. The Text to Image tab also handles "
-                    + "Flux automatically.",
+                Description = Resources.Label_FluxTextToImageDescription,
                 Category = InferenceProjectCategory.Legacy,
             },
             new()
             {
                 Type = InferenceProjectType.ImageToVideo,
-                DisplayName = "SVD Image to Video",
+                DisplayName = Resources.Label_SvdImageToVideo,
                 Icon = Symbol.VideoRecording,
-                Description = "Stable Video Diffusion image-to-video.",
+                Description = Resources.Label_SvdImageToVideoDescription,
                 Category = InferenceProjectCategory.Legacy,
             },
         };
@@ -109,9 +106,9 @@ public static class InferenceProjectTypeExtensions
     public static IReadOnlyList<InferenceProjectTypeCategoryGroup> GetGrouped() =>
         new[]
         {
-            (InferenceProjectCategory.Image, Header: "Image"),
-            (InferenceProjectCategory.Video, Header: "Video"),
-            (InferenceProjectCategory.Legacy, Header: "Legacy"),
+            (InferenceProjectCategory.Image, Header: Resources.Label_Image),
+            (InferenceProjectCategory.Video, Header: Resources.Label_Video),
+            (InferenceProjectCategory.Legacy, Header: Resources.Label_Legacy),
         }
             .Select(group => new InferenceProjectTypeCategoryGroup
             {

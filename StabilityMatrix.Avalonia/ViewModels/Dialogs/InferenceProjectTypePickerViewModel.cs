@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Extensions;
+using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.Views.Dialogs;
@@ -21,7 +22,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 [ManagedService]
 public partial class InferenceProjectTypePickerViewModel : ContentDialogViewModelBase
 {
-    public override string? Title { get; set; } = "New Project";
+    public override string? Title { get; set; } = Resources.Label_NewProject;
 
     public IReadOnlyList<InferenceProjectTypeCategoryGroup> Categories { get; } =
         InferenceProjectTypeExtensions.GetGrouped();

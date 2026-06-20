@@ -1,0 +1,101 @@
+﻿<controls:UserControlBase
+    x:Class="StabilityMatrix.Avalonia.Views.Dialogs.InferenceProjectTypePickerDialog"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:dialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
+    xmlns:fluentIcons="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:models="clr-namespace:StabilityMatrix.Avalonia.Models.Inference"
+    x:Name="Root"
+    d:DataContext="{x:Static mocks:DesignData.InferenceProjectTypePickerViewModel}"
+    d:DesignHeight="550"
+    d:DesignWidth="700"
+    x:DataType="dialogs:InferenceProjectTypePickerViewModel"
+    mc:Ignorable="d">
+
+    <ScrollViewer Padding="16" HorizontalScrollBarVisibility="Disabled">
+        <ItemsControl ItemsSource="{Binding Categories}">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="models:InferenceProjectTypeCategoryGroup">
+                    <StackPanel Margin="0,0,0,12" Spacing="8">
+                        <!--  Category header  -->
+                        <TextBlock
+                            Margin="2,0"
+                            FontSize="13"
+                            FontWeight="SemiBold"
+                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                            Text="{Binding Header}" />
+
+                        <!--  Cards  -->
+                        <ItemsControl ItemsSource="{Binding Items}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel Orientation="Horizontal" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="models:InferenceProjectTypeInfo">
+                                    <Button
+                                        Width="264"
+                                        Height="104"
+                                        Margin="4"
+                                        Padding="0"
+                                        HorizontalAlignment="Stretch"
+                                        HorizontalContentAlignment="Stretch"
+                                        VerticalContentAlignment="Stretch"
+                                        Classes="transparent-full"
+                                        Command="{Binding $parent[controls:UserControlBase].((dialogs:InferenceProjectTypePickerViewModel)DataContext).SelectTypeCommand}"
+                                        CommandParameter="{Binding}"
+                                        Cursor="Hand"
+                                        ToolTip.Tip="{Binding Description}">
+                                        <Border
+                                            Padding="12"
+                                            Background="{DynamicResource ControlFillColorDefaultBrush}"
+                                            BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                                            BorderThickness="1"
+                                            CornerRadius="8">
+                                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                                                <Border
+                                                    Grid.Column="0"
+                                                    Width="40"
+                                                    Height="40"
+                                                    VerticalAlignment="Top"
+                                                    Background="{DynamicResource ControlFillColorSecondaryBrush}"
+                                                    CornerRadius="6">
+                                                    <fluentIcons:SymbolIcon
+                                                        HorizontalAlignment="Center"
+                                                        VerticalAlignment="Center"
+                                                        FontSize="20"
+                                                        Symbol="{Binding Icon}" />
+                                                </Border>
+                                                <StackPanel
+                                                    Grid.Column="1"
+                                                    VerticalAlignment="Center"
+                                                    Spacing="2">
+                                                    <TextBlock
+                                                        FontWeight="SemiBold"
+                                                        Text="{Binding DisplayName}"
+                                                        TextWrapping="Wrap" />
+                                                    <TextBlock
+                                                        FontSize="12"
+                                                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                        MaxLines="3"
+                                                        Text="{Binding Description}"
+                                                        TextTrimming="CharacterEllipsis"
+                                                        TextWrapping="Wrap" />
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </ScrollViewer>
+</controls:UserControlBase>

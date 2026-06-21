@@ -418,7 +418,7 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
             }
         }
 
-        if (!await CheckClientConnectedWithPrompt() || !ClientManager.IsConnected)
+        if (!await CheckClientConnectedWithPrompt(cancellationToken) || !ClientManager.IsConnected)
             return;
 
         // If enabled, randomize the seed

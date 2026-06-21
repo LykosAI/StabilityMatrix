@@ -5,6 +5,7 @@ using Semver;
 using StabilityMatrix.Core.Converters.Json;
 using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models.Api.CivArchive;
+using StabilityMatrix.Core.Models.Api.HuggingFace;
 using StabilityMatrix.Core.Models.Update;
 
 namespace StabilityMatrix.Core.Models.Settings;
@@ -83,6 +84,11 @@ public class Settings
     public bool IsImportAsConnected { get; set; }
     public bool ShowConnectedModelImages { get; set; }
     public WindowSettings? WindowSettings { get; set; }
+
+    // HuggingFace browser UI prefs
+    public bool HuggingFaceUseStructuredView { get; set; } = true;
+    public bool HuggingFaceHideInstalled { get; set; }
+    public HuggingFaceSearchSort HuggingFaceSearchSort { get; set; } = HuggingFaceSearchSort.Downloads;
 
     public ModelSearchOptions? ModelSearchOptions { get; set; }
     public CivArchiveBrowserOptions CivArchiveBrowserOptions { get; set; } = new();

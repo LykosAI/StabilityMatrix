@@ -42,6 +42,7 @@
                         <vendorLabs:BetterAsyncImage
                             ContextFlyout="{TemplateBinding ContextFlyout}"
                             CornerRadius="8"
+                            DecodeWidth="{TemplateBinding DecodeWidth}"
                             IsCacheEnabled="True"
                             Source="{TemplateBinding Source}"
                             Stretch="UniformToFill" />

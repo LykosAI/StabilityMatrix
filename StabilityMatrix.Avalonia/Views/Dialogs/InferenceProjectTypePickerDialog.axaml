@@ -6,6 +6,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:dialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
     xmlns:fluentIcons="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
+    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
     xmlns:models="clr-namespace:StabilityMatrix.Avalonia.Models.Inference"
@@ -112,11 +113,11 @@
             Classes="transparent-full"
             Command="{Binding UseClassicMenuCommand}"
             Cursor="Hand"
-            ToolTip.Tip="Switch to the classic dropdown menu. You can switch back in Settings → Inference.">
+            ToolTip.Tip="{x:Static lang:Resources.Label_UseClassicMenuToolTip}">
             <TextBlock
                 FontSize="11"
                 Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                Text="Prefer the quick menu? Use the classic dropdown" />
+                Text="{x:Static lang:Resources.Label_UseClassicMenuPrompt}" />
         </Button>
     </Grid>
 </controls:UserControlBase>

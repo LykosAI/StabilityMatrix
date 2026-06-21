@@ -3778,6 +3778,42 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Classic New Tab Menu.
+        /// </summary>
+        public static string Label_ClassicNewTabMenu {
+            get {
+                return ResourceManager.GetString("Label_ClassicNewTabMenu", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Use the classic dropdown menu when adding a new Inference tab, instead of the project gallery dialog.
+        /// </summary>
+        public static string Label_ClassicNewTabMenuDescription {
+            get {
+                return ResourceManager.GetString("Label_ClassicNewTabMenuDescription", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Prefer the quick menu? Use the classic dropdown.
+        /// </summary>
+        public static string Label_UseClassicMenuPrompt {
+            get {
+                return ResourceManager.GetString("Label_UseClassicMenuPrompt", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Switch to the classic dropdown menu. You can switch back in Settings -&gt; Inference.
+        /// </summary>
+        public static string Label_UseClassicMenuToolTip {
+            get {
+                return ResourceManager.GetString("Label_UseClassicMenuToolTip", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Image.
         /// </summary>
         public static string Label_Image {

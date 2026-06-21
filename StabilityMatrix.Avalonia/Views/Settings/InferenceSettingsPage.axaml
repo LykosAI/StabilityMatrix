@@ -181,8 +181,8 @@
 
                 <ui:SettingsExpander
                     Grid.Row="5"
-                    Description="Use the classic dropdown menu when adding a new Inference tab, instead of the project gallery dialog."
-                    Header="Classic New Tab Menu">
+                    Description="{x:Static lang:Resources.Label_ClassicNewTabMenuDescription}"
+                    Header="{x:Static lang:Resources.Label_ClassicNewTabMenu}">
                     <ui:SettingsExpander.IconSource>
                         <fluentIcons:SymbolIconSource Symbol="Apps" />
                     </ui:SettingsExpander.IconSource>

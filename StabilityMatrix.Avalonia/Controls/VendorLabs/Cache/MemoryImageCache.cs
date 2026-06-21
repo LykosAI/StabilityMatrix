@@ -132,7 +132,7 @@ internal class MemoryImageCache : IImageCache
     /// <returns>Awaitable Task</returns>
     public Task PreCacheAsync(Uri uri, CancellationToken cancellationToken = default)
     {
-        return GetWithCacheAsync(uri, 0, cancellationToken);
+        return GetWithCacheAsync(uri, cancellationToken: cancellationToken);
     }
 
     /// <summary>

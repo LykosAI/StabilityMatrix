@@ -24,6 +24,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - The **Checkpoints** and **Outputs** galleries now load thumbnails at display size instead of full resolution, using far less memory and scrolling much more smoothly with large libraries
 - The **CivitAI** and **OpenModelDB** browsers now keep card images in memory, so scrolling back over models you've already seen no longer re-loads them from disk
 - Lightened the CivitAI model cards so they render faster while scrolling
+- Added a **gallery picker** for the Inference "+" new-tab button, grouping the project types into **Image / Video / Legacy** sections with icons and descriptions instead of a flat dropdown. The redundant standalone Flux text-to-image and SVD image-to-video types now live under **Legacy** so existing projects still open, without cluttering the list for new users
+  - Prefer the old menu? A **Compact New Tab Menu** toggle under Settings → Inference (and a quick link at the bottom of the picker dialog) switches the "+" button back to the fast dropdown
 
 ## v2.16.2
 ### Changed

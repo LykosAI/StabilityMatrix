@@ -79,6 +79,11 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
 
     public SharedState SharedState { get; }
 
+    /// <summary>
+    /// Whether the "+" button opens the classic dropdown menu instead of the gallery picker dialog.
+    /// </summary>
+    public bool UseClassicTabPicker => settingsManager.Settings.UseClassicInferenceTabPicker;
+
     public ObservableCollection<InferenceTabViewModelBase> Tabs { get; } = new();
 
     [ObservableProperty]
@@ -175,10 +180,9 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
             return;
         }
 
-        var comfyViewModel = newItems.FirstOrDefault(
-            vm =>
-                vm.RunningPackage.InstalledPackage.Id == selectedPackageId
-                || vm.RunningPackage.BasePackage is ComfyUI
+        var comfyViewModel = newItems.FirstOrDefault(vm =>
+            vm.RunningPackage.InstalledPackage.Id == selectedPackageId
+            || vm.RunningPackage.BasePackage is ComfyUI
         );
 
         if (comfyViewModel is null && RunningPackage?.BasePackage is ComfyUI)
@@ -291,7 +295,7 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
                         {
                             IsOpen = false,
                             IsSelected = false,
-                            CurrentTabIndex = -1
+                            CurrentTabIndex = -1,
                         }
                     );
                 }
@@ -361,8 +365,8 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
             return;
         }
 
-        var entry = await liteDbContext.InferenceProjects.FindOneAsync(
-            p => p.FilePath == projectFile.ToString()
+        var entry = await liteDbContext.InferenceProjects.FindOneAsync(p =>
+            p.FilePath == projectFile.ToString()
         );
 
         // Create if not found
@@ -392,6 +396,7 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
 
         // Create a new scope for this tab
         var scope = vmFactory.CreateScope();
+        scopes.Add(scope);
 
         // Get the view model using the scope's service provider
         var tab =
@@ -405,6 +410,24 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
 
         // Update the database with the current tab
         SyncTabStateWithDatabase(tab).SafeFireAndForget();
+    }
+
+    /// <summary>
+    /// Shows the new-project gallery picker and adds a tab for the chosen type.
+    /// </summary>
+    [RelayCommand]
+    private async Task ShowAddTabDialogAsync()
+    {
+        using var scope = vmFactory.CreateScope();
+        var pickerVm = scope.ServiceManager.Get<InferenceProjectTypePickerViewModel>();
+
+        if (
+            await pickerVm.GetDialog().ShowAsync() == ContentDialogResult.Primary
+            && pickerVm.SelectedType is { } type
+        )
+        {
+            AddTab(type);
+        }
     }
 
     /// <summary>
@@ -547,7 +570,7 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
                     {
                         Patterns = new[] { "*.smproj" },
                         MimeTypes = new[] { "application/json" },
-                    }
+                    },
                 },
                 SuggestedStartLocation = startDir,
                 DefaultExtension = ".smproj",
@@ -720,8 +743,8 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
             InferenceProjectType.ImageToImage => scope.ServiceManager.Get<InferenceImageToImageViewModel>(),
             InferenceProjectType.ImageToVideo => scope.ServiceManager.Get<InferenceImageToVideoViewModel>(),
             InferenceProjectType.Upscale => scope.ServiceManager.Get<InferenceImageUpscaleViewModel>(),
-            InferenceProjectType.FluxTextToImage
-                => scope.ServiceManager.Get<InferenceFluxTextToImageViewModel>(),
+            InferenceProjectType.FluxTextToImage =>
+                scope.ServiceManager.Get<InferenceFluxTextToImageViewModel>(),
         };
 
         switch (vm)
@@ -774,7 +797,7 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
                     {
                         Patterns = new[] { "*.smproj" },
                         MimeTypes = new[] { "application/json" },
-                    }
+                    },
                 },
                 SuggestedStartLocation = startDir,
             }

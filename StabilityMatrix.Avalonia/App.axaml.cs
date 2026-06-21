@@ -366,6 +366,12 @@ public sealed class App : Application
         // Setup uri handler for `stabilitymatrix://` protocol
         Program.UriHandler.RegisterUriScheme();
 
+        // Write a correct .desktop entry for AppImage runs so the app appears in the launcher
+        if (Compat.IsLinux)
+        {
+            LinuxDesktopIntegration.CreateDesktopFile();
+        }
+
         // Setup activation protocol handlers (uri handler on macOS)
         if (Compat.IsMacOS && this.TryGetFeature<IActivatableLifetime>() is { } activatableLifetime)
         {

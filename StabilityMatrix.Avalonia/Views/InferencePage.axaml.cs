@@ -2,34 +2,22 @@
 using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
-using Avalonia.Interactivity;
 using FluentAvalonia.UI.Controls;
 using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.ViewModels;
-using StabilityMatrix.Core.Models.Inference;
 
 namespace StabilityMatrix.Avalonia.Views;
 
 [RegisterSingleton<InferencePage>]
 public partial class InferencePage : UserControlBase
 {
-    private Button? _addButton;
-    private Button AddButton =>
-        _addButton ??= this.FindControl<TabView>("TabView")!
-            .GetTemplateChildren()
-            .OfType<Button>()
-            .First(p => p.Name == "AddButton");
-
-    private readonly CommandBarFlyout addTabFlyout;
+    private Button? addButton;
 
     public InferencePage()
     {
         InitializeComponent();
-
-        addTabFlyout =
-            Resources["AddTabFlyout"] as CommandBarFlyout
-            ?? throw new NullReferenceException("AddTabFlyout not found");
     }
 
     private void TabView_OnTabCloseRequested(TabView sender, TabViewTabCloseRequestedEventArgs args)
@@ -39,36 +27,58 @@ public partial class InferencePage : UserControlBase
 
     private void TabView_OnAddTabButtonClick(TabView sender, EventArgs args)
     {
-        ShowAddTabMenu(false);
-    }
+        if (DataContext is not InferenceViewModel vm)
+            return;
 
-    private void ShowAddTabMenu(bool isTransient)
-    {
-        addTabFlyout.ShowMode = isTransient ? FlyoutShowMode.Transient : FlyoutShowMode.Standard;
-
-        addTabFlyout.ShowAt(AddButton);
-    }
-
-    private void AddTabMenu_OnClick(object? sender, RoutedEventArgs e)
-    {
-        if (sender is Control { Tag: InferenceProjectType type })
+        if (vm.UseClassicTabPicker)
         {
-            (DataContext as InferenceViewModel)!.AddTabCommand.Execute(type);
+            ShowClassicAddTabFlyout(sender, vm);
+        }
+        else
+        {
+            vm.ShowAddTabDialogCommand.Execute(null);
         }
     }
 
-    private void AddTabMenu_ImgToVideo_OnClick(object? sender, RoutedEventArgs e)
+    /// <summary>
+    /// Shows the classic dropdown "add tab" menu, built from the same project-type metadata as the
+    /// gallery picker so the two stay in sync.
+    /// </summary>
+    private void ShowClassicAddTabFlyout(TabView tabView, InferenceViewModel vm)
     {
-        (DataContext as InferenceViewModel)!.AddTabCommand.Execute(InferenceProjectType.ImageToVideo);
-    }
+        addButton ??= tabView
+            .GetTemplateChildren()
+            .OfType<Button>()
+            .FirstOrDefault(b => b.Name == "AddButton");
 
-    private void AddTabMenu_WanTextToVideo_OnClick(object? sender, RoutedEventArgs e)
-    {
-        (DataContext as InferenceViewModel)!.AddTabCommand.Execute(InferenceProjectType.WanTextToVideo);
-    }
+        if (addButton is null)
+            return;
 
-    private void AddTabMenu_WanImgToVideo_OnClick(object? sender, RoutedEventArgs e)
-    {
-        (DataContext as InferenceViewModel)!.AddTabCommand.Execute(InferenceProjectType.WanImageToVideo);
+        var flyout = new FAMenuFlyout();
+        var isFirstGroup = true;
+
+        foreach (var group in InferenceProjectTypeExtensions.GetGrouped())
+        {
+            if (!isFirstGroup)
+            {
+                flyout.Items.Add(new MenuFlyoutSeparator());
+            }
+            isFirstGroup = false;
+
+            foreach (var info in group.Items)
+            {
+                flyout.Items.Add(
+                    new MenuFlyoutItem
+                    {
+                        Text = info.DisplayName,
+                        IconSource = new FluentIcons.Avalonia.Fluent.SymbolIconSource { Symbol = info.Icon },
+                        Command = vm.AddTabCommand,
+                        CommandParameter = info.Type,
+                    }
+                );
+            }
+        }
+
+        flyout.ShowAt(addButton);
     }
 }

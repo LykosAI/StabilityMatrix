@@ -3767,7 +3767,178 @@ namespace StabilityMatrix.Avalonia.Languages {
                 return ResourceManager.GetString("Label_TextToImage", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to New Project.
+        /// </summary>
+        public static string Label_NewProject {
+            get {
+                return ResourceManager.GetString("Label_NewProject", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Compact New Tab Menu.
+        /// </summary>
+        public static string Label_CompactNewTabMenu {
+            get {
+                return ResourceManager.GetString("Label_CompactNewTabMenu", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Use the compact dropdown menu when adding a new Inference tab, instead of the project gallery dialog.
+        /// </summary>
+        public static string Label_CompactNewTabMenuDescription {
+            get {
+                return ResourceManager.GetString("Label_CompactNewTabMenuDescription", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Prefer the quick menu? Use the compact dropdown.
+        /// </summary>
+        public static string Label_UseCompactMenuPrompt {
+            get {
+                return ResourceManager.GetString("Label_UseCompactMenuPrompt", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Switch to the compact dropdown menu. You can switch back in Settings -&gt; Inference.
+        /// </summary>
+        public static string Label_UseCompactMenuToolTip {
+            get {
+                return ResourceManager.GetString("Label_UseCompactMenuToolTip", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Image.
+        /// </summary>
+        public static string Label_Image {
+            get {
+                return ResourceManager.GetString("Label_Image", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Video.
+        /// </summary>
+        public static string Label_Video {
+            get {
+                return ResourceManager.GetString("Label_Video", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Legacy.
+        /// </summary>
+        public static string Label_Legacy {
+            get {
+                return ResourceManager.GetString("Label_Legacy", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Wan Text to Video.
+        /// </summary>
+        public static string Label_WanTextToVideo {
+            get {
+                return ResourceManager.GetString("Label_WanTextToVideo", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Wan Image to Video.
+        /// </summary>
+        public static string Label_WanImageToVideo {
+            get {
+                return ResourceManager.GetString("Label_WanImageToVideo", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Flux Text to Image.
+        /// </summary>
+        public static string Label_FluxTextToImage {
+            get {
+                return ResourceManager.GetString("Label_FluxTextToImage", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to SVD Image to Video.
+        /// </summary>
+        public static string Label_SvdImageToVideo {
+            get {
+                return ResourceManager.GetString("Label_SvdImageToVideo", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Generate images from a text prompt. Works with SD1.5, SDXL, Pony, Flux and more.
+        /// </summary>
+        public static string Label_TextToImageDescription {
+            get {
+                return ResourceManager.GetString("Label_TextToImageDescription", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Transform an existing image using a text prompt.
+        /// </summary>
+        public static string Label_ImageToImageDescription {
+            get {
+                return ResourceManager.GetString("Label_ImageToImageDescription", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Increase the resolution of an image with an upscaling model.
+        /// </summary>
+        public static string Label_UpscaleDescription {
+            get {
+                return ResourceManager.GetString("Label_UpscaleDescription", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Generate a video from a text prompt using Wan.
+        /// </summary>
+        public static string Label_WanTextToVideoDescription {
+            get {
+                return ResourceManager.GetString("Label_WanTextToVideoDescription", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Animate an input image into a video using Wan.
+        /// </summary>
+        public static string Label_WanImageToVideoDescription {
+            get {
+                return ResourceManager.GetString("Label_WanImageToVideoDescription", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Standalone Flux text-to-image. The Text to Image tab also handles Flux automatically.
+        /// </summary>
+        public static string Label_FluxTextToImageDescription {
+            get {
+                return ResourceManager.GetString("Label_FluxTextToImageDescription", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Stable Video Diffusion image-to-video.
+        /// </summary>
+        public static string Label_SvdImageToVideoDescription {
+            get {
+                return ResourceManager.GetString("Label_SvdImageToVideoDescription", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Thanks for building with us 💙.
         /// </summary>

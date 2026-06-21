@@ -8,7 +8,6 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:fluentIcons="using:FluentIcons.Avalonia.Fluent"
     xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
-    xmlns:inference="clr-namespace:StabilityMatrix.Core.Models.Inference;assembly=StabilityMatrix.Core"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     xmlns:markupExtensions="clr-namespace:StabilityMatrix.Avalonia.MarkupExtensions"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -33,71 +32,6 @@
 
     <controls:UserControlBase.Resources>
         <converters:UriStringConverter x:Key="UriStringConverter" />
-        <ui:CommandBarFlyout x:Key="AddTabFlyout" Placement="Right">
-            <!-- Note: unlike a regular CommandBar, primary items can be set as the xml content and don't need
-                   to be wrapped in a <ui:CommandBarFlyout.PrimaryCommands> tag
-            -->
-            <!--<ui:CommandBarButton Label="Text to Image" ToolTip.Tip="Text to Image">
-                <ui:CommandBarButton.IconSource>
-                    <controls:FASymbolIconSource Symbol="fa-solid fa-bolt"/>
-                </ui:CommandBarButton.IconSource>
-            </ui:CommandBarButton>
-            <ui:CommandBarButton Label="Save" ToolTip.Tip="Save" />
-            <ui:CommandBarButton Label="Delete" ToolTip.Tip="Delete" />-->
-            <ui:CommandBarFlyout.SecondaryCommands>
-                <ui:CommandBarButton
-                    Click="AddTabMenu_OnClick"
-                    IconSource="FullScreenMaximize"
-                    Label="Text to Image"
-                    Tag="{x:Static inference:InferenceProjectType.TextToImage}"
-                    ToolTip.Tip="Text to Image" />
-                <ui:CommandBarButton
-                    Click="AddTabMenu_OnClick"
-                    IconSource="ImageCopy"
-                    Label="Image to Image"
-                    Tag="{x:Static inference:InferenceProjectType.ImageToImage}"
-                    ToolTip.Tip="Image to Image" />
-                <ui:CommandBarButton
-                    IconSource="ImageEdit"
-                    IsEnabled="False"
-                    IsVisible="False"
-                    Label="Inpaint"
-                    ToolTip.Tip="Not yet implemented, coming soon!" />
-                <ui:CommandBarButton
-                    Click="AddTabMenu_OnClick"
-                    Label="Upscale"
-                    Tag="{x:Static inference:InferenceProjectType.Upscale}"
-                    ToolTip.Tip="Upscale">
-                    <ui:CommandBarButton.IconSource>
-                        <fluentIcons:SymbolIconSource FontSize="10" Symbol="ResizeImage" />
-                    </ui:CommandBarButton.IconSource>
-                </ui:CommandBarButton>
-                <ui:CommandBarButton
-                    Click="AddTabMenu_WanTextToVideo_OnClick"
-                    Label="Wan Text to Video"
-                    ToolTip.Tip="Wan Text to Video">
-                    <ui:CommandBarButton.IconSource>
-                        <fluentIcons:SymbolIconSource FontSize="10" Symbol="Video" />
-                    </ui:CommandBarButton.IconSource>
-                </ui:CommandBarButton>
-                <ui:CommandBarButton
-                    Click="AddTabMenu_WanImgToVideo_OnClick"
-                    Label="Wan Image to Video"
-                    ToolTip.Tip="Wan Image to Video">
-                    <ui:CommandBarButton.IconSource>
-                        <fluentIcons:SymbolIconSource FontSize="10" Symbol="VideoAdd" />
-                    </ui:CommandBarButton.IconSource>
-                </ui:CommandBarButton>
-                <ui:CommandBarButton
-                    Click="AddTabMenu_ImgToVideo_OnClick"
-                    Label="SVD Image to Video"
-                    ToolTip.Tip="SVD Image to Video">
-                    <ui:CommandBarButton.IconSource>
-                        <fluentIcons:SymbolIconSource FontSize="10" Symbol="VideoRecording" />
-                    </ui:CommandBarButton.IconSource>
-                </ui:CommandBarButton>
-            </ui:CommandBarFlyout.SecondaryCommands>
-        </ui:CommandBarFlyout>
     </controls:UserControlBase.Resources>
 
     <Grid>

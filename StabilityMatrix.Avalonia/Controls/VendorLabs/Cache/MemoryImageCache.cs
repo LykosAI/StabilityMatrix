@@ -132,7 +132,7 @@ internal class MemoryImageCache : IImageCache
     /// <returns>Awaitable Task</returns>
     public Task PreCacheAsync(Uri uri, CancellationToken cancellationToken = default)
     {
-        return GetWithCacheAsync(uri, cancellationToken);
+        return GetWithCacheAsync(uri, cancellationToken: cancellationToken);
     }
 
     /// <summary>
@@ -174,7 +174,11 @@ internal class MemoryImageCache : IImageCache
         return value;
     }
 
-    public async Task<IImage?> GetAsync(Uri uri, CancellationToken cancellationToken)
+    public async Task<IImage?> GetAsync(
+        Uri uri,
+        int decodeWidth = 0,
+        CancellationToken cancellationToken = default
+    )
     {
         IImage? instance = null;
 
@@ -185,12 +189,13 @@ internal class MemoryImageCache : IImageCache
                 // Local
                 if (File.Exists(uri.LocalPath))
                 {
-                    instance = LoadLocalImageWithSkia(uri);
+                    instance = LoadLocalImageWithSkia(uri, decodeWidth);
                 }
                 // Remote
                 else
                 {
-                    instance = await DownloadImageAsync(uri, cancellationToken).ConfigureAwait(false);
+                    instance = await DownloadImageAsync(uri, decodeWidth, cancellationToken)
+                        .ConfigureAwait(false);
                 }
 
                 if (instance != null)
@@ -204,11 +209,16 @@ internal class MemoryImageCache : IImageCache
         return instance;
     }
 
-    public async Task<IImage?> GetWithCacheAsync(Uri uri, CancellationToken cancellationToken)
+    public async Task<IImage?> GetWithCacheAsync(
+        Uri uri,
+        int decodeWidth = 0,
+        CancellationToken cancellationToken = default
+    )
     {
         IImage? instance = null;
 
-        var fileName = GetCacheFileName(uri);
+        // Include the decode width in the cache key so requests at different sizes don't collide.
+        var fileName = $"{GetCacheFileName(uri)}_{decodeWidth}";
         _concurrentTasks.TryGetValue(fileName, out var request);
 
         if (request != null)
@@ -222,7 +232,7 @@ internal class MemoryImageCache : IImageCache
         {
             request = new ConcurrentRequest
             {
-                Task = GetItemWithCacheAsync(uri, fileName, cancellationToken),
+                Task = GetItemWithCacheAsync(uri, fileName, decodeWidth, cancellationToken),
             };
 
             _concurrentTasks[fileName] = request;
@@ -270,6 +280,7 @@ internal class MemoryImageCache : IImageCache
     private async Task<IImage?> GetItemWithCacheAsync(
         Uri uri,
         string cacheKey,
+        int decodeWidth,
         CancellationToken cancellationToken
     )
     {
@@ -297,11 +308,12 @@ internal class MemoryImageCache : IImageCache
             {
                 if (isLocal)
                 {
-                    instance = LoadLocalImageWithSkia(uri);
+                    instance = LoadLocalImageWithSkia(uri, decodeWidth);
                 }
                 else
                 {
-                    instance = await DownloadImageAsync(uri, cancellationToken).ConfigureAwait(false);
+                    instance = await DownloadImageAsync(uri, decodeWidth, cancellationToken)
+                        .ConfigureAwait(false);
                 }
 
                 if (instance != null)
@@ -338,14 +350,18 @@ internal class MemoryImageCache : IImageCache
         return image;
     }
 
-    private static IImage? LoadLocalImageWithSkia(Uri uri)
+    private static IImage? LoadLocalImageWithSkia(Uri uri, int decodeWidth)
     {
         using var skFileStream = new SKFileStream(uri.LocalPath);
 
-        return SKBitmap.Decode(skFileStream).ToAvaloniaImage();
+        return SKBitmap.Decode(skFileStream).ToAvaloniaImageScaled(decodeWidth);
     }
 
-    private async Task<IImage?> DownloadImageAsync(Uri uri, CancellationToken cancellationToken)
+    private async Task<IImage?> DownloadImageAsync(
+        Uri uri,
+        int decodeWidth,
+        CancellationToken cancellationToken
+    )
     {
         using var ms = new MemoryStream();
 
@@ -357,7 +373,6 @@ internal class MemoryImageCache : IImageCache
 
         ms.Position = 0;
 
-        var image = new Bitmap(ms);
-        return image;
+        return Extensions.SkiaExtensions.DecodeToAvaloniaImageScaled(ms, decodeWidth);
     }
 }

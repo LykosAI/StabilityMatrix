@@ -78,7 +78,7 @@
                                                     </Border>
                                                     <StackPanel
                                                         Grid.Column="1"
-                                                        VerticalAlignment="Center"
+                                                        VerticalAlignment="Top"
                                                         Spacing="2">
                                                         <TextBlock
                                                             FontWeight="SemiBold"
@@ -113,11 +113,11 @@
             Classes="transparent-full"
             Command="{Binding UseClassicMenuCommand}"
             Cursor="Hand"
-            ToolTip.Tip="{x:Static lang:Resources.Label_UseClassicMenuToolTip}">
+            ToolTip.Tip="{x:Static lang:Resources.Label_UseCompactMenuToolTip}">
             <TextBlock
                 FontSize="11"
                 Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                Text="{x:Static lang:Resources.Label_UseClassicMenuPrompt}" />
+                Text="{x:Static lang:Resources.Label_UseCompactMenuPrompt}" />
         </Button>
     </Grid>
 </controls:UserControlBase>

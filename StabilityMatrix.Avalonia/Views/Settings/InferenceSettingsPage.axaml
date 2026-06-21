@@ -187,7 +187,7 @@
                         <fluentIcons:SymbolIconSource Symbol="Apps" />
                     </ui:SettingsExpander.IconSource>
                     <ui:SettingsExpander.Footer>
-                        <ToggleSwitch IsChecked="{Binding UseCompactTabPicker}" />
+                        <ToggleSwitch IsChecked="{Binding UseClassicTabPicker}" />
                     </ui:SettingsExpander.Footer>
                 </ui:SettingsExpander>
 

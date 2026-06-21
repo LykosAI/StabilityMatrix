@@ -3778,38 +3778,38 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Classic New Tab Menu.
+        ///   Looks up a localized string similar to Compact New Tab Menu.
         /// </summary>
-        public static string Label_ClassicNewTabMenu {
+        public static string Label_CompactNewTabMenu {
             get {
-                return ResourceManager.GetString("Label_ClassicNewTabMenu", resourceCulture);
+                return ResourceManager.GetString("Label_CompactNewTabMenu", resourceCulture);
             }
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Use the classic dropdown menu when adding a new Inference tab, instead of the project gallery dialog.
+        ///   Looks up a localized string similar to Use the compact dropdown menu when adding a new Inference tab, instead of the project gallery dialog.
         /// </summary>
-        public static string Label_ClassicNewTabMenuDescription {
+        public static string Label_CompactNewTabMenuDescription {
             get {
-                return ResourceManager.GetString("Label_ClassicNewTabMenuDescription", resourceCulture);
+                return ResourceManager.GetString("Label_CompactNewTabMenuDescription", resourceCulture);
             }
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Prefer the quick menu? Use the classic dropdown.
+        ///   Looks up a localized string similar to Prefer the quick menu? Use the compact dropdown.
         /// </summary>
-        public static string Label_UseClassicMenuPrompt {
+        public static string Label_UseCompactMenuPrompt {
             get {
-                return ResourceManager.GetString("Label_UseClassicMenuPrompt", resourceCulture);
+                return ResourceManager.GetString("Label_UseCompactMenuPrompt", resourceCulture);
             }
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Switch to the classic dropdown menu. You can switch back in Settings -&gt; Inference.
+        ///   Looks up a localized string similar to Switch to the compact dropdown menu. You can switch back in Settings -&gt; Inference.
         /// </summary>
-        public static string Label_UseClassicMenuToolTip {
+        public static string Label_UseCompactMenuToolTip {
             get {
-                return ResourceManager.GetString("Label_UseClassicMenuToolTip", resourceCulture);
+                return ResourceManager.GetString("Label_UseCompactMenuToolTip", resourceCulture);
             }
         }
 

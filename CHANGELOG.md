@@ -5,6 +5,11 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.17.0-dev.1
+### Added
+- Added a **gallery picker** for the Inference "+" new-tab button, grouping the project types into **Image / Video / Legacy** sections with icons and descriptions instead of a flat dropdown. The redundant standalone Flux text-to-image and SVD image-to-video types now live under **Legacy** so existing projects still open, without cluttering the list for new users
+  - Prefer the old menu? A **Classic New Tab Menu** toggle under Settings → Inference (and a quick link at the bottom of the picker dialog) switches the "+" button back to the fast dropdown
+
 ## v2.16.2
 ### Fixed
 - Fixed [#1666](https://github.com/LykosAI/StabilityMatrix/issues/1666) - AppImage builds creating a broken `.desktop` entry (`NoDisplay=true`, missing icon) that never showed up in the application launcher and reverted any manual edits on the next launch. AppImage runs now write a correct `.desktop` entry with the extracted app icon so Stability Matrix appears in your launcher/menu, and report a matching `WM_CLASS` so the running window shows the Stability Matrix icon in the dock/taskbar instead of a generic one. Only applies to AppImage runs; deb/rpm/flatpak installs keep their package-managed entries

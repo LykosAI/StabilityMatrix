@@ -99,6 +99,9 @@ public partial class InferenceSettingsViewModel : PageViewModelBase
     [ObservableProperty]
     private bool isImageViewerPixelGridEnabled = true;
 
+    [ObservableProperty]
+    private bool useClassicTabPicker;
+
     public InferenceSettingsViewModel(
         INotificationService notificationService,
         IPrerequisiteHelper prerequisiteHelper,
@@ -192,6 +195,13 @@ public partial class InferenceSettingsViewModel : PageViewModelBase
             this,
             vm => vm.IsImageViewerPixelGridEnabled,
             settings => settings.IsImageViewerPixelGridEnabled,
+            true
+        );
+
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.UseClassicTabPicker,
+            settings => settings.UseClassicInferenceTabPicker,
             true
         );
 

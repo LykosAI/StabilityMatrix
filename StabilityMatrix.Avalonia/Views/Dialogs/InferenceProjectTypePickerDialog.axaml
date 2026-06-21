@@ -16,86 +16,107 @@
     x:DataType="dialogs:InferenceProjectTypePickerViewModel"
     mc:Ignorable="d">
 
-    <ScrollViewer Padding="16" HorizontalScrollBarVisibility="Disabled">
-        <ItemsControl ItemsSource="{Binding Categories}">
-            <ItemsControl.ItemTemplate>
-                <DataTemplate x:DataType="models:InferenceProjectTypeCategoryGroup">
-                    <StackPanel Margin="0,0,0,12" Spacing="8">
-                        <!--  Category header  -->
-                        <TextBlock
-                            Margin="2,0"
-                            FontSize="13"
-                            FontWeight="SemiBold"
-                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                            Text="{Binding Header}" />
+    <Grid RowDefinitions="*,Auto">
+        <ScrollViewer
+            Grid.Row="0"
+            Padding="16"
+            HorizontalScrollBarVisibility="Disabled">
+            <ItemsControl ItemsSource="{Binding Categories}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="models:InferenceProjectTypeCategoryGroup">
+                        <StackPanel Margin="0,0,0,12" Spacing="8">
+                            <!--  Category header  -->
+                            <TextBlock
+                                Margin="2,0"
+                                FontSize="13"
+                                FontWeight="SemiBold"
+                                Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                Text="{Binding Header}" />
 
-                        <!--  Cards  -->
-                        <ItemsControl ItemsSource="{Binding Items}">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <WrapPanel Orientation="Horizontal" />
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate x:DataType="models:InferenceProjectTypeInfo">
-                                    <Button
-                                        Width="264"
-                                        Height="104"
-                                        Margin="4"
-                                        Padding="0"
-                                        HorizontalAlignment="Stretch"
-                                        HorizontalContentAlignment="Stretch"
-                                        VerticalContentAlignment="Stretch"
-                                        Classes="transparent-full"
-                                        Command="{Binding #Root.((dialogs:InferenceProjectTypePickerViewModel)DataContext).SelectTypeCommand}"
-                                        CommandParameter="{Binding}"
-                                        Cursor="Hand"
-                                        ToolTip.Tip="{Binding Description}">
-                                        <Border
-                                            Padding="12"
-                                            Background="{DynamicResource ControlFillColorDefaultBrush}"
-                                            BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
-                                            BorderThickness="1"
-                                            CornerRadius="8">
-                                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
-                                                <Border
-                                                    Grid.Column="0"
-                                                    Width="40"
-                                                    Height="40"
-                                                    VerticalAlignment="Top"
-                                                    Background="{DynamicResource ControlFillColorSecondaryBrush}"
-                                                    CornerRadius="6">
-                                                    <fluentIcons:SymbolIcon
-                                                        HorizontalAlignment="Center"
+                            <!--  Cards  -->
+                            <ItemsControl ItemsSource="{Binding Items}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel Orientation="Horizontal" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="models:InferenceProjectTypeInfo">
+                                        <Button
+                                            Width="264"
+                                            Height="104"
+                                            Margin="4"
+                                            Padding="0"
+                                            HorizontalAlignment="Stretch"
+                                            HorizontalContentAlignment="Stretch"
+                                            VerticalContentAlignment="Stretch"
+                                            Classes="transparent-full"
+                                            Command="{Binding #Root.((dialogs:InferenceProjectTypePickerViewModel)DataContext).SelectTypeCommand}"
+                                            CommandParameter="{Binding}"
+                                            Cursor="Hand"
+                                            ToolTip.Tip="{Binding Description}">
+                                            <Border
+                                                Padding="12"
+                                                Background="{DynamicResource ControlFillColorDefaultBrush}"
+                                                BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                                                BorderThickness="1"
+                                                CornerRadius="8">
+                                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                                                    <Border
+                                                        Grid.Column="0"
+                                                        Width="40"
+                                                        Height="40"
+                                                        VerticalAlignment="Top"
+                                                        Background="{DynamicResource ControlFillColorSecondaryBrush}"
+                                                        CornerRadius="6">
+                                                        <fluentIcons:SymbolIcon
+                                                            HorizontalAlignment="Center"
+                                                            VerticalAlignment="Center"
+                                                            FontSize="20"
+                                                            Symbol="{Binding Icon}" />
+                                                    </Border>
+                                                    <StackPanel
+                                                        Grid.Column="1"
                                                         VerticalAlignment="Center"
-                                                        FontSize="20"
-                                                        Symbol="{Binding Icon}" />
-                                                </Border>
-                                                <StackPanel
-                                                    Grid.Column="1"
-                                                    VerticalAlignment="Center"
-                                                    Spacing="2">
-                                                    <TextBlock
-                                                        FontWeight="SemiBold"
-                                                        Text="{Binding DisplayName}"
-                                                        TextWrapping="Wrap" />
-                                                    <TextBlock
-                                                        FontSize="12"
-                                                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                                                        MaxLines="3"
-                                                        Text="{Binding Description}"
-                                                        TextTrimming="CharacterEllipsis"
-                                                        TextWrapping="Wrap" />
-                                                </StackPanel>
-                                            </Grid>
-                                        </Border>
-                                    </Button>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </StackPanel>
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-        </ItemsControl>
-    </ScrollViewer>
+                                                        Spacing="2">
+                                                        <TextBlock
+                                                            FontWeight="SemiBold"
+                                                            Text="{Binding DisplayName}"
+                                                            TextWrapping="Wrap" />
+                                                        <TextBlock
+                                                            FontSize="12"
+                                                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                            MaxLines="3"
+                                                            Text="{Binding Description}"
+                                                            TextTrimming="CharacterEllipsis"
+                                                            TextWrapping="Wrap" />
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
+                                        </Button>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+
+        <!--  Escape hatch back to the classic dropdown menu  -->
+        <Button
+            Grid.Row="1"
+            Margin="0,0,0,8"
+            Padding="6,2"
+            HorizontalAlignment="Center"
+            Classes="transparent-full"
+            Command="{Binding UseClassicMenuCommand}"
+            Cursor="Hand"
+            ToolTip.Tip="Switch to the classic dropdown menu. You can switch back in Settings → Inference.">
+            <TextBlock
+                FontSize="11"
+                Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                Text="Prefer the quick menu? Use the classic dropdown" />
+        </Button>
+    </Grid>
 </controls:UserControlBase>

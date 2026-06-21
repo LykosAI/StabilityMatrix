@@ -79,6 +79,11 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
 
     public SharedState SharedState { get; }
 
+    /// <summary>
+    /// Whether the "+" button opens the classic dropdown menu instead of the gallery picker dialog.
+    /// </summary>
+    public bool UseClassicTabPicker => settingsManager.Settings.UseClassicInferenceTabPicker;
+
     public ObservableCollection<InferenceTabViewModelBase> Tabs { get; } = new();
 
     [ObservableProperty]

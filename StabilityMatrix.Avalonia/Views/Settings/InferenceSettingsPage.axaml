@@ -88,7 +88,7 @@
             </sg:SpacedGrid>
 
             <!--  General  -->
-            <sg:SpacedGrid RowDefinitions="Auto,*,*,*,*" RowSpacing="4">
+            <sg:SpacedGrid RowDefinitions="Auto,*,*,*,*,*" RowSpacing="4">
                 <TextBlock
                     Margin="0,0,0,4"
                     FontWeight="Medium"
@@ -176,6 +176,18 @@
                     </ui:SettingsExpander.IconSource>
                     <ui:SettingsExpander.Footer>
                         <ToggleSwitch IsChecked="{Binding UseLegacySearch}" />
+                    </ui:SettingsExpander.Footer>
+                </ui:SettingsExpander>
+
+                <ui:SettingsExpander
+                    Grid.Row="5"
+                    Description="Use the classic dropdown menu when adding a new Inference tab, instead of the project gallery dialog."
+                    Header="Classic New Tab Menu">
+                    <ui:SettingsExpander.IconSource>
+                        <fluentIcons:SymbolIconSource Symbol="Apps" />
+                    </ui:SettingsExpander.IconSource>
+                    <ui:SettingsExpander.Footer>
+                        <ToggleSwitch IsChecked="{Binding UseClassicTabPicker}" />
                     </ui:SettingsExpander.Footer>
                 </ui:SettingsExpander>
 

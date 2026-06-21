@@ -113,6 +113,11 @@ public class Settings
     public bool IsImageViewerPixelGridEnabled { get; set; } = true;
 
     /// <summary>
+    /// Use the classic dropdown menu instead of the gallery dialog when adding a new Inference tab
+    /// </summary>
+    public bool UseClassicInferenceTabPicker { get; set; }
+
+    /// <summary>
     /// Whether Inference Image Browser delete action uses recycle bin if available
     /// </summary>
     public bool IsInferenceImageBrowserUseRecycleBinForDelete { get; set; } = true;

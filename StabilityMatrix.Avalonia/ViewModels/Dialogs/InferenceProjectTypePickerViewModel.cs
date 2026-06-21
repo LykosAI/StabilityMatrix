@@ -10,6 +10,7 @@ using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models.Inference;
+using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
@@ -20,7 +21,8 @@ namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 [View(typeof(InferenceProjectTypePickerDialog))]
 [RegisterTransient<InferenceProjectTypePickerViewModel>]
 [ManagedService]
-public partial class InferenceProjectTypePickerViewModel : ContentDialogViewModelBase
+public partial class InferenceProjectTypePickerViewModel(ISettingsManager settingsManager)
+    : ContentDialogViewModelBase
 {
     public override string? Title { get; set; } = Resources.Label_NewProject;
 
@@ -42,6 +44,16 @@ public partial class InferenceProjectTypePickerViewModel : ContentDialogViewMode
 
         SelectedType = info.Type;
         OnPrimaryButtonClick();
+    }
+
+    /// <summary>
+    /// Switches to the classic dropdown "+" menu and closes the dialog without adding a tab.
+    /// </summary>
+    [RelayCommand]
+    private void UseClassicMenu()
+    {
+        settingsManager.Transaction(s => s.UseClassicInferenceTabPicker = true);
+        OnCloseButtonClick();
     }
 
     public override BetterContentDialog GetDialog()

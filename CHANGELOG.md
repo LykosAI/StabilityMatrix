@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
   - Select multiple files at once and see the total download size before you start, with a warning if there isn't enough free space
   - Gated or private repositories work once you add a HuggingFace token in **Settings → Accounts**
 - Added a **gallery picker** for the Inference "+" new-tab button, grouping the project types into **Image / Video / Legacy** sections with icons and descriptions instead of a flat dropdown. The redundant standalone Flux text-to-image and SVD image-to-video types now live under **Legacy** so existing projects still open, without cluttering the list for new users
-  - Prefer the old menu? A **Classic New Tab Menu** toggle under Settings → Inference (and a quick link at the bottom of the picker dialog) switches the "+" button back to the fast dropdown
+  - Prefer the old menu? A **Compact New Tab Menu** toggle under Settings → Inference (and a quick link at the bottom of the picker dialog) switches the "+" button back to the fast dropdown
 
 ## v2.16.2
 ### Fixed

@@ -5,6 +5,17 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.17.0-dev.1
+### Added
+#### New Feature: 🤗 Live HuggingFace Model Browser
+- Reworked the HuggingFace tab into a full browser instead of a fixed list of links — the curated picks are still there as the default view:
+  - Search HuggingFace for models right from the tab, sorted by downloads, likes, or most recently updated
+  - Paste a repository link to browse all of its files directly
+  - Browse files as a flat list or a folder tree, with a quick name filter and a **Hide installed** toggle
+  - Choose where each file goes (auto-detected and editable), or send a whole multi-file model such as a diffusers repo into one folder with its structure intact
+  - Select multiple files at once and see the total download size before you start, with a warning if there isn't enough free space
+  - Gated or private repositories work once you add a HuggingFace token in **Settings → Accounts**
+
 ## v2.16.2
 ### Fixed
 - Fixed [#1666](https://github.com/LykosAI/StabilityMatrix/issues/1666) - AppImage builds creating a broken `.desktop` entry (`NoDisplay=true`, missing icon) that never showed up in the application launcher and reverted any manual edits on the next launch. AppImage runs now write a correct `.desktop` entry with the extracted app icon so Stability Matrix appears in your launcher/menu, and report a matching `WM_CLASS` so the running window shows the Stability Matrix icon in the dock/taskbar instead of a generic one. Only applies to AppImage runs; deb/rpm/flatpak installs keep their package-managed entries

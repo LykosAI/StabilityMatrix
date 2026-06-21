@@ -181,13 +181,13 @@
 
                 <ui:SettingsExpander
                     Grid.Row="5"
-                    Description="{x:Static lang:Resources.Label_ClassicNewTabMenuDescription}"
-                    Header="{x:Static lang:Resources.Label_ClassicNewTabMenu}">
+                    Description="{x:Static lang:Resources.Label_CompactNewTabMenuDescription}"
+                    Header="{x:Static lang:Resources.Label_CompactNewTabMenu}">
                     <ui:SettingsExpander.IconSource>
                         <fluentIcons:SymbolIconSource Symbol="Apps" />
                     </ui:SettingsExpander.IconSource>
                     <ui:SettingsExpander.Footer>
-                        <ToggleSwitch IsChecked="{Binding UseClassicTabPicker}" />
+                        <ToggleSwitch IsChecked="{Binding UseCompactTabPicker}" />
                     </ui:SettingsExpander.Footer>
                 </ui:SettingsExpander>
 

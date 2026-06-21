@@ -13,6 +13,7 @@ using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Avalonia.Threading;
 using StabilityMatrix.Avalonia.Controls.VendorLabs.Cache;
+using StabilityMatrix.Avalonia.Extensions;
 
 namespace StabilityMatrix.Avalonia.Controls.VendorLabs;
 
@@ -121,6 +122,9 @@ public partial class BetterAsyncImage : TemplatedControlBase
 
         var uri = Source;
 
+        // Read styled property on the UI thread before dispatching to the background decode.
+        var decodeWidth = DecodeWidth;
+
         if (!uri.IsAbsoluteUri)
         {
             State = AsyncImageState.Failed;
@@ -145,17 +149,19 @@ public partial class BetterAsyncImage : TemplatedControlBase
 
                     if (uri.Scheme is "http" or "https")
                     {
-                        return await LoadImageAsync(uri, newTokenSource.Token);
+                        return await LoadImageAsync(uri, decodeWidth, newTokenSource.Token);
                     }
 
                     if (uri.Scheme == "file" && File.Exists(uri.LocalPath))
                     {
                         if (!IsCacheEnabled)
                         {
-                            return new Bitmap(uri.LocalPath);
+                            return decodeWidth > 0
+                                ? SkiaExtensions.DecodeFileToAvaloniaImageScaled(uri.LocalPath, decodeWidth)
+                                : new Bitmap(uri.LocalPath);
                         }
 
-                        return await LoadImageAsync(uri, newTokenSource.Token);
+                        return await LoadImageAsync(uri, decodeWidth, newTokenSource.Token);
                     }
 
                     if (uri.Scheme == "avares")
@@ -194,6 +200,11 @@ public partial class BetterAsyncImage : TemplatedControlBase
 
     private void AttachSource(IImage? image, CancellationToken cancellationToken)
     {
+        // NOTE: Do NOT dispose the previous ImagePart.Source here. Our AvaloniaImage is an
+        // ICustomDrawOperation that holds the SKBitmap and is rendered asynchronously on the compositor
+        // render thread; disposing it on source swap frees the bitmap mid-frame and causes a native
+        // use-after-free crash (sk_image_new_from_bitmap) during fast scrolling. Bitmap lifetime is left
+        // to the GC. A render-safe disposal scheme would be needed to reclaim native memory sooner.
         if (ImagePart != null)
         {
             ImagePart.Source = image;
@@ -222,7 +233,7 @@ public partial class BetterAsyncImage : TemplatedControlBase
         }
     }
 
-    private async Task<IImage?> LoadImageAsync(Uri url, CancellationToken cancellationToken)
+    private async Task<IImage?> LoadImageAsync(Uri url, int decodeWidth, CancellationToken cancellationToken)
     {
         // Get specific cache for this control or use the default one
         var cache = InstanceImageCache;
@@ -233,10 +244,10 @@ public partial class BetterAsyncImage : TemplatedControlBase
 
         if (IsCacheEnabled)
         {
-            return await cache.GetWithCacheAsync(url, cancellationToken);
+            return await cache.GetWithCacheAsync(url, decodeWidth, cancellationToken);
         }
 
-        return await cache.GetAsync(url, cancellationToken);
+        return await cache.GetAsync(url, decodeWidth, cancellationToken);
     }
 
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)

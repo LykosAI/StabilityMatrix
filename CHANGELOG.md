@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 
 ## v2.17.0-dev.1
 ### Added
+#### New Feature: 🤗 Live HuggingFace Model Browser
+- Reworked the HuggingFace tab into a full browser instead of a fixed list of links — the curated picks are still there as the default view:
+  - Search HuggingFace for models right from the tab, sorted by downloads, likes, or most recently updated
+  - Paste a repository link to browse all of its files directly
+  - Browse files as a flat list or a folder tree, with a quick name filter and a **Hide installed** toggle
+  - Choose where each file goes (auto-detected and editable), or send a whole multi-file model such as a diffusers repo into one folder with its structure intact
+  - Select multiple files at once and see the total download size before you start, with a warning if there isn't enough free space
+  - Gated or private repositories work once you add a HuggingFace token in **Settings → Accounts**
 - Added Inference support for the **Wan 2.2 14B** mixture-of-experts video models. Enable **Low Noise Model** from the Wan model card's options menu (⚙️) to load a second low-noise expert alongside the high-noise model; generation then runs the two-pass high-noise → low-noise sampling the 14B architecture expects, switching at a configurable **Boundary** (the fraction of steps handled by the high-noise expert, default 0.5). Works in both Wan Text to Video and Image to Video, and leaving the low-noise slot empty keeps the existing single-model Wan behavior unchanged
   - Added a separate **Low-Noise LoRAs** list so per-expert speed LoRAs (such as Wan 2.2-Lightning's high/low-noise pair) land on the correct model — the existing Extra Networks list applies to the high-noise/primary model, and the new Low-Noise LoRAs list applies to the low-noise expert
   - Added hover tooltips to the Wan model card fields (Precision, VAE, Text Encoder, Shift, Low-Noise, Boundary) explaining what each one does
@@ -15,6 +23,10 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Fixed
 - Fixed [#1666](https://github.com/LykosAI/StabilityMatrix/issues/1666) - AppImage builds creating a broken `.desktop` entry (`NoDisplay=true`, missing icon) that never showed up in the application launcher and reverted any manual edits on the next launch. AppImage runs now write a correct `.desktop` entry with the extracted app icon so Stability Matrix appears in your launcher/menu, and report a matching `WM_CLASS` so the running window shows the Stability Matrix icon in the dock/taskbar instead of a generic one. Only applies to AppImage runs; deb/rpm/flatpak installs keep their package-managed entries
 - Fixed `stabilitymatrix://` deep links (e.g. CivitAI "Download with Stability Matrix" buttons) being ignored on Linux AppImage builds — the URI is now forwarded to the running instance and the download starts, instead of just opening another window
+### Performance
+- The **Checkpoints** and **Outputs** galleries now load thumbnails at display size instead of full resolution, using far less memory and scrolling much more smoothly with large libraries
+- The **CivitAI** and **OpenModelDB** browsers now keep card images in memory, so scrolling back over models you've already seen no longer re-loads them from disk
+- Lightened the CivitAI model cards so they render faster while scrolling
 
 ## v2.16.1
 ### Added

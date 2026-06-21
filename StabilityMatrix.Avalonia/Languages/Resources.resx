@@ -759,17 +759,17 @@
   <data name="Label_NewProject" xml:space="preserve">
     <value>New Project</value>
   </data>
-  <data name="Label_ClassicNewTabMenu" xml:space="preserve">
-    <value>Classic New Tab Menu</value>
+  <data name="Label_CompactNewTabMenu" xml:space="preserve">
+    <value>Compact New Tab Menu</value>
   </data>
-  <data name="Label_ClassicNewTabMenuDescription" xml:space="preserve">
-    <value>Use the classic dropdown menu when adding a new Inference tab, instead of the project gallery dialog.</value>
+  <data name="Label_CompactNewTabMenuDescription" xml:space="preserve">
+    <value>Use the compact dropdown menu when adding a new Inference tab, instead of the project gallery dialog.</value>
   </data>
-  <data name="Label_UseClassicMenuPrompt" xml:space="preserve">
-    <value>Prefer the quick menu? Use the classic dropdown</value>
+  <data name="Label_UseCompactMenuPrompt" xml:space="preserve">
+    <value>Prefer the quick menu? Use the compact dropdown</value>
   </data>
-  <data name="Label_UseClassicMenuToolTip" xml:space="preserve">
-    <value>Switch to the classic dropdown menu. You can switch back in Settings → Inference.</value>
+  <data name="Label_UseCompactMenuToolTip" xml:space="preserve">
+    <value>Switch to the compact dropdown menu. You can switch back in Settings → Inference.</value>
   </data>
   <data name="Label_Image" xml:space="preserve">
     <value>Image</value>

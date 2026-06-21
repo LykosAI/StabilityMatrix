@@ -577,6 +577,7 @@
                                             <vendorLabs:BetterAsyncImage
                                                 ClipToBounds="True"
                                                 CornerRadius="8"
+                                                DecodeWidth="600"
                                                 IsVisible="{Binding !HideImage}"
                                                 Source="{Binding ThumbnailUri, Converter={StaticResource FileUriConverter}}"
                                                 Stretch="UniformToFill" />

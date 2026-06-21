@@ -18,6 +18,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added Inference support for the **Wan 2.2 14B** mixture-of-experts video models. Enable **Low Noise Model** from the Wan model card's options menu (⚙️) to load a second low-noise expert alongside the high-noise model; generation then runs the two-pass high-noise → low-noise sampling the 14B architecture expects, switching at a configurable **Boundary** (the fraction of steps handled by the high-noise expert, default 0.5). Works in both Wan Text to Video and Image to Video, and leaving the low-noise slot empty keeps the existing single-model Wan behavior unchanged
   - Added a separate **Low-Noise LoRAs** list so per-expert speed LoRAs (such as Wan 2.2-Lightning's high/low-noise pair) land on the correct model — the existing Extra Networks list applies to the high-noise/primary model, and the new Low-Noise LoRAs list applies to the low-noise expert
   - Added hover tooltips to the Wan model card fields (Precision, VAE, Text Encoder, Shift, Low-Noise, Boundary) explaining what each one does
+- Added a **gallery picker** for the Inference "+" new-tab button, grouping the project types into **Image / Video / Legacy** sections with icons and descriptions instead of a flat dropdown. The redundant standalone Flux text-to-image and SVD image-to-video types now live under **Legacy** so existing projects still open, without cluttering the list for new users
+  - Prefer the old menu? A **Compact New Tab Menu** toggle under Settings → Inference (and a quick link at the bottom of the picker dialog) switches the "+" button back to the fast dropdown
 
 ## v2.16.2
 ### Fixed

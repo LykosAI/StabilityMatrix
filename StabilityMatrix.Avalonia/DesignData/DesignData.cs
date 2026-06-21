@@ -1690,6 +1690,9 @@ The gallery images are often inpainted, but you will get something very similar 
     public static ModelPickerDialogViewModel ModelPickerDialogViewModel =>
         DialogFactory.Get<ModelPickerDialogViewModel>();
 
+    public static InferenceProjectTypePickerViewModel InferenceProjectTypePickerViewModel =>
+        DialogFactory.Get<InferenceProjectTypePickerViewModel>();
+
     public static PackageInstallProgressItemViewModel PackageInstallProgressItemViewModel =>
         new(
             new PackageModificationRunner

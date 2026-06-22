@@ -5,7 +5,34 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+<<<<<<< HEAD
+=======
+## v2.17.0-dev.1
+### Added
+#### New Feature: 🤗 Live HuggingFace Model Browser
+- Reworked the HuggingFace tab into a full browser instead of a fixed list of links — the curated picks are still there as the default view:
+  - Search HuggingFace for models right from the tab, sorted by downloads, likes, or most recently updated
+  - Paste a repository link to browse all of its files directly
+  - Browse files as a flat list or a folder tree, with a quick name filter and a **Hide installed** toggle
+  - Choose where each file goes (auto-detected and editable), or send a whole multi-file model such as a diffusers repo into one folder with its structure intact
+  - Select multiple files at once and see the total download size before you start, with a warning if there isn't enough free space
+  - Gated or private repositories work once you add a HuggingFace token in **Settings → Accounts**
+### Changed
+- **Generate now auto-resumes after launching ComfyUI.** If you press Generate in Inference while ComfyUI isn't connected and choose to launch it from the connection prompt, the queued generation now waits for startup and runs on its own once connected - no need to press Generate a second time
+### Fixed
+- Fixed [#1666](https://github.com/LykosAI/StabilityMatrix/issues/1666) - AppImage builds creating a broken `.desktop` entry (`NoDisplay=true`, missing icon) that never showed up in the application launcher and reverted any manual edits on the next launch. AppImage runs now write a correct `.desktop` entry with the extracted app icon so Stability Matrix appears in your launcher/menu, and report a matching `WM_CLASS` so the running window shows the Stability Matrix icon in the dock/taskbar instead of a generic one. Only applies to AppImage runs; deb/rpm/flatpak installs keep their package-managed entries
+- Fixed `stabilitymatrix://` deep links (e.g. CivitAI "Download with Stability Matrix" buttons) being ignored on Linux AppImage builds — the URI is now forwarded to the running instance and the download starts, instead of just opening another window
+### Performance
+- The **Checkpoints** and **Outputs** galleries now load thumbnails at display size instead of full resolution, using far less memory and scrolling much more smoothly with large libraries
+- The **CivitAI** and **OpenModelDB** browsers now keep card images in memory, so scrolling back over models you've already seen no longer re-loads them from disk
+- Lightened the CivitAI model cards so they render faster while scrolling
+- Added a **gallery picker** for the Inference "+" new-tab button, grouping the project types into **Image / Video / Legacy** sections with icons and descriptions instead of a flat dropdown. The redundant standalone Flux text-to-image and SVD image-to-video types now live under **Legacy** so existing projects still open, without cluttering the list for new users
+  - Prefer the old menu? A **Compact New Tab Menu** toggle under Settings → Inference (and a quick link at the bottom of the picker dialog) switches the "+" button back to the fast dropdown
+
+>>>>>>> 629ca709 (Merge pull request #1288 from ionite34/generate-after-launch-chagenlog)
 ## v2.16.2
+### Changed
+- **Generate now auto-resumes after launching ComfyUI.** If you press Generate in Inference while ComfyUI isn't connected and choose to launch it from the connection prompt, the queued generation now waits for startup and runs on its own once connected - no need to press Generate a second time
 ### Fixed
 - Fixed [#1666](https://github.com/LykosAI/StabilityMatrix/issues/1666) - AppImage builds creating a broken `.desktop` entry (`NoDisplay=true`, missing icon) that never showed up in the application launcher and reverted any manual edits on the next launch. AppImage runs now write a correct `.desktop` entry with the extracted app icon so Stability Matrix appears in your launcher/menu, and report a matching `WM_CLASS` so the running window shows the Stability Matrix icon in the dock/taskbar instead of a generic one. Only applies to AppImage runs; deb/rpm/flatpak installs keep their package-managed entries
 - Fixed `stabilitymatrix://` deep links (e.g. CivitAI "Download with Stability Matrix" buttons) being ignored on Linux AppImage builds — the URI is now forwarded to the running instance and the download starts, instead of just opening another window

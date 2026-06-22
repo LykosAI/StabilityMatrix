@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
 ## v2.16.2
+### Changed
+- **Generate now auto-resumes after launching ComfyUI.** If you press Generate in Inference while ComfyUI isn't connected and choose to launch it from the connection prompt, the queued generation now waits for startup and runs on its own once connected - no need to press Generate a second time
 ### Fixed
 - Fixed [#1666](https://github.com/LykosAI/StabilityMatrix/issues/1666) - AppImage builds creating a broken `.desktop` entry (`NoDisplay=true`, missing icon) that never showed up in the application launcher and reverted any manual edits on the next launch. AppImage runs now write a correct `.desktop` entry with the extracted app icon so Stability Matrix appears in your launcher/menu, and report a matching `WM_CLASS` so the running window shows the Stability Matrix icon in the dock/taskbar instead of a generic one. Only applies to AppImage runs; deb/rpm/flatpak installs keep their package-managed entries
 - Fixed `stabilitymatrix://` deep links (e.g. CivitAI "Download with Stability Matrix" buttons) being ignored on Linux AppImage builds — the URI is now forwarded to the running instance and the download starts, instead of just opening another window

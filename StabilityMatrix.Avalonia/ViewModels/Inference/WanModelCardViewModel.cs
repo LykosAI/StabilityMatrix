@@ -27,6 +27,8 @@ public partial class WanModelCardViewModel(
 ) : LoadableViewModelBase, IParametersLoadableState, IComfyStep
 {
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasRecommendedDefaults))]
+    [NotifyPropertyChangedFor(nameof(RecommendedDefaultsToolTip))]
     private HybridModelFile? selectedModel;
 
     /// <summary>
@@ -65,7 +67,70 @@ public partial class WanModelCardViewModel(
     [ObservableProperty]
     private double shift = 8.0d;
 
+    /// <summary>
+    /// Controls which empty-latent node the Wan text-to-video tab emits. The Wan 2.2 TI2V 5B model needs a
+    /// 48-channel / 16x latent (<c>Wan22ImageToVideoLatent</c>); the 14B and Wan 2.1 models need the
+    /// 16-channel / 8x <c>EmptyHunyuanLatentVideo</c>. <see cref="WanLatentSourceMode.Auto"/> infers this
+    /// from the selected UNet name; the other modes force one or the other.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(RecommendedDefaultsToolTip))]
+    private WanLatentSourceMode latentSourceMode = WanLatentSourceMode.Auto;
+
     public IInferenceClientManager ClientManager { get; } = clientManager;
+
+    /// <summary>
+    /// True when the Wan 2.2 TI2V 5B latent (<c>Wan22ImageToVideoLatent</c>) should be used instead of the
+    /// default <c>EmptyHunyuanLatentVideo</c>. Resolved from <see cref="LatentSourceMode"/>, falling back to
+    /// name-based auto-detection of the selected UNet.
+    /// </summary>
+    public bool UseWan22FiveBLatent =>
+        LatentSourceMode switch
+        {
+            WanLatentSourceMode.Wan22FiveB => true,
+            WanLatentSourceMode.Legacy => false,
+            _ => AutoDetectIsWan22FiveB(),
+        };
+
+    /// <summary>
+    /// Heuristic for the Wan 2.2 TI2V 5B single-model workflow, based on the selected UNet name only. The 5B
+    /// model is named like <c>wan2.2_ti2v_5B_*</c>; the 14B experts are <c>t2v</c>/<c>i2v</c>. The VAE is
+    /// deliberately not considered — it usually lags a step behind when switching models, which made the
+    /// detection (and the ✨ button) appear to "do nothing". Use the override for renamed files.
+    /// </summary>
+    private bool AutoDetectIsWan22FiveB()
+    {
+        if (SelectedModel?.FileName is not { } fileName || string.IsNullOrEmpty(fileName))
+            return false;
+
+        var name = fileName.ToLowerInvariant();
+        // "ti2v" is unique to the 5B model; "5b" covers GGUF/community repacks.
+        return name.Contains("ti2v") || name.Contains("5b");
+    }
+
+    /// <summary>
+    /// Raised when the user clicks the recommended-defaults (✨) button. The bool is
+    /// <see cref="UseWan22FiveBLatent"/> so the owning tab can apply the matching resolution / length / fps
+    /// for the 5B vs 14B / 2.1 workflow. Mirrors <c>ModelCardViewModel.RecommendedDefaultsRequested</c>.
+    /// </summary>
+    public event Action<bool>? RecommendedDefaultsRequested;
+
+    /// <summary>A model must be selected before we can suggest a matching workflow.</summary>
+    public bool HasRecommendedDefaults => SelectedModel is not null;
+
+    public string RecommendedDefaultsToolTip =>
+        UseWan22FiveBLatent
+            ? "Apply recommended Wan 2.2 5B settings: 1280×704 · 121 frames · 24 fps · uni_pc / simple / 20 steps / CFG 5"
+            : "Apply recommended Wan 14B / 2.1 settings: 832×480 · 81 frames · 16 fps · uni_pc / simple / 20 steps / CFG 5";
+
+    [RelayCommand]
+    private void ApplyRecommendedDefaults()
+    {
+        if (HasRecommendedDefaults)
+        {
+            RecommendedDefaultsRequested?.Invoke(UseWan22FiveBLatent);
+        }
+    }
 
     public StackEditableCardViewModel ExtraNetworksStackCardViewModel { get; } =
         new(vmFactory) { Title = Resources.Label_ExtraNetworks, AvailableModules = [typeof(LoraModule)] };
@@ -406,4 +471,20 @@ public partial class WanModelCardViewModel(
             ModelHash = SelectedModel?.Local?.ConnectedModelInfo?.Hashes.SHA256,
         };
     }
+}
+
+/// <summary>
+/// Selects which empty-latent node the Wan text-to-video tab emits. See
+/// <see cref="WanModelCardViewModel.UseWan22FiveBLatent"/>.
+/// </summary>
+public enum WanLatentSourceMode
+{
+    /// <summary>Infer from the selected UNet name.</summary>
+    Auto,
+
+    /// <summary>Force the Wan 2.2 TI2V 5B latent (<c>Wan22ImageToVideoLatent</c>, 48-channel / 16x).</summary>
+    Wan22FiveB,
+
+    /// <summary>Force the Wan 2.1 / 14B latent (<c>EmptyHunyuanLatentVideo</c>, 16-channel / 8x).</summary>
+    Legacy,
 }

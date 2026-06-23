@@ -17,6 +17,7 @@
     </Design.PreviewWith>
 
     <Styles.Resources>
+        <converters:EnumToBooleanConverter x:Key="EnumBoolConverter" />
         <fluent:SymbolIconSource
             x:Key="IconCube"
             IconVariant="Filled"
@@ -70,6 +71,13 @@
                                 ToolTip.Tip="Browse all models">
                                 <fluent:SymbolIcon FontSize="16" Symbol="Search" />
                             </Button>
+                            <Button
+                                VerticalAlignment="Stretch"
+                                Command="{Binding ApplyRecommendedDefaultsCommand}"
+                                IsEnabled="{Binding HasRecommendedDefaults}"
+                                ToolTip.Tip="{Binding RecommendedDefaultsToolTip}">
+                                <fluent:SymbolIcon FontSize="16" Symbol="Sparkle" />
+                            </Button>
                             <Button VerticalAlignment="Stretch" ToolTip.Tip="Model options">
                                 <ui:SymbolIcon FontSize="16" Symbol="Setting" />
                                 <Button.Flyout>
@@ -78,6 +86,21 @@
                                             IconSource="{StaticResource IconCube}"
                                             IsChecked="{Binding IsLowNoiseModelEnabled}"
                                             Text="Low Noise Model" />
+                                        <ui:MenuFlyoutSeparator />
+                                        <ui:MenuFlyoutSubItem Text="5B TI2V Latent" ToolTip.Tip="The Wan 2.2 5B model needs a different empty latent than the 14B / 2.1 models. Auto picks it from the selected model name; override if a renamed file is guessed wrong.">
+                                            <ui:RadioMenuFlyoutItem
+                                                GroupName="WanLatentSource"
+                                                IsChecked="{Binding LatentSourceMode, Converter={StaticResource EnumBoolConverter}, ConverterParameter={x:Static inference:WanLatentSourceMode.Auto}}"
+                                                Text="Auto-detect" />
+                                            <ui:RadioMenuFlyoutItem
+                                                GroupName="WanLatentSource"
+                                                IsChecked="{Binding LatentSourceMode, Converter={StaticResource EnumBoolConverter}, ConverterParameter={x:Static inference:WanLatentSourceMode.Wan22FiveB}}"
+                                                Text="Force Wan 2.2 5B" />
+                                            <ui:RadioMenuFlyoutItem
+                                                GroupName="WanLatentSource"
+                                                IsChecked="{Binding LatentSourceMode, Converter={StaticResource EnumBoolConverter}, ConverterParameter={x:Static inference:WanLatentSourceMode.Legacy}}"
+                                                Text="Force Wan 2.1 / 14B" />
+                                        </ui:MenuFlyoutSubItem>
                                     </ui:FAMenuFlyout>
                                 </Button.Flyout>
                             </Button>

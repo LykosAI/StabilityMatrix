@@ -36,11 +36,29 @@ public partial class VideoOutputSettingsCardViewModel
     [ObservableProperty]
     private List<VideoOutputMethod> availableMethods = Enum.GetValues<VideoOutputMethod>().ToList();
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsWebPFormat))]
+    private VideoOutputFormat selectedFormat = VideoOutputFormat.WebP;
+
+    [ObservableProperty]
+    private List<VideoOutputFormat> availableFormats = Enum.GetValues<VideoOutputFormat>().ToList();
+
+    /// <summary>WebP-specific controls (lossless / quality / method) only apply to the WebP format.</summary>
+    public bool IsWebPFormat => SelectedFormat == VideoOutputFormat.WebP;
+
     public void LoadStateFromParameters(GenerationParameters parameters)
     {
         Fps = parameters.OutputFps;
         Lossless = parameters.Lossless;
         Quality = parameters.VideoQuality;
+
+        if (
+            !string.IsNullOrWhiteSpace(parameters.VideoOutputFormat)
+            && Enum.TryParse<VideoOutputFormat>(parameters.VideoOutputFormat, true, out var format)
+        )
+        {
+            SelectedFormat = format;
+        }
 
         if (string.IsNullOrWhiteSpace(parameters.VideoOutputMethod))
             return;
@@ -58,6 +76,7 @@ public partial class VideoOutputSettingsCardViewModel
             Lossless = Lossless,
             VideoQuality = Quality,
             VideoOutputMethod = SelectedMethod.ToString(),
+            VideoOutputFormat = SelectedFormat.ToString(),
         };
     }
 
@@ -77,19 +96,52 @@ public partial class VideoOutputSettingsCardViewModel
             image => image
         );
 
-        var outputStep = e.Nodes.AddTypedNode(
-            new ComfyNodeBuilder.SaveAnimatedWEBP
+        switch (SelectedFormat)
+        {
+            case VideoOutputFormat.Mp4:
             {
-                Name = e.Nodes.GetUniqueName("SaveAnimatedWEBP"),
-                Images = image,
-                FilenamePrefix = "InferenceVideo",
-                Fps = Fps,
-                Lossless = Lossless,
-                Quality = Quality,
-                Method = SelectedMethod.ToString().ToLowerInvariant()
-            }
-        );
+                // Core ComfyUI mp4 path: assemble frames into a VIDEO, then encode to a container.
+                var createVideo = e.Nodes.AddTypedNode(
+                    new ComfyNodeBuilder.CreateVideo
+                    {
+                        Name = e.Nodes.GetUniqueName("CreateVideo"),
+                        Images = image,
+                        Fps = Fps,
+                    }
+                );
 
-        e.Builder.Connections.OutputNodes.Add(outputStep);
+                var saveVideo = e.Nodes.AddTypedNode(
+                    new ComfyNodeBuilder.SaveVideo
+                    {
+                        Name = e.Nodes.GetUniqueName("SaveVideo"),
+                        Video = createVideo.Output,
+                        FilenamePrefix = "InferenceVideo",
+                        Format = "mp4",
+                        Codec = "h264",
+                    }
+                );
+
+                e.Builder.Connections.OutputNodes.Add(saveVideo);
+                break;
+            }
+            default:
+            {
+                var outputStep = e.Nodes.AddTypedNode(
+                    new ComfyNodeBuilder.SaveAnimatedWEBP
+                    {
+                        Name = e.Nodes.GetUniqueName("SaveAnimatedWEBP"),
+                        Images = image,
+                        FilenamePrefix = "InferenceVideo",
+                        Fps = Fps,
+                        Lossless = Lossless,
+                        Quality = Quality,
+                        Method = SelectedMethod.ToString().ToLowerInvariant(),
+                    }
+                );
+
+                e.Builder.Connections.OutputNodes.Add(outputStep);
+                break;
+            }
+        }
     }
 }

@@ -168,6 +168,22 @@ public class ComfyNodeBuilder
         public required int BatchSize { get; init; }
     }
 
+    /// <summary>
+    /// Empty (or image-seeded) latent sized for the Wan 2.2 TI2V 5B VAE. Unlike
+    /// <see cref="EmptyHunyuanLatentVideo"/>, this produces a 48-channel, 16x-spatial latent (the 5B VAE's
+    /// compression) so it must only be used with the 5B model + wan2.2_vae. The 14B / Wan 2.1 models keep
+    /// using <see cref="EmptyHunyuanLatentVideo"/> (16-channel, 8x-spatial). <c>start_image</c> is optional
+    /// and omitted for text-to-video.
+    /// </summary>
+    public record Wan22ImageToVideoLatent : ComfyTypedNodeBase<LatentNodeConnection>
+    {
+        public required VAENodeConnection Vae { get; init; }
+        public required int Width { get; init; }
+        public required int Height { get; init; }
+        public required int Length { get; init; }
+        public required int BatchSize { get; init; }
+    }
+
     public record CLIPSetLastLayer : ComfyTypedNodeBase<ClipNodeConnection>
     {
         public required ClipNodeConnection Clip { get; init; }
@@ -440,6 +456,28 @@ public class ComfyNodeBuilder
         public required bool Lossless { get; init; }
         public required int Quality { get; init; }
         public required string Method { get; init; }
+    }
+
+    /// <summary>
+    /// Core ComfyUI node that assembles a frame sequence into a VIDEO at the given fps. Pair with
+    /// <see cref="SaveVideo"/> to write a real container (e.g. mp4). Requires a reasonably recent ComfyUI.
+    /// </summary>
+    public record CreateVideo : ComfyTypedNodeBase<VideoNodeConnection>
+    {
+        public required ImageNodeConnection Images { get; init; }
+        public required double Fps { get; init; }
+    }
+
+    /// <summary>
+    /// Core ComfyUI node that encodes a VIDEO to a container file in the output folder.
+    /// <c>format</c>/<c>codec</c> accept "auto" or explicit values like "mp4" / "h264".
+    /// </summary>
+    public record SaveVideo : ComfyTypedNodeBase
+    {
+        public required VideoNodeConnection Video { get; init; }
+        public required string FilenamePrefix { get; init; }
+        public required string Format { get; init; }
+        public required string Codec { get; init; }
     }
 
     public record UNETLoader : ComfyTypedNodeBase<ModelNodeConnection>

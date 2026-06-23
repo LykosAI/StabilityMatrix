@@ -73,6 +73,27 @@ public static class ComfyNodeBuilderExtensions
                     }
                 )
                 .Output,
+            LatentType.Wan22 => builder
+                .Nodes.AddTypedNode(
+                    new ComfyNodeBuilder.Wan22ImageToVideoLatent
+                    {
+                        Name = builder.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.Wan22ImageToVideoLatent)),
+                        Vae =
+                            builder.Connections.PrimaryVAE
+                            ?? throw new ValidationException(
+                                "A VAE must be loaded before the latent when latentType is Wan22"
+                            ),
+                        BatchSize = batchSize,
+                        Height = height,
+                        Width = width,
+                        Length =
+                            length
+                            ?? throw new ValidationException(
+                                "Length cannot be null when latentType is Wan22"
+                            ),
+                    }
+                )
+                .Output,
             _ => throw new ArgumentOutOfRangeException(nameof(latentType), latentType, null),
         };
 

@@ -5,5 +5,6 @@ public enum ConnectedModelSource
     Civitai,
     OpenModelDb,
     CivArchive,
+    HuggingFace,
     Other,
 }

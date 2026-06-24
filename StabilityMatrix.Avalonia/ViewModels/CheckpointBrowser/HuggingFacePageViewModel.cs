@@ -30,6 +30,7 @@ using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Api.HuggingFace;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
@@ -64,6 +65,7 @@ public partial class HuggingFacePageViewModel : TabViewModelBase, IHandleNavigat
     private readonly INotificationService notificationService;
     private readonly IHuggingFaceApi huggingFaceApi;
     private readonly ISecretsManager secretsManager;
+    private readonly IModelIndexService modelIndexService;
 
     public SourceCache<HuggingfaceItem, string> ItemsCache { get; } =
         new(i => i.RepositoryPath + i.ModelName);
@@ -76,6 +78,13 @@ public partial class HuggingFacePageViewModel : TabViewModelBase, IHandleNavigat
 
     /// <summary>All files of the currently browsed repo (unfiltered). Source of truth for selection/import.</summary>
     private readonly List<HuggingFaceFileViewModel> allRepoFiles = new();
+
+    /// <summary>
+    /// Cache of on-disk SHA256 by destination path for the current repo, so the installed-by-hash
+    /// verification pass hashes each present file at most once (and skips re-hashing on rebuild).
+    /// Value is null when no file exists at that path. Cleared per repo load.
+    /// </summary>
+    private readonly Dictionary<string, string?> localSha256ByPath = new();
 
     /// <summary>Filtered flat list of repo files shown in the flat view.</summary>
     public AvaloniaList<HuggingFaceFileViewModel> RepoFiles { get; } = new();
@@ -211,7 +220,8 @@ public partial class HuggingFacePageViewModel : TabViewModelBase, IHandleNavigat
         ISettingsManager settingsManager,
         INotificationService notificationService,
         IHuggingFaceApi huggingFaceApi,
-        ISecretsManager secretsManager
+        ISecretsManager secretsManager,
+        IModelIndexService modelIndexService
     )
     {
         this.trackedDownloadService = trackedDownloadService;
@@ -219,6 +229,7 @@ public partial class HuggingFacePageViewModel : TabViewModelBase, IHandleNavigat
         this.notificationService = notificationService;
         this.huggingFaceApi = huggingFaceApi;
         this.secretsManager = secretsManager;
+        this.modelIndexService = modelIndexService;
 
         // Restore persisted UI prefs (set backing fields directly to avoid triggering persistence/rebuilds).
         isStructuredView = settingsManager.Settings.HuggingFaceUseStructuredView;
@@ -539,7 +550,11 @@ public partial class HuggingFacePageViewModel : TabViewModelBase, IHandleNavigat
                         Path = entry.Path,
                         RepositoryPath = repoId,
                         Size = entry.Size,
+                        Sha256 = entry.Sha256,
                         ModelsDir = modelsDir,
+                        IsSha256Installed = Design.IsDesignMode
+                            ? null
+                            : sha256 => modelIndexService.ModelIndexSha256Hashes.Contains(sha256),
                         SelectedFolder = HuggingFaceFolderInference.Infer(entry.Path),
                     };
                     vm.PropertyChanged += RepoFileOnPropertyChanged;
@@ -572,6 +587,11 @@ public partial class HuggingFacePageViewModel : TabViewModelBase, IHandleNavigat
                     : HuggingFaceFolderInference.Infer(allRepoFiles.FirstOrDefault()?.Path ?? string.Empty);
 
                 RebuildRepoViews();
+
+                // Disambiguate same-named files (e.g. high_noise_model.safetensors across variants)
+                // that aren't matched by the index: hash the on-disk file and compare. Runs in the
+                // background so it doesn't block showing the tree; cancelled if the user navigates away.
+                _ = VerifyInstalledByHashAsync(allRepoFiles.ToList(), ct);
             }
 
             Mode = HuggingFaceBrowserMode.RepoFiles;
@@ -659,6 +679,60 @@ public partial class HuggingFacePageViewModel : TabViewModelBase, IHandleNavigat
         allRepoFiles.Clear();
         RepoFiles.Clear();
         RepoTreeRoot.Clear();
+        localSha256ByPath.Clear();
+    }
+
+    /// <summary>
+    /// For files that carry a content hash but aren't matched by the model index (e.g. installed
+    /// before metadata sidecars existed), hash the file actually present at the destination and
+    /// compare. This is what tells apart multiple repo files that share a name but are different
+    /// content — only the variant whose bytes are on disk is marked installed. Bounded: we only
+    /// hash a path that has a file present, and each path at most once.
+    /// </summary>
+    private async Task VerifyInstalledByHashAsync(
+        IReadOnlyList<HuggingFaceFileViewModel> files,
+        CancellationToken ct
+    )
+    {
+        if (Design.IsDesignMode)
+            return;
+
+        var changedWhileHidingInstalled = false;
+
+        foreach (var file in files)
+        {
+            if (ct.IsCancellationRequested)
+                return;
+
+            // Only LFS files have a hash; skip those already known-installed via the index.
+            if (
+                file.Sha256 is not { } remoteSha256
+                || file.DestinationPath is not { } dest
+                || modelIndexService.ModelIndexSha256Hashes.Contains(remoteSha256)
+            )
+                continue;
+
+            if (!localSha256ByPath.TryGetValue(dest, out var localSha256))
+            {
+                localSha256 = File.Exists(dest)
+                    ? await Task.Run(() => FileHash.GetSha256Async(dest), ct)
+                    : null;
+                localSha256ByPath[dest] = localSha256;
+            }
+
+            if (
+                localSha256 is not null
+                && string.Equals(localSha256, remoteSha256, StringComparison.OrdinalIgnoreCase)
+            )
+            {
+                file.MarkVerifiedInstalled();
+                changedWhileHidingInstalled |= HideInstalled;
+            }
+        }
+
+        // If we newly resolved files as installed while "hide installed" is on, rebuild to hide them.
+        if (changedWhileHidingInstalled && !ct.IsCancellationRequested)
+            RebuildRepoViews();
     }
 
     /// <summary>
@@ -971,7 +1045,7 @@ public partial class HuggingFacePageViewModel : TabViewModelBase, IHandleNavigat
                 )
             );
 
-            await StartFileDownloadAsync(file.DownloadUrl, downloadPath, file.NotifyExistsChanged);
+            await StartFileDownloadAsync(file.DownloadUrl, downloadPath, file.NotifyExistsChanged, file);
             file.IsSelected = false;
         }
     }
@@ -1002,7 +1076,7 @@ public partial class HuggingFacePageViewModel : TabViewModelBase, IHandleNavigat
             var relativePath = file.Path.Replace('/', Path.DirectorySeparatorChar);
             var downloadPath = new FilePath(Path.Combine(baseDir, relativePath));
 
-            await StartFileDownloadAsync(file.DownloadUrl, downloadPath, file.NotifyExistsChanged);
+            await StartFileDownloadAsync(file.DownloadUrl, downloadPath, file.NotifyExistsChanged, file);
             file.IsSelected = false;
         }
 
@@ -1035,10 +1109,40 @@ public partial class HuggingFacePageViewModel : TabViewModelBase, IHandleNavigat
         BulkDestination = null;
     }
 
-    private async Task StartFileDownloadAsync(string url, FilePath path, Action onSuccess)
+    private async Task StartFileDownloadAsync(
+        string url,
+        FilePath path,
+        Action onSuccess,
+        HuggingFaceFileViewModel? metadataSource = null
+    )
     {
         path.Directory?.Create();
         var download = trackedDownloadService.NewDownload(url, path);
+
+        // Write a .cm-info.json sidecar carrying the content hash + source so the file is matched
+        // by hash in the model index (installed-detection, update checks) and shows proper source
+        // attribution. Only LFS files have a hash; small non-LFS files (configs) are skipped.
+        if (!Design.IsDesignMode && path.Directory is { } dir && metadataSource?.Sha256 is { } sha256)
+        {
+            var info = new ConnectedModelInfo
+            {
+                ModelName = metadataSource.RepositoryPath,
+                ModelDescription = string.Empty,
+                VersionName = metadataSource.FileName,
+                Tags = [],
+                ModelType = CivitModelType.Unknown,
+                RemoteFileName = metadataSource.FileName,
+                Hashes = new CivitFileHashes { SHA256 = sha256 },
+                ImportedAt = DateTimeOffset.UtcNow,
+                Source = ConnectedModelSource.HuggingFace,
+                SourceUrl = $"https://huggingface.co/{metadataSource.RepositoryPath}",
+            };
+
+            var baseName = Path.GetFileNameWithoutExtension(path.Name);
+            await info.SaveJsonToDirectory(dir, baseName);
+            download.ExtraCleanupFileNames.Add(dir.JoinFile(baseName + ConnectedModelInfo.FileExtension));
+        }
+
         download.ProgressStateChanged += (_, e) =>
         {
             if (e == ProgressState.Success)

@@ -10,6 +10,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
+using AsyncAwaitBestPractices;
 using Avalonia.Collections;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
@@ -19,6 +20,7 @@ using CommunityToolkit.Mvvm.Input;
 using DynamicData;
 using DynamicData.Binding;
 using Injectio.Attributes;
+using NLog;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.HuggingFace;
@@ -59,6 +61,8 @@ public record BulkDestinationOption(string Label, SharedFolderType? Folder);
 [RegisterSingleton<HuggingFacePageViewModel>]
 public partial class HuggingFacePageViewModel : TabViewModelBase, IHandleNavigation, IInfinitelyScroll
 {
+    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
     private readonly ITrackedDownloadService trackedDownloadService;
     private readonly ISettingsManager settingsManager;
     private readonly INotificationService notificationService;
@@ -589,7 +593,10 @@ public partial class HuggingFacePageViewModel : TabViewModelBase, IHandleNavigat
                 // Disambiguate same-named files (e.g. high_noise_model.safetensors across variants)
                 // that aren't matched by the index: hash the on-disk file and compare. Runs in the
                 // background so it doesn't block showing the tree; cancelled if the user navigates away.
-                _ = VerifyInstalledByHashAsync(allRepoFiles.ToList(), ct);
+                VerifyInstalledByHashAsync(allRepoFiles.ToList(), ct)
+                    .SafeFireAndForget(ex =>
+                        Logger.Error(ex, "HuggingFace installed-by-hash verification failed")
+                    );
             }
 
             Mode = HuggingFaceBrowserMode.RepoFiles;
@@ -758,8 +765,19 @@ public partial class HuggingFacePageViewModel : TabViewModelBase, IHandleNavigat
             sha256,
             DateTimeOffset.UtcNow
         );
-        await info.SaveJsonToDirectory(directory, baseName);
-        return true;
+
+        // Best-effort, like the on-disk hash read: a read-only / permission-locked models dir must
+        // not throw into the fire-and-forget verify pass and abort the rest of the loop.
+        try
+        {
+            await info.SaveJsonToDirectory(directory, baseName);
+            return true;
+        }
+        catch (Exception e)
+        {
+            Logger.Warn(e, "Failed to backfill .cm-info.json for {Dest}", dest);
+            return false;
+        }
     }
 
     /// <summary>

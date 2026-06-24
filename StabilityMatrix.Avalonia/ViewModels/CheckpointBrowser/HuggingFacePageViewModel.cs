@@ -714,9 +714,23 @@ public partial class HuggingFacePageViewModel : TabViewModelBase, IHandleNavigat
 
             if (!localSha256ByPath.TryGetValue(dest, out var localSha256))
             {
-                localSha256 = File.Exists(dest)
-                    ? await Task.Run(() => FileHash.GetSha256Async(dest), ct)
-                    : null;
+                try
+                {
+                    localSha256 = File.Exists(dest)
+                        ? await Task.Run(() => FileHash.GetSha256Async(dest), ct)
+                        : null;
+                }
+                catch (Exception)
+                {
+                    // File locked / removed / permission issue: treat as unknown and keep going.
+                    localSha256 = null;
+                }
+
+                // The hash ran on a background thread; if a new repo load cancelled us in the
+                // meantime, bail before writing into the (now-cleared) cache for the old repo.
+                if (ct.IsCancellationRequested)
+                    return;
+
                 localSha256ByPath[dest] = localSha256;
             }
 
@@ -1045,7 +1059,10 @@ public partial class HuggingFacePageViewModel : TabViewModelBase, IHandleNavigat
                 )
             );
 
-            await StartFileDownloadAsync(file.DownloadUrl, downloadPath, file.NotifyExistsChanged, file);
+            // On success mark verified-installed directly: the file is now on disk with this exact
+            // content, but the model index hasn't been refreshed yet, so a plain Exists recheck would
+            // still read a hashed file as not-installed until the next scan.
+            await StartFileDownloadAsync(file.DownloadUrl, downloadPath, file.MarkVerifiedInstalled, file);
             file.IsSelected = false;
         }
     }
@@ -1076,7 +1093,10 @@ public partial class HuggingFacePageViewModel : TabViewModelBase, IHandleNavigat
             var relativePath = file.Path.Replace('/', Path.DirectorySeparatorChar);
             var downloadPath = new FilePath(Path.Combine(baseDir, relativePath));
 
-            await StartFileDownloadAsync(file.DownloadUrl, downloadPath, file.NotifyExistsChanged, file);
+            // On success mark verified-installed directly: the file is now on disk with this exact
+            // content, but the model index hasn't been refreshed yet, so a plain Exists recheck would
+            // still read a hashed file as not-installed until the next scan.
+            await StartFileDownloadAsync(file.DownloadUrl, downloadPath, file.MarkVerifiedInstalled, file);
             file.IsSelected = false;
         }
 

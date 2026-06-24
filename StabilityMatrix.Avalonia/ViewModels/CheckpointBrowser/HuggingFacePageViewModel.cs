@@ -30,7 +30,6 @@ using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
-using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Api.HuggingFace;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
@@ -80,11 +79,10 @@ public partial class HuggingFacePageViewModel : TabViewModelBase, IHandleNavigat
     private readonly List<HuggingFaceFileViewModel> allRepoFiles = new();
 
     /// <summary>
-    /// Cache of on-disk SHA256 by destination path for the current repo, so the installed-by-hash
-    /// verification pass hashes each present file at most once (and skips re-hashing on rebuild).
-    /// Value is null when no file exists at that path. Cleared per repo load.
+    /// Hashes the on-disk file at a destination path (at most once) to verify installed-by-content
+    /// for the current repo. Reset per repo load. Driven solely from the UI thread.
     /// </summary>
-    private readonly Dictionary<string, string?> localSha256ByPath = new();
+    private readonly OnDiskHashVerifier onDiskVerifier = new();
 
     /// <summary>Filtered flat list of repo files shown in the flat view.</summary>
     public AvaloniaList<HuggingFaceFileViewModel> RepoFiles { get; } = new();
@@ -679,7 +677,7 @@ public partial class HuggingFacePageViewModel : TabViewModelBase, IHandleNavigat
         allRepoFiles.Clear();
         RepoFiles.Clear();
         RepoTreeRoot.Clear();
-        localSha256ByPath.Clear();
+        onDiskVerifier.Clear();
     }
 
     /// <summary>
@@ -688,6 +686,10 @@ public partial class HuggingFacePageViewModel : TabViewModelBase, IHandleNavigat
     /// compare. This is what tells apart multiple repo files that share a name but are different
     /// content — only the variant whose bytes are on disk is marked installed. Bounded: we only
     /// hash a path that has a file present, and each path at most once.
+    ///
+    /// On a confirmed match we backfill a <c>.cm-info.json</c> sidecar (if one doesn't already
+    /// exist), so the model index picks up the hash and future visits short-circuit on the cheap
+    /// index lookup instead of re-hashing the bytes every time.
     /// </summary>
     private async Task VerifyInstalledByHashAsync(
         IReadOnlyList<HuggingFaceFileViewModel> files,
@@ -698,6 +700,7 @@ public partial class HuggingFacePageViewModel : TabViewModelBase, IHandleNavigat
             return;
 
         var changedWhileHidingInstalled = false;
+        var backfilledSidecar = false;
 
         foreach (var file in files)
         {
@@ -712,41 +715,51 @@ public partial class HuggingFacePageViewModel : TabViewModelBase, IHandleNavigat
             )
                 continue;
 
-            if (!localSha256ByPath.TryGetValue(dest, out var localSha256))
-            {
-                try
-                {
-                    localSha256 = File.Exists(dest)
-                        ? await Task.Run(() => FileHash.GetSha256Async(dest), ct)
-                        : null;
-                }
-                catch (Exception)
-                {
-                    // File locked / removed / permission issue: treat as unknown and keep going.
-                    localSha256 = null;
-                }
+            if (!await onDiskVerifier.MatchesAsync(dest, remoteSha256, ct))
+                continue;
 
-                // The hash ran on a background thread; if a new repo load cancelled us in the
-                // meantime, bail before writing into the (now-cleared) cache for the old repo.
-                if (ct.IsCancellationRequested)
-                    return;
-
-                localSha256ByPath[dest] = localSha256;
-            }
-
-            if (
-                localSha256 is not null
-                && string.Equals(localSha256, remoteSha256, StringComparison.OrdinalIgnoreCase)
-            )
-            {
-                file.MarkVerifiedInstalled();
-                changedWhileHidingInstalled |= HideInstalled;
-            }
+            file.MarkVerifiedInstalled();
+            changedWhileHidingInstalled |= HideInstalled;
+            backfilledSidecar |= await TryBackfillSidecarAsync(file, dest, remoteSha256);
         }
 
         // If we newly resolved files as installed while "hide installed" is on, rebuild to hide them.
         if (changedWhileHidingInstalled && !ct.IsCancellationRequested)
             RebuildRepoViews();
+
+        // Re-index so the backfilled hashes enter ModelIndexSha256Hashes and we never re-hash these
+        // bytes again (the cheap index lookup above will match on the next visit).
+        if (backfilledSidecar && !ct.IsCancellationRequested)
+            modelIndexService.BackgroundRefreshIndex();
+    }
+
+    /// <summary>
+    /// Write a minimal HuggingFace <c>.cm-info.json</c> next to a verified on-disk file so its hash
+    /// enters the model index. Never overwrites an existing sidecar (the file may have richer
+    /// metadata from another source). Returns true if a sidecar was written.
+    /// </summary>
+    private static async Task<bool> TryBackfillSidecarAsync(
+        HuggingFaceFileViewModel file,
+        string dest,
+        string sha256
+    )
+    {
+        if (Path.GetDirectoryName(dest) is not { } directory)
+            return false;
+
+        var baseName = Path.GetFileNameWithoutExtension(dest);
+        var sidecarPath = Path.Combine(directory, baseName + ConnectedModelInfo.FileExtension);
+        if (File.Exists(sidecarPath))
+            return false;
+
+        var info = ConnectedModelInfo.FromHuggingFace(
+            file.RepositoryPath,
+            file.FileName,
+            sha256,
+            DateTimeOffset.UtcNow
+        );
+        await info.SaveJsonToDirectory(directory, baseName);
+        return true;
     }
 
     /// <summary>
@@ -1144,19 +1157,12 @@ public partial class HuggingFacePageViewModel : TabViewModelBase, IHandleNavigat
         // attribution. Only LFS files have a hash; small non-LFS files (configs) are skipped.
         if (!Design.IsDesignMode && path.Directory is { } dir && metadataSource?.Sha256 is { } sha256)
         {
-            var info = new ConnectedModelInfo
-            {
-                ModelName = metadataSource.RepositoryPath,
-                ModelDescription = string.Empty,
-                VersionName = metadataSource.FileName,
-                Tags = [],
-                ModelType = CivitModelType.Unknown,
-                RemoteFileName = metadataSource.FileName,
-                Hashes = new CivitFileHashes { SHA256 = sha256 },
-                ImportedAt = DateTimeOffset.UtcNow,
-                Source = ConnectedModelSource.HuggingFace,
-                SourceUrl = $"https://huggingface.co/{metadataSource.RepositoryPath}",
-            };
+            var info = ConnectedModelInfo.FromHuggingFace(
+                metadataSource.RepositoryPath,
+                metadataSource.FileName,
+                sha256,
+                DateTimeOffset.UtcNow
+            );
 
             var baseName = Path.GetFileNameWithoutExtension(path.Name);
             await info.SaveJsonToDirectory(dir, baseName);

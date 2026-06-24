@@ -55,7 +55,14 @@ public partial class HuggingFaceFileViewModel : ViewModelBase
     [ObservableProperty]
     private SharedFolderType selectedFolder;
 
-    partial void OnSelectedFolderChanged(SharedFolderType value) => NotifyExistsChanged();
+    partial void OnSelectedFolderChanged(SharedFolderType value)
+    {
+        // The on-disk verification was for the previous destination path; a new folder means a new
+        // path that may not hold this file. Drop the flag so Exists re-evaluates from scratch (the
+        // index-hash match in step 1 is folder-agnostic and still applies).
+        verifiedInstalled = false;
+        NotifyExistsChanged();
+    }
 
     // File.Exists is a disk syscall, so cache it — recomputed only when the destination
     // folder changes or a download completes (NotifyExistsChanged). Avoids hammering the

@@ -40,7 +40,23 @@ public partial class WanModelCardViewModel(
     private HybridModelFile? selectedLowNoiseModel;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(PrimaryModelLabel))]
     private bool isLowNoiseModelEnabled;
+
+    [ObservableProperty]
+    private bool isAdvancedExpanded;
+
+    /// <summary>
+    /// Label for the primary model row. In dual-expert mode this becomes "High-Noise" so it reads as a
+    /// symmetric pair with the "Low-Noise" row; otherwise it's the plain "Model" label.
+    /// </summary>
+    public string PrimaryModelLabel => IsLowNoiseModelEnabled ? "High-Noise" : Resources.Label_Model;
+
+    partial void OnIsLowNoiseModelEnabledChanged(bool value)
+    {
+        // Keep the LoRA section title symmetric with the Low-Noise LoRAs section in dual-expert mode.
+        ExtraNetworksStackCardViewModel.Title = value ? "High-Noise LoRAs" : Resources.Label_ExtraNetworks;
+    }
 
     /// <summary>
     /// Fraction of sampling steps handled by the high-noise expert before switching to the low-noise

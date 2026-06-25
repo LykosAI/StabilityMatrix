@@ -26,6 +26,10 @@
             IconVariant="Filled"
             Symbol="QuestionCircle" />
         <fluent:SymbolIconSource
+            x:Key="IconSparkle"
+            IconVariant="Filled"
+            Symbol="Sparkle" />
+        <fluent:SymbolIconSource
             x:Key="IconTableCellEdit"
             IconVariant="Filled"
             Symbol="TableCellEdit" />
@@ -65,17 +69,17 @@
                                     ToolTip.Tip="Browse all models">
                                     <fluent:SymbolIcon FontSize="16" Symbol="Search" />
                                 </Button>
-                                <Button
-                                    VerticalAlignment="Stretch"
-                                    Command="{Binding ApplyRecommendedDefaultsCommand}"
-                                    IsEnabled="{Binding HasRecommendedDefaults}"
-                                    ToolTip.Tip="{Binding RecommendedDefaultsToolTip}">
-                                    <fluent:SymbolIcon FontSize="16" Symbol="Sparkle" />
-                                </Button>
                                 <Button VerticalAlignment="Stretch" ToolTip.Tip="Model options">
                                     <ui:SymbolIcon FontSize="16" Symbol="Setting" />
                                     <Button.Flyout>
                                         <ui:FAMenuFlyout Placement="BottomEdgeAlignedLeft">
+                                            <ui:MenuFlyoutItem
+                                                Command="{Binding ApplyRecommendedDefaultsCommand}"
+                                                IconSource="{StaticResource IconSparkle}"
+                                                IsEnabled="{Binding HasRecommendedDefaults}"
+                                                Text="Apply recommended settings"
+                                                ToolTip.Tip="{Binding RecommendedDefaultsToolTip}" />
+                                            <ui:MenuFlyoutSeparator />
                                             <ui:ToggleMenuFlyoutItem
                                                 IconSource="{StaticResource IconCube}"
                                                 IsChecked="{Binding IsLowNoiseModelEnabled}"
@@ -101,6 +105,16 @@
                                 </Button>
                             </StackPanel>
                         </Grid>
+
+                        <!--  Nudge: selected model looks like a 14B MoE expert, offer to enable the pair  -->
+                        <controls:SmolInfoBar
+                            Margin="0,8,0,0"
+                            ActionCommand="{Binding EnableLowNoiseExpertCommand}"
+                            ActionText="Enable"
+                            CloseCommand="{Binding DismissLowNoisePromptCommand}"
+                            IsOpen="{Binding ShowEnableLowNoisePrompt}"
+                            Message="This looks like a Wan 2.2 14B expert that pairs with a second one"
+                            Severity="Informational" />
 
                         <!--  Low-Noise expert (Wan 2.2 14B MoE, toggled via "Dual expert")  -->
                         <Grid

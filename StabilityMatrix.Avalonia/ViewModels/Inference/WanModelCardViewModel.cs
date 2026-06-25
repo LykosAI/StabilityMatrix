@@ -29,7 +29,14 @@ public partial class WanModelCardViewModel(
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasRecommendedDefaults))]
     [NotifyPropertyChangedFor(nameof(RecommendedDefaultsToolTip))]
+    [NotifyPropertyChangedFor(nameof(ShowEnableLowNoisePrompt))]
     private HybridModelFile? selectedModel;
+
+    partial void OnSelectedModelChanged(HybridModelFile? value)
+    {
+        // A different model may not be a 14B expert (or may be the other half of a pair) — re-offer the nudge.
+        IsLowNoisePromptDismissed = false;
+    }
 
     /// <summary>
     /// Optional low-noise expert model for the Wan 2.2 14B MoE. When <see cref="IsLowNoiseModelEnabled"/>
@@ -41,10 +48,19 @@ public partial class WanModelCardViewModel(
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(PrimaryModelLabel))]
+    [NotifyPropertyChangedFor(nameof(ShowEnableLowNoisePrompt))]
     private bool isLowNoiseModelEnabled;
 
     [ObservableProperty]
     private bool isAdvancedExpanded;
+
+    /// <summary>
+    /// Set when the user closes the "enable the second expert" nudge, so it stays hidden until they pick a
+    /// different model. Not persisted — the prompt is cheap to re-show next session.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowEnableLowNoisePrompt))]
+    private bool isLowNoisePromptDismissed;
 
     /// <summary>
     /// Label for the primary model row. In dual-expert mode this becomes "High-Noise" so it reads as a
@@ -52,10 +68,78 @@ public partial class WanModelCardViewModel(
     /// </summary>
     public string PrimaryModelLabel => IsLowNoiseModelEnabled ? "High-Noise" : Resources.Label_Model;
 
+    /// <summary>
+    /// Nudge shown when the selected primary model looks like one half of a Wan 2.2 14B MoE expert pair and
+    /// dual-expert mode isn't on yet. Enabling it (see <see cref="EnableLowNoiseExpertCommand"/>) turns on the
+    /// low-noise expert and auto-picks its counterpart when present.
+    /// </summary>
+    public bool ShowEnableLowNoisePrompt =>
+        !IsLowNoiseModelEnabled && !IsLowNoisePromptDismissed && AutoDetectIsWan2214BExpert();
+
     partial void OnIsLowNoiseModelEnabledChanged(bool value)
     {
         // Keep the LoRA section title symmetric with the Low-Noise LoRAs section in dual-expert mode.
         ExtraNetworksStackCardViewModel.Title = value ? "High-Noise LoRAs" : Resources.Label_ExtraNetworks;
+    }
+
+    /// <summary>
+    /// Heuristic for a Wan 2.2 14B MoE expert, from the selected UNet name only. The MoE ships as paired
+    /// <c>high_noise</c>/<c>low_noise</c> 14B experts; the 5B is single-model TI2V, so it's excluded.
+    /// </summary>
+    private bool AutoDetectIsWan2214BExpert()
+    {
+        if (SelectedModel?.FileName is not { } fileName || string.IsNullOrEmpty(fileName))
+            return false;
+
+        var name = fileName.ToLowerInvariant();
+        if (name.Contains("ti2v") || name.Contains("5b"))
+            return false;
+
+        return name.Contains("high_noise") || name.Contains("low_noise");
+    }
+
+    /// <summary>
+    /// Turns on the low-noise expert from the nudge and, when the high-noise counterpart can be matched by
+    /// name (<c>high_noise</c> -&gt; <c>low_noise</c>), pre-selects it so the user doesn't have to.
+    /// </summary>
+    [RelayCommand]
+    private void EnableLowNoiseExpert()
+    {
+        IsLowNoiseModelEnabled = true;
+
+        if (SelectedLowNoiseModel is null && TryFindLowNoiseCounterpart() is { } counterpart)
+        {
+            SelectedLowNoiseModel = counterpart;
+        }
+    }
+
+    /// <summary>Dismisses the nudge until a different model is selected (the InfoBar's close button).</summary>
+    [RelayCommand]
+    private void DismissLowNoisePrompt() => IsLowNoisePromptDismissed = true;
+
+    private HybridModelFile? TryFindLowNoiseCounterpart()
+    {
+        if (SelectedModel?.FileName is not { } fileName)
+            return null;
+
+        foreach (var (from, to) in new[] { ("high_noise", "low_noise"), ("high", "low") })
+        {
+            if (!fileName.Contains(from, StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            var candidate = fileName.Replace(from, to, StringComparison.OrdinalIgnoreCase);
+            if (
+                ClientManager.UnetModels.FirstOrDefault(m =>
+                    string.Equals(m.FileName, candidate, StringComparison.OrdinalIgnoreCase)
+                ) is
+                { } match
+            )
+            {
+                return match;
+            }
+        }
+
+        return null;
     }
 
     /// <summary>

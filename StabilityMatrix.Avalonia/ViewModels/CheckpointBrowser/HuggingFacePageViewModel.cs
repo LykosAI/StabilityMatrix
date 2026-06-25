@@ -10,6 +10,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
+using AsyncAwaitBestPractices;
 using Avalonia.Collections;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
@@ -19,6 +20,7 @@ using CommunityToolkit.Mvvm.Input;
 using DynamicData;
 using DynamicData.Binding;
 using Injectio.Attributes;
+using NLog;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.HuggingFace;
@@ -59,11 +61,14 @@ public record BulkDestinationOption(string Label, SharedFolderType? Folder);
 [RegisterSingleton<HuggingFacePageViewModel>]
 public partial class HuggingFacePageViewModel : TabViewModelBase, IHandleNavigation, IInfinitelyScroll
 {
+    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
     private readonly ITrackedDownloadService trackedDownloadService;
     private readonly ISettingsManager settingsManager;
     private readonly INotificationService notificationService;
     private readonly IHuggingFaceApi huggingFaceApi;
     private readonly ISecretsManager secretsManager;
+    private readonly IModelIndexService modelIndexService;
 
     public SourceCache<HuggingfaceItem, string> ItemsCache { get; } =
         new(i => i.RepositoryPath + i.ModelName);
@@ -76,6 +81,12 @@ public partial class HuggingFacePageViewModel : TabViewModelBase, IHandleNavigat
 
     /// <summary>All files of the currently browsed repo (unfiltered). Source of truth for selection/import.</summary>
     private readonly List<HuggingFaceFileViewModel> allRepoFiles = new();
+
+    /// <summary>
+    /// Hashes the on-disk file at a destination path (at most once) to verify installed-by-content
+    /// for the current repo. Reset per repo load. Driven solely from the UI thread.
+    /// </summary>
+    private readonly OnDiskHashVerifier onDiskVerifier = new();
 
     /// <summary>Filtered flat list of repo files shown in the flat view.</summary>
     public AvaloniaList<HuggingFaceFileViewModel> RepoFiles { get; } = new();
@@ -211,7 +222,8 @@ public partial class HuggingFacePageViewModel : TabViewModelBase, IHandleNavigat
         ISettingsManager settingsManager,
         INotificationService notificationService,
         IHuggingFaceApi huggingFaceApi,
-        ISecretsManager secretsManager
+        ISecretsManager secretsManager,
+        IModelIndexService modelIndexService
     )
     {
         this.trackedDownloadService = trackedDownloadService;
@@ -219,6 +231,7 @@ public partial class HuggingFacePageViewModel : TabViewModelBase, IHandleNavigat
         this.notificationService = notificationService;
         this.huggingFaceApi = huggingFaceApi;
         this.secretsManager = secretsManager;
+        this.modelIndexService = modelIndexService;
 
         // Restore persisted UI prefs (set backing fields directly to avoid triggering persistence/rebuilds).
         isStructuredView = settingsManager.Settings.HuggingFaceUseStructuredView;
@@ -539,7 +552,11 @@ public partial class HuggingFacePageViewModel : TabViewModelBase, IHandleNavigat
                         Path = entry.Path,
                         RepositoryPath = repoId,
                         Size = entry.Size,
+                        Sha256 = entry.Sha256,
                         ModelsDir = modelsDir,
+                        IsSha256Installed = Design.IsDesignMode
+                            ? null
+                            : sha256 => modelIndexService.ModelIndexSha256Hashes.Contains(sha256),
                         SelectedFolder = HuggingFaceFolderInference.Infer(entry.Path),
                     };
                     vm.PropertyChanged += RepoFileOnPropertyChanged;
@@ -572,6 +589,14 @@ public partial class HuggingFacePageViewModel : TabViewModelBase, IHandleNavigat
                     : HuggingFaceFolderInference.Infer(allRepoFiles.FirstOrDefault()?.Path ?? string.Empty);
 
                 RebuildRepoViews();
+
+                // Disambiguate same-named files (e.g. high_noise_model.safetensors across variants)
+                // that aren't matched by the index: hash the on-disk file and compare. Runs in the
+                // background so it doesn't block showing the tree; cancelled if the user navigates away.
+                VerifyInstalledByHashAsync(allRepoFiles.ToList(), ct)
+                    .SafeFireAndForget(ex =>
+                        Logger.Error(ex, "HuggingFace installed-by-hash verification failed")
+                    );
             }
 
             Mode = HuggingFaceBrowserMode.RepoFiles;
@@ -659,6 +684,100 @@ public partial class HuggingFacePageViewModel : TabViewModelBase, IHandleNavigat
         allRepoFiles.Clear();
         RepoFiles.Clear();
         RepoTreeRoot.Clear();
+        onDiskVerifier.Clear();
+    }
+
+    /// <summary>
+    /// For files that carry a content hash but aren't matched by the model index (e.g. installed
+    /// before metadata sidecars existed), hash the file actually present at the destination and
+    /// compare. This is what tells apart multiple repo files that share a name but are different
+    /// content — only the variant whose bytes are on disk is marked installed. Bounded: we only
+    /// hash a path that has a file present, and each path at most once.
+    ///
+    /// On a confirmed match we backfill a <c>.cm-info.json</c> sidecar (if one doesn't already
+    /// exist), so the model index picks up the hash and future visits short-circuit on the cheap
+    /// index lookup instead of re-hashing the bytes every time.
+    /// </summary>
+    private async Task VerifyInstalledByHashAsync(
+        IReadOnlyList<HuggingFaceFileViewModel> files,
+        CancellationToken ct
+    )
+    {
+        if (Design.IsDesignMode)
+            return;
+
+        var changedWhileHidingInstalled = false;
+        var backfilledSidecar = false;
+
+        foreach (var file in files)
+        {
+            if (ct.IsCancellationRequested)
+                return;
+
+            // Only LFS files have a hash; skip those already known-installed via the index.
+            if (
+                file.Sha256 is not { } remoteSha256
+                || file.DestinationPath is not { } dest
+                || modelIndexService.ModelIndexSha256Hashes.Contains(remoteSha256)
+            )
+                continue;
+
+            if (!await onDiskVerifier.MatchesAsync(dest, remoteSha256, ct))
+                continue;
+
+            file.MarkVerifiedInstalled();
+            changedWhileHidingInstalled |= HideInstalled;
+            backfilledSidecar |= await TryBackfillSidecarAsync(file, dest, remoteSha256);
+        }
+
+        // If we newly resolved files as installed while "hide installed" is on, rebuild to hide them.
+        if (changedWhileHidingInstalled && !ct.IsCancellationRequested)
+            RebuildRepoViews();
+
+        // Re-index so the backfilled hashes enter ModelIndexSha256Hashes and we never re-hash these
+        // bytes again (the cheap index lookup above will match on the next visit).
+        if (backfilledSidecar && !ct.IsCancellationRequested)
+            modelIndexService.BackgroundRefreshIndex();
+    }
+
+    /// <summary>
+    /// Write a minimal HuggingFace <c>.cm-info.json</c> next to a verified on-disk file so its hash
+    /// enters the model index. Never overwrites an existing sidecar (the file may have richer
+    /// metadata from another source). Returns true if a sidecar was written.
+    /// </summary>
+    private static async Task<bool> TryBackfillSidecarAsync(
+        HuggingFaceFileViewModel file,
+        string dest,
+        string sha256
+    )
+    {
+        if (Path.GetDirectoryName(dest) is not { } directory)
+            return false;
+
+        var baseName = Path.GetFileNameWithoutExtension(dest);
+        var sidecarPath = Path.Combine(directory, baseName + ConnectedModelInfo.FileExtension);
+        if (File.Exists(sidecarPath))
+            return false;
+
+        var info = ConnectedModelInfo.FromHuggingFace(
+            file.RepositoryPath,
+            file.FileName,
+            sha256,
+            DateTimeOffset.UtcNow
+        );
+
+        // Best-effort, like the on-disk hash read: a read-only / permission-locked models dir must
+        // not throw into the fire-and-forget verify pass and abort the rest of the loop.
+        try
+        {
+            await info.SaveJsonToDirectory(directory, baseName);
+            return true;
+        }
+        catch (Exception e)
+        {
+            Logger.Warn(e, "Failed to backfill .cm-info.json for {Dest}", dest);
+            return false;
+        }
     }
 
     /// <summary>
@@ -971,7 +1090,10 @@ public partial class HuggingFacePageViewModel : TabViewModelBase, IHandleNavigat
                 )
             );
 
-            await StartFileDownloadAsync(file.DownloadUrl, downloadPath, file.NotifyExistsChanged);
+            // On success mark verified-installed directly: the file is now on disk with this exact
+            // content, but the model index hasn't been refreshed yet, so a plain Exists recheck would
+            // still read a hashed file as not-installed until the next scan.
+            await StartFileDownloadAsync(file.DownloadUrl, downloadPath, file.MarkVerifiedInstalled, file);
             file.IsSelected = false;
         }
     }
@@ -1002,7 +1124,10 @@ public partial class HuggingFacePageViewModel : TabViewModelBase, IHandleNavigat
             var relativePath = file.Path.Replace('/', Path.DirectorySeparatorChar);
             var downloadPath = new FilePath(Path.Combine(baseDir, relativePath));
 
-            await StartFileDownloadAsync(file.DownloadUrl, downloadPath, file.NotifyExistsChanged);
+            // On success mark verified-installed directly: the file is now on disk with this exact
+            // content, but the model index hasn't been refreshed yet, so a plain Exists recheck would
+            // still read a hashed file as not-installed until the next scan.
+            await StartFileDownloadAsync(file.DownloadUrl, downloadPath, file.MarkVerifiedInstalled, file);
             file.IsSelected = false;
         }
 
@@ -1035,10 +1160,33 @@ public partial class HuggingFacePageViewModel : TabViewModelBase, IHandleNavigat
         BulkDestination = null;
     }
 
-    private async Task StartFileDownloadAsync(string url, FilePath path, Action onSuccess)
+    private async Task StartFileDownloadAsync(
+        string url,
+        FilePath path,
+        Action onSuccess,
+        HuggingFaceFileViewModel? metadataSource = null
+    )
     {
         path.Directory?.Create();
         var download = trackedDownloadService.NewDownload(url, path);
+
+        // Write a .cm-info.json sidecar carrying the content hash + source so the file is matched
+        // by hash in the model index (installed-detection, update checks) and shows proper source
+        // attribution. Only LFS files have a hash; small non-LFS files (configs) are skipped.
+        if (!Design.IsDesignMode && path.Directory is { } dir && metadataSource?.Sha256 is { } sha256)
+        {
+            var info = ConnectedModelInfo.FromHuggingFace(
+                metadataSource.RepositoryPath,
+                metadataSource.FileName,
+                sha256,
+                DateTimeOffset.UtcNow
+            );
+
+            var baseName = Path.GetFileNameWithoutExtension(path.Name);
+            await info.SaveJsonToDirectory(dir, baseName);
+            download.ExtraCleanupFileNames.Add(dir.JoinFile(baseName + ConnectedModelInfo.FileExtension));
+        }
+
         download.ProgressStateChanged += (_, e) =>
         {
             if (e == ProgressState.Success)

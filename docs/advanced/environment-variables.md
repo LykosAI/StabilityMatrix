@@ -146,8 +146,13 @@ Most users should leave these alone unless they are troubleshooting a specific R
 For some Windows ROCm-based ComfyUI launches, Stability Matrix already applies several of these optimizations automatically in package code, including:
 
 `MIOPEN_FIND_MODE=2`
-`MIOPEN_SEARCH_CUTOFF=2` `TORCH_ROCM_AOTRITON_ENABLE_EXPERIMENTAL=1` (RDNA3 and newer only) 
+
+`MIOPEN_SEARCH_CUTOFF=2`
+
+`TORCH_ROCM_AOTRITON_ENABLE_EXPERIMENTAL=1` (RDNA3 and newer only) 
+
 `FLASH_ATTENTION_TRITON_AMD_ENABLE=TRUE` `COMFYUI_ENABLE_MIOPEN=1`
+
 `PYTORCH_ALLOC_CONF=max_split_size_mb:512,garbage_collection_threshold:0.8`
 
 

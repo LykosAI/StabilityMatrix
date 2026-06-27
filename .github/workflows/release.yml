@@ -192,6 +192,13 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
+      # The signing action installs its tooling (sign CLI, SDK build tools) via NuGet
+      # with --add-source, which NuGet rejects while our packageSourceMapping is active.
+      # Move our config aside for the sign step; restored immediately after.
+      - name: Disable NuGet source mapping for signing
+        if: ${{ github.event.inputs.sign-windows != 'false' }}
+        run: Rename-Item NuGet.Config NuGet.Config.disabled
+
       # Authenticode-sign the published single-file exe before upload, so every
       # downstream channel (GitHub release, B2 / matrix auto-update) ships signed bytes.
       - name: Sign Windows executable
@@ -206,6 +213,11 @@ jobs:
           file-digest: SHA256
           timestamp-rfc3161: http://timestamp.acs.microsoft.com
           timestamp-digest: SHA256
+
+      # Restore the config even if signing failed, so the tree stays consistent.
+      - name: Restore NuGet source mapping
+        if: ${{ always() && github.event.inputs.sign-windows != 'false' }}
+        run: Rename-Item NuGet.Config.disabled NuGet.Config
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4

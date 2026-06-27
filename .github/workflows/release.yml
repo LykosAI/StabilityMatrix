@@ -43,6 +43,10 @@ on:
           - stable
           - preview
           - development
+      sign-windows:
+        type: boolean
+        description: Sign Windows executable?
+        default: true
       test-release-artifacts:
         type: boolean
         description: "[Debug] Test release artifacts?"
@@ -179,7 +183,9 @@ jobs:
         run: mv ./out/StabilityMatrix.Avalonia.exe ./out/${{ env.out-name }}
 
       # Passwordless login via OIDC federated credentials (no client secret stored).
+      # Skipped when sign-windows is explicitly disabled (escape hatch for unsigned releases).
       - name: Azure Login (OIDC)
+        if: ${{ github.event.inputs.sign-windows != 'false' }}
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
@@ -189,6 +195,7 @@ jobs:
       # Authenticode-sign the published single-file exe before upload, so every
       # downstream channel (GitHub release, B2 / matrix auto-update) ships signed bytes.
       - name: Sign Windows executable
+        if: ${{ github.event.inputs.sign-windows != 'false' }}
         uses: azure/trusted-signing-action@v2.0.0
         with:
           endpoint: ${{ vars.SIGNING_ENDPOINT }}

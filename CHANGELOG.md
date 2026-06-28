@@ -35,7 +35,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Lightened the CivitAI model cards so they render faster while scrolling
 ### Supporters
 #### 🌟 Visionaries
-A heartfelt thank you to our wonderful Visionaries: **Waterclouds**, **MrMxyzptlk12836**, **Psilocyfer18731**, **bluepopsicle**, **Ibixat**, **Droolguy**, **KalAbaddon**, **LG**, **snotty**, **whudunit**, **cusalapapen1481**, and **moon_milky2843**! Every fix and refinement in this build carries a little of your support, and we're so grateful for all of it. A warm welcome to our newest Visionaries, **SkynetFuture** and **sn3232323233350** — it's wonderful to have you with us! 💛
+This build leans hard into what's next: a live HuggingFace browser and Wan 2.2 video generation. None of that exploration happens without our Visionaries giving us the room to chase it. So a huge thank you to **Waterclouds**, **MrMxyzptlk12836**, **Psilocyfer18731**, **bluepopsicle**, **Ibixat**, **Droolguy**, **KalAbaddon**, **LG**, **snotty**, **whudunit**, **cusalapapen1481**, and **moon_milky2843**. You make the experiments possible. And a big hello to **SkynetFuture** and **sn3232323233350**, who join the Visionary crew this time around. We're genuinely glad you're here. 💛
 
 ## v2.16.2
 ### Changed

@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
   - The high-noise and low-noise model pickers sit together at the top as a labeled pair, with Precision, VAE, Text Encoder and Shift tucked into an **Advanced** section to keep the card approachable
   - Added a separate **Low-Noise LoRAs** list so per-expert speed LoRAs (such as Wan 2.2-Lightning's high/low-noise pair) land on the correct model — the **High-Noise LoRAs** list applies to the high-noise/primary model, and the new Low-Noise LoRAs list applies to the low-noise expert
   - Added hover tooltips to the Wan model card fields (Precision, VAE, Text Encoder, Shift, Low-Noise, Boundary) explaining what each one does
+- Added a **gallery picker** for the Inference "+" new-tab button, grouping the project types into **Image / Video / Legacy** sections with icons and descriptions instead of a flat dropdown. The redundant standalone Flux text-to-image and SVD image-to-video types now live under **Legacy** so existing projects still open, without cluttering the list for new users
+  - Prefer the old menu? A **Compact New Tab Menu** toggle under Settings → Inference (and a quick link at the bottom of the picker dialog) switches the "+" button back to the fast dropdown
 ### Changed
 - **Generate now auto-resumes after launching ComfyUI.** If you press Generate in Inference while ComfyUI isn't connected and choose to launch it from the connection prompt, the queued generation now waits for startup and runs on its own once connected - no need to press Generate a second time
 ### Fixed
@@ -31,8 +33,9 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - The **Checkpoints** and **Outputs** galleries now load thumbnails at display size instead of full resolution, using far less memory and scrolling much more smoothly with large libraries
 - The **CivitAI** and **OpenModelDB** browsers now keep card images in memory, so scrolling back over models you've already seen no longer re-loads them from disk
 - Lightened the CivitAI model cards so they render faster while scrolling
-- Added a **gallery picker** for the Inference "+" new-tab button, grouping the project types into **Image / Video / Legacy** sections with icons and descriptions instead of a flat dropdown. The redundant standalone Flux text-to-image and SVD image-to-video types now live under **Legacy** so existing projects still open, without cluttering the list for new users
-  - Prefer the old menu? A **Compact New Tab Menu** toggle under Settings → Inference (and a quick link at the bottom of the picker dialog) switches the "+" button back to the fast dropdown
+### Supporters
+#### 🌟 Visionaries
+A heartfelt thank you to our wonderful Visionaries: **Waterclouds**, **MrMxyzptlk12836**, **Psilocyfer18731**, **bluepopsicle**, **Ibixat**, **Droolguy**, **KalAbaddon**, **LG**, **snotty**, **whudunit**, **cusalapapen1481**, and **moon_milky2843**! Every fix and refinement in this build carries a little of your support, and we're so grateful for all of it. A warm welcome to our newest Visionaries, **SkynetFuture** and **sn3232323233350** — it's wonderful to have you with us! 💛
 
 ## v2.16.2
 ### Changed

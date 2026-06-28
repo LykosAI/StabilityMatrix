@@ -20,7 +20,10 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
   - The high-noise and low-noise model pickers sit together at the top as a labeled pair, with Precision, VAE, Text Encoder and Shift tucked into an **Advanced** section to keep the card approachable
   - Added a separate **Low-Noise LoRAs** list so per-expert speed LoRAs (such as Wan 2.2-Lightning's high/low-noise pair) land on the correct model — the **High-Noise LoRAs** list applies to the high-noise/primary model, and the new Low-Noise LoRAs list applies to the low-noise expert
   - Added hover tooltips to the Wan model card fields (Precision, VAE, Text Encoder, Shift, Low-Noise, Boundary) explaining what each one does
+- Added a **gallery picker** for the Inference "+" new-tab button, grouping the project types into **Image / Video / Legacy** sections with icons and descriptions instead of a flat dropdown. The redundant standalone Flux text-to-image and SVD image-to-video types now live under **Legacy** so existing projects still open, without cluttering the list for new users
+  - Prefer the old menu? A **Compact New Tab Menu** toggle under Settings → Inference (and a quick link at the bottom of the picker dialog) switches the "+" button back to the fast dropdown
 ### Changed
+- **Windows builds are now code-signed.** The portable executable is signed with a verified certificate, so Windows SmartScreen no longer flags Stability Matrix as from an unknown publisher. You may still see a SmartScreen prompt on the first releases while the certificate builds reputation, but those warnings will taper off as more people run signed builds
 - **Generate now auto-resumes after launching ComfyUI.** If you press Generate in Inference while ComfyUI isn't connected and choose to launch it from the connection prompt, the queued generation now waits for startup and runs on its own once connected - no need to press Generate a second time
 ### Fixed
 - Fixed the Inference **VAE** dropdown listing models in a seemingly random order, and the **Text Encoder** / **CLIP Vision** dropdowns occasionally reordering as the list finished loading; all three now sort alphabetically, with **Default** pinned to the top of the VAE list
@@ -31,8 +34,9 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - The **Checkpoints** and **Outputs** galleries now load thumbnails at display size instead of full resolution, using far less memory and scrolling much more smoothly with large libraries
 - The **CivitAI** and **OpenModelDB** browsers now keep card images in memory, so scrolling back over models you've already seen no longer re-loads them from disk
 - Lightened the CivitAI model cards so they render faster while scrolling
-- Added a **gallery picker** for the Inference "+" new-tab button, grouping the project types into **Image / Video / Legacy** sections with icons and descriptions instead of a flat dropdown. The redundant standalone Flux text-to-image and SVD image-to-video types now live under **Legacy** so existing projects still open, without cluttering the list for new users
-  - Prefer the old menu? A **Compact New Tab Menu** toggle under Settings → Inference (and a quick link at the bottom of the picker dialog) switches the "+" button back to the fast dropdown
+### Supporters
+#### 🌟 Visionaries
+This build leans hard into what's next: a live HuggingFace browser and Wan 2.2 video generation. None of that exploration happens without our Visionaries giving us the room to chase it. So a huge thank you to **Waterclouds**, **MrMxyzptlk12836**, **Psilocyfer18731**, **bluepopsicle**, **Ibixat**, **Droolguy**, **KalAbaddon**, **LG**, **snotty**, **whudunit**, **cusalapapen1481**, and **moon_milky2843**. You make the experiments possible. And a big hello to **SkynetFuture** and **sn3232323233350**, who join the Visionary crew this time around. We're genuinely glad you're here. 💛
 
 ## v2.16.2
 ### Changed

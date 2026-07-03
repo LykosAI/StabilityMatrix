@@ -886,6 +886,11 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
         }
 
         using var surface = SKSurface.Create(new SKImageInfo(CanvasSize.Width, CanvasSize.Height));
+        if (surface is null)
+        {
+            logger.LogWarning("RenderToWhiteChannelImage: Failed to create surface, returning null.");
+            return null;
+        }
 
         RenderToSurface(surface);
 
@@ -922,6 +927,11 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
         }
 
         using var surface = SKSurface.Create(new SKImageInfo(CanvasSize.Width, CanvasSize.Height));
+        if (surface is null)
+        {
+            logger.LogWarning("RenderToImage: Failed to create surface, returning null.");
+            return null;
+        }
 
         RenderToSurface(surface);
 
@@ -1148,9 +1158,14 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
         }
     }
 
-    private void RenderToSurfaceCore(SKSurface surface, bool renderBackgroundFill, bool renderBackgroundImage)
+    private void RenderToSurfaceCore(
+        SKSurface? surface,
+        bool renderBackgroundFill,
+        bool renderBackgroundImage
+    )
     {
-        if (_disposed)
+        // SKSurface.Create can return null under low memory or GPU context loss
+        if (surface is null || _disposed)
         {
             return;
         }

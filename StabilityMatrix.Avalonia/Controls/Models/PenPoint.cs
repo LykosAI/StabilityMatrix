@@ -121,7 +121,7 @@ public readonly record struct PenPoint(ulong X, ulong Y)
         : this(Convert.ToUInt64(Math.Max(0, x)), Convert.ToUInt64(Math.Max(0, y))) { }
 
     public PenPoint(SKPoint skPoint)
-        : this(Math.Max(0, skPoint.X), Math.Max(0, skPoint.Y)) { }
+        : this(Convert.ToUInt64(Math.Max(0, skPoint.X)), Convert.ToUInt64(Math.Max(0, skPoint.Y))) { }
 
     /// <summary>
     /// Radius of the point.

@@ -5,6 +5,17 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.17.0-dev.2
+### Fixed
+- Fixed a class of random crashes in the Inference **mask editor** and **image annotation editor**: canvas rendering runs on a separate render thread, while undo/redo, layer operations, exporting, and closing the editor could free the graphics resources a frame was still drawing with — occasionally crashing the app mid-stroke or while saving. All of these now wait for the in-flight frame
+- Fixed fast brush strokes occasionally failing with a "collection was modified" error while the stroke was still being drawn
+- Fixed opening older projects whose masks contained stroke points outside the canvas failing with an overflow error
+- Fixed a potential crash when the paint canvas rendered before its size was set
+### Performance
+- Dragging an image layer with the **Move** tool in the layered mask editor now re-renders only the dragged layer instead of re-compositing every layer on each pointer move, so dragging stays smooth in multi-layer projects
+- Faster color-mask extraction for regional prompting — a 1024×1024 canvas with six regions previously did over six million dictionary lookups per extraction
+- Fixed a small native memory leak while drawing with the mouse (a path object per frame was never freed), and removed a redundant full-canvas scan after every paint-bucket fill
+
 ## v2.17.0-dev.1
 ### Added
 #### New Feature: 🤗 Live HuggingFace Model Browser

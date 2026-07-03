@@ -261,7 +261,11 @@ public readonly record struct PenPath()
     {
         var skPath = new SKPath();
 
-        if (Points.Count <= 0)
+        // Snapshot the count: the UI thread can append points to an in-progress stroke
+        // while the render thread converts it
+        var count = Points.Count;
+
+        if (count <= 0)
         {
             return skPath;
         }
@@ -270,7 +274,7 @@ public readonly record struct PenPath()
         skPath.MoveTo(Points[0].X, Points[0].Y);
 
         // Add the rest of the points
-        for (var i = 1; i < Points.Count; i++)
+        for (var i = 1; i < count; i++)
         {
             skPath.LineTo(Points[i].X, Points[i].Y);
         }

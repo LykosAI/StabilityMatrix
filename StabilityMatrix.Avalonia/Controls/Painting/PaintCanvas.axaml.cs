@@ -129,11 +129,11 @@ public class PaintCanvas : TemplatedControlBase
     {
         base.OnPropertyChanged(change);
 
-        if (change.Property == IsEnabledProperty)
+        if (change.Property == IsEnabledProperty && ViewModel is { } vm)
         {
             var newIsEnabled = change.GetNewValue<bool>();
 
-            if (!newIsEnabled && ViewModel is { } vm)
+            if (!newIsEnabled)
             {
                 vm.IsPenDown = false;
             }
@@ -559,9 +559,12 @@ public class PaintCanvas : TemplatedControlBase
         {
             if (lastCanvasCursorTool != selectedTool)
             {
-                lastCanvasCursor?.Dispose();
+                // Assign the new cursor before disposing the old one, which may still be active
+                var oldCursor = lastCanvasCursor;
                 lastCanvasCursor = new Cursor(StandardCursorType.Cross);
                 lastCanvasCursorTool = selectedTool;
+                canvas.Cursor = lastCanvasCursor;
+                oldCursor?.Dispose();
             }
             canvas.Cursor = lastCanvasCursor;
             return;
@@ -572,9 +575,11 @@ public class PaintCanvas : TemplatedControlBase
         {
             if (lastCanvasCursorTool != selectedTool)
             {
-                lastCanvasCursor?.Dispose();
+                var oldCursor = lastCanvasCursor;
                 lastCanvasCursor = new Cursor(StandardCursorType.SizeAll);
                 lastCanvasCursorTool = selectedTool;
+                canvas.Cursor = lastCanvasCursor;
+                oldCursor?.Dispose();
             }
             canvas.Cursor = lastCanvasCursor;
             return;
@@ -644,7 +649,7 @@ public class PaintCanvas : TemplatedControlBase
     {
         if (sender is SkiaCustomCanvas canvas)
         {
-            canvas.Cursor = new Cursor(StandardCursorType.Arrow);
+            canvas.Cursor = Cursor.Default;
         }
     }
 

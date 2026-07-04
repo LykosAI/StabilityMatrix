@@ -49,10 +49,13 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
     private int rendersInFlight;
 
     /// <summary>
-    /// Set by the UI thread when the finalized-path cache is stale; the render thread disposes
-    /// and rebuilds <see cref="cachedPathsImage"/> on its own thread when it sees the flag.
+    /// Set (to 1) by the UI thread when the finalized-path cache is stale; the render thread
+    /// consumes it with an atomic read-and-reset and disposes/rebuilds
+    /// <see cref="cachedPathsImage"/> on its own thread. Int rather than bool so
+    /// <see cref="Interlocked.Exchange(ref int, int)"/> can swap it — a plain check-then-clear
+    /// would drop an invalidation raised between the check and the clear.
     /// </summary>
-    private volatile bool pathCacheDirty;
+    private int pathCacheDirty;
 
     /// <summary>
     /// Bitmaps swapped out of layers on the UI thread while the render thread may still be
@@ -367,7 +370,7 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
     /// </summary>
     public void InvalidatePathCache()
     {
-        pathCacheDirty = true;
+        Interlocked.Exchange(ref pathCacheDirty, 1);
     }
 
     /// <summary>
@@ -1446,11 +1449,10 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
     private void RenderPathsWithCaching(SKCanvas paintLayerCanvas)
     {
         // Consume a pending invalidation: the cache is owned by this (render) thread, so this is
-        // where the stale image actually gets disposed and reset. Clear the flag before disposing
-        // so a concurrent UI-thread invalidation is never lost.
-        if (pathCacheDirty)
+        // where the stale image actually gets disposed and reset. Atomic read-and-reset so a
+        // concurrent UI-thread invalidation is never lost between a check and a clear.
+        if (Interlocked.Exchange(ref pathCacheDirty, 0) == 1)
         {
-            pathCacheDirty = false;
             cachedPathsImage?.Dispose();
             cachedPathsImage = null;
             cachedPathsCount = 0;
@@ -1962,7 +1964,9 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
                 break;
             }
 
-            Thread.Yield();
+            // Sleep rather than yield: yielding in a tight loop busy-spins a core when no other
+            // thread is ready on it; frames are short so a 1ms granularity wait is plenty
+            Thread.Sleep(1);
         }
 
         // Dispose cached path image

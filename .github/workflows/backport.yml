@@ -1,7 +1,7 @@
 name: Automatic Backport
 
 # Label a PR `backport-to-<branch>` to get a cherry-picked PR opened against
-# `<branch>` after merge. Shared implementation:
+# `<branch>` after merge. Shared implementation (and lykos-backport App notes):
 # https://github.com/LykosAI/.github/blob/main/.github/workflows/backport.yml
 
 on:
@@ -16,3 +16,7 @@ permissions:
 jobs:
   backport:
     uses: LykosAI/.github/.github/workflows/backport.yml@main
+    # Passes org var BACKPORT_APP_ID + secret BACKPORT_APP_PRIVATE_KEY through
+    # to the reusable workflow so backport PRs get the lykos-backport App
+    # identity and trigger CI. Harmless (falls back to GITHUB_TOKEN) if unset.
+    secrets: inherit

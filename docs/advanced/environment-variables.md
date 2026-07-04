@@ -153,7 +153,7 @@ For some Windows ROCm-based ComfyUI launches, Stability Matrix already applies s
 
 `FLASH_ATTENTION_TRITON_AMD_ENABLE=TRUE`
 
-`COMFYUI_ENABLE_MIOPEN=1`
+`COMFYUI_ENABLE_MIOPEN=1` (RDNA3 and newer only)
 
 `PYTORCH_ALLOC_CONF=max_split_size_mb:512,garbage_collection_threshold:0.8`
 

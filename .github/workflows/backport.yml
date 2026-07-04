@@ -1,44 +1,18 @@
 name: Automatic Backport
 
+# Label a PR `backport-to-<branch>` to get a cherry-picked PR opened against
+# `<branch>` after merge. Shared implementation:
+# https://github.com/LykosAI/.github/blob/main/.github/workflows/backport.yml
+
 on:
   pull_request:
-    types: ["closed", "labeled"]
+    types: [closed, labeled]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
 
 jobs:
   backport:
-    if: ${{ (github.event.pull_request.merged == true) && (contains(github.event.pull_request.labels.*.name, 'backport-to-main') == true) }}
-    name: Backport PR
-    runs-on: ubuntu-latest
-    steps:
-      # Get the merge target branch to decide mainline number
-      # git cherry-pick mainline is 1 for merge to 'dev', else 2
-      - name: Get target branch
-        run: echo "CP_MAINLINE=$(if [ '${{ github.event.pull_request.base.ref }}' == 'dev' ]; then echo 1; else echo 2; fi)" >> $GITHUB_ENV
-
-      - name: Write json
-        id: create-json
-        uses: jsdaniell/create-json@v1.2.3
-        with:
-          name: ".backportrc.json"
-          json: |
-            {
-              "targetPRLabels": ["backport"],
-              "mainline": ${{ env.CP_MAINLINE }},
-              "commitConflicts": "true",
-              "prTitle": "[{{sourceBranch}} to {{targetBranch}}] backport: {{sourcePullRequest.title}} ({{sourcePullRequest.number}})"
-            }
-
-      - name: Backport Action
-        uses: sorenlouv/backport-github-action@v9.5.1
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          auto_backport_label_prefix: backport-to-
-
-      - name: Info log
-        if: ${{ success() }}
-        run: cat ~/.backport/backport.info.log
-
-      - name: Debug log
-        if: ${{ failure() }}
-        run: cat ~/.backport/backport.debug.log        
-          
+    uses: LykosAI/.github/.github/workflows/backport.yml@main

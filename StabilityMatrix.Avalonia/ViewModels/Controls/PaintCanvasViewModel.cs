@@ -1736,7 +1736,6 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
         var penPointCount = 0;
         var uniformPressure = true;
         var firstPressure = 0.0;
-        var totalThickness = 0.0;
         var firstPenPointIndex = -1;
 
         for (var i = 0; i < pointCount; i++)
@@ -1746,7 +1745,6 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
                 continue;
 
             var pressure = p.Pressure ?? 1;
-            var thickness = pressure * effectiveRadius * 2.5;
 
             if (penPointCount == 0)
             {
@@ -1758,7 +1756,6 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
                 uniformPressure = false;
             }
 
-            totalThickness += thickness;
             penPointCount++;
         }
 
@@ -1784,9 +1781,11 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
 
         if (uniformPressure)
         {
-            // All points have similar pressure - batch into single path
-            var avgThickness = totalThickness / penPointCount;
-            paint.StrokeWidth = (float)avgThickness;
+            // All points have similar pressure - batch into a single path. Width comes from the
+            // FIRST point's pressure, which never changes as the stroke grows. A running average
+            // here made the whole in-progress stroke re-render wider/narrower every frame as new
+            // points shifted the mean ("breathing" while drawing).
+            paint.StrokeWidth = (float)(firstPressure * effectiveRadius * 2.5);
 
             using var path = new SKPath();
             var started = false;

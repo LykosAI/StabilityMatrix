@@ -23,7 +23,9 @@ namespace StabilityMatrix.UITests;
 /// Members intentionally NOT persisted (see [JsonIgnore] on the models):
 /// <list type="bullet">
 ///   <item><see cref="PenPoint.Radius"/> — legacy per-point radius; new paths carry radius on <see cref="PenPath.Radius"/>.</item>
-///   <item><see cref="PenPoint.IsPen"/> — runtime-only flag; on decompress every point is forced to IsPen = true.</item>
+///   <item><see cref="PenPoint.IsPen"/> — not persisted directly, but inferred on decompress (Phase 4b):
+///   a mouse point (null Pressure, IsPen false) is written with a -1 pressure sentinel and round-trips as a
+///   mouse point; any written pressure in [0, 1] round-trips as a pen point.</item>
 ///   <item><see cref="PenPath.Points"/> — the property itself is [JsonIgnore]; points are serialized by the
 ///   custom converter as the compressed <c>points</c> string, so they DO round-trip (just not as a JSON array).</item>
 /// </list>
@@ -33,7 +35,9 @@ namespace StabilityMatrix.UITests;
 ///   <item><see cref="PenPoint.X"/>/<see cref="PenPoint.Y"/> are <c>ulong</c>; the point is compressed as a
 ///   <c>float</c> then read back and clamped to non-negative. So X/Y round-trip exactly for small integers.</item>
 ///   <item><see cref="PenPoint.Pressure"/> is stored as a float; on decompress a value is only kept when it lies
-///   in [0, 1], otherwise it becomes null. A null pressure is written as 1.0 and therefore comes back as 1.0.</item>
+///   in [0, 1], otherwise the point becomes a mouse point (null Pressure, IsPen false). A pen point's null
+///   pressure is written as 1.0 and comes back as 1.0; a mouse point's null is written as -1 and comes back
+///   as null.</item>
 /// </list>
 /// </summary>
 public class PaintCanvasSerializationTests
@@ -171,8 +175,20 @@ public class PaintCanvasSerializationTests
         [BuildFreehandPath(), BuildRectanglePath(), BuildEllipsePath(), BuildBitmapPath()];
 
     /// <summary>
+    /// Computes the expected post-round-trip (Pressure, IsPen) for a point, mirroring the
+    /// compress/decompress contract: written pressure = Pressure ?? (IsPen ? 1.0 : -1.0);
+    /// on read, values in [0, 1] are pen points, anything else is a mouse point with null pressure.
+    /// </summary>
+    private static (double? Pressure, bool IsPen) ExpectedPointRoundTrip(PenPoint point)
+    {
+        var written = point.Pressure ?? (point.IsPen ? 1.0 : -1.0);
+        var isPen = written is >= 0 and <= 1;
+        return (isPen ? written : null, isPen);
+    }
+
+    /// <summary>
     /// Asserts full value equality of the persisted members after a round-trip.
-    /// Explicitly does NOT compare PenPoint.Radius or PenPoint.IsPen (not persisted).
+    /// Explicitly does NOT compare PenPoint.Radius (not persisted).
     /// </summary>
     private static void AssertPathEqual(PenPath expected, PenPath actual)
     {
@@ -187,7 +203,6 @@ public class PaintCanvasSerializationTests
 
         // Points: compare via the compressed/persisted representation.
         // X/Y are ulong and round-trip exactly for our small integer coordinates.
-        // Pressure is kept only when in [0, 1]; null is written as 1.0 and returns as 1.0.
         Assert.Equal(expected.Points.Count, actual.Points.Count);
         for (var i = 0; i < expected.Points.Count; i++)
         {
@@ -196,11 +211,20 @@ public class PaintCanvasSerializationTests
             Assert.Equal(e.X, a.X);
             Assert.Equal(e.Y, a.Y);
 
-            // Pressure is compressed as a float, so a double like 0.33 comes back as the nearest
-            // float (0.3300000131...). Compare through a float cast to characterize that precision loss.
-            var expectedPressure = e.Pressure is >= 0 and <= 1 ? e.Pressure!.Value : 1.0;
-            Assert.NotNull(a.Pressure);
-            Assert.Equal((float)expectedPressure, (float)a.Pressure!.Value);
+            var (expectedPressure, expectedIsPen) = ExpectedPointRoundTrip(e);
+            Assert.Equal(expectedIsPen, a.IsPen);
+
+            if (expectedPressure is { } pressure)
+            {
+                // Pressure is compressed as a float, so a double like 0.33 comes back as the nearest
+                // float (0.3300000131...). Compare through a float cast to characterize that precision loss.
+                Assert.NotNull(a.Pressure);
+                Assert.Equal((float)pressure, (float)a.Pressure!.Value);
+            }
+            else
+            {
+                Assert.Null(a.Pressure);
+            }
         }
 
         // Bitmap data: compare dimensions and a sampling of pixels if present.
@@ -254,10 +278,17 @@ public class PaintCanvasSerializationTests
         var roundTripped = node.Deserialize<List<PenPath>>()!;
 
         var points = roundTripped[0].Points;
+        var originalPoints = original[0].Points;
+
         // Radius is not persisted; the decompress path always reconstructs with the default (1).
         Assert.All(points, p => Assert.Equal(1d, p.Radius));
-        // IsPen is not persisted; the decompress path forces every point to IsPen = true.
-        Assert.All(points, p => Assert.True(p.IsPen));
+
+        // IsPen is inferred from the written pressure (Phase 4b): mouse points (null pressure,
+        // IsPen false) round-trip as mouse points via the -1 sentinel; everything else is a pen point.
+        for (var i = 0; i < points.Count; i++)
+        {
+            Assert.Equal(ExpectedPointRoundTrip(originalPoints[i]).IsPen, points[i].IsPen);
+        }
     }
 
     // ---- Path A: source-gen serializer used by PaintCanvasViewModel.Serializer.cs ----

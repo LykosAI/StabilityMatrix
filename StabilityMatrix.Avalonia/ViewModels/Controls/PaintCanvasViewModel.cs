@@ -1865,6 +1865,24 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
                 }
             }
 
+            // Dispose flood-fill bitmap data owned by paths (Paths, the undo redoStack, and any
+            // in-progress TemporaryPaths). PenPath.BitmapData is an SKBitmap set by FloodFillAt and
+            // is otherwise never disposed.
+            foreach (var penPath in Paths)
+            {
+                penPath.BitmapData?.Dispose();
+            }
+
+            foreach (var penPath in redoStack)
+            {
+                penPath.BitmapData?.Dispose();
+            }
+
+            foreach (var penPath in TemporaryPaths.Values)
+            {
+                penPath.BitmapData?.Dispose();
+            }
+
             // Clear paths
             TemporaryPaths.Clear();
         }

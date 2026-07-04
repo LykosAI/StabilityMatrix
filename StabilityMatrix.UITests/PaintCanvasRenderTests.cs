@@ -270,4 +270,37 @@ public class PaintCanvasRenderTests
         var exception = Record.Exception(() => vm.Dispose());
         Assert.Null(exception);
     }
+
+    /// <summary>
+    /// A flood-fill path carries an owned <see cref="SKBitmap"/> in <see cref="PenPath.BitmapData"/>
+    /// (set by <c>FloodFillAt</c>) that is never otherwise disposed. Phase 1 of the threading redesign
+    /// makes <see cref="PaintCanvasViewModel.Dispose"/> free it. SKBitmap's underlying native handle
+    /// (<c>Handle</c>, public on SKObject) is reset to <see cref="IntPtr.Zero"/> once the wrapped native
+    /// resource is released, so we use that to verify the bitmap was actually disposed rather than
+    /// merely asserting Dispose doesn't throw. (SKObject also exposes <c>IsDisposed</c>, but it's not
+    /// publicly accessible on the concrete SKBitmap type in this SkiaSharp 3.0 preview.)
+    /// </summary>
+    [AvaloniaFact]
+    public void Dispose_DisposesFloodFillBitmapData()
+    {
+        var vm = TestHelpers.CreatePaintCanvasViewModel();
+        vm.CanvasSize = new System.Drawing.Size(CanvasWidth, CanvasHeight);
+
+        var bitmapData = new SKBitmap(CanvasWidth, CanvasHeight, SKColorType.Rgba8888, SKAlphaType.Premul);
+        var bitmapPath = new PenPath
+        {
+            PathType = PenPathType.Bitmap,
+            FillColor = SKColors.Magenta,
+            BitmapData = bitmapData,
+            Bounds = new SKRect(0, 0, CanvasWidth, CanvasHeight),
+        };
+
+        vm.Paths = ImmutableList.Create(bitmapPath);
+
+        Assert.NotEqual(IntPtr.Zero, bitmapData.Handle);
+
+        vm.Dispose();
+
+        Assert.Equal(IntPtr.Zero, bitmapData.Handle);
+    }
 }

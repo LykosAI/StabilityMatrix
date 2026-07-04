@@ -215,6 +215,7 @@ public partial class ImageAnnotationEditorViewModel(IServiceManager<ViewModelBas
 
     public void Dispose()
     {
+        PaintCanvasViewModel.Dispose();
         originalBitmap?.Dispose();
         cachedAnnotatedImage?.Dispose();
         GC.SuppressFinalize(this);

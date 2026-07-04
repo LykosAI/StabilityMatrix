@@ -257,6 +257,18 @@ public readonly record struct PenPath()
     [JsonIgnore]
     public SKBitmap? BitmapData { get; init; }
 
+    /// <summary>
+    /// Returns a copy of this path with its own, unshared <see cref="Points"/> list.
+    /// </summary>
+    /// <remarks>
+    /// While a stroke is in progress its <see cref="Points"/> list is a live, mutable buffer that the
+    /// UI thread keeps appending to (see <see cref="ToSKPath"/>). When the stroke is finalized and
+    /// moved into the immutable paths collection, the same list instance must not keep being mutated
+    /// out from under the now-"finalized" path. Call this at finalize time to snapshot the points into
+    /// a brand-new list so the finalized path is truly immutable.
+    /// </remarks>
+    public PenPath Freeze() => this with { Points = [.. Points] };
+
     public SKPath ToSKPath()
     {
         var skPath = new SKPath();

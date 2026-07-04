@@ -334,4 +334,29 @@ public class PaintCanvasSerializationTests
         // And the whole serialized object is stable too (guards the full converter output, not just points).
         Assert.Equal(firstNode.ToJsonString(), secondNode.ToJsonString());
     }
+
+    // ---- Phase 2: freezing finalized strokes ----
+
+    /// <summary>
+    /// <see cref="PenPath.Freeze"/> is used at stroke-finalize time so the path moved into the
+    /// immutable <c>Paths</c> collection stops sharing its <see cref="PenPath.Points"/> list with the
+    /// live, still-mutating in-progress stroke buffer. The frozen copy must carry equal point content
+    /// in a brand-new List instance, so later mutation of the original list cannot leak into it.
+    /// </summary>
+    [AvaloniaFact]
+    public void Freeze_ProducesPathWithUnsharedPointsListButEqualContent()
+    {
+        var original = BuildFreehandPath();
+
+        var frozen = original.Freeze();
+
+        Assert.NotSame(original.Points, frozen.Points);
+        Assert.Equal(original.Points, frozen.Points);
+
+        // Mutating the original's live buffer (as the in-progress stroke handler does) must not
+        // affect the frozen copy.
+        original.Points.Add(new PenPoint(999, 999) { Pressure = 1.0, IsPen = true });
+
+        Assert.NotEqual(original.Points.Count, frozen.Points.Count);
+    }
 }

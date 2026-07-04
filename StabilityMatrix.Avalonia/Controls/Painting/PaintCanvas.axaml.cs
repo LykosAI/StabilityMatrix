@@ -141,7 +141,9 @@ public class PaintCanvas : TemplatedControlBase
             // On any enabled change, flush temporary paths
             if (!TemporaryPaths.IsEmpty)
             {
-                Paths = Paths.AddRange(TemporaryPaths.Values);
+                // Freeze each path so the finalized copy doesn't keep sharing its Points list with an
+                // in-progress stroke buffer.
+                Paths = Paths.AddRange(TemporaryPaths.Values.Select(path => path.Freeze()));
                 TemporaryPaths.Clear();
             }
         }
@@ -242,7 +244,9 @@ public class PaintCanvas : TemplatedControlBase
 
             if (!vm.IsShapeTool && TemporaryPaths.TryGetValue(e.Pointer.Id, out var path))
             {
-                Paths = Paths.Add(path);
+                // Freeze so the finalized path stops sharing its Points list with the in-progress
+                // stroke buffer that TemporaryPaths was tracking.
+                Paths = Paths.Add(path.Freeze());
                 vm.ClearRedoStack(); // New path added, clear redo history
             }
 

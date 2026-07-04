@@ -883,22 +883,18 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
     {
         using var _ = CodeTimer.StartDebug();
 
-        if (CanvasSize == Size.Empty)
+        using var originalImage = ComposeToNewImage(renderBackgroundImage: false);
+        if (originalImage is null)
         {
-            logger.LogWarning($"RenderToImage: {nameof(CanvasSize)} is not set, returning null.");
             return null;
         }
 
-        using var surface = SKSurface.Create(new SKImageInfo(CanvasSize.Width, CanvasSize.Height));
+        using var surface = SKSurface.Create(new SKImageInfo(originalImage.Width, originalImage.Height));
         if (surface is null)
         {
             logger.LogWarning("RenderToWhiteChannelImage: Failed to create surface, returning null.");
             return null;
         }
-
-        RenderToSurface(surface);
-
-        using var originalImage = surface.Snapshot();
         // Replace all colors to white (255, 255, 255), keep original alpha
         // csharpier-ignore
         using var colorFilter = SKColorFilter.CreateColorMatrix(
@@ -920,26 +916,16 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
         return surface.Snapshot();
     }
 
-    public SKImage? RenderToImage()
+    /// <summary>
+    /// Composes the canvas into a new CPU-backed image on the calling (UI) thread, without
+    /// touching the persistent surfaces owned by the on-screen render pass.
+    /// </summary>
+    /// <param name="renderBackgroundImage">Whether to include the background image layer.</param>
+    public SKImage? RenderToImage(bool renderBackgroundImage = false)
     {
         using var _ = CodeTimer.StartDebug();
 
-        if (CanvasSize == Size.Empty)
-        {
-            logger.LogWarning($"RenderToImage: {nameof(CanvasSize)} is not set, returning null.");
-            return null;
-        }
-
-        using var surface = SKSurface.Create(new SKImageInfo(CanvasSize.Width, CanvasSize.Height));
-        if (surface is null)
-        {
-            logger.LogWarning("RenderToImage: Failed to create surface, returning null.");
-            return null;
-        }
-
-        RenderToSurface(surface);
-
-        return surface.Snapshot();
+        return ComposeToNewImage(renderBackgroundImage);
     }
 
     /// <summary>
@@ -1190,17 +1176,17 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
         {
             lock (layer)
             {
+                // Off-screen exports no longer share these surfaces (they compose their own CPU
+                // surfaces from immutable snapshots — see PaintCanvasViewModel.Compose.cs), so the
+                // persistent layer surfaces only ever serve this render pass. Recreate when missing,
+                // when the GPU context changed (device loss / GPU toggle), or on resize.
                 var needsNewSurface = layer.Surface is null;
                 if (!needsNewSurface)
                 {
-                    // Recreate if the existing surface's backing doesn't match the current target.
-                    // On-screen rendering leases a GPU surface, so the persistent layer surfaces are
-                    // GPU-backed and tied to the render thread. Off-screen export (e.g. saving an
-                    // annotation) composites onto a CPU surface from another thread; reusing those
-                    // GPU surfaces there produces a blank image. Forcing a matching CPU surface fixes
-                    // it, and the next on-screen render simply recreates the GPU surface.
-                    var layerIsGpu = layer.Surface!.Context != null;
-                    if (layerIsGpu != useGpu)
+                    // Compare native handles: managed GRContext wrappers are not guaranteed unique
+                    var expectedContextHandle = useGpu ? grContext!.Handle : IntPtr.Zero;
+                    var layerContextHandle = layer.Surface!.Context?.Handle ?? IntPtr.Zero;
+                    if (layerContextHandle != expectedContextHandle)
                     {
                         needsNewSurface = true;
                     }
@@ -1383,7 +1369,15 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
     /// </summary>
     private void RenderGridOverlay(SKCanvas canvas)
     {
-        if (GridDivisions <= 1 || CanvasSize == Size.Empty)
+        if (CanvasSize == Size.Empty)
+            return;
+
+        RenderGridOverlayCore(canvas, CanvasSize.Width, CanvasSize.Height, GridDivisions);
+    }
+
+    private static void RenderGridOverlayCore(SKCanvas canvas, int width, int height, int gridDivisions)
+    {
+        if (gridDivisions <= 1)
             return;
 
         using var paint = new SKPaint
@@ -1394,20 +1388,17 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
             StrokeWidth = 1f,
         };
 
-        var width = CanvasSize.Width;
-        var height = CanvasSize.Height;
-
         // Draw vertical lines
-        for (var i = 1; i < GridDivisions; i++)
+        for (var i = 1; i < gridDivisions; i++)
         {
-            var x = (float)(width * i) / GridDivisions;
+            var x = (float)(width * i) / gridDivisions;
             canvas.DrawLine(x, 0, x, height, paint);
         }
 
         // Draw horizontal lines
-        for (var i = 1; i < GridDivisions; i++)
+        for (var i = 1; i < gridDivisions; i++)
         {
-            var y = (float)(height * i) / GridDivisions;
+            var y = (float)(height * i) / gridDivisions;
             canvas.DrawLine(0, y, width, y, paint);
         }
     }

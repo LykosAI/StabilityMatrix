@@ -366,28 +366,29 @@ public class PaintCanvasSerializationTests
         Assert.Equal(firstNode.ToJsonString(), secondNode.ToJsonString());
     }
 
-    // ---- Phase 2: freezing finalized strokes ----
+    // ---- Stroke finalization: LiveStroke -> PenPath ----
 
     /// <summary>
-    /// <see cref="PenPath.Freeze"/> is used at stroke-finalize time so the path moved into the
-    /// immutable <c>Paths</c> collection stops sharing its <see cref="PenPath.Points"/> list with the
-    /// live, still-mutating in-progress stroke buffer. The frozen copy must carry equal point content
-    /// in a brand-new List instance, so later mutation of the original list cannot leak into it.
+    /// <see cref="LiveStroke.ToPenPath"/> is used at stroke-finalize time. The finalized path must
+    /// carry an equal, fully independent copy of the live points so later appends to the live
+    /// stroke cannot leak into the path that was moved into the immutable <c>Paths</c> collection.
     /// </summary>
     [AvaloniaFact]
-    public void Freeze_ProducesPathWithUnsharedPointsListButEqualContent()
+    public void LiveStrokeToPenPath_ProducesIndependentPointsList()
     {
-        var original = BuildFreehandPath();
+        var template = BuildFreehandPath() with { Points = [] };
+        var stroke = new LiveStroke { Template = template };
+        stroke.AddPoints(BuildVariedPoints().ToArray());
 
-        var frozen = original.Freeze();
+        var finalized = stroke.ToPenPath();
 
-        Assert.NotSame(original.Points, frozen.Points);
-        Assert.Equal(original.Points, frozen.Points);
+        Assert.Equal(stroke.GetPointsSnapshot().Length, finalized.Points.Count);
+        Assert.Equal(BuildVariedPoints(), finalized.Points);
 
-        // Mutating the original's live buffer (as the in-progress stroke handler does) must not
-        // affect the frozen copy.
-        original.Points.Add(new PenPoint(999, 999) { Pressure = 1.0, IsPen = true });
+        // Appending to the live stroke (as the pointer handler does) must not affect the
+        // finalized copy.
+        stroke.AddPoints([new PenPoint(999, 999) { Pressure = 1.0, IsPen = true }]);
 
-        Assert.NotEqual(original.Points.Count, frozen.Points.Count);
+        Assert.NotEqual(stroke.GetPointsSnapshot().Length, finalized.Points.Count);
     }
 }

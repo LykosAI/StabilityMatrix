@@ -1727,10 +1727,8 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
         SKColor? overrideColor = null
     )
     {
-        // Freehand path rendering
-        // Snapshot the list and count once: for temporary paths the UI thread appends points
-        // while the render thread is in here, so iterate by index up to the captured count
-        // (foreach would throw "collection was modified")
+        // Freehand path rendering. The point list is always a stable snapshot here: finalized
+        // PenPath lists are frozen at finalize time, and LiveStroke hands out immutable arrays.
         var pointCount = points.Count;
 
         if (pointCount == 0)

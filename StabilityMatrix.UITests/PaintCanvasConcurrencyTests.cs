@@ -34,40 +34,58 @@ public class PaintCanvasConcurrencyTests
 {
     private const string SkipReason = "Enabled in Phase 5 after threading redesign";
 
-    // ==== Test A: live stroke append vs concurrent path reads ====
+    // Test A's skip was removed in Phase 3 (LiveStroke); Test B stays skipped until Phase 5.
 
-    [AvaloniaFact(Skip = SkipReason)]
+    // ==== Test A: live stroke append vs concurrent snapshot reads ====
+    // Enabled as of Phase 3: LiveStroke publishes copy-on-append snapshots, so concurrent
+    // append-while-render is structurally safe (a captured array is never mutated).
+
+    [AvaloniaFact]
     public async Task LiveStroke_AppendWhileReading_DoesNotThrow()
     {
         await RunLiveStrokeStress();
     }
 
-    /// <summary>
-    /// Core body split out so the one-time characterization run can call it directly (temporarily
-    /// removing the Skip on the fact above, or invoking this from a scratch harness).
-    /// </summary>
     private static async Task RunLiveStrokeStress()
     {
-        var penPath = new PenPath
+        var stroke = new LiveStroke
         {
-            FillColor = SKColors.Red,
-            Radius = 3f,
-            PathType = PenPathType.Freehand,
+            Template = new PenPath
+            {
+                FillColor = SKColors.Red,
+                Radius = 3f,
+                PathType = PenPathType.Freehand,
+            },
         };
 
         using var cts = new CancellationTokenSource();
         Exception? failure = null;
 
-        // Writer: append points in a tight loop (~100k).
+        // Writer: publish points in small batches (mirrors HandlePointerMoved's per-event batch),
+        // yielding occasionally so the reader gets real overlap with array growth.
         var writer = Task.Run(() =>
         {
             try
             {
-                for (var i = 0; i < 100_000; i++)
+                var batch = new PenPoint[8];
+                for (var i = 0; i < 100_000; i += batch.Length)
                 {
-                    penPath.Points.Add(
-                        new PenPoint((ulong)(i % 64), (ulong)((i / 64) % 64)) { IsPen = true }
-                    );
+                    for (var j = 0; j < batch.Length; j++)
+                    {
+                        var n = i + j;
+                        batch[j] = new PenPoint((ulong)(n % 64), (ulong)((n / 64) % 64))
+                        {
+                            IsPen = true,
+                            Pressure = (n % 100) / 100.0,
+                        };
+                    }
+
+                    stroke.AddPoints(batch);
+
+                    if (i % 1024 == 0)
+                    {
+                        Thread.Yield();
+                    }
                 }
             }
             catch (Exception ex)
@@ -80,23 +98,32 @@ public class PaintCanvasConcurrencyTests
             }
         });
 
-        // Reader: convert to SKPath and simulate RenderFreehandPath-style index reads.
+        // Reader: render snapshots to a CPU canvas and verify prefix consistency — the number of
+        // observed points must never decrease, and every snapshot must be fully readable.
         var reader = Task.Run(() =>
         {
             try
             {
+                using var surface = SKSurface.Create(new SKImageInfo(64, 64));
+                using var paint = new SKPaint();
+                var lastCount = 0;
+
                 while (!cts.IsCancellationRequested)
                 {
-                    using var skPath = penPath.ToSKPath();
+                    var snapshot = stroke.GetPointsSnapshot();
 
-                    var points = penPath.Points;
-                    var count = points.Count;
-                    for (var i = 0; i < count; i++)
+                    Assert.True(
+                        snapshot.Length >= lastCount,
+                        $"Snapshot shrank: {snapshot.Length} < {lastCount}"
+                    );
+                    lastCount = snapshot.Length;
+
+                    foreach (var p in snapshot)
                     {
-                        // Mirror RenderFreehandPath: read fields by index up to the snapshotted count.
-                        var p = points[i];
                         _ = p.X + p.Y + (p.Pressure ?? 1) + (p.IsPen ? 1 : 0);
                     }
+
+                    PaintCanvasViewModel.RenderLiveStroke(surface.Canvas, stroke, paint);
                 }
             }
             catch (Exception ex)
@@ -107,6 +134,7 @@ public class PaintCanvasConcurrencyTests
 
         await Task.WhenAll(writer, reader);
         Assert.Null(failure);
+        Assert.Equal(100_000, stroke.GetPointsSnapshot().Length);
     }
 
     // ==== Test B: export vs mutate ====

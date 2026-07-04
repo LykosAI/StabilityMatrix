@@ -39,7 +39,11 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
     /// </summary>
     private readonly object renderLock = new();
 
-    public ConcurrentDictionary<long, PenPath> TemporaryPaths { get; set; } = new();
+    /// <summary>
+    /// Strokes currently being drawn, keyed by pointer id. Values are <see cref="LiveStroke"/>s:
+    /// the UI thread appends points while the render thread reads stable snapshots, without locks.
+    /// </summary>
+    public ConcurrentDictionary<long, LiveStroke> TemporaryPaths { get; set; } = new();
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(UndoCommand))]
@@ -548,7 +552,7 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
             IsStrokeOnly = IsShapeStrokeOnly,
             StrokeWidth = (float)PaintBrushSize,
         };
-        TemporaryPaths[ShapePointerId] = previewPath;
+        TemporaryPaths[ShapePointerId] = new LiveStroke { Template = previewPath };
     }
 
     /// <summary>
@@ -1461,10 +1465,10 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
             }
         }
 
-        // Render temporary paths directly (the batched RenderPenPath is already optimized)
-        foreach (var penPath in TemporaryPaths.Values)
+        // Render in-progress strokes directly (the batched rendering is already optimized)
+        foreach (var stroke in TemporaryPaths.Values)
         {
-            RenderPenPath(paintLayerCanvas, penPath, paint);
+            RenderLiveStroke(paintLayerCanvas, stroke, paint);
         }
     }
 
@@ -1633,11 +1637,54 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
     }
 
     /// <summary>
+    /// Renders an in-progress <see cref="LiveStroke"/> to a canvas using a stable point snapshot,
+    /// safe to call from the render thread while the UI thread keeps appending points.
+    /// </summary>
+    public static void RenderLiveStroke(
+        SKCanvas canvas,
+        LiveStroke stroke,
+        SKPaint paint,
+        SKColor? overrideColor = null
+    )
+    {
+        var template = stroke.Template;
+
+        switch (template.PathType)
+        {
+            case PenPathType.Rectangle:
+            case PenPathType.Ellipse:
+                RenderShapePath(canvas, template, paint, overrideColor);
+                return;
+
+            case PenPathType.Bitmap:
+                RenderBitmapPath(canvas, template, paint, overrideColor);
+                return;
+
+            case PenPathType.Freehand:
+            default:
+                RenderFreehandPathCore(canvas, template, stroke.GetPointsSnapshot(), paint, overrideColor);
+                return;
+        }
+    }
+
+    /// <summary>
     /// Renders freehand paths with pressure-sensitive strokes to the canvas.
     /// </summary>
     private static void RenderFreehandPath(
         SKCanvas canvas,
         PenPath penPath,
+        SKPaint paint,
+        SKColor? overrideColor = null
+    ) => RenderFreehandPathCore(canvas, penPath, penPath.Points, paint, overrideColor);
+
+    /// <summary>
+    /// Shared freehand rendering over any stable point list: a finalized path's own
+    /// (frozen) list, or a <see cref="LiveStroke"/> snapshot array.
+    /// </summary>
+    private static void RenderFreehandPathCore(
+        SKCanvas canvas,
+        PenPath penPath,
+        IReadOnlyList<PenPoint> points,
         SKPaint paint,
         SKColor? overrideColor = null
     )
@@ -1646,7 +1693,6 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
         // Snapshot the list and count once: for temporary paths the UI thread appends points
         // while the render thread is in here, so iterate by index up to the captured count
         // (foreach would throw "collection was modified")
-        var points = penPath.Points;
         var pointCount = points.Count;
 
         if (pointCount == 0)
@@ -1673,12 +1719,18 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
         paint.StrokeCap = SKStrokeCap.Round; // Round caps handle endpoints
         paint.StrokeJoin = SKStrokeJoin.Round;
 
+        // Get effective radius (path-level, or backward-compat from the first point —
+        // mirrors PenPath.GetEffectiveRadius but reads the caller-supplied point list)
+        var effectiveRadius =
+            penPath.Radius > 0 ? penPath.Radius
+            : pointCount > 0 && points[0].Radius > 0 ? (float)points[0].Radius
+            : 1f;
+
         // Apply feathering (soft brush edge) using blur mask filter
         if (penPath.Feathering > 0)
         {
             // Calculate blur sigma based on the effective radius and feathering amount
-            var effectiveRadiusForBlur = penPath.GetEffectiveRadius();
-            var blurSigma = effectiveRadiusForBlur * penPath.Feathering * 0.5f;
+            var blurSigma = effectiveRadius * penPath.Feathering * 0.5f;
             if (blurSigma > 0.1f)
             {
                 paint.MaskFilter = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, blurSigma);
@@ -1695,9 +1747,6 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
         var firstPressure = 0.0;
         var totalThickness = 0.0;
         var firstPenPointIndex = -1;
-
-        // Get effective radius (path-level or backward-compat from first point)
-        var effectiveRadius = penPath.GetEffectiveRadius();
 
         for (var i = 0; i < pointCount; i++)
         {
@@ -1724,9 +1773,9 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
 
         if (penPointCount == 0)
         {
-            // No pen points - use the ToSKPath method for mouse-based paths
+            // No pen points - draw a plain polyline for mouse-based paths
             paint.StrokeWidth = effectiveRadius * 2;
-            using var skPath = penPath.ToSKPath();
+            using var skPath = BuildSKPath(points, pointCount);
             canvas.DrawPath(skPath, paint);
             return;
         }
@@ -1828,6 +1877,29 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
     }
 
     /// <summary>
+    /// Builds a polyline <see cref="SKPath"/> from the first <paramref name="pointCount"/> entries
+    /// of a stable point list. Caller owns the returned path.
+    /// </summary>
+    private static SKPath BuildSKPath(IReadOnlyList<PenPoint> points, int pointCount)
+    {
+        var skPath = new SKPath();
+
+        if (pointCount <= 0)
+        {
+            return skPath;
+        }
+
+        skPath.MoveTo(points[0].X, points[0].Y);
+
+        for (var i = 1; i < pointCount; i++)
+        {
+            skPath.LineTo(points[i].X, points[i].Y);
+        }
+
+        return skPath;
+    }
+
+    /// <summary>
     /// Disposes all cached resources to free memory.
     /// </summary>
     public void Dispose()
@@ -1878,9 +1950,9 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
                 penPath.BitmapData?.Dispose();
             }
 
-            foreach (var penPath in TemporaryPaths.Values)
+            foreach (var stroke in TemporaryPaths.Values)
             {
-                penPath.BitmapData?.Dispose();
+                stroke.Template.BitmapData?.Dispose();
             }
 
             // Clear paths

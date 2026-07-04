@@ -32,9 +32,9 @@ namespace StabilityMatrix.UITests;
 /// </summary>
 public class PaintCanvasConcurrencyTests
 {
-    private const string SkipReason = "Enabled in Phase 5 after threading redesign";
-
-    // Test A's skip was removed in Phase 3 (LiveStroke); Test B stays skipped until Phase 5.
+    // Both stress tests are live: Test A was enabled in Phase 3 (LiveStroke), Test B in Phase 5
+    // (lock-free ownership model). The characterization notes in the class doc describe how the
+    // PRE-redesign code behaved when these were first written.
 
     // ==== Test A: live stroke append vs concurrent snapshot reads ====
     // Enabled as of Phase 3: LiveStroke publishes copy-on-append snapshots, so concurrent
@@ -137,18 +137,27 @@ public class PaintCanvasConcurrencyTests
         Assert.Equal(100_000, stroke.GetPointsSnapshot().Length);
     }
 
-    // ==== Test B: export vs mutate ====
+    // ==== Test B: render thread vs UI-thread mutation + export ====
+    // Enabled as of Phase 5 (lock-free ownership model). Mirrors the app's REAL threading
+    // contract: one thread plays the compositor render thread (RenderToSurface in a loop), one
+    // thread plays the UI thread (mutations and exports are serialized on it, as they are in the
+    // app via the dispatcher). This is exactly the interleaving that used to cause the native
+    // use-after-free crash class: the UI thread swapping/disposing layer bitmaps and invalidating
+    // the path cache while a frame was mid-render.
 
-    [AvaloniaFact(Skip = SkipReason)]
-    public async Task Export_WhileMutating_DoesNotThrow()
+    [AvaloniaFact]
+    public async Task Render_WhileUiThreadMutatesAndExports_DoesNotThrow()
     {
-        await RunExportMutateStress(TimeSpan.FromSeconds(2));
+        await RunRenderMutateStress(TimeSpan.FromSeconds(2));
     }
 
-    private static async Task RunExportMutateStress(TimeSpan duration)
+    private static async Task RunRenderMutateStress(TimeSpan duration)
     {
         var vm = TestHelpers.CreatePaintCanvasViewModel();
         vm.CanvasSize = new System.Drawing.Size(64, 64);
+        // Signal that this canvas renders on-screen so swapped-out layer bitmaps take the
+        // deferred-dispose path (drained by the render loop) instead of synchronous disposal.
+        vm.RefreshCanvas = () => { };
         vm.Paths = ImmutableList.Create(
             TestHelpers.BuildPenStroke(SKColors.Red),
             TestHelpers.BuildMouseStroke(SKColors.Blue),
@@ -168,14 +177,17 @@ public class PaintCanvasConcurrencyTests
             }
         }
 
-        // (a) RenderToImage in a loop.
-        var renderTask = Task.Run(() =>
+        // Render thread: RenderToSurface onto a locally created CPU surface, every "frame".
+        var renderThread = Task.Run(() =>
         {
             try
             {
+                using var surface = SKSurface.Create(new SKImageInfo(64, 64));
+                Assert.NotNull(surface);
+
                 while (!token.IsCancellationRequested)
                 {
-                    using var image = vm.RenderToImage();
+                    vm.RenderToSurface(surface!, renderBackgroundFill: true, renderBackgroundImage: true);
                 }
             }
             catch (Exception ex)
@@ -184,38 +196,20 @@ public class PaintCanvasConcurrencyTests
             }
         });
 
-        // (b) RenderToSurface onto a locally created CPU surface.
-        var surfaceTask = Task.Run(() =>
-        {
-            try
-            {
-                while (!token.IsCancellationRequested)
-                {
-                    using var surface = SKSurface.Create(new SKImageInfo(64, 64));
-                    if (surface is not null)
-                    {
-                        vm.RenderToSurface(surface);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Record(ex);
-            }
-        });
-
-        // (c) Undo / Redo / ClearCanvas / SetLayerBitmap with small bitmaps.
-        var mutateTask = Task.Run(() =>
+        // Simulated UI thread: mutations AND exports, serialized with each other (as the
+        // dispatcher serializes them in the app) but fully concurrent with the render thread.
+        var uiThread = Task.Run(() =>
         {
             try
             {
                 var i = 0;
                 while (!token.IsCancellationRequested)
                 {
-                    switch (i++ % 5)
+                    switch (i++ % 6)
                     {
                         case 0:
                             vm.Paths = vm.Paths.Add(TestHelpers.BuildPenStroke(SKColors.Yellow));
+                            vm.ClearRedoStack();
                             break;
                         case 1:
                             vm.Undo();
@@ -231,6 +225,16 @@ public class PaintCanvasConcurrencyTests
                             }
                             break;
                         case 4:
+                            using (var image = vm.RenderToImage())
+                            {
+                                Assert.NotNull(image);
+                            }
+                            using (var mask = vm.RenderToWhiteChannelImage())
+                            {
+                                Assert.NotNull(mask);
+                            }
+                            break;
+                        case 5:
                             vm.ClearCanvas();
                             vm.Paths = ImmutableList.Create(
                                 TestHelpers.BuildRectangle(SKColors.Green, new SKRect(10, 10, 40, 40))
@@ -245,8 +249,9 @@ public class PaintCanvasConcurrencyTests
             }
         });
 
-        await Task.WhenAll(renderTask, surfaceTask, mutateTask);
+        await Task.WhenAll(renderThread, uiThread);
 
+        // Dispose while conceptually "just after" rendering stopped — exercises the quiescence gate.
         vm.Dispose();
 
         Assert.Empty(failures);

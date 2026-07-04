@@ -28,16 +28,38 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
     : LoadableViewModelBase,
         IDisposable
 {
-    private bool _disposed;
+    // Threading model (no locks):
+    //  * UI thread: all mutation (strokes, undo/redo, layer bitmap swaps, exports, Dispose).
+    //    Shared state crosses to the render thread only as immutable snapshots — ImmutableList
+    //    swaps for Paths and SKLayer.Bitmaps, LiveStroke point-array publication.
+    //  * Render thread (compositor): RenderToSurface only. It exclusively owns the persistent
+    //    native objects (SKLayer.Surface, cachedPathsImage, the checkerboard shader) — they are
+    //    created, rebuilt and disposed only inside the render pass.
+    //  * Cross-thread disposal is deferred: bitmaps swapped out on the UI thread are queued to
+    //    retiredLayerBitmaps and freed by the render thread after the frame completes; cache
+    //    invalidation sets pathCacheDirty instead of disposing.
+    //  * Dispose quiesces first: it sets _disposed (checked at render entry) and waits for
+    //    rendersInFlight to drain before freeing render-owned resources.
+    private volatile bool _disposed;
 
     /// <summary>
-    /// Serializes rendering against cache invalidation and disposal. On-screen rendering runs on
-    /// the compositor render thread while undo/redo, exports and Dispose run on the UI thread;
-    /// without this lock the UI thread can dispose <see cref="cachedPathsImage"/>, layer surfaces
-    /// or the checkerboard shader mid-frame (native use-after-free). Lock ordering: renderLock
-    /// is always taken before any per-layer lock, never the reverse.
+    /// Number of render passes currently inside <see cref="RenderToSurface"/>. Used by
+    /// <see cref="Dispose"/> to wait for the in-flight frame before freeing native resources.
     /// </summary>
-    private readonly object renderLock = new();
+    private int rendersInFlight;
+
+    /// <summary>
+    /// Set by the UI thread when the finalized-path cache is stale; the render thread disposes
+    /// and rebuilds <see cref="cachedPathsImage"/> on its own thread when it sees the flag.
+    /// </summary>
+    private volatile bool pathCacheDirty;
+
+    /// <summary>
+    /// Bitmaps swapped out of layers on the UI thread while the render thread may still be
+    /// drawing them. Drained (disposed) by the render thread after each frame, and by
+    /// <see cref="Dispose"/>.
+    /// </summary>
+    private readonly ConcurrentQueue<SKBitmap> retiredLayerBitmaps = new();
 
     /// <summary>
     /// Strokes currently being drawn, keyed by pointer id. Values are <see cref="LiveStroke"/>s:
@@ -260,32 +282,40 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
             return;
         }
 
-        // Dispose old bitmaps before replacing to prevent memory leaks
-        lock (layer)
-        {
-            foreach (var oldBitmap in layer.Bitmaps)
-            {
-                oldBitmap.Dispose();
-            }
-
-            layer.Bitmaps = bitmap is not null ? [bitmap] : [];
-        }
+        var oldBitmaps = layer.Bitmaps;
+        layer.Bitmaps = bitmap is not null ? [bitmap] : [];
+        RetireLayerBitmaps(oldBitmaps);
     }
 
     public void LoadCanvasFromBitmap(SKBitmap bitmap)
     {
-        // Dispose old bitmaps and invalidate cache
-        lock (ImagesLayer)
-        {
-            foreach (var oldBitmap in ImagesLayer.Bitmaps)
-            {
-                oldBitmap.Dispose();
-            }
-            ImagesLayer.Bitmaps = [bitmap];
-        }
+        var oldBitmaps = ImagesLayer.Bitmaps;
+        ImagesLayer.Bitmaps = [bitmap];
+        RetireLayerBitmaps(oldBitmaps);
 
         InvalidatePathCache();
         RefreshCanvas?.Invoke();
+    }
+
+    /// <summary>
+    /// Frees bitmaps that were swapped out of a layer. When the canvas renders on-screen
+    /// (<see cref="RefreshCanvas"/> is wired), the render thread may still be drawing them,
+    /// so they are queued and disposed by the render thread after the frame. For export-only
+    /// view models that never render on-screen, they are disposed immediately.
+    /// </summary>
+    private void RetireLayerBitmaps(ImmutableList<SKBitmap> oldBitmaps)
+    {
+        foreach (var oldBitmap in oldBitmaps)
+        {
+            if (RefreshCanvas is null)
+            {
+                oldBitmap.Dispose();
+            }
+            else
+            {
+                retiredLayerBitmaps.Enqueue(oldBitmap);
+            }
+        }
     }
 
     [RelayCommand(CanExecute = nameof(CanExecuteUndo))]
@@ -332,15 +362,12 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
 
     /// <summary>
     /// Invalidates the cached paths image. Call when paths are modified externally.
+    /// The cache itself is owned by the render thread, so this only raises a flag; the
+    /// render thread disposes and rebuilds the cache on its own thread.
     /// </summary>
     public void InvalidatePathCache()
     {
-        lock (renderLock)
-        {
-            cachedPathsImage?.Dispose();
-            cachedPathsImage = null;
-            cachedPathsCount = 0;
-        }
+        pathCacheDirty = true;
     }
 
     /// <summary>
@@ -705,25 +732,23 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
         using var canvas = new SKCanvas(bitmap);
         canvas.Clear(SKColors.Transparent);
 
-        // Draw all layers in order
+        // Draw all layers in order. Runs on the UI thread; layer.Bitmaps is an atomically-swapped
+        // immutable list only ever mutated from the UI thread, so a plain read is safe.
         foreach (var (name, layer) in Layers)
         {
-            lock (layer)
+            foreach (var layerBitmap in layer.Bitmaps)
             {
-                foreach (var layerBitmap in layer.Bitmaps)
-                {
-                    canvas.DrawBitmap(layerBitmap, 0, 0);
-                }
+                canvas.DrawBitmap(layerBitmap, 0, 0);
+            }
 
-                // If this is the active brush layer, also render the active vector paths
-                // We render them freshly here on CPU to avoid using the GPU-backed cache from a different thread
-                if (name == "Brush")
+            // If this is the active brush layer, also render the active vector paths
+            // We render them freshly here on CPU to avoid using the GPU-backed cache from a different thread
+            if (name == "Brush")
+            {
+                using var paint = new SKPaint();
+                foreach (var path in Paths)
                 {
-                    using var paint = new SKPaint();
-                    foreach (var path in Paths)
-                    {
-                        RenderPenPath(canvas, path, paint);
-                    }
+                    RenderPenPath(canvas, path, paint);
                 }
             }
         }
@@ -1136,15 +1161,30 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
             && Math.Abs(a.Blue - b.Blue) <= tolerance;
     }
 
+    /// <summary>
+    /// On-screen render entry point, called by the compositor render thread each frame.
+    /// Tracked by <see cref="rendersInFlight"/> so <see cref="Dispose"/> can wait for the
+    /// in-flight frame before freeing the native resources this pass draws with.
+    /// </summary>
     public void RenderToSurface(
         SKSurface surface,
         bool renderBackgroundFill = false,
         bool renderBackgroundImage = false
     )
     {
-        lock (renderLock)
+        Interlocked.Increment(ref rendersInFlight);
+        try
         {
+            if (_disposed)
+            {
+                return;
+            }
+
             RenderToSurfaceCore(surface, renderBackgroundFill, renderBackgroundImage);
+        }
+        finally
+        {
+            Interlocked.Decrement(ref rendersInFlight);
         }
     }
 
@@ -1171,80 +1211,75 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
         var useGpu = UseGpuAcceleration && grContext != null;
         IsUsingGpu = useGpu;
 
-        // Initialize canvas layers
+        // Initialize canvas layers. The persistent layer surfaces are exclusively owned by this
+        // render pass (exports compose their own CPU surfaces from immutable snapshots — see
+        // PaintCanvasViewModel.Compose.cs), so no locking is needed. Recreate when missing, when
+        // the GPU context changed (device loss / GPU toggle), or on resize.
         foreach (var layer in Layers.Values)
         {
-            lock (layer)
+            var needsNewSurface = layer.Surface is null;
+            if (!needsNewSurface)
             {
-                // Off-screen exports no longer share these surfaces (they compose their own CPU
-                // surfaces from immutable snapshots — see PaintCanvasViewModel.Compose.cs), so the
-                // persistent layer surfaces only ever serve this render pass. Recreate when missing,
-                // when the GPU context changed (device loss / GPU toggle), or on resize.
-                var needsNewSurface = layer.Surface is null;
-                if (!needsNewSurface)
+                // Compare native handles: managed GRContext wrappers are not guaranteed unique
+                var expectedContextHandle = useGpu ? grContext!.Handle : IntPtr.Zero;
+                var layerContextHandle = layer.Surface!.Context?.Handle ?? IntPtr.Zero;
+                if (layerContextHandle != expectedContextHandle)
                 {
-                    // Compare native handles: managed GRContext wrappers are not guaranteed unique
-                    var expectedContextHandle = useGpu ? grContext!.Handle : IntPtr.Zero;
-                    var layerContextHandle = layer.Surface!.Context?.Handle ?? IntPtr.Zero;
-                    if (layerContextHandle != expectedContextHandle)
-                    {
-                        needsNewSurface = true;
-                    }
-                    else
-                    {
-                        // Check if we need to resize
-                        var currentInfo = layer.Surface!.Canvas.DeviceClipBounds;
-                        needsNewSurface =
-                            currentInfo.Width != CanvasSize.Width || currentInfo.Height != CanvasSize.Height;
-                    }
+                    needsNewSurface = true;
                 }
-
-                if (needsNewSurface)
+                else
                 {
-                    // Dispose old surface if exists
-                    layer.Surface?.Dispose();
+                    // Check if we need to resize
+                    var currentInfo = layer.Surface!.Canvas.DeviceClipBounds;
+                    needsNewSurface =
+                        currentInfo.Width != CanvasSize.Width || currentInfo.Height != CanvasSize.Height;
+                }
+            }
 
-                    var imageInfo = new SKImageInfo(CanvasSize.Width, CanvasSize.Height);
+            if (needsNewSurface)
+            {
+                // Dispose old surface if exists
+                layer.Surface?.Dispose();
 
-                    // Try GPU surface first if available
-                    if (useGpu)
+                var imageInfo = new SKImageInfo(CanvasSize.Width, CanvasSize.Height);
+
+                // Try GPU surface first if available
+                if (useGpu)
+                {
+                    layer.Surface = SKSurface.Create(grContext!, budgeted: true, imageInfo);
+
+                    // Fallback to CPU if GPU surface creation failed
+                    if (layer.Surface is null)
                     {
-                        layer.Surface = SKSurface.Create(grContext!, budgeted: true, imageInfo);
-
-                        // Fallback to CPU if GPU surface creation failed
-                        if (layer.Surface is null)
-                        {
-                            if (LogRenderingMode)
-                            {
-                                logger.LogWarning(
-                                    "GPU surface creation failed, falling back to CPU for layer"
-                                );
-                            }
-                            layer.Surface = SKSurface.Create(imageInfo);
-                        }
-                        else if (LogRenderingMode)
-                        {
-                            logger.LogDebug("Created GPU-accelerated surface for layer");
-                        }
-                    }
-                    else
-                    {
-                        layer.Surface = SKSurface.Create(imageInfo);
                         if (LogRenderingMode)
                         {
-                            logger.LogDebug("Created CPU surface for layer (GPU not available or disabled)");
+                            logger.LogWarning("GPU surface creation failed, falling back to CPU for layer");
                         }
+                        layer.Surface = SKSurface.Create(imageInfo);
+                    }
+                    else if (LogRenderingMode)
+                    {
+                        logger.LogDebug("Created GPU-accelerated surface for layer");
                     }
                 }
                 else
                 {
-                    // No resize needed, just clear
-                    layer.Surface!.Canvas.Clear(SKColors.Transparent);
+                    layer.Surface = SKSurface.Create(imageInfo);
+                    if (LogRenderingMode)
+                    {
+                        logger.LogDebug("Created CPU surface for layer (GPU not available or disabled)");
+                    }
                 }
+            }
+            else
+            {
+                // No resize needed, just clear
+                layer.Surface!.Canvas.Clear(SKColors.Transparent);
             }
         }
 
-        // Render all layer images in order
+        // Render all layer images in order. layer.Bitmaps is an atomically-swapped immutable list;
+        // bitmaps swapped out mid-frame stay alive in retiredLayerBitmaps until the frame completes.
         foreach (var (layerName, layer) in Layers)
         {
             // Skip background image if not requested
@@ -1253,13 +1288,10 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
                 continue;
             }
 
-            lock (layer)
+            var layerCanvas = layer.Surface!.Canvas;
+            foreach (var bitmap in layer.Bitmaps)
             {
-                var layerCanvas = layer.Surface!.Canvas;
-                foreach (var bitmap in layer.Bitmaps)
-                {
-                    layerCanvas.DrawBitmap(bitmap, new SKPoint(0, 0));
-                }
+                layerCanvas.DrawBitmap(bitmap, new SKPoint(0, 0));
             }
         }
 
@@ -1281,11 +1313,8 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
         // Draw the layers to the main surface
         foreach (var layer in Layers.Values)
         {
-            lock (layer)
-            {
-                layer.Surface!.Canvas.Flush();
-                surface.Canvas.DrawSurface(layer.Surface!, new SKPoint(0, 0));
-            }
+            layer.Surface!.Canvas.Flush();
+            surface.Canvas.DrawSurface(layer.Surface!, new SKPoint(0, 0));
         }
 
         // Draw grid overlay if enabled
@@ -1295,6 +1324,13 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
         }
 
         surface.Canvas.Flush();
+
+        // The frame is fully drawn and flushed - bitmaps retired by UI-thread layer swaps can no
+        // longer be referenced by this pass, so free them now, on the thread that owns rendering.
+        while (retiredLayerBitmaps.TryDequeue(out var retired))
+        {
+            retired.Dispose();
+        }
     }
 
     /// <summary>
@@ -1409,6 +1445,17 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
     /// </summary>
     private void RenderPathsWithCaching(SKCanvas paintLayerCanvas)
     {
+        // Consume a pending invalidation: the cache is owned by this (render) thread, so this is
+        // where the stale image actually gets disposed and reset. Clear the flag before disposing
+        // so a concurrent UI-thread invalidation is never lost.
+        if (pathCacheDirty)
+        {
+            pathCacheDirty = false;
+            cachedPathsImage?.Dispose();
+            cachedPathsImage = null;
+            cachedPathsCount = 0;
+        }
+
         var currentPathCount = Paths.Count;
         var hasTemporaryPaths = !TemporaryPaths.IsEmpty;
 
@@ -1890,64 +1937,83 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
     }
 
     /// <summary>
-    /// Disposes all cached resources to free memory.
+    /// Disposes all cached resources to free memory. Called from the UI thread.
+    /// Quiesces rendering first: sets <see cref="_disposed"/> (checked at render entry) and
+    /// waits for the in-flight render pass to exit before freeing the native resources it
+    /// may be drawing with.
     /// </summary>
     public void Dispose()
     {
-        // Take the render lock so an in-flight render pass finishes before we free
-        // the native resources it is drawing with
-        lock (renderLock)
+        if (_disposed)
+            return;
+
+        // New render passes see this at entry and return without touching resources
+        _disposed = true;
+
+        // Wait (bounded) for an in-flight render pass to finish. Frames are short; if this
+        // ever times out something is badly wrong, so log and proceed rather than hang.
+        var waitStart = Environment.TickCount64;
+        while (Volatile.Read(ref rendersInFlight) > 0)
         {
-            if (_disposed)
-                return;
-
-            _disposed = true;
-
-            // Dispose cached path image
-            cachedPathsImage?.Dispose();
-            cachedPathsImage = null;
-
-            // Dispose checkerboard shader
-            cachedCheckerboardShader?.Dispose();
-            cachedCheckerboardShader = null;
-
-            // Dispose layer surfaces and bitmaps
-            foreach (var layer in Layers.Values)
+            if (Environment.TickCount64 - waitStart > 1000)
             {
-                lock (layer)
-                {
-                    layer.Surface?.Dispose();
-                    layer.Surface = null;
-
-                    foreach (var bitmap in layer.Bitmaps)
-                    {
-                        bitmap.Dispose();
-                    }
-                    layer.Bitmaps = [];
-                }
+                logger.LogWarning(
+                    "Dispose: timed out waiting for in-flight render pass ({Count} still active), proceeding",
+                    Volatile.Read(ref rendersInFlight)
+                );
+                break;
             }
 
-            // Dispose flood-fill bitmap data owned by paths (Paths, the undo redoStack, and any
-            // in-progress TemporaryPaths). PenPath.BitmapData is an SKBitmap set by FloodFillAt and
-            // is otherwise never disposed.
-            foreach (var penPath in Paths)
-            {
-                penPath.BitmapData?.Dispose();
-            }
-
-            foreach (var penPath in redoStack)
-            {
-                penPath.BitmapData?.Dispose();
-            }
-
-            foreach (var stroke in TemporaryPaths.Values)
-            {
-                stroke.Template.BitmapData?.Dispose();
-            }
-
-            // Clear paths
-            TemporaryPaths.Clear();
+            Thread.Yield();
         }
+
+        // Dispose cached path image
+        cachedPathsImage?.Dispose();
+        cachedPathsImage = null;
+
+        // Dispose checkerboard shader
+        cachedCheckerboardShader?.Dispose();
+        cachedCheckerboardShader = null;
+
+        // Dispose layer surfaces and bitmaps
+        foreach (var layer in Layers.Values)
+        {
+            layer.Surface?.Dispose();
+            layer.Surface = null;
+
+            foreach (var bitmap in layer.Bitmaps)
+            {
+                bitmap.Dispose();
+            }
+            layer.Bitmaps = [];
+        }
+
+        // Drain bitmaps that were retired by layer swaps but never freed by a render pass
+        while (retiredLayerBitmaps.TryDequeue(out var retired))
+        {
+            retired.Dispose();
+        }
+
+        // Dispose flood-fill bitmap data owned by paths (Paths, the undo redoStack, and any
+        // in-progress TemporaryPaths). PenPath.BitmapData is an SKBitmap set by FloodFillAt and
+        // is otherwise never disposed.
+        foreach (var penPath in Paths)
+        {
+            penPath.BitmapData?.Dispose();
+        }
+
+        foreach (var penPath in redoStack)
+        {
+            penPath.BitmapData?.Dispose();
+        }
+
+        foreach (var stroke in TemporaryPaths.Values)
+        {
+            stroke.Template.BitmapData?.Dispose();
+        }
+
+        // Clear paths
+        TemporaryPaths.Clear();
 
         GC.SuppressFinalize(this);
     }

@@ -464,7 +464,11 @@ public sealed class App : Application
                 provider.GetRequiredService<OutputsPageViewModel>(),
                 provider.GetRequiredService<WorkflowsPageViewModel>(),
             },
-            FooterPages = { provider.GetRequiredService<SettingsViewModel>() },
+            FooterPages =
+            {
+                provider.GetRequiredService<DocumentationViewModel>(),
+                provider.GetRequiredService<SettingsViewModel>(),
+            },
         });
     }
 
@@ -835,6 +839,15 @@ public sealed class App : Application
             {
                 c.BaseAddress = new Uri("https://openart.ai/api/public/workflows");
                 c.Timeout = TimeSpan.FromHours(1);
+            })
+            .AddPolicyHandler(retryPolicy);
+
+        services
+            .AddRefitClient<IGitHubContentApi>(defaultRefitSettings)
+            .ConfigureHttpClient(c =>
+            {
+                c.BaseAddress = new Uri("https://api.github.com");
+                c.Timeout = TimeSpan.FromMinutes(1);
             })
             .AddPolicyHandler(retryPolicy);
 

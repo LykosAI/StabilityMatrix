@@ -1,0 +1,156 @@
+﻿<controls:UserControlBase
+    x:Class="StabilityMatrix.Avalonia.Views.DocumentationPage"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:docs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Documentation"
+    xmlns:fluentAvalonia="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
+    d:DesignHeight="650"
+    d:DesignWidth="900"
+    x:CompileBindings="True"
+    x:DataType="vm:DocumentationViewModel"
+    mc:Ignorable="d">
+
+    <Grid ColumnDefinitions="280,*">
+
+        <!--  Left pane: navigation tree  -->
+        <Border
+            Grid.Column="0"
+            Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+            BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+            BorderThickness="0,0,1,0">
+            <Grid RowDefinitions="Auto,*">
+                <TextBlock
+                    Grid.Row="0"
+                    Margin="16,16,16,8"
+                    FontSize="18"
+                    FontWeight="SemiBold"
+                    Text="Documentation" />
+
+                <!--  Loading tree indicator  -->
+                <controls:ProgressRing
+                    Grid.Row="1"
+                    Width="32"
+                    Height="32"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    BorderThickness="4"
+                    IsIndeterminate="True"
+                    IsVisible="{Binding IsTreeLoading}" />
+
+                <ScrollViewer Grid.Row="1" IsVisible="{Binding !IsTreeLoading}">
+                    <ItemsControl ItemsSource="{Binding Sections}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="docs:DocumentationSectionNavItem">
+                                <StackPanel Margin="0,0,0,4">
+                                    <TextBlock
+                                        Margin="16,10,16,4"
+                                        FontSize="12"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                        IsVisible="{Binding HasHeader}"
+                                        Text="{Binding Title}" />
+                                    <ItemsControl ItemsSource="{Binding Pages}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="docs:DocumentationPageNavItem">
+                                                <RadioButton
+                                                    Margin="8,0"
+                                                    Padding="8,6"
+                                                    HorizontalAlignment="Stretch"
+                                                    HorizontalContentAlignment="Left"
+                                                    Command="{Binding ((vm:DocumentationViewModel)DataContext).SelectPageCommand, RelativeSource={RelativeSource AncestorType=controls:UserControlBase}}"
+                                                    CommandParameter="{Binding}"
+                                                    Content="{Binding Title}"
+                                                    GroupName="DocsPages"
+                                                    IsChecked="{Binding IsSelected, Mode=OneWay}" />
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+
+        <!--  Right pane: content  -->
+        <Grid Grid.Column="1">
+
+            <!--  Docs-not-available state  -->
+            <StackPanel
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                IsVisible="{Binding IsDocsUnavailable}"
+                Spacing="8">
+                <fluentAvalonia:SymbolIcon
+                    HorizontalAlignment="Center"
+                    FontSize="48"
+                    Symbol="Document" />
+                <TextBlock
+                    HorizontalAlignment="Center"
+                    FontSize="18"
+                    FontWeight="SemiBold"
+                    Text="Documentation is not available yet" />
+                <TextBlock
+                    MaxWidth="420"
+                    HorizontalAlignment="Center"
+                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                    Text="The documentation is coming soon. Please check back in a future release."
+                    TextAlignment="Center"
+                    TextWrapping="Wrap" />
+                <Button
+                    HorizontalAlignment="Center"
+                    Command="{Binding RetryCommand}"
+                    Content="Retry" />
+            </StackPanel>
+
+            <!--  Normal content area  -->
+            <Grid IsVisible="{Binding IsContentVisible}">
+
+                <!--  Error state  -->
+                <StackPanel
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    IsVisible="{Binding HasError}"
+                    Spacing="8">
+                    <fluentAvalonia:SymbolIcon
+                        HorizontalAlignment="Center"
+                        FontSize="48"
+                        Symbol="CloudOff" />
+                    <TextBlock
+                        MaxWidth="420"
+                        HorizontalAlignment="Center"
+                        Text="{Binding ErrorMessage}"
+                        TextAlignment="Center"
+                        TextWrapping="Wrap" />
+                    <Button
+                        HorizontalAlignment="Center"
+                        Command="{Binding RetryCommand}"
+                        Content="Retry" />
+                </StackPanel>
+
+                <!--  Page loading indicator  -->
+                <controls:ProgressRing
+                    Width="48"
+                    Height="48"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    BorderThickness="4"
+                    IsIndeterminate="True"
+                    IsVisible="{Binding IsPageLoading}" />
+
+                <!--  Rendered markdown (MarkdownScrollViewer scrolls internally)  -->
+                <controls:DocumentationMarkdownViewer
+                    Margin="24,16"
+                    ImageBaseUrl="{Binding CurrentImageBaseUrl}"
+                    IsVisible="{Binding !HasError}"
+                    LinkCommand="{Binding LinkClickedCommand}"
+                    Markdown="{Binding CurrentMarkdown, Mode=OneWay}" />
+            </Grid>
+        </Grid>
+    </Grid>
+</controls:UserControlBase>

@@ -30,7 +30,7 @@ Inference packages are used for generating images and video. They provide their 
 | **Stable Diffusion Web UI (DirectML)** | A fork of the AUTOMATIC1111 WebUI with DirectML support for running on Windows without CUDA. |
 | **FramePack** | An advanced next-frame-prediction neural network for progressively generating video content. |
 | **FramePack Studio** | A full-featured video generation application built on top of the FramePack architecture. |
-| **Wan2GP** | A highly optimized Gradio UI for AI video creation using WAN-based models, with performance-focused features and worfklows aimed at making modern and newer video-generation models more practical on lower-VRAM systems. |
+| **Wan2GP** | A highly optimized Gradio UI for AI video creation using WAN-based models, with performance-focused features and workflows aimed at making modern and newer video-generation models more practical on lower-VRAM systems. |
 
 ## Training Packages
 

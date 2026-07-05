@@ -1,6 +1,6 @@
 # Installing Packages
 
-This page walks through installing an WebUI package in Stability Matrix using the **Add Package** screen.
+This page walks through installing a WebUI package in Stability Matrix using the **Add Package** screen.
 
 [`Section Overview`](overview.md) | [`Home`](../README.md)
 
@@ -25,7 +25,7 @@ Packages are displayed as a scrollable list of cards organized into three tabs a
 - **Training**: Model fine-tuning and training tools such as Kohya's GUI and OneTrainer.
 - **Legacy**: Older packages that are maintained for existing users but not recommended for new installations. May be stale and no longer receiving updates.
 
-Each package card shows the package name, author, a short description, and a row of **hardware compatibility badges** indicating which PyTorch backends the package supports from the following types CUDA (NVIDIA), ROCm (AMD-native), DirectML, macOS (MPS), ZLUDA (AMD), IPEX (Intel), or CPU. Note that the absence of a particular hardware badge does not necessarily mean the package is incompatible, some packages may still be usable with manual configuration or community-provided workarounds. Within each tab, beginner-friendly packages appear first, followed by advanced tools in alphabetical order.
+Each package card shows the package name, author, a short description, and a row of **hardware compatibility badges** indicating which PyTorch backends the package supports from the following types: CUDA (NVIDIA), ROCm (AMD-native), DirectML, macOS (MPS), ZLUDA (AMD), IPEX (Intel), or CPU. Note that the absence of a particular hardware badge does not necessarily mean the package is incompatible; some packages may still be usable with manual configuration or community-provided workarounds. Within each tab, beginner-friendly packages appear first, followed by advanced tools in alphabetical order.
 
 Use the tabs to switch between package types, or type in the search bar to filter the list by name in real time. Incompatible packages are hidden by default: enable *Show All Packages* to see packages that do not officially support your current hardware (e.g., CUDA-only packages on an AMD system).
 
@@ -134,7 +134,7 @@ The progress dialog shows a real-time log of each step. If any step fails, the d
 | First install (no cached wheels) | 5–15 minutes |
 | Slow connection or CPU-only install | 10–25 minutes |
 
-> **Note:** PyTorch wheels are large and the multiple needed WHL files needed can accumulate to several GB's or more in total download size depending on backend used. The first installation on a fresh system downloads these wheels. Subsequent installs reuse cached wheels, making them significantly faster.
+> **Note:** PyTorch wheels are large and the multiple WHL files needed can accumulate to several GBs or more in total download size depending on the backend used. The first installation on a fresh system downloads these wheels. Subsequent installs reuse cached wheels, making them significantly faster.
 
 ## One-Click Install
 
@@ -148,7 +148,7 @@ For new users, Stability Matrix offers a streamlined **one-click install** exper
    - The **latest release version** (or latest commit, for packages without releases).
    - The **recommended PyTorch backend** detected from your hardware.
    - The **recommended shared folder method** (symlinks for most packages).
-   - The **package's recommended default Python version** 
+   - The **package's recommended default Python version**.
 
 3. **Installation**: clicking Install runs the same step pipeline described in [Installation Progress](#installation-progress). A progress bar shows the current status, and status text updates as each step completes.
 

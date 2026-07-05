@@ -494,7 +494,7 @@ Common modern families and ecosystems include:
 - **SDXL 1.0**: the major open Stable Diffusion XL base family, still foundational for a huge amount of community work
 - **Pony**: a large SDXL-derived ecosystem known for stylized, character-heavy, and expressive prompt behavior
 - **Illustrious / illustrative SDXL families**: SDXL derivatives centered on polished illustration and anime-adjacent output
-- **NoobAI**: a newer, growing anime and illustration ecosystem derived from Illustrious. Many Illustrious LoRAs still work well with it, though the broader community content base is still larger around Illustrious. Workflows may use either v-prediction or EPS depending on the specific release and setup
+- **NoobAI**: a newer, growing anime and illustration ecosystem derived from Illustrious. Many Illustrious LoRAs still work well with it, though the broader community content base is still larger around Illustrious. Workflows may use either v-prediction or EPS depending on the specific release and setup.
 - **Anima**: a 2B anime and illustration-focused base model family made by CircleStone Labs in collaboration with Comfy Org, built for stylized character art, illustration-heavy workflows, and strong anime-oriented visual behavior
 - **FLUX Kontext**: FLUX-family releases focused on instruction-following, contextual edits, and image-aware generation behavior
 - **FLUX Klein**: smaller FLUX.2-oriented variants designed to be lighter and faster than the heavier full-dev style releases

@@ -68,5 +68,5 @@ Once the license agreement is accepted and the data directory is configured, Sta
 From there, the usual next steps are:
 
 - [Install your first package](../package-manager/installing-packages.md)
-- [Browse or import models](../model-browser/overview.md)
+- Browse or import models with the Model Browser *(planned)*
 - If the user installed ComfyUI and downloaded a starter model during setup, they can [go straight to generating with the built-in Inference UI](../inference/overview.md)

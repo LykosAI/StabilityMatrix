@@ -26,7 +26,7 @@ Most image-generation workflows start with a model, a prompt, a seed, and a set 
 
 A checkpoint or model is the trained weight file or model bundle used for generation or editing. In older Stable Diffusion ecosystems this is often a single `.safetensors` file. In newer families such as FLUX.2, Qwen Image Edit, Z-Image, and WAN 2.x, the usable model may instead be split into multiple files or distributed as a diffusers-style bundle.
 
-From a practical user perspective, the model is the main thing that determines what kinds of outputs and workflows are possible. It affects whether a setup leans toward realism, illustration, text rendering, editing, or video, and it often determines which secondary files or add-ons are compatible.
+For most users, the model is the main thing that determines what kinds of outputs and workflows are possible. It affects whether a setup leans toward realism, illustration, text rendering, editing, or video, and it often determines which secondary files or add-ons are compatible.
 
 **Prompt**
 
@@ -38,7 +38,7 @@ Different ecosystems respond differently to prompt style. Some older families re
 
 A negative prompt describes what you do not want in the result. It is still very important in SDXL-based families such as SDXL 1.0, Pony, Illustrious, and NoobAI. It is usually less dominant in newer instruction-led families such as FLUX Kontext, Qwen Image Edit, Anima, and some WAN editing or video workflows.
 
-In practice, negative prompts are commonly used to suppress artifacts, anatomy problems, unwanted text, watermarks, muddy detail, or style traits you do not want carried into the final output.
+They are commonly used to suppress artifacts, anatomy problems, unwanted text, watermarks, muddy detail, or style traits you do not want carried into the final output.
 
 **Seed**
 
@@ -56,19 +56,19 @@ Too few steps can leave the output muddy or undercooked. Too many can waste time
 
 The sampler is the algorithm that decides how each denoising step is performed. Common examples include Euler, Euler Ancestral, DPM++ 2M, and UniPC.
 
-In practice, sampler choice can change the feel of an image even when the prompt and seed stay the same. Different samplers can affect sharpness, smoothness, contrast, painterliness, stability, and how "creative" or literal the result feels.
+Sampler choice can change the feel of an image even when the prompt and seed stay the same. Different samplers can affect sharpness, smoothness, contrast, painterliness, stability, and how "creative" or literal the result feels.
 
 **Scheduler**
 
 The scheduler is the noise schedule used by the sampler across the denoising process. Common examples include Normal, Karras, Exponential, and SGM Uniform.
 
-The simplest mental model is that the sampler is the solver, while the scheduler controls how noise levels are spaced through the run. That is why some guides recommend not just a sampler, but a sampler and scheduler pairing.
+The simplest way to picture it is that the sampler is the solver, while the scheduler controls how noise levels are spaced through the run. That is why some guides recommend not just a sampler, but a sampler and scheduler pairing.
 
 **CFG / Guidance Scale**
 
 CFG means Classifier-Free Guidance. It controls how strongly the output follows the prompt. Lower CFG usually gives looser, more flexible, or more creative output. Higher CFG usually pushes the model to obey the prompt more strictly, but it can also introduce artifacts or make the image feel forced.
 
-Practical ranges vary by family. SDXL-style models often live around 4.5 to 8, FLUX dev-style models often work around 3 to 5, and turbo or distilled models such as Z-Image Turbo may work better much closer to 1.0 to 3.0. If CFG is too high, images can become brittle, oversaturated, distorted, or unnatural. If it is too low, the image may drift away from the prompt, fall back toward the model's built-in composition biases, or come out washed out and lacking detail.
+Useful ranges vary by family, and the numbers below are community rules of thumb that shift with each model and fine-tune rather than fixed rules. SDXL-style models often live around 4.5 to 8, FLUX dev-style models often work around 3 to 5, and turbo or distilled models such as Z-Image Turbo may work better much closer to 1.0 to 3.0. If CFG is too high, images can become brittle, oversaturated, distorted, or unnatural. If it is too low, the image may drift away from the prompt, fall back toward the model's built-in composition biases, or come out washed out and lacking detail.
 
 **Denoise Strength**
 
@@ -78,7 +78,7 @@ This is one of the most important edit-workflow settings because it determines w
 
 ## Model Components
 
-**How these parts fit together**
+**What each component does in the pipeline**
 
 In a typical diffusion pipeline, your prompt is first turned into machine-readable vectors by a text encoder. The generator then starts from random noise in a compressed space called the latent, repeatedly denoises that latent, and finally converts the latent back into pixels. Older Stable Diffusion families usually do this with a UNet-style denoiser; newer families often use a DiT-style denoiser instead.
 
@@ -88,19 +88,19 @@ The UNet is the denoising network used in traditional Stable Diffusion architect
 
 In image generation, the UNet does not directly paint pixels from scratch. Instead, it looks at a noisy latent and predicts how to move that latent toward a cleaner image representation step by step. Each denoising step uses the prompt conditioning plus the current noise level to decide what should be kept, changed, or clarified.
 
-In practical terms, SD 1.5, SDXL 1.0, and most SDXL fine-tune ecosystems such as Pony, Illustrious, and NoobAI are still UNet-based. Many surrounding tools such as ControlNet and IP-Adapter were also built first around UNet-style diffusion pipelines, which is why those ecosystems often feel especially mature.
+SD 1.5, SDXL 1.0, and most SDXL fine-tune ecosystems such as Pony, Illustrious, and NoobAI are still UNet-based. Many surrounding tools such as ControlNet and IP-Adapter were also built first around UNet-style diffusion pipelines, which is why those ecosystems often feel especially mature.
 
 **DiT**
 
 DiT stands for Diffusion Transformer. It fills the same broad role as a UNet, but uses transformer-style attention blocks instead of the classic UNet layout as the core denoiser.
 
-The practical idea is still the same: start from noise, then repeatedly predict a cleaner version. The difference is architectural. A DiT-based model is using transformer machinery to reason over the latent representation, which can improve scaling behavior and make it easier to build newer large-model families around attention-heavy designs.
+The idea is still the same: start from noise, then repeatedly predict a cleaner version. The difference is architectural. A DiT-based model is using transformer machinery to reason over the latent representation, which can improve scaling behavior and make it easier to build newer large-model families around attention-heavy designs.
 
 When a guide says a model is "DiT-based," it usually means the main denoising engine is not a classic Stable Diffusion UNet. FLUX.1, FLUX.2, Qwen Image and Qwen Image Edit, Z-Image, and several newer video families fall into this broader transformer-led direction.
 
 **VAE**
 
-VAE stands for Variational Autoencoder, or sometimes referred to as Variable Auto Encoder. In image-generation workflows, the VAE is the component that converts between normal image pixels and the model's numerical, sometimes compressed if using a UNet workflow, representative latent space.
+VAE stands for Variational Autoencoder. In image-generation workflows, the VAE is the component that converts between normal image pixels and the model's numerical, sometimes compressed if using a UNet workflow, representative latent space.
 
 You can think of it as a translator between two worlds:
 
@@ -146,7 +146,7 @@ CLIP is also used more broadly outside the text encoder slot itself, including i
 
 CLIP Vision is the image-encoder side of the CLIP family. Instead of reading text, it reads an image and converts that image into a feature representation the rest of the pipeline can compare against or condition on.
 
-In practical workflows, CLIP Vision is most often mentioned with tools like IP-Adapter. A reference image is run through CLIP Vision, useful visual features are extracted, and those features are then used to guide generation. Depending on the tool, that guidance may lean more toward style, composition, subject identity, or overall visual similarity.
+CLIP Vision is most often mentioned alongside tools like IP-Adapter. A reference image is run through CLIP Vision, useful visual features are extracted, and those features are then used to guide generation. Depending on the tool, that guidance may lean more toward style, composition, subject identity, or overall visual similarity.
 
 If a workflow asks for a separate CLIP Vision model file, it usually means the feature extractor for reference-image conditioning is not bundled into the main checkpoint.
 
@@ -154,7 +154,7 @@ If a workflow asks for a separate CLIP Vision model file, it usually means the f
 
 T5 and UMT5 are transformer-based text encoders from the broader language-model world. In image-generation pipelines, they are used as prompt encoders for newer architectures that want stronger language understanding than older CLIP-only setups typically provided.
 
-The practical difference users notice is often prompt behavior. Models using T5- or UMT5-style encoders may respond better to plain-language instructions, longer semantic prompts, editing instructions, or more natural phrasing. That does not automatically make them "better" in every case, but it often makes them feel less tied to old keyword-stack prompting habits.
+The difference users notice is often prompt behavior. Models using T5- or UMT5-style encoders may respond better to plain-language instructions, longer semantic prompts, editing instructions, or more natural phrasing. That does not automatically make them "better" in every case, but it often makes them feel less tied to old keyword-stack prompting habits.
 
 These encoders are also large. In many workflows they are distributed as separate files and can consume a meaningful amount of VRAM and RAM. That is why FLUX-family, Qwen Image Edit, and WAN workflows often involve more moving parts than a single older-style checkpoint file.
 
@@ -175,7 +175,7 @@ Examples of conditioning include:
 - reference-image features from IP-Adapter
 - LoRAs or other adapters that alter the model's behavior
 
-If you want a practical mental model, think of conditioning as "what information the model is being asked to obey."
+If you want a one-line summary, think of conditioning as "what information the model is being asked to obey."
 
 **How conditioning changes the result**
 
@@ -187,7 +187,7 @@ That is why different conditioning types can cooperate or fight each other. Prom
 
 ControlNet is an add-on network that lets a diffusion model follow an external structural guide such as edges, depth, pose, lineart, segmentation, or similar control signals. It was designed so the original base model could stay mostly intact while a separate control branch learns how to inject that extra guidance.
 
-In practical use, ControlNet is what you reach for when you want the model to preserve layout or structure while still generating a new image. For example:
+ControlNet is what you reach for when you want the model to preserve layout or structure while still generating a new image. For example:
 
 - use canny or lineart when you want the output to follow major outlines
 - use depth when you want stronger scene geometry and spatial consistency
@@ -216,7 +216,7 @@ IP-Adapter is a lightweight image-prompt adapter that uses features from a refer
 
 Technically, IP-Adapter works by extracting image features with an image encoder and injecting those features into added attention pathways, while leaving the original base model mostly frozen. From a user perspective, the important part is simpler: it lets you guide generation with image-based cues without replacing the whole checkpoint.
 
-In practice, IP-Adapter is commonly used for:
+IP-Adapter is commonly used for:
 
 - borrowing overall style or color feel from a reference image
 - keeping composition or layout closer to a reference
@@ -233,7 +233,7 @@ From a user's perspective, a LoRA is usually an add-on file that teaches the bas
 
 LoRAs are popular because they are small, easy to share, and stackable. They are often far smaller than full checkpoints, which makes experimentation much easier. They also preserve the base model's broad capabilities better than swapping to a totally different checkpoint for every idea.
 
-In practical terms:
+A few rules of thumb:
 
 - a low weight usually gives a lighter influence
 - a high weight pushes the result harder toward the LoRA's learned behavior
@@ -255,7 +255,7 @@ An embedding, often called Textual Inversion in Stable Diffusion communities, is
 
 The important difference from a LoRA is scope. A textual inversion embedding modifies prompt-space behavior by teaching the text encoder and model to associate a learned token with a concept. A LoRA usually changes the model more directly through added weights.
 
-In practical use, an embedding often behaves like this:
+In typical use, an embedding often behaves like this:
 
 - you load the embedding file
 - you place its special token in the prompt
@@ -288,7 +288,7 @@ The main distinction is scope:
 
 Image to image, usually shortened to img2img, starts from an existing image instead of pure random noise. The input image is encoded into latent space, noise is added to it, and then the model denoises from that partially noised starting point while following the prompt.
 
-The important practical result is that img2img tends to preserve some relationship to the source image. Depending on settings, that relationship may be loose or strong. Low denoise strength keeps more of the original composition, shapes, colors, and lighting. High denoise strength gives the model more freedom to reinterpret the image and can approach a near-regeneration.
+The key result is that img2img tends to preserve some relationship to the source image. Depending on settings, that relationship may be loose or strong. Low denoise strength keeps more of the original composition, shapes, colors, and lighting. High denoise strength gives the model more freedom to reinterpret the image and can approach a near-regeneration.
 
 This is why img2img is commonly used for:
 
@@ -314,7 +314,7 @@ The masked area is where the model is allowed to invent new content. The surroun
 
 **Outpainting**
 
-Outpainting extends an image beyond its original borders. In practical terms, you enlarge the canvas, create empty or masked space around the existing image, and generate into that new area.
+Outpainting extends an image beyond its original borders. You enlarge the canvas, create empty or masked space around the existing image, and generate into that new area.
 
 It is often used when you want to:
 
@@ -329,7 +329,7 @@ Outpainting is basically a special case of inpainting where the masked region is
 
 A mask is the region that tells the model where edits should happen. In most inpainting workflows, the masked area is the editable area and the unmasked area is meant to stay unchanged or mostly unchanged.
 
-In common inpainting interfaces, this is usually presented as a white painted mask layer drawn over the image. In practical terms, you mark the area you want changed, and everything outside that painted region is treated as preserved context.
+In common inpainting interfaces, this is usually presented as a white painted mask layer drawn over the image. You mark the area you want changed, and everything outside that painted region is treated as preserved context.
 
 Some interfaces and workflows also let you import a separate black-and-white mask image and place it on top of the base image as the edit mask instead of painting it by hand.
 
@@ -349,7 +349,7 @@ The usual pattern is:
 
 This matters because many models are more stable at moderate resolutions than at very large native resolutions. A direct high-resolution generation can be slower, heavier on VRAM, and sometimes structurally worse. Hires Fix gets around that by first solving composition at a smaller size and then improving detail in a second pass.
 
-In practice, it is often used to reduce muddy detail, improve textures, and make large outputs feel more finished. But if the second denoise pass is too strong, it can also alter composition or introduce new mistakes.
+It is often used to reduce muddy detail, improve textures, and make large outputs feel more finished. But if the second denoise pass is too strong, it can also alter composition or introduce new mistakes.
 
 **Refiner / Refining**
 
@@ -382,7 +382,7 @@ It is worth remembering that upscalers do not recover hidden real detail. They h
 
 ## Model Add-Ons and Variants
 
-**How these terms relate**
+**Lineage versus packaging**
 
 This section is about lineage and packaging: what model you start from, how it was specialized, how it is distributed, and what larger ecosystem it belongs to.
 
@@ -429,7 +429,7 @@ That specialization can target:
 - better text rendering or editing behavior
 - a narrower domain such as anime, fashion, portraits, or concept art
 
-In practical usage, most of the models people browse on sites like Hugging Face or CivitAI are not pure base models. They are fine-tunes, merges, or other derivatives built on top of a broader base family.
+Most of the models people browse on sites like Hugging Face or CivitAI are not pure base models. They are fine-tunes, merges, or other derivatives built on top of a broader base family.
 
 **Merge**
 
@@ -437,19 +437,19 @@ A merge is a model created by mathematically combining two or more checkpoints o
 
 Merges are especially common in SDXL-derived communities because that ecosystem produced huge numbers of stylistically different checkpoints. A merge might try to combine, for example, one model's anatomy, another model's color handling, and another model's illustration style.
 
-From a user perspective, a merge can be very good, but it can also be less predictable than a cleaner base or fine-tune lineage. If a model feels powerful but a little "mystery meat" in behavior, it is often a heavily merged release.
+A merge can be very good, but it can also be less predictable than a cleaner base or fine-tune lineage. If a model feels powerful but a little "mystery meat" in behavior, it is often a heavily merged release.
 
 **VAE-baked / AiO**
 
 VAE-baked means the checkpoint already includes its VAE inside the model file, so you do not usually need to load a separate external VAE.
 
-This term is most common in older Stable Diffusion checkpoint ecosystems, where releases could ship in several different ways. It also still comes up in SDXL discussions, but in practice most SDXL-derived checkpoints are already VAE-baked:
+This term is most common in older Stable Diffusion checkpoint ecosystems, where releases could ship in several different ways. It also still comes up in SDXL discussions, where whether a checkpoint bakes in its VAE varies from release to release. Plenty of community SDXL checkpoints ship without a baked VAE, or bake in the notoriously broken fp16 VAE, so a matching external VAE was a near-mandatory download for much of the SDXL era. It is worth checking the model page rather than assuming. The common shipping options are:
 
 - model only, requiring a matching external VAE
 - model plus separate VAE
 - model with the VAE already baked in
 
-In newer DiT-based ecosystems, you may also see AiO, short for all-in-one. In practice, AiO usually means the full generation stack is packaged together as one coordinated model release, often including the transformer or denoiser, text encoders, and VAE in the same bundled file or tightly coupled package.
+In newer DiT-based ecosystems, you may also see AiO, short for all-in-one. AiO usually means the full generation stack is packaged together as one coordinated model release, often including the transformer or denoiser, text encoders, and VAE in the same bundled file or tightly coupled package.
 
 In many AiO releases, that really does mean a single bundled model file with the text encoder and or VAE included. The important nuance is that this is still not universal. Some modern DiT releases remain split into separate internal components, but are distributed and loaded as one complete package instead of expecting the user to assemble mismatched pieces manually.
 
@@ -475,13 +475,13 @@ Common quantized releases and formats include fp8 and int8 checkpoints, as well 
 
 What matters in practice is that quantization is both a precision choice and a release-format choice. Some quantized models are still distributed as ordinary checkpoint files in a lower precision such as fp8 or int8. Others are repackaged into formats such as GGUF that are designed around quantized inference workflows.
 
-Quantized releases are especially relevant in newer heavy model ecosystems, where full-size versions may be too large for many local users. In practical terms, quantization is often the reason a model becomes runnable at all on smaller GPUs.
+Quantized releases are especially relevant in newer heavy model ecosystems, where full-size versions may be too large for many local users. Often it is the reason a model becomes runnable at all on smaller GPUs.
 
 **GGUF**
 
 GGUF is a model file format commonly used for quantized transformer-style models. In image-generation contexts, it shows up most often with newer transformer-heavy families where full-size releases may be too heavy for many local systems.
 
-The practical reason people care about GGUF is not the container format by itself. It is that GGUF releases are often paired with quantization levels that make otherwise large models more runnable on limited hardware, especially in workflows aimed at lower VRAM usage.
+The reason people care about GGUF is not the container format by itself. It is that GGUF releases are often paired with quantization levels that make otherwise large models more runnable on limited hardware, especially in workflows aimed at lower VRAM usage.
 
 **Model Family / Base Family**
 
@@ -532,7 +532,7 @@ Image to video starts from a still image and animates it into a clip. Instead of
 
 This usually gives the user more control than pure text-to-video, because the first frame already locks in much of the composition, subject appearance, and visual style. The model is still generating new frames, but it is doing so from a stronger visual anchor.
 
-In practice, I2V is often used for:
+I2V is often used for:
 
 - animating illustrations or portraits
 - adding camera motion to a still scene
@@ -557,7 +557,7 @@ FPS means frames per second in the saved output video. It controls playback spee
 
 That distinction matters. If you keep the same frames but change the FPS, you are mostly changing how quickly those frames are shown, not asking the model to invent different motion.
 
-In practical terms:
+So:
 
 - higher FPS makes the clip play faster or look smoother if enough frames exist
 - lower FPS makes the clip play slower or feel more choppy
@@ -586,13 +586,13 @@ These are reference frames used to guide the video across time.
 - an end frame anchors how the clip should finish
 - a keyframe is a more general term for any frame used as a visual reference at a particular point in time
 
-The practical idea is that the model is not generating every frame with equal freedom. It is being told that certain points in the clip should stay closer to specific reference images or target states.
+The idea is that the model is not generating every frame with equal freedom. It is being told that certain points in the clip should stay closer to specific reference images or target states.
 
 This can be useful when you want to control transitions, preserve a character, move from one scene state to another, or create a more directed animation path instead of fully unconstrained motion.
 
 ## Performance and Precision Terms
 
-**How these terms relate**
+**The hardware and runtime side**
 
 This section is about the hardware and runtime side of generation: which backend is doing the work, what precision the model is stored or computed in, what memory-saving tricks are enabled, and why one setup may be faster or more compatible than another.
 
@@ -602,7 +602,7 @@ In practice, many generation problems that look like "the model is bad" are real
 
 CUDA is NVIDIA's GPU compute platform and the main acceleration path used by most PyTorch-based image and video generation software on NVIDIA GPUs.
 
-In practical terms, CUDA is what lets tensor operations run on an NVIDIA GPU instead of the CPU. It is also the ecosystem many surrounding optimizations are built around, including cuDNN, TensorRT, xFormers, Flash Attention, and a large amount of custom inference code. That is why NVIDIA workflows usually have the widest software support and the most mature optimized kernels.
+At its core, CUDA is what lets tensor operations run on an NVIDIA GPU instead of the CPU. It is also the ecosystem many surrounding optimizations are built around, including cuDNN, TensorRT, xFormers, Flash Attention, and a large amount of custom inference code. That is why NVIDIA workflows usually have the widest software support and the most mature optimized kernels.
 
 You will often still see names like `torch.cuda`, `device="cuda"`, or `cuda:0` even in projects that also support AMD, Intel, or Apple hardware. That does not always mean the whole project is NVIDIA-only. It often means the codebase grew up in a CUDA-first ecosystem and kept CUDA-shaped API names as the common GPU interface.
 
@@ -617,17 +617,17 @@ The simple mental model is:
 - ROCm = the full AMD compute platform
 - HIP = the CUDA-like interface layer inside that platform
 
-In practical usage, ROCm support can vary more by GPU generation, OS, wheel availability, and kernel support than CUDA support often does. But for supported Radeon and Instinct hardware, ROCm is the main native AMD path for local model inference.
+ROCm support can vary more by GPU generation, OS, wheel availability, and kernel support than CUDA support often does. But for supported Radeon and Instinct hardware, ROCm is the main native AMD path for local model inference.
 
 **ZLUDA**
 
 ZLUDA is a compatibility layer that lets some CUDA-targeted software run on non-NVIDIA hardware by translating enough of the CUDA-facing behavior for those applications to work.
 
-At a practical level, you can think of it as taking software that expects CUDA-style code and CUDA API calls, then bridging or translating enough of that behavior into HIP and ROCm-compatible behavior for AMD hardware to execute it, using tooling provided by the HIP SDK such as `hipify`.
+You can think of it as taking software that expects CUDA-style code and CUDA API calls, then bridging or translating enough of that behavior into HIP and ROCm-compatible behavior for AMD hardware to execute it, using tooling provided by the HIP SDK such as `hipify`.
 
-In practical local image-generation use, ZLUDA most often comes up as an alternative AMD path on Windows when native ROCm support is unavailable, incomplete, or simply not the preferred setup for a particular GPU or package. It is not the same thing as ROCm, and it should not be thought of as AMD's native compute stack.
+For local image generation, ZLUDA most often comes up as an alternative AMD path on Windows when native ROCm support is unavailable, incomplete, or simply not the preferred setup for a particular GPU or package. It is not the same thing as ROCm, and it should not be thought of as AMD's native compute stack.
 
-The practical mental model is:
+Put simply:
 
 - ROCm = AMD's native compute platform
 - ZLUDA = a compatibility path for some CUDA-oriented software on other hardware
@@ -642,7 +642,7 @@ In image-generation communities, IPEX usually comes up when discussing Intel-nat
 
 **MPS**
 
-MPS means the Apple Metal Performance Shaders backend as exposed through PyTorch on macOS. In practical local-AI discussion, it is the Apple Silicon GPU acceleration path used on M-series Macs.
+MPS means the Apple Metal Performance Shaders backend as exposed through PyTorch on macOS. For local AI work, it is the Apple Silicon GPU acceleration path used on M-series Macs.
 
 It allows model operations to run on the integrated Apple GPU instead of only on the CPU. That can make local inference much more usable on Mac hardware, but MPS is still its own backend with its own operator coverage, performance limits, and occasional compatibility gaps compared with CUDA.
 
@@ -672,7 +672,7 @@ In practice, fp8 usually matters most for newer transformer-heavy models where f
 
 int8 is an 8-bit integer precision format used in quantized inference workflows. Unlike fp8, which is still a floating-point format, int8 stores values as integers and usually relies on extra scaling logic during inference.
 
-From a user perspective, int8 mostly means a more aggressively compressed model that can fit on weaker hardware than its fp16, bf16, or fp32 equivalent. The tradeoff is that int8 models are more dependent on runtime support, and depending on the implementation they may lose more quality or flexibility than lighter quantization approaches.
+For most users, int8 mostly means a more aggressively compressed model that can fit on weaker hardware than its fp16, bf16, or fp32 equivalent. The tradeoff is that int8 models are more dependent on runtime support, and depending on the implementation they may lose more quality or flexibility than lighter quantization approaches.
 
 **xFormers**
 
@@ -684,7 +684,7 @@ Users usually encounter it as a toggle, install dependency, or troubleshooting d
 
 Flash Attention is a highly optimized attention implementation designed to reduce memory traffic and make attention layers faster and more memory efficient.
 
-In practice, this matters because attention is one of the more expensive parts of modern image and video models, especially in larger transformer-led architectures. Better attention kernels can noticeably improve performance or make a workflow fit into available memory when it otherwise would not.
+This matters because attention is one of the more expensive parts of modern image and video models, especially in larger transformer-led architectures. Better attention kernels can noticeably improve performance or make a workflow fit into available memory when it otherwise would not.
 
 Flash Attention is strongly associated with NVIDIA CUDA workflows, but supported ROCm paths also exist through AMD-backed kernel implementations and integrations. The important user-facing point is not the exact kernel internals. It is that Flash Attention is one of the main "fast path" optimizations users may see mentioned in setup guides for heavy models.
 
@@ -708,7 +708,7 @@ Tiled VAE encode/decode means running the VAE in smaller image chunks instead of
 
 By breaking the image into tiles, the VAE only has to process one region at a time, which makes larger images possible on weaker hardware. The tradeoff is that tiled VAE workflows can sometimes introduce seams, slight inconsistency between regions, or slower total processing time if the implementation is not good.
 
-In practice, tiled VAE encode/decode is often the difference between successfully handling a large image and hitting an out-of-memory error during latent conversion.
+Tiled VAE encode/decode is often the difference between successfully handling a large image and hitting an out-of-memory error during latent conversion.
 
 **OOM / Out of Memory**
 

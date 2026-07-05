@@ -100,7 +100,7 @@ For ordinary Stability Matrix usage, the most practical variables here are `PYTO
 
 ## HuggingFace Cache Variables
 
-These variables are useful when a package downloads models, tokenizers, datasets, or other assets from the Hugging Face ecosystem. In Stability Matrix, the most common reasons to set them are moving caches off the system drive, forcing offline operation, or making Hub requests more reliable on slow connections. These are mainly to modify HuggingFace operations within Packages themselves (HF features built into WebUI's, HF download capable extensions/custom nodes)
+These variables are useful when a package downloads models, tokenizers, datasets, or other assets from the Hugging Face ecosystem. In Stability Matrix, the most common reasons to set them are moving caches off the system drive, forcing offline operation, or making Hub requests more reliable on slow connections. These mainly modify HuggingFace operations within packages themselves, such as HF features built into WebUIs or HF-download-capable extensions and custom nodes.
 
 Because Stability Matrix injects environment variables globally, remember that authentication or offline-mode settings here will affect every launched package that uses `huggingface_hub`, `transformers`, `datasets`, or a library built on top of them.
 
@@ -140,25 +140,31 @@ Most users should leave these alone unless they are troubleshooting a specific R
 | `MIOPEN_LOG_LEVEL` | `5` | Sets MIOpen log verbosity. Higher values provide more detailed internal logging and are useful when debugging solver selection, kernel compilation, or runtime failures. |
 | `MIOPEN_CHECK_NUMERICS` | `0x02` or `0x04` | Checks tensors for NaNs, infinities, and related numerical problems. This is useful when a ROCm workflow produces corrupted outputs or starts failing only on certain models or resolutions. |
 | `MIOPEN_GEMM_ENFORCE_BACKEND` | `5` | Overrides MIOpen's GEMM backend selection. This is an advanced tuning variable that can be useful when comparing rocBLAS and hipBLASLt behavior or isolating backend-specific regressions. |
-| `COMFYUI_ENABLE_MIOPEN` | `1` | Tells ComfyUI to keep the MIOpen-backed path enabled on ROCm builds where it may otherwise be disabled by default. Without this enabled, ComfyUI disables the `cudnn` backend path in its backend calls for RDNA 3, RDNA 4, and newer AMD GPUs, which in turn disables the MIOpen-backed functions that rely on that path. This variable is needed for MIOpen to function properly in those setups. |
+| `COMFYUI_ENABLE_MIOPEN` | `1` | Tells ComfyUI to keep the MIOpen-backed path enabled on ROCm builds where it may otherwise be disabled by default. Without this enabled, ComfyUI disables the `cudnn` backend path in its backend calls for RDNA3, RDNA3.5, and RDNA4 AMD GPUs, which in turn disables the MIOpen-backed functions that rely on that path. This variable is needed for MIOpen to function properly in those setups. |
 | `TORCH_ROCM_AOTRITON_ENABLE_EXPERIMENTAL` | `1` | Enables the experimental ROCm AOTriton path in compatible PyTorch builds. In Stability Matrix's Windows ROCm ComfyUI integration, this is used for TheRock technical-preview PyTorch builds to enable AOTriton-provided built-in Flash Attention and PyTorch SDPA memory-efficient attention paths. |
 
 For some Windows ROCm-based ComfyUI launches, Stability Matrix already applies several of these optimizations automatically in package code, including:
 
 `MIOPEN_FIND_MODE=2`
 
-`MIOPEN_SEARCH_CUTOFF=2`
+`MIOPEN_SEARCH_CUTOFF=1`
 
-`TORCH_ROCM_AOTRITON_ENABLE_EXPERIMENTAL=1` (RDNA3 and newer only)
+`MIOPEN_FIND_ENFORCE=1`
+
+`TORCH_ROCM_AOTRITON_ENABLE_EXPERIMENTAL=1` (RDNA3 / RDNA3.5 / RDNA4 only, and additionally excluded on the gfx1152/gfx1153 APU architectures where AOTriton isn't yet supported)
 
 `FLASH_ATTENTION_TRITON_AMD_ENABLE=TRUE`
 
-`COMFYUI_ENABLE_MIOPEN=1` (RDNA3 and newer only)
+`COMFYUI_ENABLE_MIOPEN=1` (RDNA3 / RDNA3.5 / RDNA4 only, no gfx1152/gfx1153 exclusion)
 
 `PYTORCH_ALLOC_CONF=max_split_size_mb:512,garbage_collection_threshold:0.8`
 
 
 Linux installs do not currently get the same automatic overrides, so they will need to be enabled by the user.
+
+If you're using the ComfyUI-Zluda package specifically, it also sets its own environment variables at launch on top of the above: `FLASH_ATTENTION_TRITON_AMD_ENABLE=TRUE`, `MIOPEN_FIND_MODE=2`, `MIOPEN_LOG_LEVEL=3`, and `ZLUDA_COMGR_LOG_LEVEL=1`. If you're wondering why those already appear to be set for a ZLUDA install, this is why.
+
+Whatever you set in Stability Matrix's own environment-variable editor is applied last, so it always overrides these auto-applied defaults if the same variable name is used.
 
 For a broader reference, see the [official ROCm environment variable documentation](https://rocm.docs.amd.com/en/latest/reference/env-variables.html) and the [official MIOpen environment variable documentation](https://rocm.docs.amd.com/projects/MIOpen/en/latest/reference/env_variables.html).
 

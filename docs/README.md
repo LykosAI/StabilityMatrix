@@ -62,7 +62,7 @@ Current Status: In-progress - Structure is in-place and planned docs are current
 - [Overview](advanced/overview.md) — Advanced configuration and technical reference
 - Building from Source and Contributing *(planned)* — Local builds, runtime targets, and where to start for code or docs contributions
 - Shared Folders *(planned)* — Folder structure, symlinks, and cross-package model sharing
-- Hardware Support *(planned)* — CUDA, ROCm, DirectML, MPS, ZLUDA, IPEX, and CPU backends
+- [Hardware Support](advanced/hardware-support.md) — CUDA, ROCm, DirectML, MPS, ZLUDA, IPEX, and CPU backends
 - Python Environment *(planned)* — Virtual environments, uv, pip, and Python version management
 - [ComfyUI Integration](advanced/comfyui-integration.md) — ComfyUI node API, WebSocket protocol, and custom nodes
 - [Environment Variables](advanced/environment-variables.md) — Per-package environment variable configuration
@@ -75,3 +75,6 @@ Current Status: In-progress - Structure is in-place and planned docs are current
 - AMD GPU Workflow *(planned)* — Getting image and video generation working on AMD hardware
 - Model Dependencies *(planned)* — Required secondary files for modern models (text encoders, VAEs, etc.)
 - VRAM Optimization *(planned)* — Reducing VRAM usage without sacrificing too much quality or speed
+
+### Troubleshooting
+- [Common Issues](troubleshooting/common-issues.md) — Symptom-first fixes for install, launch, GPU, and Inference problems

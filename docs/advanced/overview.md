@@ -14,5 +14,5 @@ Most users never need to touch these topics, since Stability Matrix handles envi
 - [ComfyUI Integration](comfyui-integration.md) — ComfyUI node API, WebSocket protocol, and custom nodes
 - Building from Source and Contributing *(planned)* — Local builds, runtime targets, and where to start for code or docs contributions
 - Shared Folders *(planned)* — Folder structure, symlinks, and cross-package model sharing
-- Hardware Support *(planned)* — CUDA, ROCm, DirectML, MPS, ZLUDA, IPEX, and CPU backends
+- [Hardware Support](hardware-support.md) — CUDA, ROCm, DirectML, MPS, ZLUDA, IPEX, and CPU backends
 - Python Environment *(planned)* — Virtual environments, uv, pip, and Python version management

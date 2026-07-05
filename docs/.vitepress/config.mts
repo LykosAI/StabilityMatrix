@@ -25,7 +25,8 @@ export default defineConfig({
       { text: 'Package Manager', link: '/package-manager/overview' },
       { text: 'Inference', link: '/inference/overview' },
       { text: 'Advanced', link: '/advanced/overview' },
-      { text: 'Tips and Tricks', link: '/tips/overview' }
+      { text: 'Tips and Tricks', link: '/tips/overview' },
+      { text: 'Troubleshooting', link: '/troubleshooting/common-issues' }
     ],
 
     sidebar: {
@@ -63,6 +64,7 @@ export default defineConfig({
           text: 'Advanced',
           items: [
             { text: 'Overview', link: '/advanced/overview' },
+            { text: 'Hardware Support', link: '/advanced/hardware-support' },
             { text: 'ComfyUI Integration', link: '/advanced/comfyui-integration' },
             { text: 'Environment Variables', link: '/advanced/environment-variables' }
           ]
@@ -74,6 +76,14 @@ export default defineConfig({
           items: [
             { text: 'Overview', link: '/tips/overview' },
             { text: 'Terminology', link: '/tips/terminology' }
+          ]
+        }
+      ],
+      '/troubleshooting/': [
+        {
+          text: 'Troubleshooting',
+          items: [
+            { text: 'Common Issues', link: '/troubleshooting/common-issues' }
           ]
         }
       ]

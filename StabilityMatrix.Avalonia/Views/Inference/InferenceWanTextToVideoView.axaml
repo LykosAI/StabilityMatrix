@@ -5,7 +5,9 @@
     xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:fluentIcons="using:FluentIcons.Avalonia.Fluent"
     xmlns:inference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
+    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     xmlns:markupExtensions="clr-namespace:StabilityMatrix.Avalonia.MarkupExtensions"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
@@ -85,7 +87,7 @@
                                         <controls:Card Padding="8">
                                             <Grid
                                                 HorizontalAlignment="Center"
-                                                ColumnDefinitions="Auto,*,Auto"
+                                                ColumnDefinitions="Auto,*,Auto,Auto"
                                                 RowDefinitions="Auto,*">
                                                 <Grid.Styles>
                                                     <Style Selector="Button">
@@ -143,6 +145,19 @@
                                                     Command="{Binding GenerateImageCommand}"
                                                     CommandParameter="{x:Static modelsInference:GenerateFlags.UseCurrentSeed}"
                                                     ToolTip.Tip="Generate with current seed" />
+
+                                                <!--  Add to Queue  -->
+                                                <Button
+                                                    Grid.Row="1"
+                                                    Grid.Column="3"
+                                                    Margin="4,0"
+                                                    Padding="12,8"
+                                                    HorizontalAlignment="Left"
+                                                    Classes="transparent"
+                                                    Command="{Binding AddToQueueCommand}"
+                                                    ToolTip.Tip="{x:Static lang:Resources.Label_AddToQueue}">
+                                                    <fluentIcons:SymbolIcon FontSize="16" Symbol="AppsAddIn" />
+                                                </Button>
                                             </Grid>
                                         </controls:Card>
                                     </StackPanel>

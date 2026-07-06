@@ -4,13 +4,15 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:dock="clr-namespace:StabilityMatrix.Avalonia.Controls.Dock"
+    xmlns:fluentIcons="using:FluentIcons.Avalonia.Fluent"
+    xmlns:gif="clr-namespace:Avalonia.Gif;assembly=Avalonia.Gif"
     xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
+    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
-    xmlns:vmInference="using:StabilityMatrix.Avalonia.ViewModels.Inference"
-    xmlns:dock="clr-namespace:StabilityMatrix.Avalonia.Controls.Dock"
     xmlns:modelsInference="clr-namespace:StabilityMatrix.Avalonia.Models.Inference"
-    xmlns:gif="clr-namespace:Avalonia.Gif;assembly=Avalonia.Gif"
+    xmlns:vmInference="using:StabilityMatrix.Avalonia.ViewModels.Inference"
     d:DataContext="{x:Static mocks:DesignData.InferenceImageToVideoViewModel}"
     d:DesignHeight="800"
     d:DesignWidth="1000"
@@ -38,9 +40,7 @@
                     Id="MainLayout"
                     Orientation="Horizontal">
                     <!--  Left Pane  -->
-                    <ProportionalDock
-                        Proportion="0.3"
-                        Orientation="Vertical">
+                    <ProportionalDock Orientation="Vertical" Proportion="0.3">
                         <ToolDock
                             x:Name="SelectImagePane"
                             Alignment="Left"
@@ -50,10 +50,9 @@
                                 x:Name="SelectImageTool"
                                 Title="Image Input"
                                 x:DataType="Tool"
-                                Id="ConfigTool"
-                                CanClose="False">
-                                <controls:SelectImageCard 
-                                    DataContext="{Binding #Dock.((vmInference:InferenceImageToVideoViewModel)DataContext).SelectImageCardViewModel}" />
+                                CanClose="False"
+                                Id="ConfigTool">
+                                <controls:SelectImageCard DataContext="{Binding #Dock.((vmInference:InferenceImageToVideoViewModel)DataContext).SelectImageCardViewModel}" />
                             </Tool>
                         </ToolDock>
                         <ToolDock
@@ -65,20 +64,16 @@
                                 x:Name="ConfigTool"
                                 Title="Config"
                                 x:DataType="Tool"
-                                Id="ConfigTool"
-                                CanClose="False">
-                                <controls:StackCard
-                                    Opacity="1"
-                                    DataContext="{ReflectionBinding ElementName=Dock, Path=DataContext.StackCardViewModel}" />
+                                CanClose="False"
+                                Id="ConfigTool">
+                                <controls:StackCard DataContext="{ReflectionBinding ElementName=Dock, Path=DataContext.StackCardViewModel}" Opacity="1" />
                             </Tool>
                         </ToolDock>
                     </ProportionalDock>
                     <ProportionalDockSplitter x:Name="Splitter1" Id="Splitter1" />
 
                     <!--  Middle Pane  -->
-                    <ProportionalDock
-                        Proportion="0.5"
-                        Orientation="Vertical">
+                    <ProportionalDock Orientation="Vertical" Proportion="0.5">
                         <ToolDock
                             x:Name="ImageGalleryPane"
                             Alignment="Right"
@@ -88,54 +83,52 @@
                                 x:Name="ImageGalleryTool"
                                 Title="Image Output"
                                 x:DataType="Tool"
-                                Id="ImageGalleryTool"
-                                CanClose="False">
+                                CanClose="False"
+                                Id="ImageGalleryTool">
 
-                                <Grid
-                                    x:CompileBindings="False"
-                                    DataContext="{Binding ElementName=Dock, Path=DataContext}">
-                                    <controls:ImageGalleryCard
-                                        Grid.Row="0"
-                                        DataContext="{Binding ImageGalleryCardViewModel}"/>
-                                    
+                                <Grid x:CompileBindings="False" DataContext="{Binding ElementName=Dock, Path=DataContext}">
+                                    <controls:ImageGalleryCard Grid.Row="0" DataContext="{Binding ImageGalleryCardViewModel}" />
+
                                     <StackPanel
-                                        DataContext="{Binding OutputProgress}"
                                         Margin="2,1,2,4"
-                                        Spacing="4"
-                                        VerticalAlignment="Top">
+                                        VerticalAlignment="Top"
+                                        DataContext="{Binding OutputProgress}"
+                                        Spacing="4">
                                         <ProgressBar
-                                            IsVisible="{Binding IsProgressVisible}"
                                             IsIndeterminate="{Binding IsIndeterminate}"
+                                            IsVisible="{Binding IsProgressVisible}"
                                             Maximum="{Binding Maximum}"
                                             Value="{Binding Value}" />
 
                                         <TextBlock
                                             Margin="0,10,0,0"
                                             IsVisible="{Binding IsTextVisible}"
-                                            TextAlignment="Center"
-                                            Text="{Binding Text}" />
+                                            Text="{Binding Text}"
+                                            TextAlignment="Center" />
                                     </StackPanel>
                                 </Grid>
                             </Tool>
                         </ToolDock>
-                        <ToolDock x:Name="GeneratePane"
-                                  Alignment="Top"
-                                  Id="ConfigPane"
-                                  Proportion="0.1">
+                        <ToolDock
+                            x:Name="GeneratePane"
+                            Alignment="Top"
+                            Id="ConfigPane"
+                            Proportion="0.1">
                             <Tool
                                 x:Name="GenerateTool"
                                 Title="Generate"
                                 x:DataType="Tool"
-                                Id="GenerateTool"
-                                CanClose="False">
+                                CanClose="False"
+                                Id="GenerateTool">
                                 <!--  Generate Buttons  -->
-                                <StackPanel Margin="0,6,0,0"
-                                            x:CompileBindings="False"
-                                            DataContext="{Binding ElementName=Dock, Path=DataContext}">
+                                <StackPanel
+                                    Margin="0,6,0,0"
+                                    x:CompileBindings="False"
+                                    DataContext="{Binding ElementName=Dock, Path=DataContext}">
                                     <controls:Card Padding="8">
                                         <Grid
                                             HorizontalAlignment="Center"
-                                            ColumnDefinitions="Auto,*,Auto"
+                                            ColumnDefinitions="Auto,*,Auto,Auto"
                                             RowDefinitions="Auto,*">
                                             <Grid.Styles>
                                                 <Style Selector="Button">
@@ -155,10 +148,8 @@
                                                 CommandParameter="{x:Static modelsInference:GenerateFlags.None}"
                                                 IsVisible="{Binding !GenerateImageCommand.CanBeCanceled}">
                                                 <Panel>
-                                                    <TextBlock IsVisible="{Binding #GenerateButton.IsEnabled}"
-                                                               Text="Generate Image" />
-                                                    <controls:ProgressRing IsIndeterminate="True"
-                                                                           IsVisible="{Binding !#GenerateButton.IsEnabled}" />
+                                                    <TextBlock IsVisible="{Binding #GenerateButton.IsEnabled}" Text="Generate Image" />
+                                                    <controls:ProgressRing IsIndeterminate="True" IsVisible="{Binding !#GenerateButton.IsEnabled}" />
                                                 </Panel>
                                             </Button>
                                             <!--  Cancel Button  -->
@@ -183,6 +174,19 @@
                                                 Command="{Binding GenerateImageCommand}"
                                                 CommandParameter="{x:Static modelsInference:GenerateFlags.UseCurrentSeed}"
                                                 ToolTip.Tip="Generate with current seed" />
+
+                                            <!--  Add to Queue  -->
+                                            <Button
+                                                Grid.Row="1"
+                                                Grid.Column="3"
+                                                Margin="4,0"
+                                                Padding="12,8"
+                                                HorizontalAlignment="Left"
+                                                Classes="transparent"
+                                                Command="{Binding AddToQueueCommand}"
+                                                ToolTip.Tip="{x:Static lang:Resources.Label_AddToQueue}">
+                                                <fluentIcons:SymbolIcon FontSize="16" Symbol="AppsAddIn" />
+                                            </Button>
                                         </Grid>
                                     </controls:Card>
                                 </StackPanel>
@@ -200,16 +204,13 @@
                         Proportion="0.2">
                         <Tool
                             x:Name="ImageFolderTool"
-                            x:DataType="Tool"
                             Title="Gallery"
-                            Id="ImageFolderTool"
-                            CanClose="False">
+                            x:DataType="Tool"
+                            CanClose="False"
+                            Id="ImageFolderTool">
 
-                            <Grid
-                                x:CompileBindings="False"
-                                DataContext="{Binding ElementName=Dock, Path=DataContext}">
-                                <controls:ImageFolderCard
-                                    DataContext="{Binding ImageFolderCardViewModel}" />
+                            <Grid x:CompileBindings="False" DataContext="{Binding ElementName=Dock, Path=DataContext}">
+                                <controls:ImageFolderCard DataContext="{Binding ImageFolderCardViewModel}" />
                             </Grid>
                         </Tool>
                     </ToolDock>

@@ -24,7 +24,7 @@ using StabilityMatrix.Core.Services;
 namespace StabilityMatrix.Avalonia.Services;
 
 [RegisterSingleton<IPromptQueueService, PromptQueueService>]
-public partial class PromptQueueService : ObservableObject, IPromptQueueService
+public partial class PromptQueueService : ObservableObject, IPromptQueueService, IDisposable
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -40,7 +40,10 @@ public partial class PromptQueueService : ObservableObject, IPromptQueueService
     private readonly object saveLock = new();
     private volatile CancellationTokenSource? delayedSaveCts;
 
-    private bool isLoaded;
+    private volatile bool isLoaded;
+
+    /// <summary>True when a debounced save has been requested but not yet written.</summary>
+    private volatile bool savePending;
 
     /// <summary>Cancellation for the currently running item's generation.</summary>
     private CancellationTokenSource? currentItemCts;
@@ -68,7 +71,9 @@ public partial class PromptQueueService : ObservableObject, IPromptQueueService
         this.clientManager = clientManager;
         this.notificationService = notificationService;
 
-        settingsManager.RegisterOnLibraryDirSet(_ => Load());
+        settingsManager.RegisterOnLibraryDirSet(_ =>
+            LoadAsync().SafeFireAndForget(ex => Logger.Warn(ex, "Failed to load prompt queue"))
+        );
 
         Items.CollectionChanged += (_, _) => RequestSave();
     }
@@ -85,7 +90,12 @@ public partial class PromptQueueService : ObservableObject, IPromptQueueService
     {
         if (item == CurrentItem)
         {
+            // End-of-processing cleanup disposes the preview once the generation stops.
             CancelCurrent();
+        }
+        else
+        {
+            DisposePreview(item);
         }
 
         DetachItemHandlers(item);
@@ -114,6 +124,7 @@ public partial class PromptQueueService : ObservableObject, IPromptQueueService
     {
         foreach (var item in Items.Where(IsFinished).ToList())
         {
+            DisposePreview(item);
             DetachItemHandlers(item);
             Items.Remove(item);
         }
@@ -123,6 +134,7 @@ public partial class PromptQueueService : ObservableObject, IPromptQueueService
     {
         foreach (var item in Items.Where(x => x.Status == PromptQueueItemStatus.Pending).ToList())
         {
+            DisposePreview(item);
             DetachItemHandlers(item);
             Items.Remove(item);
         }
@@ -133,6 +145,13 @@ public partial class PromptQueueService : ObservableObject, IPromptQueueService
             is PromptQueueItemStatus.Completed
                 or PromptQueueItemStatus.Failed
                 or PromptQueueItemStatus.Cancelled;
+
+    private static void DisposePreview(PromptQueueItem item)
+    {
+        var preview = item.PreviewImage;
+        item.PreviewImage = null;
+        preview?.Dispose();
+    }
 
     #region Processing
 
@@ -290,7 +309,9 @@ public partial class PromptQueueService : ObservableObject, IPromptQueueService
             await Dispatcher
                 .UIThread.InvokeAsync(() =>
                 {
-                    item.PreviewImage = null;
+                    // Safe to dispose: RunGeneration's cleanup has already cleared the gallery's
+                    // shared reference to this bitmap.
+                    DisposePreview(item);
                     if (CurrentItem == item)
                         CurrentItem = null;
                 })
@@ -354,6 +375,10 @@ public partial class PromptQueueService : ObservableObject, IPromptQueueService
         private readonly InferenceGenerationViewModelBase generationViewModel;
         private readonly PromptQueueItem item;
 
+        // Posted lambdas may run after the headless view model's scope is disposed, so they must
+        // only touch the item and values captured at event time - never the view model.
+        private volatile bool isDisposed;
+
         public ProgressMirror(InferenceGenerationViewModelBase generationViewModel, PromptQueueItem item)
         {
             this.generationViewModel = generationViewModel;
@@ -366,26 +391,50 @@ public partial class PromptQueueService : ObservableObject, IPromptQueueService
         private void OnProgressChanged(object? sender, PropertyChangedEventArgs e)
         {
             var progress = generationViewModel.OutputProgress;
-            // Marshal to UI thread; progress events already post there but stay defensive.
+            var value = progress.Value;
+            var maximum = progress.Maximum;
+            var text = progress.Text;
+
             Dispatcher.UIThread.Post(() =>
             {
-                item.Progress =
-                    progress.Maximum > 0 ? progress.Value / progress.Maximum * 100 : progress.Value;
-                item.ProgressText = progress.Text;
+                if (isDisposed)
+                    return;
+
+                item.Progress = maximum > 0 ? value / maximum * 100 : value;
+                item.ProgressText = text;
             });
         }
 
         private void OnGalleryChanged(object? sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName != nameof(generationViewModel.ImageGalleryCardViewModel.PreviewImage))
+            var gallery = generationViewModel.ImageGalleryCardViewModel;
+
+            if (e.PropertyName != nameof(gallery.PreviewImage))
                 return;
 
-            var preview = generationViewModel.ImageGalleryCardViewModel.PreviewImage;
-            Dispatcher.UIThread.Post(() => item.PreviewImage = preview);
+            var preview = gallery.PreviewImage;
+
+            Dispatcher.UIThread.Post(() =>
+            {
+                if (isDisposed)
+                    return;
+
+                var previous = item.PreviewImage;
+                item.PreviewImage = preview;
+
+                // The item shares bitmap instances with the gallery: the incoming preview is the
+                // gallery's current bitmap, so only the replaced (no longer referenced) one may
+                // be disposed.
+                if (previous is not null && !ReferenceEquals(previous, preview))
+                {
+                    previous.Dispose();
+                }
+            });
         }
 
         public void Dispose()
         {
+            isDisposed = true;
             generationViewModel.OutputProgress.PropertyChanged -= OnProgressChanged;
             generationViewModel.ImageGalleryCardViewModel.PropertyChanged -= OnGalleryChanged;
         }
@@ -421,7 +470,7 @@ public partial class PromptQueueService : ObservableObject, IPromptQueueService
         RequestSave();
     }
 
-    private void Load()
+    private async Task LoadAsync()
     {
         try
         {
@@ -432,31 +481,36 @@ public partial class PromptQueueService : ObservableObject, IPromptQueueService
                 return;
             }
 
-            var json = File.ReadAllText(file);
+            // Read and deserialize off the UI thread; RegisterOnLibraryDirSet callbacks run
+            // synchronously on the UI thread during startup.
+            var json = await File.ReadAllTextAsync(file).ConfigureAwait(false);
             var loaded = JsonSerializer.Deserialize<List<PromptQueueItem>>(json, SerializerOptions);
 
-            Dispatcher.UIThread.Post(() =>
-            {
-                if (loaded is not null)
+            await Dispatcher
+                .UIThread.InvokeAsync(() =>
                 {
-                    foreach (var item in loaded)
+                    if (loaded is not null)
                     {
-                        // Items that were mid-run when the app closed become pending again.
-                        if (item.Status == PromptQueueItemStatus.Running)
+                        foreach (var item in loaded)
                         {
-                            item.Status = PromptQueueItemStatus.Pending;
-                            item.Progress = 0;
-                            item.ProgressText = null;
-                            item.StartedAt = null;
+                            // Items that were mid-run when the app closed become pending again.
+                            if (item.Status == PromptQueueItemStatus.Running)
+                            {
+                                item.Status = PromptQueueItemStatus.Pending;
+                                item.Progress = 0;
+                                item.ProgressText = null;
+                                item.StartedAt = null;
+                            }
+
+                            AttachItemHandlers(item);
+                            Items.Add(item);
                         }
-
-                        AttachItemHandlers(item);
-                        Items.Add(item);
                     }
-                }
 
-                isLoaded = true;
-            });
+                    isLoaded = true;
+                })
+                .GetTask()
+                .ConfigureAwait(false);
         }
         catch (Exception e)
         {
@@ -469,6 +523,8 @@ public partial class PromptQueueService : ObservableObject, IPromptQueueService
     {
         if (!isLoaded || !settingsManager.IsLibraryDirSet)
             return;
+
+        savePending = true;
 
         var cts = new CancellationTokenSource();
         var old = Interlocked.Exchange(ref delayedSaveCts, cts);
@@ -485,7 +541,8 @@ public partial class PromptQueueService : ObservableObject, IPromptQueueService
                     try
                     {
                         await Task.Delay(TimeSpan.FromMilliseconds(500), cts.Token).ConfigureAwait(false);
-                        Save();
+                        savePending = false;
+                        await SaveAsync().ConfigureAwait(false);
                     }
                     catch (TaskCanceledException) { }
                     finally
@@ -498,12 +555,19 @@ public partial class PromptQueueService : ObservableObject, IPromptQueueService
             .SafeFireAndForget();
     }
 
-    private void Save()
+    private async Task SaveAsync()
     {
         // Snapshot on the UI thread since Items is UI-owned.
-        List<PromptQueueItem> snapshot = null!;
-        Dispatcher.UIThread.Invoke(() => snapshot = Items.ToList());
+        var snapshot = await Dispatcher
+            .UIThread.InvokeAsync(() => Items.ToList())
+            .GetTask()
+            .ConfigureAwait(false);
 
+        WriteSnapshot(snapshot);
+    }
+
+    private void WriteSnapshot(List<PromptQueueItem> snapshot)
+    {
         lock (saveLock)
         {
             try
@@ -522,6 +586,40 @@ public partial class PromptQueueService : ObservableObject, IPromptQueueService
                 Logger.Warn(e, "Failed to save prompt queue");
             }
         }
+    }
+
+    /// <summary>
+    /// Flushes any pending debounced save on shutdown so closing the app within the debounce
+    /// window doesn't drop changes. Called when the service provider is disposed on exit.
+    /// </summary>
+    public void Dispose()
+    {
+        var cts = Interlocked.Exchange(ref delayedSaveCts, null);
+        try
+        {
+            cts?.Cancel();
+        }
+        catch (ObjectDisposedException) { }
+
+        if (savePending && settingsManager.IsLibraryDirSet)
+        {
+            savePending = false;
+
+            try
+            {
+                var snapshot = Dispatcher.UIThread.CheckAccess()
+                    ? Items.ToList()
+                    : Dispatcher.UIThread.Invoke(() => Items.ToList());
+
+                WriteSnapshot(snapshot);
+            }
+            catch (Exception e)
+            {
+                Logger.Warn(e, "Failed to flush prompt queue on shutdown");
+            }
+        }
+
+        GC.SuppressFinalize(this);
     }
 
     #endregion

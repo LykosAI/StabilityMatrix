@@ -746,29 +746,51 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
     [RelayCommand]
     private async Task OpenQueueItemInTabAsync(PromptQueueItem item)
     {
-        if (item.Project.State is not { } state)
+        try
         {
-            return;
-        }
+            if (item.Project.State is not { } state)
+            {
+                throw new ApplicationException("Queue item project does not have a 'State' key");
+            }
 
-        if (item.ProjectType.ToViewModelType() is not { } vmType)
+            if (item.ProjectType.ToViewModelType() is not { } vmType)
+            {
+                throw new InvalidOperationException($"Unsupported project type: {item.ProjectType}");
+            }
+
+            var scope = vmFactory.CreateScope();
+            try
+            {
+                var vm =
+                    scope.ServiceManager.Get(vmType) as InferenceTabViewModelBase
+                    ?? throw new NullReferenceException($"Could not create view model of type {vmType}");
+
+                vm.LoadStateFromJsonObject(state);
+
+                // Commit the scope and tab together to keep the Tabs/scopes invariant
+                scopes.Add(scope);
+                Tabs.Add(vm);
+                SelectedTab = vm;
+            }
+            catch
+            {
+                scopes.Remove(scope);
+                scope.Dispose();
+                throw;
+            }
+
+            await SyncTabStatesWithDatabase();
+        }
+        catch (Exception e)
         {
-            return;
+            Logger.Warn(e, "Failed to open queue item in tab");
+
+            notificationService.ShowPersistent(
+                "Failed to open queue item",
+                $"[{e.GetType().Name}] {e.Message}",
+                NotificationType.Error
+            );
         }
-
-        var scope = vmFactory.CreateScope();
-        scopes.Add(scope);
-
-        var vm =
-            scope.ServiceManager.Get(vmType) as InferenceTabViewModelBase
-            ?? throw new NullReferenceException($"Could not create view model of type {vmType}");
-
-        vm.LoadStateFromJsonObject(state);
-
-        Tabs.Add(vm);
-        SelectedTab = vm;
-
-        await SyncTabStatesWithDatabase();
     }
 
     private async Task AddTabFromFile(FilePath file)

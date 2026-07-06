@@ -5593,5 +5593,23 @@ namespace StabilityMatrix.Avalonia.Languages {
                 return ResourceManager.GetString("Label_StatusCancelled", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Move up.
+        /// </summary>
+        public static string Action_MoveUp {
+            get {
+                return ResourceManager.GetString("Action_MoveUp", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Move down.
+        /// </summary>
+        public static string Action_MoveDown {
+            get {
+                return ResourceManager.GetString("Action_MoveDown", resourceCulture);
+            }
+        }
     }
 }

@@ -13,6 +13,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
     xmlns:models="clr-namespace:StabilityMatrix.Avalonia.Models"
+    xmlns:modelsInference="clr-namespace:StabilityMatrix.Avalonia.Models.Inference"
     xmlns:ui="using:FluentAvalonia.UI.Controls"
     xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
     xmlns:vmInference="using:StabilityMatrix.Avalonia.ViewModels.Inference"
@@ -32,178 +33,432 @@
 
     <controls:UserControlBase.Resources>
         <converters:UriStringConverter x:Key="UriStringConverter" />
+        <converters:PromptQueueStatusToBrushConverter x:Key="PromptQueueStatusToBrushConverter" />
     </controls:UserControlBase.Resources>
 
-    <Grid>
-        <ui:TabView
-            x:Name="TabView"
-            HorizontalAlignment="Stretch"
-            VerticalAlignment="Stretch"
-            AddTabButtonClick="TabView_OnAddTabButtonClick"
-            CanDragTabs="True"
-            CanReorderTabs="True"
-            CloseButtonOverlayMode="Auto"
-            SelectedIndex="{Binding SelectedTabIndex}"
-            SelectedItem="{Binding SelectedTab}"
-            TabCloseRequested="TabView_OnTabCloseRequested"
-            TabItems="{Binding Tabs}"
-            TabWidthMode="SizeToContent">
-            <ui:TabView.TabItemTemplate>
-                <DataTemplate DataType="{x:Type base:InferenceTabViewModelBase}">
-                    <ui:TabViewItem
-                        Content="{Binding FallbackValue=''}"
-                        Header="{Binding TabTitle}"
-                        IconSource="Document" />
-                </DataTemplate>
-            </ui:TabView.TabItemTemplate>
-            <ui:TabView.TabStripFooter>
-                <StackPanel
-                    HorizontalAlignment="Right"
-                    Orientation="Horizontal"
-                    Spacing="2">
+    <SplitView
+        DisplayMode="Inline"
+        IsPaneOpen="{Binding IsQueuePanelOpen}"
+        OpenPaneLength="340"
+        PanePlacement="Right">
+        <SplitView.Pane>
+            <Grid Margin="8" RowDefinitions="Auto,*">
 
-                    <!--  Connecting Progress  -->
-                    <controls:ProgressRing
-                        Margin="0,0,4,0"
-                        BorderThickness="4"
-                        IsIndeterminate="True">
-                        <controls:ProgressRing.IsVisible>
-                            <MultiBinding Converter="{x:Static BoolConverters.Or}">
-                                <Binding Path="ClientManager.IsConnecting" />
-                                <Binding Path="IsWaitingForConnection" />
-                            </MultiBinding>
-                        </controls:ProgressRing.IsVisible>
-                    </controls:ProgressRing>
-                    <!--  Connecting Progress Text  -->
-                    <TextBlock
+                <!--  Queue panel header  -->
+                <Grid
+                    Grid.Row="0"
+                    Margin="0,0,0,8"
+                    ColumnDefinitions="*,Auto">
+                    <StackPanel
                         VerticalAlignment="Center"
-                        IsVisible="{Binding ClientManager.IsConnecting}"
-                        Text="{x:Static lang:Resources.Label_ConnectingEllipsis}" />
-                    <!--  Waiting to connect progress text  -->
-                    <TextBlock VerticalAlignment="Center" Text="{x:Static lang:Resources.Label_WaitingToConnectEllipsis}">
-                        <Button.IsVisible>
-                            <MultiBinding Converter="{x:Static BoolConverters.And}">
-                                <Binding Path="!ClientManager.IsConnecting" />
-                                <Binding Path="IsWaitingForConnection" />
-                            </MultiBinding>
-                        </Button.IsVisible>
-                    </TextBlock>
-
-                    <!--  Active connect (when Comfy is running)  -->
-                    <Button
-                        Padding="12,4"
-                        Classes="success"
-                        Command="{Binding ConnectCommand}">
-                        <Button.IsVisible>
-                            <MultiBinding Converter="{x:Static BoolConverters.And}">
-                                <Binding Path="ClientManager.CanUserConnect" />
-                                <Binding Path="IsComfyRunning" />
-                                <Binding Path="!IsWaitingForConnection" />
-                            </MultiBinding>
-                        </Button.IsVisible>
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="{x:Static lang:Resources.Action_Connect}" />
-                        </StackPanel>
-                    </Button>
-
-                    <!--  Connect help  -->
-                    <Button Padding="12,4" Command="{Binding ShowConnectionHelpCommand}">
-                        <Button.IsVisible>
-                            <MultiBinding Converter="{x:Static BoolConverters.And}">
-                                <Binding Path="ClientManager.CanUserConnect" />
-                                <Binding Path="!IsComfyRunning" />
-                                <Binding Path="!IsWaitingForConnection" />
-                            </MultiBinding>
-                        </Button.IsVisible>
-                        <StackPanel Orientation="Horizontal">
-                            <icons:Icon
-                                Margin="0,0,8,0"
-                                FontSize="14"
-                                Value="fa-solid fa-circle-question" />
-                            <TextBlock Text="{x:Static lang:Resources.Action_Launch}" />
-                        </StackPanel>
-                    </Button>
-
-                    <!--  Successful connection icon  -->
-                    <Button Classes="transparent-full">
-
-                        <Button.IsVisible>
-                            <MultiBinding Converter="{x:Static BoolConverters.And}">
-                                <Binding Path="ClientManager.IsConnected" />
-                                <Binding Path="!ClientManager.IsConnecting" />
-                                <Binding Path="!IsWaitingForConnection" />
-                            </MultiBinding>
-                        </Button.IsVisible>
-
-                        <fluentIcons:SymbolIcon
+                        Orientation="Horizontal"
+                        Spacing="8">
+                        <TextBlock
                             VerticalAlignment="Center"
-                            FontSize="18"
-                            Foreground="{DynamicResource ThemeGreyColor}"
-                            IconVariant="Filled"
-                            Symbol="PlugConnected" />
+                            FontWeight="SemiBold"
+                            Text="{x:Static lang:Resources.Label_PromptQueue}" />
+                        <Border
+                            Padding="6,1"
+                            VerticalAlignment="Center"
+                            Background="{DynamicResource CardStrokeColorDefaultBrush}"
+                            CornerRadius="8">
+                            <TextBlock FontSize="11" Text="{Binding PromptQueue.Items.Count}" />
+                        </Border>
+                    </StackPanel>
 
-                        <Button.Flyout>
-                            <ui:FAMenuFlyout Placement="BottomEdgeAlignedRight">
-                                <ui:MenuFlyoutItem
-                                    Command="{Binding DisconnectCommand}"
-                                    IsEnabled="False"
-                                    Text="{Binding ClientManager.Client.BaseAddress, Converter={StaticResource UriStringConverter}, FallbackValue=''}" />
-                                <ui:MenuFlyoutSeparator />
-                                <ui:MenuFlyoutItem Command="{Binding DisconnectCommand}" Text="Disconnect">
-                                    <ui:MenuFlyoutItem.IconSource>
-                                        <fluentIcons:SymbolIconSource Symbol="PlugDisconnected" />
-                                    </ui:MenuFlyoutItem.IconSource>
-                                </ui:MenuFlyoutItem>
-                            </ui:FAMenuFlyout>
-                        </Button.Flyout>
-                    </Button>
+                    <StackPanel
+                        Grid.Column="1"
+                        Orientation="Horizontal"
+                        Spacing="2">
+                        <Button
+                            Padding="8,4"
+                            Classes="accent"
+                            Command="{Binding ToggleQueueProcessingCommand}">
+                            <Panel>
+                                <StackPanel
+                                    IsVisible="{Binding !PromptQueue.IsProcessing}"
+                                    Orientation="Horizontal"
+                                    Spacing="6">
+                                    <fluentIcons:SymbolIcon
+                                        FontSize="15"
+                                        IconVariant="Filled"
+                                        Symbol="Play" />
+                                    <TextBlock VerticalAlignment="Center" Text="{x:Static lang:Resources.Action_StartQueue}" />
+                                </StackPanel>
+                                <StackPanel
+                                    IsVisible="{Binding PromptQueue.IsProcessing}"
+                                    Orientation="Horizontal"
+                                    Spacing="6">
+                                    <fluentIcons:SymbolIcon
+                                        FontSize="15"
+                                        IconVariant="Filled"
+                                        Symbol="Pause" />
+                                    <TextBlock VerticalAlignment="Center" Text="{x:Static lang:Resources.Action_PauseQueue}" />
+                                </StackPanel>
+                            </Panel>
+                        </Button>
+                        <Button
+                            Classes="transparent-full"
+                            Command="{Binding ClearQueueFinishedCommand}"
+                            ToolTip.Tip="{x:Static lang:Resources.Label_ClearFinished}">
+                            <fluentIcons:SymbolIcon FontSize="16" Symbol="Broom" />
+                        </Button>
+                        <Button Classes="transparent-full" ToolTip.Tip="{x:Static lang:Resources.Label_ClearPending}">
+                            <fluentIcons:SymbolIcon FontSize="16" Symbol="MoreVertical" />
+                            <Button.Flyout>
+                                <ui:FAMenuFlyout Placement="BottomEdgeAlignedRight">
+                                    <ui:MenuFlyoutItem Command="{Binding ClearQueuePendingCommand}" Text="{x:Static lang:Resources.Label_ClearPending}">
+                                        <ui:MenuFlyoutItem.IconSource>
+                                            <fluentIcons:SymbolIconSource Symbol="Delete" />
+                                        </ui:MenuFlyoutItem.IconSource>
+                                    </ui:MenuFlyoutItem>
+                                </ui:FAMenuFlyout>
+                            </Button.Flyout>
+                        </Button>
+                    </StackPanel>
+                </Grid>
 
-                    <!--  Menu  -->
-                    <Button Classes="transparent-full">
-                        <ui:SymbolIcon FontSize="18" Symbol="MoreVertical" />
-                        <Button.Flyout>
-                            <ui:FAMenuFlyout Placement="BottomEdgeAlignedRight">
-                                <ui:MenuFlyoutItem
-                                    Command="{Binding MenuOpenProjectCommand}"
-                                    IconSource="OpenFolder"
-                                    InputGesture="{markupExtensions:PlatformGesture Ctrl+O}"
-                                    Text="{x:Static lang:Resources.Action_OpenProjectEllipsis}" />
-                                <ui:MenuFlyoutSeparator />
-                                <ui:MenuFlyoutItem
-                                    Command="{Binding MenuSaveCommand}"
-                                    IconSource="Save"
-                                    InputGesture="{markupExtensions:PlatformGesture Ctrl+S}"
-                                    Text="{x:Static lang:Resources.Action_Save}" />
-                                <ui:MenuFlyoutItem
-                                    Command="{Binding MenuSaveAsCommand}"
-                                    InputGesture="{markupExtensions:PlatformGesture Ctrl+Shift+S}"
-                                    Text="{x:Static lang:Resources.Action_SaveAsEllipsis}" />
+                <!--  Empty state  -->
+                <TextBlock
+                    Grid.Row="1"
+                    Margin="0,24,0,0"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Top"
+                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                    IsVisible="{Binding !PromptQueue.Items.Count}"
+                    Text="{x:Static lang:Resources.Label_QueueEmpty}" />
 
-                                <ui:MenuFlyoutSeparator />
+                <!--  Item list  -->
+                <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled">
+                    <ItemsControl ItemsSource="{Binding PromptQueue.Items}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="{x:Type modelsInference:PromptQueueItem}">
+                                <Border
+                                    Margin="0,0,0,6"
+                                    Padding="10"
+                                    Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                                    BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="6">
+                                    <Grid RowDefinitions="Auto,Auto,Auto,Auto">
 
-                                <ui:MenuFlyoutItem
-                                    Command="{Binding SelectedTab.RestoreDefaultViewStateCommand, FallbackValue={x:Null}}"
-                                    IconSource="CalendarReply"
-                                    Text="{x:Static lang:Resources.Action_RestoreDefaultLayout}" />
+                                        <!--  Title row  -->
+                                        <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto">
+                                            <fluentIcons:SymbolIcon
+                                                Grid.Column="0"
+                                                Margin="0,0,8,0"
+                                                VerticalAlignment="Center"
+                                                FontSize="16"
+                                                Symbol="{Binding Icon}" />
+                                            <TextBlock
+                                                Grid.Column="1"
+                                                VerticalAlignment="Center"
+                                                Text="{Binding Name}"
+                                                TextTrimming="CharacterEllipsis" />
+                                            <Border
+                                                Grid.Column="2"
+                                                Padding="6,1"
+                                                VerticalAlignment="Center"
+                                                Background="{Binding Status, Converter={StaticResource PromptQueueStatusToBrushConverter}}"
+                                                CornerRadius="8">
+                                                <TextBlock
+                                                    FontSize="11"
+                                                    Foreground="White"
+                                                    Text="{Binding StatusText}" />
+                                            </Border>
+                                        </Grid>
 
-                                <!--  Debug mode menus  -->
-                                <ui:MenuFlyoutSeparator IsVisible="{Binding SharedState.IsDebugMode}" />
+                                        <!--  Progress + preview (running only)  -->
+                                        <Grid
+                                            Grid.Row="1"
+                                            Margin="0,8,0,0"
+                                            ColumnDefinitions="Auto,*"
+                                            IsVisible="{Binding IsRunning}">
+                                            <Border
+                                                Grid.Column="0"
+                                                Width="48"
+                                                Height="48"
+                                                Margin="0,0,8,0"
+                                                ClipToBounds="True"
+                                                CornerRadius="4"
+                                                IsVisible="{Binding PreviewImage, Converter={x:Static ObjectConverters.IsNotNull}}">
+                                                <Image Source="{Binding PreviewImage}" Stretch="UniformToFill" />
+                                            </Border>
+                                            <StackPanel
+                                                Grid.Column="1"
+                                                VerticalAlignment="Center"
+                                                Spacing="4">
+                                                <ProgressBar Maximum="100" Value="{Binding Progress}" />
+                                                <TextBlock
+                                                    FontSize="11"
+                                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                    Text="{Binding ProgressText}"
+                                                    TextTrimming="CharacterEllipsis" />
+                                            </StackPanel>
+                                        </Grid>
 
-                                <ui:MenuFlyoutItem
-                                    Command="{Binding SelectedTab.DebugSaveViewStateCommand, FallbackValue={x:Null}}"
-                                    IsVisible="{Binding SharedState.IsDebugMode}"
-                                    Text="Show Dock State" />
+                                        <!--  Error message (failed only)  -->
+                                        <TextBlock
+                                            Grid.Row="2"
+                                            Margin="0,6,0,0"
+                                            FontSize="11"
+                                            Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+                                            IsVisible="{Binding IsFailed}"
+                                            Text="{Binding ErrorMessage}"
+                                            TextWrapping="Wrap" />
 
-                                <ui:MenuFlyoutItem
-                                    Command="{Binding SelectedTab.DebugLoadViewStateCommand, FallbackValue={x:Null}}"
-                                    IsVisible="{Binding SharedState.IsDebugMode}"
-                                    Text="Load Dock State" />
+                                        <!--  Action buttons  -->
+                                        <StackPanel
+                                            Grid.Row="3"
+                                            Margin="0,6,0,0"
+                                            HorizontalAlignment="Right"
+                                            Orientation="Horizontal"
+                                            Spacing="1">
+                                            <Button
+                                                Padding="5"
+                                                Classes="transparent-full"
+                                                Command="{Binding $parent[ItemsControl].((vm:InferenceViewModel)DataContext).CancelQueueItemCommand}"
+                                                CommandParameter="{Binding}"
+                                                IsVisible="{Binding IsRunning}"
+                                                ToolTip.Tip="{x:Static lang:Resources.Action_Cancel}">
+                                                <fluentIcons:SymbolIcon FontSize="15" Symbol="Stop" />
+                                            </Button>
+                                            <Button
+                                                Padding="5"
+                                                Classes="transparent-full"
+                                                Command="{Binding $parent[ItemsControl].((vm:InferenceViewModel)DataContext).MoveQueueItemUpCommand}"
+                                                CommandParameter="{Binding}"
+                                                ToolTip.Tip="{x:Static lang:Resources.Action_MoveUp}">
+                                                <fluentIcons:SymbolIcon FontSize="15" Symbol="ArrowUp" />
+                                            </Button>
+                                            <Button
+                                                Padding="5"
+                                                Classes="transparent-full"
+                                                Command="{Binding $parent[ItemsControl].((vm:InferenceViewModel)DataContext).MoveQueueItemDownCommand}"
+                                                CommandParameter="{Binding}"
+                                                ToolTip.Tip="{x:Static lang:Resources.Action_MoveDown}">
+                                                <fluentIcons:SymbolIcon FontSize="15" Symbol="ArrowDown" />
+                                            </Button>
+                                            <Button
+                                                Padding="5"
+                                                Classes="transparent-full"
+                                                Command="{Binding $parent[ItemsControl].((vm:InferenceViewModel)DataContext).OpenQueueItemInTabCommand}"
+                                                CommandParameter="{Binding}"
+                                                ToolTip.Tip="{x:Static lang:Resources.Label_OpenInTab}">
+                                                <fluentIcons:SymbolIcon FontSize="15" Symbol="Open" />
+                                            </Button>
+                                            <Button
+                                                Padding="5"
+                                                Classes="transparent-full"
+                                                Command="{Binding $parent[ItemsControl].((vm:InferenceViewModel)DataContext).RemoveQueueItemCommand}"
+                                                CommandParameter="{Binding}"
+                                                ToolTip.Tip="{x:Static lang:Resources.Action_Remove}">
+                                                <fluentIcons:SymbolIcon FontSize="15" Symbol="Delete" />
+                                            </Button>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Grid>
+        </SplitView.Pane>
 
-                            </ui:FAMenuFlyout>
-                        </Button.Flyout>
-                    </Button>
-                </StackPanel>
-            </ui:TabView.TabStripFooter>
-        </ui:TabView>
-    </Grid>
+        <Grid>
+            <ui:TabView
+                x:Name="TabView"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch"
+                AddTabButtonClick="TabView_OnAddTabButtonClick"
+                CanDragTabs="True"
+                CanReorderTabs="True"
+                CloseButtonOverlayMode="Auto"
+                SelectedIndex="{Binding SelectedTabIndex}"
+                SelectedItem="{Binding SelectedTab}"
+                TabCloseRequested="TabView_OnTabCloseRequested"
+                TabItems="{Binding Tabs}"
+                TabWidthMode="SizeToContent">
+                <ui:TabView.TabItemTemplate>
+                    <DataTemplate DataType="{x:Type base:InferenceTabViewModelBase}">
+                        <ui:TabViewItem
+                            Content="{Binding FallbackValue=''}"
+                            Header="{Binding TabTitle}"
+                            IconSource="Document" />
+                    </DataTemplate>
+                </ui:TabView.TabItemTemplate>
+                <ui:TabView.TabStripFooter>
+                    <StackPanel
+                        HorizontalAlignment="Right"
+                        Orientation="Horizontal"
+                        Spacing="2">
+
+                        <!--  Connecting Progress  -->
+                        <controls:ProgressRing
+                            Margin="0,0,4,0"
+                            BorderThickness="4"
+                            IsIndeterminate="True">
+                            <controls:ProgressRing.IsVisible>
+                                <MultiBinding Converter="{x:Static BoolConverters.Or}">
+                                    <Binding Path="ClientManager.IsConnecting" />
+                                    <Binding Path="IsWaitingForConnection" />
+                                </MultiBinding>
+                            </controls:ProgressRing.IsVisible>
+                        </controls:ProgressRing>
+                        <!--  Connecting Progress Text  -->
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            IsVisible="{Binding ClientManager.IsConnecting}"
+                            Text="{x:Static lang:Resources.Label_ConnectingEllipsis}" />
+                        <!--  Waiting to connect progress text  -->
+                        <TextBlock VerticalAlignment="Center" Text="{x:Static lang:Resources.Label_WaitingToConnectEllipsis}">
+                            <Button.IsVisible>
+                                <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                    <Binding Path="!ClientManager.IsConnecting" />
+                                    <Binding Path="IsWaitingForConnection" />
+                                </MultiBinding>
+                            </Button.IsVisible>
+                        </TextBlock>
+
+                        <!--  Active connect (when Comfy is running)  -->
+                        <Button
+                            Padding="12,4"
+                            Classes="success"
+                            Command="{Binding ConnectCommand}">
+                            <Button.IsVisible>
+                                <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                    <Binding Path="ClientManager.CanUserConnect" />
+                                    <Binding Path="IsComfyRunning" />
+                                    <Binding Path="!IsWaitingForConnection" />
+                                </MultiBinding>
+                            </Button.IsVisible>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{x:Static lang:Resources.Action_Connect}" />
+                            </StackPanel>
+                        </Button>
+
+                        <!--  Connect help  -->
+                        <Button Padding="12,4" Command="{Binding ShowConnectionHelpCommand}">
+                            <Button.IsVisible>
+                                <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                    <Binding Path="ClientManager.CanUserConnect" />
+                                    <Binding Path="!IsComfyRunning" />
+                                    <Binding Path="!IsWaitingForConnection" />
+                                </MultiBinding>
+                            </Button.IsVisible>
+                            <StackPanel Orientation="Horizontal">
+                                <icons:Icon
+                                    Margin="0,0,8,0"
+                                    FontSize="14"
+                                    Value="fa-solid fa-circle-question" />
+                                <TextBlock Text="{x:Static lang:Resources.Action_Launch}" />
+                            </StackPanel>
+                        </Button>
+
+                        <!--  Successful connection icon  -->
+                        <Button Classes="transparent-full">
+
+                            <Button.IsVisible>
+                                <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                    <Binding Path="ClientManager.IsConnected" />
+                                    <Binding Path="!ClientManager.IsConnecting" />
+                                    <Binding Path="!IsWaitingForConnection" />
+                                </MultiBinding>
+                            </Button.IsVisible>
+
+                            <fluentIcons:SymbolIcon
+                                VerticalAlignment="Center"
+                                FontSize="18"
+                                Foreground="{DynamicResource ThemeGreyColor}"
+                                IconVariant="Filled"
+                                Symbol="PlugConnected" />
+
+                            <Button.Flyout>
+                                <ui:FAMenuFlyout Placement="BottomEdgeAlignedRight">
+                                    <ui:MenuFlyoutItem
+                                        Command="{Binding DisconnectCommand}"
+                                        IsEnabled="False"
+                                        Text="{Binding ClientManager.Client.BaseAddress, Converter={StaticResource UriStringConverter}, FallbackValue=''}" />
+                                    <ui:MenuFlyoutSeparator />
+                                    <ui:MenuFlyoutItem Command="{Binding DisconnectCommand}" Text="Disconnect">
+                                        <ui:MenuFlyoutItem.IconSource>
+                                            <fluentIcons:SymbolIconSource Symbol="PlugDisconnected" />
+                                        </ui:MenuFlyoutItem.IconSource>
+                                    </ui:MenuFlyoutItem>
+                                </ui:FAMenuFlyout>
+                            </Button.Flyout>
+                        </Button>
+
+                        <!--  Prompt queue toggle  -->
+                        <Button
+                            Classes="transparent-full"
+                            Command="{Binding ToggleQueuePanelCommand}"
+                            ToolTip.Tip="{x:Static lang:Resources.Label_PromptQueue}">
+                            <Panel>
+                                <fluentIcons:SymbolIcon FontSize="18" Symbol="AppsList" />
+                                <Border
+                                    Margin="0,-6,-6,0"
+                                    Padding="4,0"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Top"
+                                    Background="{DynamicResource SystemAccentColor}"
+                                    CornerRadius="7"
+                                    IsVisible="{Binding PromptQueue.Items.Count}">
+                                    <TextBlock
+                                        FontSize="10"
+                                        Foreground="White"
+                                        Text="{Binding PromptQueue.Items.Count}" />
+                                </Border>
+                            </Panel>
+                        </Button>
+
+                        <!--  Menu  -->
+                        <Button Classes="transparent-full">
+                            <ui:SymbolIcon FontSize="18" Symbol="MoreVertical" />
+                            <Button.Flyout>
+                                <ui:FAMenuFlyout Placement="BottomEdgeAlignedRight">
+                                    <ui:MenuFlyoutItem
+                                        Command="{Binding MenuOpenProjectCommand}"
+                                        IconSource="OpenFolder"
+                                        InputGesture="{markupExtensions:PlatformGesture Ctrl+O}"
+                                        Text="{x:Static lang:Resources.Action_OpenProjectEllipsis}" />
+                                    <ui:MenuFlyoutSeparator />
+                                    <ui:MenuFlyoutItem
+                                        Command="{Binding MenuSaveCommand}"
+                                        IconSource="Save"
+                                        InputGesture="{markupExtensions:PlatformGesture Ctrl+S}"
+                                        Text="{x:Static lang:Resources.Action_Save}" />
+                                    <ui:MenuFlyoutItem
+                                        Command="{Binding MenuSaveAsCommand}"
+                                        InputGesture="{markupExtensions:PlatformGesture Ctrl+Shift+S}"
+                                        Text="{x:Static lang:Resources.Action_SaveAsEllipsis}" />
+
+                                    <ui:MenuFlyoutSeparator />
+
+                                    <ui:MenuFlyoutItem
+                                        Command="{Binding SelectedTab.RestoreDefaultViewStateCommand, FallbackValue={x:Null}}"
+                                        IconSource="CalendarReply"
+                                        Text="{x:Static lang:Resources.Action_RestoreDefaultLayout}" />
+
+                                    <!--  Debug mode menus  -->
+                                    <ui:MenuFlyoutSeparator IsVisible="{Binding SharedState.IsDebugMode}" />
+
+                                    <ui:MenuFlyoutItem
+                                        Command="{Binding SelectedTab.DebugSaveViewStateCommand, FallbackValue={x:Null}}"
+                                        IsVisible="{Binding SharedState.IsDebugMode}"
+                                        Text="Show Dock State" />
+
+                                    <ui:MenuFlyoutItem
+                                        Command="{Binding SelectedTab.DebugLoadViewStateCommand, FallbackValue={x:Null}}"
+                                        IsVisible="{Binding SharedState.IsDebugMode}"
+                                        Text="Load Dock State" />
+
+                                </ui:FAMenuFlyout>
+                            </Button.Flyout>
+                        </Button>
+                    </StackPanel>
+                </ui:TabView.TabStripFooter>
+            </ui:TabView>
+        </Grid>
+    </SplitView>
 </controls:UserControlBase>

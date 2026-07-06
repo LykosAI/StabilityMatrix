@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
+using FluentIcons.Common;
+using StabilityMatrix.Avalonia.Extensions;
+using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Core.Models.Inference;
 
@@ -30,6 +33,9 @@ public partial class PromptQueueItem : ObservableObject
 
     [ObservableProperty]
     [property: JsonConverter(typeof(JsonStringEnumConverter<PromptQueueItemStatus>))]
+    [NotifyPropertyChangedFor(nameof(StatusText))]
+    [NotifyPropertyChangedFor(nameof(IsRunning))]
+    [NotifyPropertyChangedFor(nameof(IsFailed))]
     private PromptQueueItemStatus status = PromptQueueItemStatus.Pending;
 
     [ObservableProperty]
@@ -57,4 +63,25 @@ public partial class PromptQueueItem : ObservableObject
     [ObservableProperty]
     [property: JsonIgnore]
     private Bitmap? previewImage;
+
+    [JsonIgnore]
+    public bool IsRunning => Status == PromptQueueItemStatus.Running;
+
+    [JsonIgnore]
+    public bool IsFailed => Status == PromptQueueItemStatus.Failed;
+
+    [JsonIgnore]
+    public Symbol Icon => ProjectType.GetInfo()?.Icon ?? Symbol.Image;
+
+    [JsonIgnore]
+    public string StatusText =>
+        Status switch
+        {
+            PromptQueueItemStatus.Pending => Resources.Label_StatusPending,
+            PromptQueueItemStatus.Running => Resources.Label_StatusRunning,
+            PromptQueueItemStatus.Completed => Resources.Label_StatusCompleted,
+            PromptQueueItemStatus.Failed => Resources.Label_StatusFailed,
+            PromptQueueItemStatus.Cancelled => Resources.Label_StatusCancelled,
+            _ => string.Empty,
+        };
 }

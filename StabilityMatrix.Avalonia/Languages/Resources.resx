@@ -2057,4 +2057,10 @@ Account tokens will not be viewable after saving, please make a note of them if 
   <data name="Label_StatusCancelled" xml:space="preserve">
     <value>Cancelled</value>
   </data>
+  <data name="Action_MoveUp" xml:space="preserve">
+    <value>Move up</value>
+  </data>
+  <data name="Action_MoveDown" xml:space="preserve">
+    <value>Move down</value>
+  </data>
 </root>

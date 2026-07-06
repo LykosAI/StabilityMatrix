@@ -23,6 +23,7 @@ using NLog;
 using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
+using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
@@ -61,6 +62,11 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
     private readonly RunningPackageService runningPackageService;
     private Guid? selectedPackageId;
     private List<IDisposable> scopes = [];
+
+    public IPromptQueueService PromptQueue { get; }
+
+    [ObservableProperty]
+    private bool isQueuePanelOpen;
 
     public override string Title => Resources.Label_Inference;
     public override IconSource IconSource =>
@@ -111,13 +117,15 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
         IModelIndexService modelIndexService,
         ILiteDbContext liteDbContext,
         RunningPackageService runningPackageService,
-        SharedState sharedState
+        SharedState sharedState,
+        IPromptQueueService promptQueueService
     )
     {
         this.vmFactory = vmFactory;
         this.notificationService = notificationService;
         this.settingsManager = settingsManager;
         this.modelIndexService = modelIndexService;
+        PromptQueue = promptQueueService;
         this.liteDbContext = liteDbContext;
         this.runningPackageService = runningPackageService;
 
@@ -687,6 +695,80 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
         {
             SelectedTabIndex--;
         }
+    }
+
+    [RelayCommand]
+    private void ToggleQueuePanel()
+    {
+        IsQueuePanelOpen = !IsQueuePanelOpen;
+    }
+
+    [RelayCommand]
+    private void ToggleQueueProcessing()
+    {
+        if (PromptQueue.IsProcessing)
+        {
+            PromptQueue.StopProcessing();
+        }
+        else
+        {
+            PromptQueue.StartProcessing();
+        }
+    }
+
+    [RelayCommand]
+    private void ClearQueueFinished() => PromptQueue.ClearFinished();
+
+    [RelayCommand]
+    private void ClearQueuePending() => PromptQueue.ClearPending();
+
+    [RelayCommand]
+    private void MoveQueueItemUp(PromptQueueItem item) => PromptQueue.MoveUp(item);
+
+    [RelayCommand]
+    private void MoveQueueItemDown(PromptQueueItem item) => PromptQueue.MoveDown(item);
+
+    [RelayCommand]
+    private void RemoveQueueItem(PromptQueueItem item) => PromptQueue.Remove(item);
+
+    [RelayCommand]
+    private void CancelQueueItem(PromptQueueItem item)
+    {
+        if (item == PromptQueue.CurrentItem)
+        {
+            PromptQueue.CancelCurrent();
+        }
+    }
+
+    /// <summary>
+    /// Opens a prompt queue item's saved project state in a new tab so it can be edited and re-queued.
+    /// </summary>
+    [RelayCommand]
+    private async Task OpenQueueItemInTabAsync(PromptQueueItem item)
+    {
+        if (item.Project.State is not { } state)
+        {
+            return;
+        }
+
+        if (item.ProjectType.ToViewModelType() is not { } vmType)
+        {
+            return;
+        }
+
+        var scope = vmFactory.CreateScope();
+        scopes.Add(scope);
+
+        var vm =
+            scope.ServiceManager.Get(vmType) as InferenceTabViewModelBase
+            ?? throw new NullReferenceException($"Could not create view model of type {vmType}");
+
+        vm.LoadStateFromJsonObject(state);
+
+        Tabs.Add(vm);
+        SelectedTab = vm;
+
+        await SyncTabStatesWithDatabase();
     }
 
     private async Task AddTabFromFile(FilePath file)

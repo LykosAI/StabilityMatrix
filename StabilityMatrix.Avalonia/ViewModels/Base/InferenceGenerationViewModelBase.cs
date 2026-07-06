@@ -9,6 +9,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
@@ -633,6 +634,8 @@ public abstract partial class InferenceGenerationViewModelBase
             Name = $"{TabTitle} - {DateTime.Now:t}",
             ProjectType = project.ProjectType,
             Project = project,
+            PromptSnippet = GetPromptSnippet(project),
+            ParamsSummary = GetParamsSummary(project),
         };
 
         promptQueueService.Enqueue(item);
@@ -642,6 +645,85 @@ public abstract partial class InferenceGenerationViewModelBase
             Resources.Label_AddedToQueue,
             NotificationType.Information
         );
+    }
+
+    /// <summary>
+    /// Extracts the positive prompt text from a project snapshot as a single line for queue card
+    /// display. Returns null for tabs without a prompt card (e.g. Upscale) or empty prompts.
+    /// </summary>
+    private static string? GetPromptSnippet(InferenceProjectDocument project)
+    {
+        try
+        {
+            if (
+                project.State?["Prompt"] is not { } promptCard
+                || promptCard["Prompt"] is not JsonValue promptNode
+                || !promptNode.TryGetValue<string>(out var prompt)
+            )
+            {
+                return null;
+            }
+
+            var singleLine = string.Join(
+                ' ',
+                prompt.Split(
+                    ["\r\n", "\n", "\r"],
+                    StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries
+                )
+            );
+
+            return string.IsNullOrWhiteSpace(singleLine) ? null : singleLine;
+        }
+        catch (Exception e)
+        {
+            Logger.Debug(e, "Failed to extract prompt snippet from project snapshot");
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Extracts compact generation parameters (dimensions, steps, fixed seed) from a project
+    /// snapshot for queue card display. Returns null if nothing useful is available.
+    /// </summary>
+    private static string? GetParamsSummary(InferenceProjectDocument project)
+    {
+        try
+        {
+            if (project.State is not { } state)
+                return null;
+
+            var parts = new List<string>();
+
+            var sampler = state["Sampler"];
+
+            if (GetIntValue(sampler?["Width"]) is { } width && GetIntValue(sampler?["Height"]) is { } height)
+            {
+                parts.Add($"{width}×{height}");
+            }
+
+            if (GetIntValue(sampler?["Steps"]) is { } steps)
+            {
+                parts.Add(string.Format(Resources.Label_QueueParamsSteps, steps));
+            }
+
+            // Only show the seed when it's fixed; randomized seeds are regenerated at run time
+            if (project.GetSeedModel() is { IsRandomizeEnabled: false } seed)
+            {
+                parts.Add(string.Format(Resources.Label_QueueParamsSeed, seed.Seed));
+            }
+
+            return parts.Count > 0 ? string.Join(" · ", parts) : null;
+        }
+        catch (Exception e)
+        {
+            Logger.Debug(e, "Failed to extract params summary from project snapshot");
+            return null;
+        }
+    }
+
+    private static int? GetIntValue(JsonNode? node)
+    {
+        return node is JsonValue value && value.TryGetValue<int>(out var result) ? result : null;
     }
 
     /// <summary>

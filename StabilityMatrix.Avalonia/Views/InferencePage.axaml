@@ -140,7 +140,7 @@
                                     BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
                                     BorderThickness="1"
                                     CornerRadius="6">
-                                    <Grid RowDefinitions="Auto,Auto,Auto,Auto">
+                                    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto">
 
                                         <!--  Title row  -->
                                         <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto">
@@ -168,12 +168,37 @@
                                             </Border>
                                         </Grid>
 
-                                        <!--  Progress + preview (running only)  -->
-                                        <Grid
+                                        <!--  Prompt snippet + params  -->
+                                        <StackPanel
                                             Grid.Row="1"
+                                            Margin="0,4,0,0"
+                                            Spacing="2">
+                                            <TextBlock
+                                                FontSize="12"
+                                                Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                IsVisible="{Binding PromptSnippet, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                                Text="{Binding PromptSnippet}"
+                                                TextTrimming="CharacterEllipsis"
+                                                ToolTip.Tip="{Binding PromptSnippet}" />
+                                            <TextBlock
+                                                FontSize="11"
+                                                Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                                IsVisible="{Binding ParamsSummary, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                                Text="{Binding ParamsSummary}"
+                                                TextTrimming="CharacterEllipsis" />
+                                        </StackPanel>
+
+                                        <!--  Preview thumbnail + progress (progress while running)  -->
+                                        <Grid
+                                            Grid.Row="2"
                                             Margin="0,8,0,0"
-                                            ColumnDefinitions="Auto,*"
-                                            IsVisible="{Binding IsRunning}">
+                                            ColumnDefinitions="Auto,*">
+                                            <Grid.IsVisible>
+                                                <MultiBinding Converter="{x:Static BoolConverters.Or}">
+                                                    <Binding Path="IsRunning" />
+                                                    <Binding Converter="{x:Static ObjectConverters.IsNotNull}" Path="PreviewImage" />
+                                                </MultiBinding>
+                                            </Grid.IsVisible>
                                             <Border
                                                 Grid.Column="0"
                                                 Width="48"
@@ -187,6 +212,7 @@
                                             <StackPanel
                                                 Grid.Column="1"
                                                 VerticalAlignment="Center"
+                                                IsVisible="{Binding IsRunning}"
                                                 Spacing="4">
                                                 <ProgressBar Maximum="100" Value="{Binding Progress}" />
                                                 <TextBlock
@@ -199,7 +225,7 @@
 
                                         <!--  Error message (failed only)  -->
                                         <TextBlock
-                                            Grid.Row="2"
+                                            Grid.Row="3"
                                             Margin="0,6,0,0"
                                             FontSize="11"
                                             Foreground="{DynamicResource SystemFillColorCriticalBrush}"
@@ -209,7 +235,7 @@
 
                                         <!--  Action buttons  -->
                                         <StackPanel
-                                            Grid.Row="3"
+                                            Grid.Row="4"
                                             Margin="0,6,0,0"
                                             HorizontalAlignment="Right"
                                             Orientation="Horizontal"

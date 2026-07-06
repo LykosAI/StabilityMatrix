@@ -5611,5 +5611,23 @@ namespace StabilityMatrix.Avalonia.Languages {
                 return ResourceManager.GetString("Action_MoveDown", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to {0} steps.
+        /// </summary>
+        public static string Label_QueueParamsSteps {
+            get {
+                return ResourceManager.GetString("Label_QueueParamsSteps", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to seed {0}.
+        /// </summary>
+        public static string Label_QueueParamsSeed {
+            get {
+                return ResourceManager.GetString("Label_QueueParamsSeed", resourceCulture);
+            }
+        }
     }
 }

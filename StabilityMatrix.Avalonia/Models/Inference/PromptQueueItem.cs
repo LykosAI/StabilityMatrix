@@ -47,6 +47,18 @@ public partial class PromptQueueItem : ObservableObject
     [ObservableProperty]
     private string? errorMessage;
 
+    /// <summary>
+    /// Single-line positive prompt text extracted from the snapshot at enqueue time, for card
+    /// display. Null for tabs without a prompt card (e.g. Upscale).
+    /// </summary>
+    public string? PromptSnippet { get; set; }
+
+    /// <summary>
+    /// Compact generation parameters extracted from the snapshot at enqueue time,
+    /// e.g. "1024×1024 · 20 steps · seed 123".
+    /// </summary>
+    public string? ParamsSummary { get; set; }
+
     public DateTimeOffset AddedAt { get; set; } = DateTimeOffset.Now;
 
     [ObservableProperty]

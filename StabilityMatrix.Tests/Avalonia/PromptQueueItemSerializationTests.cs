@@ -18,6 +18,8 @@ public class PromptQueueItemSerializationTests
             Progress = 42,
             ProgressText = "sampling",
             ErrorMessage = null,
+            PromptSnippet = "a cat sitting on a windowsill, masterpiece",
+            ParamsSummary = "1024×1024 · 20 steps · seed 1234",
             OutputImagePaths = { "C:/images/a.png", "C:/images/b.png" },
             Project = new InferenceProjectDocument
             {
@@ -41,6 +43,8 @@ public class PromptQueueItemSerializationTests
         Assert.AreEqual(item.Status, restored.Status);
         Assert.AreEqual(item.Progress, restored.Progress);
         Assert.AreEqual(item.ProgressText, restored.ProgressText);
+        Assert.AreEqual(item.PromptSnippet, restored.PromptSnippet);
+        Assert.AreEqual(item.ParamsSummary, restored.ParamsSummary);
         CollectionAssert.AreEqual(item.OutputImagePaths, restored.OutputImagePaths);
 
         Assert.IsNotNull(restored.Project.State);

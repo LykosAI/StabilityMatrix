@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Controls.Notifications;
+using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Injectio.Attributes;
@@ -160,6 +161,22 @@ public partial class PromptQueueService : ObservableObject, IPromptQueueService,
         if (IsProcessing)
             return;
 
+        // Called on the UI thread from the Start command - check connectivity up front so the
+        // user gets instant feedback instead of the loop exiting in the background.
+        if (!clientManager.IsConnected)
+        {
+            if (Items.Any(x => x.Status == PromptQueueItemStatus.Pending))
+            {
+                notificationService.Show(
+                    Resources.Label_PromptQueue,
+                    Resources.Label_PromptQueueNotConnected,
+                    NotificationType.Warning
+                );
+            }
+
+            return;
+        }
+
         stopRequested = false;
         IsProcessing = true;
 
@@ -197,15 +214,20 @@ public partial class PromptQueueService : ObservableObject, IPromptQueueService,
                 if (item is null)
                     break;
 
-                // Require a connected client. If not connected, notify once, leave the item
-                // pending, and stop processing.
+                // Client disconnected mid-queue: notify once (on the UI thread - this loop runs
+                // in the background), leave the item pending, and stop processing.
                 if (!clientManager.IsConnected)
                 {
-                    notificationService.Show(
-                        Resources.Label_PromptQueue,
-                        Resources.Label_PromptQueueNotConnected,
-                        NotificationType.Warning
-                    );
+                    await Dispatcher
+                        .UIThread.InvokeAsync(() =>
+                            notificationService.Show(
+                                Resources.Label_PromptQueue,
+                                Resources.Label_PromptQueueNotConnected,
+                                NotificationType.Warning
+                            )
+                        )
+                        .GetTask()
+                        .ConfigureAwait(false);
                     break;
                 }
 
@@ -260,6 +282,7 @@ public partial class PromptQueueService : ObservableObject, IPromptQueueService,
             .ConfigureAwait(false);
 
         var progressMirror = new ProgressMirror(generationViewModel, item);
+        var succeeded = false;
 
         try
         {
@@ -278,6 +301,8 @@ public partial class PromptQueueService : ObservableObject, IPromptQueueService,
                 })
                 .GetTask()
                 .ConfigureAwait(false);
+
+            succeeded = true;
         }
         catch (OperationCanceledException)
         {
@@ -318,6 +343,52 @@ public partial class PromptQueueService : ObservableObject, IPromptQueueService,
                 .GetTask()
                 .ConfigureAwait(false);
         }
+
+        // After the live preview is cleaned up, show the finished image on the card
+        if (succeeded)
+        {
+            LoadOutputThumbnailAsync(item)
+                .SafeFireAndForget(ex =>
+                    Logger.Warn(ex, "Failed to load output thumbnail for queue item {Id}", item.Id)
+                );
+        }
+    }
+
+    /// <summary>
+    /// Decodes a thumbnail of the item's first output image (off the UI thread) and assigns it
+    /// as the card preview. Best-effort: missing or unreadable files are skipped. The decoded
+    /// bitmap is queue-owned, so the usual dispose-on-replace/remove rules apply.
+    /// </summary>
+    private async Task LoadOutputThumbnailAsync(PromptQueueItem item)
+    {
+        var path = item.OutputImagePaths.FirstOrDefault();
+
+        if (string.IsNullOrEmpty(path) || !File.Exists(path))
+            return;
+
+        var thumbnail = await Task.Run(() =>
+            {
+                using var stream = File.OpenRead(path);
+                return Bitmap.DecodeToWidth(stream, 256);
+            })
+            .ConfigureAwait(false);
+
+        await Dispatcher
+            .UIThread.InvokeAsync(() =>
+            {
+                // The item may have been removed while decoding - don't leak the bitmap
+                if (!Items.Contains(item))
+                {
+                    thumbnail.Dispose();
+                    return;
+                }
+
+                var previous = item.PreviewImage;
+                item.PreviewImage = thumbnail;
+                previous?.Dispose();
+            })
+            .GetTask()
+            .ConfigureAwait(false);
     }
 
     /// <summary>
@@ -511,6 +582,19 @@ public partial class PromptQueueService : ObservableObject, IPromptQueueService,
                 })
                 .GetTask()
                 .ConfigureAwait(false);
+
+            // Lazily restore output thumbnails for completed items (best-effort, background)
+            foreach (
+                var item in (loaded ?? []).Where(x =>
+                    x.Status == PromptQueueItemStatus.Completed && x.OutputImagePaths.Count > 0
+                )
+            )
+            {
+                LoadOutputThumbnailAsync(item)
+                    .SafeFireAndForget(ex =>
+                        Logger.Warn(ex, "Failed to load output thumbnail for queue item {Id}", item.Id)
+                    );
+            }
         }
         catch (Exception e)
         {

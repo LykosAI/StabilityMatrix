@@ -2063,4 +2063,10 @@ Account tokens will not be viewable after saving, please make a note of them if 
   <data name="Action_MoveDown" xml:space="preserve">
     <value>Move down</value>
   </data>
+  <data name="Label_QueueParamsSteps" xml:space="preserve">
+    <value>{0} steps</value>
+  </data>
+  <data name="Label_QueueParamsSeed" xml:space="preserve">
+    <value>seed {0}</value>
+  </data>
 </root>

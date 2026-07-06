@@ -112,6 +112,7 @@ public static class CivitFileTypeExtensions
                 baseModelType?.StartsWith("Wan", StringComparison.OrdinalIgnoreCase) is true
                 || baseModelType?.StartsWith("Flux", StringComparison.OrdinalIgnoreCase) is true
                 || baseModelType?.StartsWith("Hunyuan", StringComparison.OrdinalIgnoreCase) is true
+                || baseModelType?.StartsWith("Krea", StringComparison.OrdinalIgnoreCase) is true
                 || format == CivitModelFormat.GGUF
                 || (
                     fileName is not null

@@ -55,9 +55,17 @@ public class InferenceFluxTextToImageViewModel : InferenceGenerationViewModelBas
         IInferenceClientManager inferenceClientManager,
         INotificationService notificationService,
         ISettingsManager settingsManager,
-        RunningPackageService runningPackageService
+        RunningPackageService runningPackageService,
+        IPromptQueueService promptQueueService
     )
-        : base(vmFactory, inferenceClientManager, notificationService, settingsManager, runningPackageService)
+        : base(
+            vmFactory,
+            inferenceClientManager,
+            notificationService,
+            settingsManager,
+            runningPackageService,
+            promptQueueService
+        )
     {
         this.notificationService = notificationService;
         this.modelIndexService = modelIndexService;

@@ -64,9 +64,17 @@ public partial class InferenceImageToVideoViewModel
         ISettingsManager settingsManager,
         IServiceManager<ViewModelBase> vmFactory,
         IModelIndexService modelIndexService,
-        RunningPackageService runningPackageService
+        RunningPackageService runningPackageService,
+        IPromptQueueService promptQueueService
     )
-        : base(vmFactory, inferenceClientManager, notificationService, settingsManager, runningPackageService)
+        : base(
+            vmFactory,
+            inferenceClientManager,
+            notificationService,
+            settingsManager,
+            runningPackageService,
+            promptQueueService
+        )
     {
         this.notificationService = notificationService;
         this.modelIndexService = modelIndexService;

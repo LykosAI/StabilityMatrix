@@ -66,6 +66,7 @@ public abstract partial class InferenceGenerationViewModelBase
     private readonly RunningPackageService runningPackageService;
     private readonly IServiceManager<ViewModelBase> vmFactory;
     private readonly INotificationService notificationService;
+    private readonly IPromptQueueService promptQueueService;
 
     [JsonPropertyName("ImageGallery")]
     public ImageGalleryCardViewModel ImageGalleryCardViewModel { get; }
@@ -85,7 +86,8 @@ public abstract partial class InferenceGenerationViewModelBase
         IInferenceClientManager inferenceClientManager,
         INotificationService notificationService,
         ISettingsManager settingsManager,
-        RunningPackageService runningPackageService
+        RunningPackageService runningPackageService,
+        IPromptQueueService promptQueueService
     )
         : base(notificationService)
     {
@@ -93,6 +95,7 @@ public abstract partial class InferenceGenerationViewModelBase
         this.settingsManager = settingsManager;
         this.runningPackageService = runningPackageService;
         this.vmFactory = vmFactory;
+        this.promptQueueService = promptQueueService;
 
         ClientManager = inferenceClientManager;
 
@@ -610,6 +613,42 @@ public abstract partial class InferenceGenerationViewModelBase
     protected virtual Task GenerateImageImpl(GenerateOverrides overrides, CancellationToken cancellationToken)
     {
         return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Snapshots the current tab state and adds it to the prompt queue. Separate from the Generate
+    /// button; does not require a connected client (queueing while ComfyUI is off is allowed).
+    /// </summary>
+    [RelayCommand]
+    private void AddToQueue()
+    {
+        var project = InferenceProjectDocument.FromLoadable(this);
+
+        var item = new PromptQueueItem
+        {
+            Name = $"{TabTitle} - {DateTime.Now:t}",
+            ProjectType = project.ProjectType,
+            Project = project,
+        };
+
+        promptQueueService.Enqueue(item);
+
+        notificationService.Show(
+            Resources.Label_PromptQueue,
+            Resources.Label_AddedToQueue,
+            NotificationType.Information
+        );
+    }
+
+    /// <summary>
+    /// Runs a single generation using the same implementation as the Generate button, for
+    /// headless replay by the prompt queue. Unlike the command, exceptions are not swallowed so
+    /// the queue can mark the item failed; <see cref="OperationCanceledException"/> propagates for
+    /// cancelled items.
+    /// </summary>
+    public Task RunGenerationForQueueAsync(CancellationToken cancellationToken)
+    {
+        return GenerateImageImpl(GenerateOverrides.FromFlags(default), cancellationToken);
     }
 
     /// <summary>

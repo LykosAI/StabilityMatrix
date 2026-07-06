@@ -195,7 +195,14 @@ public partial class PromptQueueService : ObservableObject, IPromptQueueService,
 
     public void CancelCurrent()
     {
-        currentItemCts?.Cancel();
+        try
+        {
+            currentItemCts?.Cancel();
+        }
+        catch (ObjectDisposedException)
+        {
+            // The item finished and its CTS was disposed between the read and the cancel
+        }
     }
 
     private async Task ProcessLoopAsync()
@@ -317,7 +324,16 @@ public partial class PromptQueueService : ObservableObject, IPromptQueueService,
 
         try
         {
-            await generationViewModel.RunGenerationForQueueAsync(cts.Token).ConfigureAwait(false);
+            // Start the generation on the UI thread so it runs with interactive semantics:
+            // RunGeneration touches gallery/progress state after awaits and is only safe when
+            // its continuations resume on the dispatcher context. The loop thread just awaits
+            // the returned task.
+            var generationTask = await Dispatcher
+                .UIThread.InvokeAsync<Task>(() => generationViewModel.RunGenerationForQueueAsync(cts.Token))
+                .GetTask()
+                .ConfigureAwait(false);
+
+            await generationTask.ConfigureAwait(false);
 
             await Dispatcher
                 .UIThread.InvokeAsync(() =>
@@ -642,11 +658,16 @@ public partial class PromptQueueService : ObservableObject, IPromptQueueService,
         savePending = true;
 
         var cts = new CancellationTokenSource();
+        // Read the token before spawning: a subsequent RequestSave or shutdown may cancel the
+        // CTS while the delayed task runs, and the closure must never touch the CTS itself.
+        var token = cts.Token;
+
         var old = Interlocked.Exchange(ref delayedSaveCts, cts);
         try
         {
+            // Cancel and drop the old CTS; it is left for the GC rather than disposed so any
+            // in-flight delayed task can't observe a disposed instance.
             old?.Cancel();
-            old?.Dispose();
         }
         catch (ObjectDisposedException) { }
 
@@ -655,14 +676,14 @@ public partial class PromptQueueService : ObservableObject, IPromptQueueService,
                 {
                     try
                     {
-                        await Task.Delay(TimeSpan.FromMilliseconds(500), cts.Token).ConfigureAwait(false);
+                        await Task.Delay(TimeSpan.FromMilliseconds(500), token).ConfigureAwait(false);
                         savePending = false;
                         await SaveAsync().ConfigureAwait(false);
                     }
-                    catch (TaskCanceledException) { }
-                    finally
+                    catch (OperationCanceledException) { }
+                    catch (ObjectDisposedException e)
                     {
-                        cts.Dispose();
+                        Logger.Debug(e, "Prompt queue save debounce raced with disposal");
                     }
                 },
                 CancellationToken.None

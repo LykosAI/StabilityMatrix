@@ -701,7 +701,7 @@ public partial class CivitDetailsPageViewModel(
 
         foreach (var file in modelVersion.Files)
         {
-            if (file is not { Type: CivitFileType.Model, Hashes.BLAKE3: not null })
+            if (!file.Type.IsModelWeights() || file is not { Hashes.BLAKE3: not null })
                 continue;
 
             var matchingModels = (await modelIndexService.FindByHashAsync(file.Hashes.BLAKE3)).ToList();
@@ -826,7 +826,7 @@ public partial class CivitDetailsPageViewModel(
         if (ShowTrainingData)
             return true;
 
-        return file.Type is CivitFileType.Model or CivitFileType.PrunedModel or CivitFileType.VAE;
+        return file.Type.IsDownloadableModelFile();
     }
 
     partial void OnSelectedVersionChanged(ModelVersionViewModel? value)
@@ -950,11 +950,15 @@ public partial class CivitDetailsPageViewModel(
         string? fileName = null
     )
     {
-        if (fileType is CivitFileType.VAE)
+        // Explicitly-typed component files (VAE, Diffusion Model, Text Encoder, ...) determine
+        // their own destination — no need to guess from the model/base-model type.
+        if (fileType?.GetExplicitSharedFolderType() is { } explicitFolder)
         {
-            return rootModelsDirectory.JoinDir(SharedFolderType.VAE.GetStringValue());
+            return rootModelsDirectory.JoinDir(explicitFolder.GetStringValue());
         }
 
+        // Legacy fallback for files still typed plain "Model": guess UNet-only checkpoints
+        // from the base model type.
         if (
             modelType is CivitModelType.Checkpoint
             && (
@@ -988,10 +992,7 @@ public partial class CivitDetailsPageViewModel(
         DirectoryPath requestedDestinationDir
     )
     {
-        if (
-            civitFile.Type is not (CivitFileType.Model or CivitFileType.PrunedModel)
-            || CivitModel.Type is not CivitModelType.Checkpoint
-        )
+        if (!civitFile.Type.IsModelWeights() || CivitModel.Type is not CivitModelType.Checkpoint)
         {
             return;
         }

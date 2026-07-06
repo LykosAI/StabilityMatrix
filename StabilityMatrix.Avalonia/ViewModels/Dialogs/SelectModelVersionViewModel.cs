@@ -377,11 +377,15 @@ public partial class SelectModelVersionViewModel(
         string? baseModelType
     )
     {
-        if (civitFile?.Type is CivitFileType.VAE)
+        // Explicitly-typed component files (VAE, Diffusion Model, Text Encoder, ...) determine
+        // their own destination — no need to guess from the model/base-model type.
+        if (civitFile?.Type.GetExplicitSharedFolderType() is { } explicitFolder)
         {
-            return rootModelsDirectory.JoinDir(SharedFolderType.VAE.GetStringValue());
+            return rootModelsDirectory.JoinDir(explicitFolder.GetStringValue());
         }
 
+        // Legacy fallback for files still typed plain "Model": guess UNet-only checkpoints
+        // from the base model type.
         if (
             modelType is CivitModelType.Checkpoint
             && (

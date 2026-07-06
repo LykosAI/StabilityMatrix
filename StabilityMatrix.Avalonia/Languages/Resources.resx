@@ -2075,4 +2075,10 @@ Account tokens will not be viewable after saving, please make a note of them if 
   <data name="Action_RequeueAll" xml:space="preserve">
     <value>Re-queue all finished</value>
   </data>
+  <data name="Label_QueuePausing" xml:space="preserve">
+    <value>Pausing…</value>
+  </data>
+  <data name="Label_QueuePauseTooltip" xml:space="preserve">
+    <value>Finishes the current item, then stops</value>
+  </data>
 </root>

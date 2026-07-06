@@ -73,7 +73,8 @@
                         <Button
                             Padding="8,4"
                             Classes="accent"
-                            Command="{Binding ToggleQueueProcessingCommand}">
+                            Command="{Binding ToggleQueueProcessingCommand}"
+                            IsEnabled="{Binding !PromptQueue.IsStopRequested}">
                             <Panel>
                                 <StackPanel
                                     IsVisible="{Binding !PromptQueue.IsProcessing}"
@@ -86,14 +87,31 @@
                                     <TextBlock VerticalAlignment="Center" Text="{x:Static lang:Resources.Action_StartQueue}" />
                                 </StackPanel>
                                 <StackPanel
-                                    IsVisible="{Binding PromptQueue.IsProcessing}"
                                     Orientation="Horizontal"
-                                    Spacing="6">
+                                    Spacing="6"
+                                    ToolTip.Tip="{x:Static lang:Resources.Label_QueuePauseTooltip}">
+                                    <StackPanel.IsVisible>
+                                        <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                            <Binding Path="PromptQueue.IsProcessing" />
+                                            <Binding Path="!PromptQueue.IsStopRequested" />
+                                        </MultiBinding>
+                                    </StackPanel.IsVisible>
                                     <fluentIcons:SymbolIcon
                                         FontSize="15"
                                         IconVariant="Filled"
                                         Symbol="Pause" />
                                     <TextBlock VerticalAlignment="Center" Text="{x:Static lang:Resources.Action_PauseQueue}" />
+                                </StackPanel>
+                                <StackPanel
+                                    IsVisible="{Binding PromptQueue.IsStopRequested}"
+                                    Orientation="Horizontal"
+                                    Spacing="6">
+                                    <controls:ProgressRing
+                                        Width="15"
+                                        Height="15"
+                                        BorderThickness="3"
+                                        IsIndeterminate="True" />
+                                    <TextBlock VerticalAlignment="Center" Text="{x:Static lang:Resources.Label_QueuePausing}" />
                                 </StackPanel>
                             </Panel>
                         </Button>

@@ -21,6 +21,12 @@ public interface IPromptQueueService : INotifyPropertyChanged
     bool IsProcessing { get; }
 
     /// <summary>
+    /// Whether a graceful stop has been requested: the current item finishes, then processing
+    /// stops. Only true while <see cref="IsProcessing"/> is true.
+    /// </summary>
+    bool IsStopRequested { get; }
+
+    /// <summary>
     /// The item currently being executed, if any.
     /// </summary>
     PromptQueueItem? CurrentItem { get; }

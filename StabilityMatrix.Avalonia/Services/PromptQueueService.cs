@@ -58,6 +58,9 @@ public partial class PromptQueueService : ObservableObject, IPromptQueueService,
     private bool isProcessing;
 
     [ObservableProperty]
+    private bool isStopRequested;
+
+    [ObservableProperty]
     private PromptQueueItem? currentItem;
 
     public PromptQueueService(
@@ -203,19 +206,29 @@ public partial class PromptQueueService : ObservableObject, IPromptQueueService,
         }
 
         stopRequested = false;
+        IsStopRequested = false;
         IsProcessing = true;
 
         ProcessLoopAsync()
             .SafeFireAndForget(ex =>
             {
                 Logger.Error(ex, "Prompt queue processing loop faulted");
-                Dispatcher.UIThread.Post(() => IsProcessing = false);
+                Dispatcher.UIThread.Post(() =>
+                {
+                    IsProcessing = false;
+                    IsStopRequested = false;
+                });
             });
     }
 
     public void StopProcessing()
     {
+        // Idempotent: only meaningful while processing and not already requested
+        if (!IsProcessing || stopRequested)
+            return;
+
         stopRequested = true;
+        IsStopRequested = true;
     }
 
     public void CancelCurrent()
@@ -281,6 +294,7 @@ public partial class PromptQueueService : ObservableObject, IPromptQueueService,
             {
                 CurrentItem = null;
                 IsProcessing = false;
+                IsStopRequested = false;
             });
         }
     }

@@ -5647,5 +5647,23 @@ namespace StabilityMatrix.Avalonia.Languages {
                 return ResourceManager.GetString("Action_RequeueAll", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Pausing….
+        /// </summary>
+        public static string Label_QueuePausing {
+            get {
+                return ResourceManager.GetString("Label_QueuePausing", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Finishes the current item, then stops.
+        /// </summary>
+        public static string Label_QueuePauseTooltip {
+            get {
+                return ResourceManager.GetString("Label_QueuePauseTooltip", resourceCulture);
+            }
+        }
     }
 }

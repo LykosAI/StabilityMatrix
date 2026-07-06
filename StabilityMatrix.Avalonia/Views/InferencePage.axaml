@@ -71,22 +71,28 @@
                         Orientation="Horizontal"
                         Spacing="2">
                         <Button
+                            MinWidth="92"
                             Padding="8,4"
                             Classes="accent"
                             Command="{Binding ToggleQueueProcessingCommand}"
                             IsEnabled="{Binding !PromptQueue.IsStopRequested}">
                             <Panel>
                                 <StackPanel
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
                                     IsVisible="{Binding !PromptQueue.IsProcessing}"
                                     Orientation="Horizontal"
                                     Spacing="6">
                                     <fluentIcons:SymbolIcon
+                                        VerticalAlignment="Center"
                                         FontSize="15"
                                         IconVariant="Filled"
                                         Symbol="Play" />
                                     <TextBlock VerticalAlignment="Center" Text="{x:Static lang:Resources.Action_StartQueue}" />
                                 </StackPanel>
                                 <StackPanel
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
                                     Orientation="Horizontal"
                                     Spacing="6"
                                     ToolTip.Tip="{x:Static lang:Resources.Label_QueuePauseTooltip}">
@@ -97,20 +103,26 @@
                                         </MultiBinding>
                                     </StackPanel.IsVisible>
                                     <fluentIcons:SymbolIcon
+                                        VerticalAlignment="Center"
                                         FontSize="15"
                                         IconVariant="Filled"
                                         Symbol="Pause" />
                                     <TextBlock VerticalAlignment="Center" Text="{x:Static lang:Resources.Action_PauseQueue}" />
                                 </StackPanel>
                                 <StackPanel
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
                                     IsVisible="{Binding PromptQueue.IsStopRequested}"
                                     Orientation="Horizontal"
                                     Spacing="6">
                                     <controls:ProgressRing
                                         Width="15"
                                         Height="15"
-                                        BorderThickness="3"
-                                        IsIndeterminate="True" />
+                                        MinWidth="15"
+                                        MinHeight="15"
+                                        VerticalAlignment="Center"
+                                        IsIndeterminate="True"
+                                        StrokeThickness="2" />
                                     <TextBlock VerticalAlignment="Center" Text="{x:Static lang:Resources.Label_QueuePausing}" />
                                 </StackPanel>
                             </Panel>

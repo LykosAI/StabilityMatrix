@@ -418,6 +418,15 @@
                             <Button.Flyout>
                                 <ui:FAMenuFlyout Placement="BottomEdgeAlignedRight">
                                     <ui:MenuFlyoutItem
+                                        x:CompileBindings="False"
+                                        Command="{Binding SelectedTab.AddToQueueCommand, FallbackValue={x:Null}}"
+                                        Text="{x:Static lang:Resources.Label_AddToQueue}">
+                                        <ui:MenuFlyoutItem.IconSource>
+                                            <fluentIcons:SymbolIconSource Symbol="AppsAddIn" />
+                                        </ui:MenuFlyoutItem.IconSource>
+                                    </ui:MenuFlyoutItem>
+                                    <ui:MenuFlyoutSeparator />
+                                    <ui:MenuFlyoutItem
                                         Command="{Binding MenuOpenProjectCommand}"
                                         IconSource="OpenFolder"
                                         InputGesture="{markupExtensions:PlatformGesture Ctrl+O}"

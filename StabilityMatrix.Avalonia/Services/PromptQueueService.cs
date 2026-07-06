@@ -167,7 +167,13 @@ public partial class PromptQueueService : ObservableObject, IPromptQueueService
         {
             while (!stopRequested)
             {
-                var item = Items.FirstOrDefault(x => x.Status == PromptQueueItemStatus.Pending);
+                // Items is UI-owned; read the next pending item on the UI thread.
+                var item = await Dispatcher
+                    .UIThread.InvokeAsync(() =>
+                        Items.FirstOrDefault(x => x.Status == PromptQueueItemStatus.Pending)
+                    )
+                    .GetTask()
+                    .ConfigureAwait(false);
                 if (item is null)
                     break;
 
@@ -239,11 +245,12 @@ public partial class PromptQueueService : ObservableObject, IPromptQueueService
         {
             await generationViewModel.RunGenerationForQueueAsync(cts.Token).ConfigureAwait(false);
 
-            CaptureOutputs(generationViewModel, item);
-
             await Dispatcher
                 .UIThread.InvokeAsync(() =>
                 {
+                    // ImageSources is UI-owned; capture on the UI thread.
+                    CaptureOutputs(generationViewModel, item);
+
                     item.Status = PromptQueueItemStatus.Completed;
                     item.Progress = 100;
                     item.ProgressText = null;

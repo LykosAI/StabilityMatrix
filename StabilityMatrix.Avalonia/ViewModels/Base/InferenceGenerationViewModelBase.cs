@@ -335,6 +335,8 @@ public abstract partial class InferenceGenerationViewModelBase
             catch (ApiException e)
             {
                 Logger.Warn(e, "Api exception while queuing prompt");
+                if (IsQueueReplay)
+                    throw;
                 await DialogHelper.CreateApiExceptionDialog(e, "Api Error").ShowAsync();
                 return;
             }
@@ -379,6 +381,8 @@ public abstract partial class InferenceGenerationViewModelBase
             catch (ComfyNodeException e)
             {
                 Logger.Warn(e, "Comfy node exception while queuing prompt");
+                if (IsQueueReplay)
+                    throw;
                 await DialogHelper
                     .CreateJsonDialog(e.JsonData, "Comfy Error", "Node execution encountered an error")
                     .ShowAsync();
@@ -641,14 +645,29 @@ public abstract partial class InferenceGenerationViewModelBase
     }
 
     /// <summary>
+    /// True while this view model is replaying a generation headlessly for the prompt queue.
+    /// Errors are then surfaced to the caller as exceptions instead of interactive dialogs.
+    /// </summary>
+    [JsonIgnore]
+    protected bool IsQueueReplay { get; private set; }
+
+    /// <summary>
     /// Runs a single generation using the same implementation as the Generate button, for
     /// headless replay by the prompt queue. Unlike the command, exceptions are not swallowed so
     /// the queue can mark the item failed; <see cref="OperationCanceledException"/> propagates for
     /// cancelled items.
     /// </summary>
-    public Task RunGenerationForQueueAsync(CancellationToken cancellationToken)
+    public async Task RunGenerationForQueueAsync(CancellationToken cancellationToken)
     {
-        return GenerateImageImpl(GenerateOverrides.FromFlags(default), cancellationToken);
+        IsQueueReplay = true;
+        try
+        {
+            await GenerateImageImpl(GenerateOverrides.FromFlags(default), cancellationToken);
+        }
+        finally
+        {
+            IsQueueReplay = false;
+        }
     }
 
     /// <summary>
@@ -686,6 +705,12 @@ public abstract partial class InferenceGenerationViewModelBase
     {
         if (ClientManager.IsConnected)
             return true;
+
+        // No interactive connection prompt during queue replay - fail the item instead
+        if (IsQueueReplay)
+        {
+            throw new ValidationException("ComfyUI is not connected");
+        }
 
         var vm = vmFactory.Get<InferenceConnectionHelpViewModel>();
         var result = await vm.CreateDialog().ShowAsync();
@@ -856,6 +881,20 @@ public abstract partial class InferenceGenerationViewModelBase
         if (missingExtensions.Count == 0 && outOfDateExtensions.Count == 0)
         {
             return true;
+        }
+
+        // No interactive install prompt during queue replay - fail the item with a readable message
+        if (IsQueueReplay)
+        {
+            throw new ValidationException(
+                "Missing required extensions: "
+                    + string.Join(
+                        ", ",
+                        missingExtensions
+                            .Select(ext => ext.Name)
+                            .Concat(outOfDateExtensions.Select(pair => pair.Specifier.Name))
+                    )
+            );
         }
 
         var dialog = DialogHelper.CreateMarkdownDialog(

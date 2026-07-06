@@ -17,6 +17,7 @@ using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Services;
 
@@ -271,6 +272,11 @@ public partial class PromptQueueService : ObservableObject, IPromptQueueService
                 .GetTask()
                 .ConfigureAwait(false);
         }
+        catch (ComfyNodeException e)
+        {
+            Logger.Warn(e, "Prompt queue item {Id} failed on node execution", item.Id);
+            SetFailed(item, FormatNodeError(e));
+        }
         catch (Exception e)
         {
             Logger.Warn(e, "Prompt queue item {Id} failed", item.Id);
@@ -291,6 +297,24 @@ public partial class PromptQueueService : ObservableObject, IPromptQueueService
                 .GetTask()
                 .ConfigureAwait(false);
         }
+    }
+
+    /// <summary>
+    /// Builds a human-readable error message from a Comfy node execution error,
+    /// e.g. "KSampler: mat1 and mat2 shapes cannot be multiplied".
+    /// </summary>
+    private static string FormatNodeError(ComfyNodeException e)
+    {
+        var errorData = e.ErrorData;
+
+        if (string.IsNullOrEmpty(errorData.ExceptionMessage))
+        {
+            return "Node execution encountered an error";
+        }
+
+        return string.IsNullOrEmpty(errorData.NodeType)
+            ? errorData.ExceptionMessage
+            : $"{errorData.NodeType}: {errorData.ExceptionMessage}";
     }
 
     private void SetFailed(PromptQueueItem item, string? message)

@@ -49,6 +49,9 @@ public partial class PromptQueueService : ObservableObject, IPromptQueueService,
     /// <summary>Cancellation for the currently running item's generation.</summary>
     private CancellationTokenSource? currentItemCts;
 
+    /// <summary>Guards <see cref="currentItemCts"/> against concurrent Cancel/Dispose.</summary>
+    private readonly object currentItemLock = new();
+
     /// <summary>Set when StopProcessing is requested; the current item finishes but no next starts.</summary>
     private volatile bool stopRequested;
 
@@ -233,13 +236,16 @@ public partial class PromptQueueService : ObservableObject, IPromptQueueService,
 
     public void CancelCurrent()
     {
-        try
+        lock (currentItemLock)
         {
-            currentItemCts?.Cancel();
-        }
-        catch (ObjectDisposedException)
-        {
-            // The item finished and its CTS was disposed between the read and the cancel
+            try
+            {
+                currentItemCts?.Cancel();
+            }
+            catch (ObjectDisposedException)
+            {
+                // The item finished and its CTS was disposed between the read and the cancel
+            }
         }
     }
 
@@ -355,8 +361,12 @@ public partial class PromptQueueService : ObservableObject, IPromptQueueService,
             return;
         }
 
-        using var cts = new CancellationTokenSource();
-        currentItemCts = cts;
+        CancellationTokenSource cts;
+        lock (currentItemLock)
+        {
+            cts = new CancellationTokenSource();
+            currentItemCts = cts;
+        }
 
         var progressMirror = new ProgressMirror(generationViewModel, item);
         var succeeded = false;
@@ -415,7 +425,14 @@ public partial class PromptQueueService : ObservableObject, IPromptQueueService,
         finally
         {
             progressMirror.Dispose();
-            currentItemCts = null;
+
+            // Null the field before disposing so a concurrent CancelCurrent can't find the CTS
+            // we're about to dispose.
+            lock (currentItemLock)
+            {
+                currentItemCts = null;
+            }
+            cts.Dispose();
 
             await Dispatcher
                 .UIThread.InvokeAsync(() =>
@@ -647,6 +664,15 @@ public partial class PromptQueueService : ObservableObject, IPromptQueueService,
             await Dispatcher
                 .UIThread.InvokeAsync(() =>
                 {
+                    // Idempotent: clear any existing items (disposing bitmaps + detaching handlers)
+                    // so a re-load can't leak or duplicate.
+                    foreach (var existing in Items)
+                    {
+                        DisposePreview(existing);
+                        DetachItemHandlers(existing);
+                    }
+                    Items.Clear();
+
                     if (loaded is not null)
                     {
                         foreach (var item in loaded)

@@ -29,6 +29,12 @@ public interface IPromptQueueService : INotifyPropertyChanged
 
     void Remove(PromptQueueItem item);
 
+    /// <summary>
+    /// Resets a finished (completed, failed, or cancelled) item back to pending in place so it
+    /// runs again. No-op for pending or running items.
+    /// </summary>
+    void Requeue(PromptQueueItem item);
+
     void MoveUp(PromptQueueItem item);
 
     void MoveDown(PromptQueueItem item);

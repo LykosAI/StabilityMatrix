@@ -5629,5 +5629,14 @@ namespace StabilityMatrix.Avalonia.Languages {
                 return ResourceManager.GetString("Label_QueueParamsSeed", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Re-queue.
+        /// </summary>
+        public static string Action_Requeue {
+            get {
+                return ResourceManager.GetString("Action_Requeue", resourceCulture);
+            }
+        }
     }
 }

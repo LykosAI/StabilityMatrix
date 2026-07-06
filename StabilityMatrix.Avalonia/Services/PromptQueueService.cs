@@ -103,6 +103,23 @@ public partial class PromptQueueService : ObservableObject, IPromptQueueService,
         Items.Remove(item);
     }
 
+    public void Requeue(PromptQueueItem item)
+    {
+        // Only finished items can be re-run; Running/Pending are no-ops
+        if (!IsFinished(item))
+            return;
+
+        DisposePreview(item);
+
+        item.Status = PromptQueueItemStatus.Pending;
+        item.Progress = 0;
+        item.ProgressText = null;
+        item.ErrorMessage = null;
+        item.StartedAt = null;
+        item.CompletedAt = null;
+        item.OutputImagePaths = [];
+    }
+
     public void MoveUp(PromptQueueItem item)
     {
         var index = Items.IndexOf(item);
@@ -423,8 +440,9 @@ public partial class PromptQueueService : ObservableObject, IPromptQueueService,
         await Dispatcher
             .UIThread.InvokeAsync(() =>
             {
-                // The item may have been removed while decoding - don't leak the bitmap
-                if (!Items.Contains(item))
+                // The item may have been removed or re-queued while decoding - don't leak the
+                // bitmap or attach a stale thumbnail to a pending item
+                if (!Items.Contains(item) || item.Status != PromptQueueItemStatus.Completed)
                 {
                     thumbnail.Dispose();
                     return;

@@ -757,6 +757,9 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
     private void RemoveQueueItem(PromptQueueItem item) => PromptQueue.Remove(item);
 
     [RelayCommand]
+    private void RequeueQueueItem(PromptQueueItem item) => PromptQueue.Requeue(item);
+
+    [RelayCommand]
     private void CancelQueueItem(PromptQueueItem item)
     {
         if (item == PromptQueue.CurrentItem)

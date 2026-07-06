@@ -252,6 +252,15 @@
                                             <Button
                                                 Padding="5"
                                                 Classes="transparent-full"
+                                                Command="{Binding $parent[ItemsControl].((vm:InferenceViewModel)DataContext).RequeueQueueItemCommand}"
+                                                CommandParameter="{Binding}"
+                                                IsVisible="{Binding IsRequeueable}"
+                                                ToolTip.Tip="{x:Static lang:Resources.Action_Requeue}">
+                                                <fluentIcons:SymbolIcon FontSize="15" Symbol="ArrowClockwise" />
+                                            </Button>
+                                            <Button
+                                                Padding="5"
+                                                Classes="transparent-full"
                                                 Command="{Binding $parent[ItemsControl].((vm:InferenceViewModel)DataContext).MoveQueueItemUpCommand}"
                                                 CommandParameter="{Binding}"
                                                 ToolTip.Tip="{x:Static lang:Resources.Action_MoveUp}">

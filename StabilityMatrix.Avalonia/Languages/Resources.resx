@@ -2069,4 +2069,7 @@ Account tokens will not be viewable after saving, please make a note of them if 
   <data name="Label_QueueParamsSeed" xml:space="preserve">
     <value>seed {0}</value>
   </data>
+  <data name="Action_Requeue" xml:space="preserve">
+    <value>Re-queue</value>
+  </data>
 </root>

@@ -102,15 +102,14 @@ public partial class RecommendedModelsViewModel : ContentDialogViewModelBase
                 {
                     // Find the first non-Turbo/Lightning version, or default to the first version if none match
                     var suitableVersion =
-                        model.ModelVersions?.FirstOrDefault(
-                            x =>
-                                !x.BaseModel.Contains("Turbo", StringComparison.OrdinalIgnoreCase)
-                                && !x.BaseModel.Contains("Lightning", StringComparison.OrdinalIgnoreCase)
-                                && x.Files != null
-                                && x.Files.Any(f => f.Type == CivitFileType.Model) // Ensure there's a model file
+                        model.ModelVersions?.FirstOrDefault(x =>
+                            !x.BaseModel.Contains("Turbo", StringComparison.OrdinalIgnoreCase)
+                            && !x.BaseModel.Contains("Lightning", StringComparison.OrdinalIgnoreCase)
+                            && x.Files != null
+                            && x.Files.Any(f => f.Type.IsModelWeights()) // Ensure there's a model file
                         )
-                        ?? model.ModelVersions?.FirstOrDefault(
-                            x => x.Files != null && x.Files.Any(f => f.Type == CivitFileType.Model)
+                        ?? model.ModelVersions?.FirstOrDefault(x =>
+                            x.Files != null && x.Files.Any(f => f.Type.IsModelWeights())
                         );
 
                     if (suitableVersion == null)
@@ -127,7 +126,7 @@ public partial class RecommendedModelsViewModel : ContentDialogViewModelBase
                     {
                         ModelVersion = suitableVersion,
                         Author = $"by {model.Creator?.Username}",
-                        CivitModel = model
+                        CivitModel = model,
                     };
                 })
                 .Where(vm => vm != null); // Filter out nulls (models skipped due to no suitable version)
@@ -182,9 +181,8 @@ public partial class RecommendedModelsViewModel : ContentDialogViewModelBase
         {
             // Get latest version file that is a Model type and marked primary, or fallback to first model file
             var modelFile =
-                model.ModelVersion.Files?.FirstOrDefault(
-                    f => f is { Type: CivitFileType.Model, IsPrimary: true }
-                ) ?? model.ModelVersion.Files?.FirstOrDefault(f => f.Type == CivitFileType.Model);
+                model.ModelVersion.Files?.FirstOrDefault(f => f.IsPrimary && f.Type.IsModelWeights())
+                ?? model.ModelVersion.Files?.FirstOrDefault(f => f.Type.IsModelWeights());
 
             if (modelFile is null)
             {

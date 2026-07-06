@@ -138,10 +138,7 @@ public partial class ConfirmBulkDownloadDialogViewModel(
                     if (fileVm.IsInstalled)
                         return false;
 
-                    return fileVm.CivitFile.Type
-                        is CivitFileType.Model
-                            or CivitFileType.VAE
-                            or CivitFileType.PrunedModel;
+                    return fileVm.CivitFile.Type.IsDownloadableModelFile();
                 }
             );
 

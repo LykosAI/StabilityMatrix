@@ -671,7 +671,7 @@ public partial class ModelIndexService : IModelIndexService
             }
 
             var latestHashes = latestVersionFiles
-                .Where(f => f.Type == CivitFileType.Model)
+                .Where(f => f.Type.IsModelWeights())
                 .Select(f => f.Hashes.BLAKE3)
                 .Where(hash => hash is not null)
                 .ToList();

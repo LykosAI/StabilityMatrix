@@ -48,7 +48,7 @@ public class CivitModel
             var latestVersion = ModelVersions?.FirstOrDefault();
             if (latestVersion?.Files != null && latestVersion.Files.Any())
             {
-                var latestModelFile = latestVersion.Files.FirstOrDefault(x => x.Type == CivitFileType.Model);
+                var latestModelFile = latestVersion.Files.FirstOrDefault(x => x.Type.IsModelWeights());
                 kbs = latestModelFile?.SizeKb ?? 0;
             }
             fullFilesSize = new FileSizeType(kbs);

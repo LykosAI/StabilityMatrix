@@ -54,7 +54,8 @@ public partial class CivitFileViewModel : DisposableViewModelBase
         this.downloadAction = downloadAction;
         CivitFile = civitFile;
         IsInstalled =
-            CivitFile is { Type: CivitFileType.Model, Hashes.BLAKE3: not null }
+            CivitFile is { Hashes.BLAKE3: not null }
+            && CivitFile.Type.IsModelWeights()
             && modelIndexService.ModelIndexBlake3Hashes.Contains(CivitFile.Hashes.BLAKE3);
         EventManager.Instance.ModelIndexChanged += ModelIndexChanged;
 
@@ -95,7 +96,8 @@ public partial class CivitFileViewModel : DisposableViewModelBase
         Dispatcher.UIThread.Post(() =>
         {
             IsInstalled =
-                CivitFile is { Type: CivitFileType.Model, Hashes.BLAKE3: not null }
+                CivitFile is { Hashes.BLAKE3: not null }
+                && CivitFile.Type.IsModelWeights()
                 && modelIndexService.ModelIndexBlake3Hashes.Contains(CivitFile.Hashes.BLAKE3);
         });
     }

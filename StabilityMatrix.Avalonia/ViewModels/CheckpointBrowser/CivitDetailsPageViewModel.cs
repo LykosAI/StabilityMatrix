@@ -948,44 +948,12 @@ public partial class CivitDetailsPageViewModel(
         CivitModelType modelType,
         string? baseModelType,
         string? fileName = null
-    )
-    {
-        // Explicitly-typed component files (VAE, Diffusion Model, Text Encoder, ...) determine
-        // their own destination — no need to guess from the model/base-model type.
-        if (fileType?.GetExplicitSharedFolderType() is { } explicitFolder)
-        {
-            return rootModelsDirectory.JoinDir(explicitFolder.GetStringValue());
-        }
-
-        // Legacy fallback for files still typed plain "Model": guess UNet-only checkpoints
-        // from the base model type.
-        if (
-            modelType is CivitModelType.Checkpoint
-            && (
-                baseModelType == CivitBaseModelType.Flux1D.GetStringValue()
-                || baseModelType == CivitBaseModelType.Flux1S.GetStringValue()
-                || baseModelType == CivitBaseModelType.WanVideo.GetStringValue()
-                || baseModelType?.StartsWith("Wan", StringComparison.OrdinalIgnoreCase) is true
-                || baseModelType?.StartsWith("Flux", StringComparison.OrdinalIgnoreCase) is true
-                || baseModelType?.StartsWith("Hunyuan", StringComparison.OrdinalIgnoreCase) is true
-            )
-        )
-        {
-            return rootModelsDirectory.JoinDir(SharedFolderType.DiffusionModels.GetStringValue());
-        }
-
-        // GGUF checkpoints are always UNet-only, route directly to DiffusionModels
-        if (
-            modelType is CivitModelType.Checkpoint
-            && fileName is not null
-            && Path.GetExtension(fileName).Equals(".gguf", StringComparison.OrdinalIgnoreCase)
-        )
-        {
-            return rootModelsDirectory.JoinDir(SharedFolderType.DiffusionModels.GetStringValue());
-        }
-
-        return rootModelsDirectory.JoinDir(modelType.ConvertTo<SharedFolderType>().GetStringValue());
-    }
+    ) =>
+        rootModelsDirectory.JoinDir(
+            (fileType ?? CivitFileType.Unknown)
+                .GetSharedFolderType(modelType, baseModelType, fileName)
+                .GetStringValue()
+        );
 
     private async Task TryMoveDownloadedCheckpointToDiffusionModelsIfNeededAsync(
         CivitFile civitFile,

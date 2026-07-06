@@ -214,9 +214,14 @@ public class ModelDownloadLinkHandler(
 
         var rootModelsDirectory = new DirectoryPath(settingsManager.ModelsDirectory);
         var downloadDirectory = rootModelsDirectory.JoinDir(
-            (
-                selectedFile.Type.GetExplicitSharedFolderType() ?? model.Type.ConvertTo<SharedFolderType>()
-            ).GetStringValue()
+            selectedFile
+                .Type.GetSharedFolderType(
+                    model.Type,
+                    model.BaseModelType,
+                    selectedFile.Name,
+                    selectedFile.Metadata?.Format
+                )
+                .GetStringValue()
         );
 
         var importTask = modelImportService.DoImport(

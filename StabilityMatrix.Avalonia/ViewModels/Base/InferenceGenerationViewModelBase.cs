@@ -734,6 +734,20 @@ public abstract partial class InferenceGenerationViewModelBase
     protected bool IsQueueReplay { get; private set; }
 
     /// <summary>
+    /// Ensures all input image sources have their content hashes computed. Prompt building
+    /// requires cached hashes synchronously (<see cref="ImageSource.GetHashGuidFileNameCached()"/>);
+    /// interactive selection precomputes them in the background at selection time, but a state
+    /// restore followed by an immediate generation (queue replay) must await them explicitly.
+    /// </summary>
+    private async Task EnsureInputImagesHashedAsync()
+    {
+        foreach (var image in GetInputImages())
+        {
+            await image.GetBlake3HashAsync();
+        }
+    }
+
+    /// <summary>
     /// Runs a single generation using the same implementation as the Generate button, for
     /// headless replay by the prompt queue. Unlike the command, exceptions are not swallowed so
     /// the queue can mark the item failed; <see cref="OperationCanceledException"/> propagates for
@@ -744,6 +758,8 @@ public abstract partial class InferenceGenerationViewModelBase
         IsQueueReplay = true;
         try
         {
+            await EnsureInputImagesHashedAsync();
+
             await GenerateImageImpl(GenerateOverrides.FromFlags(default), cancellationToken);
         }
         finally

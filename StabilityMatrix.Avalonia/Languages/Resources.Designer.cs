@@ -5638,5 +5638,14 @@ namespace StabilityMatrix.Avalonia.Languages {
                 return ResourceManager.GetString("Action_Requeue", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Re-queue all finished.
+        /// </summary>
+        public static string Action_RequeueAll {
+            get {
+                return ResourceManager.GetString("Action_RequeueAll", resourceCulture);
+            }
+        }
     }
 }

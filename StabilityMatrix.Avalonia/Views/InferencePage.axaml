@@ -103,10 +103,16 @@
                             ToolTip.Tip="{x:Static lang:Resources.Label_ClearFinished}">
                             <fluentIcons:SymbolIcon FontSize="16" Symbol="Broom" />
                         </Button>
-                        <Button Classes="transparent-full" ToolTip.Tip="{x:Static lang:Resources.Label_ClearPending}">
+                        <Button Classes="transparent-full" ToolTip.Tip="{x:Static lang:Resources.Label_PromptQueue}">
                             <fluentIcons:SymbolIcon FontSize="16" Symbol="MoreVertical" />
                             <Button.Flyout>
                                 <ui:FAMenuFlyout Placement="BottomEdgeAlignedRight">
+                                    <ui:MenuFlyoutItem Command="{Binding RequeueAllQueueFinishedCommand}" Text="{x:Static lang:Resources.Action_RequeueAll}">
+                                        <ui:MenuFlyoutItem.IconSource>
+                                            <fluentIcons:SymbolIconSource Symbol="ArrowClockwise" />
+                                        </ui:MenuFlyoutItem.IconSource>
+                                    </ui:MenuFlyoutItem>
+                                    <ui:MenuFlyoutSeparator />
                                     <ui:MenuFlyoutItem Command="{Binding ClearQueuePendingCommand}" Text="{x:Static lang:Resources.Label_ClearPending}">
                                         <ui:MenuFlyoutItem.IconSource>
                                             <fluentIcons:SymbolIconSource Symbol="Delete" />

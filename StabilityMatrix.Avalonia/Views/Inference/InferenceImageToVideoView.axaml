@@ -182,6 +182,7 @@
                                                 Margin="4,0"
                                                 Padding="12,8"
                                                 HorizontalAlignment="Left"
+                                                VerticalAlignment="Center"
                                                 Classes="transparent"
                                                 Command="{Binding AddToQueueCommand}"
                                                 ToolTip.Tip="{x:Static lang:Resources.Label_AddToQueue}">

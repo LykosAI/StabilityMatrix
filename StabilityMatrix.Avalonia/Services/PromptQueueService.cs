@@ -120,6 +120,14 @@ public partial class PromptQueueService : ObservableObject, IPromptQueueService,
         item.OutputImagePaths = [];
     }
 
+    public void RequeueAllFinished()
+    {
+        foreach (var item in Items.Where(IsFinished).ToList())
+        {
+            Requeue(item);
+        }
+    }
+
     public void MoveUp(PromptQueueItem item)
     {
         var index = Items.IndexOf(item);

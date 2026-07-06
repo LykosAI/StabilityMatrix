@@ -35,6 +35,11 @@ public interface IPromptQueueService : INotifyPropertyChanged
     /// </summary>
     void Requeue(PromptQueueItem item);
 
+    /// <summary>
+    /// Re-queues every finished item, preserving queue order.
+    /// </summary>
+    void RequeueAllFinished();
+
     void MoveUp(PromptQueueItem item);
 
     void MoveDown(PromptQueueItem item);

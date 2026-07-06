@@ -2072,4 +2072,7 @@ Account tokens will not be viewable after saving, please make a note of them if 
   <data name="Action_Requeue" xml:space="preserve">
     <value>Re-queue</value>
   </data>
+  <data name="Action_RequeueAll" xml:space="preserve">
+    <value>Re-queue all finished</value>
+  </data>
 </root>

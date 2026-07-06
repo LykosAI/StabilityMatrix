@@ -20,7 +20,7 @@ public partial class PromptQueueItem : ObservableObject
     public Guid Id { get; set; } = Guid.NewGuid();
 
     [ObservableProperty]
-    private string name = string.Empty;
+    public partial string Name { get; set; } = string.Empty;
 
     [JsonConverter(typeof(JsonStringEnumConverter<InferenceProjectType>))]
     public InferenceProjectType ProjectType { get; set; }
@@ -32,21 +32,21 @@ public partial class PromptQueueItem : ObservableObject
     public InferenceProjectDocument Project { get; set; } = new();
 
     [ObservableProperty]
-    [property: JsonConverter(typeof(JsonStringEnumConverter<PromptQueueItemStatus>))]
+    [JsonConverter(typeof(JsonStringEnumConverter<PromptQueueItemStatus>))]
     [NotifyPropertyChangedFor(nameof(StatusText))]
     [NotifyPropertyChangedFor(nameof(IsRunning))]
     [NotifyPropertyChangedFor(nameof(IsFailed))]
     [NotifyPropertyChangedFor(nameof(IsRequeueable))]
-    private PromptQueueItemStatus status = PromptQueueItemStatus.Pending;
+    public partial PromptQueueItemStatus Status { get; set; } = PromptQueueItemStatus.Pending;
 
     [ObservableProperty]
-    private double progress;
+    public partial double Progress { get; set; }
 
     [ObservableProperty]
-    private string? progressText;
+    public partial string? ProgressText { get; set; }
 
     [ObservableProperty]
-    private string? errorMessage;
+    public partial string? ErrorMessage { get; set; }
 
     /// <summary>
     /// Single-line positive prompt text extracted from the snapshot at enqueue time, for card
@@ -63,10 +63,10 @@ public partial class PromptQueueItem : ObservableObject
     public DateTimeOffset AddedAt { get; set; } = DateTimeOffset.Now;
 
     [ObservableProperty]
-    private DateTimeOffset? startedAt;
+    public partial DateTimeOffset? StartedAt { get; set; }
 
     [ObservableProperty]
-    private DateTimeOffset? completedAt;
+    public partial DateTimeOffset? CompletedAt { get; set; }
 
     public List<string> OutputImagePaths { get; set; } = [];
 
@@ -74,8 +74,8 @@ public partial class PromptQueueItem : ObservableObject
     /// Runtime-only live preview bitmap shown while the item is running. Never serialized.
     /// </summary>
     [ObservableProperty]
-    [property: JsonIgnore]
-    private Bitmap? previewImage;
+    [JsonIgnore]
+    public partial Bitmap? PreviewImage { get; set; }
 
     [JsonIgnore]
     public bool IsRunning => Status == PromptQueueItemStatus.Running;

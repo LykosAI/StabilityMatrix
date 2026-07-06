@@ -58,13 +58,13 @@ public partial class PromptQueueService : ObservableObject, IPromptQueueService,
     public ObservableCollection<PromptQueueItem> Items { get; } = [];
 
     [ObservableProperty]
-    private bool isProcessing;
+    public partial bool IsProcessing { get; set; }
 
     [ObservableProperty]
-    private bool isStopRequested;
+    public partial bool IsStopRequested { get; set; }
 
     [ObservableProperty]
-    private PromptQueueItem? currentItem;
+    public partial PromptQueueItem? CurrentItem { get; set; }
 
     public PromptQueueService(
         ISettingsManager settingsManager,

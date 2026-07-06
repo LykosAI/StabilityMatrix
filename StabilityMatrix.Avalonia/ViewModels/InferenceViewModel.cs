@@ -21,6 +21,7 @@ using Injectio.Attributes;
 using Microsoft.Extensions.DependencyInjection;
 using NLog;
 using StabilityMatrix.Avalonia.Extensions;
+using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.Inference;
@@ -704,16 +705,40 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
     }
 
     [RelayCommand]
-    private void ToggleQueueProcessing()
+    private async Task ToggleQueueProcessing()
     {
         if (PromptQueue.IsProcessing)
         {
             PromptQueue.StopProcessing();
+            return;
         }
-        else
+
+        // Establish a connection first if there's work to do: auto-connect when ComfyUI is
+        // already running, otherwise offer the same launch dialog as the Generate flow.
+        if (
+            !ClientManager.IsConnected
+            && PromptQueue.Items.Any(x => x.Status == PromptQueueItemStatus.Pending)
+        )
         {
-            PromptQueue.StartProcessing();
+            if (IsComfyRunning)
+            {
+                await Connect();
+            }
+            else
+            {
+                await InferenceConnectionHelper.PromptAndWaitForConnectionAsync(
+                    vmFactory,
+                    ClientManager,
+                    runningPackageService
+                );
+            }
+
+            // User cancelled the dialog or the connection failed - keep items pending
+            if (!ClientManager.IsConnected)
+                return;
         }
+
+        PromptQueue.StartProcessing();
     }
 
     [RelayCommand]

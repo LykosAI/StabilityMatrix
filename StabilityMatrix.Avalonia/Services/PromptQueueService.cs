@@ -231,7 +231,16 @@ public partial class PromptQueueService : ObservableObject, IPromptQueueService,
                     break;
                 }
 
-                await ProcessItemAsync(item).ConfigureAwait(false);
+                try
+                {
+                    await ProcessItemAsync(item).ConfigureAwait(false);
+                }
+                catch (Exception e)
+                {
+                    // A per-item infrastructure failure must not kill the whole queue
+                    Logger.Error(e, "Unexpected error processing prompt queue item {Id}", item.Id);
+                    SetFailed(item, e.Message);
+                }
             }
         }
         finally
@@ -246,29 +255,40 @@ public partial class PromptQueueService : ObservableObject, IPromptQueueService,
 
     private async Task ProcessItemAsync(PromptQueueItem item)
     {
-        using var scope = vmFactory.CreateScope();
+        var scope = vmFactory.CreateScope();
+        try
+        {
+            await ProcessItemCoreAsync(scope, item).ConfigureAwait(false);
+        }
+        finally
+        {
+            // Dispose the scope on the UI thread: view model Dispose implementations may be
+            // UI-affine, and real tab scopes are also disposed on the UI thread.
+            await Dispatcher.UIThread.InvokeAsync(scope.Dispose).GetTask().ConfigureAwait(false);
+        }
+    }
 
+    private async Task ProcessItemCoreAsync(IServiceManagerScope<ViewModelBase> scope, PromptQueueItem item)
+    {
         if (item.ProjectType.ToViewModelType() is not { } vmType)
         {
             SetFailed(item, $"Unsupported project type: {item.ProjectType}");
             return;
         }
 
-        if (scope.ServiceManager.Get(vmType) is not InferenceGenerationViewModelBase generationViewModel)
-        {
-            SetFailed(item, $"Could not create view model for {item.ProjectType}");
-            return;
-        }
-
-        using var cts = new CancellationTokenSource();
-        currentItemCts = cts;
+        // Resolve and initialize the view model on the UI thread: tab view model constructors
+        // capture SynchronizationContext.Current (real tabs are also constructed on the UI thread).
+        InferenceGenerationViewModelBase? generationViewModel = null;
 
         await Dispatcher
             .UIThread.InvokeAsync(() =>
             {
+                if (scope.ServiceManager.Get(vmType) is not InferenceGenerationViewModelBase vm)
+                    return;
+
                 if (item.Project.State is { } state)
                 {
-                    generationViewModel.LoadStateFromJsonObject(state);
+                    vm.LoadStateFromJsonObject(state);
                 }
 
                 item.Status = PromptQueueItemStatus.Running;
@@ -277,9 +297,20 @@ public partial class PromptQueueService : ObservableObject, IPromptQueueService,
                 item.ProgressText = null;
                 item.ErrorMessage = null;
                 CurrentItem = item;
+
+                generationViewModel = vm;
             })
             .GetTask()
             .ConfigureAwait(false);
+
+        if (generationViewModel is null)
+        {
+            SetFailed(item, $"Could not create view model for {item.ProjectType}");
+            return;
+        }
+
+        using var cts = new CancellationTokenSource();
+        currentItemCts = cts;
 
         var progressMirror = new ProgressMirror(generationViewModel, item);
         var succeeded = false;

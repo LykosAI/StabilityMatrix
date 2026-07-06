@@ -794,97 +794,13 @@ public abstract partial class InferenceGenerationViewModelBase
             throw new ValidationException("ComfyUI is not connected");
         }
 
-        var vm = vmFactory.Get<InferenceConnectionHelpViewModel>();
-        var result = await vm.CreateDialog().ShowAsync();
-
-        if (ClientManager.IsConnected)
-            return true;
-
-        // If the user chose to launch ComfyUI, the package is now starting up. The connection
-        // is established automatically by InferenceViewModel once startup completes, so wait for
-        // it here and let the generation resume instead of forcing the user to press Generate again.
-        if (result == ContentDialogResult.Primary && vm.IsLaunchMode)
-        {
-            return await WaitForConnectedAsync(cancellationToken);
-        }
-
-        return ClientManager.IsConnected;
-    }
-
-    /// <summary>
-    /// Waits for the ClientManager to become connected, showing indeterminate progress.
-    /// Used after launching ComfyUI from the connection prompt so a queued generation can
-    /// resume automatically once the backend is ready. Stops waiting early if ComfyUI is
-    /// shut down or crashes before connecting (it is removed from RunningPackages either way).
-    /// </summary>
-    private async Task<bool> WaitForConnectedAsync(CancellationToken cancellationToken)
-    {
-        if (ClientManager.IsConnected)
-            return true;
-
-        // RunContinuationsAsynchronously so the await resumption (and UI updates in finally)
-        // don't run synchronously on the thread that raised the completing event.
-        var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-
-        bool IsAnyComfyRunning() =>
-            runningPackageService.RunningPackages.Values.Any(vm => vm.RunningPackage.BasePackage is ComfyUI);
-
-        void OnPropertyChanged(object? sender, PropertyChangedEventArgs args)
-        {
-            // null/empty PropertyName means "all properties changed" per INotifyPropertyChanged
-            if (
-                args.PropertyName is nameof(ClientManager.IsConnected) or null or ""
-                && ClientManager.IsConnected
-            )
-            {
-                tcs.TrySetResult();
-            }
-        }
-
-        void OnRunningPackagesChanged(object? sender, NotifyCollectionChangedEventArgs args)
-        {
-            // ComfyUI was shut down or crashed before connecting - stop waiting
-            if (!IsAnyComfyRunning())
-            {
-                tcs.TrySetResult();
-            }
-        }
-
-        ClientManager.PropertyChanged += OnPropertyChanged;
-        runningPackageService.RunningPackages.CollectionChanged += OnRunningPackagesChanged;
-        try
-        {
-            // Re-check in case it connected, or the package already stopped, between the
-            // initial checks and subscribing
-            if (ClientManager.IsConnected)
-                return true;
-            if (!IsAnyComfyRunning())
-                return false;
-
-            // Give up waiting after a generous timeout in case startup never completes
-            using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            timeoutCts.CancelAfter(TimeSpan.FromMinutes(5));
-
-            OutputProgress.IsIndeterminate = true;
-            OutputProgress.Text = "Waiting for ComfyUI to start...";
-
-            await using (timeoutCts.Token.Register(() => tcs.TrySetCanceled(timeoutCts.Token)))
-            {
-                await tcs.Task;
-            }
-
-            return ClientManager.IsConnected;
-        }
-        catch (OperationCanceledException)
-        {
-            return ClientManager.IsConnected;
-        }
-        finally
-        {
-            ClientManager.PropertyChanged -= OnPropertyChanged;
-            runningPackageService.RunningPackages.CollectionChanged -= OnRunningPackagesChanged;
-            OutputProgress.ClearProgress();
-        }
+        return await InferenceConnectionHelper.PromptAndWaitForConnectionAsync(
+            vmFactory,
+            ClientManager,
+            runningPackageService,
+            OutputProgress,
+            cancellationToken
+        );
     }
 
     /// <summary>

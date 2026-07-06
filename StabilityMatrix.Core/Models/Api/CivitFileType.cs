@@ -1,6 +1,7 @@
 using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 using StabilityMatrix.Core.Converters.Json;
+using StabilityMatrix.Core.Extensions;
 
 namespace StabilityMatrix.Core.Models.Api;
 
@@ -86,4 +87,43 @@ public static class CivitFileTypeExtensions
             CivitFileType.Upscaler => SharedFolderType.ESRGAN,
             _ => null,
         };
+
+    /// <summary>
+    /// Resolves the destination shared folder for a file: explicit file types win; the legacy
+    /// fallback then guesses UNet-only checkpoints for files still typed plain "Model"
+    /// (base model name prefixes and GGUF format); otherwise the model type decides.
+    /// </summary>
+    public static SharedFolderType GetSharedFolderType(
+        this CivitFileType type,
+        CivitModelType modelType,
+        string? baseModelType,
+        string? fileName = null,
+        CivitModelFormat? format = null
+    )
+    {
+        if (type.GetExplicitSharedFolderType() is { } explicitFolder)
+        {
+            return explicitFolder;
+        }
+
+        if (modelType is CivitModelType.Checkpoint)
+        {
+            var isUnetOnly =
+                baseModelType?.StartsWith("Wan", StringComparison.OrdinalIgnoreCase) is true
+                || baseModelType?.StartsWith("Flux", StringComparison.OrdinalIgnoreCase) is true
+                || baseModelType?.StartsWith("Hunyuan", StringComparison.OrdinalIgnoreCase) is true
+                || format == CivitModelFormat.GGUF
+                || (
+                    fileName is not null
+                    && Path.GetExtension(fileName).Equals(".gguf", StringComparison.OrdinalIgnoreCase)
+                );
+
+            if (isUnetOnly)
+            {
+                return SharedFolderType.DiffusionModels;
+            }
+        }
+
+        return modelType.ConvertTo<SharedFolderType>();
+    }
 }

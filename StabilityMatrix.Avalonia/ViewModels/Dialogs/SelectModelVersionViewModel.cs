@@ -375,33 +375,12 @@ public partial class SelectModelVersionViewModel(
         CivitFile? civitFile,
         CivitModelType modelType,
         string? baseModelType
-    )
-    {
-        // Explicitly-typed component files (VAE, Diffusion Model, Text Encoder, ...) determine
-        // their own destination — no need to guess from the model/base-model type.
-        if (civitFile?.Type.GetExplicitSharedFolderType() is { } explicitFolder)
-        {
-            return rootModelsDirectory.JoinDir(explicitFolder.GetStringValue());
-        }
-
-        // Legacy fallback for files still typed plain "Model": guess UNet-only checkpoints
-        // from the base model type.
-        if (
-            modelType is CivitModelType.Checkpoint
-            && (
-                baseModelType == CivitBaseModelType.Flux1D.GetStringValue()
-                || baseModelType == CivitBaseModelType.Flux1S.GetStringValue()
-                || baseModelType == CivitBaseModelType.WanVideo.GetStringValue()
-                || baseModelType == CivitBaseModelType.HunyuanVideo.GetStringValue()
-                || civitFile?.Metadata.Format == CivitModelFormat.GGUF
-            )
-        )
-        {
-            return rootModelsDirectory.JoinDir(SharedFolderType.DiffusionModels.GetStringValue());
-        }
-
-        return rootModelsDirectory.JoinDir(modelType.ConvertTo<SharedFolderType>().GetStringValue());
-    }
+    ) =>
+        rootModelsDirectory.JoinDir(
+            (civitFile?.Type ?? CivitFileType.Unknown)
+                .GetSharedFolderType(modelType, baseModelType, civitFile?.Name, civitFile?.Metadata?.Format)
+                .GetStringValue()
+        );
 
     private void ApplySavedDownloadPreference()
     {

@@ -69,7 +69,7 @@ public class ModelDownloadLinkHandler(
         var hasValidLegacyFilter =
             !string.IsNullOrWhiteSpace(type)
             && !string.IsNullOrWhiteSpace(format)
-            && Enum.TryParse<CivitFileType>(type, out _)
+            && Enum.TryParse<CivitFileType>(type.Replace(" ", ""), true, out _)
             && Enum.TryParse<CivitModelFormat>(format, out _);
 
         if (
@@ -157,7 +157,8 @@ public class ModelDownloadLinkHandler(
         }
         else
         {
-            Enum.TryParse<CivitFileType>(type, out var civitFileType);
+            // File type values may contain spaces (e.g. "Diffusion Model", "Pruned Model")
+            Enum.TryParse<CivitFileType>(type?.Replace(" ", ""), true, out var civitFileType);
             Enum.TryParse<CivitModelFormat>(format, out var civitFormat);
 
             var possibleFiles = modelVersion.Files?.Where(x =>
@@ -213,9 +214,14 @@ public class ModelDownloadLinkHandler(
 
         var rootModelsDirectory = new DirectoryPath(settingsManager.ModelsDirectory);
         var downloadDirectory = rootModelsDirectory.JoinDir(
-            selectedFile.Type == CivitFileType.VAE
-                ? SharedFolderType.VAE.GetStringValue()
-                : model.Type.ConvertTo<SharedFolderType>().GetStringValue()
+            selectedFile
+                .Type.GetSharedFolderType(
+                    model.Type,
+                    model.BaseModelType,
+                    selectedFile.Name,
+                    selectedFile.Metadata?.Format
+                )
+                .GetStringValue()
         );
 
         var importTask = modelImportService.DoImport(

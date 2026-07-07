@@ -701,7 +701,7 @@ public partial class CivitDetailsPageViewModel(
 
         foreach (var file in modelVersion.Files)
         {
-            if (file is not { Type: CivitFileType.Model, Hashes.BLAKE3: not null })
+            if (file is not { Hashes.BLAKE3: not null } || !file.Type.IsModelWeights())
                 continue;
 
             var matchingModels = (await modelIndexService.FindByHashAsync(file.Hashes.BLAKE3)).ToList();
@@ -826,7 +826,7 @@ public partial class CivitDetailsPageViewModel(
         if (ShowTrainingData)
             return true;
 
-        return file.Type is CivitFileType.Model or CivitFileType.PrunedModel or CivitFileType.VAE;
+        return file.Type.IsDownloadableModelFile();
     }
 
     partial void OnSelectedVersionChanged(ModelVersionViewModel? value)
@@ -948,50 +948,19 @@ public partial class CivitDetailsPageViewModel(
         CivitModelType modelType,
         string? baseModelType,
         string? fileName = null
-    )
-    {
-        if (fileType is CivitFileType.VAE)
-        {
-            return rootModelsDirectory.JoinDir(SharedFolderType.VAE.GetStringValue());
-        }
-
-        if (
-            modelType is CivitModelType.Checkpoint
-            && (
-                baseModelType == CivitBaseModelType.Flux1D.GetStringValue()
-                || baseModelType == CivitBaseModelType.Flux1S.GetStringValue()
-                || baseModelType == CivitBaseModelType.WanVideo.GetStringValue()
-                || baseModelType?.StartsWith("Wan", StringComparison.OrdinalIgnoreCase) is true
-                || baseModelType?.StartsWith("Flux", StringComparison.OrdinalIgnoreCase) is true
-                || baseModelType?.StartsWith("Hunyuan", StringComparison.OrdinalIgnoreCase) is true
-            )
-        )
-        {
-            return rootModelsDirectory.JoinDir(SharedFolderType.DiffusionModels.GetStringValue());
-        }
-
-        // GGUF checkpoints are always UNet-only, route directly to DiffusionModels
-        if (
-            modelType is CivitModelType.Checkpoint
-            && fileName is not null
-            && Path.GetExtension(fileName).Equals(".gguf", StringComparison.OrdinalIgnoreCase)
-        )
-        {
-            return rootModelsDirectory.JoinDir(SharedFolderType.DiffusionModels.GetStringValue());
-        }
-
-        return rootModelsDirectory.JoinDir(modelType.ConvertTo<SharedFolderType>().GetStringValue());
-    }
+    ) =>
+        rootModelsDirectory.JoinDir(
+            (fileType ?? CivitFileType.Unknown)
+                .GetSharedFolderType(modelType, baseModelType, fileName)
+                .GetStringValue()
+        );
 
     private async Task TryMoveDownloadedCheckpointToDiffusionModelsIfNeededAsync(
         CivitFile civitFile,
         DirectoryPath requestedDestinationDir
     )
     {
-        if (
-            civitFile.Type is not (CivitFileType.Model or CivitFileType.PrunedModel)
-            || CivitModel.Type is not CivitModelType.Checkpoint
-        )
+        if (!civitFile.Type.IsModelWeights() || CivitModel.Type is not CivitModelType.Checkpoint)
         {
             return;
         }

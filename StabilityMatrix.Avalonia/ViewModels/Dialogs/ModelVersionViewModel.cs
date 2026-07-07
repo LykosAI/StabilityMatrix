@@ -25,7 +25,8 @@ public partial class ModelVersionViewModel : DisposableViewModelBase
 
         IsInstalled =
             ModelVersion.Files?.Any(file =>
-                file is { Type: CivitFileType.Model, Hashes.BLAKE3: not null }
+                file is { Hashes.BLAKE3: not null }
+                && file.Type.IsModelWeights()
                 && modelIndexService.ModelIndexBlake3Hashes.Contains(file.Hashes.BLAKE3)
             ) ?? false;
 
@@ -36,7 +37,8 @@ public partial class ModelVersionViewModel : DisposableViewModelBase
     {
         IsInstalled =
             ModelVersion.Files?.Any(file =>
-                file is { Type: CivitFileType.Model, Hashes.BLAKE3: not null }
+                file is { Hashes.BLAKE3: not null }
+                && file.Type.IsModelWeights()
                 && modelIndexService.ModelIndexBlake3Hashes.Contains(file.Hashes.BLAKE3)
             ) ?? false;
     }

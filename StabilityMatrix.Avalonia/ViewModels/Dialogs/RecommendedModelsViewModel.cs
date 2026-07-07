@@ -181,8 +181,9 @@ public partial class RecommendedModelsViewModel : ContentDialogViewModelBase
         {
             // Get latest version file that is a Model type and marked primary, or fallback to first model file
             var modelFile =
-                model.ModelVersion.Files?.FirstOrDefault(f => f.IsPrimary && f.Type.IsModelWeights())
-                ?? model.ModelVersion.Files?.FirstOrDefault(f => f.Type.IsModelWeights());
+                model.ModelVersion.Files?.FirstOrDefault(f =>
+                    f is { IsPrimary: true } && f.Type.IsModelWeights()
+                ) ?? model.ModelVersion.Files?.FirstOrDefault(f => f is not null && f.Type.IsModelWeights());
 
             if (modelFile is null)
             {

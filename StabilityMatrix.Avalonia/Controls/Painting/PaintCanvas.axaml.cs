@@ -26,7 +26,7 @@ namespace StabilityMatrix.Avalonia.Controls;
 
 public class PaintCanvas : TemplatedControlBase
 {
-    private ConcurrentDictionary<long, PenPath> TemporaryPaths => ViewModel!.TemporaryPaths;
+    private ConcurrentDictionary<long, LiveStroke> TemporaryPaths => ViewModel!.TemporaryPaths;
 
     private ImmutableList<PenPath> Paths
     {
@@ -129,19 +129,19 @@ public class PaintCanvas : TemplatedControlBase
     {
         base.OnPropertyChanged(change);
 
-        if (change.Property == IsEnabledProperty)
+        if (change.Property == IsEnabledProperty && ViewModel is { } vm)
         {
             var newIsEnabled = change.GetNewValue<bool>();
 
-            if (!newIsEnabled && ViewModel is { } vm)
+            if (!newIsEnabled)
             {
                 vm.IsPenDown = false;
             }
 
-            // On any enabled change, flush temporary paths
+            // On any enabled change, flush in-progress strokes into finalized paths
             if (!TemporaryPaths.IsEmpty)
             {
-                Paths = Paths.AddRange(TemporaryPaths.Values);
+                Paths = Paths.AddRange(TemporaryPaths.Values.Select(stroke => stroke.ToPenPath()));
                 TemporaryPaths.Clear();
             }
         }
@@ -240,9 +240,10 @@ public class PaintCanvas : TemplatedControlBase
                 vm.IsPenDown = false;
             }
 
-            if (!vm.IsShapeTool && TemporaryPaths.TryGetValue(e.Pointer.Id, out var path))
+            if (!vm.IsShapeTool && TemporaryPaths.TryGetValue(e.Pointer.Id, out var stroke))
             {
-                Paths = Paths.Add(path);
+                // Snapshot the live stroke into a fully independent finalized path
+                Paths = Paths.Add(stroke.ToPenPath());
                 vm.ClearRedoStack(); // New path added, clear redo history
             }
 
@@ -334,27 +335,32 @@ public class PaintCanvas : TemplatedControlBase
 
         viewModel.CurrentPenPressure = points.FirstOrDefault().Properties.Pressure;
 
-        // Get or create a temp path
-        if (!TemporaryPaths.TryGetValue(e.Pointer.Id, out var penPath))
+        // Get or create a live stroke for this pointer
+        if (!TemporaryPaths.TryGetValue(e.Pointer.Id, out var stroke))
         {
-            penPath = new PenPath
+            stroke = new LiveStroke
             {
-                FillColor = viewModel.PaintBrushSKColor.WithAlpha((byte)(viewModel.PaintBrushAlpha * 255)),
-                IsErase = viewModel.SelectedTool == PaintCanvasTool.Eraser,
-                Radius = (float)viewModel.PaintBrushSize,
-                Feathering = (float)viewModel.PaintBrushFeathering,
+                Template = new PenPath
+                {
+                    FillColor = viewModel.PaintBrushSKColor.WithAlpha(
+                        (byte)(viewModel.PaintBrushAlpha * 255)
+                    ),
+                    IsErase = viewModel.SelectedTool == PaintCanvasTool.Eraser,
+                    Radius = (float)viewModel.PaintBrushSize,
+                    Feathering = (float)viewModel.PaintBrushFeathering,
+                },
             };
-            TemporaryPaths[e.Pointer.Id] = penPath;
+            TemporaryPaths[e.Pointer.Id] = stroke;
         }
-
-        // Add line for path
-        // var cursorPosition = e.GetPosition(MainCanvas);
-        // penPath.Path.LineTo(cursorPosition.ToSKPoint());
 
         // Get bounds for discarding invalid points
         var canvasBounds = new Rect(0, 0, MainCanvas?.Bounds.Width ?? 0, MainCanvas?.Bounds.Height ?? 0);
 
-        // Add points
+        // Collect valid points, then publish them to the stroke in one batch so the render
+        // thread sees a single stable snapshot per pointer event
+        Span<PenPoint> newPoints = points.Count <= 64 ? stackalloc PenPoint[64] : new PenPoint[points.Count];
+        var newPointCount = 0;
+
         foreach (var point in points)
         {
             // Discard invalid points
@@ -363,15 +369,15 @@ public class PaintCanvas : TemplatedControlBase
                 continue;
             }
 
-            var penPoint = new PenPoint(point.Position.X, point.Position.Y)
+            newPoints[newPointCount++] = new PenPoint(point.Position.X, point.Position.Y)
             {
                 Pressure = point.Pointer.Type == PointerType.Mouse ? null : point.Properties.Pressure,
                 Radius = viewModel.PaintBrushSize,
                 IsPen = point.Pointer.Type == PointerType.Pen,
             };
-
-            penPath.Points.Add(penPoint);
         }
+
+        stroke.AddPoints(newPoints[..newPointCount]);
     }
 
     /// <inheritdoc />
@@ -559,9 +565,12 @@ public class PaintCanvas : TemplatedControlBase
         {
             if (lastCanvasCursorTool != selectedTool)
             {
-                lastCanvasCursor?.Dispose();
+                // Assign the new cursor before disposing the old one, which may still be active
+                var oldCursor = lastCanvasCursor;
                 lastCanvasCursor = new Cursor(StandardCursorType.Cross);
                 lastCanvasCursorTool = selectedTool;
+                canvas.Cursor = lastCanvasCursor;
+                oldCursor?.Dispose();
             }
             canvas.Cursor = lastCanvasCursor;
             return;
@@ -572,9 +581,11 @@ public class PaintCanvas : TemplatedControlBase
         {
             if (lastCanvasCursorTool != selectedTool)
             {
-                lastCanvasCursor?.Dispose();
+                var oldCursor = lastCanvasCursor;
                 lastCanvasCursor = new Cursor(StandardCursorType.SizeAll);
                 lastCanvasCursorTool = selectedTool;
+                canvas.Cursor = lastCanvasCursor;
+                oldCursor?.Dispose();
             }
             canvas.Cursor = lastCanvasCursor;
             return;
@@ -644,7 +655,7 @@ public class PaintCanvas : TemplatedControlBase
     {
         if (sender is SkiaCustomCanvas canvas)
         {
-            canvas.Cursor = new Cursor(StandardCursorType.Arrow);
+            canvas.Cursor = Cursor.Default;
         }
     }
 

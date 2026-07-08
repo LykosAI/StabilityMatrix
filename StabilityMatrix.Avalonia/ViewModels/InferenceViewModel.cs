@@ -801,9 +801,9 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
         viewerVm.ImageSource = image;
         viewerVm.LocalImageFile = LocalImageFile.FromPath(path);
 
-        var dialog = new BetterContentDialog { Content = new ImageViewerDialog { DataContext = viewerVm } };
-
-        await dialog.ShowAsync();
+        // GetDialog sizes the viewer to the window (matches the output gallery); a bare
+        // BetterContentDialog would collapse to the image's intrinsic size.
+        await viewerVm.GetDialog().ShowAsync();
     }
 
     /// <summary>

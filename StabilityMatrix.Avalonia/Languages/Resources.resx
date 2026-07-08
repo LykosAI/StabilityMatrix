@@ -2081,4 +2081,10 @@ Account tokens will not be viewable after saving, please make a note of them if 
   <data name="Label_QueuePauseTooltip" xml:space="preserve">
     <value>Finishes the current item, then stops</value>
   </data>
+  <data name="Label_OpenImage" xml:space="preserve">
+    <value>Open image</value>
+  </data>
+  <data name="Label_ImageFileNotFound" xml:space="preserve">
+    <value>Image file not found</value>
+  </data>
 </root>

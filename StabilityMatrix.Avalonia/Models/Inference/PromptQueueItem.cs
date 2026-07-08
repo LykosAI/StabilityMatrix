@@ -37,6 +37,7 @@ public partial class PromptQueueItem : ObservableObject
     [NotifyPropertyChangedFor(nameof(IsRunning))]
     [NotifyPropertyChangedFor(nameof(IsFailed))]
     [NotifyPropertyChangedFor(nameof(IsRequeueable))]
+    [NotifyPropertyChangedFor(nameof(HasOutputImage))]
     public partial PromptQueueItemStatus Status { get; set; } = PromptQueueItemStatus.Pending;
 
     [ObservableProperty]
@@ -89,6 +90,9 @@ public partial class PromptQueueItem : ObservableObject
             is PromptQueueItemStatus.Completed
                 or PromptQueueItemStatus.Failed
                 or PromptQueueItemStatus.Cancelled;
+
+    [JsonIgnore]
+    public bool HasOutputImage => Status == PromptQueueItemStatus.Completed && OutputImagePaths.Count > 0;
 
     [JsonIgnore]
     public Symbol Icon => ProjectType.GetInfo()?.Icon ?? Symbol.Image;

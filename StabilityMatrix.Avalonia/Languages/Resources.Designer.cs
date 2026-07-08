@@ -5665,5 +5665,23 @@ namespace StabilityMatrix.Avalonia.Languages {
                 return ResourceManager.GetString("Label_QueuePauseTooltip", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Open image.
+        /// </summary>
+        public static string Label_OpenImage {
+            get {
+                return ResourceManager.GetString("Label_OpenImage", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Image file not found.
+        /// </summary>
+        public static string Label_ImageFileNotFound {
+            get {
+                return ResourceManager.GetString("Label_ImageFileNotFound", resourceCulture);
+            }
+        }
     }
 }

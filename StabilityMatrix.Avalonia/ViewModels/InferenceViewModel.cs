@@ -20,6 +20,7 @@ using FluentIcons.Common;
 using Injectio.Attributes;
 using Microsoft.Extensions.DependencyInjection;
 using NLog;
+using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Languages;
@@ -30,6 +31,7 @@ using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
 using StabilityMatrix.Avalonia.Views;
+using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Database;
 using StabilityMatrix.Core.Extensions;
@@ -769,6 +771,39 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
         {
             PromptQueue.CancelCurrent();
         }
+    }
+
+    /// <summary>
+    /// Opens a finished queue item's full-resolution output image in the same viewer the
+    /// Inference output gallery uses.
+    /// </summary>
+    [RelayCommand]
+    private async Task OpenQueueItemImageAsync(PromptQueueItem item)
+    {
+        var path = item.OutputImagePaths.Select(p => new FilePath(p)).FirstOrDefault(p => p.Exists);
+
+        if (path is null)
+        {
+            notificationService.Show(
+                Resources.Label_PromptQueue,
+                Resources.Label_ImageFileNotFound,
+                NotificationType.Warning
+            );
+            return;
+        }
+
+        var image = new ImageSource(path);
+
+        // Preload so the viewer opens with the image ready
+        await image.GetBitmapAsync();
+
+        var viewerVm = vmFactory.Get<ImageViewerViewModel>();
+        viewerVm.ImageSource = image;
+        viewerVm.LocalImageFile = LocalImageFile.FromPath(path);
+
+        var dialog = new BetterContentDialog { Content = new ImageViewerDialog { DataContext = viewerVm } };
+
+        await dialog.ShowAsync();
     }
 
     /// <summary>

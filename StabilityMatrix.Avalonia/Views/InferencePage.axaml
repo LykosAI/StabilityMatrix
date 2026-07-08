@@ -243,7 +243,18 @@
                                                 ClipToBounds="True"
                                                 CornerRadius="4"
                                                 IsVisible="{Binding PreviewImage, Converter={x:Static ObjectConverters.IsNotNull}}">
-                                                <Image Source="{Binding PreviewImage}" Stretch="UniformToFill" />
+                                                <Button
+                                                    Padding="0"
+                                                    HorizontalContentAlignment="Stretch"
+                                                    VerticalContentAlignment="Stretch"
+                                                    Classes="transparent"
+                                                    Command="{Binding $parent[ItemsControl].((vm:InferenceViewModel)DataContext).OpenQueueItemImageCommand}"
+                                                    CommandParameter="{Binding}"
+                                                    Cursor="Hand"
+                                                    IsEnabled="{Binding HasOutputImage}"
+                                                    ToolTip.Tip="{x:Static lang:Resources.Label_OpenImage}">
+                                                    <Image Source="{Binding PreviewImage}" Stretch="UniformToFill" />
+                                                </Button>
                                             </Border>
                                             <StackPanel
                                                 Grid.Column="1"

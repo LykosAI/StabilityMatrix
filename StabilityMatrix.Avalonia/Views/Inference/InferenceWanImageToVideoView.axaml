@@ -189,7 +189,11 @@
                                                     Classes="transparent"
                                                     Command="{Binding AddToQueueCommand}"
                                                     ToolTip.Tip="{x:Static lang:Resources.Label_AddToQueue}">
-                                                    <fluentIcons:SymbolIcon FontSize="16" Symbol="AppsAddIn" />
+                                                    <fluentIcons:SymbolIcon
+                                                        Width="16"
+                                                        Height="16"
+                                                        FontSize="16"
+                                                        Symbol="AppsAddIn" />
                                                 </Button>
                                             </Grid>
                                         </controls:Card>

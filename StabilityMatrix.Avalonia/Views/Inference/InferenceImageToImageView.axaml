@@ -127,7 +127,7 @@
                                                 MinWidth="400"
                                                 Padding="6,4"
                                                 HorizontalAlignment="Center"
-                                                Background="{DynamicResource ControlFillColorSecondaryBrush}"
+                                                Background="#33000000"
                                                 BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
                                                 BorderThickness="1"
                                                 CornerRadius="10">
@@ -135,6 +135,10 @@
                                                     <Grid.Styles>
                                                         <Style Selector="Button">
                                                             <Setter Property="MinHeight" Value="32" />
+                                                        </Style>
+                                                        <!--  Borderless icon buttons; hover highlight preserved  -->
+                                                        <Style Selector="Button.transparent">
+                                                            <Setter Property="BorderThickness" Value="0" />
                                                         </Style>
                                                     </Grid.Styles>
 

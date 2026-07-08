@@ -94,11 +94,18 @@
                                                 MinWidth="320"
                                                 Padding="6,4"
                                                 HorizontalAlignment="Center"
-                                                Background="{DynamicResource ControlFillColorSecondaryBrush}"
+                                                Background="#33000000"
                                                 BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
                                                 BorderThickness="1"
                                                 CornerRadius="10">
                                                 <Grid ColumnDefinitions="*,Auto,*" RowDefinitions="Auto,*">
+                                                    <Grid.Styles>
+                                                        <!--  Borderless icon buttons; hover highlight preserved  -->
+                                                        <Style Selector="Button.transparent">
+                                                            <Setter Property="BorderThickness" Value="0" />
+                                                        </Style>
+                                                    </Grid.Styles>
+
                                                     <!--  Left flank empty (no hires/current-seed): omit the left divider  -->
 
                                                     <!--  Center: Generate + Cancel overlay  -->

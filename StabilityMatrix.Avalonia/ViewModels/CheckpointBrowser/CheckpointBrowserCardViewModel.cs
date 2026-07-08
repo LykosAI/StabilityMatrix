@@ -140,7 +140,8 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
         var latestVersionInstalled =
             latestVersion.Files != null
             && latestVersion.Files.Any(file =>
-                file is { Type: CivitFileType.Model, Hashes.BLAKE3: not null }
+                file is { Hashes.BLAKE3: not null }
+                && file.Type.IsModelWeights()
                 && installedModels.Contains(file.Hashes.BLAKE3)
             );
 
@@ -150,7 +151,8 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
             || CivitModel.ModelVersions.Any(version =>
                 version.Files != null
                 && version.Files.Any(file =>
-                    file is { Type: CivitFileType.Model, Hashes.BLAKE3: not null }
+                    file is { Hashes.BLAKE3: not null }
+                    && file.Type.IsModelWeights()
                     && installedModels.Contains(file.Hashes.BLAKE3)
                 )
             );
@@ -244,8 +246,7 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
         }
 
         // Get latest version file
-        var modelFile =
-            selectedFile ?? modelVersion.Files?.FirstOrDefault(x => x.Type == CivitFileType.Model);
+        var modelFile = selectedFile ?? modelVersion.Files?.FirstOrDefault(x => x.Type.IsModelWeights());
         if (modelFile is null)
         {
             notificationService.Show(

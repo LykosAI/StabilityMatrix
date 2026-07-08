@@ -119,8 +119,7 @@ public class ModelImportService(
         }
 
         // Get latest version file
-        var modelFile =
-            selectedFile ?? modelVersion.Files?.FirstOrDefault(x => x.Type == CivitFileType.Model);
+        var modelFile = selectedFile ?? modelVersion.Files?.FirstOrDefault(x => x.Type.IsModelWeights());
         if (modelFile is null)
         {
             notificationService.Show(

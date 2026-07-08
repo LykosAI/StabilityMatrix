@@ -122,84 +122,86 @@
                                     <!--  Generate Buttons  -->
                                     <StackPanel Grid.Row="2" Margin="0,6,0,0">
                                         <controls:Card Padding="8">
-                                            <Grid
-                                                HorizontalAlignment="Center"
-                                                ColumnDefinitions="Auto,*,Auto,Auto"
-                                                RowDefinitions="Auto,*">
+                                            <Grid ColumnDefinitions="*,Auto,*" RowDefinitions="Auto,*">
                                                 <Grid.Styles>
                                                     <Style Selector="Button">
                                                         <Setter Property="MinHeight" Value="32" />
                                                     </Style>
                                                 </Grid.Styles>
-                                                <Button
-                                                    Grid.Row="1"
-                                                    Margin="4,0"
-                                                    Padding="12,8"
-                                                    HorizontalAlignment="Left"
-                                                    icons:Attached.Icon="fa-solid fa-magnifying-glass-plus"
-                                                    Classes="transparent"
-                                                    Command="{Binding GenerateImageCommand}"
-                                                    CommandParameter="{x:Static modelsInference:GenerateFlags.HiresFixAndUseCurrentSeed}"
-                                                    ToolTip.Tip="Generate with Hires Scaling" />
 
-                                                <!--  Main Generate Button  -->
-                                                <Button
-                                                    x:Name="GenerateButton"
+                                                <!--  Left flank: generate-now variants, hugging Generate's left edge  -->
+                                                <StackPanel
                                                     Grid.Row="1"
-                                                    Grid.Column="1"
-                                                    Width="130"
-                                                    HorizontalAlignment="Stretch"
-                                                    Classes="accent"
-                                                    Command="{Binding GenerateImageCommand}"
-                                                    CommandParameter="{x:Static modelsInference:GenerateFlags.None}"
-                                                    HotKey="{markupExtensions:PlatformGesture Ctrl+Enter}"
-                                                    IsVisible="{Binding !GenerateImageCommand.CanBeCanceled}"
-                                                    ToolTip.Tip="{Binding $self.HotKey}">
-                                                    <Panel>
-                                                        <TextBlock IsVisible="{Binding #GenerateButton.IsEnabled}" Text="Generate Image" />
-                                                        <controls:ProgressRing IsIndeterminate="True" IsVisible="{Binding !#GenerateButton.IsEnabled}" />
-                                                    </Panel>
-                                                </Button>
-                                                <!--  Cancel Button  -->
-                                                <Button
-                                                    x:Name="CancelButton"
-                                                    Grid.Row="1"
-                                                    Grid.Column="1"
-                                                    Width="130"
-                                                    HorizontalAlignment="Stretch"
-                                                    icons:Attached.Icon="fa-solid fa-stop"
-                                                    Command="{Binding GenerateImageCancelCommand}"
-                                                    IsVisible="{Binding GenerateImageCommand.CanBeCanceled}" />
+                                                    Grid.Column="0"
+                                                    HorizontalAlignment="Right"
+                                                    Orientation="Horizontal">
+                                                    <Button
+                                                        Margin="4,0"
+                                                        Padding="12,8"
+                                                        icons:Attached.Icon="fa-solid fa-magnifying-glass-plus"
+                                                        Classes="transparent"
+                                                        Command="{Binding GenerateImageCommand}"
+                                                        CommandParameter="{x:Static modelsInference:GenerateFlags.HiresFixAndUseCurrentSeed}"
+                                                        ToolTip.Tip="Generate with Hires Scaling" />
+                                                    <Button
+                                                        Margin="4,0"
+                                                        Padding="12,8"
+                                                        icons:Attached.Icon="fa-solid fa-repeat"
+                                                        Classes="transparent"
+                                                        Command="{Binding GenerateImageCommand}"
+                                                        CommandParameter="{x:Static modelsInference:GenerateFlags.UseCurrentSeed}"
+                                                        ToolTip.Tip="Generate with current seed" />
+                                                </StackPanel>
 
-                                                <Button
+                                                <!--  Center: Generate + Cancel overlay  -->
+                                                <Panel Grid.Row="1" Grid.Column="1">
+                                                    <!--  Main Generate Button  -->
+                                                    <Button
+                                                        x:Name="GenerateButton"
+                                                        Width="130"
+                                                        HorizontalAlignment="Stretch"
+                                                        Classes="accent"
+                                                        Command="{Binding GenerateImageCommand}"
+                                                        CommandParameter="{x:Static modelsInference:GenerateFlags.None}"
+                                                        HotKey="{markupExtensions:PlatformGesture Ctrl+Enter}"
+                                                        IsVisible="{Binding !GenerateImageCommand.CanBeCanceled}"
+                                                        ToolTip.Tip="{Binding $self.HotKey}">
+                                                        <Panel>
+                                                            <TextBlock IsVisible="{Binding #GenerateButton.IsEnabled}" Text="Generate Image" />
+                                                            <controls:ProgressRing IsIndeterminate="True" IsVisible="{Binding !#GenerateButton.IsEnabled}" />
+                                                        </Panel>
+                                                    </Button>
+                                                    <!--  Cancel Button  -->
+                                                    <Button
+                                                        x:Name="CancelButton"
+                                                        Width="130"
+                                                        HorizontalAlignment="Stretch"
+                                                        icons:Attached.Icon="fa-solid fa-stop"
+                                                        Command="{Binding GenerateImageCancelCommand}"
+                                                        IsVisible="{Binding GenerateImageCommand.CanBeCanceled}" />
+                                                </Panel>
+
+                                                <!--  Right flank: queue for later, hugging Generate's right edge  -->
+                                                <StackPanel
                                                     Grid.Row="1"
                                                     Grid.Column="2"
-                                                    Margin="4,0"
-                                                    Padding="12,8"
                                                     HorizontalAlignment="Left"
-                                                    icons:Attached.Icon="fa-solid fa-repeat"
-                                                    Classes="transparent"
-                                                    Command="{Binding GenerateImageCommand}"
-                                                    CommandParameter="{x:Static modelsInference:GenerateFlags.UseCurrentSeed}"
-                                                    ToolTip.Tip="Generate with current seed" />
-
-                                                <!--  Add to Queue  -->
-                                                <Button
-                                                    Grid.Row="1"
-                                                    Grid.Column="3"
-                                                    Margin="4,0"
-                                                    Padding="12,8"
-                                                    HorizontalAlignment="Left"
-                                                    VerticalAlignment="Center"
-                                                    Classes="transparent"
-                                                    Command="{Binding AddToQueueCommand}"
-                                                    ToolTip.Tip="{x:Static lang:Resources.Label_AddToQueue}">
-                                                    <fluentIcons:SymbolIcon
-                                                        Width="16"
-                                                        Height="16"
-                                                        FontSize="16"
-                                                        Symbol="AppsAddIn" />
-                                                </Button>
+                                                    Orientation="Horizontal">
+                                                    <!--  Add to Queue  -->
+                                                    <Button
+                                                        Margin="4,0"
+                                                        Padding="12,8"
+                                                        VerticalAlignment="Center"
+                                                        Classes="transparent"
+                                                        Command="{Binding AddToQueueCommand}"
+                                                        ToolTip.Tip="{x:Static lang:Resources.Label_AddToQueue}">
+                                                        <fluentIcons:SymbolIcon
+                                                            Width="16"
+                                                            Height="16"
+                                                            FontSize="16"
+                                                            Symbol="AppsAddIn" />
+                                                    </Button>
+                                                </StackPanel>
                                             </Grid>
                                         </controls:Card>
                                     </StackPanel>

@@ -5,6 +5,59 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+<<<<<<< HEAD
+=======
+## v2.17.0-dev.2
+### Changed
+- CivitAI downloads now pick their destination folder from the file's declared type — **Diffusion Model** and **UNet** files go to DiffusionModels, **Text Encoder** to TextEncoders, **CLIP Vision** to ClipVision, **ControlNet** to ControlNet, and **Upscaler** to the upscalers folder — instead of guessing from the model's name and base model. The name-based guess remains only as a fallback for files still typed plain "Model", and now also recognizes **Krea 2** checkpoints as UNet-only so they land in DiffusionModels
+### Fixed
+- Fixed a class of random crashes in the Inference **mask editor** and **image annotation editor**: canvas rendering runs on a separate render thread, while undo/redo, layer operations, exporting, and closing the editor could free the graphics resources a frame was still drawing with — occasionally crashing the app mid-stroke or while saving. The canvas threading model has been redesigned so this can't happen structurally: the render thread now exclusively owns the on-screen graphics resources, exports composite from immutable snapshots on their own surfaces, in-progress strokes hand the renderer stable point snapshots, and closing the editor waits for the in-flight frame before freeing anything
+- Fixed **pen pressure appearing to apply to the whole stroke instead of following the pen**: pressing harder mid-stroke re-widened the entire stroke while drawing (the width was a running average recomputed every frame), and after saving and reopening a project, mouse-drawn strokes came back ~25% thicker as full-pressure pen strokes. Pressure now stays per-segment while drawing, and mouse strokes keep their original width across save/load (existing project files load exactly as before)
+- Fixed the mask editor and image annotation editor leaking graphics memory: neither released their paint canvas on close, and paint-bucket fill results were never freed at all (each fill pinned a full-canvas bitmap until app exit)
+- Fixed fast brush strokes occasionally failing with a "collection was modified" error while the stroke was still being drawn
+- Fixed opening older projects whose masks contained stroke points outside the canvas failing with an overflow error
+- Fixed a potential crash when the paint canvas rendered before its size was set
+- Fixed CivitAI models showing an empty Files section with no download links when their files use CivitAI's newer file type labels — most often official releases like **Krea 2 Turbo** and **Z-Image** whose files are typed **Diffusion Model** or **Text Encoder** instead of plain "Model". All current CivitAI file types are now recognized across the model browser, details page, version dialog, bulk download, and installed/update detection
+- Fixed CivitAI "Download with Stability Matrix" links saving UNet-only checkpoints (Flux, Wan Video, Hunyuan, Krea 2) into the **StableDiffusion** folder — external links now use the same destination logic as the in-app browser
+### Performance
+- Dragging an image layer with the **Move** tool in the layered mask editor now re-renders only the dragged layer instead of re-compositing every layer on each pointer move, so dragging stays smooth in multi-layer projects
+- Faster color-mask extraction for regional prompting — a 1024×1024 canvas with six regions previously did over six million dictionary lookups per extraction
+- Fixed a small native memory leak while drawing with the mouse (a path object per frame was never freed), and removed a redundant full-canvas scan after every paint-bucket fill
+
+## v2.17.0-dev.1
+### Added
+#### New Feature: 🤗 Live HuggingFace Model Browser
+- Reworked the HuggingFace tab into a full browser instead of a fixed list of links — the curated picks are still there as the default view:
+  - Search HuggingFace for models right from the tab, sorted by downloads, likes, or most recently updated
+  - Paste a repository link to browse all of its files directly
+  - Browse files as a flat list or a folder tree, with a quick name filter and a **Hide installed** toggle
+  - Choose where each file goes (auto-detected and editable), or send a whole multi-file model such as a diffusers repo into one folder with its structure intact
+  - Select multiple files at once and see the total download size before you start, with a warning if there isn't enough free space
+  - Gated or private repositories work once you add a HuggingFace token in **Settings → Accounts**
+- Added Inference support for the **Wan 2.2 14B** mixture-of-experts video models. Enable **Dual expert (high / low noise)** from the Wan model card's options menu (⚙️) to load a second low-noise expert alongside the high-noise model; generation then runs the two-pass high-noise → low-noise sampling the 14B architecture expects, switching at a configurable **Boundary** (the fraction of steps handled by the high-noise expert, default 0.5). Works in both Wan Text to Video and Image to Video, and leaving the low-noise slot empty keeps the existing single-model Wan behavior unchanged
+  - When you pick a model that looks like one half of a 14B expert pair (e.g. `wan2.2_t2v_high_noise_14B`), the card offers a one-click prompt to enable the second expert and auto-selects its matching low-noise counterpart
+  - The high-noise and low-noise model pickers sit together at the top as a labeled pair, with Precision, VAE, Text Encoder and Shift tucked into an **Advanced** section to keep the card approachable
+  - Added a separate **Low-Noise LoRAs** list so per-expert speed LoRAs (such as Wan 2.2-Lightning's high/low-noise pair) land on the correct model — the **High-Noise LoRAs** list applies to the high-noise/primary model, and the new Low-Noise LoRAs list applies to the low-noise expert
+  - Added hover tooltips to the Wan model card fields (Precision, VAE, Text Encoder, Shift, Low-Noise, Boundary) explaining what each one does
+- Added a **gallery picker** for the Inference "+" new-tab button, grouping the project types into **Image / Video / Legacy** sections with icons and descriptions instead of a flat dropdown. The redundant standalone Flux text-to-image and SVD image-to-video types now live under **Legacy** so existing projects still open, without cluttering the list for new users
+  - Prefer the old menu? A **Compact New Tab Menu** toggle under Settings → Inference (and a quick link at the bottom of the picker dialog) switches the "+" button back to the fast dropdown
+### Changed
+- **Windows builds are now code-signed.** The portable executable is signed with a verified certificate, so Windows SmartScreen no longer flags Stability Matrix as from an unknown publisher. You may still see a SmartScreen prompt on the first releases while the certificate builds reputation, but those warnings will taper off as more people run signed builds
+- **Generate now auto-resumes after launching ComfyUI.** If you press Generate in Inference while ComfyUI isn't connected and choose to launch it from the connection prompt, the queued generation now waits for startup and runs on its own once connected - no need to press Generate a second time
+### Fixed
+- Fixed the Inference **VAE** dropdown listing models in a seemingly random order, and the **Text Encoder** / **CLIP Vision** dropdowns occasionally reordering as the list finished loading; all three now sort alphabetically, with **Default** pinned to the top of the VAE list
+- Model dropdowns no longer reserve space for a thumbnail when the selected model has no preview image, so names are no longer squished into a narrow strip
+- Fixed [#1666](https://github.com/LykosAI/StabilityMatrix/issues/1666) - AppImage builds creating a broken `.desktop` entry (`NoDisplay=true`, missing icon) that never showed up in the application launcher and reverted any manual edits on the next launch. AppImage runs now write a correct `.desktop` entry with the extracted app icon so Stability Matrix appears in your launcher/menu, and report a matching `WM_CLASS` so the running window shows the Stability Matrix icon in the dock/taskbar instead of a generic one. Only applies to AppImage runs; deb/rpm/flatpak installs keep their package-managed entries
+- Fixed `stabilitymatrix://` deep links (e.g. CivitAI "Download with Stability Matrix" buttons) being ignored on Linux AppImage builds — the URI is now forwarded to the running instance and the download starts, instead of just opening another window
+### Performance
+- The **Checkpoints** and **Outputs** galleries now load thumbnails at display size instead of full resolution, using far less memory and scrolling much more smoothly with large libraries
+- The **CivitAI** and **OpenModelDB** browsers now keep card images in memory, so scrolling back over models you've already seen no longer re-loads them from disk
+- Lightened the CivitAI model cards so they render faster while scrolling
+### Supporters
+#### 🌟 Visionaries
+This build leans hard into what's next: a live HuggingFace browser and Wan 2.2 video generation. None of that exploration happens without our Visionaries giving us the room to chase it. So a huge thank you to **Waterclouds**, **MrMxyzptlk12836**, **Psilocyfer18731**, **bluepopsicle**, **Ibixat**, **Droolguy**, **KalAbaddon**, **LG**, **snotty**, **whudunit**, **cusalapapen1481**, and **moon_milky2843**. You make the experiments possible. And a big hello to **SkynetFuture** and **sn3232323233350**, who join the Visionary crew this time around. We're genuinely glad you're here. 💛
+
+>>>>>>> 356d6e88 (Merge pull request #1295 from ionite34/paint-canvas-perf-and-crash-hardening)
 ## v2.16.2
 ### Changed
 - **Generate now auto-resumes after launching ComfyUI.** If you press Generate in Inference while ComfyUI isn't connected and choose to launch it from the connection prompt, the queued generation now waits for startup and runs on its own once connected - no need to press Generate a second time

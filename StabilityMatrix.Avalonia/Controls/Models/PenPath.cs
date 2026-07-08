@@ -261,8 +261,8 @@ public readonly record struct PenPath()
     {
         var skPath = new SKPath();
 
-        // Snapshot the count: the UI thread can append points to an in-progress stroke
-        // while the render thread converts it
+        // In-progress strokes live in LiveStroke (never in a PenPath), so by the time a PenPath
+        // exists its Points list is frozen and safe to iterate from any thread.
         var count = Points.Count;
 
         if (count <= 0)
@@ -317,14 +317,20 @@ public readonly record struct PenPath()
             BitConverter.TryWriteBytes(buffer.AsSpan(offset), points.Count);
             offset += 4;
 
-            // Write each point as 3 floats
+            // Write each point as 3 floats. Mouse points (no pressure, not a pen) are written with
+            // a -1 pressure sentinel so they round-trip as mouse points instead of being promoted
+            // to full-pressure pen points on reload (which rendered them ~25% thicker). Old readers
+            // treat out-of-range pressure as null, matching their existing reload behavior.
             foreach (var point in points)
             {
                 BitConverter.TryWriteBytes(buffer.AsSpan(offset), (float)point.X);
                 offset += 4;
                 BitConverter.TryWriteBytes(buffer.AsSpan(offset), (float)point.Y);
                 offset += 4;
-                BitConverter.TryWriteBytes(buffer.AsSpan(offset), (float)(point.Pressure ?? 1.0));
+                BitConverter.TryWriteBytes(
+                    buffer.AsSpan(offset),
+                    (float)(point.Pressure ?? (point.IsPen ? 1.0 : -1.0))
+                );
                 offset += 4;
             }
 
@@ -386,13 +392,12 @@ public readonly record struct PenPath()
                 var pressure = BitConverter.ToSingle(buffer, offset);
                 offset += 4;
 
-                points.Add(
-                    new PenPoint(x, y)
-                    {
-                        Pressure = pressure >= 0 && pressure <= 1 ? pressure : null,
-                        IsPen = true, // Mark as pen point so it renders correctly
-                    }
-                );
+                // Pressure in [0, 1] means a pen point; anything else (notably the -1 mouse
+                // sentinel written by CompressPointsPublic, or legacy garbage) is a mouse point,
+                // so mouse strokes keep their plain polyline rendering across save/load.
+                var isPen = pressure >= 0 && pressure <= 1;
+
+                points.Add(new PenPoint(x, y) { Pressure = isPen ? pressure : null, IsPen = isPen });
             }
 
             return points;

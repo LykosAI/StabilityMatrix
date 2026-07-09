@@ -40,7 +40,8 @@ public partial class PaintCanvasViewModel
     {
         var model = new PaintCanvasModel
         {
-            TemporaryPaths = TemporaryPaths.ToDictionary(x => x.Key, x => x.Value),
+            // LiveStrokes are frozen into plain PenPaths so the serialized shape is unchanged
+            TemporaryPaths = TemporaryPaths.ToDictionary(x => x.Key, x => x.Value.ToPenPath()),
             Paths = Paths,
             PaintBrushColor = PaintBrushColor,
             PaintBrushSize = PaintBrushSize,
@@ -49,7 +50,7 @@ public partial class PaintCanvasViewModel
             CurrentZoom = CurrentZoom,
             IsPenDown = IsPenDown,
             SelectedTool = SelectedTool,
-            CanvasSize = CanvasSize
+            CanvasSize = CanvasSize,
         };
 
         return model;
@@ -60,7 +61,7 @@ public partial class PaintCanvasViewModel
         TemporaryPaths.Clear();
         foreach (var (key, value) in model.TemporaryPaths)
         {
-            TemporaryPaths.TryAdd(key, value);
+            TemporaryPaths.TryAdd(key, LiveStroke.FromPenPath(value));
         }
 
         Paths = model.Paths;

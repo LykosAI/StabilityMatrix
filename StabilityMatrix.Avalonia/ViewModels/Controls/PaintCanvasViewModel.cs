@@ -28,8 +28,47 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
     : LoadableViewModelBase,
         IDisposable
 {
-    private bool _disposed;
-    public ConcurrentDictionary<long, PenPath> TemporaryPaths { get; set; } = new();
+    // Threading model (no locks):
+    //  * UI thread: all mutation (strokes, undo/redo, layer bitmap swaps, exports, Dispose).
+    //    Shared state crosses to the render thread only as immutable snapshots — ImmutableList
+    //    swaps for Paths and SKLayer.Bitmaps, LiveStroke point-array publication.
+    //  * Render thread (compositor): RenderToSurface only. It exclusively owns the persistent
+    //    native objects (SKLayer.Surface, cachedPathsImage, the checkerboard shader) — they are
+    //    created, rebuilt and disposed only inside the render pass.
+    //  * Cross-thread disposal is deferred: bitmaps swapped out on the UI thread are queued to
+    //    retiredLayerBitmaps and freed by the render thread after the frame completes; cache
+    //    invalidation sets pathCacheDirty instead of disposing.
+    //  * Dispose quiesces first: it sets _disposed (checked at render entry) and waits for
+    //    rendersInFlight to drain before freeing render-owned resources.
+    private volatile bool _disposed;
+
+    /// <summary>
+    /// Number of render passes currently inside <see cref="RenderToSurface"/>. Used by
+    /// <see cref="Dispose"/> to wait for the in-flight frame before freeing native resources.
+    /// </summary>
+    private int rendersInFlight;
+
+    /// <summary>
+    /// Set (to 1) by the UI thread when the finalized-path cache is stale; the render thread
+    /// consumes it with an atomic read-and-reset and disposes/rebuilds
+    /// <see cref="cachedPathsImage"/> on its own thread. Int rather than bool so
+    /// <see cref="Interlocked.Exchange(ref int, int)"/> can swap it — a plain check-then-clear
+    /// would drop an invalidation raised between the check and the clear.
+    /// </summary>
+    private int pathCacheDirty;
+
+    /// <summary>
+    /// Bitmaps swapped out of layers on the UI thread while the render thread may still be
+    /// drawing them. Drained (disposed) by the render thread after each frame, and by
+    /// <see cref="Dispose"/>.
+    /// </summary>
+    private readonly ConcurrentQueue<SKBitmap> retiredLayerBitmaps = new();
+
+    /// <summary>
+    /// Strokes currently being drawn, keyed by pointer id. Values are <see cref="LiveStroke"/>s:
+    /// the UI thread appends points while the render thread reads stable snapshots, without locks.
+    /// </summary>
+    public ConcurrentDictionary<long, LiveStroke> TemporaryPaths { get; set; } = new();
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(UndoCommand))]
@@ -86,9 +125,6 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
     [ObservableProperty]
     private bool isShapeStrokeOnly;
 
-    [JsonIgnore]
-    private SKCanvas? SourceCanvas { set; get; }
-
     [Localizable(false)]
     [JsonIgnore]
     private OrderedDictionary<string, SKLayer> Layers { get; } =
@@ -124,19 +160,6 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
     /// </summary>
     [JsonIgnore]
     private int cachedPathsCount;
-
-    /// <summary>
-    /// Cached surface for temporary paths during active drawing.
-    /// Allows incremental rendering of long strokes.
-    /// </summary>
-    [JsonIgnore]
-    private SKSurface? tempPathSurface;
-
-    /// <summary>
-    /// Tracks how many points have been rendered to the temp path surface per pointer ID.
-    /// </summary>
-    [JsonIgnore]
-    private readonly ConcurrentDictionary<long, int> tempPathRenderedPoints = new();
 
     /// <summary>
     /// Whether to use GPU-accelerated surfaces when available.
@@ -262,38 +285,40 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
             return;
         }
 
-        // Dispose old bitmaps before replacing to prevent memory leaks
-        lock (layer)
-        {
-            foreach (var oldBitmap in layer.Bitmaps)
-            {
-                oldBitmap.Dispose();
-            }
-
-            layer.Bitmaps = bitmap is not null ? [bitmap] : [];
-        }
-    }
-
-    public void SetSourceCanvas(SKCanvas canvas)
-    {
-        ArgumentNullException.ThrowIfNull(canvas);
-        SourceCanvas = canvas;
+        var oldBitmaps = layer.Bitmaps;
+        layer.Bitmaps = bitmap is not null ? [bitmap] : [];
+        RetireLayerBitmaps(oldBitmaps);
     }
 
     public void LoadCanvasFromBitmap(SKBitmap bitmap)
     {
-        // Dispose old bitmaps and invalidate cache
-        lock (ImagesLayer)
-        {
-            foreach (var oldBitmap in ImagesLayer.Bitmaps)
-            {
-                oldBitmap.Dispose();
-            }
-            ImagesLayer.Bitmaps = [bitmap];
-        }
+        var oldBitmaps = ImagesLayer.Bitmaps;
+        ImagesLayer.Bitmaps = [bitmap];
+        RetireLayerBitmaps(oldBitmaps);
 
         InvalidatePathCache();
         RefreshCanvas?.Invoke();
+    }
+
+    /// <summary>
+    /// Frees bitmaps that were swapped out of a layer. When the canvas renders on-screen
+    /// (<see cref="RefreshCanvas"/> is wired), the render thread may still be drawing them,
+    /// so they are queued and disposed by the render thread after the frame. For export-only
+    /// view models that never render on-screen, they are disposed immediately.
+    /// </summary>
+    private void RetireLayerBitmaps(ImmutableList<SKBitmap> oldBitmaps)
+    {
+        foreach (var oldBitmap in oldBitmaps)
+        {
+            if (RefreshCanvas is null)
+            {
+                oldBitmap.Dispose();
+            }
+            else
+            {
+                retiredLayerBitmaps.Enqueue(oldBitmap);
+            }
+        }
     }
 
     [RelayCommand(CanExecute = nameof(CanExecuteUndo))]
@@ -340,12 +365,12 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
 
     /// <summary>
     /// Invalidates the cached paths image. Call when paths are modified externally.
+    /// The cache itself is owned by the render thread, so this only raises a flag; the
+    /// render thread disposes and rebuilds the cache on its own thread.
     /// </summary>
     public void InvalidatePathCache()
     {
-        cachedPathsImage?.Dispose();
-        cachedPathsImage = null;
-        cachedPathsCount = 0;
+        Interlocked.Exchange(ref pathCacheDirty, 1);
     }
 
     /// <summary>
@@ -557,7 +582,7 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
             IsStrokeOnly = IsShapeStrokeOnly,
             StrokeWidth = (float)PaintBrushSize,
         };
-        TemporaryPaths[ShapePointerId] = previewPath;
+        TemporaryPaths[ShapePointerId] = new LiveStroke { Template = previewPath };
     }
 
     /// <summary>
@@ -710,25 +735,23 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
         using var canvas = new SKCanvas(bitmap);
         canvas.Clear(SKColors.Transparent);
 
-        // Draw all layers in order
+        // Draw all layers in order. Runs on the UI thread; layer.Bitmaps is an atomically-swapped
+        // immutable list only ever mutated from the UI thread, so a plain read is safe.
         foreach (var (name, layer) in Layers)
         {
-            lock (layer)
+            foreach (var layerBitmap in layer.Bitmaps)
             {
-                foreach (var layerBitmap in layer.Bitmaps)
-                {
-                    canvas.DrawBitmap(layerBitmap, 0, 0);
-                }
+                canvas.DrawBitmap(layerBitmap, 0, 0);
+            }
 
-                // If this is the active brush layer, also render the active vector paths
-                // We render them freshly here on CPU to avoid using the GPU-backed cache from a different thread
-                if (name == "Brush")
+            // If this is the active brush layer, also render the active vector paths
+            // We render them freshly here on CPU to avoid using the GPU-backed cache from a different thread
+            if (name == "Brush")
+            {
+                using var paint = new SKPaint();
+                foreach (var path in Paths)
                 {
-                    using var paint = new SKPaint();
-                    foreach (var path in Paths)
-                    {
-                        RenderPenPath(canvas, path, paint);
-                    }
+                    RenderPenPath(canvas, path, paint);
                 }
             }
         }
@@ -759,6 +782,8 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
         var visited = new bool[width * height];
         var queue = new Queue<(int x, int y)>();
         queue.Enqueue((startX, startY));
+
+        var hasContent = false;
 
         // Collect horizontal spans to draw
         var spans = new List<(int y, int left, int right)>();
@@ -834,6 +859,7 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
                 1 + (Expand * 2),
                 paint
             );
+            hasContent = true;
 
             // Queue pixels above and below the span
             for (var i = left; i <= right; i++)
@@ -862,14 +888,7 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
             }
         }
 
-        // Check if anything was filled (at least one visited pixel)
-        foreach (var v in visited)
-        {
-            if (v)
-                return true;
-        }
-
-        return false;
+        return hasContent;
     }
 
     private static bool ColorsAreSimilar(SKColor a, SKColor b, int tolerance)
@@ -892,17 +911,18 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
     {
         using var _ = CodeTimer.StartDebug();
 
-        if (CanvasSize == Size.Empty)
+        using var originalImage = ComposeToNewImage(renderBackgroundImage: false);
+        if (originalImage is null)
         {
-            logger.LogWarning($"RenderToImage: {nameof(CanvasSize)} is not set, returning null.");
             return null;
         }
 
-        using var surface = SKSurface.Create(new SKImageInfo(CanvasSize.Width, CanvasSize.Height));
-
-        RenderToSurface(surface);
-
-        using var originalImage = surface.Snapshot();
+        using var surface = SKSurface.Create(new SKImageInfo(originalImage.Width, originalImage.Height));
+        if (surface is null)
+        {
+            logger.LogWarning("RenderToWhiteChannelImage: Failed to create surface, returning null.");
+            return null;
+        }
         // Replace all colors to white (255, 255, 255), keep original alpha
         // csharpier-ignore
         using var colorFilter = SKColorFilter.CreateColorMatrix(
@@ -924,21 +944,16 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
         return surface.Snapshot();
     }
 
-    public SKImage? RenderToImage()
+    /// <summary>
+    /// Composes the canvas into a new CPU-backed image on the calling (UI) thread, without
+    /// touching the persistent surfaces owned by the on-screen render pass.
+    /// </summary>
+    /// <param name="renderBackgroundImage">Whether to include the background image layer.</param>
+    public SKImage? RenderToImage(bool renderBackgroundImage = false)
     {
         using var _ = CodeTimer.StartDebug();
 
-        if (CanvasSize == Size.Empty)
-        {
-            logger.LogWarning($"RenderToImage: {nameof(CanvasSize)} is not set, returning null.");
-            return null;
-        }
-
-        using var surface = SKSurface.Create(new SKImageInfo(CanvasSize.Width, CanvasSize.Height));
-
-        RenderToSurface(surface);
-
-        return surface.Snapshot();
+        return ComposeToNewImage(renderBackgroundImage);
     }
 
     /// <summary>
@@ -969,19 +984,15 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
         var srcPixels = sourceBitmap.Pixels; // SKColor[] array - fast direct access
         var pixelCount = srcPixels.Length;
 
-        // Create result bitmaps for each color
-        var resultBitmaps = new Dictionary<SKColor, SKBitmap>();
-        var resultPixels = new Dictionary<SKColor, SKColor[]>();
-        foreach (var color in targetColors)
+        // Use flat arrays in the per-pixel loop to avoid dictionary lookups per pixel per color.
+        // default(SKColor) is transparent, so only matches need to be written.
+        var colorCount = targetColors.Count;
+        var colors = new SKColor[colorCount];
+        var resultPixels = new SKColor[colorCount][];
+        for (var c = 0; c < colorCount; c++)
         {
-            var bitmap = new SKBitmap(
-                sourceBitmap.Width,
-                sourceBitmap.Height,
-                SKColorType.Rgba8888,
-                SKAlphaType.Premul
-            );
-            resultBitmaps[color] = bitmap;
-            resultPixels[color] = new SKColor[pixelCount];
+            colors[c] = targetColors[c];
+            resultPixels[c] = new SKColor[pixelCount];
         }
 
         // Single pass through pixels, check all colors
@@ -989,24 +1000,34 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
         {
             var pixel = srcPixels[i];
 
-            foreach (var targetColor in targetColors)
+            if (pixel.Alpha == 0)
+                continue;
+
+            for (var c = 0; c < colorCount; c++)
             {
-                var matches =
+                var targetColor = colors[c];
+                if (
                     Math.Abs(pixel.Red - targetColor.Red) <= tolerance
                     && Math.Abs(pixel.Green - targetColor.Green) <= tolerance
                     && Math.Abs(pixel.Blue - targetColor.Blue) <= tolerance
-                    && pixel.Alpha > 0;
-
-                resultPixels[targetColor][i] = matches ? SKColors.White : SKColors.Transparent;
+                )
+                {
+                    resultPixels[c][i] = SKColors.White;
+                }
             }
         }
 
         // Set pixels and convert bitmaps to images
-        foreach (var (color, bitmap) in resultBitmaps)
+        for (var c = 0; c < colorCount; c++)
         {
-            bitmap.Pixels = resultPixels[color];
-            results[color] = SKImage.FromBitmap(bitmap);
-            bitmap.Dispose();
+            using var bitmap = new SKBitmap(
+                sourceBitmap.Width,
+                sourceBitmap.Height,
+                SKColorType.Rgba8888,
+                SKAlphaType.Premul
+            );
+            bitmap.Pixels = resultPixels[c];
+            results[colors[c]] = SKImage.FromBitmap(bitmap);
         }
 
         return results;
@@ -1143,90 +1164,125 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
             && Math.Abs(a.Blue - b.Blue) <= tolerance;
     }
 
+    /// <summary>
+    /// On-screen render entry point, called by the compositor render thread each frame.
+    /// Tracked by <see cref="rendersInFlight"/> so <see cref="Dispose"/> can wait for the
+    /// in-flight frame before freeing the native resources this pass draws with.
+    /// </summary>
     public void RenderToSurface(
         SKSurface surface,
         bool renderBackgroundFill = false,
         bool renderBackgroundImage = false
     )
     {
+        Interlocked.Increment(ref rendersInFlight);
+        try
+        {
+            if (_disposed)
+            {
+                return;
+            }
+
+            RenderToSurfaceCore(surface, renderBackgroundFill, renderBackgroundImage);
+        }
+        finally
+        {
+            Interlocked.Decrement(ref rendersInFlight);
+        }
+    }
+
+    private void RenderToSurfaceCore(
+        SKSurface? surface,
+        bool renderBackgroundFill,
+        bool renderBackgroundImage
+    )
+    {
+        // SKSurface.Create can return null under low memory or GPU context loss
+        if (surface is null || _disposed)
+        {
+            return;
+        }
+
+        // A zero-size canvas would make SKSurface.Create return null below and NRE on layer.Surface
+        if (CanvasSize.Width <= 0 || CanvasSize.Height <= 0)
+        {
+            surface.Canvas.Clear(SKColors.Transparent);
+            return;
+        }
+
         var grContext = surface.Context;
         var useGpu = UseGpuAcceleration && grContext != null;
         IsUsingGpu = useGpu;
 
-        // Initialize canvas layers
+        // Initialize canvas layers. The persistent layer surfaces are exclusively owned by this
+        // render pass (exports compose their own CPU surfaces from immutable snapshots — see
+        // PaintCanvasViewModel.Compose.cs), so no locking is needed. Recreate when missing, when
+        // the GPU context changed (device loss / GPU toggle), or on resize.
         foreach (var layer in Layers.Values)
         {
-            lock (layer)
+            var needsNewSurface = layer.Surface is null;
+            if (!needsNewSurface)
             {
-                var needsNewSurface = layer.Surface is null;
-                if (!needsNewSurface)
+                // Compare native handles: managed GRContext wrappers are not guaranteed unique
+                var expectedContextHandle = useGpu ? grContext!.Handle : IntPtr.Zero;
+                var layerContextHandle = layer.Surface!.Context?.Handle ?? IntPtr.Zero;
+                if (layerContextHandle != expectedContextHandle)
                 {
-                    // Recreate if the existing surface's backing doesn't match the current target.
-                    // On-screen rendering leases a GPU surface, so the persistent layer surfaces are
-                    // GPU-backed and tied to the render thread. Off-screen export (e.g. saving an
-                    // annotation) composites onto a CPU surface from another thread; reusing those
-                    // GPU surfaces there produces a blank image. Forcing a matching CPU surface fixes
-                    // it, and the next on-screen render simply recreates the GPU surface.
-                    var layerIsGpu = layer.Surface!.Context != null;
-                    if (layerIsGpu != useGpu)
-                    {
-                        needsNewSurface = true;
-                    }
-                    else
-                    {
-                        // Check if we need to resize
-                        var currentInfo = layer.Surface!.Canvas.DeviceClipBounds;
-                        needsNewSurface =
-                            currentInfo.Width != CanvasSize.Width || currentInfo.Height != CanvasSize.Height;
-                    }
+                    needsNewSurface = true;
                 }
-
-                if (needsNewSurface)
+                else
                 {
-                    // Dispose old surface if exists
-                    layer.Surface?.Dispose();
+                    // Check if we need to resize
+                    var currentInfo = layer.Surface!.Canvas.DeviceClipBounds;
+                    needsNewSurface =
+                        currentInfo.Width != CanvasSize.Width || currentInfo.Height != CanvasSize.Height;
+                }
+            }
 
-                    var imageInfo = new SKImageInfo(CanvasSize.Width, CanvasSize.Height);
+            if (needsNewSurface)
+            {
+                // Dispose old surface if exists
+                layer.Surface?.Dispose();
 
-                    // Try GPU surface first if available
-                    if (useGpu)
+                var imageInfo = new SKImageInfo(CanvasSize.Width, CanvasSize.Height);
+
+                // Try GPU surface first if available
+                if (useGpu)
+                {
+                    layer.Surface = SKSurface.Create(grContext!, budgeted: true, imageInfo);
+
+                    // Fallback to CPU if GPU surface creation failed
+                    if (layer.Surface is null)
                     {
-                        layer.Surface = SKSurface.Create(grContext!, budgeted: true, imageInfo);
-
-                        // Fallback to CPU if GPU surface creation failed
-                        if (layer.Surface is null)
-                        {
-                            if (LogRenderingMode)
-                            {
-                                logger.LogWarning(
-                                    "GPU surface creation failed, falling back to CPU for layer"
-                                );
-                            }
-                            layer.Surface = SKSurface.Create(imageInfo);
-                        }
-                        else if (LogRenderingMode)
-                        {
-                            logger.LogDebug("Created GPU-accelerated surface for layer");
-                        }
-                    }
-                    else
-                    {
-                        layer.Surface = SKSurface.Create(imageInfo);
                         if (LogRenderingMode)
                         {
-                            logger.LogDebug("Created CPU surface for layer (GPU not available or disabled)");
+                            logger.LogWarning("GPU surface creation failed, falling back to CPU for layer");
                         }
+                        layer.Surface = SKSurface.Create(imageInfo);
+                    }
+                    else if (LogRenderingMode)
+                    {
+                        logger.LogDebug("Created GPU-accelerated surface for layer");
                     }
                 }
                 else
                 {
-                    // No resize needed, just clear
-                    layer.Surface!.Canvas.Clear(SKColors.Transparent);
+                    layer.Surface = SKSurface.Create(imageInfo);
+                    if (LogRenderingMode)
+                    {
+                        logger.LogDebug("Created CPU surface for layer (GPU not available or disabled)");
+                    }
                 }
+            }
+            else
+            {
+                // No resize needed, just clear
+                layer.Surface!.Canvas.Clear(SKColors.Transparent);
             }
         }
 
-        // Render all layer images in order
+        // Render all layer images in order. layer.Bitmaps is an atomically-swapped immutable list;
+        // bitmaps swapped out mid-frame stay alive in retiredLayerBitmaps until the frame completes.
         foreach (var (layerName, layer) in Layers)
         {
             // Skip background image if not requested
@@ -1235,13 +1291,10 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
                 continue;
             }
 
-            lock (layer)
+            var layerCanvas = layer.Surface!.Canvas;
+            foreach (var bitmap in layer.Bitmaps)
             {
-                var layerCanvas = layer.Surface!.Canvas;
-                foreach (var bitmap in layer.Bitmaps)
-                {
-                    layerCanvas.DrawBitmap(bitmap, new SKPoint(0, 0));
-                }
+                layerCanvas.DrawBitmap(bitmap, new SKPoint(0, 0));
             }
         }
 
@@ -1263,11 +1316,8 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
         // Draw the layers to the main surface
         foreach (var layer in Layers.Values)
         {
-            lock (layer)
-            {
-                layer.Surface!.Canvas.Flush();
-                surface.Canvas.DrawSurface(layer.Surface!, new SKPoint(0, 0));
-            }
+            layer.Surface!.Canvas.Flush();
+            surface.Canvas.DrawSurface(layer.Surface!, new SKPoint(0, 0));
         }
 
         // Draw grid overlay if enabled
@@ -1277,6 +1327,13 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
         }
 
         surface.Canvas.Flush();
+
+        // The frame is fully drawn and flushed - bitmaps retired by UI-thread layer swaps can no
+        // longer be referenced by this pass, so free them now, on the thread that owns rendering.
+        while (retiredLayerBitmaps.TryDequeue(out var retired))
+        {
+            retired.Dispose();
+        }
     }
 
     /// <summary>
@@ -1351,7 +1408,15 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
     /// </summary>
     private void RenderGridOverlay(SKCanvas canvas)
     {
-        if (GridDivisions <= 1 || CanvasSize == Size.Empty)
+        if (CanvasSize == Size.Empty)
+            return;
+
+        RenderGridOverlayCore(canvas, CanvasSize.Width, CanvasSize.Height, GridDivisions);
+    }
+
+    private static void RenderGridOverlayCore(SKCanvas canvas, int width, int height, int gridDivisions)
+    {
+        if (gridDivisions <= 1)
             return;
 
         using var paint = new SKPaint
@@ -1362,20 +1427,17 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
             StrokeWidth = 1f,
         };
 
-        var width = CanvasSize.Width;
-        var height = CanvasSize.Height;
-
         // Draw vertical lines
-        for (var i = 1; i < GridDivisions; i++)
+        for (var i = 1; i < gridDivisions; i++)
         {
-            var x = (float)(width * i) / GridDivisions;
+            var x = (float)(width * i) / gridDivisions;
             canvas.DrawLine(x, 0, x, height, paint);
         }
 
         // Draw horizontal lines
-        for (var i = 1; i < GridDivisions; i++)
+        for (var i = 1; i < gridDivisions; i++)
         {
-            var y = (float)(height * i) / GridDivisions;
+            var y = (float)(height * i) / gridDivisions;
             canvas.DrawLine(0, y, width, y, paint);
         }
     }
@@ -1386,6 +1448,16 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
     /// </summary>
     private void RenderPathsWithCaching(SKCanvas paintLayerCanvas)
     {
+        // Consume a pending invalidation: the cache is owned by this (render) thread, so this is
+        // where the stale image actually gets disposed and reset. Atomic read-and-reset so a
+        // concurrent UI-thread invalidation is never lost between a check and a clear.
+        if (Interlocked.Exchange(ref pathCacheDirty, 0) == 1)
+        {
+            cachedPathsImage?.Dispose();
+            cachedPathsImage = null;
+            cachedPathsCount = 0;
+        }
+
         var currentPathCount = Paths.Count;
         var hasTemporaryPaths = !TemporaryPaths.IsEmpty;
 
@@ -1433,206 +1505,11 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
             }
         }
 
-        // Render temporary paths directly (the batched RenderPenPath is already optimized)
-        foreach (var penPath in TemporaryPaths.Values)
+        // Render in-progress strokes directly (the batched rendering is already optimized)
+        foreach (var stroke in TemporaryPaths.Values)
         {
-            RenderPenPath(paintLayerCanvas, penPath, paint);
+            RenderLiveStroke(paintLayerCanvas, stroke, paint);
         }
-    }
-
-    /// <summary>
-    /// Renders temporary paths with incremental caching for long strokes.
-    /// Only new points since last render are drawn, dramatically improving
-    /// performance for continuous drawing.
-    /// </summary>
-    private void RenderTemporaryPathsIncremental(SKCanvas targetCanvas, SKPaint paint)
-    {
-        if (TemporaryPaths.IsEmpty)
-        {
-            // No temporary paths - dispose surface if exists
-            if (tempPathSurface != null)
-            {
-                tempPathSurface.Dispose();
-                tempPathSurface = null;
-                tempPathRenderedPoints.Clear();
-            }
-            return;
-        }
-
-        // For simplicity and reliability, use a hybrid approach:
-        // - Keep a cached surface for the "already rendered" portions
-        // - Render new points directly to target canvas (which gets composited)
-
-        // Ensure we have a temp surface
-        var needNewSurface = tempPathSurface == null;
-        if (!needNewSurface)
-        {
-            var bounds = tempPathSurface!.Canvas.DeviceClipBounds;
-            needNewSurface = bounds.Width != CanvasSize.Width || bounds.Height != CanvasSize.Height;
-        }
-
-        if (needNewSurface)
-        {
-            tempPathSurface?.Dispose();
-            var imageInfo = new SKImageInfo(CanvasSize.Width, CanvasSize.Height);
-
-            // Use CPU surface for temp paths to avoid GPU context threading issues
-            tempPathSurface = SKSurface.Create(imageInfo);
-            tempPathSurface?.Canvas.Clear(SKColors.Transparent);
-            tempPathRenderedPoints.Clear();
-        }
-
-        if (tempPathSurface == null)
-        {
-            // Fallback: render all temp paths directly
-            foreach (var penPath in TemporaryPaths.Values)
-            {
-                RenderPenPath(targetCanvas, penPath, paint);
-            }
-            return;
-        }
-
-        var tempCanvas = tempPathSurface.Canvas;
-
-        // Check if any paths were removed (stroke finalized) - need to clear and rebuild
-        var pathsRemoved = false;
-        foreach (var pointerId in tempPathRenderedPoints.Keys.ToArray())
-        {
-            if (!TemporaryPaths.ContainsKey(pointerId))
-            {
-                pathsRemoved = true;
-                tempPathRenderedPoints.TryRemove(pointerId, out _);
-            }
-        }
-
-        if (pathsRemoved)
-        {
-            // A stroke was finalized - clear the temp surface
-            tempCanvas.Clear(SKColors.Transparent);
-            tempPathRenderedPoints.Clear();
-        }
-
-        // Render each temporary path
-        foreach (var (pointerId, penPath) in TemporaryPaths)
-        {
-            var renderedCount = tempPathRenderedPoints.GetValueOrDefault(pointerId, 0);
-            var totalPoints = penPath.Points.Count;
-
-            if (totalPoints > renderedCount)
-            {
-                if (renderedCount == 0)
-                {
-                    // New path - render everything to the temp surface
-                    RenderPenPath(tempCanvas, penPath, paint);
-                }
-                else
-                {
-                    // Continuing path - render new segment to temp surface
-                    RenderPenPathSegment(tempCanvas, penPath, renderedCount, totalPoints, paint);
-                }
-                tempPathRenderedPoints[pointerId] = totalPoints;
-            }
-        }
-
-        // Draw the temp surface to target
-        tempCanvas.Flush();
-        using var tempImage = tempPathSurface.Snapshot();
-        targetCanvas.DrawImage(tempImage, new SKPoint(0, 0));
-    }
-
-    /// <summary>
-    /// Renders a segment of a pen path (from startIndex to endIndex).
-    /// Used for incremental rendering of temporary paths.
-    /// </summary>
-    private static void RenderPenPathSegment(
-        SKCanvas canvas,
-        PenPath penPath,
-        int startIndex,
-        int endIndex,
-        SKPaint paint
-    )
-    {
-        if (startIndex >= endIndex || penPath.Points.Count == 0)
-            return;
-
-        // Apply Color
-        if (penPath.IsErase)
-        {
-            paint.BlendMode = SKBlendMode.Clear;
-            paint.Color = SKColors.Transparent;
-        }
-        else
-        {
-            paint.BlendMode = SKBlendMode.SrcOver;
-            paint.Color = penPath.FillColor;
-        }
-
-        paint.IsDither = true;
-        paint.IsAntialias = true;
-        paint.Style = SKPaintStyle.Stroke;
-        paint.StrokeCap = SKStrokeCap.Round;
-        paint.StrokeJoin = SKStrokeJoin.Round;
-
-        // Apply feathering (soft brush edge) using blur mask filter
-        if (penPath.Feathering > 0)
-        {
-            var effectiveRadiusForBlur = penPath.GetEffectiveRadius();
-            var blurSigma = effectiveRadiusForBlur * penPath.Feathering * 0.5f;
-            if (blurSigma > 0.1f)
-            {
-                paint.MaskFilter = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, blurSigma);
-            }
-        }
-        else
-        {
-            paint.MaskFilter = null;
-        }
-
-        using var path = new SKPath();
-        var started = false;
-        var currentThickness = 0f;
-
-        // Start from one point before to ensure continuity
-        var actualStart = Math.Max(0, startIndex - 1);
-
-        var effectiveRadius = penPath.GetEffectiveRadius();
-
-        for (var i = actualStart; i < endIndex && i < penPath.Points.Count; i++)
-        {
-            var point = penPath.Points[i];
-            if (!point.IsPen)
-                continue;
-
-            var thickness = (float)((point.Pressure ?? 1) * effectiveRadius * 2.5);
-
-            if (!started)
-            {
-                path.MoveTo(point.X, point.Y);
-                currentThickness = thickness;
-                started = true;
-            }
-            else
-            {
-                path.LineTo(point.X, point.Y);
-                currentThickness = (currentThickness + thickness) / 2;
-            }
-        }
-
-        if (started)
-        {
-            paint.StrokeWidth = currentThickness;
-            canvas.DrawPath(path, paint);
-        }
-    }
-
-    /// <summary>
-    /// Clears the temporary path cache. Call when a stroke is finalized.
-    /// </summary>
-    public void ClearTempPathCache()
-    {
-        tempPathSurface?.Dispose();
-        tempPathSurface = null;
-        tempPathRenderedPoints.Clear();
     }
 
     /// <summary>
@@ -1800,6 +1677,37 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
     }
 
     /// <summary>
+    /// Renders an in-progress <see cref="LiveStroke"/> to a canvas using a stable point snapshot,
+    /// safe to call from the render thread while the UI thread keeps appending points.
+    /// </summary>
+    public static void RenderLiveStroke(
+        SKCanvas canvas,
+        LiveStroke stroke,
+        SKPaint paint,
+        SKColor? overrideColor = null
+    )
+    {
+        var template = stroke.Template;
+
+        switch (template.PathType)
+        {
+            case PenPathType.Rectangle:
+            case PenPathType.Ellipse:
+                RenderShapePath(canvas, template, paint, overrideColor);
+                return;
+
+            case PenPathType.Bitmap:
+                RenderBitmapPath(canvas, template, paint, overrideColor);
+                return;
+
+            case PenPathType.Freehand:
+            default:
+                RenderFreehandPathCore(canvas, template, stroke.GetPointsSnapshot(), paint, overrideColor);
+                return;
+        }
+    }
+
+    /// <summary>
     /// Renders freehand paths with pressure-sensitive strokes to the canvas.
     /// </summary>
     private static void RenderFreehandPath(
@@ -1807,10 +1715,25 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
         PenPath penPath,
         SKPaint paint,
         SKColor? overrideColor = null
+    ) => RenderFreehandPathCore(canvas, penPath, penPath.Points, paint, overrideColor);
+
+    /// <summary>
+    /// Shared freehand rendering over any stable point list: a finalized path's own
+    /// (frozen) list, or a <see cref="LiveStroke"/> snapshot array.
+    /// </summary>
+    private static void RenderFreehandPathCore(
+        SKCanvas canvas,
+        PenPath penPath,
+        IReadOnlyList<PenPoint> points,
+        SKPaint paint,
+        SKColor? overrideColor = null
     )
     {
-        // Freehand path rendering
-        if (penPath.Points.Count == 0)
+        // Freehand path rendering. The point list is always a stable snapshot here: finalized
+        // PenPath lists are frozen at finalize time, and LiveStroke hands out immutable arrays.
+        var pointCount = points.Count;
+
+        if (pointCount == 0)
         {
             return;
         }
@@ -1834,12 +1757,18 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
         paint.StrokeCap = SKStrokeCap.Round; // Round caps handle endpoints
         paint.StrokeJoin = SKStrokeJoin.Round;
 
+        // Get effective radius (path-level, or backward-compat from the first point —
+        // mirrors PenPath.GetEffectiveRadius but reads the caller-supplied point list)
+        var effectiveRadius =
+            penPath.Radius > 0 ? penPath.Radius
+            : pointCount > 0 && points[0].Radius > 0 ? (float)points[0].Radius
+            : 1f;
+
         // Apply feathering (soft brush edge) using blur mask filter
         if (penPath.Feathering > 0)
         {
             // Calculate blur sigma based on the effective radius and feathering amount
-            var effectiveRadiusForBlur = penPath.GetEffectiveRadius();
-            var blurSigma = effectiveRadiusForBlur * penPath.Feathering * 0.5f;
+            var blurSigma = effectiveRadius * penPath.Feathering * 0.5f;
             if (blurSigma > 0.1f)
             {
                 paint.MaskFilter = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, blurSigma);
@@ -1854,20 +1783,15 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
         var penPointCount = 0;
         var uniformPressure = true;
         var firstPressure = 0.0;
-        var totalThickness = 0.0;
         var firstPenPointIndex = -1;
 
-        // Get effective radius (path-level or backward-compat from first point)
-        var effectiveRadius = penPath.GetEffectiveRadius();
-
-        for (var i = 0; i < penPath.Points.Count; i++)
+        for (var i = 0; i < pointCount; i++)
         {
-            var p = penPath.Points[i];
+            var p = points[i];
             if (!p.IsPen)
                 continue;
 
             var pressure = p.Pressure ?? 1;
-            var thickness = pressure * effectiveRadius * 2.5;
 
             if (penPointCount == 0)
             {
@@ -1879,15 +1803,14 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
                 uniformPressure = false;
             }
 
-            totalThickness += thickness;
             penPointCount++;
         }
 
         if (penPointCount == 0)
         {
-            // No pen points - use the ToSKPath method for mouse-based paths
+            // No pen points - draw a plain polyline for mouse-based paths
             paint.StrokeWidth = effectiveRadius * 2;
-            var skPath = penPath.ToSKPath();
+            using var skPath = BuildSKPath(points, pointCount);
             canvas.DrawPath(skPath, paint);
             return;
         }
@@ -1896,7 +1819,7 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
         if (penPointCount == 1)
         {
             // Single point - draw a circle
-            var point = penPath.Points[firstPenPointIndex];
+            var point = points[firstPenPointIndex];
             var thickness = (point.Pressure ?? 1) * effectiveRadius * 2.5;
             paint.Style = SKPaintStyle.Fill;
             canvas.DrawCircle(point.X, point.Y, (float)(thickness / 2), paint);
@@ -1905,16 +1828,19 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
 
         if (uniformPressure)
         {
-            // All points have similar pressure - batch into single path
-            var avgThickness = totalThickness / penPointCount;
-            paint.StrokeWidth = (float)avgThickness;
+            // All points have similar pressure - batch into a single path. Width comes from the
+            // FIRST point's pressure, which never changes as the stroke grows. A running average
+            // here made the whole in-progress stroke re-render wider/narrower every frame as new
+            // points shifted the mean ("breathing" while drawing).
+            paint.StrokeWidth = (float)(firstPressure * effectiveRadius * 2.5);
 
             using var path = new SKPath();
             var started = false;
 
             // Use plain loop instead of LINQ to avoid iterator allocation in hot path
-            foreach (var p in penPath.Points)
+            for (var i = 0; i < pointCount; i++)
             {
+                var p = points[i];
                 if (!p.IsPen)
                     continue;
 
@@ -1941,8 +1867,9 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
             var lastPenX = 0f;
             var lastPenY = 0f;
 
-            foreach (var point in penPath.Points)
+            for (var i = 0; i < pointCount; i++)
             {
+                var point = points[i];
                 if (!point.IsPen)
                     continue;
 
@@ -1987,23 +1914,64 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
     }
 
     /// <summary>
-    /// Disposes all cached resources to free memory.
+    /// Builds a polyline <see cref="SKPath"/> from the first <paramref name="pointCount"/> entries
+    /// of a stable point list. Caller owns the returned path.
+    /// </summary>
+    private static SKPath BuildSKPath(IReadOnlyList<PenPoint> points, int pointCount)
+    {
+        var skPath = new SKPath();
+
+        if (pointCount <= 0)
+        {
+            return skPath;
+        }
+
+        skPath.MoveTo(points[0].X, points[0].Y);
+
+        for (var i = 1; i < pointCount; i++)
+        {
+            skPath.LineTo(points[i].X, points[i].Y);
+        }
+
+        return skPath;
+    }
+
+    /// <summary>
+    /// Disposes all cached resources to free memory. Called from the UI thread.
+    /// Quiesces rendering first: sets <see cref="_disposed"/> (checked at render entry) and
+    /// waits for the in-flight render pass to exit before freeing the native resources it
+    /// may be drawing with.
     /// </summary>
     public void Dispose()
     {
         if (_disposed)
             return;
 
+        // New render passes see this at entry and return without touching resources
         _disposed = true;
+
+        // Wait (bounded) for an in-flight render pass to finish. Frames are short; if this
+        // ever times out something is badly wrong, so log and proceed rather than hang.
+        var waitStart = Environment.TickCount64;
+        while (Volatile.Read(ref rendersInFlight) > 0)
+        {
+            if (Environment.TickCount64 - waitStart > 1000)
+            {
+                logger.LogWarning(
+                    "Dispose: timed out waiting for in-flight render pass ({Count} still active), proceeding",
+                    Volatile.Read(ref rendersInFlight)
+                );
+                break;
+            }
+
+            // Sleep rather than yield: yielding in a tight loop busy-spins a core when no other
+            // thread is ready on it; frames are short so a 1ms granularity wait is plenty
+            Thread.Sleep(1);
+        }
 
         // Dispose cached path image
         cachedPathsImage?.Dispose();
         cachedPathsImage = null;
-
-        // Dispose temporary path surface
-        tempPathSurface?.Dispose();
-        tempPathSurface = null;
-        tempPathRenderedPoints.Clear();
 
         // Dispose checkerboard shader
         cachedCheckerboardShader?.Dispose();
@@ -2012,17 +1980,38 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
         // Dispose layer surfaces and bitmaps
         foreach (var layer in Layers.Values)
         {
-            lock (layer)
-            {
-                layer.Surface?.Dispose();
-                layer.Surface = null;
+            layer.Surface?.Dispose();
+            layer.Surface = null;
 
-                foreach (var bitmap in layer.Bitmaps)
-                {
-                    bitmap.Dispose();
-                }
-                layer.Bitmaps = [];
+            foreach (var bitmap in layer.Bitmaps)
+            {
+                bitmap.Dispose();
             }
+            layer.Bitmaps = [];
+        }
+
+        // Drain bitmaps that were retired by layer swaps but never freed by a render pass
+        while (retiredLayerBitmaps.TryDequeue(out var retired))
+        {
+            retired.Dispose();
+        }
+
+        // Dispose flood-fill bitmap data owned by paths (Paths, the undo redoStack, and any
+        // in-progress TemporaryPaths). PenPath.BitmapData is an SKBitmap set by FloodFillAt and
+        // is otherwise never disposed.
+        foreach (var penPath in Paths)
+        {
+            penPath.BitmapData?.Dispose();
+        }
+
+        foreach (var penPath in redoStack)
+        {
+            penPath.BitmapData?.Dispose();
+        }
+
+        foreach (var stroke in TemporaryPaths.Values)
+        {
+            stroke.Template.BitmapData?.Dispose();
         }
 
         // Clear paths

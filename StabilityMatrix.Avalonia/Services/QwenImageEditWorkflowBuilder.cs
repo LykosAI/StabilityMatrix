@@ -1,3 +1,4 @@
+using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Models.BananaVision;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
@@ -101,29 +102,14 @@ public static class QwenImageEditWorkflowBuilder
         var currentClip = clipLoader.Output;
 
         // Apply LoRAs if any
-        var loraList = loras?.ToList() ?? [];
-        if (loraList.Count > 0)
-        {
-            for (var i = 0; i < loraList.Count; i++)
-            {
-                var lora = loraList[i];
-                var loraLoader = nodes.AddNamedNode(
-                    ComfyNodeBuilder.LoraLoader(
-                        nodes.GetUniqueName($"LoraLoader_{i + 1}"),
-                        currentModel,
-                        currentClip,
-                        lora.Model.RelativePath,
-                        (double)lora.ModelWeight,
-                        (double)lora.ClipWeight
-                    )
-                );
-                currentModel = loraLoader.Output1;
-                currentClip = loraLoader.Output2;
-            }
-        }
+        (currentModel, currentClip) = ComfyWorkflowHelper.ApplyLoras(nodes, loras, currentModel, currentClip);
 
         // Get reference image filenames (up to 3 for Qwen)
-        var referenceImageNames = GetReferenceImageNames(request);
+        var referenceImageNames = ComfyWorkflowHelper.GetReferenceImageNames(
+            request,
+            maxImages: 3,
+            providerPrefix: "qwen_image_edit"
+        );
 
         // Load reference images if any
         ImageNodeConnection? image1 = null;
@@ -247,44 +233,5 @@ public static class QwenImageEditWorkflowBuilder
 
         // Return the node dictionary directly
         return nodes;
-    }
-
-    /// <summary>
-    /// Get reference image filenames from the request (input images + conversation history)
-    /// Note: Images uploaded via ComfyClient.UploadImageAsync go to the "Inference" subfolder
-    /// </summary>
-    private static List<string> GetReferenceImageNames(ImageGenerationRequest request)
-    {
-        var imageNames = new List<string>();
-
-        // Priority 1: Current input images (will be uploaded with known names)
-        // Qwen supports up to 3 images natively
-        if (request.InputImages?.Count > 0)
-        {
-            for (var i = 0; i < Math.Min(request.InputImages.Count, 3); i++) // Max 3 images for Qwen
-            {
-                // Include the "Inference/" subfolder prefix since that's where UploadImageAsync uploads to
-                imageNames.Add($"Inference/qwen_image_edit_input_{i}.png");
-            }
-        }
-
-        // Priority 2: Most recent image from conversation history (previous generation)
-        // Only include if we have room (less than 3 images)
-        if (imageNames.Count < 3 && request.ConversationHistory != null)
-        {
-            var lastAssistantImage = request.ConversationHistory.LastOrDefault(m =>
-                m is { Role: MessageRole.Assistant, ImageContent: not null }
-            );
-
-            // Only add the filename if we found an image with content
-            // (the provider will have uploaded it)
-            if (lastAssistantImage?.ImageContent != null)
-            {
-                // Include the "Inference/" subfolder prefix
-                imageNames.Add("Inference/qwen_image_edit_history_latest.png");
-            }
-        }
-
-        return imageNames;
     }
 }

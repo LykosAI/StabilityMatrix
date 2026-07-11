@@ -708,7 +708,11 @@ public class ImageGenerationChatService(
             await database.Conversations.UpdateAsync(errorUpdatedConversation).ConfigureAwait(false);
 
             // Throw exception so caller can handle it appropriately (show notification, etc.)
-            throw new ImageGenerationException(response.ErrorMessage ?? "Image generation failed");
+            throw new ImageGenerationException(response.ErrorMessage ?? "Image generation failed")
+            {
+                DetailJson = response.ErrorDetailJson,
+                ErrorCode = response.ErrorCode,
+            };
         }
 
         // Save generated images
@@ -998,7 +1002,11 @@ public class ImageGenerationChatService(
             conversation.UpdatedAt = DateTime.UtcNow;
             await database.Conversations.UpdateAsync(conversation).ConfigureAwait(false);
 
-            throw new ImageGenerationException(response.ErrorMessage ?? "Image generation failed");
+            throw new ImageGenerationException(response.ErrorMessage ?? "Image generation failed")
+            {
+                DetailJson = response.ErrorDetailJson,
+                ErrorCode = response.ErrorCode,
+            };
         }
 
         // Save generated images

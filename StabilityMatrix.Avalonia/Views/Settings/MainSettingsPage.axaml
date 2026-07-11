@@ -937,6 +937,42 @@
                         </ui:SettingsExpanderItem.Footer>
                     </ui:SettingsExpanderItem>
 
+                    <ui:SettingsExpanderItem
+                        Margin="4,0,4,4"
+                        Content="Gemini error dialogs"
+                        Description="Preview Image Lab / Nano Banana error dialogs, banners, and messages without a real API failure"
+                        IconSource="Flag">
+                        <ui:SettingsExpanderItem.Footer>
+                            <WrapPanel HorizontalAlignment="Right">
+                                <Button
+                                    Margin="4"
+                                    Command="{Binding DebugShowGeminiErrorDialogCommand}"
+                                    CommandParameter="GeminiApiKeyNotConfigured"
+                                    Content="Key Not Configured" />
+                                <Button
+                                    Margin="4"
+                                    Command="{Binding DebugShowGeminiErrorDialogCommand}"
+                                    CommandParameter="GeminiInvalidApiKey"
+                                    Content="Invalid Key" />
+                                <Button
+                                    Margin="4"
+                                    Command="{Binding DebugShowGeminiErrorDialogCommand}"
+                                    CommandParameter="GeminiQuotaExceeded"
+                                    Content="Quota Exceeded" />
+                                <Button
+                                    Margin="4"
+                                    Command="{Binding DebugShowGeminiErrorDialogCommand}"
+                                    CommandParameter="GeminiAccessForbidden"
+                                    Content="Access Forbidden" />
+                                <Button
+                                    Margin="4"
+                                    Command="{Binding DebugShowGeminiErrorDialogCommand}"
+                                    CommandParameter="Generic"
+                                    Content="Generic Failure" />
+                            </WrapPanel>
+                        </ui:SettingsExpanderItem.Footer>
+                    </ui:SettingsExpanderItem>
+
                     <ItemsRepeater Margin="4,0,4,4" ItemsSource="{Binding DebugCommands}">
                         <ItemsRepeater.Layout>
                             <UniformGridLayout />

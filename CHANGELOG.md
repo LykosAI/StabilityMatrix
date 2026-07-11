@@ -5,6 +5,39 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.16.1
+### Added
+- Added **automatic text encoder and VAE selection** to the Inference Model card. Selecting a model now fills any empty encoder slots and the default VAE with the matching local files for the detected workflow, so you don't need to know which files pair with which architecture (e.g. `qwen_3_4b` or `qwen_3_8b` + Flux.2 VAE for Flux.2 Klein, `clip_l` + `t5xxl` for Flux, `qwen_3_06b` + `qwen_image_vae` for Anima). Anything you pick manually is never overridden
+- Added a **misplaced-model warning** to the Inference Model card with a one-click **Move** button. If a model sits in a folder that can't work with the selected workflow (like a Z-Image or Anima file in the StableDiffusion folder), a compact warning explains the problem instead of letting generation fail with a cryptic ComfyUI error. The Move button relocates the file and its metadata to the right folder, then re-selects it. Dismissible per model
+- Added a **native macOS menu bar** with the standard application menu — About Stability Matrix, **Settings… (⌘,)**, and the usual Services / Hide / **Quit (⌘Q)** items
+### Changed
+- The Inference **Workflow** selector now switches the model loader to match the chosen profile, showing or hiding the separate encoder and VAE fields as appropriate. It will never switch to a loader that can't load the selected file; you get the warning above instead
+- Renamed the "Anima / SD" workflow profile to **"Anima"**. Anima has no all-in-one version, so it's now handled like Z-Image: standalone model in DiffusionModels with a separate text encoder and VAE
+- Image Lab's Flux.2 Klein model checks now match the text encoder to your selected UNET variant (4B vs 9B), and switching variants updates the status banner immediately
+- Image Lab's Flux Kontext and Qwen Image Edit providers now show ComfyUI's actual workflow rejection message instead of a generic "Generation failed" (Flux.2 Klein already did this)
+- Image Lab now opens the same ComfyUI error detail dialog that Inference uses when a workflow is rejected or a node fails mid-generation, showing the full error JSON instead of a truncated toast
+- Keyboard shortcuts now use **⌘ (Command)** instead of Ctrl on macOS — save/open, Generate, undo/redo, copy/paste/cut, tab navigation, and the mask editor all follow the platform convention, and context menus show the ⌘ glyph
+### Fixed
+- Fixed [#1659](https://github.com/LykosAI/StabilityMatrix/issues/1659) - Z-Image and Anima workflows hiding the Text Encoder selectors and passing an invalid `None` CLIP input to ComfyUI; standalone workflows now expose and automatically fill compatible text encoders and VAEs
+- Fixed [#1654](https://github.com/LykosAI/StabilityMatrix/issues/1654) and [#1658](https://github.com/LykosAI/StabilityMatrix/issues/1658) - Inference Image-to-Image masks could disappear in Linux AppImage builds, fail to appear in the image-card preview, or crash the app when saving an enabled clipping mask because Avalonia retained pixels owned by a disposed Skia image; converted mask bitmaps now own their pixel data and previews refresh after editing, restoring a project, or loading image dimensions
+- Fixed [#1660](https://github.com/LykosAI/StabilityMatrix/issues/1660) - CivArchive downloads always saving to the model folder root; the primary Download button now offers the inferred folder, existing subdirectories, and a custom folder picker, while filename patterns containing path separators create missing nested subfolders and keep downloads inside the selected models directory
+- Fixed [#1661](https://github.com/LykosAI/StabilityMatrix/issues/1661) - Custom UNet workflows missing current ComfyUI encoder types such as `sdxl`; the selector now includes current CLIP loader values while retaining single-encoder compatibility and migrating legacy `HiDream` casing
+- Fixed [#1664](https://github.com/LykosAI/StabilityMatrix/issues/1664) - Gemini failures with a saved key being misreported as "API key not configured"; Image Lab now shows the actual invalid-key, billing, quota, or permission error and explains that Nano Banana image generation requires a paid-tier API key from a Google AI project with billing enabled
+- Fixed **"No text encoders configured"** errors when generating with an all-in-one checkpoint after a UNet model had been selected in the same tab
+- Fixed Qwen Image Edit in Image Lab failing mid-generation when a wrong-size Qwen2.5-VL text encoder was installed. The **7B** encoder is now required, and the correct download is offered when it's missing
+- Fixed Image Lab reporting "all models present" for Flux.2 Klein 9B setups that only had the 4B text encoder (and vice versa). The matching encoder download is now offered
+- Fixed Image Lab model and LoRA dropdowns hiding files whose CivitAI base model tag is unrecognized (commonly "Other"), even when the filename clearly matches the provider
+- Fixed Animagine XL and other SDXL models with "anima" in the name being misdetected as the Anima architecture
+- Fixed the running-package exit confirmation not appearing when quitting via **⌘Q, the macOS app menu, or the Dock** — it previously only showed when closing the window directly, so those paths could tear down running packages without warning. All quit paths now prompt
+- Fixed an empty strip of space appearing below the native window title bar on macOS and Linux; the Windows-only caption area (icon, title, and min/max/close buttons) is now collapsed on those platforms so content sits directly under the system title bar
+### Performance
+- Optimized SKBitmap-to-WriteableBitmap conversion used throughout Inference and Image Lab; pixel data is now copied directly native-to-native (single bulk copy when strides match, per-row otherwise) instead of round-tripping every scanline through a temporary managed buffer, reducing allocations and GC pressure on full-resolution images
+### Supporters
+#### 🌟 Visionaries
+A massive thank you to our brilliant Visionaries: **Waterclouds**, **bluepopsicle**, **Ibixat**, **Droolguy**, **snotty**, **LG**, **whudunit**, **MrMxyzptlk12836**, **Psilocyfer18731**, **KalAbaddon**, and **moon_milky2843**! There's a little of your support behind every fix and refinement in this update, and we're grateful for all of it. A warm welcome to our newest Visionary, **cusalapapen1481**; it's wonderful to have you with us! 💛
+#### 🚀 Pioneers
+And an equally big thank you to our fantastic Pioneer crew, all familiar faces this time around: **Szir777**, **[USA]TechDude**, **SinthCore**, **Jisuren**, **Tigon**, **jweg79**, **rwx14662**, **Hurbie53**, **ahnhj.al**, **drew.lukas**, **Tuskaruho**, **Cjloha**, **Alligator1907**, **Bitti**, **Ghislain G**, **CommissarGiygas16050**, **qob97515211**, **bastardofbethlehem**, and **Zombop**! You keep showing up for us, and that steadiness is a big part of how this project keeps moving forward. Thank you, truly, every one of you. 💛
+
 ## v2.16.0
 ### Added
 #### New Feature: 🧪 Image Lab - Conversational Image Generation for ComfyUI

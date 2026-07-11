@@ -244,6 +244,7 @@ public partial class MaskEditorViewModel(IServiceManager<ViewModelBase> vmFactor
     }*/
     public void Dispose()
     {
+        _cachedMaskRenderImage?.Dispose();
         _cachedMaskRenderInverseAlphaImage?.Dispose();
         GC.SuppressFinalize(this);
     }

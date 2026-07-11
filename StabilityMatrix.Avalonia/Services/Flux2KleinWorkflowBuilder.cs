@@ -1,4 +1,5 @@
 using SkiaSharp;
+using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Models.BananaVision;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
@@ -138,29 +139,12 @@ public static class Flux2KleinWorkflowBuilder
         );
 
         // Apply LoRAs if any
-        var currentModel = unetOutput;
-        var currentClip = clipLoader.Output;
-
-        var loraList = loras?.ToList() ?? [];
-        if (loraList.Count > 0)
-        {
-            for (var i = 0; i < loraList.Count; i++)
-            {
-                var lora = loraList[i];
-                var loraLoader = nodes.AddNamedNode(
-                    ComfyNodeBuilder.LoraLoader(
-                        nodes.GetUniqueName($"LoraLoader_{i + 1}"),
-                        currentModel,
-                        currentClip,
-                        lora.Model.RelativePath,
-                        (double)lora.ModelWeight,
-                        (double)lora.ClipWeight
-                    )
-                );
-                currentModel = loraLoader.Output1;
-                currentClip = loraLoader.Output2;
-            }
-        }
+        var (currentModel, currentClip) = ComfyWorkflowHelper.ApplyLoras(
+            nodes,
+            loras,
+            unetOutput,
+            clipLoader.Output
+        );
 
         // 2. Encode the positive prompt
         var positivePrompt = request.TextPrompt ?? "a beautiful image";
@@ -193,7 +177,13 @@ public static class Flux2KleinWorkflowBuilder
         var positiveConditioning = positiveTextEncode.Output;
         var negativeConditioning = negativeTextEncode.Output;
 
-        var referenceImageNames = GetReferenceImageNames(request);
+        // Klein supports multi-reference editing; cap at 4 to keep prompt build time
+        // and VRAM use predictable
+        var referenceImageNames = ComfyWorkflowHelper.GetReferenceImageNames(
+            request,
+            maxImages: 4,
+            providerPrefix: "flux2_klein"
+        );
         for (var i = 0; i < referenceImageNames.Count; i++)
         {
             var imageName = referenceImageNames[i];
@@ -396,38 +386,5 @@ public static class Flux2KleinWorkflowBuilder
         h = Math.Max(step, (h / step) * step);
 
         return (w, h);
-    }
-
-    /// <summary>
-    /// Get reference image filenames (uploaded inputs + most recent history image).
-    /// Klein supports multi-reference editing; we cap at 4 to keep prompt build time
-    /// and VRAM use predictable.
-    /// </summary>
-    private static List<string> GetReferenceImageNames(ImageGenerationRequest request)
-    {
-        const int maxRefs = 4;
-        var imageNames = new List<string>();
-
-        if (request.InputImages?.Count > 0)
-        {
-            for (var i = 0; i < Math.Min(request.InputImages.Count, maxRefs); i++)
-            {
-                imageNames.Add($"Inference/flux2_klein_input_{i}.png");
-            }
-        }
-
-        if (imageNames.Count < maxRefs && request.ConversationHistory != null)
-        {
-            var lastAssistantImage = request.ConversationHistory.LastOrDefault(m =>
-                m is { Role: MessageRole.Assistant, ImageContent: not null }
-            );
-
-            if (lastAssistantImage?.ImageContent != null)
-            {
-                imageNames.Add("Inference/flux2_klein_history_latest.png");
-            }
-        }
-
-        return imageNames;
     }
 }

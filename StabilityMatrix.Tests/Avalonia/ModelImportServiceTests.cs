@@ -77,6 +77,91 @@ public class ModelImportServiceTests
         }
     }
 
+    [TestMethod]
+    public async Task DoCustomImport_CreatesPatternSubfoldersAndDownloadsIntoThem()
+    {
+        var downloadService = Substitute.For<IDownloadService>();
+        var notificationService = Substitute.For<INotificationService>();
+        var trackedDownloadService = Substitute.For<ITrackedDownloadService>();
+        var service = new ModelImportService(downloadService, notificationService, trackedDownloadService);
+
+        var tempDir = Directory.CreateTempSubdirectory();
+        var modelUri = new Uri("https://example.org/model.safetensors");
+        FilePath? capturedPath = null;
+
+        try
+        {
+            trackedDownloadService
+                .NewDownload(modelUri, Arg.Do<FilePath>(path => capturedPath = path))
+                .Returns(call => new TrackedDownload
+                {
+                    Id = Guid.NewGuid(),
+                    SourceUrl = modelUri,
+                    DownloadDirectory = call.Arg<FilePath>().Directory!,
+                    FileName = call.Arg<FilePath>().Name,
+                    TempFileName = "model.safetensors.tmp",
+                });
+
+            await service.DoCustomImport(
+                [modelUri],
+                "SDXL/Creator/Model/model.safetensors",
+                new DirectoryPath(tempDir.FullName)
+            );
+
+            var expectedDirectory = Path.Combine(tempDir.FullName, "SDXL", "Creator", "Model");
+            Assert.IsTrue(Directory.Exists(expectedDirectory));
+            Assert.IsNotNull(capturedPath);
+            Assert.AreEqual(Path.Combine(expectedDirectory, "model.safetensors"), capturedPath.FullPath);
+        }
+        finally
+        {
+            tempDir.Delete(recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public async Task DoCustomImport_DropsTraversalSegmentsFromPatternPath()
+    {
+        var downloadService = Substitute.For<IDownloadService>();
+        var notificationService = Substitute.For<INotificationService>();
+        var trackedDownloadService = Substitute.For<ITrackedDownloadService>();
+        var service = new ModelImportService(downloadService, notificationService, trackedDownloadService);
+
+        var tempDir = Directory.CreateTempSubdirectory();
+        var modelUri = new Uri("https://example.org/model.safetensors");
+        FilePath? capturedPath = null;
+
+        try
+        {
+            trackedDownloadService
+                .NewDownload(modelUri, Arg.Do<FilePath>(path => capturedPath = path))
+                .Returns(call => new TrackedDownload
+                {
+                    Id = Guid.NewGuid(),
+                    SourceUrl = modelUri,
+                    DownloadDirectory = call.Arg<FilePath>().Directory!,
+                    FileName = call.Arg<FilePath>().Name,
+                    TempFileName = "model.safetensors.tmp",
+                });
+
+            await service.DoCustomImport(
+                [modelUri],
+                "../../SDXL/model.safetensors",
+                new DirectoryPath(tempDir.FullName)
+            );
+
+            Assert.IsNotNull(capturedPath);
+            Assert.AreEqual(
+                Path.Combine(tempDir.FullName, "SDXL", "model.safetensors"),
+                capturedPath.FullPath
+            );
+        }
+        finally
+        {
+            tempDir.Delete(recursive: true);
+        }
+    }
+
     private static async Task<TaskResult<bool>> AwaitTask(Task task)
     {
         await task;

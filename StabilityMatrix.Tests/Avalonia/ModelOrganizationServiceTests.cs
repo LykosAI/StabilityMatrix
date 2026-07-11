@@ -1,4 +1,5 @@
 using StabilityMatrix.Avalonia.Services;
+using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Database;
@@ -326,6 +327,71 @@ public class ModelOrganizationServiceTests
             Assert.IsTrue(File.Exists(cmInfoPath));
             Assert.IsFalse(File.Exists(Path.Combine(targetDirectory, "remote-file.safetensors")));
             Assert.IsFalse(File.Exists(Path.Combine(targetDirectory, "remote-file.cm-info.json")));
+        }
+        finally
+        {
+            Directory.Delete(tempRoot, true);
+        }
+    }
+
+    [TestMethod]
+    public async Task MoveModelFileAsync_MovesModelAndSidecars()
+    {
+        var tempRoot = CreateTempDirectory();
+
+        try
+        {
+            var model = CreateModelFile(
+                tempRoot,
+                Path.Combine("StableDiffusion", "z_image_turbo.safetensors"),
+                "z_image_turbo.safetensors"
+            );
+
+            // Sidecars next to the model
+            var sourceDir = Path.Combine(tempRoot, "StableDiffusion");
+            File.WriteAllText(Path.Combine(sourceDir, "z_image_turbo.cm-info.json"), "{}");
+            File.WriteAllText(Path.Combine(sourceDir, "z_image_turbo.preview.jpeg"), "img");
+
+            var destinationDir = Path.Combine(tempRoot, "DiffusionModels");
+
+            await service.MoveModelFileAsync(model, tempRoot, destinationDir);
+
+            Assert.IsTrue(File.Exists(Path.Combine(destinationDir, "z_image_turbo.safetensors")));
+            Assert.IsTrue(File.Exists(Path.Combine(destinationDir, "z_image_turbo.cm-info.json")));
+            Assert.IsTrue(File.Exists(Path.Combine(destinationDir, "z_image_turbo.preview.jpeg")));
+            Assert.IsFalse(File.Exists(Path.Combine(sourceDir, "z_image_turbo.safetensors")));
+            Assert.IsFalse(File.Exists(Path.Combine(sourceDir, "z_image_turbo.cm-info.json")));
+            Assert.IsFalse(File.Exists(Path.Combine(sourceDir, "z_image_turbo.preview.jpeg")));
+        }
+        finally
+        {
+            Directory.Delete(tempRoot, true);
+        }
+    }
+
+    [TestMethod]
+    public async Task MoveModelFileAsync_DestinationExists_ThrowsWithoutMoving()
+    {
+        var tempRoot = CreateTempDirectory();
+
+        try
+        {
+            var model = CreateModelFile(
+                tempRoot,
+                Path.Combine("StableDiffusion", "model.safetensors"),
+                "model.safetensors"
+            );
+
+            var destinationDir = Path.Combine(tempRoot, "DiffusionModels");
+            Directory.CreateDirectory(destinationDir);
+            File.WriteAllText(Path.Combine(destinationDir, "model.safetensors"), "existing");
+
+            await Assert.ThrowsExceptionAsync<FileTransferExistsException>(() =>
+                service.MoveModelFileAsync(model, tempRoot, destinationDir)
+            );
+
+            // Source must be untouched
+            Assert.IsTrue(File.Exists(Path.Combine(tempRoot, "StableDiffusion", "model.safetensors")));
         }
         finally
         {

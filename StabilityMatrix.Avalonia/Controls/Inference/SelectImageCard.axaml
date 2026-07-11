@@ -59,9 +59,8 @@
                                 </Panel.IsVisible>
                                 <controls:BetterImage
                                     VerticalAlignment="Stretch"
-                                    DataContext="{Binding MaskEditorViewModel}"
                                     RenderOptions.BitmapInterpolationMode="HighQuality"
-                                    Source="{Binding CachedOrNewMaskRenderImage.Bitmap}"
+                                    Source="{Binding MaskOverlayImage}"
                                     Stretch="Uniform"
                                     StretchDirection="Both" />
                             </Panel>

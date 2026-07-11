@@ -344,8 +344,14 @@ public partial class CompletionProvider : ICompletionProvider
 
         var models = modelIndexService.FindByModelType(folderTypes);
 
+        // Substring match, but prefix matches still rank first so typing the start of a name
+        // behaves the same as before.
         var matches = models
-            .Where(model => model.FileName.StartsWith(searchTerm, StringComparison.OrdinalIgnoreCase))
+            .Where(model => model.FileName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+            .OrderByDescending(model =>
+                model.FileName.StartsWith(searchTerm, StringComparison.OrdinalIgnoreCase)
+            )
+            .ThenBy(model => model.FileName, StringComparer.OrdinalIgnoreCase)
             .Select(model => ModelCompletionData.FromLocalModel(model, networkType))
             .Take(itemsCount);
 
@@ -358,12 +364,12 @@ public partial class CompletionProvider : ICompletionProvider
         {
             (PromptExtraNetworkType.Lora, "lora"),
             (PromptExtraNetworkType.LyCORIS, "lyco"),
-            (PromptExtraNetworkType.Embedding, "embedding")
+            (PromptExtraNetworkType.Embedding, "embedding"),
         };
 
         return availableTypes
-            .Where(
-                type => type.Item1.GetStringValue().StartsWith(searchTerm, StringComparison.OrdinalIgnoreCase)
+            .Where(type =>
+                type.Item1.GetStringValue().StartsWith(searchTerm, StringComparison.OrdinalIgnoreCase)
             )
             .Select(type => new ModelTypeCompletionData(type.Item2, type.Item1));
     }
@@ -381,7 +387,7 @@ public partial class CompletionProvider : ICompletionProvider
         {
             Term = searchTerm,
             MaxItemCount = itemsCount,
-            SuggestWhenFoundStartsWith = suggest
+            SuggestWhenFoundStartsWith = suggest,
         };
 
         var result = searcher.Search(searchOptions);
@@ -409,7 +415,7 @@ public partial class CompletionProvider : ICompletionProvider
             if (entries.TryGetValue(item, out var entry))
             {
                 var entryType = TagTypeExtensions.FromE621(entry.Type.GetValueOrDefault(-1));
-                completions.Add(new TagCompletionData(entry.Name!, entryType));
+                completions.Add(new TagCompletionData(entry.Name!, entryType, entry.Count));
             }
         }
 

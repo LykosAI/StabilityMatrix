@@ -10,9 +10,11 @@ using StabilityMatrix.Core.Models.FDS;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Packages.Config;
 using StabilityMatrix.Core.Models.Progress;
+using StabilityMatrix.Core.Models.Rocm;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
+using StabilityMatrix.Core.Services.Rocm;
 
 namespace StabilityMatrix.Core.Models.Packages;
 
@@ -23,7 +25,8 @@ public class StableSwarm(
     IDownloadService downloadService,
     IPrerequisiteHelper prerequisiteHelper,
     IPyInstallationManager pyInstallationManager,
-    IPipWheelService pipWheelService
+    IPipWheelService pipWheelService,
+    IRocmPackageHelper rocmPackageHelper
 )
     : BaseGitPackage(
         githubApi,
@@ -263,44 +266,54 @@ public class StableSwarm(
 
         if (!options.IsUpdate)
         {
-            // set default settings
-            var settings = new StableSwarmSettings { IsInstalled = true };
+            // Settings.fds - merge into the existing file instead of replacing it, so user edits
+            // (and any fields added by newer SwarmUI versions) survive a re-install.
+            var settingsPath = GetSettingsPath(installLocation);
+            Directory.CreateDirectory(Path.GetDirectoryName(settingsPath)!);
+            var settingsSection = File.Exists(settingsPath)
+                ? FDSUtility.ReadFile(settingsPath)
+                : new FDSSection();
+
+            settingsSection.Set("IsInstalled", true);
 
             if (options.SharedFolderMethod is SharedFolderMethod.Configuration)
             {
-                settings.Paths = new StableSwarmSettings.PathsData
-                {
-                    ModelRoot = settingsManager.ModelsDirectory,
-                    SDModelFolder = Path.Combine(
-                        settingsManager.ModelsDirectory,
-                        SharedFolderType.StableDiffusion.ToString()
-                    ),
-                    SDLoraFolder = Path.Combine(
-                        settingsManager.ModelsDirectory,
-                        SharedFolderType.Lora.ToString()
-                    ),
-                    SDVAEFolder = Path.Combine(
-                        settingsManager.ModelsDirectory,
-                        SharedFolderType.VAE.ToString()
-                    ),
-                    SDEmbeddingFolder = Path.Combine(
-                        settingsManager.ModelsDirectory,
-                        SharedFolderType.Embeddings.ToString()
-                    ),
-                    SDControlNetsFolder = Path.Combine(
-                        settingsManager.ModelsDirectory,
-                        SharedFolderType.ControlNet.ToString()
-                    ),
-                    SDClipVisionFolder = Path.Combine(
-                        settingsManager.ModelsDirectory,
-                        SharedFolderType.ClipVision.ToString()
-                    ),
-                };
+                var pathsSection = settingsSection.GetSection("Paths") ?? new FDSSection();
+                pathsSection.Set("ModelRoot", settingsManager.ModelsDirectory);
+                pathsSection.Set(
+                    "SDModelFolder",
+                    Path.Combine(settingsManager.ModelsDirectory, SharedFolderType.StableDiffusion.ToString())
+                );
+                pathsSection.Set(
+                    "SDLoraFolder",
+                    Path.Combine(settingsManager.ModelsDirectory, SharedFolderType.Lora.ToString())
+                );
+                pathsSection.Set(
+                    "SDVAEFolder",
+                    Path.Combine(settingsManager.ModelsDirectory, SharedFolderType.VAE.ToString())
+                );
+                pathsSection.Set(
+                    "SDEmbeddingFolder",
+                    Path.Combine(settingsManager.ModelsDirectory, SharedFolderType.Embeddings.ToString())
+                );
+                pathsSection.Set(
+                    "SDControlNetsFolder",
+                    Path.Combine(settingsManager.ModelsDirectory, SharedFolderType.ControlNet.ToString())
+                );
+                pathsSection.Set(
+                    "SDClipVisionFolder",
+                    Path.Combine(settingsManager.ModelsDirectory, SharedFolderType.ClipVision.ToString())
+                );
+                settingsSection.Set("Paths", pathsSection);
             }
 
-            settings.Save(true).SaveToFile(GetSettingsPath(installLocation));
+            settingsSection.SaveToFile(settingsPath);
 
-            var backendsFile = new FDSSection();
+            // Backends.fds - same deal: preserve any user-added backend entries and only replace key "0"
+            var backendsPath = GetBackendsPath(installLocation);
+            var backendsFile = File.Exists(backendsPath)
+                ? FDSUtility.ReadFile(backendsPath)
+                : new FDSSection();
             var dataSection = new FDSSection();
             dataSection.Set("type", "comfyui_selfstart");
             dataSection.Set("title", "StabilityMatrix ComfyUI Self-Start");
@@ -371,7 +384,7 @@ public class StableSwarm(
             }
 
             backendsFile.Set("0", dataSection);
-            backendsFile.SaveToFile(GetBackendsPath(installLocation));
+            backendsFile.SaveToFile(backendsPath);
         }
     }
 
@@ -393,20 +406,23 @@ public class StableSwarm(
             ["DOTNET_ROOT"] = dotnetDir.FullPath,
         };
 
-        if (aspEnvVars.TryGetValue("PATH", out var pathValue))
+        // Build PATH with required directories
+        var pathDirs = new List<string> { dotnetDir.FullPath, portableGitBin };
+
+        // Add FFmpeg to PATH if it's installed (optional - for video processing)
+        if (PrerequisiteHelper.IsFfmpegInstalled)
         {
-            aspEnvVars["PATH"] = Compat.GetEnvPathWithExtensions(
-                dotnetDir.FullPath,
-                portableGitBin,
-                pathValue
-            );
-        }
-        else
-        {
-            aspEnvVars["PATH"] = Compat.GetEnvPathWithExtensions(dotnetDir.FullPath, portableGitBin);
+            var ffmpegDir = Path.GetDirectoryName(PrerequisiteHelper.FfmpegPath);
+            if (!string.IsNullOrEmpty(ffmpegDir))
+            {
+                pathDirs.Add(ffmpegDir);
+            }
         }
 
+        aspEnvVars["PATH"] = Compat.GetEnvPathWithExtensions([.. pathDirs]);
+
         aspEnvVars.Update(settingsManager.Settings.EnvironmentVariables);
+        aspEnvVars.Update(BuildLinkedComfyLaunchEnvironment()); // Windows ROCm ComfyUI env var pass-through
 
         void HandleConsoleOutput(ProcessOutput s)
         {
@@ -561,6 +577,43 @@ public class StableSwarm(
                 onProcessOutput: onConsoleOutput
             )
             .ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Builds ROCm launch environment variables for Swarm so they flow through to its self-launched Comfy backend.
+    /// </summary>
+    private IReadOnlyDictionary<string, string> BuildLinkedComfyLaunchEnvironment()
+    {
+        var comfyPackage = settingsManager.Settings.InstalledPackages.FirstOrDefault(x =>
+            x.PackageName is nameof(ComfyUI) or "ComfyUI-Zluda"
+        );
+
+        if (comfyPackage is null || !ShouldInjectLinkedComfyRocmEnvironment(comfyPackage))
+        {
+            return new Dictionary<string, string>();
+        }
+
+        return rocmPackageHelper.BuildLaunchEnvironment(ComfyWindowsRocmProfile.Default);
+    }
+
+    /// <summary>
+    /// Returns true only when the linked backend is standard ComfyUI on a supported Windows ROCm path.
+    /// </summary>
+    private bool ShouldInjectLinkedComfyRocmEnvironment(InstalledPackage comfyPackage)
+    {
+        if (!Compat.IsWindows || comfyPackage.PackageName != nameof(ComfyUI))
+        {
+            return false;
+        }
+
+        var compatibility = rocmPackageHelper.GetCompatibility();
+        if (!compatibility.IsCompatible)
+        {
+            return false;
+        }
+
+        var selectedTorchIndex = comfyPackage.PreferredTorchIndex ?? TorchIndex.Rocm;
+        return selectedTorchIndex == TorchIndex.Rocm;
     }
 
     private Task SetupModelFoldersConfig(DirectoryPath installDirectory)

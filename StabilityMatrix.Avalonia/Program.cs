@@ -14,6 +14,8 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Threading;
 using CommandLine;
+using MessagePipe;
+using Microsoft.Extensions.DependencyInjection;
 using NLog;
 using Polly.Contrib.WaitAndRetry;
 using Projektanker.Icons.Avalonia;
@@ -38,6 +40,10 @@ public static class Program
     private static Logger? _logger;
     private static Logger Logger => _logger ??= LogManager.GetCurrentClassLogger();
 
+    private static Mutex? singleInstanceMutex;
+
+    public const string ShowWindowIpcKey = "show_window";
+
     public static AppArgs Args { get; private set; } = new();
 
     public static bool IsDebugBuild { get; private set; }
@@ -55,6 +61,7 @@ public static class Program
     public static void Main(string[] args)
     {
         StartupTimer.Start();
+        ProcessRunner.SanitizeCurrentProcessPythonEnvironment();
 
         SetDebugBuild();
 
@@ -69,8 +76,8 @@ public static class Program
             });
 
         if (
-            parseResult.Errors.Any(
-                x => x.Tag is ErrorType.HelpRequestedError or ErrorType.VersionRequestedError
+            parseResult.Errors.Any(x =>
+                x.Tag is ErrorType.HelpRequestedError or ErrorType.VersionRequestedError
             )
         )
         {
@@ -109,6 +116,17 @@ public static class Program
         HandleUpdateReplacement();
         HandleUpdateCleanup();
 
+        // Single-instance check: if another instance is running, signal it to show and exit
+        if (Args.WaitForExitPid is null && !Compat.IsMacOS)
+        {
+            singleInstanceMutex = new Mutex(true, "StabilityMatrix_SingleInstance", out var createdNew);
+            if (!createdNew)
+            {
+                SignalExistingInstanceAndExit();
+                return;
+            }
+        }
+
         var infoVersion = Assembly
             .GetExecutingAssembly()
             .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
@@ -130,6 +148,32 @@ public static class Program
         }
 
         BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+    }
+
+    /// <summary>
+    /// Sends a show-window signal to the existing instance via named pipe and exits.
+    /// </summary>
+    [DoesNotReturn]
+    private static void SignalExistingInstanceAndExit()
+    {
+        try
+        {
+            var services = new ServiceCollection();
+            services.AddMessagePipe().AddNamedPipeInterprocess("StabilityMatrix");
+            using var provider = services.BuildServiceProvider();
+            var publisher = provider.GetRequiredService<IDistributedPublisher<string, Uri>>();
+
+            publisher
+                .PublishAsync(ShowWindowIpcKey, new Uri("stabilitymatrix://show-window"))
+                .AsTask()
+                .Wait(TimeSpan.FromSeconds(3));
+        }
+        catch (Exception e)
+        {
+            Console.Error.WriteLine($"Failed to signal existing instance: {e.Message}");
+        }
+
+        Environment.Exit(0);
     }
 
     [DoesNotReturn]
@@ -172,7 +216,7 @@ public static class Program
             {
                 BaseCachePath = Path.Combine(Path.GetTempPath(), "StabilityMatrix", "Cache"),
                 CacheDuration = TimeSpan.FromDays(1),
-                MaxMemoryCacheCount = 100
+                MaxMemoryCacheCount = 100,
             }
         );
     }
@@ -198,7 +242,7 @@ public static class Program
             app = app.With(
                 new Win32PlatformOptions
                 {
-                    RenderingMode = [Win32RenderingMode.Wgl, Win32RenderingMode.Software]
+                    RenderingMode = [Win32RenderingMode.Wgl, Win32RenderingMode.Software],
                 }
             );
         }
@@ -216,7 +260,7 @@ public static class Program
                 .With(
                     new AvaloniaNativePlatformOptions
                     {
-                        RenderingMode = new[] { AvaloniaNativeRenderingMode.Software }
+                        RenderingMode = new[] { AvaloniaNativeRenderingMode.Software },
                     }
                 );
         }
@@ -402,14 +446,28 @@ public static class Program
         if (e.ExceptionObject is not Exception ex)
             return;
 
+        ShowExceptionDialog(ex, false);
+    }
+
+    internal static bool ShowExceptionDialog(Exception ex, bool isRecoverable)
+    {
         SentryId? sentryId = null;
 
         // Exception automatically logged by Sentry if enabled
         if (SentrySdk.IsEnabled)
         {
-            ex.SetSentryMechanism("AppDomain.UnhandledException", handled: false);
+            ex.SetSentryMechanism(
+                isRecoverable ? "Dispatcher.UnhandledException" : "AppDomain.UnhandledException",
+                handled: isRecoverable
+            );
+
             sentryId = SentrySdk.CaptureException(ex);
-            SentrySdk.FlushAsync().SafeFireAndForget();
+
+            if (!isRecoverable)
+            {
+                SentrySdk.FlushAsync().SafeFireAndForget();
+            }
+
             Logger.Warn(ex, "Unhandled {Type}: {Message}", ex.GetType().Name, ex.Message);
         }
         else
@@ -419,10 +477,14 @@ public static class Program
 
         if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime lifetime)
         {
-            var dialog = new ExceptionDialog
+            var viewModel = new ExceptionViewModel
             {
-                DataContext = new ExceptionViewModel { Exception = ex, SentryId = sentryId }
+                Exception = ex,
+                SentryId = sentryId,
+                IsRecoverable = isRecoverable,
             };
+
+            var dialog = new ExceptionDialog { DataContext = viewModel };
 
             // We can only show dialog if main window exists, and is visible
             if (lifetime.MainWindow is { PlatformImpl: not null, IsVisible: true } mainWindow)
@@ -441,25 +503,38 @@ public static class Program
                         _ =>
                         {
                             cts.Cancel();
-                            ExitWithException(ex);
+                            if (!isRecoverable || !viewModel.IsContinueResult)
+                            {
+                                ExitWithException(ex);
+                            }
                         },
                         TaskScheduler.FromCurrentSynchronizationContext()
                     );
 
                 Dispatcher.UIThread.MainLoop(cts.Token);
+                return viewModel.IsContinueResult;
             }
             else
             {
                 // No parent window available
                 var cts = new CancellationTokenSource();
-                // Exit on token cancellation
-                cts.Token.Register(() => ExitWithException(ex));
+                // Exit on token cancellation only if not recoverable or user didn't choose continue
+                cts.Token.Register(() =>
+                {
+                    if (!isRecoverable || !viewModel.IsContinueResult)
+                    {
+                        ExitWithException(ex);
+                    }
+                });
 
                 dialog.ShowWithCts(cts);
 
                 Dispatcher.UIThread.MainLoop(cts.Token);
+                return viewModel.IsContinueResult;
             }
         }
+
+        return false;
     }
 
     [DoesNotReturn]

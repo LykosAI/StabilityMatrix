@@ -1,30 +1,29 @@
-﻿<Styles xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:selectableImageCard="clr-namespace:StabilityMatrix.Avalonia.Controls.SelectableImageCard"
-        xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
-        xmlns:controls1="clr-namespace:Avalonia.Labs.Controls;assembly=Avalonia.Labs.Controls"
-        xmlns:vendorLabs="clr-namespace:StabilityMatrix.Avalonia.Controls.VendorLabs">
+﻿<Styles
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+    xmlns:controls1="clr-namespace:Avalonia.Labs.Controls;assembly=Avalonia.Labs.Controls"
+    xmlns:selectableImageCard="clr-namespace:StabilityMatrix.Avalonia.Controls.SelectableImageCard"
+    xmlns:vendorLabs="clr-namespace:StabilityMatrix.Avalonia.Controls.VendorLabs">
     <Design.PreviewWith>
         <Border Padding="20">
-            <!-- Add Controls for Previewer Here -->
-            <selectableImageCard:SelectableImageButton 
-                Source="https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/78fd2a0a-42b6-42b0-9815-81cb11bb3d05/00009-2423234823.jpeg" />
+            <!--  Add Controls for Previewer Here  -->
+            <selectableImageCard:SelectableImageButton Source="https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/78fd2a0a-42b6-42b0-9815-81cb11bb3d05/00009-2423234823.jpeg" />
         </Border>
     </Design.PreviewWith>
 
-    <!-- Add Styles Here -->
+    <!--  Add Styles Here  -->
     <Style Selector="selectableImageCard|SelectableImageButton">
         <Setter Property="Template">
             <ControlTemplate>
-                <Grid
-                    Width="{Binding ImageWidth, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
-                    Height="{Binding ImageHeight, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}">
-                    <CheckBox VerticalAlignment="Top"
-                              HorizontalAlignment="Right"
-                              Margin="14,8"
-                              Padding="0"
-                              IsChecked="{Binding IsSelected, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
-                              ZIndex="100">
+                <Grid Width="{Binding ImageWidth, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}" Height="{Binding ImageHeight, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}">
+                    <CheckBox
+                        Margin="14,8"
+                        Padding="0"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Top"
+                        IsChecked="{Binding IsSelected, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
+                        ZIndex="100">
                         <CheckBox.RenderTransform>
                             <ScaleTransform ScaleX="1.5" ScaleY="1.5" />
                         </CheckBox.RenderTransform>
@@ -37,16 +36,32 @@
                     <Button
                         Margin="0"
                         Padding="4"
-                        CornerRadius="12"
                         Command="{TemplateBinding Command}"
-                        CommandParameter="{TemplateBinding CommandParameter}">
+                        CommandParameter="{TemplateBinding CommandParameter}"
+                        CornerRadius="12">
                         <vendorLabs:BetterAsyncImage
-                            IsCacheEnabled="True"
-                            Stretch="UniformToFill"
-                            CornerRadius="8"
                             ContextFlyout="{TemplateBinding ContextFlyout}"
-                            Source="{TemplateBinding Source}" />
+                            CornerRadius="8"
+                            IsCacheEnabled="True"
+                            Source="{TemplateBinding Source}"
+                            Stretch="UniformToFill" />
                     </Button>
+                    <!--  Video Play Icon Overlay  -->
+                    <Border
+                        Padding="12"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Background="#80000000"
+                        CornerRadius="32"
+                        IsHitTestVisible="False"
+                        IsVisible="{Binding IsVideo, RelativeSource={RelativeSource TemplatedParent}}">
+                        <PathIcon
+                            Width="48"
+                            Height="48"
+                            Margin="8,4,0,4"
+                            Data="M8,5.14V19.14L19,12.14L8,5.14Z"
+                            Foreground="White" />
+                    </Border>
                 </Grid>
             </ControlTemplate>
         </Setter>

@@ -87,6 +87,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Become a Supporter.
+        /// </summary>
+        public static string Action_BecomeSupporter {
+            get {
+                return ResourceManager.GetString("Action_BecomeSupporter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cancel.
         /// </summary>
         public static string Action_Cancel {
@@ -94,7 +103,16 @@ namespace StabilityMatrix.Avalonia.Languages {
                 return ResourceManager.GetString("Action_Cancel", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Custom....
+        /// </summary>
+        public static string Action_CustomFolderEllipsis {
+            get {
+                return ResourceManager.GetString("Action_CustomFolderEllipsis", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Check for Updates.
         /// </summary>
@@ -204,6 +222,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Copy User ID.
+        /// </summary>
+        public static string Action_CopyUserId {
+            get {
+                return ResourceManager.GetString("Action_CopyUserId", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Delete.
         /// </summary>
         public static string Action_Delete {
@@ -258,6 +285,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Edit Profile Image on Gravatar.
+        /// </summary>
+        public static string Action_EditGravatar {
+            get {
+                return ResourceManager.GetString("Action_EditGravatar", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Enable.
         /// </summary>
         public static string Action_Enable {
@@ -272,6 +308,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Action_ExitApplication {
             get {
                 return ResourceManager.GetString("Action_ExitApplication", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Find Metadata.
+        /// </summary>
+        public static string Action_FindMetadata {
+            get {
+                return ResourceManager.GetString("Action_FindMetadata", resourceCulture);
             }
         }
         
@@ -330,6 +375,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Learn More.
+        /// </summary>
+        public static string Action_LearnMore {
+            get {
+                return ResourceManager.GetString("Action_LearnMore", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Login.
         /// </summary>
         public static string Action_Login {
@@ -339,11 +393,38 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Manage your Lykos Account.
+        /// </summary>
+        public static string Action_ManageLykosAccount {
+            get {
+                return ResourceManager.GetString("Action_ManageLykosAccount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Manage Membership.
+        /// </summary>
+        public static string Action_ManageMembership {
+            get {
+                return ResourceManager.GetString("Action_ManageMembership", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Maybe Later.
         /// </summary>
         public static string Action_MaybeLater {
             get {
                 return ResourceManager.GetString("Action_MaybeLater", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Migrate Now.
+        /// </summary>
+        public static string Action_MigrateNow {
+            get {
+                return ResourceManager.GetString("Action_MigrateNow", resourceCulture);
             }
         }
         
@@ -470,6 +551,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Action_OpenWebUI {
             get {
                 return ResourceManager.GetString("Action_OpenWebUI", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Organize.
+        /// </summary>
+        public static string Action_Organize {
+            get {
+                return ResourceManager.GetString("Action_Organize", resourceCulture);
             }
         }
         
@@ -744,6 +834,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Update Metadata.
+        /// </summary>
+        public static string Action_UpdateMetadata {
+            get {
+                return ResourceManager.GetString("Action_UpdateMetadata", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Upgrade.
         /// </summary>
         public static string Action_Upgrade {
@@ -804,11 +903,38 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Your Patreon benefits continue through {0}..
+        /// </summary>
+        public static string InfoBar_PatreonGracePeriod {
+            get {
+                return ResourceManager.GetString("InfoBar_PatreonGracePeriod", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You can now move to a direct Lykos membership. Keep your tier and support independent development..
+        /// </summary>
+        public static string InfoBar_PatreonMigration {
+            get {
+                return ResourceManager.GetString("InfoBar_PatreonMigration", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to About.
         /// </summary>
         public static string Label_About {
             get {
                 return ResourceManager.GetString("Label_About", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to About Account Credentials.
+        /// </summary>
+        public static string Label_AboutAccountCredentials {
+            get {
+                return ResourceManager.GetString("Label_AboutAccountCredentials", resourceCulture);
             }
         }
         
@@ -836,6 +962,114 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_ActionCannotBeUndone {
             get {
                 return ResourceManager.GetString("Label_ActionCannotBeUndone", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} supporter.
+        /// </summary>
+        public static string Label_ActiveSupporterTier {
+            get {
+                return ResourceManager.GetString("Label_ActiveSupporterTier", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Activity.
+        /// </summary>
+        public static string Label_Activity {
+            get {
+                return ResourceManager.GetString("Label_Activity", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to In Progress.
+        /// </summary>
+        public static string Label_InProgress {
+            get {
+                return ResourceManager.GetString("Label_InProgress", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Mark all as read.
+        /// </summary>
+        public static string Action_MarkAllRead {
+            get {
+                return ResourceManager.GetString("Action_MarkAllRead", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Clear all.
+        /// </summary>
+        public static string Action_ClearAll {
+            get {
+                return ResourceManager.GetString("Action_ClearAll", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Toggle details.
+        /// </summary>
+        public static string Action_ToggleDetails {
+            get {
+                return ResourceManager.GetString("Action_ToggleDetails", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Dismiss.
+        /// </summary>
+        public static string Action_Dismiss {
+            get {
+                return ResourceManager.GetString("Action_Dismiss", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Open Folder.
+        /// </summary>
+        public static string Action_OpenFolder {
+            get {
+                return ResourceManager.GetString("Action_OpenFolder", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Open.
+        /// </summary>
+        public static string Action_Open {
+            get {
+                return ResourceManager.GetString("Action_Open", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Show Activity.
+        /// </summary>
+        public static string Action_ShowActivity {
+            get {
+                return ResourceManager.GetString("Action_ShowActivity", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to just now.
+        /// </summary>
+        public static string Label_RelativeTime_JustNow {
+            get {
+                return ResourceManager.GetString("Label_RelativeTime_JustNow", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to {0}m ago.
+        /// </summary>
+        public static string Label_RelativeTime_MinutesAgo {
+            get {
+                return ResourceManager.GetString("Label_RelativeTime_MinutesAgo", resourceCulture);
             }
         }
         
@@ -1083,6 +1317,24 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Support the Stability Matrix Team and get access to early development builds and be the first to test new features..
+        /// </summary>
+        public static string Label_BecomeSupporterDescription {
+            get {
+                return ResourceManager.GetString("Label_BecomeSupporterDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Benefits.
+        /// </summary>
+        public static string Label_Benefits {
+            get {
+                return ResourceManager.GetString("Label_Benefits", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Beta.
         /// </summary>
         public static string Label_Beta {
@@ -1209,6 +1461,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Connect to download models that require login from CivitAI.
+        /// </summary>
+        public static string Label_CivitAIOffDescription {
+            get {
+                return ResourceManager.GetString("Label_CivitAIOffDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Clipping Mask.
         /// </summary>
         public static string Label_ClippingMask {
@@ -1281,6 +1542,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Community.
+        /// </summary>
+        public static string Label_Community {
+            get {
+                return ResourceManager.GetString("Label_Community", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Replace underscores with spaces when inserting completions.
         /// </summary>
         public static string Label_CompletionReplaceUnderscoresWithSpaces {
@@ -1344,6 +1614,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Conflict.
+        /// </summary>
+        public static string Label_Conflict {
+            get {
+                return ResourceManager.GetString("Label_Conflict", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to We had some trouble connecting your account.
         /// </summary>
         public static string Label_ConnectAccountFailed {
@@ -1380,6 +1659,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Connect Patreon Account.
+        /// </summary>
+        public static string Label_ConnectPatreonAccount {
+            get {
+                return ResourceManager.GetString("Label_ConnectPatreonAccount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Console.
         /// </summary>
         public static string Label_Console {
@@ -1394,6 +1682,24 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_ConsolidateExplanation {
             get {
                 return ResourceManager.GetString("Label_ConsolidateExplanation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You have contributor access.
+        /// </summary>
+        public static string Label_ContributorAccess {
+            get {
+                return ResourceManager.GetString("Label_ContributorAccess", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You have contributor access to preview and dev release channels..
+        /// </summary>
+        public static string Label_ContributorAccessDescription {
+            get {
+                return ResourceManager.GetString("Label_ContributorAccessDescription", resourceCulture);
             }
         }
         
@@ -1430,6 +1736,19 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_CreateExtensionPackExplanation {
             get {
                 return ResourceManager.GetString("Label_CreateExtensionPackExplanation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Account credentials and tokens are stored locally on your computer, with at-rest AES encryption.
+        ///
+        ///If you make changes to your computer hardware, you may need to re-login to your accounts.
+        ///
+        ///Account tokens will not be viewable after saving, please make a note of them if you need to use them elsewhere..
+        /// </summary>
+        public static string Label_CredentialsStorageNotice {
+            get {
+                return ResourceManager.GetString("Label_CredentialsStorageNotice", resourceCulture);
             }
         }
         
@@ -1619,6 +1938,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_EarlyAccessModels {
             get {
                 return ResourceManager.GetString("Label_EarlyAccessModels", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Early Access Update Available.
+        /// </summary>
+        public static string Label_EarlyAccessUpdateAvailable {
+            get {
+                return ResourceManager.GetString("Label_EarlyAccessUpdateAvailable", resourceCulture);
             }
         }
         
@@ -1857,6 +2185,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Add your Gemini API key to use Nano Banana in the Image Lab for image generation.
+        /// </summary>
+        public static string Label_GeminiOffDescription {
+            get {
+                return ResourceManager.GetString("Label_GeminiOffDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to General.
         /// </summary>
         public static string Label_General {
@@ -1918,7 +2255,25 @@ namespace StabilityMatrix.Avalonia.Languages {
                 return ResourceManager.GetString("Label_HolidayMode", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Always Show Scrollbars.
+        /// </summary>
+        public static string Label_AlwaysShowScrollbars {
+            get {
+                return ResourceManager.GetString("Label_AlwaysShowScrollbars", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to When on, vertical scrollbars stay visible at full thickness. When off, they fade to a thin bar that only expands on hover..
+        /// </summary>
+        public static string Label_AlwaysShowScrollbars_Details {
+            get {
+                return ResourceManager.GetString("Label_AlwaysShowScrollbars_Details", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Hugging Face.
         /// </summary>
@@ -1934,6 +2289,24 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_HuggingFaceLoginRequired {
             get {
                 return ResourceManager.GetString("Label_HuggingFaceLoginRequired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Connect to download models that require login from Hugging Face.
+        /// </summary>
+        public static string Label_HuggingFaceOffDescription {
+            get {
+                return ResourceManager.GetString("Label_HuggingFaceOffDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Image Generation APIs.
+        /// </summary>
+        public static string Label_ImageGenerationApis {
+            get {
+                return ResourceManager.GetString("Label_ImageGenerationApis", resourceCulture);
             }
         }
         
@@ -2181,6 +2554,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Legacy Connections.
+        /// </summary>
+        public static string Label_LegacyConnections {
+            get {
+                return ResourceManager.GetString("Label_LegacyConnections", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Let&apos;s get started.
         /// </summary>
         public static string Label_LetsGetStarted {
@@ -2235,6 +2617,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to You need to be logged in to use this feature..
+        /// </summary>
+        public static string Label_LoginRequiredMessage {
+            get {
+                return ResourceManager.GetString("Label_LoginRequiredMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Logs.
         /// </summary>
         public static string Label_Logs {
@@ -2253,11 +2644,38 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Manage connected features in Stability Matrix.
+        /// </summary>
+        public static string Label_LykosOffDescription {
+            get {
+                return ResourceManager.GetString("Label_LykosOffDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Max Size.
         /// </summary>
         public static string Label_MaxSize {
             get {
                 return ResourceManager.GetString("Label_MaxSize", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Membership.
+        /// </summary>
+        public static string Label_Membership {
+            get {
+                return ResourceManager.GetString("Label_Membership", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Metadata needed.
+        /// </summary>
+        public static string Label_MetadataNeeded {
+            get {
+                return ResourceManager.GetString("Label_MetadataNeeded", resourceCulture);
             }
         }
         
@@ -2334,11 +2752,29 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Moderation Error.
+        /// </summary>
+        public static string Label_ModerationError {
+            get {
+                return ResourceManager.GetString("Label_ModerationError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Motion Bucket ID.
         /// </summary>
         public static string Label_MotionBucketId {
             get {
                 return ResourceManager.GetString("Label_MotionBucketId", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Naming Pattern.
+        /// </summary>
+        public static string Label_NamingPattern {
+            get {
+                return ResourceManager.GetString("Label_NamingPattern", resourceCulture);
             }
         }
         
@@ -2559,6 +2995,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Organize Models.
+        /// </summary>
+        public static string Label_OrganizeModels {
+            get {
+                return ResourceManager.GetString("Label_OrganizeModels", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to - or -.
         /// </summary>
         public static string Label_OrWithHyphensAround {
@@ -2658,6 +3103,24 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Patreon is no longer used for new memberships. Existing connections remain valid during the transition..
+        /// </summary>
+        public static string Label_PatreonLegacyDescription {
+            get {
+                return ResourceManager.GetString("Label_PatreonLegacyDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Access preview and dev release channels for auto-updates.
+        /// </summary>
+        public static string Label_PatreonOffDescription {
+            get {
+                return ResourceManager.GetString("Label_PatreonOffDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Please choose a different name or select a different install location..
         /// </summary>
         public static string Label_PleaseChooseDifferentName {
@@ -2744,6 +3207,42 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_Prompt {
             get {
                 return ResourceManager.GetString("Label_Prompt", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Prompt Amplifier Error.
+        /// </summary>
+        public static string Label_PromptAmplifierError {
+            get {
+                return ResourceManager.GetString("Label_PromptAmplifierError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You have no Prompt Amplifier usage left this month. Usage resets on the 1st of each month. ({0} days left).
+        /// </summary>
+        public static string Label_PromptAmplifierRateLimitMessage {
+            get {
+                return ResourceManager.GetString("Label_PromptAmplifierRateLimitMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Rate Limit Reached.
+        /// </summary>
+        public static string Label_PromptAmplifierRateLimitTitle {
+            get {
+                return ResourceManager.GetString("Label_PromptAmplifierRateLimitTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Your prompt was flagged by the moderation system. Please try again with a different prompt..
+        /// </summary>
+        public static string Label_PromptFlaggedMessage {
+            get {
+                return ResourceManager.GetString("Label_PromptFlaggedMessage", resourceCulture);
             }
         }
         
@@ -2838,6 +3337,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Ready.
+        /// </summary>
+        public static string Label_Ready {
+            get {
+                return ResourceManager.GetString("Label_Ready", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Recommended Models.
         /// </summary>
         public static string Label_RecommendedModels {
@@ -2915,6 +3423,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_RemoveSymlinksOnShutdown_Details {
             get {
                 return ResourceManager.GetString("Label_RemoveSymlinksOnShutdown_Details", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There was an error processing your request..
+        /// </summary>
+        public static string Label_RequestErrorMessage {
+            get {
+                return ResourceManager.GetString("Label_RequestErrorMessage", resourceCulture);
             }
         }
         
@@ -3090,6 +3607,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Skipped.
+        /// </summary>
+        public static string Label_Skipped {
+            get {
+                return ResourceManager.GetString("Label_Skipped", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Skip first-time setup.
         /// </summary>
         public static string Label_SkipSetup {
@@ -3171,6 +3697,33 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Support open-source development and get access to additional features and community perks..
+        /// </summary>
+        public static string Label_SupporterCTA {
+            get {
+                return ResourceManager.GetString("Label_SupporterCTA", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Supporting since.
+        /// </summary>
+        public static string Label_SupportingSince {
+            get {
+                return ResourceManager.GetString("Label_SupportingSince", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Support Us.
+        /// </summary>
+        public static string Label_SupportUs {
+            get {
+                return ResourceManager.GetString("Label_SupportUs", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to System.
         /// </summary>
         public static string Label_System {
@@ -3212,6 +3765,24 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_TextToImage {
             get {
                 return ResourceManager.GetString("Label_TextToImage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Thanks for building with us 💙.
+        /// </summary>
+        public static string Label_ThankYouContributor {
+            get {
+                return ResourceManager.GetString("Label_ThankYouContributor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Thank you for supporting Stability Matrix 💙.
+        /// </summary>
+        public static string Label_ThankYouSupporter {
+            get {
+                return ResourceManager.GetString("Label_ThankYouSupporter", resourceCulture);
             }
         }
         
@@ -3261,6 +3832,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unchanged.
+        /// </summary>
+        public static string Label_Unchanged {
+            get {
+                return ResourceManager.GetString("Label_Unchanged", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to An unexpected error occurred.
         /// </summary>
         public static string Label_UnexpectedErrorOccurred {
@@ -3302,15 +3882,6 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_UpdateAvailable {
             get {
                 return ResourceManager.GetString("Label_UpdateAvailable", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to Early Access Update Available.
-        /// </summary>
-        public static string Label_EarlyAccessUpdateAvailable {
-            get {
-                return ResourceManager.GetString("Label_EarlyAccessUpdateAvailable", resourceCulture);
             }
         }
         
@@ -3708,6 +4279,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Sign in with your Lykos account to activate your membership benefits..
+        /// </summary>
+        public static string Sponsorship_ConnectLykosPrompt {
+            get {
+                return ResourceManager.GetString("Sponsorship_ConnectLykosPrompt", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to If you&apos;re already supporting us on Patreon, please link your account to continue..
         /// </summary>
         public static string Sponsorship_ConnectPatreonPrompt {
@@ -3762,6 +4342,24 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Click any toast to jump straight to it, or open this panel anytime to catch up on what you missed..
+        /// </summary>
+        public static string TeachingTip_ActivityCenter_Subtitle {
+            get {
+                return ResourceManager.GetString("TeachingTip_ActivityCenter_Subtitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Notifications &amp; downloads live here.
+        /// </summary>
+        public static string TeachingTip_ActivityCenter_Title {
+            get {
+                return ResourceManager.GetString("TeachingTip_ActivityCenter_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Add a package to get started!.
         /// </summary>
         public static string TeachingTip_AddPackageToGetStarted {
@@ -3785,6 +4383,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string TeachingTip_DownloadsExplanation {
             get {
                 return ResourceManager.GetString("TeachingTip_DownloadsExplanation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Format Variables.
+        /// </summary>
+        public static string TeachingTip_FormatVariablesTitle {
+            get {
+                return ResourceManager.GetString("TeachingTip_FormatVariablesTitle", resourceCulture);
             }
         }
         
@@ -3959,6 +4566,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Reorganize model files into folders using a naming pattern. Models stay within their type folder..
+        /// </summary>
+        public static string Text_OrganizeModelsDescription {
+            get {
+                return ResourceManager.GetString("Text_OrganizeModelsDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to This will delete the package folder and all its contents, including any generated images and files you may have added..
         /// </summary>
         public static string Text_PackageUninstall_Details {
@@ -4049,6 +4665,24 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} file(s) have incomplete metadata for the current pattern..
+        /// </summary>
+        public static string TextTemplate_FilesIncompleteMetadata {
+            get {
+                return ResourceManager.GetString("TextTemplate_FilesIncompleteMetadata", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} file(s) need metadata before they can be organized..
+        /// </summary>
+        public static string TextTemplate_FilesNeedMetadata {
+            get {
+                return ResourceManager.GetString("TextTemplate_FilesNeedMetadata", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Last checked: {0}.
         /// </summary>
         public static string TextTemplate_LastChecked {
@@ -4085,6 +4719,24 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Example: {0}.
+        /// </summary>
+        public static string TextTemplate_PatternPreviewExample {
+            get {
+                return ResourceManager.GetString("TextTemplate_PatternPreviewExample", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Show unchanged ({0}).
+        /// </summary>
+        public static string TextTemplate_ShowUnchangedCount {
+            get {
+                return ResourceManager.GetString("TextTemplate_ShowUnchangedCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Updating {0}.
         /// </summary>
         public static string TextTemplate_UpdatingPackage {
@@ -4112,6 +4764,42 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Show available variables.
+        /// </summary>
+        public static string Tooltip_ShowAvailableVariables {
+            get {
+                return ResourceManager.GetString("Tooltip_ShowAvailableVariables", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Show files with conflicts.
+        /// </summary>
+        public static string Tooltip_ShowConflictFiles {
+            get {
+                return ResourceManager.GetString("Tooltip_ShowConflictFiles", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Show ready files.
+        /// </summary>
+        public static string Tooltip_ShowReadyFiles {
+            get {
+                return ResourceManager.GetString("Tooltip_ShowReadyFiles", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Show skipped files.
+        /// </summary>
+        public static string Tooltip_ShowSkippedFiles {
+            get {
+                return ResourceManager.GetString("Tooltip_ShowSkippedFiles", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Package name cannot be empty.
         /// </summary>
         public static string Validation_PackageNameCannotBeEmpty {
@@ -4130,6 +4818,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to OneDrive folders are not recommended: file syncing can break Git, Python venvs, and package installations..
+        /// </summary>
+        public static string Warning_OneDriveFolder {
+            get {
+                return ResourceManager.GetString("Warning_OneDriveFolder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to PLEASE EXTRACT THE APP FROM THE ZIP FILE BEFORE RUNNING STABILITY MATRIX.
         /// </summary>
         public static string Warning_PleaseExtractFirst {
@@ -4144,6 +4841,204 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Watermark_EnterPackageName {
             get {
                 return ResourceManager.GetString("Watermark_EnterPackageName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The {0} workflow expects a model from DiffusionModels, but this file is in {1}. It may not load correctly..
+        /// </summary>
+        public static string TextTemplate_WorkflowNeedsDiffusionModelsFile {
+            get {
+                return ResourceManager.GetString("TextTemplate_WorkflowNeedsDiffusionModelsFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This file is in DiffusionModels and can't load as an all-in-one checkpoint. It may not load correctly..
+        /// </summary>
+        public static string Text_FileInDiffusionModelsNotCheckpoint {
+            get {
+                return ResourceManager.GetString("Text_FileInDiffusionModelsNotCheckpoint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This looks like {0}, which loads from DiffusionModels, but the file is in {1}. It may not load correctly..
+        /// </summary>
+        public static string TextTemplate_FileLooksLikeStandaloneModel {
+            get {
+                return ResourceManager.GetString("TextTemplate_FileLooksLikeStandaloneModel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Move to {0}.
+        /// </summary>
+        public static string TextTemplate_MoveToFolder {
+            get {
+                return ResourceManager.GetString("TextTemplate_MoveToFolder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Move.
+        /// </summary>
+        public static string Action_Move {
+            get {
+                return ResourceManager.GetString("Action_Move", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not move model.
+        /// </summary>
+        public static string Label_CouldNotMoveModel {
+            get {
+                return ResourceManager.GetString("Label_CouldNotMoveModel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A file named '{0}' already exists in the {1} folder..
+        /// </summary>
+        public static string TextTemplate_FileAlreadyExistsInFolder {
+            get {
+                return ResourceManager.GetString("TextTemplate_FileAlreadyExistsInFolder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Model moved.
+        /// </summary>
+        public static string Label_ModelMoved {
+            get {
+                return ResourceManager.GetString("Label_ModelMoved", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Moved '{0}' to the {1} folder..
+        /// </summary>
+        public static string TextTemplate_MovedFileToFolder {
+            get {
+                return ResourceManager.GetString("TextTemplate_MovedFileToFolder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Comfy Error.
+        /// </summary>
+        public static string Label_ComfyError {
+            get {
+                return ResourceManager.GetString("Label_ComfyError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ComfyUI reported an error during generation.
+        /// </summary>
+        public static string Text_ComfyReportedGenerationError {
+            get {
+                return ResourceManager.GetString("Text_ComfyReportedGenerationError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Generation Failed.
+        /// </summary>
+        public static string Label_GenerationFailed {
+            get {
+                return ResourceManager.GetString("Label_GenerationFailed", resourceCulture);
+            }
+        }
+
+        public static string Label_Success {
+            get {
+                return ResourceManager.GetString("Label_Success", resourceCulture);
+            }
+        }
+
+        public static string Label_GeminiApiKey {
+            get {
+                return ResourceManager.GetString("Label_GeminiApiKey", resourceCulture);
+            }
+        }
+
+        public static string Validation_ApiKeyRequired {
+            get {
+                return ResourceManager.GetString("Validation_ApiKeyRequired", resourceCulture);
+            }
+        }
+
+        public static string Label_SetGeminiApiKey {
+            get {
+                return ResourceManager.GetString("Label_SetGeminiApiKey", resourceCulture);
+            }
+        }
+
+        public static string Text_SetGeminiApiKeyDescription {
+            get {
+                return ResourceManager.GetString("Text_SetGeminiApiKeyDescription", resourceCulture);
+            }
+        }
+
+        public static string Text_GeminiApiKeySaved {
+            get {
+                return ResourceManager.GetString("Text_GeminiApiKeySaved", resourceCulture);
+            }
+        }
+
+        public static string Label_RemoveGeminiApiKey {
+            get {
+                return ResourceManager.GetString("Label_RemoveGeminiApiKey", resourceCulture);
+            }
+        }
+
+        public static string Text_ConfirmRemoveGeminiApiKey {
+            get {
+                return ResourceManager.GetString("Text_ConfirmRemoveGeminiApiKey", resourceCulture);
+            }
+        }
+
+        public static string Text_GeminiApiKeyRemoved {
+            get {
+                return ResourceManager.GetString("Text_GeminiApiKeyRemoved", resourceCulture);
+            }
+        }
+
+        public static string Label_GeminiApiSetupRequired {
+            get {
+                return ResourceManager.GetString("Label_GeminiApiSetupRequired", resourceCulture);
+            }
+        }
+
+        public static string Text_GeminiPaidTierRequired {
+            get {
+                return ResourceManager.GetString("Text_GeminiPaidTierRequired", resourceCulture);
+            }
+        }
+
+        public static string Error_GeminiApiKeyNotConfigured {
+            get {
+                return ResourceManager.GetString("Error_GeminiApiKeyNotConfigured", resourceCulture);
+            }
+        }
+
+        public static string Error_GeminiQuotaExceeded {
+            get {
+                return ResourceManager.GetString("Error_GeminiQuotaExceeded", resourceCulture);
+            }
+        }
+
+        public static string Error_GeminiInvalidApiKey {
+            get {
+                return ResourceManager.GetString("Error_GeminiInvalidApiKey", resourceCulture);
+            }
+        }
+
+        public static string Error_GeminiAccessForbidden {
+            get {
+                return ResourceManager.GetString("Error_GeminiAccessForbidden", resourceCulture);
             }
         }
     }

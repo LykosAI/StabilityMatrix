@@ -38,7 +38,7 @@ public partial class MaskEditorViewModel(IServiceManager<ViewModelBase> vmFactor
         {
             Patterns = new[] { "*.png", "*.jpg", "*.jpeg", "*.webp", "*.json" },
             AppleUniformTypeIdentifiers = new[] { "public.image", "public.json" },
-            MimeTypes = new[] { "image/*", "application/json" }
+            MimeTypes = new[] { "image/*", "application/json" },
         };
 
     [JsonIgnore]
@@ -121,11 +121,12 @@ public partial class MaskEditorViewModel(IServiceManager<ViewModelBase> vmFactor
             ContentVerticalScrollBarVisibility = ScrollBarVisibility.Disabled,
             MaxDialogHeight = 2000,
             MaxDialogWidth = 2000,
+            MinDialogWidth = 900,
             ContentMargin = new Thickness(16),
             FullSizeDesired = true,
             PrimaryButtonText = Resources.Action_Save,
             CloseButtonText = Resources.Action_Cancel,
-            DefaultButton = ContentDialogButton.Primary
+            DefaultButton = ContentDialogButton.Primary,
         };
 
         return dialog;
@@ -193,7 +194,7 @@ public partial class MaskEditorViewModel(IServiceManager<ViewModelBase> vmFactor
                         ".png" => SKEncodedImageFormat.Png,
                         ".jpg" or ".jpeg" => SKEncodedImageFormat.Jpeg,
                         ".webp" => SKEncodedImageFormat.Webp,
-                        _ => throw new NotSupportedException("Unsupported image format")
+                        _ => throw new NotSupportedException("Unsupported image format"),
                     },
                     100
                 )
@@ -243,6 +244,7 @@ public partial class MaskEditorViewModel(IServiceManager<ViewModelBase> vmFactor
     }*/
     public void Dispose()
     {
+        _cachedMaskRenderImage?.Dispose();
         _cachedMaskRenderInverseAlphaImage?.Dispose();
         GC.SuppressFinalize(this);
     }

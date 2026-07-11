@@ -84,6 +84,20 @@
         </Style.Setters>
     </Style>
 
+    <!--  Bold text styling - use SemiBold for cross-font compatibility (NotoSansJP only has Regular/SemiBold)  -->
+    <Style Selector=".Markdown_Avalonia_MarkdownViewer ctxt|CBold">
+        <Style.Setters>
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style.Setters>
+    </Style>
+
+    <!--  Italic text styling  -->
+    <Style Selector=".Markdown_Avalonia_MarkdownViewer ctxt|CItalic">
+        <Style.Setters>
+            <Setter Property="FontStyle" Value="Italic" />
+        </Style.Setters>
+    </Style>
+
     <Style Selector=".Markdown_Avalonia_MarkdownViewer ctxt|CHyperlink">
         <Style.Setters>
             <Setter Property="IsUnderline" Value="true" />
@@ -208,6 +222,29 @@
     <Style Selector=".Markdown_Avalonia_MarkdownViewer mdc|Rule">
         <Style.Setters>
             <Setter Property="Margin" Value="0,3" />
+        </Style.Setters>
+    </Style>
+
+    <!--  Notification dialog styles - more generous spacing for CJK text and important messages  -->
+    <Style Selector=".NotificationDialog .Markdown_Avalonia_MarkdownViewer ctxt|CTextBlock">
+        <Style.Setters>
+            <Setter Property="Margin" Value="0,8" />
+            <Setter Property="LineHeight" Value="22" />
+            <!--  Normally 14  -->
+            <Setter Property="FontSize" Value="15" />
+        </Style.Setters>
+    </Style>
+    <Style Selector=".NotificationDialog .Markdown_Avalonia_MarkdownViewer TextBlock">
+        <Style.Setters>
+            <Setter Property="Margin" Value="0,10,0,16" />
+            <Setter Property="LineHeight" Value="22" />
+            <!--  Normally 14  -->
+            <Setter Property="FontSize" Value="15" />
+        </Style.Setters>
+    </Style>
+    <Style Selector=".NotificationDialog .Markdown_Avalonia_MarkdownViewer ctxt|CBold">
+        <Style.Setters>
+            <Setter Property="FontWeight" Value="SemiBold" />
         </Style.Setters>
     </Style>
 </Styles>

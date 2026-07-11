@@ -34,12 +34,20 @@
         </DrawingImage>
     </controls:AppWindowBase.Resources>
 
-    <Grid RowDefinitions="Auto,Auto,*">
+    <Grid RowDefinitions="Auto,Auto,Auto,*">
         <Grid
             Name="TitleBarHost"
-            Height="32"
             Background="Transparent"
             ColumnDefinitions="Auto,Auto,*,Auto">
+            <!--
+                Windows hosts the icon/title/caption buttons here; on macOS & Linux those are
+                native, so collapse the strip to avoid an empty band under the system title bar.
+            -->
+            <Grid.Height>
+                <OnPlatform Default="0">
+                    <On Content="32" Options="Windows" />
+                </OnPlatform>
+            </Grid.Height>
             <Image
                 Name="WindowIcon"
                 Width="18"
@@ -70,9 +78,13 @@
 
             <Border Grid.Column="2" Padding="6" />
         </Grid>
+
+        <!--  Notification Banner  -->
+        <controls:NotificationBanner Grid.Row="1" DataContext="{Binding NotificationBannerViewModel}" />
+
         <ui:NavigationView
             Name="NavigationView"
-            Grid.Row="1"
+            Grid.Row="2"
             Grid.RowSpan="2"
             BackRequested="NavigationView_OnBackRequested"
             FooterMenuItemsSource="{Binding FooterPages, Mode=OneWay}"
@@ -115,13 +127,13 @@
                         </ui:NavigationViewItem.IconSource>
                     </ui:NavigationViewItem>
 
-                    <!--  Patreon  -->
+                    <!--  Support Us  -->
                     <ui:NavigationViewItem
-                        Name="PatreonPatreonItem"
-                        Content="{x:Static lang:Resources.Label_BecomeAPatron}"
-                        Tapped="PatreonPatreonItem_OnTapped">
+                        Name="FooterSupportItem"
+                        Content="{x:Static lang:Resources.Label_SupportUs}"
+                        Tapped="FooterSupportItem_OnTapped">
                         <ui:NavigationViewItem.IconSource>
-                            <ui:ImageIconSource Source="{StaticResource BrandsPatreonSymbolWhite}" />
+                            <fluentIcons:SymbolIconSource IconVariant="Filled" Symbol="Heart" />
                         </ui:NavigationViewItem.IconSource>
                     </ui:NavigationViewItem>
 
@@ -135,14 +147,20 @@
                         </ui:NavigationViewItem.IconSource>
                     </ui:NavigationViewItem>
 
-                    <!--  Download flyout  -->
+                    <!--  Activity flyout (downloads + notifications)  -->
                     <ui:NavigationViewItem
                         Name="FooterDownloadItem"
-                        Content="{x:Static lang:Resources.Label_Downloads}"
+                        Content="{x:Static lang:Resources.Label_Activity}"
                         DataContext="{Binding ProgressManagerViewModel}"
                         IconSource="{Binding IconSource}"
-                        IsVisible="{Binding !!ProgressItems.Count}"
                         Tapped="FooterDownloadItem_OnTapped">
+                        <ui:NavigationViewItem.Styles>
+                            <!--  Override the baked-in FlyoutPresenter MaxWidth (~456) so the activity panel can grow  -->
+                            <Style Selector="FlyoutPresenter">
+                                <Setter Property="MaxWidth" Value="800" />
+                                <Setter Property="MaxHeight" Value="600" />
+                            </Style>
+                        </ui:NavigationViewItem.Styles>
                         <ui:NavigationViewItem.ContextFlyout>
                             <controls:BetterFlyout
                                 Content="{Binding}"
@@ -151,7 +169,7 @@
                                 VerticalScrollBarVisibility="Auto" />
                         </ui:NavigationViewItem.ContextFlyout>
                         <ui:NavigationViewItem.InfoBadge>
-                            <ui:InfoBadge IsVisible="{Binding !!ProgressItems.Count}" Value="{Binding ProgressItems.Count}" />
+                            <ui:InfoBadge IsVisible="{Binding IsBadgeVisible}" Value="{Binding TotalBadgeCount}" />
                         </ui:NavigationViewItem.InfoBadge>
                     </ui:NavigationViewItem>
                 </StackPanel>
@@ -168,17 +186,18 @@
         <ui:TeachingTip
             Name="UpdateAvailableTeachingTip"
             Title="{x:Static lang:Resources.Label_UpdateAvailable}"
-            Grid.Row="1"
+            Grid.Row="2"
             Grid.RowSpan="2"
             PreferredPlacement="Right"
             Target="{Binding #FooterUpdateItem}" />
 
         <ui:TeachingTip
-            Name="DownloadsTeachingTip"
-            Title="{x:Static lang:Resources.Label_Downloads}"
-            Grid.Row="1"
+            Name="ActivityTeachingTip"
+            Title="{x:Static lang:Resources.TeachingTip_ActivityCenter_Title}"
+            Grid.Row="2"
             Grid.RowSpan="2"
             PreferredPlacement="Right"
+            Subtitle="{x:Static lang:Resources.TeachingTip_ActivityCenter_Subtitle}"
             Target="{Binding #FooterDownloadItem}" />
     </Grid>
 </controls:AppWindowBase>

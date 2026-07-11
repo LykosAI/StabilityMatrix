@@ -274,18 +274,44 @@ public class ModelImportService(
         Action<TrackedDownload>? configureDownload = null
     )
     {
+        // Subfolder support for user-defined patterns such as
+        // "{base_model}/{model_name}/{file_name}". Treat every component as relative so
+        // rooted or traversal input cannot escape the selected models folder.
+        var pathSegments = modelFileName
+            .Split(['/', '\\'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Where(segment => segment is not "." and not "..")
+            .Select(SanitizePathSegment)
+            .Where(segment => !string.IsNullOrWhiteSpace(segment))
+            .ToArray();
+
+        if (pathSegments.Length == 0)
+        {
+            throw new ArgumentException(
+                "Model file name must contain a valid file name.",
+                nameof(modelFileName)
+            );
+        }
+
+        modelFileName = pathSegments[^1];
+        if (pathSegments.Length > 1)
+        {
+            downloadFolder = new DirectoryPath(
+                [downloadFolder.FullPath, .. pathSegments.Take(pathSegments.Length - 1)]
+            );
+        }
+
         // Folders might be missing if user didn't install any packages yet
         downloadFolder.Create();
 
         // Fix invalid chars in FileName
-        var modelBaseFileName = Path.GetFileNameWithoutExtension(modelFileName);
-        modelBaseFileName = Path.GetInvalidFileNameChars()
-            .Aggregate(modelBaseFileName, (current, c) => current.Replace(c, '_'));
+        var modelBaseFileName = SanitizePathSegment(Path.GetFileNameWithoutExtension(modelFileName));
         var modelFileExtension = Path.GetExtension(modelFileName);
 
         var downloadPath = downloadFolder.JoinFile(modelBaseFileName + modelFileExtension);
 
-        // Save model info and preview image first if available
+        // Save model info first if available. Preview image downloads can be slow
+        // or hosted on flaky third-party mirrors, so start the model download before
+        // fetching the preview in the background.
         var cleanupFilePaths = new List<string>();
         if (connectedModelInfo is not null)
         {
@@ -294,6 +320,8 @@ public class ModelImportService(
                 downloadFolder.JoinFile(modelBaseFileName + ConnectedModelInfo.FileExtension)
             );
         }
+
+        FilePath? previewImageDownloadPath = null;
         if (previewImageUri is not null)
         {
             if (previewImageFileExtension is null)
@@ -307,13 +335,8 @@ public class ModelImportService(
                 }
             }
 
-            var previewImageDownloadPath = downloadFolder.JoinFile(
+            previewImageDownloadPath = downloadFolder.JoinFile(
                 modelBaseFileName + ".preview" + previewImageFileExtension
-            );
-
-            await notificationService.TryAsync(
-                downloadService.DownloadToFileAsync(previewImageUri.ToString(), previewImageDownloadPath),
-                "Could not download preview image"
             );
 
             cleanupFilePaths.Add(previewImageDownloadPath);
@@ -337,6 +360,22 @@ public class ModelImportService(
         // download.ContextAction = CivitPostDownloadContextAction.FromCivitFile(modelFile);
 
         await trackedDownloadService.TryStartDownload(download);
+
+        if (previewImageUri is not null && previewImageDownloadPath is not null)
+        {
+            DownloadPreviewImageAsync(previewImageUri, previewImageDownloadPath).SafeFireAndForget();
+        }
+    }
+
+    private static string SanitizePathSegment(string segment) =>
+        Path.GetInvalidFileNameChars().Aggregate(segment, (current, c) => current.Replace(c, '_'));
+
+    private async Task DownloadPreviewImageAsync(Uri previewImageUri, FilePath previewImageDownloadPath)
+    {
+        await notificationService.TryAsync(
+            downloadService.DownloadToFileAsync(previewImageUri.ToString(), previewImageDownloadPath),
+            "Could not download preview image"
+        );
     }
 
     private string GenerateUniqueFileName(string folder, string fileName)

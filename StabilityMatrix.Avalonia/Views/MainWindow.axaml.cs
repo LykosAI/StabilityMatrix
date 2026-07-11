@@ -20,6 +20,7 @@ using Avalonia.Media.Immutable;
 using Avalonia.Platform;
 using Avalonia.Styling;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using FluentAvalonia.Styling;
 using FluentAvalonia.UI.Controls;
 using FluentAvalonia.UI.Media;
@@ -34,6 +35,7 @@ using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Avalonia.ViewModels.Progress;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.Settings;
@@ -163,10 +165,10 @@ public partial class MainWindow : AppWindowBase
         navigationService.TypedNavigation += NavigationService_OnTypedNavigation;
 
         EventManager.Instance.ToggleProgressFlyout += (_, _) => progressFlyout?.Hide();
+        EventManager.Instance.ShowProgressFlyout += (_, _) => ShowProgressFlyout();
         EventManager.Instance.CultureChanged += (_, _) => SetDefaultFonts();
         EventManager.Instance.UpdateAvailable += OnUpdateAvailable;
         EventManager.Instance.NavigateAndFindCivitModelRequested += OnNavigateAndFindCivitModelRequested;
-        EventManager.Instance.DownloadsTeachingTipRequested += InstanceOnDownloadsTeachingTipRequested;
 
         SetDefaultFonts();
 
@@ -247,26 +249,6 @@ public partial class MainWindow : AppWindowBase
         }
     }
 
-    private void InstanceOnDownloadsTeachingTipRequested(object? sender, EventArgs e)
-    {
-        Dispatcher.UIThread.Post(() =>
-        {
-            if (
-                !settingsManager.Settings.SeenTeachingTips.Contains(
-                    Core.Models.Settings.TeachingTip.DownloadsTip
-                )
-            )
-            {
-                var target = this.FindControl<NavigationViewItem>("FooterDownloadItem")!;
-                var tip = this.FindControl<TeachingTip>("DownloadsTeachingTip")!;
-
-                tip.Target = target;
-                tip.Subtitle = Languages.Resources.TeachingTip_DownloadsExplanation;
-                tip.IsOpen = true;
-            }
-        });
-    }
-
     private void OnNavigateAndFindCivitModelRequested(object? sender, int e)
     {
         navigationService.NavigateTo<CheckpointBrowserViewModel>();
@@ -292,55 +274,60 @@ public partial class MainWindow : AppWindowBase
         {
             TryEnableMicaEffect();
         }
+
+        MaybeShowActivityCenterTipAsync().SafeFireAndForget();
     }
+
+    private async Task MaybeShowActivityCenterTipAsync()
+    {
+        if (
+            settingsManager.Settings.SeenTeachingTips.Contains(
+                Core.Models.Settings.TeachingTip.ActivityCenterTip
+            )
+        )
+            return;
+
+        // Let the window settle and any first-run dialogs come up first
+        await Task.Delay(TimeSpan.FromSeconds(3));
+
+        Dispatcher.UIThread.Post(() =>
+        {
+            // Skip if a content dialog is currently open (first-run setup etc)
+            if (IsAnyDialogVisible())
+                return;
+
+            var target = this.FindControl<NavigationViewItem>("FooterDownloadItem");
+            var tip = this.FindControl<TeachingTip>("ActivityTeachingTip");
+            if (target == null || tip == null)
+                return;
+
+            tip.Target = target;
+            tip.IsOpen = true;
+
+            settingsManager.Transaction(s =>
+                s.SeenTeachingTips.Add(Core.Models.Settings.TeachingTip.ActivityCenterTip)
+            );
+        });
+    }
+
+    private bool IsAnyDialogVisible() =>
+        this.FindDescendantOfType<DialogHost>()
+            ?.GetVisualDescendants()
+            .OfType<BetterContentDialog>()
+            .Any(d => d.IsVisible) ?? false;
 
     protected override void OnClosing(WindowClosingEventArgs e)
     {
-        // Show confirmation if package running
-        var runningPackageService = App.Services.GetRequiredService<RunningPackageService>();
-        if (
-            runningPackageService.RunningPackages.Count > 0
-            && e.CloseReason is WindowCloseReason.WindowClosing
-        )
+        // Route the close button through the app shutdown flow so the running-package
+        // confirmation is handled in one place, consistently with ⌘Q and the menu Quit.
+        if (e.CloseReason is WindowCloseReason.WindowClosing)
         {
             e.Cancel = true;
-
-            var dialog = CreateExitConfirmDialog();
-            Dispatcher
-                .UIThread.InvokeAsync(async () =>
-                {
-                    if (
-                        (TaskDialogStandardResult)await dialog.ShowAsync(true) == TaskDialogStandardResult.Yes
-                    )
-                    {
-                        App.Services.GetRequiredService<MainWindow>().Hide();
-                        App.Shutdown();
-                    }
-                })
-                .SafeFireAndForget();
+            App.Shutdown();
+            return;
         }
 
         base.OnClosing(e);
-    }
-
-    private static TaskDialog CreateExitConfirmDialog()
-    {
-        var dialog = DialogHelper.CreateTaskDialog(
-            Languages.Resources.Label_ConfirmExit,
-            Languages.Resources.Label_ConfirmExitDetail
-        );
-
-        dialog.ShowProgressBar = false;
-        dialog.FooterVisibility = TaskDialogFooterVisibility.Never;
-
-        dialog.Buttons = new List<TaskDialogButton>
-        {
-            new("Exit", TaskDialogStandardResult.Yes),
-            TaskDialogButton.CancelButton,
-        };
-        dialog.Buttons[0].IsDefault = true;
-
-        return dialog;
     }
 
     /// <inheritdoc />
@@ -513,10 +500,36 @@ public partial class MainWindow : AppWindowBase
     private void FooterDownloadItem_OnTapped(object? sender, TappedEventArgs e)
     {
         var item = sender as NavigationViewItem;
+        if (item?.DataContext is ProgressManagerViewModel progressVm)
+        {
+            progressVm.RecomputePreferredTab();
+        }
         var flyout = item!.ContextFlyout;
         flyout!.ShowAt(item);
 
         progressFlyout = flyout;
+    }
+
+    /// <summary>Programmatically opens the activity flyout at the footer item (used by
+    /// notification actions like a failed download that want to surface the panel).</summary>
+    private void ShowProgressFlyout()
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (this.FindControl<NavigationViewItem>("FooterDownloadItem") is not { } item)
+                return;
+
+            if (item.DataContext is ProgressManagerViewModel progressVm)
+            {
+                progressVm.RecomputePreferredTab();
+            }
+
+            if (item.ContextFlyout is { } flyout)
+            {
+                flyout.ShowAt(item);
+                progressFlyout = flyout;
+            }
+        });
     }
 
     private async void FooterUpdateItem_OnTapped(object? sender, TappedEventArgs e)
@@ -535,9 +548,9 @@ public partial class MainWindow : AppWindowBase
         ProcessRunner.OpenUrl(Assets.DiscordServerUrl);
     }
 
-    private void PatreonPatreonItem_OnTapped(object? sender, TappedEventArgs e)
+    private void FooterSupportItem_OnTapped(object? sender, TappedEventArgs e)
     {
-        ProcessRunner.OpenUrl(Assets.PatreonUrl);
+        ProcessRunner.OpenUrl(Assets.MembershipUrl);
     }
 
     private void TopLevel_OnBackRequested(object? sender, RoutedEventArgs e)

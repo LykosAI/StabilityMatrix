@@ -7,6 +7,9 @@ namespace StabilityMatrix.Core.Models.Api.Lykos;
 
 public class LykosAccountStatusUpdateEventArgs : EventArgs
 {
+    private static readonly string[] TierRoles = ["Visionary", "Pioneer", "Insider", "Supporter"];
+    private static readonly string[] SpecialRoles = ["Developer", "BetaTester", "Translator"];
+
     public static LykosAccountStatusUpdateEventArgs Disconnected { get; } = new();
 
     public bool IsConnected { get; init; }
@@ -24,5 +27,23 @@ public class LykosAccountStatusUpdateEventArgs : EventArgs
 
     public bool IsPatreonConnected => User?.PatreonId != null;
 
-    public bool IsActiveSupporter => User?.Roles.Contains("ActivePatron") == true;
+    public bool IsActiveSupporter =>
+        User?.Roles.Contains("ActivePatron") == true || User?.Roles.Contains("ActiveSubscriber") == true;
+
+    /// <summary>
+    /// The highest subscription tier from the user's roles, or null if none.
+    /// Priority: Visionary > Pioneer > Insider > Supporter.
+    /// </summary>
+    public string? HighestTier => TierRoles.FirstOrDefault(r => User?.Roles.Contains(r) == true);
+
+    /// <summary>
+    /// All displayable roles (tier + special) the user has, in priority order.
+    /// </summary>
+    public IReadOnlyList<string> DisplayRoles =>
+        TierRoles.Concat(SpecialRoles).Where(r => User?.Roles.Contains(r) == true).ToList();
+
+    /// <summary>
+    /// Whether the user has an active Stripe subscription (active or trialing).
+    /// </summary>
+    public bool HasStripeSubscription => User?.StripeSubscriptionStatus is "active" or "trialing";
 }

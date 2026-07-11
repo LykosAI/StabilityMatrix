@@ -1,0 +1,25 @@
+﻿{
+  Greeting: Welcome to Avalonia!,
+  ProgressManagerViewModel: {
+    Title: Download Manager,
+    IconSource: {
+      Type: SymbolIconSource
+    },
+    IsOpen: false,
+    CanNavigateNext: false,
+    CanNavigatePrevious: false,
+    RemoveFromParentListCommand: ViewModelBase.RemoveFromParentList(),
+    HasErrors: false
+  },
+  UpdateViewModel: {
+    IsUpdateAvailable: false,
+    IsProgressIndeterminate: false,
+    ShowProgressBar: false,
+    InstallUpdateCommand: UpdateViewModel.InstallUpdate(),
+    RemoveFromParentListCommand: ViewModelBase.RemoveFromParentList(),
+    HasErrors: false
+  },
+  PaneWidth: 200.0,
+  RemoveFromParentListCommand: ViewModelBase.RemoveFromParentList(),
+  HasErrors: false
+}

@@ -48,6 +48,12 @@ public class SDWebForge(
     public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Simple;
     public override PackageType PackageType => PackageType.Legacy;
 
+    /// <summary>
+    /// Torch version spec used during install. Default (" ") leaves torch unpinned (resolved from
+    /// the cu* index per the requirements file). Subclasses can override to pin a specific version.
+    /// </summary>
+    protected virtual string TorchVersionSpec => " ";
+
     public override List<LaunchOptionDefinition> LaunchOptions =>
         [
             new()
@@ -168,36 +174,30 @@ public class SDWebForge(
             )
             .ConfigureAwait(false);
 
-        // Dynamically discover all requirements files
-        var requirementsPaths = new List<string> { "requirements_versions.txt" };
-        var extensionsBuiltinDir = new DirectoryPath(installLocation, "extensions-builtin");
-        if (extensionsBuiltinDir.Exists)
-        {
-            requirementsPaths.AddRange(
-                extensionsBuiltinDir
-                    .EnumerateFiles("requirements.txt", EnumerationOptionConstants.AllDirectories)
-                    .Select(f => Path.GetRelativePath(installLocation, f.ToString()))
-            );
-        }
+        var requirementsPaths = GetRequirementsPaths(installLocation);
 
         var torchIndex = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
-        var isBlackwell =
+        var isLegacyNvidia =
             torchIndex is TorchIndex.Cuda
-            && (SettingsManager.Settings.PreferredGpu?.IsBlackwellGpu() ?? HardwareHelper.HasBlackwellGpu());
+            && (
+                SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu()
+                ?? HardwareHelper.HasLegacyNvidiaGpu()
+            );
 
         var config = new PipInstallConfig
         {
             PrePipInstallArgs = ["joblib"],
             RequirementsFilePaths = requirementsPaths,
-            TorchVersion = "",
-            TorchvisionVersion = "",
-            CudaIndex = isBlackwell ? "cu128" : "cu126",
-            RocmIndex = "rocm7.1",
+            TorchVersion = TorchVersionSpec,
+            TorchvisionVersion = " ",
+            CudaIndex = isLegacyNvidia ? "cu126" : "cu128",
+            RocmIndex = "rocm7.2",
             ExtraPipArgs =
             [
                 "https://github.com/openai/CLIP/archive/d50d76daa670286dd6cacf3bcd80b5e4823fc8e1.zip",
             ],
-            PostInstallPipArgs = ["numpy==1.26.4"],
+            // CLIP imports pkg_resources.packaging at runtime, which breaks with setuptools 70.x.
+            PostInstallPipArgs = ["numpy==1.26.4", "setuptools==69.5.1"],
         };
 
         await StandardPipInstallProcessAsync(
@@ -212,5 +212,23 @@ public class SDWebForge(
             .ConfigureAwait(false);
 
         progress?.Report(new ProgressReport(1f, "Install complete", isIndeterminate: false));
+    }
+
+    protected static List<string> GetRequirementsPaths(string installLocation)
+    {
+        var requirementsPaths = new List<string> { "requirements_versions.txt" };
+        var extensionsBuiltinDir = new DirectoryPath(installLocation, "extensions-builtin");
+        if (!extensionsBuiltinDir.Exists)
+        {
+            return requirementsPaths;
+        }
+
+        requirementsPaths.AddRange(
+            extensionsBuiltinDir
+                .EnumerateFiles("requirements.txt", EnumerationOptionConstants.AllDirectories)
+                .Select(f => Path.GetRelativePath(installLocation, f.ToString()))
+        );
+
+        return requirementsPaths;
     }
 }

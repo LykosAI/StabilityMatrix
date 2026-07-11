@@ -9,6 +9,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Documents;
 using Avalonia.Data;
 using Avalonia.Layout;
 using Avalonia.LogicalTree;
@@ -113,7 +114,7 @@ public static class DialogHelper
         var grid = new Grid
         {
             RowDefinitions = { new RowDefinition(GridLength.Star), new RowDefinition(GridLength.Auto) },
-            Children = { markdown, image }
+            Children = { markdown, image },
         };
 
         return CreateTextEntryDialog(title, grid, textFields);
@@ -138,7 +139,7 @@ public static class DialogHelper
         var grid = new Grid
         {
             RowDefinitions = { new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Star) },
-            Children = { content, stackPanel }
+            Children = { content, stackPanel },
         };
         grid.Loaded += (_, _) =>
         {
@@ -186,7 +187,7 @@ public static class DialogHelper
                     Text = field.InnerLeftText,
                     Foreground = Brushes.Gray,
                     VerticalAlignment = VerticalAlignment.Center,
-                    Margin = new Thickness(8, 0, -4, 0)
+                    Margin = new Thickness(8, 0, -4, 0),
                 };
             }
 
@@ -223,22 +224,51 @@ public static class DialogHelper
             CloseButtonText = Resources.Action_Cancel,
             IsPrimaryButtonEnabled = true,
             PrimaryButtonCommand = primaryCommand,
-            DefaultButton = ContentDialogButton.Primary
+            DefaultButton = ContentDialogButton.Primary,
         };
     }
 
     /// <summary>
     /// Create a generic dialog for showing a markdown document
     /// </summary>
+    /// <param name="markdown">The markdown content to display</param>
+    /// <param name="title">Optional dialog title</param>
+    /// <param name="editorPreset">Optional syntax highlighting preset for code blocks</param>
+    /// <param name="styleClass">Optional style class to apply to the dialog (e.g., "NotificationDialog" for CJK-friendly spacing)</param>
     public static BetterContentDialog CreateMarkdownDialog(
         string markdown,
         string? title = null,
-        TextEditorPreset editorPreset = default
+        TextEditorPreset editorPreset = default,
+        string? styleClass = null
     )
     {
         Dispatcher.UIThread.VerifyAccess();
 
         var viewer = new BetterMarkdownScrollViewer { Markdown = markdown };
+
+        // Ensure the markdown viewer uses the correct font:
+        // - For Japanese: use bundled NotoSansJP (CTextBlock doesn't inherit ContentControlThemeFontFamily)
+        // - For Windows: use non-variable "Segoe UI" to work around Avalonia 11.3.x variable font
+        //   regression (AvaloniaUI/Avalonia#18875) where FontWeight doesn't apply for inline spans
+        // - Otherwise: use app's platform default font
+        if (App.Current is { } app)
+        {
+            var fontFamily =
+                Cultures.Current?.Name == "ja-JP" ? app.GetPlatformDefaultFontFamily()
+                : Compat.IsWindows ? new FontFamily("Segoe UI")
+                : app.GetPlatformDefaultFontFamily();
+
+            viewer.SetValue(TextElement.FontFamilyProperty, fontFamily);
+        }
+
+        // Apply style class if provided (wraps content for CSS selector targeting)
+        Control content = viewer;
+        if (!string.IsNullOrEmpty(styleClass))
+        {
+            var wrapper = new Border { Child = viewer };
+            wrapper.Classes.Add(styleClass);
+            content = wrapper;
+        }
 
         // Apply syntax highlighting to code blocks if preset is provided
         if (editorPreset != default)
@@ -280,12 +310,12 @@ public static class DialogHelper
         return new BetterContentDialog
         {
             Title = title,
-            Content = viewer,
+            Content = content,
             CloseButtonText = Resources.Action_Close,
             IsPrimaryButtonEnabled = false,
             MinDialogWidth = 800,
             MaxDialogHeight = 1000,
-            MaxDialogWidth = 1000
+            MaxDialogWidth = 1000,
         };
     }
 
@@ -301,7 +331,7 @@ public static class DialogHelper
         {
             IsReadOnly = true,
             WordWrap = true,
-            Options = { ShowColumnRulers = false, AllowScrollBelowDocument = false }
+            Options = { ShowColumnRulers = false, AllowScrollBelowDocument = false },
         };
         var registryOptions = new RegistryOptions(ThemeName.DarkPlus);
         textEditor.InstallTextMate(registryOptions).SetGrammar(registryOptions.GetScopeByLanguageId("json"));
@@ -319,8 +349,8 @@ public static class DialogHelper
                     FontWeight = FontWeight.Medium,
                     Margin = new Thickness(0, 8),
                 },
-                textEditor
-            }
+                textEditor,
+            },
         };
 
         var dialog = new BetterContentDialog
@@ -342,7 +372,7 @@ public static class DialogHelper
                     new JsonSerializerOptions
                     {
                         AllowTrailingCommas = true,
-                        ReadCommentHandling = JsonCommentHandling.Skip
+                        ReadCommentHandling = JsonCommentHandling.Skip,
                     }
                 );
                 var formatted = JsonSerializer.Serialize(
@@ -378,7 +408,7 @@ public static class DialogHelper
         {
             IsReadOnly = true,
             WordWrap = true,
-            Options = { ShowColumnRulers = false, AllowScrollBelowDocument = false }
+            Options = { ShowColumnRulers = false, AllowScrollBelowDocument = false },
         };
         var registryOptions = new RegistryOptions(ThemeName.DarkPlus);
         textEditor.InstallTextMate(registryOptions).SetGrammar(registryOptions.GetScopeByLanguageId("json"));
@@ -387,7 +417,7 @@ public static class DialogHelper
         {
             Spacing = 8,
             Margin = new Thickness(16),
-            Children = { textEditor }
+            Children = { textEditor },
         };
 
         if (subTitle is not null)
@@ -422,7 +452,7 @@ public static class DialogHelper
                 new JsonSerializerOptions
                 {
                     AllowTrailingCommas = true,
-                    ReadCommentHandling = JsonCommentHandling.Skip
+                    ReadCommentHandling = JsonCommentHandling.Skip,
                 }
             );
             var formatted = JsonSerializer.Serialize(
@@ -513,8 +543,8 @@ public static class DialogHelper
             {
                 HighlightCurrentLine = true,
                 ShowColumnRulers = false,
-                AllowScrollBelowDocument = false
-            }
+                AllowScrollBelowDocument = false,
+            },
         };
         TextEditorConfigs.Configure(textEditor, TextEditorPreset.Prompt);
 
@@ -535,8 +565,8 @@ public static class DialogHelper
                     FontWeight = FontWeight.Medium,
                     Margin = new Thickness(0, 8),
                 },
-                textEditor
-            }
+                textEditor,
+            },
         };
 
         // Check model typos
@@ -557,7 +587,7 @@ public static class DialogHelper
                         {
                             Title = $"Did you mean: {result.Value}?",
                             IsClosable = false,
-                            IsOpen = true
+                            IsOpen = true,
                         }
                     );
                 }
@@ -597,15 +627,15 @@ public static class DialogHelper
                     Text = title,
                     TextWrapping = TextWrapping.WrapWithOverflow,
                 },
-                new TextBlock { Text = description, TextWrapping = TextWrapping.WrapWithOverflow, }
-            }
+                new TextBlock { Text = description, TextWrapping = TextWrapping.WrapWithOverflow },
+            },
         };
 
         return new TaskDialog
         {
             Title = title,
             Content = content,
-            XamlRoot = App.VisualRoot
+            XamlRoot = App.VisualRoot,
         };
     }
 }

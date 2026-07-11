@@ -190,6 +190,11 @@
                             </SplitButton.Flyout>
                         </SplitButton>
                     </ui:CommandBarElementContainer>
+                    <ui:CommandBarButton
+                        VerticalAlignment="Center"
+                        Command="{Binding OrganizeModelsCommand}"
+                        IconSource="MoveToFolder"
+                        Label="Organize" />
                     <ui:CommandBarToggleButton IsChecked="{Binding ShowModelsInSubfolders, Mode=TwoWay}" Label="Show Nested Models">
                         <ui:CommandBarToggleButton.IconSource>
                             <controls:FASymbolIconSource Symbol="fa-solid fa-folder-tree" />

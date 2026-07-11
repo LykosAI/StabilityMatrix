@@ -81,17 +81,17 @@
                         Content="Select a different default GPU"
                         FontSize="11" />
 
-                    <controls:BetterComboBox
+                    <ComboBox
                         HorizontalAlignment="Stretch"
                         IsVisible="{Binding SelectDifferentGpu}"
                         ItemsSource="{Binding GpuInfoCollection}"
                         SelectedItem="{Binding SelectedGpu}">
-                        <controls:BetterComboBox.ItemTemplate>
+                        <ComboBox.ItemTemplate>
                             <DataTemplate DataType="hardwareInfo:GpuInfo">
                                 <TextBlock Text="{Binding Name}" />
                             </DataTemplate>
-                        </controls:BetterComboBox.ItemTemplate>
-                    </controls:BetterComboBox>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
 
                     <TextBlock
                         Margin="8,4"

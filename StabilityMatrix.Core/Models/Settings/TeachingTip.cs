@@ -12,7 +12,6 @@ public record TeachingTip(string Value) : StringValue(Value)
     public static TeachingTip AccountsCredentialsStorageNotice => new("AccountsCredentialsStorageNotice");
     public static TeachingTip CheckpointCategoriesTip => new("CheckpointCategoriesTip");
     public static TeachingTip PackageExtensionsInstallNotice => new("PackageExtensionsInstallNotice");
-    public static TeachingTip DownloadsTip => new("DownloadsTip");
     public static TeachingTip WebUiButtonMovedTip => new("WebUiButtonMovedTip");
     public static TeachingTip InferencePromptHelpButtonTip => new("InferencePromptHelpButtonTip");
     public static TeachingTip LykosAccountMigrateTip => new("LykosAccountMigrateTip");
@@ -20,6 +19,7 @@ public record TeachingTip(string Value) : StringValue(Value)
     public static TeachingTip FolderMapTip => new("FolderMapTip");
     public static TeachingTip InferencePromptAmplifyTip => new("InferencePromptAmplifyTip");
     public static TeachingTip PromptAmplifyDisclaimer => new("PromptAmplifyDisclaimer");
+    public static TeachingTip ActivityCenterTip => new("ActivityCenterTip");
 
     /// <inheritdoc />
     public override string ToString()

@@ -44,6 +44,7 @@ using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.TagCompletion;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
 using StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
 using StabilityMatrix.Avalonia.ViewModels.Controls;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
@@ -64,6 +65,7 @@ using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
+using StabilityMatrix.Core.Services.ImageGeneration;
 using Symbol = FluentIcons.Common.Symbol;
 using SymbolIconSource = FluentIcons.Avalonia.Fluent.SymbolIconSource;
 
@@ -133,6 +135,10 @@ public partial class MainSettingsViewModel : PageViewModelBase
     // Integrations section
     [ObservableProperty]
     private bool isDiscordRichPresenceEnabled;
+
+    // Appearance section
+    [ObservableProperty]
+    private bool scrollBarsAlwaysVisible = true;
 
     // Console section
     [ObservableProperty]
@@ -256,6 +262,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
         RemoveSymlinksOnShutdown = settingsManager.Settings.RemoveFolderLinksOnShutdown;
         SelectedAnimationScale = settingsManager.Settings.AnimationScale;
         HolidayModeSetting = settingsManager.Settings.HolidayModeSetting;
+        ScrollBarsAlwaysVisible = settingsManager.Settings.ScrollBarsAlwaysVisible;
 
         settingsManager.RelayPropertyFor(this, vm => vm.SelectedTheme, settings => settings.Theme);
 
@@ -265,6 +272,17 @@ public partial class MainSettingsViewModel : PageViewModelBase
             settings => settings.IsDiscordRichPresenceEnabled,
             true
         );
+
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.ScrollBarsAlwaysVisible,
+            settings => settings.ScrollBarsAlwaysVisible,
+            true
+        );
+
+        // Push the initial value into the global DynamicResources that the
+        // ScrollBarStyles read from, so the loaded setting actually takes effect.
+        ApplyScrollBarSetting(ScrollBarsAlwaysVisible);
 
         settingsManager.RelayPropertyFor(
             this,
@@ -523,6 +541,28 @@ public partial class MainSettingsViewModel : PageViewModelBase
         trackedDownloadService.UpdateMaxConcurrentDownloads(value);
     }
 
+    partial void OnScrollBarsAlwaysVisibleChanged(bool value)
+    {
+        ApplyScrollBarSetting(value);
+    }
+
+    /// <summary>
+    /// Pushes the scrollbar-visibility setting into the global DynamicResources that
+    /// the ScrollBarStyles consume. Called both on initial settings load and whenever
+    /// the toggle changes, so changes take effect immediately without restart.
+    /// </summary>
+    private static void ApplyScrollBarSetting(bool alwaysVisible)
+    {
+        if (Application.Current is not { } app)
+            return;
+
+        // AllowAutoHide is the inverse of "always visible". MinWidth=14 gives the
+        // thumb a comfortable hit-target when permanent; 0 lets Avalonia's default
+        // thin/expanded transition work normally in legacy mode.
+        app.Resources["ScrollBarAllowAutoHide"] = !alwaysVisible;
+        app.Resources["ScrollBarMinWidthValue"] = alwaysVisible ? 14d : 0d;
+    }
+
     public async Task ResetCheckpointCache()
     {
         await notificationService.TryAsync(modelIndexService.RefreshIndex());
@@ -554,22 +594,32 @@ public partial class MainSettingsViewModel : PageViewModelBase
     {
         var viewModel = dialogFactory.Get<EnvVarsViewModel>();
 
-        // Load current settings
-        var current = settingsManager.Settings.UserEnvironmentVariables ?? new Dictionary<string, string>();
-        viewModel.EnvVars = new ObservableCollection<EnvVarKeyPair>(
-            current.Select(kvp => new EnvVarKeyPair(kvp.Key, kvp.Value))
-        );
+        // Load current settings — prefer new list format, fall back to legacy dict
+        var currentList = settingsManager.Settings.UserEnvironmentVariablesList;
+        if (currentList is { Count: > 0 })
+        {
+            viewModel.EnvVars = new ObservableCollection<EnvVarKeyPair>(currentList);
+        }
+        else
+        {
+            var current =
+                settingsManager.Settings.UserEnvironmentVariables ?? new Dictionary<string, string>();
+            viewModel.EnvVars = new ObservableCollection<EnvVarKeyPair>(
+                current.Select(kvp => new EnvVarKeyPair(kvp.Key, kvp.Value))
+            );
+        }
 
         var dialog = viewModel.GetDialog();
 
         if (await dialog.ShowAsync() == ContentDialogResult.Primary)
         {
-            // Save settings
-            var newEnvVars = viewModel
-                .EnvVars.Where(kvp => !string.IsNullOrWhiteSpace(kvp.Key))
-                .GroupBy(kvp => kvp.Key, StringComparer.Ordinal)
-                .ToDictionary(g => g.Key, g => g.First().Value, StringComparer.Ordinal);
-            settingsManager.Transaction(s => s.UserEnvironmentVariables = newEnvVars);
+            // Save in new list format, clear legacy dict
+            var newEnvVars = viewModel.EnvVars.Where(kvp => !string.IsNullOrWhiteSpace(kvp.Key)).ToList();
+            settingsManager.Transaction(s =>
+            {
+                s.UserEnvironmentVariablesList = newEnvVars;
+                s.UserEnvironmentVariables = null;
+            });
         }
     }
 
@@ -1046,6 +1096,21 @@ public partial class MainSettingsViewModel : PageViewModelBase
         notificationService.Show(new Notification("Content dialog closed", $"Result: {result}"));
     }
 
+    /// <summary>
+    /// Debug: previews an Image Lab / Nano Banana generation error through the real
+    /// BananaVision handlers. <paramref name="errorCode"/> is an <see cref="ImageGenerationErrorCode"/>
+    /// name, or any unparseable value (e.g. "Generic") to preview the generic failure path.
+    /// </summary>
+    [RelayCommand]
+    private Task DebugShowGeminiErrorDialog(string? errorCode)
+    {
+        var code = Enum.TryParse<ImageGenerationErrorCode>(errorCode, out var parsed)
+            ? parsed
+            : (ImageGenerationErrorCode?)null;
+
+        return dialogFactory.Get<BananaVisionPageViewModel>().DebugSimulateGenerationErrorAsync(code);
+    }
+
     [RelayCommand]
     private void DebugThrowException()
     {
@@ -1270,6 +1335,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
             new CommandItem(DebugRobocopyCommand),
             new CommandItem(DebugInstallUvCommand),
             new CommandItem(DebugRunUvCommand),
+            new CommandItem(DebugClassifySafetensorCommand),
         ];
 
     [RelayCommand]
@@ -1531,6 +1597,42 @@ public partial class MainSettingsViewModel : PageViewModelBase
     private void DebugNvidiaSmi()
     {
         HardwareHelper.IterGpuInfoNvidiaSmi();
+    }
+
+    [RelayCommand]
+    private async Task DebugClassifySafetensor()
+    {
+        var files = await App.StorageProvider.OpenFilePickerAsync(
+            new FilePickerOpenOptions
+            {
+                Title = "Select a .safetensors file",
+                FileTypeFilter = [new FilePickerFileType("Safetensors") { Patterns = ["*.safetensors"] }],
+            }
+        );
+
+        if (files.Count == 0)
+            return;
+
+        var filePath = files[0].TryGetLocalPath();
+        if (filePath is null)
+            return;
+
+        try
+        {
+            var kind = await SafetensorClassifier.ClassifyAsync(new FilePath(filePath));
+
+            var fileName = Path.GetFileName(filePath);
+            await DialogHelper
+                .CreateMarkdownDialog(
+                    $"**File:** `{fileName}`\n\n**Classification:** `{kind}`",
+                    "Safetensor Classification"
+                )
+                .ShowAsync();
+        }
+        catch (Exception e)
+        {
+            notificationService.Show("Classification failed", e.Message, NotificationType.Error);
+        }
     }
 
     #endregion

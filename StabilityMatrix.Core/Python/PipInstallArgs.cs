@@ -34,6 +34,9 @@ public partial record PipInstallArgs : ProcessArgsBuilder
     public PipInstallArgs WithTorchExtraIndex(string index) =>
         WithExtraIndex($"https://download.pytorch.org/whl/{index}");
 
+    public PipInstallArgs WithUvTorchExtraIndex(string index) =>
+        this.AddKeyedArgs("--index", ["--index", $"pytorch=https://download.pytorch.org/whl/{index}"]);
+
     public PipInstallArgs WithParsedFromRequirementsTxt(
         string requirements,
         [StringSyntax(StringSyntaxAttribute.Regex)] string? excludePattern = null
@@ -54,7 +57,15 @@ public partial record PipInstallArgs : ProcessArgsBuilder
             requirementsEntries = requirementsEntries.Where(s => !excludeRegex.IsMatch(s));
         }
 
-        return this.AddArgs(requirementsEntries.Select(Argument.Quoted).ToArray());
+        return this.AddArgs(requirementsEntries.Select(ToRequirementArgument).ToArray());
+    }
+
+    private static Argument ToRequirementArgument(string requirementEntry)
+    {
+        if (requirementEntry.StartsWith('-'))
+            return Argument.Quoted(requirementEntry);
+
+        return new Argument(requirementEntry);
     }
 
     /// <summary>
@@ -121,13 +132,12 @@ public partial record PipInstallArgs : ProcessArgsBuilder
         return this with
         {
             Arguments = Arguments
-                .Where(
-                    arg =>
-                        arg.HasKey
-                            ? (arg.Key != argumentKey)
-                            : (arg.Value != argumentKey && !arg.Value.Contains($"{argumentKey}=="))
+                .Where(arg =>
+                    arg.HasKey
+                        ? (arg.Key != argumentKey)
+                        : (arg.Value != argumentKey && !arg.Value.Contains($"{argumentKey}=="))
                 )
-                .ToImmutableList()
+                .ToImmutableList(),
         };
     }
 

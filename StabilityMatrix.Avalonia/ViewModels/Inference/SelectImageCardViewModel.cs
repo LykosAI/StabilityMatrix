@@ -32,7 +32,8 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 [RegisterTransient<SelectImageCardViewModel>]
 public partial class SelectImageCardViewModel(
     INotificationService notificationService,
-    IServiceManager<ViewModelBase> vmFactory
+    IServiceManager<ViewModelBase> vmFactory,
+    TabContext tabContext
 ) : LoadableViewModelBase, IDropTarget, IComfyStep, IInputImageProvider
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -42,17 +43,18 @@ public partial class SelectImageCardViewModel(
         {
             Patterns = new[] { "*.png", "*.jpg", "*.jpeg" },
             AppleUniformTypeIdentifiers = new[] { "public.jpeg", "public.png" },
-            MimeTypes = new[] { "image/jpeg", "image/png" }
+            MimeTypes = new[] { "image/jpeg", "image/png" },
         };
 
-    private readonly Lazy<MaskEditorViewModel> _lazyMaskEditorViewModel =
-        new(vmFactory.Get<MaskEditorViewModel>);
+    private MaskEditorViewModel? maskEditorViewModel;
 
     /// <summary>
     /// When true, enables a button to open a mask editor for the image.
     /// This is not saved or loaded from state.
     /// </summary>
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(MaskEditorViewModel))]
+    [NotifyPropertyChangedFor(nameof(MaskOverlayImage))]
     [property: JsonIgnore]
     [property: MemberNotNull(nameof(MaskEditorViewModel))]
     private bool isMaskEditorEnabled;
@@ -79,6 +81,10 @@ public partial class SelectImageCardViewModel(
     [ObservableProperty]
     private Size currentBitmapSize = Size.Empty;
 
+    [ObservableProperty]
+    [property: JsonIgnore]
+    private bool syncBitmapSizeToTabContext;
+
     /// <summary>
     /// True if the image file is set but the local file does not exist.
     /// </summary>
@@ -94,10 +100,54 @@ public partial class SelectImageCardViewModel(
 
     [JsonInclude]
     public MaskEditorViewModel? MaskEditorViewModel =>
-        IsMaskEditorEnabled ? _lazyMaskEditorViewModel.Value : null;
+        IsMaskEditorEnabled ? maskEditorViewModel ??= CreateMaskEditorViewModel() : null;
+
+    [JsonIgnore]
+    public global::Avalonia.Media.IImage? MaskOverlayImage =>
+        MaskEditorViewModel?.CachedOrNewMaskRenderImage?.Bitmap;
 
     [JsonIgnore]
     public ImageSource? LastMaskImage { get; private set; }
+
+    private MaskEditorViewModel CreateMaskEditorViewModel()
+    {
+        var viewModel = vmFactory.Get<MaskEditorViewModel>();
+        viewModel.PropertyChanged += (_, args) =>
+        {
+            if (args.PropertyName == nameof(MaskEditorViewModel.CachedOrNewMaskRenderImage))
+            {
+                OnPropertyChanged(nameof(MaskOverlayImage));
+            }
+        };
+        return viewModel;
+    }
+
+    partial void OnCurrentBitmapSizeChanged(Size value)
+    {
+        PublishCurrentBitmapSizeToTabContext();
+
+        if (maskEditorViewModel is not null && !value.IsEmpty)
+        {
+            maskEditorViewModel.PaintCanvasViewModel.CanvasSize = value;
+            maskEditorViewModel.InvalidateCachedMaskRenderImage();
+        }
+    }
+
+    partial void OnSyncBitmapSizeToTabContextChanged(bool value)
+    {
+        PublishCurrentBitmapSizeToTabContext();
+    }
+
+    private void PublishCurrentBitmapSizeToTabContext()
+    {
+        if (!SyncBitmapSizeToTabContext)
+        {
+            return;
+        }
+
+        tabContext.SourceImageWidth = CurrentBitmapSize.Width > 0 ? CurrentBitmapSize.Width : 0;
+        tabContext.SourceImageHeight = CurrentBitmapSize.Height > 0 ? CurrentBitmapSize.Height : 0;
+    }
 
     /// <inheritdoc />
     public void ApplyStep(ModuleApplyStepEventArgs e)
@@ -170,6 +220,11 @@ public partial class SelectImageCardViewModel(
                     );
                 });
         }
+
+        if (value is null)
+        {
+            CurrentBitmapSize = Size.Empty;
+        }
     }
 
     [RelayCommand]
@@ -178,7 +233,12 @@ public partial class SelectImageCardViewModel(
         var files = await App.StorageProvider.OpenFilePickerAsync(
             new FilePickerOpenOptions
             {
-                FileTypeFilter = [FilePickerFileTypes.ImagePng, FilePickerFileTypes.ImageJpg, SupportedImages]
+                FileTypeFilter =
+                [
+                    FilePickerFileTypes.ImagePng,
+                    FilePickerFileTypes.ImageJpg,
+                    SupportedImages,
+                ],
             }
         );
 
@@ -215,6 +275,7 @@ public partial class SelectImageCardViewModel(
         if (await MaskEditorViewModel.GetDialog().ShowAsync() == ContentDialogResult.Primary)
         {
             MaskEditorViewModel.InvalidateCachedMaskRenderImage();
+            OnPropertyChanged(nameof(MaskOverlayImage));
         }
         else
         {
@@ -289,6 +350,7 @@ public partial class SelectImageCardViewModel(
     {
         var current = ImageSource;
 
+        CurrentBitmapSize = Size.Empty;
         ImageSource = image;
 
         // current?.Dispose();

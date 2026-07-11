@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive.Linq;
+﻿using System.Reactive.Linq;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
-using System.Threading;
-using System.Threading.Tasks;
+using DesktopNotifications;
 using DynamicData.Binding;
 using Injectio.Attributes;
 using NLog;
@@ -19,7 +15,9 @@ using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.Comfy;
+using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 using StabilityMatrix.Core.Models.Inference;
+using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Services;
 using InferenceTextToImageView = StabilityMatrix.Avalonia.Views.Inference.InferenceTextToImageView;
 
@@ -80,6 +78,7 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
         SeedCardViewModel.GenerateNewSeed();
 
         ModelCardViewModel = vmFactory.Get<ModelCardViewModel>();
+        ModelCardViewModel.RecommendedDefaultsRequested += ApplyRecommendedDefaults;
 
         // When the model changes in the ModelCardViewModel, we'll have access to it in the TabContext
 
@@ -105,6 +104,7 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
                 typeof(HiresFixModule),
                 typeof(SaveImageModule),
                 typeof(UpscalerModule),
+                typeof(FaceDetailerModule),
             };
             modulesCard.DefaultModules = new[] { typeof(HiresFixModule), typeof(UpscalerModule) };
             modulesCard.InitializeDefaults();
@@ -169,12 +169,22 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
         // Load models
         ModelCardViewModel.ApplyStep(applyArgs);
 
-        var isUnetLoader = ModelCardViewModel.SelectedModelLoader is ModelLoader.Unet;
         var useSd3Latent =
-            SamplerCardViewModel.ModulesCardViewModel.IsModuleEnabled<FluxGuidanceModule>() || isUnetLoader;
+            SamplerCardViewModel.ModulesCardViewModel.IsModuleEnabled<FluxGuidanceModule>()
+            || (IsUnetLoader && UsesSd3Latent);
         var usePlasmaNoise = SamplerCardViewModel.ModulesCardViewModel.IsModuleEnabled<PlasmaNoiseModule>();
 
-        if (useSd3Latent)
+        if (IsFlux2Unet)
+        {
+            builder.SetupEmptyLatentSource(
+                SamplerCardViewModel.Width,
+                SamplerCardViewModel.Height,
+                BatchSizeCardViewModel.BatchSize,
+                BatchSizeCardViewModel.IsBatchIndexEnabled ? BatchSizeCardViewModel.BatchIndex : null,
+                latentType: LatentType.Flux2
+            );
+        }
+        else if (useSd3Latent)
         {
             builder.SetupEmptyLatentSource(
                 SamplerCardViewModel.Width,
@@ -219,8 +229,98 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
         // Prompts and loras
         PromptCardViewModel.ApplyStep(applyArgs);
 
+        ApplyModelSamplingForCurrentWorkflow(applyArgs);
+
         // Setup Sampler and Refiner if enabled
-        if (isUnetLoader)
+        ApplySamplerForCurrentWorkflow(applyArgs);
+
+        // Hires fix if enabled
+        foreach (var module in ModulesCardViewModel.Cards.OfType<ModuleBase>())
+        {
+            module.ApplyStep(applyArgs);
+        }
+
+        applyArgs.InvokeAllPreOutputActions();
+
+        builder.SetupOutputImage();
+    }
+
+    protected bool IsUnetLoader => ModelCardViewModel.SelectedModelLoader is ModelLoader.Unet;
+
+    protected InferenceWorkflowProfile ResolvedWorkflowProfile => ModelCardViewModel.ResolvedWorkflowProfile;
+
+    protected bool IsFlux2Unet =>
+        IsUnetLoader
+        && (
+            ResolvedWorkflowProfile is InferenceWorkflowProfile.Flux2
+            || (
+                ResolvedWorkflowProfile is InferenceWorkflowProfile.Custom
+                && ModelCardViewModel.SelectedClipType is "flux2"
+            )
+        );
+
+    protected bool IsZImageUnet =>
+        IsUnetLoader
+        && (
+            ResolvedWorkflowProfile
+                is InferenceWorkflowProfile.ZImageBase
+                    or InferenceWorkflowProfile.ZImageTurbo
+            || (
+                ResolvedWorkflowProfile is InferenceWorkflowProfile.Custom
+                && ModelCardViewModel.SelectedClipType is "lumina2"
+            )
+        );
+
+    protected bool UsesSd3Latent =>
+        ResolvedWorkflowProfile
+            is InferenceWorkflowProfile.Flux
+                or InferenceWorkflowProfile.ZImageBase
+                or InferenceWorkflowProfile.ZImageTurbo
+                or InferenceWorkflowProfile.HiDream
+        || (
+            ResolvedWorkflowProfile is InferenceWorkflowProfile.Custom
+            && ModelCardViewModel.SelectedClipType is not "stable_diffusion" and not "flux2"
+        );
+
+    protected bool UsesFluxGuidanceSampler =>
+        ResolvedWorkflowProfile is InferenceWorkflowProfile.Flux or InferenceWorkflowProfile.HiDream
+        || (
+            ResolvedWorkflowProfile is InferenceWorkflowProfile.Custom
+            && IsUnetLoader
+            && ModelCardViewModel.SelectedClipType is not "stable_diffusion" and not "lumina2" and not "flux2"
+        );
+
+    protected void ApplyModelSamplingForCurrentWorkflow(ModuleApplyStepEventArgs applyArgs)
+    {
+        if (!IsZImageUnet)
+            return;
+
+        var builder = applyArgs.Builder;
+        var modelSampling = builder.Nodes.AddTypedNode(
+            new ComfyNodeBuilder.ModelSamplingAuraFlow
+            {
+                Name = builder.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.ModelSamplingAuraFlow)),
+                Model = builder.Connections.Base.Model.Unwrap(),
+                Shift = ModelCardViewModel.Shift,
+            }
+        );
+
+        builder.Connections.Base.Model = modelSampling.Output;
+    }
+
+    protected void ApplySamplerForCurrentWorkflow(
+        ModuleApplyStepEventArgs applyArgs,
+        bool includeGgufAsFluxGuidance = false
+    )
+    {
+        if (IsFlux2Unet)
+        {
+            SamplerCardViewModel.ApplyStepsInitialCustomSampler(applyArgs, false, useFlux2Scheduler: true);
+        }
+        else if (
+            (includeGgufAsFluxGuidance && ModelCardViewModel.IsGguf)
+            || (IsUnetLoader && UsesFluxGuidanceSampler)
+        )
         {
             SamplerCardViewModel.ApplyStepsInitialCustomSampler(applyArgs, true);
         }
@@ -232,16 +332,49 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
         {
             SamplerCardViewModel.ApplyStep(applyArgs);
         }
+    }
 
-        // Hires fix if enabled
-        foreach (var module in ModulesCardViewModel.Cards.OfType<ModuleBase>())
+    private void ApplyRecommendedDefaults(InferenceWorkflowProfile profile)
+    {
+        switch (profile)
         {
-            module.ApplyStep(applyArgs);
+            case InferenceWorkflowProfile.DefaultCheckpoint:
+                SamplerCardViewModel.SelectedSampler = ComfySampler.EulerAncestral;
+                SamplerCardViewModel.SelectedScheduler = ComfyScheduler.Normal;
+                SamplerCardViewModel.Steps = 30;
+                SamplerCardViewModel.CfgScale = 5.0d;
+                break;
+            case InferenceWorkflowProfile.Flux:
+                SamplerCardViewModel.SelectedSampler = ComfySampler.Euler;
+                SamplerCardViewModel.SelectedScheduler = ComfyScheduler.Simple;
+                SamplerCardViewModel.Steps = 20;
+                SamplerCardViewModel.CfgScale = 3.5d;
+                break;
+            case InferenceWorkflowProfile.Flux2:
+                SamplerCardViewModel.SelectedSampler = ComfySampler.Euler;
+                SamplerCardViewModel.SelectedScheduler = ComfyScheduler.Normal;
+                SamplerCardViewModel.Steps = 20;
+                SamplerCardViewModel.CfgScale = 5.0d;
+                break;
+            case InferenceWorkflowProfile.ZImageTurbo:
+                SamplerCardViewModel.SelectedSampler = ComfySampler.ResMultistep;
+                SamplerCardViewModel.SelectedScheduler = ComfyScheduler.Simple;
+                SamplerCardViewModel.Steps = 8;
+                SamplerCardViewModel.CfgScale = 1.0d;
+                break;
+            case InferenceWorkflowProfile.ZImageBase:
+                SamplerCardViewModel.SelectedSampler = ComfySampler.ResMultistep;
+                SamplerCardViewModel.SelectedScheduler = ComfyScheduler.Simple;
+                SamplerCardViewModel.Steps = 30;
+                SamplerCardViewModel.CfgScale = 4.0d;
+                break;
+            case InferenceWorkflowProfile.Anima:
+                SamplerCardViewModel.SelectedSampler = ComfySampler.ErSde;
+                SamplerCardViewModel.SelectedScheduler = ComfyScheduler.Simple;
+                SamplerCardViewModel.Steps = 30;
+                SamplerCardViewModel.CfgScale = 4.0d;
+                break;
         }
-
-        applyArgs.InvokeAllPreOutputActions();
-
-        builder.SetupOutputImage();
     }
 
     /// <inheritdoc />
@@ -336,6 +469,24 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
         foreach (var args in batchArgs)
         {
             await RunGeneration(args, cancellationToken);
+        }
+
+        // Only show batch notification when there's more than one item
+        // (single items already get a "Prompt Completed" notification)
+        if (batches > 1)
+        {
+            await notificationService.ShowAsync(
+                NotificationKey.Inference_BatchCompleted,
+                new Notification
+                {
+                    Title = "Batch Completed",
+                    Body =
+                        $"Batch of {batches} items [{Guid.NewGuid().ToString()[..7].ToLower()}] completed successfully",
+                    BodyImagePath = ImageGalleryCardViewModel
+                        .ImageSources.LastOrDefault()
+                        ?.LocalFile?.FullPath,
+                }
+            );
         }
     }
 

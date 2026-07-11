@@ -14,6 +14,18 @@ public interface IModelIndexService
     IReadOnlySet<string> ModelIndexBlake3Hashes { get; }
 
     /// <summary>
+    /// Set of all <see cref="ModelIndex"/> files SHA256 hashes (case-insensitive).
+    /// Synchronized with internal changes to <see cref="ModelIndex"/>.
+    /// </summary>
+    IReadOnlySet<string> ModelIndexSha256Hashes { get; }
+
+    /// <summary>
+    /// Set of CivArchive relative URLs for all locally installed CivArchive-sourced models.
+    /// Synchronized with internal changes to <see cref="ModelIndex"/>.
+    /// </summary>
+    IReadOnlySet<string> ModelIndexCivArchiveUrls { get; }
+
+    /// <summary>
     /// Refreshes the local model file index.
     /// </summary>
     Task RefreshIndex();

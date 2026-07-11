@@ -3,6 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Reflection;
+using System.Runtime.Versioning;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Apizr;
@@ -12,6 +13,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Core.Plugins;
+using Avalonia.Input;
 using Avalonia.Input.Platform;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
@@ -51,6 +53,7 @@ using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Progress;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Api;
+using StabilityMatrix.Core.Api.Handlers;
 using StabilityMatrix.Core.Api.LykosAuthApi;
 using StabilityMatrix.Core.Api.PromptGenApi;
 using StabilityMatrix.Core.Attributes;
@@ -65,6 +68,7 @@ using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
+using StabilityMatrix.Core.Services.ImageGeneration;
 using StabilityMatrix.Core.Updater;
 using ApiOptions = StabilityMatrix.Core.Models.Configs.ApiOptions;
 using Application = Avalonia.Application;
@@ -97,6 +101,18 @@ public sealed class App : Application
     private bool isAsyncDisposeComplete;
 
     private bool isOnExitComplete;
+
+    /// <summary>
+    /// True once the user has confirmed exiting while packages are running, so
+    /// <see cref="OnShutdownRequested"/> doesn't prompt again on the follow-up shutdown.
+    /// </summary>
+    private bool isExitConfirmed;
+
+    /// <summary>
+    /// True while the exit confirmation dialog is open, to avoid stacking dialogs if more
+    /// shutdown requests arrive (e.g. ⌘Q pressed repeatedly).
+    /// </summary>
+    private bool isConfirmingExit;
 
     private ServiceProvider? serviceProvider;
 
@@ -138,6 +154,13 @@ public sealed class App : Application
 
         SetFontFamily(GetPlatformDefaultFontFamily());
 
+        // macOS app menu must be set here (before AppBuilder's AfterSetup creates the menu
+        // exporter) so it becomes the app menu and Avalonia appends the standard Services/Hide/Quit
+        if (Compat.IsMacOS && !Design.IsDesignMode)
+        {
+            SetupMacOsApplicationMenu();
+        }
+
         // Set design theme
         if (Design.IsDesignMode)
         {
@@ -148,6 +171,11 @@ public sealed class App : Application
     public override void OnFrameworkInitializationCompleted()
     {
         base.OnFrameworkInitializationCompleted();
+
+        if (!Debugger.IsAttached || Program.Args.DebugExceptionDialog)
+        {
+            Dispatcher.UIThread.UnhandledException += Dispatcher_UnhandledException;
+        }
 
         if (Design.IsDesignMode)
         {
@@ -211,6 +239,47 @@ public sealed class App : Application
                 ShowMainWindow();
             }
         }
+    }
+
+    /// <summary>
+    /// Sets the native macOS application menu. Avalonia's native backend reads the app menu (the
+    /// bold app-name menu) from <see cref="NativeMenu"/> attached to the <see cref="Application"/>
+    /// during AppBuilder's AfterSetup phase, then appends the standard Services / Hide / Quit (⌘Q)
+    /// items. We add About and Settings… (⌘,) above those. Called from <see cref="Initialize"/>,
+    /// which runs just before that phase, so it must not be moved any later or Avalonia falls back
+    /// to its default "About Avalonia" menu.
+    /// </summary>
+    [SupportedOSPlatform("macos")]
+    private void SetupMacOsApplicationMenu()
+    {
+        var aboutItem = new NativeMenuItem("About Stability Matrix");
+        aboutItem.Click += (_, _) => ShowAboutDialog();
+
+        var settingsItem = new NativeMenuItem("Settings…")
+        {
+            Gesture = new KeyGesture(Key.OemComma, KeyModifiers.Meta),
+        };
+        settingsItem.Click += (_, _) =>
+            Services
+                .GetRequiredService<INavigationService<MainWindowViewModel>>()
+                .NavigateTo<SettingsViewModel>();
+
+        var appMenu = new NativeMenu { Items = { aboutItem, new NativeMenuItemSeparator(), settingsItem } };
+
+        NativeMenu.SetMenu(this, appMenu);
+    }
+
+    private static void ShowAboutDialog()
+    {
+        var dialog = DialogHelper.CreateTaskDialog(
+            "Stability Matrix",
+            $"Version {Compat.AppVersion.ToDisplayString()}"
+        );
+        dialog.ShowProgressBar = false;
+        dialog.FooterVisibility = TaskDialogFooterVisibility.Never;
+        dialog.Buttons = new List<TaskDialogButton> { TaskDialogButton.CloseButton };
+
+        dialog.ShowAsync(true).SafeFireAndForget();
     }
 
     /// <summary>
@@ -376,17 +445,20 @@ public sealed class App : Application
             provider.GetRequiredService<IModelIndexService>(),
             provider.GetRequiredService<Lazy<IModelDownloadLinkHandler>>(),
             provider.GetRequiredService<INotificationService>(),
+            provider.GetRequiredService<IAppNotificationService>(),
             provider.GetRequiredService<IAnalyticsHelper>(),
             provider.GetRequiredService<IUpdateHelper>(),
             provider.GetRequiredService<ISecretsManager>(),
             provider.GetRequiredService<INavigationService<MainWindowViewModel>>(),
-            provider.GetRequiredService<INavigationService<SettingsViewModel>>()
+            provider.GetRequiredService<INavigationService<SettingsViewModel>>(),
+            provider.GetRequiredService<IDistributedSubscriber<string, Uri>>()
         )
         {
             Pages =
             {
                 provider.GetRequiredService<PackageManagerViewModel>(),
                 provider.GetRequiredService<InferenceViewModel>(),
+                provider.GetRequiredService<BananaVisionPageViewModel>(),
                 provider.GetRequiredService<CheckpointsPageViewModel>(),
                 provider.GetRequiredService<CheckpointBrowserViewModel>(),
                 provider.GetRequiredService<OutputsPageViewModel>(),
@@ -451,6 +523,14 @@ public sealed class App : Application
         // Named pipe interprocess communication on Windows and Linux for uri handling
         if (!disableMessagePipeInterprocess && (Compat.IsWindows || Compat.IsLinux))
         {
+            // On Linux, named pipes use Unix domain sockets which leave stale socket files
+            // if the app crashes or exits without cleanup. Delete the stale file if no other
+            // instance is running, so the new instance can bind successfully.
+            if (Compat.IsLinux)
+            {
+                CleanupStaleUnixSocket("StabilityMatrix");
+            }
+
             services.AddMessagePipe().AddNamedPipeInterprocess("StabilityMatrix");
         }
         else
@@ -493,7 +573,20 @@ public sealed class App : Application
         {
             services.AddSingleton<ILiteDbContext, LiteDbContext>();
             services.AddSingleton<IDisposable>(p => p.GetRequiredService<ILiteDbContext>());
+
+            // BananaVision has its own database to preserve conversations when main DB is cleared
+            services.AddSingleton<IBananaVisionDbContext, BananaVisionDbContext>();
+            services.AddSingleton<IDisposable>(p => p.GetRequiredService<IBananaVisionDbContext>());
         }
+
+        // Image generation services
+        services.AddSingleton<IImageGenerationProvider, GeminiImageGenerationProvider>();
+        services.AddSingleton<IImageGenerationProvider, Gemini31FlashImageGenerationProvider>();
+        services.AddSingleton<IImageGenerationProvider, Gemini3ProImageGenerationProvider>();
+        services.AddSingleton<IImageGenerationProvider, FluxKontextProvider>();
+        services.AddSingleton<IImageGenerationProvider, QwenImageEditProvider>();
+        services.AddSingleton<IImageGenerationProvider, Flux2KleinProvider>();
+        services.AddSingleton<IImageGenerationChatService, ImageGenerationChatService>();
 
         services.AddTransient<IGitHubClient, GitHubClient>(_ =>
         {
@@ -718,7 +811,7 @@ public sealed class App : Application
                 }
             )
             .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false })
-            .AddPolicyHandler(retryPolicy)
+            .AddPolicyHandler(retryPolicyLonger)
             .AddHttpMessageHandler(serviceProvider => new TokenAuthHeaderHandler(
                 serviceProvider.GetRequiredService<LykosAuthTokenProvider>()
             ));
@@ -753,6 +846,19 @@ public sealed class App : Application
                 c.Timeout = TimeSpan.FromHours(1); // Or a more appropriate timeout like 60 seconds, consistent with retry policy
             })
             .AddPolicyHandler(retryPolicy); // Assuming retryPolicy is suitable
+
+        services
+            .AddRefitClient<IGeminiApi>(defaultRefitSettings)
+            .ConfigureHttpClient(c =>
+            {
+                c.BaseAddress = new Uri("https://generativelanguage.googleapis.com");
+                c.Timeout = TimeSpan.FromMinutes(5); // Higher timeout for image generation
+            })
+            .AddHttpMessageHandler<GeminiApiKeyHandler>()
+            .AddPolicyHandler(retryPolicyLonger);
+
+        // Register GeminiApiKeyHandler
+        services.AddTransient<GeminiApiKeyHandler>();
 
         // Apizr clients
         services.AddApizrManagerFor<IOpenModelDbApi, OpenModelDbManager>(options =>
@@ -855,6 +961,26 @@ public sealed class App : Application
         }
     }
 
+    private static TaskDialog CreateExitConfirmDialog()
+    {
+        var dialog = DialogHelper.CreateTaskDialog(
+            Languages.Resources.Label_ConfirmExit,
+            Languages.Resources.Label_ConfirmExitDetail
+        );
+
+        dialog.ShowProgressBar = false;
+        dialog.FooterVisibility = TaskDialogFooterVisibility.Never;
+
+        dialog.Buttons = new List<TaskDialogButton>
+        {
+            new("Exit", TaskDialogStandardResult.Yes),
+            TaskDialogButton.CancelButton,
+        };
+        dialog.Buttons[0].IsDefault = true;
+
+        return dialog;
+    }
+
     private void OnShutdownRequested(object? sender, ShutdownRequestedEventArgs e)
     {
         Logger.Trace("Start OnShutdownRequested");
@@ -862,9 +988,54 @@ public sealed class App : Application
         if (e.Cancel)
             return;
 
-        // Skip if Async Dispose already started, shutdown will be handled by it
+        // Confirm exit while packages are running. This covers every quit path — the window
+        // close button, ⌘Q, the app menu Quit, and dock Quit — since they all end up here.
+        if (!isExitConfirmed && !isAsyncDisposeStarted && serviceProvider is not null)
+        {
+            var runningPackageService = serviceProvider.GetRequiredService<RunningPackageService>();
+            if (runningPackageService.RunningPackages.Count > 0)
+            {
+                e.Cancel = true;
+
+                // Avoid stacking dialogs if another shutdown request arrives while this one is open
+                if (isConfirmingExit)
+                    return;
+
+                isConfirmingExit = true;
+                Dispatcher
+                    .UIThread.InvokeAsync(async () =>
+                    {
+                        try
+                        {
+                            var dialog = CreateExitConfirmDialog();
+                            if (
+                                (TaskDialogStandardResult)await dialog.ShowAsync(true)
+                                == TaskDialogStandardResult.Yes
+                            )
+                            {
+                                isExitConfirmed = true;
+                                DesktopLifetime?.MainWindow?.Hide();
+                                Shutdown();
+                            }
+                        }
+                        finally
+                        {
+                            isConfirmingExit = false;
+                        }
+                    })
+                    .SafeFireAndForget();
+                return;
+            }
+        }
+
+        // If an async dispose is already running, cancel until it completes so we don't
+        // Environment.Exit before settings/database flushes finish
         if (isAsyncDisposeStarted)
+        {
+            if (!isAsyncDisposeComplete)
+                e.Cancel = true;
             return;
+        }
 
         // Cancel shutdown for now to dispose
         e.Cancel = true;
@@ -973,6 +1144,47 @@ public sealed class App : Application
         }
     }
 
+    /// <summary>
+    /// On Linux, .NET named pipes use Unix domain sockets. If the app exits without cleanup,
+    /// the socket file remains and prevents the next instance from binding.
+    /// This deletes the stale socket file if no other instance holds it.
+    /// </summary>
+    private static void CleanupStaleUnixSocket(string pipeName)
+    {
+        try
+        {
+            var tempPath = Path.GetTempPath();
+            var socketPath = Path.Combine(tempPath, $"CoreFxPipe_{pipeName}");
+
+            if (!File.Exists(socketPath))
+                return;
+
+            // Try connecting to see if another instance is actually listening
+            using var socket = new System.Net.Sockets.Socket(
+                System.Net.Sockets.AddressFamily.Unix,
+                System.Net.Sockets.SocketType.Stream,
+                System.Net.Sockets.ProtocolType.Unspecified
+            );
+
+            try
+            {
+                socket.Connect(new System.Net.Sockets.UnixDomainSocketEndPoint(socketPath));
+                // Connected successfully - another instance is running, don't delete
+            }
+            catch (System.Net.Sockets.SocketException ex)
+                when (ex.SocketErrorCode == System.Net.Sockets.SocketError.ConnectionRefused)
+            {
+                // A refused connection means the socket file exists but nothing is listening anymore.
+                File.Delete(socketPath);
+                Logger.Info("Deleted stale Unix domain socket: {SocketPath}", socketPath);
+            }
+        }
+        catch (Exception e)
+        {
+            Logger.Warn(e, "Failed to clean up stale Unix domain socket");
+        }
+    }
+
     private static void OnServiceProviderDisposing(ServiceProvider serviceProvider)
     {
         // Force materialize SharedFolders so its DisposeAsync is called
@@ -986,6 +1198,14 @@ public sealed class App : Application
         disposables.RemoveAll(d => d is NamedPipeWorker);
 
         Logger.Trace("Disposing {Count} Disposables", disposables.Count);
+    }
+
+    private static void Dispatcher_UnhandledException(object? sender, DispatcherUnhandledExceptionEventArgs e)
+    {
+        if (Program.ShowExceptionDialog(e.Exception, true))
+        {
+            e.Handled = true;
+        }
     }
 
     private static void TaskScheduler_UnobservedTaskException(

@@ -348,7 +348,7 @@
             </sg:SpacedGrid>
 
             <!--  Theme  -->
-            <Grid RowDefinitions="Auto,*,*,*,*,*">
+            <Grid RowDefinitions="Auto,*,*,*,*,*,*">
                 <TextBlock
                     Margin="0,0,0,8"
                     FontWeight="Medium"
@@ -422,8 +422,25 @@
                     </ui:SettingsExpander.Footer>
                 </ui:SettingsExpander>
 
+                <!--  Scrollbar appearance toggle  -->
                 <ui:SettingsExpander
                     Grid.Row="5"
+                    Margin="8,0,8,4"
+                    Description="{x:Static lang:Resources.Label_AlwaysShowScrollbars_Details}"
+                    Header="{x:Static lang:Resources.Label_AlwaysShowScrollbars}">
+                    <ui:SettingsExpander.IconSource>
+                        <fluentIcons:SymbolIconSource
+                            FontSize="10"
+                            IconVariant="Filled"
+                            Symbol="LineHorizontal3" />
+                    </ui:SettingsExpander.IconSource>
+                    <ui:SettingsExpander.Footer>
+                        <ToggleSwitch IsChecked="{Binding ScrollBarsAlwaysVisible}" />
+                    </ui:SettingsExpander.Footer>
+                </ui:SettingsExpander>
+
+                <ui:SettingsExpander
+                    Grid.Row="6"
                     Margin="8,0,8,4"
                     ActionIconSource="ChevronRight"
                     Command="{Binding NavigateToSubPageCommand}"
@@ -917,6 +934,42 @@
                                 Margin="0,8"
                                 Command="{Binding DebugImageMetadataCommand}"
                                 Content="Choose image" />
+                        </ui:SettingsExpanderItem.Footer>
+                    </ui:SettingsExpanderItem>
+
+                    <ui:SettingsExpanderItem
+                        Margin="4,0,4,4"
+                        Content="Gemini error dialogs"
+                        Description="Preview Image Lab / Nano Banana error dialogs, banners, and messages without a real API failure"
+                        IconSource="Flag">
+                        <ui:SettingsExpanderItem.Footer>
+                            <WrapPanel HorizontalAlignment="Right">
+                                <Button
+                                    Margin="4"
+                                    Command="{Binding DebugShowGeminiErrorDialogCommand}"
+                                    CommandParameter="GeminiApiKeyNotConfigured"
+                                    Content="Key Not Configured" />
+                                <Button
+                                    Margin="4"
+                                    Command="{Binding DebugShowGeminiErrorDialogCommand}"
+                                    CommandParameter="GeminiInvalidApiKey"
+                                    Content="Invalid Key" />
+                                <Button
+                                    Margin="4"
+                                    Command="{Binding DebugShowGeminiErrorDialogCommand}"
+                                    CommandParameter="GeminiQuotaExceeded"
+                                    Content="Quota Exceeded" />
+                                <Button
+                                    Margin="4"
+                                    Command="{Binding DebugShowGeminiErrorDialogCommand}"
+                                    CommandParameter="GeminiAccessForbidden"
+                                    Content="Access Forbidden" />
+                                <Button
+                                    Margin="4"
+                                    Command="{Binding DebugShowGeminiErrorDialogCommand}"
+                                    CommandParameter="Generic"
+                                    Content="Generic Failure" />
+                            </WrapPanel>
                         </ui:SettingsExpanderItem.Footer>
                     </ui:SettingsExpanderItem>
 

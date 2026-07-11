@@ -23,7 +23,15 @@ public record NotificationKey(string Value) : StringValue(Value), IParsable<Noti
         {
             DefaultOption = Compat.IsLinux ? NotificationOption.AppToast : NotificationOption.NativePush,
             Level = NotificationLevel.Success,
-            DisplayName = "Inference Prompt Completed"
+            DisplayName = "Inference Prompt Completed",
+        };
+
+    public static NotificationKey Inference_BatchCompleted =>
+        new("Inference_BatchCompleted")
+        {
+            DefaultOption = Compat.IsLinux ? NotificationOption.AppToast : NotificationOption.NativePush,
+            Level = NotificationLevel.Success,
+            DisplayName = "Inference Batch Completed",
         };
 
     public static NotificationKey Download_Completed =>
@@ -31,7 +39,7 @@ public record NotificationKey(string Value) : StringValue(Value), IParsable<Noti
         {
             DefaultOption = Compat.IsLinux ? NotificationOption.AppToast : NotificationOption.NativePush,
             Level = NotificationLevel.Success,
-            DisplayName = "Download Completed"
+            DisplayName = "Download Completed",
         };
 
     public static NotificationKey Download_Failed =>
@@ -39,7 +47,7 @@ public record NotificationKey(string Value) : StringValue(Value), IParsable<Noti
         {
             DefaultOption = Compat.IsLinux ? NotificationOption.AppToast : NotificationOption.NativePush,
             Level = NotificationLevel.Error,
-            DisplayName = "Download Failed"
+            DisplayName = "Download Failed",
         };
 
     public static NotificationKey Download_Canceled =>
@@ -47,7 +55,7 @@ public record NotificationKey(string Value) : StringValue(Value), IParsable<Noti
         {
             DefaultOption = Compat.IsLinux ? NotificationOption.AppToast : NotificationOption.NativePush,
             Level = NotificationLevel.Warning,
-            DisplayName = "Download Canceled"
+            DisplayName = "Download Canceled",
         };
 
     public static NotificationKey Package_Install_Completed =>
@@ -55,7 +63,7 @@ public record NotificationKey(string Value) : StringValue(Value), IParsable<Noti
         {
             DefaultOption = Compat.IsLinux ? NotificationOption.AppToast : NotificationOption.NativePush,
             Level = NotificationLevel.Success,
-            DisplayName = "Package Install Completed"
+            DisplayName = "Package Install Completed",
         };
 
     public static NotificationKey Package_Install_Failed =>
@@ -63,7 +71,7 @@ public record NotificationKey(string Value) : StringValue(Value), IParsable<Noti
         {
             DefaultOption = Compat.IsLinux ? NotificationOption.AppToast : NotificationOption.NativePush,
             Level = NotificationLevel.Error,
-            DisplayName = "Package Install Failed"
+            DisplayName = "Package Install Failed",
         };
 
     public static Dictionary<string, NotificationKey> All { get; } = GetValues<NotificationKey>();

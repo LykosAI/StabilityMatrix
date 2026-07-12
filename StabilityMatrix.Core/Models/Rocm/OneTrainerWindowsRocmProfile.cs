@@ -1,7 +1,7 @@
 using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Python;
 
-namespace StabilityMatrixc.Core.Models.Rocm;
+namespace StabilityMatrix.Core.Models.Rocm;
 
 /// <summary>
 /// Shared Windows ROCm profile for OneTrainer.
@@ -9,7 +9,7 @@ namespace StabilityMatrixc.Core.Models.Rocm;
 /// </summary>
 public class OneTrainerWindowsRocmProfile : RocmPackageProfile
 {
-    public static RocmPackageprofile Default { get; } = new OnetrainerWindowsRocmProfile();
+    public static RocmPackageProfile Default { get; } = new OneTrainerWindowsRocmProfile();
 
     // Restores flop counter functionality requiring triton module
     private const string TritonWindowsPackage = "triton-windows";

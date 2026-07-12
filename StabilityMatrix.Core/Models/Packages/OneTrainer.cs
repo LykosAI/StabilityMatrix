@@ -55,7 +55,7 @@ public class OneTrainer(
     public override bool ShouldIgnoreReleases => true;
     public override IEnumerable<PackagePrerequisite> Prerequisites =>
         base.Prerequisites.Concat([PackagePrerequisite.Tkinter]);
-    public override PyVersion RecommendedPythonVersion => PyInstallationManager.Python_3_12_12;
+    public override PyVersion RecommendedPythonVersion => Python.PyInstallationManager.Python_3_12_10;
 
     public override TorchIndex GetRecommendedTorchVersion()
     {

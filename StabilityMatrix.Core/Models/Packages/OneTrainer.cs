@@ -5,9 +5,11 @@ using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
+using StabilityMatrix.Core.Models.Rocm;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
+using StabilityMatrix.Core.Services.Rocm;
 
 namespace StabilityMatrix.Core.Models.Packages;
 
@@ -18,7 +20,8 @@ public class OneTrainer(
     IDownloadService downloadService,
     IPrerequisiteHelper prerequisiteHelper,
     IPyInstallationManager pyInstallationManager,
-    IPipWheelService pipWheelService
+    IPipWheelService pipWheelService,
+    IRocmPackageHelper rocmPackageHelper
 )
     : BaseGitPackage(
         githubApi,
@@ -52,6 +55,17 @@ public class OneTrainer(
     public override bool ShouldIgnoreReleases => true;
     public override IEnumerable<PackagePrerequisite> Prerequisites =>
         base.Prerequisites.Concat([PackagePrerequisite.Tkinter]);
+    public override PyVersion RecommendedPythonVersion => PyInstallationManager.Python_3_12_12;
+
+    public override TorchIndex GetRecommendedTorchVersion()
+    {
+        if (Compat.IsWindows && rocmPackageHelper.GetCompatibility().IsCompatible)
+        {
+            return TorchIndex.Rocm;
+        }
+
+        return base.GetRecommendedTorchVersion();
+    }
 
     public override async Task InstallPackage(
         string installLocation,
@@ -69,32 +83,80 @@ public class OneTrainer(
             )
             .ConfigureAwait(false);
 
-        progress?.Report(new ProgressReport(-1f, "Installing requirements", isIndeterminate: true));
         var torchVersion = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
-        var requirementsFileName = torchVersion switch
+        var pyVersion = options.PythonOptions.PythonVersion ?? RecommendedPythonVersion;
+
+        // Windows ROCm path
+        var isWindowsRocm =
+            Compat.IsWindows
+            && torchVersion == TorchIndex.Rocm
+            && rocmPackageHelper.GetCompatibility().IsCompatible;
+
+        if (isWindowsRocm)
         {
-            TorchIndex.Cuda => "requirements-cuda.txt",
-            TorchIndex.Rocm => "requirements-rocm.txt",
-            _ => "requirements-default.txt",
-        };
+            var config = rocmPackageHelper.BuildWindowsNativeInstallConfig(
+                OneTrainerWindowsRocmProfile.Default
+            );
 
-        await venvRunner.PipInstall(["-r", requirementsFileName], onConsoleOutput).ConfigureAwait(false);
+            await StandardPipInstallProcessAsync(
+                    venvRunner,
+                    options,
+                    installedPackage,
+                    config with
+                    {
+                        RequirementsFilePaths = ["requirements-default.txt"],
+                    },
+                    onConsoleOutput,
+                    progress,
+                    cancellationToken
+                )
+                .ConfigureAwait(false);
 
-        var requirementsGlobal = new FilePath(installLocation, "requirements-global.txt");
-        var pipArgs = new PipInstallArgs().WithParsedFromRequirementsTxt(
-            (await requirementsGlobal.ReadAllTextAsync(cancellationToken).ConfigureAwait(false)).Replace(
-                "-e ",
-                ""
-            ),
-            "scipy==1.15.1; sys_platform != 'win32'"
-        );
+            progress?.Report(
+                new ProgressReport(-1f, "Installing Windows ROCm torch...", isIndeterminate: true)
+            );
 
-        if (installedPackage.PipOverrides != null)
-        {
-            pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
+            await rocmPackageHelper
+                .InstallWindowsNativeTorchAsync(
+                    venvRunner,
+                    installedPackage,
+                    OneTrainerWindowsRocmProfile.CreateInstallProfile(pyVersion),
+                    progress,
+                    onConsoleOutput,
+                    cancellationToken
+                )
+                .ConfigureAwait(false);
         }
+        else
+        {
+            // Original path (CUDA / Linux ROCm)
+            progress?.Report(new ProgressReport(-1f, "Installing requirements", isIndeterminate: true));
 
-        await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
+            var requirementsFileName = torchVersion switch
+            {
+                TorchIndex.Cuda => "requirements-cuda.txt",
+                TorchIndex.Rocm => "requirements-rocm.txt",
+                _ => "requirements-default.txt",
+            };
+
+            await venvRunner.PipInstall(["-r", requirementsFileName], onConsoleOutput).ConfigureAwait(false);
+            // Shared requirements-global.txt
+            var requirementsGlobal = new FilePath(installLocation, "requirements-global.txt");
+            var pipArgs = new PipInstallArgs().WithParsedFromRequirementsTxt(
+                (await requirementsGlobal.ReadAllTextAsync(cancellationToken).ConfigureAwait(false)).Replace(
+                    "-e ",
+                    ""
+                ),
+                "scipy==1.15.1; sys_platform != 'win32'"
+            );
+
+            if (installedPackage.PipOverrides != null)
+            {
+                pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
+            }
+
+            await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
+        }
     }
 
     public override async Task RunPackage(
@@ -107,6 +169,15 @@ public class OneTrainer(
     {
         await SetupVenv(installLocation, pythonVersion: PyVersion.Parse(installedPackage.PythonVersion))
             .ConfigureAwait(false);
+
+        var selectedTorchIndex = installedPackage.PreferredTorchIndex ?? GetRecommendedTorchVersion();
+
+        if (rocmPackageHelper.ShouldApplyWindowsLaunchEnvironment(selectedTorchIndex))
+        {
+            VenvRunner.UpdateEnvironmentVariables(env =>
+                env.SetItems(rocmPackageHelper.BuildLaunchEnvironment(OneTrainerWindowsRocmProfile.Default))
+            );
+        }
 
         VenvRunner.RunDetached(
             [Path.Combine(installLocation, options.Command ?? LaunchCommand), .. options.Arguments],

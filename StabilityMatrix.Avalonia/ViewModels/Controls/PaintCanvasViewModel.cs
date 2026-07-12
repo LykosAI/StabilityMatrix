@@ -1161,10 +1161,24 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
                 var needsNewSurface = layer.Surface is null;
                 if (!needsNewSurface)
                 {
-                    // Check if we need to resize
-                    var currentInfo = layer.Surface!.Canvas.DeviceClipBounds;
-                    needsNewSurface =
-                        currentInfo.Width != CanvasSize.Width || currentInfo.Height != CanvasSize.Height;
+                    // Recreate if the existing surface's backing doesn't match the current target.
+                    // On-screen rendering leases a GPU surface, so the persistent layer surfaces are
+                    // GPU-backed and tied to the render thread. Off-screen export (e.g. saving an
+                    // annotation) composites onto a CPU surface from another thread; reusing those
+                    // GPU surfaces there produces a blank image. Forcing a matching CPU surface fixes
+                    // it, and the next on-screen render simply recreates the GPU surface.
+                    var layerIsGpu = layer.Surface!.Context != null;
+                    if (layerIsGpu != useGpu)
+                    {
+                        needsNewSurface = true;
+                    }
+                    else
+                    {
+                        // Check if we need to resize
+                        var currentInfo = layer.Surface!.Canvas.DeviceClipBounds;
+                        needsNewSurface =
+                            currentInfo.Width != CanvasSize.Width || currentInfo.Height != CanvasSize.Height;
+                    }
                 }
 
                 if (needsNewSurface)

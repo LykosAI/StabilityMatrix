@@ -103,7 +103,16 @@ namespace StabilityMatrix.Avalonia.Languages {
                 return ResourceManager.GetString("Action_Cancel", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Custom....
+        /// </summary>
+        public static string Action_CustomFolderEllipsis {
+            get {
+                return ResourceManager.GetString("Action_CustomFolderEllipsis", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Check for Updates.
         /// </summary>
@@ -4832,6 +4841,204 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Watermark_EnterPackageName {
             get {
                 return ResourceManager.GetString("Watermark_EnterPackageName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The {0} workflow expects a model from DiffusionModels, but this file is in {1}. It may not load correctly..
+        /// </summary>
+        public static string TextTemplate_WorkflowNeedsDiffusionModelsFile {
+            get {
+                return ResourceManager.GetString("TextTemplate_WorkflowNeedsDiffusionModelsFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This file is in DiffusionModels and can't load as an all-in-one checkpoint. It may not load correctly..
+        /// </summary>
+        public static string Text_FileInDiffusionModelsNotCheckpoint {
+            get {
+                return ResourceManager.GetString("Text_FileInDiffusionModelsNotCheckpoint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This looks like {0}, which loads from DiffusionModels, but the file is in {1}. It may not load correctly..
+        /// </summary>
+        public static string TextTemplate_FileLooksLikeStandaloneModel {
+            get {
+                return ResourceManager.GetString("TextTemplate_FileLooksLikeStandaloneModel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Move to {0}.
+        /// </summary>
+        public static string TextTemplate_MoveToFolder {
+            get {
+                return ResourceManager.GetString("TextTemplate_MoveToFolder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Move.
+        /// </summary>
+        public static string Action_Move {
+            get {
+                return ResourceManager.GetString("Action_Move", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not move model.
+        /// </summary>
+        public static string Label_CouldNotMoveModel {
+            get {
+                return ResourceManager.GetString("Label_CouldNotMoveModel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A file named '{0}' already exists in the {1} folder..
+        /// </summary>
+        public static string TextTemplate_FileAlreadyExistsInFolder {
+            get {
+                return ResourceManager.GetString("TextTemplate_FileAlreadyExistsInFolder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Model moved.
+        /// </summary>
+        public static string Label_ModelMoved {
+            get {
+                return ResourceManager.GetString("Label_ModelMoved", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Moved '{0}' to the {1} folder..
+        /// </summary>
+        public static string TextTemplate_MovedFileToFolder {
+            get {
+                return ResourceManager.GetString("TextTemplate_MovedFileToFolder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Comfy Error.
+        /// </summary>
+        public static string Label_ComfyError {
+            get {
+                return ResourceManager.GetString("Label_ComfyError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ComfyUI reported an error during generation.
+        /// </summary>
+        public static string Text_ComfyReportedGenerationError {
+            get {
+                return ResourceManager.GetString("Text_ComfyReportedGenerationError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Generation Failed.
+        /// </summary>
+        public static string Label_GenerationFailed {
+            get {
+                return ResourceManager.GetString("Label_GenerationFailed", resourceCulture);
+            }
+        }
+
+        public static string Label_Success {
+            get {
+                return ResourceManager.GetString("Label_Success", resourceCulture);
+            }
+        }
+
+        public static string Label_GeminiApiKey {
+            get {
+                return ResourceManager.GetString("Label_GeminiApiKey", resourceCulture);
+            }
+        }
+
+        public static string Validation_ApiKeyRequired {
+            get {
+                return ResourceManager.GetString("Validation_ApiKeyRequired", resourceCulture);
+            }
+        }
+
+        public static string Label_SetGeminiApiKey {
+            get {
+                return ResourceManager.GetString("Label_SetGeminiApiKey", resourceCulture);
+            }
+        }
+
+        public static string Text_SetGeminiApiKeyDescription {
+            get {
+                return ResourceManager.GetString("Text_SetGeminiApiKeyDescription", resourceCulture);
+            }
+        }
+
+        public static string Text_GeminiApiKeySaved {
+            get {
+                return ResourceManager.GetString("Text_GeminiApiKeySaved", resourceCulture);
+            }
+        }
+
+        public static string Label_RemoveGeminiApiKey {
+            get {
+                return ResourceManager.GetString("Label_RemoveGeminiApiKey", resourceCulture);
+            }
+        }
+
+        public static string Text_ConfirmRemoveGeminiApiKey {
+            get {
+                return ResourceManager.GetString("Text_ConfirmRemoveGeminiApiKey", resourceCulture);
+            }
+        }
+
+        public static string Text_GeminiApiKeyRemoved {
+            get {
+                return ResourceManager.GetString("Text_GeminiApiKeyRemoved", resourceCulture);
+            }
+        }
+
+        public static string Label_GeminiApiSetupRequired {
+            get {
+                return ResourceManager.GetString("Label_GeminiApiSetupRequired", resourceCulture);
+            }
+        }
+
+        public static string Text_GeminiPaidTierRequired {
+            get {
+                return ResourceManager.GetString("Text_GeminiPaidTierRequired", resourceCulture);
+            }
+        }
+
+        public static string Error_GeminiApiKeyNotConfigured {
+            get {
+                return ResourceManager.GetString("Error_GeminiApiKeyNotConfigured", resourceCulture);
+            }
+        }
+
+        public static string Error_GeminiQuotaExceeded {
+            get {
+                return ResourceManager.GetString("Error_GeminiQuotaExceeded", resourceCulture);
+            }
+        }
+
+        public static string Error_GeminiInvalidApiKey {
+            get {
+                return ResourceManager.GetString("Error_GeminiInvalidApiKey", resourceCulture);
+            }
+        }
+
+        public static string Error_GeminiAccessForbidden {
+            get {
+                return ResourceManager.GetString("Error_GeminiAccessForbidden", resourceCulture);
             }
         }
     }

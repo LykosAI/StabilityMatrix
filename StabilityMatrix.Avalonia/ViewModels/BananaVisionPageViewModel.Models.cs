@@ -9,13 +9,47 @@ using FluentAvalonia.UI.Controls;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Models.BananaVision;
+using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Services.ImageGeneration;
 
 namespace StabilityMatrix.Avalonia.ViewModels;
 
+internal enum BananaVisionModelTermMatch
+{
+    Excluded,
+    Primary,
+    Secondary,
+    Untagged,
+}
+
 public partial class BananaVisionPageViewModel
 {
+    /// <summary>
+    /// Provider-aware availability check. Klein's check is encoder-variant aware (a 9B UNET
+    /// needs the 8B encoder), so the user's UNET selection is passed through for it.
+    /// </summary>
+    private bool AreProviderModelsAvailable(ILocalProviderModelManager manager) =>
+        manager is Flux2KleinModelManager klein
+            ? klein.AreModelsAvailable(ClientManager, SelectedKleinModel)
+            : manager.AreModelsAvailable(ClientManager);
+
+    /// <summary>
+    /// Provider-aware missing-model list. See <see cref="AreProviderModelsAvailable"/>.
+    /// </summary>
+    private IEnumerable<RemoteResource> GetProviderMissingModels(ILocalProviderModelManager manager) =>
+        manager is Flux2KleinModelManager klein
+            ? klein.GetMissingModels(ClientManager, SelectedKleinModel)
+            : manager.GetMissingModels(ClientManager);
+
+    /// <summary>
+    /// Provider-aware missing-model display names. See <see cref="AreProviderModelsAvailable"/>.
+    /// </summary>
+    private IEnumerable<string> GetProviderMissingModelNames(ILocalProviderModelManager manager) =>
+        manager is Flux2KleinModelManager klein
+            ? klein.GetMissingModelNames(ClientManager, SelectedKleinModel)
+            : manager.GetMissingModelNames(ClientManager);
+
     /// <summary>
     /// Sorts models by connected status first, then alphabetically by display name
     /// </summary>
@@ -69,45 +103,62 @@ public partial class BananaVisionPageViewModel
 
         foreach (var model in modelIndexService.FindByModelType(folderType).Select(HybridModelFile.FromLocal))
         {
-            var baseModel = model.Local?.ConnectedModelInfo?.BaseModel;
-
-            // Check primary terms first
-            if (
-                primaryTerms.Any(term =>
-                    baseModel?.Contains(term, StringComparison.OrdinalIgnoreCase) == true
-                )
-            )
+            switch (GetModelTermMatch(model, primaryTerms, secondaryTerms))
             {
-                primaryModels.Add(model);
-            }
-            // Check secondary terms
-            else if (
-                secondaryTerms?.Any(term =>
-                    baseModel?.Contains(term, StringComparison.OrdinalIgnoreCase) == true
-                ) == true
-            )
-            {
-                secondaryModels.Add(model);
-            }
-            // Check filename fallback for untagged models
-            else if (string.IsNullOrEmpty(baseModel))
-            {
-                if (
-                    primaryTerms.Any(term =>
-                        model.FileName.Contains(term, StringComparison.OrdinalIgnoreCase)
-                    )
-                )
-                {
+                case BananaVisionModelTermMatch.Primary:
                     primaryModels.Add(model);
-                }
-                else
-                {
+                    break;
+                case BananaVisionModelTermMatch.Secondary:
+                    secondaryModels.Add(model);
+                    break;
+                case BananaVisionModelTermMatch.Untagged:
                     untaggedModels.Add(model);
-                }
+                    break;
             }
         }
 
         return (primaryModels, secondaryModels, untaggedModels);
+    }
+
+    internal static BananaVisionModelTermMatch GetModelTermMatch(
+        HybridModelFile model,
+        string[] primaryTerms,
+        string[]? secondaryTerms = null
+    )
+    {
+        var baseModel = model.Local?.ConnectedModelInfo?.BaseModel;
+
+        if (primaryTerms.Any(term => baseModel?.Contains(term, StringComparison.OrdinalIgnoreCase) == true))
+        {
+            return BananaVisionModelTermMatch.Primary;
+        }
+
+        if (
+            secondaryTerms?.Any(term => baseModel?.Contains(term, StringComparison.OrdinalIgnoreCase) == true)
+            == true
+        )
+        {
+            return BananaVisionModelTermMatch.Secondary;
+        }
+
+        // Filename fallback applies even when metadata is present but unrecognized, which
+        // is common for CivitAI uploads tagged "Other".
+        if (primaryTerms.Any(term => model.FileName.Contains(term, StringComparison.OrdinalIgnoreCase)))
+        {
+            return BananaVisionModelTermMatch.Primary;
+        }
+
+        if (
+            secondaryTerms?.Any(term => model.FileName.Contains(term, StringComparison.OrdinalIgnoreCase))
+            == true
+        )
+        {
+            return BananaVisionModelTermMatch.Secondary;
+        }
+
+        return string.IsNullOrEmpty(baseModel)
+            ? BananaVisionModelTermMatch.Untagged
+            : BananaVisionModelTermMatch.Excluded;
     }
 
     /// <summary>
@@ -340,6 +391,10 @@ public partial class BananaVisionPageViewModel
         var (recommendedSteps, recommendedCfg) = DetectKleinDefaults(value);
         KleinSteps = recommendedSteps;
         KleinCfg = recommendedCfg;
+
+        // The availability check is encoder-variant aware, so switching between a 4B and a
+        // 9B UNET can change which text encoder counts as missing — re-evaluate the banner.
+        UpdateProviderStatus();
     }
 
     /// <summary>

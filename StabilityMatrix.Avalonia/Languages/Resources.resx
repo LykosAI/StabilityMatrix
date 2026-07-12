@@ -1622,7 +1622,7 @@ We prioritize your privacy ([Gen AI Terms](&lt;https://lykos.ai/gen-ai-terms&gt;
     <value>Image Generation APIs</value>
   </data>
   <data name="Label_GeminiOffDescription" xml:space="preserve">
-    <value>Add your Gemini API key to use Nano Banana in the Image Lab for image generation</value>
+    <value>Add a paid-tier Gemini API key (billing enabled) to use Nano Banana in the Image Lab</value>
   </data>
   <data name="Label_AboutAccountCredentials" xml:space="preserve">
     <value>About Account Credentials</value>
@@ -1743,5 +1743,93 @@ Account tokens will not be viewable after saving, please make a note of them if 
   </data>
   <data name="TextTemplate_PatternPreviewExample" xml:space="preserve">
     <value>Example: {0}</value>
+  </data>
+  <data name="TextTemplate_WorkflowNeedsDiffusionModelsFile" xml:space="preserve">
+    <value>The {0} workflow expects a model from DiffusionModels, but this file is in {1}. It may not load correctly.</value>
+  </data>
+  <data name="Text_FileInDiffusionModelsNotCheckpoint" xml:space="preserve">
+    <value>This file is in DiffusionModels and can't load as an all-in-one checkpoint. It may not load correctly.</value>
+  </data>
+  <data name="TextTemplate_FileLooksLikeStandaloneModel" xml:space="preserve">
+    <value>This looks like {0}, which loads from DiffusionModels, but the file is in {1}. It may not load correctly.</value>
+  </data>
+  <data name="TextTemplate_MoveToFolder" xml:space="preserve">
+    <value>Move to {0}</value>
+  </data>
+  <data name="Action_Move" xml:space="preserve">
+    <value>Move</value>
+  </data>
+  <data name="Label_CouldNotMoveModel" xml:space="preserve">
+    <value>Could not move model</value>
+  </data>
+  <data name="TextTemplate_FileAlreadyExistsInFolder" xml:space="preserve">
+    <value>A file named '{0}' already exists in the {1} folder.</value>
+  </data>
+  <data name="Label_ModelMoved" xml:space="preserve">
+    <value>Model moved</value>
+  </data>
+  <data name="TextTemplate_MovedFileToFolder" xml:space="preserve">
+    <value>Moved '{0}' to the {1} folder.</value>
+  </data>
+  <data name="Label_ComfyError" xml:space="preserve">
+    <value>Comfy Error</value>
+  </data>
+  <data name="Text_ComfyReportedGenerationError" xml:space="preserve">
+    <value>ComfyUI reported an error during generation</value>
+  </data>
+  <data name="Label_GenerationFailed" xml:space="preserve">
+    <value>Generation Failed</value>
+  </data>
+  <data name="Label_Success" xml:space="preserve">
+    <value>Success</value>
+  </data>
+  <data name="Label_GeminiApiKey" xml:space="preserve">
+    <value>Gemini API Key</value>
+  </data>
+  <data name="Validation_ApiKeyRequired" xml:space="preserve">
+    <value>API key is required</value>
+  </data>
+  <data name="Label_SetGeminiApiKey" xml:space="preserve">
+    <value>Set Gemini API Key</value>
+  </data>
+  <data name="Text_SetGeminiApiKeyDescription" xml:space="preserve">
+    <value>Image Lab's Nano Banana models need a **paid-tier** Gemini API key — free-tier keys cannot generate images.
+
+1. Create a key at [Google AI Studio](https://aistudio.google.com/apikey).
+2. Enable billing for its Google Cloud project in the [Cloud Console](https://console.cloud.google.com/billing).
+3. Paste the key below.</value>
+  </data>
+  <data name="Text_GeminiApiKeySaved" xml:space="preserve">
+    <value>Gemini API key saved</value>
+  </data>
+  <data name="Label_RemoveGeminiApiKey" xml:space="preserve">
+    <value>Remove Gemini API Key</value>
+  </data>
+  <data name="Text_ConfirmRemoveGeminiApiKey" xml:space="preserve">
+    <value>Are you sure you want to remove your Gemini API key?</value>
+  </data>
+  <data name="Text_GeminiApiKeyRemoved" xml:space="preserve">
+    <value>Gemini API key removed</value>
+  </data>
+  <data name="Label_GeminiApiSetupRequired" xml:space="preserve">
+    <value>Gemini API Setup Required</value>
+  </data>
+  <data name="Text_GeminiPaidTierRequired" xml:space="preserve">
+    <value>Nano Banana image generation requires a Gemini API key from a Google AI project with billing enabled. Free-tier keys do not support these image-generation models.</value>
+  </data>
+  <data name="Error_GeminiApiKeyNotConfigured" xml:space="preserve">
+    <value>Gemini API key not configured. Please add it in Account Settings.</value>
+  </data>
+  <data name="Error_GeminiQuotaExceeded" xml:space="preserve">
+    <value>Rate limit or quota exceeded. Gemini image-generation models require a Google AI project with billing enabled; free-tier API keys cannot generate images. If billing is enabled, wait for the paid tier to activate or try again after the rate limit resets.</value>
+  </data>
+  <data name="Error_GeminiInvalidApiKey" xml:space="preserve">
+    <value>Invalid Gemini API key. Please check the key saved in Account Settings.</value>
+  </data>
+  <data name="Error_GeminiAccessForbidden" xml:space="preserve">
+    <value>Gemini image generation was denied. Confirm that billing is enabled for the key's Google AI project and that the Gemini API is available to that project.</value>
+  </data>
+  <data name="Action_CustomFolderEllipsis" xml:space="preserve">
+    <value>Custom...</value>
   </data>
 </root>

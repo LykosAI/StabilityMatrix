@@ -643,28 +643,24 @@ public partial class AccountSettingsViewModel : PageViewModelBase
 
         var field = new TextBoxField
         {
-            Label = "Gemini API Key",
+            Label = Resources.Label_GeminiApiKey,
             IsPassword = true,
             Validator = s =>
             {
                 if (string.IsNullOrWhiteSpace(s))
                 {
-                    throw new ValidationException("API key is required");
+                    throw new ValidationException(Resources.Validation_ApiKeyRequired);
                 }
             },
         };
 
         var dialog = DialogHelper.CreateTextEntryDialog(
-            "Set Gemini API Key",
-            """
-            Get your Gemini API key from [Google AI Studio](https://ai.google.dev/)
-
-            This key will be used for Image Lab image generation.
-            """,
+            Resources.Label_SetGeminiApiKey,
+            Resources.Text_SetGeminiApiKeyDescription,
             null,
             [field]
         );
-        dialog.PrimaryButtonText = "Save";
+        dialog.PrimaryButtonText = Resources.Action_Save;
 
         if (await dialog.ShowAsync() != ContentDialogResult.Primary || field.Text is not { } apiKey)
         {
@@ -672,7 +668,11 @@ public partial class AccountSettingsViewModel : PageViewModelBase
         }
 
         await accountsService.GeminiLoginAsync(apiKey);
-        notificationService.Show("Success", "Gemini API key saved", NotificationType.Success);
+        notificationService.Show(
+            Resources.Label_Success,
+            Resources.Text_GeminiApiKeySaved,
+            NotificationType.Success
+        );
     }
 
     [RelayCommand]
@@ -680,10 +680,10 @@ public partial class AccountSettingsViewModel : PageViewModelBase
     {
         var dialog = new BetterContentDialog
         {
-            Title = "Remove Gemini API Key",
-            Content = "Are you sure you want to remove your Gemini API key?",
-            PrimaryButtonText = "Remove",
-            CloseButtonText = "Cancel",
+            Title = Resources.Label_RemoveGeminiApiKey,
+            Content = Resources.Text_ConfirmRemoveGeminiApiKey,
+            PrimaryButtonText = Resources.Action_Remove,
+            CloseButtonText = Resources.Action_Cancel,
             DefaultButton = ContentDialogButton.Close,
         };
 
@@ -693,6 +693,10 @@ public partial class AccountSettingsViewModel : PageViewModelBase
         }
 
         await accountsService.GeminiLogoutAsync();
-        notificationService.Show("Success", "Gemini API key removed", NotificationType.Success);
+        notificationService.Show(
+            Resources.Label_Success,
+            Resources.Text_GeminiApiKeyRemoved,
+            NotificationType.Success
+        );
     }
 }

@@ -6,6 +6,7 @@
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:inference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
+    xmlns:markupExtensions="clr-namespace:StabilityMatrix.Avalonia.MarkupExtensions"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
     xmlns:modelsInference="clr-namespace:StabilityMatrix.Avalonia.Models.Inference"
@@ -144,7 +145,7 @@
                                                     Classes="accent"
                                                     Command="{Binding GenerateImageCommand}"
                                                     CommandParameter="{x:Static modelsInference:GenerateFlags.None}"
-                                                    HotKey="Ctrl+Enter"
+                                                    HotKey="{markupExtensions:PlatformGesture Ctrl+Enter}"
                                                     IsVisible="{Binding !GenerateImageCommand.CanBeCanceled}"
                                                     ToolTip.Tip="{Binding $self.HotKey}">
                                                     <Panel>

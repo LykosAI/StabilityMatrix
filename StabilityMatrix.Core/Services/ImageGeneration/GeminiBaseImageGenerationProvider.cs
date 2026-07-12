@@ -35,7 +35,7 @@ public abstract class GeminiBaseImageGenerationProvider(
             return new ImageGenerationResponse
             {
                 IsSuccess = false,
-                ErrorMessage = "Gemini API key not configured. Please add it in Settings.",
+                ErrorCode = ImageGenerationErrorCode.GeminiApiKeyNotConfigured,
             };
         }
 
@@ -62,33 +62,33 @@ public abstract class GeminiBaseImageGenerationProvider(
             return new ImageGenerationResponse
             {
                 IsSuccess = false,
-                ErrorMessage =
-                    "Rate limit or quota exceeded. "
-                    + "Note: Free Gemini API keys do not support image generation - you need a paid API key. "
-                    + "If you have a paid key, you may be hitting rate limits. Please try again in a moment.",
+                ErrorCode = ImageGenerationErrorCode.GeminiQuotaExceeded,
             };
         }
         catch (ApiException apiEx)
         {
             logger.LogError(apiEx, "Gemini API error: {StatusCode}", apiEx.StatusCode);
 
-            const string keyRestrictionHint =
-                " Note: as of June 19 2026, Google blocks unrestricted Gemini API keys. "
-                + "If your key was created earlier, you may need to add API restrictions to it at "
-                + "https://aistudio.google.com/apikey.";
+            var errorCode = apiEx.StatusCode switch
+            {
+                System.Net.HttpStatusCode.Unauthorized => ImageGenerationErrorCode.GeminiInvalidApiKey,
+                System.Net.HttpStatusCode.Forbidden => ImageGenerationErrorCode.GeminiAccessForbidden,
+                _ => (ImageGenerationErrorCode?)null,
+            };
 
             var errorMessage = apiEx.StatusCode switch
             {
-                System.Net.HttpStatusCode.Unauthorized =>
-                    "Invalid API key. Please check your Gemini API key in Settings." + keyRestrictionHint,
-                System.Net.HttpStatusCode.Forbidden =>
-                    "Access forbidden. Your API key may not have the required permissions."
-                        + keyRestrictionHint,
                 System.Net.HttpStatusCode.BadRequest => $"Invalid request: {apiEx.Content}",
-                _ => $"API error ({apiEx.StatusCode}): {apiEx.Message}",
+                _ when errorCode is null => $"API error ({apiEx.StatusCode}): {apiEx.Message}",
+                _ => null,
             };
 
-            return new ImageGenerationResponse { IsSuccess = false, ErrorMessage = errorMessage };
+            return new ImageGenerationResponse
+            {
+                IsSuccess = false,
+                ErrorCode = errorCode,
+                ErrorMessage = errorMessage,
+            };
         }
         catch (Exception ex)
         {

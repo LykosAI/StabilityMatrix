@@ -109,7 +109,7 @@ You can think of it as a translator between two worlds:
 
 The denoiser usually works in latent space because latent tensors are much smaller than full-resolution images, which makes diffusion practical on consumer hardware. The VAE is what lets the pipeline move into that latent space and back out again.
 
-This is also why the wrong VAE can visibly damage output. Common symptoms include washed-out colors, odd contrast, muddy textures, or images that simply do not decode correctly and resulting in error. In older SD and SDXL workflows, matching the intended VAE can matter a lot.
+This is also why the wrong VAE can visibly damage output. Common symptoms include washed-out colors, odd contrast, muddy textures, or images that simply do not decode correctly and result in an error. In older SD and SDXL workflows, matching the intended VAE can matter a lot.
 
 **Latent**
 

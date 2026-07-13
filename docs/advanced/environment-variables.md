@@ -59,7 +59,7 @@ Not every package will use every variable below, but these are some of the most 
 | `UV_HTTP_RETRIES` | `5` | Controls how many times uv retries failed HTTP requests. This can help when downloads intermittently fail because of unstable networking or remote mirror issues. |
 | `DOTNET_ROOT` | `Linux/macOS: /usr/share/dotnet`<br>`Windows: C:\Program Files\dotnet` | Tells .NET where to find the runtime and shared frameworks. This is the main .NET environment variable to check when a .NET-based helper or component cannot locate the expected runtime. |
 
-For most users, the most practical variables here are `PATH`, package-manager cache and network variables (`PIP_*` and `UV_*`), and `DOTNET_ROOT` when runtime discovery does not behave as expected. `LD_PRELOAD` is powerful, but it is mainly an advanced Linux/MacOS troubleshooting tool rather than a routine Stability Matrix setting.
+For most users, the most practical variables here are `PATH`, package-manager cache and network variables (`PIP_*` and `UV_*`), and `DOTNET_ROOT` when runtime discovery does not behave as expected. `LD_PRELOAD` is powerful, but it is mainly an advanced Linux/macOS troubleshooting tool rather than a routine Stability Matrix setting.
 
 ## PyTorch and CUDA Variables
 

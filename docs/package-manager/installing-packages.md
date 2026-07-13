@@ -55,7 +55,7 @@ The **Advanced Options** section is a collapsible panel containing settings that
 The **Pip Override** section is a separate collapsible panel that lets you override specific Python package dependencies during installation and updates. It presents a data grid where each row defines an override with three fields:
 
 - **Action**: **Update** to change a dependency's version or constraint, or **Remove** to exclude it entirely.
-- **Name**: the pip package name of the dependency to override.
+- **Name**: The pip package name of the dependency to override.
 - **Constraint** and **Version**: the version specifier (e.g., `>=`, `==`, `!=`) and target version to pin.
 
 This is useful when you need to force a specific version of a dependency to resolve a compatibility issue, or to remove a problematic package from the install. For example, you might pin `numpy==1.26.4` or remove an optional dependency that causes conflicts.

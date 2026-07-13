@@ -103,7 +103,7 @@ The **PyTorch backend** determines which GPU acceleration library your package u
 | **MPS** | macOS | Apple Silicon (M1 and newer) | Apple's Metal Performance Shaders backend. Included with PyTorch on macOS; no additional setup required. |
 | **CPU** | All | None | Runs entirely on the CPU. Significantly slower than any GPU backend. Suitable only for testing or systems with no compatible GPU. |
 
-The pre-selected backend is determined by Default GPU selected at First-Launch or in Default GPU setting, along with internal recommended Torch checks Stability Matrix determines based on detected hardware. If a package does not support your detected GPU, the recommended default will fall back to CPU.
+The pre-selected backend is determined by the Default GPU selected at First Launch or in the Default GPU setting, along with internal recommended Torch checks that Stability Matrix determines based on detected hardware. If a package does not support your detected GPU, the recommended default will fall back to CPU.
 
 > **Note:** The PyTorch backend is selected at install time, but can be changed afterward via the **Python Packages** dialog — accessible from the package's three-dot menu on the Packages screen. A planned Python Environment Management page will cover this in more detail.
 
@@ -134,7 +134,7 @@ The progress dialog shows a real-time log of each step. If any step fails, the d
 | First install (no cached wheels) | 5–15 minutes |
 | Slow connection or CPU-only install | 10–25 minutes |
 
-> **Note:** PyTorch wheels are large and the multiple WHL files needed can accumulate to several GBs or more in total download size depending on the backend used. The first installation on a fresh system downloads these wheels. Subsequent installs reuse cached wheels, making them significantly faster.
+> **Note:** PyTorch wheels are large and the multiple `.whl` files needed can accumulate to several GB or more in total download size depending on the backend used. The first installation on a fresh system downloads these wheels. Subsequent installs reuse cached wheels, making them significantly faster.
 
 ## One-Click Install
 
@@ -142,17 +142,17 @@ For new users, Stability Matrix offers a streamlined **one-click install** exper
 
 ### How It Works
 
-1. **Welcome dialog**: on the first launch after a fresh install, Stability Matrix presents a welcome screen with a brief explanation and a large **Install** button. The first compatible package that offers one-click installation is pre-selected; you can choose a different package from the dropdown if desired.
+1. **Welcome dialog**: On the first launch after a fresh install, Stability Matrix presents a welcome screen with a brief explanation and a large **Install** button. The first compatible package that offers one-click installation is pre-selected; you can choose a different package from the dropdown if desired.
 
-2. **Automatic configuration**: the one-click flow selects sensible defaults automatically:
+2. **Automatic configuration**: The one-click flow selects sensible defaults automatically:
    - The **latest release version** (or latest commit, for packages without releases).
    - The **recommended PyTorch backend** detected from your hardware.
    - The **recommended shared folder method** (symlinks for most packages).
    - The **package's recommended default Python version**.
 
-3. **Installation**: clicking Install runs the same step pipeline described in [Installation Progress](#installation-progress). A progress bar shows the current status, and status text updates as each step completes.
+3. **Installation**: Clicking Install runs the same step pipeline described in [Installation Progress](#installation-progress). A progress bar shows the current status, and status text updates as each step completes.
 
-4. **Post-install**: after successful installation, a brief countdown appears and the dialog closes, returning you to the Packages screen with the newly installed package ready to launch.
+4. **Post-install**: After successful installation, a brief countdown appears and the dialog closes, returning you to the Packages screen with the newly installed package ready to launch.
 
 ### Skipping One-Click Install
 

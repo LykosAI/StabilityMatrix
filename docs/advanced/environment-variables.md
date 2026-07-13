@@ -49,7 +49,7 @@ Not every package will use every variable below, but these are some of the most 
 | Variable | Example Value | Purpose |
 |---|---|---|
 | `PATH` | `Linux/macOS: /opt/custom/bin:/usr/local/bin:/usr/bin`<br>`Windows: C:\Tools;C:\Windows\System32` | Controls where the OS looks for executables and shared tooling. This is useful when a helper binary or compiler needs to be found before the system default. |
-| `LD_PRELOAD` | `/usr/lib/libtcmalloc.so` | Preloads a shared library before the target process starts. This is mainly a Linux and MacOS troubleshooting variable for advanced cases such as custom allocators, compatibility shims, or injected hooks. |
+| `LD_PRELOAD` | `/usr/lib/libtcmalloc.so` | Preloads a shared library before the target process starts. This is mainly a Linux and macOS troubleshooting variable for advanced cases such as custom allocators, compatibility shims, or injected hooks. |
 | `PIP_CACHE_DIR` | `Linux/macOS: /mnt/drive/pip-cache`<br>`Windows: D:\pip-cache` | Moves pip's download and wheel cache to a different drive. This can help when your system drive is small or you want repeated installs to reuse cached artifacts. |
 | `PIP_TIMEOUT` | `60` | Sets pip's HTTP timeout in seconds. This is useful when downloads fail on slower connections, high-latency links, or package sources that respond slowly. |
 | `PIP_RETRIES` | `8` | Controls how many times pip retries failed network requests. This can help when installs are mostly working but occasionally fail because of transient connection or CDN issues. |

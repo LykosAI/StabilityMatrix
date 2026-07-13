@@ -48,7 +48,7 @@ The **Advanced Options** section is a collapsible panel containing settings that
 - **Model Sharing**: Controls how model directories are linked to the shared `Models/` library. Options include **Symlink** (recommended for most users), **Configuration** (uses the package's own config files to point to shared paths), and **None** (isolated model folders).
 - **PyTorch Index**: Choose the PyTorch compute backend for your GPU. See [Selecting a Hardware Backend](#selecting-a-hardware-backend).
 - **Output Sharing**: Enabled by default. When enabled, generated outputs are saved to the shared `Images/` directory rather than inside the package folder.
-- **Python Version**: Select the Python version for the package's virtual environment from the versions available via Stability Matrix's internal `uv` utility. A green checkmark indicates versions already downloaded and cached locally. It's typically best to leave this at the default Stability Matrix configures for the package, since that reflects compatibility testing and upstream recommendations. Only change it before installing if a specific version is actually needed.
+- **Python Version**: Select the Python version for the package's virtual environment from the versions available via Stability Matrix's internal `uv` utility. A green checkmark indicates versions already downloaded and cached locally. It's typically best to leave this at the default configured by Stability Matrix for the package, since that reflects compatibility testing and upstream recommendations. Only change it before installing if a specific version is actually needed.
 
 ### Python Dependencies Override
 

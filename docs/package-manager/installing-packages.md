@@ -1,6 +1,6 @@
 # Installing Packages
 
-This page walks through installing an WebUI package in Stability Matrix using the **Add Package** screen.
+This page walks through installing a WebUI package in Stability Matrix using the **Add Package** screen.
 
 [`Section Overview`](overview.md) | [`Home`](../README.md)
 
@@ -25,7 +25,7 @@ Packages are displayed as a scrollable list of cards organized into three tabs a
 - **Training**: Model fine-tuning and training tools such as Kohya's GUI and OneTrainer.
 - **Legacy**: Older packages that are maintained for existing users but not recommended for new installations. May be stale and no longer receiving updates.
 
-Each package card shows the package name, author, a short description, and a row of **hardware compatibility badges** indicating which PyTorch backends the package supports from the following types CUDA (NVIDIA), ROCm (AMD-native), DirectML, macOS (MPS), ZLUDA (AMD), IPEX (Intel), or CPU. Note that the absence of a particular hardware badge does not necessarily mean the package is incompatible, some packages may still be usable with manual configuration or community-provided workarounds. Within each tab, beginner-friendly packages appear first, followed by advanced tools in alphabetical order.
+Each package card shows the package name, author, a short description, and a row of **hardware compatibility badges** indicating which PyTorch backends the package supports from the following types: CUDA (NVIDIA), ROCm (AMD-native), DirectML, macOS (MPS), ZLUDA (AMD), IPEX (Intel), or CPU. Note that the absence of a particular hardware badge does not necessarily mean the package is incompatible; some packages may still be usable with manual configuration or community-provided workarounds. Within each tab, beginner-friendly packages appear first, followed by advanced tools in alphabetical order.
 
 Use the tabs to switch between package types, or type in the search bar to filter the list by name in real time. Incompatible packages are hidden by default: enable *Show All Packages* to see packages that do not officially support your current hardware (e.g., CUDA-only packages on an AMD system).
 
@@ -48,7 +48,7 @@ The **Advanced Options** section is a collapsible panel containing settings that
 - **Model Sharing**: Controls how model directories are linked to the shared `Models/` library. Options include **Symlink** (recommended for most users), **Configuration** (uses the package's own config files to point to shared paths), and **None** (isolated model folders).
 - **PyTorch Index**: Choose the PyTorch compute backend for your GPU. See [Selecting a Hardware Backend](#selecting-a-hardware-backend).
 - **Output Sharing**: Enabled by default. When enabled, generated outputs are saved to the shared `Images/` directory rather than inside the package folder.
-- **Python Version**: Select the Python version for the package's virtual environment from the versions available via Stability Matrix's internal `uv` utility. A green checkmark indicates versions already downloaded and cached locally. Typically it is recommended to leave set to what the package is configured in SM as default for compatibility/upstream recommendation and, recommended only to change if specifically needed before installing.
+- **Python Version**: Select the Python version for the package's virtual environment from the versions available via Stability Matrix's internal `uv` utility. A green checkmark indicates versions already downloaded and cached locally. It's typically best to leave this at the default Stability Matrix configures for the package, since that reflects compatibility testing and upstream recommendations. Only change it before installing if a specific version is actually needed.
 
 ### Python Dependencies Override
 
@@ -96,7 +96,7 @@ The **PyTorch backend** determines which GPU acceleration library your package u
 | Backend | Platform | GPU | Notes |
 |---------|----------|-----|-------|
 | **CUDA** | Windows, Linux | NVIDIA (GTX 900-series and newer) | Best performance and broadest compatibility. CUDA toolkit is bundled with PyTorch; no separate driver installation beyond standard NVIDIA drivers. Turing (RTX 2000-series) or newer recommended. |
-| **ROCm** | Windows, Linux | AMD (select GPUs per platform) | Native AMD GPU acceleration. On Linux, requires system-level ROCm installation. On Windows, uses AMD's TheRock technical preview builds. See [Hardware Support](../advanced/hardware-support.md#amd-rocm) for per-chip compatibility. |
+| **ROCm** | Windows, Linux | AMD (select GPUs per platform) | Native AMD GPU acceleration. On Linux, requires system-level ROCm installation. On Windows, uses AMD's TheRock technical preview builds. Per-chip compatibility details are planned for a future Hardware Support page. |
 | **DirectML** | Windows | AMD, Intel, some NVIDIA | Microsoft's DirectML API. Broad compatibility but slower performance than CUDA or ROCm. Development is largely stagnant; consider native ROCm, or ZLUDA if need be, as an alternative for AMD GPUs. |
 | **ZLUDA** | Windows | AMD (via CUDA translation layer) | Experimental CUDA-to-AMD translation layer. Used by the ComfyUI-Zluda, SD.Next, and AMDGPU Forge packages. Generally faster than DirectML for supported operations. |
 | **IPEX** | Windows, Linux | Intel Arc (discrete and integrated) | Intel Extension for PyTorch. Requires Intel Arc GPU (A-series, B-series) or modern Intel Core Ultra with integrated Arc graphics. |
@@ -105,9 +105,9 @@ The **PyTorch backend** determines which GPU acceleration library your package u
 
 The pre-selected backend is determined by Default GPU selected at First-Launch or in Default GPU setting, along with internal recommended Torch checks Stability Matrix determines based on detected hardware. If a package does not support your detected GPU, the recommended default will fall back to CPU.
 
-> **Note:** The PyTorch backend is selected at install time, but can be changed afterward via the **Python Packages** dialog — accessible from the package's three-dot menu on the Packages screen. See [Python Environment Management](../advanced/python-environment.md#viewing-installed-python-packages).
+> **Note:** The PyTorch backend is selected at install time, but can be changed afterward via the **Python Packages** dialog — accessible from the package's three-dot menu on the Packages screen. A planned Python Environment Management page will cover this in more detail.
 
-For in-depth platform-specific guidance, including driver requirements and known caveats, see [Hardware Support](../advanced/hardware-support.md).
+In-depth platform-specific guidance, including driver requirements and known caveats, is planned for a future Hardware Support page.
 
 ## Installation Progress
 
@@ -134,7 +134,7 @@ The progress dialog shows a real-time log of each step. If any step fails, the d
 | First install (no cached wheels) | 5–15 minutes |
 | Slow connection or CPU-only install | 10–25 minutes |
 
-> **Note:** PyTorch wheels are large and the multiple needed WHL files needed can accumulate to several GB's or more in total download size depending on backend used. The first installation on a fresh system downloads these wheels. Subsequent installs reuse cached wheels, making them significantly faster.
+> **Note:** PyTorch wheels are large and the multiple WHL files needed can accumulate to several GBs or more in total download size depending on the backend used. The first installation on a fresh system downloads these wheels. Subsequent installs reuse cached wheels, making them significantly faster.
 
 ## One-Click Install
 
@@ -148,7 +148,7 @@ For new users, Stability Matrix offers a streamlined **one-click install** exper
    - The **latest release version** (or latest commit, for packages without releases).
    - The **recommended PyTorch backend** detected from your hardware.
    - The **recommended shared folder method** (symlinks for most packages).
-   - The **package's recommended default Python version** 
+   - The **package's recommended default Python version**.
 
 3. **Installation**: clicking Install runs the same step pipeline described in [Installation Progress](#installation-progress). A progress bar shows the current status, and status text updates as each step completes.
 
@@ -164,4 +164,4 @@ The one-click install dialog is a first-launch experience only. Once dismissed o
 
 ## Next Steps
 
-Once a package is installed, you can launch it, monitor its console output, configure launch arguments, run multiple packages simultaneously, update to newer versions, or remove it entirely. See [Managing Packages](managing-packages.md) for details on all of these workflows.
+Once a package is installed, you can launch it, monitor its console output, configure launch arguments, run multiple packages simultaneously, update to newer versions, or remove it entirely. A planned Managing Packages page will cover all of these workflows in detail.

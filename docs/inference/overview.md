@@ -2,7 +2,7 @@
 
 The Inference page is Stability Matrix's built-in image and video generation interface, powered by ComfyUI under the hood. It provides a structured, panel-based UI as an alternative to using a web browser to control ComfyUI directly.
 
-[`Section Overview`](overview.md) | [`Home`](../README.md)
+[`Home`](../README.md)
 
 ## Table of Contents
 
@@ -38,12 +38,14 @@ The Inference UI can reopen a previously saved project tab on startup, provided 
 
 ## Generation Modes
 
-- [Text to Image](text-to-image.md): Creates images from prompts without a required source image. This is the default mode and the main entry point for most image-generation workflows.
-- [Image to Image](image-to-image.md): Uses an input image together with prompt and sampler settings to guide edits, restyling, or controlled variation.
-- [Image Upscale](image-upscale.md): Starts from an existing image and applies upscale methods exposed by the connected backend, including latent and model-based upscalers when available.
-- [Video Generation](video-generation.md): Covers the video-oriented tabs exposed in the UI, including Wan Text to Video, Wan Image to Video, and SVD-style image-to-video generation.
+- **Text to Image** *(planned page)*: Creates images from prompts without a required source image. This is the default mode and the main entry point for most image-generation workflows.
+- **Image to Image** *(planned page)*: Uses an input image together with prompt and sampler settings to guide edits, restyling, or controlled variation.
+- **Image Upscale** *(planned page)*: Starts from an existing image and applies upscale methods exposed by the connected backend, including latent and model-based upscalers when available.
+- **Wan Text to Video** *(planned page)*: Generates video from a text prompt using Wan video models.
+- **Wan Image to Video** *(planned page)*: Generates video from a source image using Wan video models.
+- **SVD Image to Video** *(planned page)*: Generates video from a source image using Stable Video Diffusion.
 
-All of these modes are implemented as separate tab view models, which is why different tabs can expose different cards, input requirements, and prompt behavior while still sharing the same backend connection.
+Video generation is not a single mode — it's split across three independent tabs, each its own project type, so Wan Text to Video, Wan Image to Video, and SVD Image to Video can be opened side by side with their own settings. All of these modes are implemented as separate tab view models, which is why different tabs can expose different cards, input requirements, and prompt behavior while still sharing the same backend connection.
 
 ## Panel Layout
 
@@ -81,14 +83,14 @@ The Inference page supports standard project-style actions for these files, incl
 
 Generated images can also carry Stability Matrix project metadata. When a saved output includes embedded Stability Matrix project data, dropping that image back onto a compatible Inference tab can restore the serialized state directly from the image metadata.
 
-`.smproj` files are distinct from ComfyUI workflow JSON files. Project files capture the state of Stability Matrix's native Inference tabs, while the [Workflows Browser](../workflows/overview.md) is for browsing and managing ComfyUI workflow files.
+`.smproj` files are distinct from ComfyUI workflow JSON files. Project files capture the state of Stability Matrix's native Inference tabs, while the Workflows Browser *(planned page)* is for browsing and managing ComfyUI workflow files.
 
 ## Related Pages
 
-- [Text to Image](text-to-image.md)
-- [Image to Image](image-to-image.md)
-- [Image Upscale](image-upscale.md)
-- [Video Generation](video-generation.md)
-- [Advanced Controls](advanced-controls.md)
-- [Outputs Overview](../outputs/overview.md)
-- [ComfyUI Intergration](../advanced/comfyui-integration.md)
+- Text to Image *(planned)*
+- Image to Image *(planned)*
+- Image Upscale *(planned)*
+- Video Generation *(planned)*
+- Advanced Controls *(planned)*
+- Outputs Overview *(planned)*
+- [ComfyUI Integration](../advanced/comfyui-integration.md)

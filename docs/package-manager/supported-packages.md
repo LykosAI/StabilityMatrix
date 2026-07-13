@@ -18,7 +18,7 @@ Inference packages are used for generating images and video. They provide their 
 
 | Package | Description |
 |---|---|
-| **AUTOMATIC1111 Stable Diffusion WebUI** | The original Gradio-based web interface for Stable Diffusion. The `dev` branch is installed by default as it is in active development while the `main` branch has been in a stale state|
+| **AUTOMATIC1111 Stable Diffusion WebUI** | The original Gradio-based web interface for Stable Diffusion. The `dev` branch is installed by default as it is in active development while the `main` branch has been in a stale state. |
 | **Stable Diffusion WebUI reForge** | A fast-moving Forge fork that tracks new functionality and newer model architectures quickly. Beyond Stable Diffusion, it supports a range of newer families such as FLUX, SD3, PixArt, Hunyuan, WAN video models, and other recent transformer-led pipelines. |
 | **Stable Diffusion WebUI Forge - Neo** | An NVIDIA-focused Forge fork in rapid development, aimed at newer functionality, current model architectures, and a streamlined high-performance workflow. |
 | **ComfyUI** | A powerful, node-based graph UI for building custom inference pipelines across a wide range of modern image and video models. It has grown into one of the most popular local AI frontends, and Stability Matrix's Inference UI is built to work alongside it through ComfyUI's API and workflow backend. |

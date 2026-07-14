@@ -37,8 +37,19 @@ public partial class DocumentationViewModel : PageViewModelBase
 
     public ObservableCollection<DocumentationSectionNavItem> Sections { get; } = [];
 
+    /// <summary>
+    /// Flattened source for the navigation <c>TreeView</c>: root-level pages are hoisted to
+    /// top-level leaves and each non-root section is a parent node. Items are either
+    /// <see cref="DocumentationSectionNavItem"/> or <see cref="DocumentationPageNavItem"/>.
+    /// </summary>
+    public ObservableCollection<object> TreeItems { get; } = [];
+
     [ObservableProperty]
     private DocumentationPageNavItem? selectedPage;
+
+    /// <summary>Two-way bound to the nav TreeView's SelectedItem; routes page leaves to <see cref="SelectedPage"/>.</summary>
+    [ObservableProperty]
+    private object? selectedTreeItem;
 
     [ObservableProperty]
     private string? currentMarkdown;
@@ -68,8 +79,17 @@ public partial class DocumentationViewModel : PageViewModelBase
     /// <summary>Command bound to the markdown viewer to intercept hyperlink clicks.</summary>
     public ICommand LinkClickedCommand { get; }
 
+    /// <summary>
+    /// Raised when an in-page anchor should be scrolled to. The argument is the bare heading slug.
+    /// The view subscribes and forwards to the markdown viewer (keeps the VM free of control refs).
+    /// </summary>
+    public event EventHandler<string>? AnchorRequested;
+
     private CancellationTokenSource? pageCts;
     private bool hasLoadedTree;
+
+    /// <summary>Anchor slug to scroll to after the next page load completes (cross-page anchor links).</summary>
+    private string? pendingAnchor;
 
     public DocumentationViewModel(
         ILogger<DocumentationViewModel> logger,
@@ -97,13 +117,6 @@ public partial class DocumentationViewModel : PageViewModelBase
         await LoadTreeAsync(forceRefresh: true);
     }
 
-    [RelayCommand]
-    private void SelectPage(DocumentationPageNavItem? page)
-    {
-        if (page is not null)
-            SelectedPage = page;
-    }
-
     private async Task LoadTreeAsync(bool forceRefresh = false)
     {
         IsTreeLoading = true;
@@ -115,21 +128,29 @@ public partial class DocumentationViewModel : PageViewModelBase
             var sections = await documentationService.GetSectionsAsync(forceRefresh);
 
             Sections.Clear();
+            TreeItems.Clear();
             foreach (var section in sections)
             {
-                Sections.Add(
-                    new DocumentationSectionNavItem
-                    {
-                        Title = section.Title,
-                        Pages = section
-                            .Pages.Select(p => new DocumentationPageNavItem
-                            {
-                                Title = p.Title,
-                                Path = p.Path,
-                            })
-                            .ToList(),
-                    }
-                );
+                var navSection = new DocumentationSectionNavItem
+                {
+                    Title = section.Title,
+                    Pages = section
+                        .Pages.Select(p => new DocumentationPageNavItem { Title = p.Title, Path = p.Path })
+                        .ToList(),
+                };
+                Sections.Add(navSection);
+
+                // Hoist the root (empty-title) section's pages to top-level tree leaves;
+                // real sections become parent nodes.
+                if (navSection.HasHeader)
+                {
+                    TreeItems.Add(navSection);
+                }
+                else
+                {
+                    foreach (var page in navSection.Pages)
+                        TreeItems.Add(page);
+                }
             }
 
             hasLoadedTree = true;
@@ -146,12 +167,14 @@ public partial class DocumentationViewModel : PageViewModelBase
             logger.LogInformation(e, "Documentation is not available yet");
             IsDocsUnavailable = true;
             Sections.Clear();
+            TreeItems.Clear();
         }
         catch (Exception e)
         {
             logger.LogWarning(e, "Failed to load documentation tree");
             ErrorMessage = "Could not load the documentation listing. Check your connection and try again.";
             Sections.Clear();
+            TreeItems.Clear();
         }
         finally
         {
@@ -161,17 +184,26 @@ public partial class DocumentationViewModel : PageViewModelBase
 
     partial void OnSelectedPageChanged(DocumentationPageNavItem? oldValue, DocumentationPageNavItem? newValue)
     {
-        if (oldValue is not null)
-            oldValue.IsSelected = false;
+        // Keep the tree's visual selection in sync (e.g. when navigation comes from a link click).
+        SelectedTreeItem = newValue;
 
         if (newValue is null)
             return;
 
-        newValue.IsSelected = true;
-        LoadPageAsync(newValue.Path).SafeFireAndForget();
+        // Capture any anchor queued by a cross-page link so it can't race a later navigation.
+        var anchor = pendingAnchor;
+        pendingAnchor = null;
+        LoadPageAsync(newValue.Path, anchor).SafeFireAndForget();
     }
 
-    private async Task LoadPageAsync(string docsRelativePath)
+    partial void OnSelectedTreeItemChanged(object? value)
+    {
+        // Only page leaves load content; selecting a section node is a no-op.
+        if (value is DocumentationPageNavItem page)
+            SelectedPage = page;
+    }
+
+    private async Task LoadPageAsync(string docsRelativePath, string? anchor = null)
     {
         // Replace the CTS before any await so rapid selections can't race on the old one,
         // then cancel the superseded load.
@@ -199,6 +231,12 @@ public partial class DocumentationViewModel : PageViewModelBase
 
             CurrentMarkdown = DocumentationPathResolver.RewriteImageUrls(docsRelativePath, markdown);
             CurrentImageBaseUrl = GetPageFolderRawUrl(docsRelativePath);
+
+            // The page content is now set; ask the view to scroll to the requested anchor.
+            // The viewer defers the actual measurement to a layout pass, so this can't race
+            // the (already-completed) page load.
+            if (!string.IsNullOrEmpty(anchor))
+                AnchorRequested?.Invoke(this, anchor);
         }
         catch (OperationCanceledException)
         {
@@ -231,20 +269,32 @@ public partial class DocumentationViewModel : PageViewModelBase
                 break;
 
             case DocumentationPathResolver.LinkKind.InternalPage:
-                NavigateToPath(resolved.Target);
+                NavigateToPath(resolved.Target, resolved.Fragment);
                 break;
 
             case DocumentationPathResolver.LinkKind.Anchor:
-                // In-page anchors are not currently supported; no-op.
+                // Same-page anchor: ask the view to scroll to the heading.
+                if (!string.IsNullOrEmpty(resolved.Target))
+                    AnchorRequested?.Invoke(this, resolved.Target);
                 break;
         }
     }
 
-    private void NavigateToPath(string docsRelativePath)
+    private void NavigateToPath(string docsRelativePath, string? fragment = null)
     {
         var match = Sections
             .SelectMany(s => s.Pages)
             .FirstOrDefault(p => string.Equals(p.Path, docsRelativePath, StringComparison.OrdinalIgnoreCase));
+
+        // Already on the target page: SelectedPage won't re-fire, so handle the anchor directly.
+        if (match is not null && ReferenceEquals(match, SelectedPage))
+        {
+            if (!string.IsNullOrEmpty(fragment))
+                AnchorRequested?.Invoke(this, fragment);
+            return;
+        }
+
+        pendingAnchor = fragment;
 
         if (match is not null)
         {
@@ -253,7 +303,9 @@ public partial class DocumentationViewModel : PageViewModelBase
         else
         {
             // Not part of the discovered tree (e.g. a page not yet listed) — load it directly.
-            LoadPageAsync(docsRelativePath).SafeFireAndForget();
+            var anchor = pendingAnchor;
+            pendingAnchor = null;
+            LoadPageAsync(docsRelativePath, anchor).SafeFireAndForget();
         }
     }
 

@@ -127,6 +127,19 @@
                         </ui:NavigationViewItem.IconSource>
                     </ui:NavigationViewItem>
 
+                    <!--  Documentation  -->
+                    <ui:NavigationViewItem
+                        Name="FooterDocumentationItem"
+                        Content="Documentation"
+                        Tapped="FooterDocumentationItem_OnTapped">
+                        <ui:NavigationViewItem.IconSource>
+                            <fluentIcons:SymbolIconSource
+                                FontSize="18"
+                                IconVariant="Filled"
+                                Symbol="BookOpen" />
+                        </ui:NavigationViewItem.IconSource>
+                    </ui:NavigationViewItem>
+
                     <!--  Support Us  -->
                     <ui:NavigationViewItem
                         Name="FooterSupportItem"

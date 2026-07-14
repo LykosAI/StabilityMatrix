@@ -31,7 +31,45 @@ public static class DocumentationPathResolver
     /// <summary>
     /// Result of classifying/resolving a clicked link.
     /// </summary>
-    public readonly record struct ResolvedLink(LinkKind Kind, string Target);
+    /// <param name="Kind">The classification of the link.</param>
+    /// <param name="Target">
+    /// For <see cref="LinkKind.InternalPage"/>, the resolved docs-root-relative page path.
+    /// For <see cref="LinkKind.External"/>, the absolute URL.
+    /// For <see cref="LinkKind.Anchor"/>, the bare heading slug (no leading <c>#</c>).
+    /// </param>
+    /// <param name="Fragment">
+    /// For an <see cref="LinkKind.InternalPage"/> that carried a <c>#fragment</c>, the bare
+    /// heading slug to scroll to after the page loads; otherwise <c>null</c>.
+    /// </param>
+    public readonly record struct ResolvedLink(LinkKind Kind, string Target, string? Fragment = null);
+
+    /// <summary>
+    /// Produces a GitHub-style anchor slug from heading text: lowercased, with everything
+    /// except letters, digits, spaces and hyphens removed, and spaces collapsed to hyphens.
+    /// </summary>
+    /// <remarks>
+    /// Duplicate-heading disambiguation (the <c>-1</c>, <c>-2</c> suffixes GitHub adds) is applied
+    /// by the caller in document order, not here.
+    /// </remarks>
+    public static string Slugify(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+            return string.Empty;
+
+        var builder = new StringBuilder(text.Length);
+        foreach (var c in text.Trim().ToLowerInvariant())
+        {
+            if (char.IsLetterOrDigit(c) || c == '-')
+                builder.Append(c);
+            else if (char.IsWhiteSpace(c))
+                builder.Append(' ');
+            // all other characters (punctuation, parentheses, etc.) are dropped
+        }
+
+        // Collapse runs of whitespace to single hyphens
+        var words = builder.ToString().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        return string.Join('-', words);
+    }
 
     /// <summary>
     /// Converts a docs file or folder name into a human friendly title.
@@ -93,9 +131,9 @@ public static class DocumentationPathResolver
 
         href = href.Trim();
 
-        // In-page anchor
+        // In-page anchor -> carry the bare heading slug as the target
         if (href.StartsWith('#'))
-            return new ResolvedLink(LinkKind.Anchor, href);
+            return new ResolvedLink(LinkKind.Anchor, Slugify(href.TrimStart('#')));
 
         // Absolute http(s) (also covers mailto: etc. -> treat as external / open-in-browser)
         if (
@@ -110,19 +148,26 @@ public static class DocumentationPathResolver
             return new ResolvedLink(LinkKind.External, href);
         }
 
-        // Strip any anchor fragment from a relative path before resolving
+        // Split off any anchor fragment from a relative path before resolving the page
+        string? fragment = null;
         var fragmentIndex = href.IndexOf('#');
         if (fragmentIndex >= 0)
+        {
+            var rawFragment = href[(fragmentIndex + 1)..];
+            if (!string.IsNullOrWhiteSpace(rawFragment))
+                fragment = Slugify(rawFragment);
             href = href[..fragmentIndex];
+        }
 
+        // A bare "#" (or "path#" with no page part) was really an in-page anchor
         if (string.IsNullOrEmpty(href))
-            return new ResolvedLink(LinkKind.Anchor, "#");
+            return new ResolvedLink(LinkKind.Anchor, fragment ?? string.Empty);
 
-        // Relative markdown page -> resolve against the current page's folder
+        // Relative markdown page -> resolve against the current page's folder, carrying any fragment
         if (href.EndsWith(".md", StringComparison.OrdinalIgnoreCase))
         {
             var resolved = ResolveRelativePath(currentPagePath, href);
-            return new ResolvedLink(LinkKind.InternalPage, resolved);
+            return new ResolvedLink(LinkKind.InternalPage, resolved, fragment);
         }
 
         // Anything else relative (rare) -> treat as external best-effort against raw base

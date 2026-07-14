@@ -41,39 +41,30 @@
                     IsIndeterminate="True"
                     IsVisible="{Binding IsTreeLoading}" />
 
-                <ScrollViewer Grid.Row="1" IsVisible="{Binding !IsTreeLoading}">
-                    <ItemsControl ItemsSource="{Binding Sections}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate x:DataType="docs:DocumentationSectionNavItem">
-                                <StackPanel Margin="0,0,0,4">
-                                    <TextBlock
-                                        Margin="16,10,16,4"
-                                        FontSize="12"
-                                        FontWeight="SemiBold"
-                                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                                        IsVisible="{Binding HasHeader}"
-                                        Text="{Binding Title}" />
-                                    <ItemsControl ItemsSource="{Binding Pages}">
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate x:DataType="docs:DocumentationPageNavItem">
-                                                <RadioButton
-                                                    Margin="8,0"
-                                                    Padding="8,6"
-                                                    HorizontalAlignment="Stretch"
-                                                    HorizontalContentAlignment="Left"
-                                                    Command="{Binding ((vm:DocumentationViewModel)DataContext).SelectPageCommand, RelativeSource={RelativeSource AncestorType=controls:UserControlBase}}"
-                                                    CommandParameter="{Binding}"
-                                                    Content="{Binding Title}"
-                                                    GroupName="DocsPages"
-                                                    IsChecked="{Binding IsSelected, Mode=OneWay}" />
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
-                                </StackPanel>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </ScrollViewer>
+                <TreeView
+                    Grid.Row="1"
+                    Padding="8,0,8,8"
+                    IsVisible="{Binding !IsTreeLoading}"
+                    ItemsSource="{Binding TreeItems}"
+                    SelectedItem="{Binding SelectedTreeItem, Mode=TwoWay}">
+                    <TreeView.Styles>
+                        <!--  Bind expansion state for section nodes (leaves have no children; cast is safe for both types)  -->
+                        <Style Selector="TreeViewItem">
+                            <Setter Property="IsExpanded" Value="{Binding $self.((docs:DocumentationNavNode)DataContext).IsExpanded, Mode=TwoWay}" />
+                        </Style>
+                    </TreeView.Styles>
+                    <TreeView.DataTemplates>
+                        <TreeDataTemplate DataType="{x:Type docs:DocumentationSectionNavItem}" ItemsSource="{Binding Pages}">
+                            <TextBlock
+                                FontWeight="SemiBold"
+                                Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                Text="{Binding Title}" />
+                        </TreeDataTemplate>
+                        <DataTemplate DataType="{x:Type docs:DocumentationPageNavItem}">
+                            <TextBlock Text="{Binding Title}" TextWrapping="Wrap" />
+                        </DataTemplate>
+                    </TreeView.DataTemplates>
+                </TreeView>
             </Grid>
         </Border>
 
@@ -145,6 +136,7 @@
 
                 <!--  Rendered markdown (MarkdownScrollViewer scrolls internally)  -->
                 <controls:DocumentationMarkdownViewer
+                    x:Name="MarkdownViewer"
                     Margin="24,16"
                     ImageBaseUrl="{Binding CurrentImageBaseUrl}"
                     IsVisible="{Binding !HasError}"

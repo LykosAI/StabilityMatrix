@@ -464,11 +464,7 @@ public sealed class App : Application
                 provider.GetRequiredService<OutputsPageViewModel>(),
                 provider.GetRequiredService<WorkflowsPageViewModel>(),
             },
-            FooterPages =
-            {
-                provider.GetRequiredService<DocumentationViewModel>(),
-                provider.GetRequiredService<SettingsViewModel>(),
-            },
+            FooterPages = { provider.GetRequiredService<SettingsViewModel>() },
         });
     }
 

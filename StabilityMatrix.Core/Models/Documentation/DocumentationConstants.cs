@@ -19,6 +19,20 @@ public static class DocumentationConstants
     public const string DocsRoot = "docs";
 
     /// <summary>
+    /// Preferred display order of documentation section folders, matching the docs site navigation.
+    /// Folders not listed here are appended afterwards in alphabetical order.
+    /// </summary>
+    public static readonly string[] PreferredSectionOrder =
+    [
+        "getting-started",
+        "package-manager",
+        "inference",
+        "advanced",
+        "tips",
+        "troubleshooting",
+    ];
+
+    /// <summary>
     /// Base URL for raw file content, e.g.
     /// <c>https://raw.githubusercontent.com/{Owner}/{Repo}/{Branch}/</c>.
     /// </summary>

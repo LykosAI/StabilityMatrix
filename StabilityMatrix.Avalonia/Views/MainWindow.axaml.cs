@@ -553,6 +553,14 @@ public partial class MainWindow : AppWindowBase
         ProcessRunner.OpenUrl(Assets.MembershipUrl);
     }
 
+    private void FooterDocumentationItem_OnTapped(object? sender, TappedEventArgs e)
+    {
+        // Documentation is no longer part of FooterPages, so navigate directly by type.
+        // The NavigationView's SelectedItem will clear (no matching menu/footer item) — the
+        // footer entry stays un-highlighted, which is the intended behavior here.
+        navigationService.NavigateTo<DocumentationViewModel>(new BetterEntranceNavigationTransition());
+    }
+
     private void TopLevel_OnBackRequested(object? sender, RoutedEventArgs e)
     {
         e.Handled = true;

@@ -94,6 +94,51 @@ public class DocumentationPathResolverTests
         );
 
         Assert.AreEqual(DocumentationPathResolver.LinkKind.Anchor, result.Kind);
+        // Target is the bare slug (no leading '#').
+        Assert.AreEqual("common-variables", result.Target);
+    }
+
+    [TestMethod]
+    public void ResolveLink_AnchorWithMixedCaseAndPunctuation_SlugifiesTarget()
+    {
+        var result = DocumentationPathResolver.ResolveLink("advanced/overview.md", "#Apple Silicon (MPS)");
+
+        Assert.AreEqual(DocumentationPathResolver.LinkKind.Anchor, result.Kind);
+        Assert.AreEqual("apple-silicon-mps", result.Target);
+    }
+
+    [TestMethod]
+    public void ResolveLink_MarkdownWithFragment_CarriesSlugFragment()
+    {
+        var result = DocumentationPathResolver.ResolveLink(
+            "advanced/environment-variables.md",
+            "overview.md#Setting Variables"
+        );
+
+        Assert.AreEqual(DocumentationPathResolver.LinkKind.InternalPage, result.Kind);
+        Assert.AreEqual("advanced/overview.md", result.Target);
+        Assert.AreEqual("setting-variables", result.Fragment);
+    }
+
+    [TestMethod]
+    public void ResolveLink_MarkdownWithoutFragment_HasNullFragment()
+    {
+        var result = DocumentationPathResolver.ResolveLink("README.md", "getting-started/overview.md");
+
+        Assert.AreEqual(DocumentationPathResolver.LinkKind.InternalPage, result.Kind);
+        Assert.IsNull(result.Fragment);
+    }
+
+    [DataTestMethod]
+    [DataRow("AMD (ROCm)", "amd-rocm")]
+    [DataRow("Apple Silicon (MPS)", "apple-silicon-mps")]
+    [DataRow("Common Variables", "common-variables")]
+    [DataRow("Already-Slugged", "already-slugged")]
+    [DataRow("  Trailing / Slashes!  ", "trailing-slashes")]
+    [DataRow("Multiple   Spaces", "multiple-spaces")]
+    public void Slugify_ProducesGitHubStyleSlug(string input, string expected)
+    {
+        Assert.AreEqual(expected, DocumentationPathResolver.Slugify(input));
     }
 
     [TestMethod]

@@ -244,9 +244,9 @@ public class DocumentationService(
             );
         }
 
-        foreach (var folder in sectionOrder.OrderBy(f => f, StringComparer.OrdinalIgnoreCase))
+        foreach (var folder in OrderSections(sectionOrder))
         {
-            var pages = sections[folder].OrderBy(p => p.Title, StringComparer.OrdinalIgnoreCase).ToList();
+            var pages = OrderSectionPages(sections[folder]);
 
             result.Add(
                 new DocumentationSection
@@ -259,6 +259,47 @@ public class DocumentationService(
         }
 
         return result;
+    }
+
+    /// <summary>
+    /// Orders section folders by <see cref="DocumentationConstants.PreferredSectionOrder"/>,
+    /// with any folder not in that list appended afterwards alphabetically.
+    /// </summary>
+    private static IEnumerable<string> OrderSections(IEnumerable<string> folders)
+    {
+        return folders.OrderBy(GetPreferredSectionIndex).ThenBy(f => f, StringComparer.OrdinalIgnoreCase);
+    }
+
+    private static int GetPreferredSectionIndex(string folder)
+    {
+        var order = DocumentationConstants.PreferredSectionOrder;
+        for (var i = 0; i < order.Length; i++)
+        {
+            if (string.Equals(order[i], folder, StringComparison.OrdinalIgnoreCase))
+                return i;
+        }
+
+        // Unknown folders sort after all known ones (then alphabetically via ThenBy).
+        return order.Length;
+    }
+
+    /// <summary>
+    /// Orders pages within a section: <c>overview.md</c> first (matched on file name), then the
+    /// remaining pages alphabetically by title.
+    /// </summary>
+    private static List<DocumentationPage> OrderSectionPages(IEnumerable<DocumentationPage> pages)
+    {
+        return pages
+            .OrderByDescending(p => IsOverviewPage(p.Path))
+            .ThenBy(p => p.Title, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
+
+    private static bool IsOverviewPage(string docsRelativePath)
+    {
+        var lastSlash = docsRelativePath.LastIndexOf('/');
+        var fileName = lastSlash < 0 ? docsRelativePath : docsRelativePath[(lastSlash + 1)..];
+        return fileName.Equals("overview.md", StringComparison.OrdinalIgnoreCase);
     }
 
     private static bool IsFresh(FilePath cacheFile) =>

@@ -1,7 +1,13 @@
 using System;
+using System.Collections.Generic;
 using System.Windows.Input;
 using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Threading;
+using Avalonia.VisualTree;
+using ColorTextBlock.Avalonia;
 using Markdown.Avalonia;
+using StabilityMatrix.Core.Models.Documentation;
 
 namespace StabilityMatrix.Avalonia.Controls;
 
@@ -78,5 +84,107 @@ public class DocumentationMarkdownViewer : BetterMarkdownScrollViewer
         // AssetPathRoot flows through to the engine's bitmap loader so relative image
         // paths resolve against the raw docs URL.
         AssetPathRoot = ImageBaseUrl ?? string.Empty;
+    }
+
+    private static readonly string[] HeadingClasses =
+    [
+        "Heading1",
+        "Heading2",
+        "Heading3",
+        "Heading4",
+        "Heading5",
+        "Heading6",
+    ];
+
+    /// <summary>
+    /// Scrolls the rendered content so the heading matching the given GitHub-style anchor slug
+    /// is brought to the top of the viewport.
+    /// </summary>
+    /// <param name="anchor">The bare heading slug (no leading <c>#</c>).</param>
+    /// <returns><c>true</c> if a matching heading was found at call time; otherwise <c>false</c>.</returns>
+    public bool ScrollToAnchor(string anchor)
+    {
+        if (string.IsNullOrWhiteSpace(anchor))
+            return false;
+
+        var slug = DocumentationPathResolver.Slugify(anchor);
+        if (slug.Length == 0)
+            return false;
+
+        // Content is built synchronously when Markdown changes, but layout/measure (needed for
+        // TranslatePoint) only runs on the next layout pass — defer the actual scroll.
+        var found = FindHeadingBySlug(slug) is not null;
+
+        Dispatcher.UIThread.Post(
+            () =>
+            {
+                var target = FindHeadingBySlug(slug);
+                if (target is not null)
+                    ScrollHeadingIntoView(target);
+            },
+            DispatcherPriority.Background
+        );
+
+        return found;
+    }
+
+    /// <summary>
+    /// Locates the heading control whose slug matches, applying GitHub-style duplicate suffixes
+    /// (<c>-1</c>, <c>-2</c>, ...) in document order.
+    /// </summary>
+    private CTextBlock? FindHeadingBySlug(string slug)
+    {
+        var seen = new Dictionary<string, int>(StringComparer.Ordinal);
+
+        foreach (var descendant in this.GetVisualDescendants())
+        {
+            if (descendant is not CTextBlock textBlock || !IsHeading(textBlock))
+                continue;
+
+            var baseSlug = DocumentationPathResolver.Slugify(textBlock.Text ?? string.Empty);
+            if (baseSlug.Length == 0)
+                continue;
+
+            string effectiveSlug;
+            if (seen.TryGetValue(baseSlug, out var count))
+            {
+                effectiveSlug = $"{baseSlug}-{count}";
+                seen[baseSlug] = count + 1;
+            }
+            else
+            {
+                effectiveSlug = baseSlug;
+                seen[baseSlug] = 1;
+            }
+
+            if (string.Equals(effectiveSlug, slug, StringComparison.Ordinal))
+                return textBlock;
+        }
+
+        return null;
+    }
+
+    private static bool IsHeading(StyledElement control)
+    {
+        foreach (var cls in HeadingClasses)
+        {
+            if (control.Classes.Contains(cls))
+                return true;
+        }
+
+        return false;
+    }
+
+    private void ScrollHeadingIntoView(Visual heading)
+    {
+        // Position of the heading relative to this control's viewport, plus the current scroll
+        // offset, gives the heading's Y within the scrollable content.
+        var current = ScrollValue;
+        var point = heading.TranslatePoint(new Point(0, 0), this);
+        if (point is null)
+            return;
+
+        var targetY = Math.Max(0, point.Value.Y + current.Y);
+        ScrollValue = new Vector(current.X, targetY);
     }
 }

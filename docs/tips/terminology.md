@@ -109,7 +109,7 @@ You can think of it as a translator between two worlds:
 
 The denoiser usually works in latent space because latent tensors are much smaller than full-resolution images, which makes diffusion practical on consumer hardware. The VAE is what lets the pipeline move into that latent space and back out again.
 
-This is also why the wrong VAE can visibly damage output. Common symptoms include washed-out colors, odd contrast, muddy textures, or images that simply do not decode correctly and resulting in error. In older SD and SDXL workflows, matching the intended VAE can matter a lot.
+This is also why the wrong VAE can visibly damage output. Common symptoms include washed-out colors, odd contrast, muddy textures, or images that simply do not decode correctly, resulting in an error or black output (NaN). In older SD and SDXL workflows, matching the intended VAE can matter a lot.
 
 **Latent**
 
@@ -451,7 +451,7 @@ This term is most common in older Stable Diffusion checkpoint ecosystems, where 
 
 In newer DiT-based ecosystems, you may also see AiO, short for all-in-one. AiO usually means the full generation stack is packaged together as one coordinated model release, often including the transformer or denoiser, text encoders, and VAE in the same bundled file or tightly coupled package.
 
-In many AiO releases, that really does mean a single bundled model file with the text encoder and or VAE included. The important nuance is that this is still not universal. Some modern DiT releases remain split into separate internal components, but are distributed and loaded as one complete package instead of expecting the user to assemble mismatched pieces manually.
+In many AiO releases, that really does mean a single bundled model file with the text encoder and/or VAE included. The important nuance is that this is still not universal. Some modern DiT releases remain split into separate internal components, but are distributed and loaded as one complete package instead of expecting the user to assemble mismatched pieces manually.
 
 Why it matters: if a model is VAE-baked, setup is simpler because you do not need to hunt for a matching external VAE. If a model is described as AiO, it usually means setup is simpler at a broader level because the main transformer, text encoders, and VAE are meant to be used together as one packaged release. That said, not all DiT models are AiO, and many modern ones remain modular by design for flexibility, swapping components, and memory management.
 

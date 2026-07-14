@@ -318,51 +318,16 @@ public partial class MainWindow : AppWindowBase
 
     protected override void OnClosing(WindowClosingEventArgs e)
     {
-        // Show confirmation if package running
-        var runningPackageService = App.Services.GetRequiredService<RunningPackageService>();
-        if (
-            runningPackageService.RunningPackages.Count > 0
-            && e.CloseReason is WindowCloseReason.WindowClosing
-        )
+        // Route the close button through the app shutdown flow so the running-package
+        // confirmation is handled in one place, consistently with ⌘Q and the menu Quit.
+        if (e.CloseReason is WindowCloseReason.WindowClosing)
         {
             e.Cancel = true;
-
-            var dialog = CreateExitConfirmDialog();
-            Dispatcher
-                .UIThread.InvokeAsync(async () =>
-                {
-                    if (
-                        (TaskDialogStandardResult)await dialog.ShowAsync(true) == TaskDialogStandardResult.Yes
-                    )
-                    {
-                        App.Services.GetRequiredService<MainWindow>().Hide();
-                        App.Shutdown();
-                    }
-                })
-                .SafeFireAndForget();
+            App.Shutdown();
+            return;
         }
 
         base.OnClosing(e);
-    }
-
-    private static TaskDialog CreateExitConfirmDialog()
-    {
-        var dialog = DialogHelper.CreateTaskDialog(
-            Languages.Resources.Label_ConfirmExit,
-            Languages.Resources.Label_ConfirmExitDetail
-        );
-
-        dialog.ShowProgressBar = false;
-        dialog.FooterVisibility = TaskDialogFooterVisibility.Never;
-
-        dialog.Buttons = new List<TaskDialogButton>
-        {
-            new("Exit", TaskDialogStandardResult.Yes),
-            TaskDialogButton.CancelButton,
-        };
-        dialog.Buttons[0].IsDefault = true;
-
-        return dialog;
     }
 
     /// <inheritdoc />

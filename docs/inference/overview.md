@@ -55,7 +55,7 @@ Above the docked panels, the upper-right area of the Inference page contains pag
 
 That upper-right area also includes a three-dot menu for tab and project management actions. This menu provides commands for opening a project, saving the current project, saving the current project under a new name, and restoring the default layout.
 
-On the left, most tabs expose configuration cards such as model selection, sampler settings, modules, seed controls, batch settings, or input-image selectors. In text-to-image, these controls appear as a stacked configuration pane. In certain image-based and video-based modes, Upscaler and SVD Image to Video, the left side may also include dedicated source-image cards.
+On the left, most tabs expose configuration cards such as model selection, sampler settings, modules, seed controls, batch settings, or input-image selectors. In text-to-image, these controls appear as a stacked configuration pane. In certain image-based and video-based modes, such as Image to Image and Wan Image to Video, the left side may also include dedicated source-image cards.
 
 The center area is typically reserved for the prompt workspace and the main generation controls. In text-to-image, this includes the prompt editor and a separate generate pane with the main generate, cancel, and seed-reuse actions. In other modes, the center layout may combine prompts with additional mode-specific controls such as source-image input.
 

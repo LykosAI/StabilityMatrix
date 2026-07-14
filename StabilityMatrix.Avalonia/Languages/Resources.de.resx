@@ -1087,7 +1087,17 @@
     <value>Bildgenerierungs-APIs</value>
   </data>
   <data name="Label_GeminiOffDescription" xml:space="preserve">
-    <value>Füge deinen Gemini-API-Schlüssel hinzu, um Nano Banana im Image Lab zur Bildgenerierung zu nutzen</value>
+    <value>Füge einen kostenpflichtigen Gemini-API-Schlüssel (Abrechnung aktiviert) hinzu, um Nano Banana im Image Lab zu nutzen</value>
+  </data>
+  <data name="Text_SetGeminiApiKeyDescription" xml:space="preserve">
+    <value>Die Nano-Banana-Modelle im Image Lab benötigen einen **kostenpflichtigen** Gemini-API-Schlüssel – Schlüssel der kostenlosen Stufe können keine Bilder generieren.
+
+1. Erstelle einen Schlüssel im [Google AI Studio](https://aistudio.google.com/apikey).
+2. Aktiviere die Abrechnung für das zugehörige Google-Cloud-Projekt in der [Cloud Console](https://console.cloud.google.com/billing).
+3. Füge den Schlüssel unten ein.</value>
+  </data>
+  <data name="Action_CustomFolderEllipsis" xml:space="preserve">
+    <value>Benutzerdefiniert...</value>
   </data>
   <data name="Label_AboutAccountCredentials" xml:space="preserve">
     <value>Über Konto-Anmeldeinformationen</value>

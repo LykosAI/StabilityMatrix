@@ -37,9 +37,17 @@
     <Grid RowDefinitions="Auto,Auto,Auto,*">
         <Grid
             Name="TitleBarHost"
-            Height="32"
             Background="Transparent"
             ColumnDefinitions="Auto,Auto,*,Auto">
+            <!--
+                Windows hosts the icon/title/caption buttons here; on macOS & Linux those are
+                native, so collapse the strip to avoid an empty band under the system title bar.
+            -->
+            <Grid.Height>
+                <OnPlatform Default="0">
+                    <On Content="32" Options="Windows" />
+                </OnPlatform>
+            </Grid.Height>
             <Image
                 Name="WindowIcon"
                 Width="18"

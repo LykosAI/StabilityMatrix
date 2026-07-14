@@ -49,7 +49,7 @@ Not every package will use every variable below, but these are some of the most 
 | Variable | Example Value | Purpose |
 |---|---|---|
 | `PATH` | `Linux/macOS: /opt/custom/bin:/usr/local/bin:/usr/bin`<br>`Windows: C:\Tools;C:\Windows\System32` | Controls where the OS looks for executables and shared tooling. This is useful when a helper binary or compiler needs to be found before the system default. |
-| `LD_PRELOAD` | `/usr/lib/libtcmalloc.so` | Preloads a shared library before the target process starts. This is mainly a Linux and MacOS troubleshooting variable for advanced cases such as custom allocators, compatibility shims, or injected hooks. |
+| `LD_PRELOAD` | `/usr/lib/libtcmalloc.so` | Preloads a shared library before the target process starts. This is mainly a Linux and macOS troubleshooting variable for advanced cases such as custom allocators, compatibility shims, or injected hooks. |
 | `PIP_CACHE_DIR` | `Linux/macOS: /mnt/drive/pip-cache`<br>`Windows: D:\pip-cache` | Moves pip's download and wheel cache to a different drive. This can help when your system drive is small or you want repeated installs to reuse cached artifacts. |
 | `PIP_TIMEOUT` | `60` | Sets pip's HTTP timeout in seconds. This is useful when downloads fail on slower connections, high-latency links, or package sources that respond slowly. |
 | `PIP_RETRIES` | `8` | Controls how many times pip retries failed network requests. This can help when installs are mostly working but occasionally fail because of transient connection or CDN issues. |
@@ -59,7 +59,7 @@ Not every package will use every variable below, but these are some of the most 
 | `UV_HTTP_RETRIES` | `5` | Controls how many times uv retries failed HTTP requests. This can help when downloads intermittently fail because of unstable networking or remote mirror issues. |
 | `DOTNET_ROOT` | `Linux/macOS: /usr/share/dotnet`<br>`Windows: C:\Program Files\dotnet` | Tells .NET where to find the runtime and shared frameworks. This is the main .NET environment variable to check when a .NET-based helper or component cannot locate the expected runtime. |
 
-For most users, the most practical variables here are `PATH`, package-manager cache and network variables (`PIP_*` and `UV_*`), and `DOTNET_ROOT` when runtime discovery does not behave as expected. `LD_PRELOAD` is powerful, but it is mainly an advanced Linux/MacOS troubleshooting tool rather than a routine Stability Matrix setting.
+For most users, the most practical variables here are `PATH`, package-manager cache and network variables (`PIP_*` and `UV_*`), and `DOTNET_ROOT` when runtime discovery does not behave as expected. `LD_PRELOAD` is powerful, but it is mainly an advanced Linux/macOS troubleshooting tool rather than a routine Stability Matrix setting.
 
 ## PyTorch and CUDA Variables
 

@@ -9,9 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Injectio.Attributes;
 using Microsoft.Extensions.Logging;
-using Refit;
-using StabilityMatrix.Core.Api;
-using StabilityMatrix.Core.Models.Api;
+using Octokit;
 using StabilityMatrix.Core.Models.Documentation;
 using StabilityMatrix.Core.Models.FileInterfaces;
 
@@ -20,7 +18,7 @@ namespace StabilityMatrix.Core.Services;
 [RegisterSingleton<IDocumentationService, DocumentationService>]
 public class DocumentationService(
     ILogger<DocumentationService> logger,
-    IGitHubContentApi gitHubContentApi,
+    IGitHubClient gitHubClient,
     IHttpClientFactory httpClientFactory
 ) : IDocumentationService
 {
@@ -135,27 +133,32 @@ public class DocumentationService(
 
     private async Task<List<string>> FetchDocsPathsAsync(CancellationToken cancellationToken)
     {
-        GitHubTreeResponse tree;
+        // Octokit calls don't take a CancellationToken; the tree response is small and
+        // the surrounding cache logic still honors cancellation.
+        TreeResponse tree;
         try
         {
-            tree = await gitHubContentApi
-                .GetTree(
+            tree = await gitHubClient
+                .Git.Tree.GetRecursive(
                     DocumentationConstants.Owner,
                     DocumentationConstants.Repo,
-                    DocumentationConstants.Branch,
-                    cancellationToken: cancellationToken
+                    DocumentationConstants.Branch
                 )
                 .ConfigureAwait(false);
         }
-        catch (ApiException e) when (e.StatusCode == HttpStatusCode.NotFound)
+        catch (NotFoundException e)
         {
             throw new DocumentationNotAvailableException("Documentation repository or branch not found.", e);
         }
 
+        cancellationToken.ThrowIfCancellationRequested();
+
         var prefix = DocumentationConstants.DocsRoot + "/";
 
         var paths = tree
-            .Tree.Where(item => item.IsBlob && item.Path.StartsWith(prefix, StringComparison.Ordinal))
+            .Tree.Where(item =>
+                item.Type == TreeType.Blob && item.Path.StartsWith(prefix, StringComparison.Ordinal)
+            )
             .Select(item => item.Path[prefix.Length..])
             .Where(IsDocPage)
             .ToList();

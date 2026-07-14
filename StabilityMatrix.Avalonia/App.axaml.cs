@@ -843,15 +843,6 @@ public sealed class App : Application
             .AddPolicyHandler(retryPolicy);
 
         services
-            .AddRefitClient<IGitHubContentApi>(defaultRefitSettings)
-            .ConfigureHttpClient(c =>
-            {
-                c.BaseAddress = new Uri("https://api.github.com");
-                c.Timeout = TimeSpan.FromMinutes(1);
-            })
-            .AddPolicyHandler(retryPolicy);
-
-        services
             .AddRefitClient<IHuggingFaceApi>(defaultRefitSettings) // Assuming defaultRefitSettings is suitable
             .ConfigureHttpClient(c =>
             {

@@ -161,7 +161,12 @@
                             Classes="transparent"
                             Command="{Binding ZoomOutCommand}"
                             ToolTip.Tip="Zoom out">
-                            <fluentAvalonia:SymbolIcon FontSize="16" Symbol="ZoomOut" />
+                            <!--  FluentIcons SymbolIcon measures greedily without explicit Width/Height  -->
+                            <fluentAvalonia:SymbolIcon
+                                Width="16"
+                                Height="16"
+                                FontSize="16"
+                                Symbol="ZoomOut" />
                         </Button>
                         <Button
                             MinWidth="48"
@@ -179,7 +184,11 @@
                             Classes="transparent"
                             Command="{Binding ZoomInCommand}"
                             ToolTip.Tip="Zoom in">
-                            <fluentAvalonia:SymbolIcon FontSize="16" Symbol="ZoomIn" />
+                            <fluentAvalonia:SymbolIcon
+                                Width="16"
+                                Height="16"
+                                FontSize="16"
+                                Symbol="ZoomIn" />
                         </Button>
                     </StackPanel>
                 </Border>

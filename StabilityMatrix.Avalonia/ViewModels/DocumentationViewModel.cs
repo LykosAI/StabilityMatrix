@@ -27,8 +27,13 @@ namespace StabilityMatrix.Avalonia.ViewModels;
 [RegisterSingleton<DocumentationViewModel>]
 public partial class DocumentationViewModel : PageViewModelBase
 {
+    private const double MinZoom = 0.5;
+    private const double MaxZoom = 2.0;
+    private const double ZoomStep = 0.1;
+
     private readonly ILogger<DocumentationViewModel> logger;
     private readonly IDocumentationService documentationService;
+    private readonly ISettingsManager settingsManager;
 
     public override string Title => "Documentation";
 
@@ -72,6 +77,14 @@ public partial class DocumentationViewModel : PageViewModelBase
     [NotifyPropertyChangedFor(nameof(IsContentVisible))]
     private bool isDocsUnavailable;
 
+    /// <summary>Content zoom factor for the markdown viewer (1.0 = 100%). Persisted in settings.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ZoomPercentText))]
+    public partial double ZoomFactor { get; set; }
+
+    /// <summary>Current zoom level formatted for display, e.g. "100%".</summary>
+    public string ZoomPercentText => $"{Math.Round(ZoomFactor * 100)}%";
+
     public bool HasError => !string.IsNullOrEmpty(ErrorMessage);
 
     public bool IsContentVisible => !IsDocsUnavailable;
@@ -87,23 +100,40 @@ public partial class DocumentationViewModel : PageViewModelBase
 
     private CancellationTokenSource? pageCts;
     private bool hasLoadedTree;
+    private bool hasRegisteredSettingsRelays;
 
     /// <summary>Anchor slug to scroll to after the next page load completes (cross-page anchor links).</summary>
     private string? pendingAnchor;
 
     public DocumentationViewModel(
         ILogger<DocumentationViewModel> logger,
-        IDocumentationService documentationService
+        IDocumentationService documentationService,
+        ISettingsManager settingsManager
     )
     {
         this.logger = logger;
         this.documentationService = documentationService;
+        this.settingsManager = settingsManager;
         LinkClickedCommand = new RelayCommand<string>(OnLinkClicked);
+        ZoomFactor = 1.0;
     }
 
     public override async Task OnLoadedAsync()
     {
         await base.OnLoadedAsync();
+
+        if (!hasRegisteredSettingsRelays)
+        {
+            hasRegisteredSettingsRelays = true;
+
+            // Load the persisted zoom level and keep it saved on change.
+            settingsManager.RelayPropertyFor(
+                this,
+                vm => vm.ZoomFactor,
+                settings => settings.DocumentationZoomFactor,
+                true
+            );
+        }
 
         if (!hasLoadedTree)
         {
@@ -115,6 +145,24 @@ public partial class DocumentationViewModel : PageViewModelBase
     private async Task RetryAsync()
     {
         await LoadTreeAsync(forceRefresh: true);
+    }
+
+    [RelayCommand]
+    private void ZoomIn()
+    {
+        ZoomFactor = Math.Min(MaxZoom, Math.Round(ZoomFactor + ZoomStep, 2));
+    }
+
+    [RelayCommand]
+    private void ZoomOut()
+    {
+        ZoomFactor = Math.Max(MinZoom, Math.Round(ZoomFactor - ZoomStep, 2));
+    }
+
+    [RelayCommand]
+    private void ResetZoom()
+    {
+        ZoomFactor = 1.0;
     }
 
     private async Task LoadTreeAsync(bool forceRefresh = false)
@@ -229,6 +277,9 @@ public partial class DocumentationViewModel : PageViewModelBase
             );
             ct.ThrowIfCancellationRequested();
 
+            // Fold code-span link text ([`Home`](url) -> [Home](url)) that the markdown
+            // renderer can't parse, then absolutize relative image URLs.
+            markdown = DocumentationPathResolver.RewriteCodeSpanLinks(markdown);
             CurrentMarkdown = DocumentationPathResolver.RewriteImageUrls(docsRelativePath, markdown);
             CurrentImageBaseUrl = GetPageFolderRawUrl(docsRelativePath);
 

@@ -207,6 +207,58 @@ public static class DocumentationPathResolver
         );
     }
 
+    // Matches a (non-image) markdown link whose text contains inline code, e.g. [`Home`](../README.md)
+    private static readonly Regex CodeSpanLinkRegex = new(
+        @"(?<!!)\[(?<text>[^\]]*`[^\]]*)\]\((?<url>[^)]+)\)",
+        RegexOptions.Compiled
+    );
+
+    /// <summary>
+    /// Rewrites markdown links whose link text contains inline code spans
+    /// (e.g. <c>[`Home`](../README.md)</c>) into plain-text links (<c>[Home](../README.md)</c>),
+    /// because Markdown.Avalonia's inline parser cannot parse code spans inside link text and
+    /// renders the whole construct literally. Content inside fenced code blocks
+    /// (<c>```</c>/<c>~~~</c>) is left untouched.
+    /// </summary>
+    /// <param name="markdown">The raw markdown content.</param>
+    public static string RewriteCodeSpanLinks(string markdown)
+    {
+        if (string.IsNullOrEmpty(markdown) || !markdown.Contains('`'))
+            return markdown;
+
+        // Split into lines so fenced code blocks can be skipped; '\n' split keeps any '\r'
+        // at line ends, and rejoining with '\n' restores the original line endings.
+        var lines = markdown.Split('\n');
+        var inFence = false;
+
+        for (var i = 0; i < lines.Length; i++)
+        {
+            var trimmed = lines[i].TrimStart();
+            if (
+                trimmed.StartsWith("```", StringComparison.Ordinal)
+                || trimmed.StartsWith("~~~", StringComparison.Ordinal)
+            )
+            {
+                inFence = !inFence;
+                continue;
+            }
+
+            if (inFence)
+                continue;
+
+            lines[i] = CodeSpanLinkRegex.Replace(
+                lines[i],
+                match =>
+                {
+                    var text = match.Groups["text"].Value.Replace("`", string.Empty);
+                    return $"[{text}]({match.Groups["url"].Value})";
+                }
+            );
+        }
+
+        return string.Join('\n', lines);
+    }
+
     /// <summary>
     /// Resolves a relative image path in the current page into an absolute raw URL so it renders.
     /// </summary>

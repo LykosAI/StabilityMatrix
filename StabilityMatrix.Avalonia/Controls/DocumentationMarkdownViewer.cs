@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows.Input;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Media;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using ColorTextBlock.Avalonia;
@@ -42,16 +44,61 @@ public class DocumentationMarkdownViewer : BetterMarkdownScrollViewer
         set => SetValue(LinkCommandProperty, value);
     }
 
+    /// <summary>
+    /// Zoom factor applied to the rendered document content (1.0 = 100%).
+    /// Scales the content inside the internal scroll viewer, so the scrollbar is unaffected.
+    /// </summary>
+    public static readonly StyledProperty<double> ContentZoomProperty = AvaloniaProperty.Register<
+        DocumentationMarkdownViewer,
+        double
+    >(nameof(ContentZoom), 1.0);
+
     public string? ImageBaseUrl
     {
         get => GetValue(ImageBaseUrlProperty);
         set => SetValue(ImageBaseUrlProperty, value);
     }
 
+    public double ContentZoom
+    {
+        get => GetValue(ContentZoomProperty);
+        set => SetValue(ContentZoomProperty, value);
+    }
+
+    /// <summary>
+    /// Hosts the document content inside the internal scroll viewer so zoom can scale the
+    /// content without scaling the scrollbar. Null if the base control's composition changes.
+    /// </summary>
+    private readonly LayoutTransformControl? zoomHost;
+
     public DocumentationMarkdownViewer()
     {
         ApplyLinkCommand();
         ApplyImageBaseUrl();
+
+        // The base ctor composes a non-templated inner ScrollViewer (a direct visual child)
+        // whose Content is the document wrapper, and never reassigns Content afterwards
+        // (page changes only swap the wrapper's Document). Re-parent the wrapper into a
+        // LayoutTransformControl so zoom scales the document but not the scrollbar, and add
+        // right margin so the overlay scrollbar doesn't cover the rightmost text.
+        if (this.GetVisualChildren().OfType<ScrollViewer>().FirstOrDefault() is { } innerViewer)
+        {
+            if (innerViewer.Content is Control content)
+            {
+                innerViewer.Content = null;
+                zoomHost = new LayoutTransformControl
+                {
+                    Child = content,
+                    Margin = new Thickness(0, 0, 18, 0),
+                };
+                innerViewer.Content = zoomHost;
+            }
+            else
+            {
+                // Fallback: at least keep the scrollbar off the content.
+                innerViewer.Padding = new Thickness(0, 0, 18, 0);
+            }
+        }
     }
 
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
@@ -66,6 +113,20 @@ public class DocumentationMarkdownViewer : BetterMarkdownScrollViewer
         {
             ApplyImageBaseUrl();
         }
+        else if (change.Property == ContentZoomProperty)
+        {
+            ApplyContentZoom();
+        }
+    }
+
+    private void ApplyContentZoom()
+    {
+        if (zoomHost is null)
+            return;
+
+        // Guard against zero/negative values from bad bindings.
+        var zoom = Math.Clamp(ContentZoom, 0.25, 4.0);
+        zoomHost.LayoutTransform = new ScaleTransform(zoom, zoom);
     }
 
     private void ApplyLinkCommand()

@@ -142,6 +142,48 @@ public class DocumentationPathResolverTests
     }
 
     [TestMethod]
+    public void RewriteCodeSpanLinks_FoldsCodeSpanLinkText()
+    {
+        const string markdown = "[`Home`](../README.md) > [`Section Overview`](overview.md)";
+
+        var result = DocumentationPathResolver.RewriteCodeSpanLinks(markdown);
+
+        Assert.AreEqual("[Home](../README.md) > [Section Overview](overview.md)", result);
+    }
+
+    [TestMethod]
+    public void RewriteCodeSpanLinks_MultipleCodeSpansInOneLink_StripsAllBackticks()
+    {
+        const string markdown = "[`a` and `b`](target.md)";
+
+        var result = DocumentationPathResolver.RewriteCodeSpanLinks(markdown);
+
+        Assert.AreEqual("[a and b](target.md)", result);
+    }
+
+    [TestMethod]
+    public void RewriteCodeSpanLinks_InsideFencedCodeBlock_IsUntouched()
+    {
+        const string markdown = "before\n\n```md\n[`Home`](../README.md)\n```\n\n[`Home`](../README.md)\n";
+
+        var result = DocumentationPathResolver.RewriteCodeSpanLinks(markdown);
+
+        // The occurrence inside the fence is untouched; the one outside is rewritten.
+        StringAssert.Contains(result, "```md\n[`Home`](../README.md)\n```");
+        StringAssert.Contains(result, "\n\n[Home](../README.md)\n");
+    }
+
+    [TestMethod]
+    public void RewriteCodeSpanLinks_PlainLinksAndText_AreUntouched()
+    {
+        const string markdown = "[Home](../README.md) with `inline code` and ![`alt`](img.png) image\n";
+
+        var result = DocumentationPathResolver.RewriteCodeSpanLinks(markdown);
+
+        Assert.AreEqual(markdown, result);
+    }
+
+    [TestMethod]
     public void ResolveImageUrl_RelativeParentPath_ResolvesToRawUrl()
     {
         var result = DocumentationPathResolver.ResolveImageUrl(

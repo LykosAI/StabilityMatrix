@@ -23,6 +23,9 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Full history so VitePress lastUpdated timestamps are accurate
+          fetch-depth: 0
 
       - name: Set up Node.js
         uses: actions/setup-node@v4

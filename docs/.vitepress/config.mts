@@ -16,8 +16,24 @@ export default defineConfig({
 
   appearance: 'dark',
 
+  // Requires full git history at build time (fetch-depth: 0 in the deploy job).
+  lastUpdated: true,
+
+  sitemap: {
+    hostname: 'https://docs.lykos.ai'
+  },
+
   themeConfig: {
     outline: 'deep',
+
+    search: {
+      provider: 'local'
+    },
+
+    editLink: {
+      pattern: 'https://github.com/LykosAI/StabilityMatrix/edit/main/docs/:path',
+      text: 'Edit this page on GitHub'
+    },
 
     nav: [
       { text: 'Home', link: '/' },

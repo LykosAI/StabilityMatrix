@@ -53,6 +53,11 @@ export default defineConfig({
   themeConfig: {
     outline: 'deep',
 
+    // The site-title link defaults to the bare site root, which only resolves
+    // via the Azure SWA redirect — point it at the section index directly so
+    // it also works in local preview (and needs no redirect hop in prod).
+    logoLink: '/stability-matrix/',
+
     search: {
       provider: 'local'
     },

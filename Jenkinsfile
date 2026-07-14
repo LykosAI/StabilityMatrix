@@ -35,11 +35,11 @@ node("Diligence") {
             stage('Publish Linux') {
                 // Prerequisites on Jenkins agent:
                 // - fuse3 (provides fusermount3 for appimagetool AppImage)
-                // - appimagetool-x86_64.AppImage in $PATH (/usr/local/bin/)
+                // - appimagetool in $PATH (/usr/local/bin/)
                 // - pupnet 1.9.1 globally installed
                 sh "rm -rf StabilityMatrix.Avalonia/bin/*"
                 sh "rm -rf StabilityMatrix.Avalonia/obj/*"
-                sh "/home/jenkins/.dotnet/tools/pupnet --runtime linux-x64 --kind appimage --app-version ${version} --clean -y"
+                sh "/home/jenkins/.dotnet/tools/pupnet -r linux-x64 -c Release --kind appimage --app-version $RELEASE_VERSION --clean"
             }
         }
     } finally {

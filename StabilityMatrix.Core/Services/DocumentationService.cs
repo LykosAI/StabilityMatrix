@@ -52,7 +52,14 @@ public class DocumentationService(
             try
             {
                 paths = await FetchDocsPathsAsync(cancellationToken).ConfigureAwait(false);
-                await WriteCachedPathsAsync(cacheFile, paths, cancellationToken).ConfigureAwait(false);
+                try
+                {
+                    await WriteCachedPathsAsync(cacheFile, paths, cancellationToken).ConfigureAwait(false);
+                }
+                catch (Exception cacheEx) when (cacheEx is not OperationCanceledException)
+                {
+                    logger.LogWarning(cacheEx, "Failed to write docs tree to cache");
+                }
             }
             catch (DocumentationNotAvailableException)
             {
@@ -99,8 +106,16 @@ public class DocumentationService(
             client.Timeout = TimeSpan.FromSeconds(30);
             var markdown = await client.GetStringAsync(url, cancellationToken).ConfigureAwait(false);
 
-            CacheDir.Create();
-            await cacheFile.WriteAllTextAsync(markdown, cancellationToken).ConfigureAwait(false);
+            try
+            {
+                CacheDir.Create();
+                await cacheFile.WriteAllTextAsync(markdown, cancellationToken).ConfigureAwait(false);
+            }
+            catch (Exception cacheEx) when (cacheEx is not OperationCanceledException)
+            {
+                logger.LogWarning(cacheEx, "Failed to write markdown to cache for {Path}", docsRelativePath);
+            }
+
             return markdown;
         }
         catch (Exception e) when (e is not OperationCanceledException)
@@ -162,7 +177,8 @@ public class DocumentationService(
         if (docsRelativePath.StartsWith("images/", StringComparison.OrdinalIgnoreCase))
             return false;
 
-        var fileName = docsRelativePath.Split('/').Last();
+        var lastSlash = docsRelativePath.LastIndexOf('/');
+        var fileName = lastSlash < 0 ? docsRelativePath : docsRelativePath[(lastSlash + 1)..];
         if (fileName.Equals(".gitkeep", StringComparison.OrdinalIgnoreCase))
             return false;
 
@@ -191,7 +207,7 @@ public class DocumentationService(
             }
 
             var folder = path[..separatorIndex];
-            var fileName = path.Split('/').Last();
+            var fileName = path[(path.LastIndexOf('/') + 1)..];
 
             if (!sections.TryGetValue(folder, out var list))
             {
@@ -247,14 +263,22 @@ public class DocumentationService(
 
     private static async Task<List<string>?> ReadCachedPathsAsync(FilePath cacheFile, CancellationToken ct)
     {
-        if (!cacheFile.Exists)
-            return null;
+        try
+        {
+            if (!cacheFile.Exists)
+                return null;
 
-        var text = await cacheFile.ReadAllTextAsync(ct).ConfigureAwait(false);
-        return text.Split('\n', StringSplitOptions.RemoveEmptyEntries)
-            .Select(line => line.Trim())
-            .Where(line => line.Length > 0)
-            .ToList();
+            var text = await cacheFile.ReadAllTextAsync(ct).ConfigureAwait(false);
+            return text.Split('\n', StringSplitOptions.RemoveEmptyEntries)
+                .Select(line => line.Trim())
+                .Where(line => line.Length > 0)
+                .ToList();
+        }
+        catch (Exception e) when (e is not OperationCanceledException)
+        {
+            // Unreadable/corrupt cache — treat as a miss so callers fall back to the network.
+            return null;
+        }
     }
 
     private static async Task WriteCachedPathsAsync(

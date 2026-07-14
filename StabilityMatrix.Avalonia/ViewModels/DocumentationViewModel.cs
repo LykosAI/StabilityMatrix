@@ -173,11 +173,18 @@ public partial class DocumentationViewModel : PageViewModelBase
 
     private async Task LoadPageAsync(string docsRelativePath)
     {
-        // Cancel any in-flight page load
-        await (pageCts?.CancelAsync() ?? Task.CompletedTask);
-        pageCts?.Dispose();
-        pageCts = new CancellationTokenSource();
-        var ct = pageCts.Token;
+        // Replace the CTS before any await so rapid selections can't race on the old one,
+        // then cancel the superseded load.
+        var oldCts = pageCts;
+        var newCts = new CancellationTokenSource();
+        pageCts = newCts;
+        var ct = newCts.Token;
+
+        if (oldCts is not null)
+        {
+            await oldCts.CancelAsync();
+            oldCts.Dispose();
+        }
 
         IsPageLoading = true;
         ErrorMessage = null;

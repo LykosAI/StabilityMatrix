@@ -64,8 +64,10 @@ public class DocumentationMarkdownViewer : BetterMarkdownScrollViewer
 
     private void ApplyLinkCommand()
     {
-        // The engine (IMarkdownEngine) owns the HyperlinkCommand used for all rendered links.
-        if (Engine is IMarkdownEngine engine)
+        // The engine owns the HyperlinkCommand used for all rendered links. The Engine getter
+        // always returns an IMarkdownEngine2 (custom IMarkdownEngine values are upgraded to a
+        // wrapper that only implements IMarkdownEngine2), so match on that interface.
+        if (Engine is IMarkdownEngine2 engine)
         {
             engine.HyperlinkCommand = LinkCommand;
         }

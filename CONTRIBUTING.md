@@ -20,8 +20,13 @@ The `output_dir` environment variable can be specified or defaults to `./out/osx
 ```
 ### Linux
 ```bash
-sudo apt-get -y install libfuse2
-dotnet tool install -g KuiperZone.PupNet
+sudo apt-get -y install fuse3
+# Download appimagetool (uses static type2-runtime; end users still need
+# fusermount or fusermount3 setuid helper on their system, or can use
+# --appimage-extract-and-run as a fallback)
+sudo wget -q https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage -O /usr/local/bin/appimagetool-x86_64.AppImage
+sudo chmod +x /usr/local/bin/appimagetool-x86_64.AppImage
+dotnet tool install -g KuiperZone.PupNet --version 1.9.1
 pupnet -r linux-x64 -c Release --kind appimage --app-version $RELEASE_VERSION --clean
 ```
 

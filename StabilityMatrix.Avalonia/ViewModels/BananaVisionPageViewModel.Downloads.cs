@@ -93,7 +93,7 @@ public partial class BananaVisionPageViewModel
             return;
         }
 
-        var missingModels = modelManager.GetMissingModels(ClientManager).ToList();
+        var missingModels = GetProviderMissingModels(modelManager).ToList();
 
         if (missingModels.Count == 0)
         {

@@ -7,6 +7,7 @@
     xmlns:dock="clr-namespace:StabilityMatrix.Avalonia.Controls.Dock"
     xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
     xmlns:inference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
+    xmlns:markupExtensions="clr-namespace:StabilityMatrix.Avalonia.MarkupExtensions"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
     xmlns:modelsInference="clr-namespace:StabilityMatrix.Avalonia.Models.Inference"
@@ -86,9 +87,7 @@
                                     Opacity="1"
                                     RowDefinitions="*">
                                     <!--  Prompt card  -->
-                                    <controls:SelectImageCard 
-                                        x:CompileBindings="False" 
-                                        DataContext="{Binding SelectImageCardViewModel}" />
+                                    <controls:SelectImageCard x:CompileBindings="False" DataContext="{Binding SelectImageCardViewModel}" />
                                 </Grid>
 
                             </Tool>
@@ -149,11 +148,11 @@
                                                     Width="130"
                                                     HorizontalAlignment="Stretch"
                                                     Classes="accent"
-                                                    ToolTip.Tip="{Binding $self.HotKey}"
-                                                    HotKey="Ctrl+Enter"
                                                     Command="{Binding GenerateImageCommand}"
                                                     CommandParameter="{x:Static modelsInference:GenerateFlags.None}"
-                                                    IsVisible="{Binding !GenerateImageCommand.CanBeCanceled}">
+                                                    HotKey="{markupExtensions:PlatformGesture Ctrl+Enter}"
+                                                    IsVisible="{Binding !GenerateImageCommand.CanBeCanceled}"
+                                                    ToolTip.Tip="{Binding $self.HotKey}">
                                                     <Panel>
                                                         <TextBlock IsVisible="{Binding #GenerateButton.IsEnabled}" Text="Generate Image" />
                                                         <controls:ProgressRing IsIndeterminate="True" IsVisible="{Binding !#GenerateButton.IsEnabled}" />

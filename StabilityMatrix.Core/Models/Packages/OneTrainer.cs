@@ -180,11 +180,22 @@ public class OneTrainer(
             );
         }
 
+        foreach (var line in GetLaunchNoticeLines(installedPackage))
+        {
+            onConsoleOutput?.Invoke(ProcessOutput.FromStdOutLine($"{line}{Environment.NewLine}"));
+        }
+
         VenvRunner.RunDetached(
             [Path.Combine(installLocation, options.Command ?? LaunchCommand), .. options.Arguments],
             onConsoleOutput,
             OnExit
         );
+    }
+
+    private IReadOnlyList<string> GetLaunchNoticeLines(InstalledPackage installedPackage)
+    {
+        var selectedTorchIndex = installedPackage.PreferredTorchIndex ?? GetRecommendedTorchVersion();
+        return rocmPackageHelper.GetWindowsLaunchNoticeLines(selectedTorchIndex);
     }
 
     public override List<LaunchOptionDefinition> LaunchOptions => [LaunchOptionDefinition.Extras];

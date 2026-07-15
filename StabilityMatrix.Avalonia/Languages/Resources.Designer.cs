@@ -5458,5 +5458,230 @@ namespace StabilityMatrix.Avalonia.Languages {
                 return ResourceManager.GetString("Label_UpdatedAgo", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Prompt Queue.
+        /// </summary>
+        public static string Label_PromptQueue {
+            get {
+                return ResourceManager.GetString("Label_PromptQueue", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Add to Queue.
+        /// </summary>
+        public static string Label_AddToQueue {
+            get {
+                return ResourceManager.GetString("Label_AddToQueue", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Added to the prompt queue.
+        /// </summary>
+        public static string Label_AddedToQueue {
+            get {
+                return ResourceManager.GetString("Label_AddedToQueue", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Connect to ComfyUI to process the prompt queue.
+        /// </summary>
+        public static string Label_PromptQueueNotConnected {
+            get {
+                return ResourceManager.GetString("Label_PromptQueueNotConnected", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Queue is empty.
+        /// </summary>
+        public static string Label_QueueEmpty {
+            get {
+                return ResourceManager.GetString("Label_QueueEmpty", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Clear finished.
+        /// </summary>
+        public static string Label_ClearFinished {
+            get {
+                return ResourceManager.GetString("Label_ClearFinished", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Clear pending.
+        /// </summary>
+        public static string Label_ClearPending {
+            get {
+                return ResourceManager.GetString("Label_ClearPending", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Open in tab.
+        /// </summary>
+        public static string Label_OpenInTab {
+            get {
+                return ResourceManager.GetString("Label_OpenInTab", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Start.
+        /// </summary>
+        public static string Action_StartQueue {
+            get {
+                return ResourceManager.GetString("Action_StartQueue", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Pause.
+        /// </summary>
+        public static string Action_PauseQueue {
+            get {
+                return ResourceManager.GetString("Action_PauseQueue", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Pending.
+        /// </summary>
+        public static string Label_StatusPending {
+            get {
+                return ResourceManager.GetString("Label_StatusPending", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Running.
+        /// </summary>
+        public static string Label_StatusRunning {
+            get {
+                return ResourceManager.GetString("Label_StatusRunning", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Completed.
+        /// </summary>
+        public static string Label_StatusCompleted {
+            get {
+                return ResourceManager.GetString("Label_StatusCompleted", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Failed.
+        /// </summary>
+        public static string Label_StatusFailed {
+            get {
+                return ResourceManager.GetString("Label_StatusFailed", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Cancelled.
+        /// </summary>
+        public static string Label_StatusCancelled {
+            get {
+                return ResourceManager.GetString("Label_StatusCancelled", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Move up.
+        /// </summary>
+        public static string Action_MoveUp {
+            get {
+                return ResourceManager.GetString("Action_MoveUp", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Move down.
+        /// </summary>
+        public static string Action_MoveDown {
+            get {
+                return ResourceManager.GetString("Action_MoveDown", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to {0} steps.
+        /// </summary>
+        public static string Label_QueueParamsSteps {
+            get {
+                return ResourceManager.GetString("Label_QueueParamsSteps", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to seed {0}.
+        /// </summary>
+        public static string Label_QueueParamsSeed {
+            get {
+                return ResourceManager.GetString("Label_QueueParamsSeed", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Re-queue.
+        /// </summary>
+        public static string Action_Requeue {
+            get {
+                return ResourceManager.GetString("Action_Requeue", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Re-queue all finished.
+        /// </summary>
+        public static string Action_RequeueAll {
+            get {
+                return ResourceManager.GetString("Action_RequeueAll", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Pausing….
+        /// </summary>
+        public static string Label_QueuePausing {
+            get {
+                return ResourceManager.GetString("Label_QueuePausing", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Finishes the current item, then stops.
+        /// </summary>
+        public static string Label_QueuePauseTooltip {
+            get {
+                return ResourceManager.GetString("Label_QueuePauseTooltip", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Open image.
+        /// </summary>
+        public static string Label_OpenImage {
+            get {
+                return ResourceManager.GetString("Label_OpenImage", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Image file not found.
+        /// </summary>
+        public static string Label_ImageFileNotFound {
+            get {
+                return ResourceManager.GetString("Label_ImageFileNotFound", resourceCulture);
+            }
+        }
     }
 }

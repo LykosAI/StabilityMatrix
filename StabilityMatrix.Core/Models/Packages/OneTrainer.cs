@@ -140,23 +140,24 @@ public class OneTrainer(
             };
 
             await venvRunner.PipInstall(["-r", requirementsFileName], onConsoleOutput).ConfigureAwait(false);
-            // Shared requirements-global.txt
-            var requirementsGlobal = new FilePath(installLocation, "requirements-global.txt");
-            var pipArgs = new PipInstallArgs().WithParsedFromRequirementsTxt(
-                (await requirementsGlobal.ReadAllTextAsync(cancellationToken).ConfigureAwait(false)).Replace(
-                    "-e ",
-                    ""
-                ),
-                "scipy==1.15.1; sys_platform != 'win32'"
-            );
-
-            if (installedPackage.PipOverrides != null)
-            {
-                pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
-            }
-
-            await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
         }
+
+        // Shared requirements-global.txt (both paths)
+        var requirementsGlobal = new FilePath(installLocation, "requirements-global.txt");
+        var pipArgs = new PipInstallArgs().WithParsedFromRequirementsTxt(
+            (await requirementsGlobal.ReadAllTextAsync(cancellationToken).ConfigureAwait(false)).Replace(
+                "-e ",
+                ""
+            ),
+            "scipy==1.15.1; sys_platform != 'win32'"
+        );
+
+        if (installedPackage.PipOverrides != null)
+        {
+            pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
+        }
+
+        await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
     }
 
     public override async Task RunPackage(

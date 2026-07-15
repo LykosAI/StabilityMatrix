@@ -1,0 +1,14 @@
+{
+  "routes": [
+    {
+      "route": "/",
+      "redirect": "/stability-matrix/",
+      "statusCode": 302
+    }
+  ],
+  "responseOverrides": {
+    "404": {
+      "rewrite": "/404.html"
+    }
+  }
+}

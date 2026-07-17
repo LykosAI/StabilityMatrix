@@ -39,7 +39,7 @@ public class OneTrainer(
         "OneTrainer is a one-stop solution for all your stable diffusion training needs";
     public override string LicenseType => "AGPL-3.0";
     public override string LicenseUrl => "https://github.com/Nerogar/OneTrainer/blob/master/LICENSE.txt";
-    public override string LaunchCommand => "scripts/train_ui.py";
+    public override string LaunchCommand => "scripts/train_ui_ctk.py";
 
     public override Uri PreviewImageUri =>
         new("https://github.com/Nerogar/OneTrainer/blob/master/resources/icons/icon.png?raw=true");

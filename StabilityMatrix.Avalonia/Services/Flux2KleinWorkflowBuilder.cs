@@ -120,15 +120,28 @@ public static class Flux2KleinWorkflowBuilder
         }
 
         // Single CLIPLoader with type="flux2" — Klein uses a single Qwen3 text encoder,
-        // not the Flux.1-style dual CLIP-L + T5.
-        var clipLoader = nodes.AddTypedNode(
-            new ComfyNodeBuilder.CLIPLoader
-            {
-                Name = nodes.GetUniqueName(nameof(ComfyNodeBuilder.CLIPLoader)),
-                ClipName = selectedModels.ClipModel.RelativePath,
-                Type = DefaultClipType,
-            }
-        );
+        // not the Flux.1-style dual CLIP-L + T5. GGUF encoders route through CLIPLoaderGGUF.
+        var clipOutput = selectedModels.ClipModel.IsGguf
+            ? nodes
+                .AddTypedNode(
+                    new ComfyNodeBuilder.CLIPLoaderGGUF
+                    {
+                        Name = nodes.GetUniqueName(nameof(ComfyNodeBuilder.CLIPLoaderGGUF)),
+                        ClipName = selectedModels.ClipModel.RelativePath,
+                        Type = DefaultClipType,
+                    }
+                )
+                .Output
+            : nodes
+                .AddTypedNode(
+                    new ComfyNodeBuilder.CLIPLoader
+                    {
+                        Name = nodes.GetUniqueName(nameof(ComfyNodeBuilder.CLIPLoader)),
+                        ClipName = selectedModels.ClipModel.RelativePath,
+                        Type = DefaultClipType,
+                    }
+                )
+                .Output;
 
         var vaeLoader = nodes.AddTypedNode(
             new ComfyNodeBuilder.VAELoader
@@ -143,7 +156,7 @@ public static class Flux2KleinWorkflowBuilder
             nodes,
             loras,
             unetOutput,
-            clipLoader.Output
+            clipOutput
         );
 
         // 2. Encode the positive prompt

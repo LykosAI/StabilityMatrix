@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.ComponentModel.DataAnnotations;
@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Controls.Notifications;
 using Avalonia.Threading;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ExifLibrary;
 using FluentAvalonia.UI.Controls;
@@ -75,6 +76,115 @@ public abstract partial class InferenceGenerationViewModelBase
 
     [JsonIgnore]
     public IInferenceClientManager ClientManager { get; }
+
+    private readonly List<InferenceProjectDocument> _generationQueue = [];
+    private bool _isProcessingQueue;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(QueueToggleIcon))]
+    [NotifyPropertyChangedFor(nameof(QueueToggleToolTip))]
+    [property: JsonIgnore]
+    private bool isQueuePaused = true;
+
+    public string QueueToggleIcon => IsQueuePaused ? "fa-solid fa-play" : "fa-solid fa-pause";
+    public string QueueToggleToolTip => IsQueuePaused ? "Start Queue" : "Pause Queue";
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(QueueGenerationText))]
+    [NotifyPropertyChangedFor(nameof(IsQueueClearable))]
+    [property: JsonIgnore]
+    private int queuedGenerationsCount;
+
+    public string QueueGenerationText =>
+        QueuedGenerationsCount > 0 ? $"Queue Generation ({QueuedGenerationsCount})" : "Queue Generation";
+
+    public bool IsQueueClearable => QueuedGenerationsCount > 0;
+
+    [RelayCommand]
+    private void ClearQueue()
+    {
+        _generationQueue.Clear();
+        QueuedGenerationsCount = 0;
+        IsQueuePaused = true;
+        Logger.Info("Generation queue cleared");
+    }
+
+    [RelayCommand]
+    private void ToggleQueueState()
+    {
+        IsQueuePaused = !IsQueuePaused;
+        if (!IsQueuePaused)
+        {
+            ProcessQueueAsync().SafeFireAndForget(ex => Logger.Error(ex, "Error processing generation queue"));
+        }
+    }
+
+    [RelayCommand]
+    private void QueueGeneration()
+    {
+        var doc = InferenceProjectDocument.FromLoadable(this);
+        _generationQueue.Add(doc);
+        QueuedGenerationsCount = _generationQueue.Count;
+        Logger.Info("Queued generation. Queue size: {QueueSize}", QueuedGenerationsCount);
+
+        if (!IsQueuePaused)
+        {
+            ProcessQueueAsync().SafeFireAndForget(ex => Logger.Error(ex, "Error processing generation queue"));
+        }
+    }
+
+    private async Task ProcessQueueAsync()
+    {
+        if (_isProcessingQueue)
+            return;
+
+        _isProcessingQueue = true;
+
+        try
+        {
+            while (_generationQueue.Count > 0 && !IsQueuePaused)
+            {
+                // Wait for any active generation to complete before starting the next
+                if (GenerateImageCommand.IsRunning)
+                {
+                    var executionTask = GenerateImageCommand.ExecutionTask;
+                    if (executionTask is not null)
+                    {
+                        await executionTask;
+                    }
+                }
+
+                // Re-check after awaiting — queue may have been cleared or paused
+                if (_generationQueue.Count == 0 || IsQueuePaused)
+                    break;
+
+                // Dequeue and load state on UI thread
+                var nextDoc = _generationQueue[0];
+                _generationQueue.RemoveAt(0);
+                QueuedGenerationsCount = _generationQueue.Count;
+
+                await Dispatcher.UIThread.InvokeAsync(() => LoadStateFromJsonObject(nextDoc.State));
+
+                try
+                {
+                    await GenerateImageCommand.ExecuteAsync(default(GenerateFlags));
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error(ex, "Queued generation failed");
+                }
+            }
+
+            if (_generationQueue.Count == 0)
+            {
+                IsQueuePaused = true;
+            }
+        }
+        finally
+        {
+            _isProcessingQueue = false;
+        }
+    }
 
     /// <inheritdoc />
     protected InferenceGenerationViewModelBase(

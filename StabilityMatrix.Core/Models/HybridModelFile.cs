@@ -61,6 +61,14 @@ public record HybridModelFile : ISearchText, IDownloadableResource
     [JsonIgnore]
     public string FileName => Path.GetFileName(RelativePath);
 
+    /// <summary>
+    /// Whether this file is a GGUF-quantized model (by file extension).
+    /// </summary>
+    [JsonIgnore]
+    public bool IsGguf =>
+        Type is not HybridModelType.None
+        && RelativePath.EndsWith(".gguf", StringComparison.OrdinalIgnoreCase);
+
     [JsonIgnore]
     public string ShortDisplayName
     {

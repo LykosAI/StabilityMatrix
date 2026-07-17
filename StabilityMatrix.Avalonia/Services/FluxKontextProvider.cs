@@ -8,8 +8,12 @@ namespace StabilityMatrix.Avalonia.Services;
 /// <summary>
 /// Image generation provider for Flux Kontext using local ComfyUI backend
 /// </summary>
-public class FluxKontextProvider(ILogger<FluxKontextProvider> logger, IInferenceClientManager clientManager)
-    : ComfyImageGenerationProviderBase(logger, clientManager)
+public class FluxKontextProvider(
+    ILogger<FluxKontextProvider> logger,
+    IInferenceClientManager clientManager,
+    RunningPackageService runningPackageService,
+    INotificationService notificationService
+) : ComfyImageGenerationProviderBase(logger, clientManager, runningPackageService, notificationService)
 {
     public override string ProviderId => BananaVisionProviderIds.FluxKontext;
     public override string ProviderName => "Flux Kontext (Local)";

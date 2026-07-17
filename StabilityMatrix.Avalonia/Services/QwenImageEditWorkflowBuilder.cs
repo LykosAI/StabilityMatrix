@@ -90,16 +90,28 @@ public static class QwenImageEditWorkflowBuilder
             }
         );
 
-        // CLIPLoader for Qwen (type: "qwen_image")
-        var clipLoader = nodes.AddTypedNode(
-            new ComfyNodeBuilder.CLIPLoader
-            {
-                Name = nodes.GetUniqueName(nameof(ComfyNodeBuilder.CLIPLoader)),
-                ClipName = selectedModels.ClipModel.RelativePath,
-                Type = "qwen_image",
-            }
-        );
-        var currentClip = clipLoader.Output;
+        // CLIPLoader for Qwen (type: "qwen_image"); GGUF encoders route through CLIPLoaderGGUF
+        var currentClip = selectedModels.ClipModel.IsGguf
+            ? nodes
+                .AddTypedNode(
+                    new ComfyNodeBuilder.CLIPLoaderGGUF
+                    {
+                        Name = nodes.GetUniqueName(nameof(ComfyNodeBuilder.CLIPLoaderGGUF)),
+                        ClipName = selectedModels.ClipModel.RelativePath,
+                        Type = "qwen_image",
+                    }
+                )
+                .Output
+            : nodes
+                .AddTypedNode(
+                    new ComfyNodeBuilder.CLIPLoader
+                    {
+                        Name = nodes.GetUniqueName(nameof(ComfyNodeBuilder.CLIPLoader)),
+                        ClipName = selectedModels.ClipModel.RelativePath,
+                        Type = "qwen_image",
+                    }
+                )
+                .Output;
 
         // Apply LoRAs if any
         (currentModel, currentClip) = ComfyWorkflowHelper.ApplyLoras(nodes, loras, currentModel, currentClip);

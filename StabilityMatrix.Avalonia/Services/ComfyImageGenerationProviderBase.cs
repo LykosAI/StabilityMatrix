@@ -1,4 +1,5 @@
 using AsyncAwaitBestPractices;
+using Avalonia.Threading;
 using Microsoft.Extensions.Logging;
 using Refit;
 using StabilityMatrix.Avalonia.Helpers;
@@ -20,11 +21,17 @@ namespace StabilityMatrix.Avalonia.Services;
 /// interrupt, output download, and error handling — so subclasses supply only the
 /// provider-specific model requirements and workflow node graph.
 /// </summary>
-public abstract class ComfyImageGenerationProviderBase(ILogger logger, IInferenceClientManager clientManager)
-    : IImageGenerationProvider
+public abstract class ComfyImageGenerationProviderBase(
+    ILogger logger,
+    IInferenceClientManager clientManager,
+    RunningPackageService runningPackageService,
+    INotificationService notificationService
+) : IImageGenerationProvider
 {
     protected ILogger Logger { get; } = logger;
     protected IInferenceClientManager ClientManager { get; } = clientManager;
+    protected RunningPackageService RunningPackageService { get; } = runningPackageService;
+    protected INotificationService NotificationService { get; } = notificationService;
 
     public abstract string ProviderId { get; }
     public abstract string ProviderName { get; }
@@ -102,15 +109,7 @@ public abstract class ComfyImageGenerationProviderBase(ILogger logger, IInferenc
                     is { Count: > 0 } missing
             )
             {
-                var extensionList = string.Join(", ", missing);
-                Logger.LogWarning("Required ComfyUI extensions not installed: {Extensions}", extensionList);
-                return new ImageGenerationResponse
-                {
-                    IsSuccess = false,
-                    ErrorMessage =
-                        $"This workflow requires ComfyUI extensions that are not installed: {extensionList}. "
-                        + "Install them from the ComfyUI package's Extensions section, then restart ComfyUI.",
-                };
+                return await HandleMissingExtensionsAsync(missing);
             }
 
             Logger.LogInformation("Queuing prompt to ComfyUI");
@@ -190,13 +189,13 @@ public abstract class ComfyImageGenerationProviderBase(ILogger logger, IInferenc
     }
 
     /// <summary>
-    /// Returns the required-extension urls declared by the workflow's typed nodes (e.g.
+    /// Returns the required extensions declared by the workflow's typed nodes (e.g.
     /// ComfyUI-GGUF for UnetLoaderGGUF) that are not installed in the locally-managed ComfyUI,
-    /// so we can fail with a clear message instead of a generic queue-time 400 rejection.
+    /// so we can offer an install instead of a generic queue-time 400 rejection.
     /// Returns an empty list when nothing is missing or the installed extensions cannot be
     /// determined (e.g. a remote / unmanaged server).
     /// </summary>
-    private async Task<IReadOnlyList<string>> GetMissingExtensionsAsync(
+    private async Task<IReadOnlyList<ExtensionSpecifier>> GetMissingExtensionsAsync(
         NodeDictionary nodes,
         CancellationToken cancellationToken
     )
@@ -226,16 +225,62 @@ public abstract class ComfyImageGenerationProviderBase(ILogger logger, IInferenc
                 .OfType<string>()
                 .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-            return requiredExtensions
-                .Where(specifier => !installedUrls.Contains(specifier.Name))
-                .Select(specifier => specifier.Name)
-                .ToList();
+            return requiredExtensions.Where(specifier => !installedUrls.Contains(specifier.Name)).ToList();
         }
         catch (Exception e)
         {
             Logger.LogWarning(e, "Failed to check required extensions, proceeding with generation");
             return [];
         }
+    }
+
+    /// <summary>
+    /// Offers the same install-and-restart flow Inference uses for missing extensions, and
+    /// returns the error response for the chat: either "installing, retry once reconnected"
+    /// or manual install instructions if the prompt was declined / unavailable.
+    /// </summary>
+    private async Task<ImageGenerationResponse> HandleMissingExtensionsAsync(
+        IReadOnlyList<ExtensionSpecifier> missingExtensions
+    )
+    {
+        var extensionList = string.Join(", ", missingExtensions.Select(ext => ext.Name));
+        Logger.LogWarning("Required ComfyUI extensions not installed: {Extensions}", extensionList);
+
+        if (
+            ClientManager.Client?.LocalServerPackage is { } localPackagePair
+            && localPackagePair.BasePackage.ExtensionManager is { } extensionManager
+        )
+        {
+            var installStarted = await Dispatcher.UIThread.InvokeAsync(() =>
+                ComfyExtensionInstallHelper.PromptInstallAndRestartAsync(
+                    extensionManager,
+                    localPackagePair,
+                    missingExtensions,
+                    [],
+                    RunningPackageService,
+                    NotificationService
+                )
+            );
+
+            if (installStarted)
+            {
+                return new ImageGenerationResponse
+                {
+                    IsSuccess = false,
+                    ErrorMessage =
+                        $"Installing required ComfyUI extensions: {extensionList}. "
+                        + "ComfyUI will restart - please try again once it has reconnected.",
+                };
+            }
+        }
+
+        return new ImageGenerationResponse
+        {
+            IsSuccess = false,
+            ErrorMessage =
+                $"This workflow requires ComfyUI extensions that are not installed: {extensionList}. "
+                + "Install them from the ComfyUI package's Extensions section, then restart ComfyUI.",
+        };
     }
 
     /// <summary>

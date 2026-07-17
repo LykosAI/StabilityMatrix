@@ -848,6 +848,7 @@ public abstract partial class InferenceGenerationViewModelBase
 
         var localExtensionsByGitUrl = localExtensions
             .Where(ext => ext.GitRepositoryUrl is not null)
+            .DistinctBy(ext => ext.GitRepositoryUrl!)
             .ToDictionary(ext => ext.GitRepositoryUrl!, ext => ext);
 
         var requiredExtensionReferences = requiredExtensionSpecifiers

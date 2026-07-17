@@ -65,8 +65,8 @@ def _patch_rich_console():
     except ImportError:
         pass
     except Exception as e:
-        print("[sitecustomize error]:", e)
-        
+        print("[sitecustomize error]:", e, file=sys.stderr)
+
     try:
         from pip._vendor.rich import console
 
@@ -79,19 +79,19 @@ def _patch_rich_console():
     except ImportError:
         pass
     except Exception as e:
-        print("[sitecustomize error]:", e)
+        print("[sitecustomize error]:", e, file=sys.stderr)
 
 # Patch tqdm to use stdout instead of stderr
 def _patch_tqdm():
     try:
         import sys
         from tqdm import std
-        
+
         sys.stderr = sys.stdout
     except ImportError:
         pass
     except Exception as e:
-        print("[sitecustomize error]:", e)
+        print("[sitecustomize error]:", e, file=sys.stderr)
 
 # Run startup customizations. Each is isolated so that a failure in one (or an
 # unusual host environment, e.g. an interpreter probe with no real stdio) can
@@ -101,7 +101,7 @@ def _run_safely(func):
         func()
     except Exception as e:
         try:
-            print("[sitecustomize error]:", e)
+            print("[sitecustomize error]:", e, file=sys.stderr)
         except Exception:
             pass
 

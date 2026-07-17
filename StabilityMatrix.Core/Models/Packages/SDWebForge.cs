@@ -54,6 +54,12 @@ public class SDWebForge(
     /// </summary>
     protected virtual string TorchVersionSpec => " ";
 
+    /// <summary>
+    /// ROCm torch index used on Linux installs. Subclasses that pin torch must pick an index that
+    /// actually hosts that version, or pip falls back to the CUDA wheel from PyPI.
+    /// </summary>
+    protected virtual string RocmIndexName => "rocm7.2";
+
     public override List<LaunchOptionDefinition> LaunchOptions =>
         [
             new()
@@ -191,7 +197,7 @@ public class SDWebForge(
             TorchVersion = TorchVersionSpec,
             TorchvisionVersion = " ",
             CudaIndex = isLegacyNvidia ? "cu126" : "cu128",
-            RocmIndex = "rocm7.2",
+            RocmIndex = RocmIndexName,
             ExtraPipArgs =
             [
                 "https://github.com/openai/CLIP/archive/d50d76daa670286dd6cacf3bcd80b5e4823fc8e1.zip",

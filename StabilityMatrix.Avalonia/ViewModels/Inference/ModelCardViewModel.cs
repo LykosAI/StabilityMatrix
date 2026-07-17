@@ -236,6 +236,8 @@ public partial class ModelCardViewModel(
             "sdxl",
             "sd3",
             "flux",
+            "flux2",
+            "chroma",
             "hunyuan_video",
             "hidream",
             "hunyuan_image",
@@ -245,8 +247,15 @@ public partial class ModelCardViewModel(
             "ltxv",
             "newbie",
             "ace",
-            "flux2",
             "lumina2",
+            "qwen_image",
+            "wan",
+            "omnigen2",
+            "mochi",
+            "pixart",
+            "cosmos",
+            "stable_cascade",
+            "stable_audio",
             "stable_diffusion",
         ];
     public List<InferenceWorkflowProfile> WorkflowProfiles { get; set; } =
@@ -1006,14 +1015,7 @@ public partial class ModelCardViewModel(
             var encoderCount = legacyNames.TakeWhile(n => n is not null).Count();
 
             // Use at least the default count for the encoder type
-            var defaultCount = SelectedClipType switch
-            {
-                "flux" => 2,
-                "flux2" or "lumina2" or "stable_diffusion" => 1,
-                "sd3" => 3,
-                "hidream" => 4,
-                _ => 2,
-            };
+            var defaultCount = DefaultEncoderCountForClipType(SelectedClipType);
             encoderCount = Math.Max(encoderCount, defaultCount);
 
             for (var i = 0; i < encoderCount; i++)
@@ -1553,14 +1555,7 @@ public partial class ModelCardViewModel(
             return;
         }
 
-        var targetCount = SelectedClipType switch
-        {
-            "flux" => 2,
-            "flux2" or "lumina2" or "stable_diffusion" => 1,
-            "sd3" => 3,
-            "hidream" => 4,
-            _ => 2, // Default to 2 for unknown types
-        };
+        var targetCount = DefaultEncoderCountForClipType(SelectedClipType);
 
         // Add or remove encoders to match target count
         while (TextEncoders.Count < targetCount)
@@ -1576,6 +1571,31 @@ public partial class ModelCardViewModel(
         OnPropertyChanged(nameof(CanRemoveEncoder));
         OnPropertyChanged(nameof(TextEncodersHeader));
     }
+
+    /// <summary>
+    /// Default number of encoder slots for a clip type. Types accepted by ComfyUI's
+    /// DualCLIPLoader load an encoder pair (e.g. clip_l + t5xxl for flux); sd3 / hidream use
+    /// the triple / quadruple loaders; everything else is a single-encoder CLIPLoader type
+    /// (flux2, lumina2, chroma, wan, qwen_image, ...).
+    /// </summary>
+    private static int DefaultEncoderCountForClipType(string? clipType) =>
+        clipType switch
+        {
+            "sd3" => 3,
+            "hidream" => 4,
+            "sdxl"
+            or "flux"
+            or "hunyuan_video"
+            or "hunyuan_image"
+            or "hunyuan_video_15"
+            or "kandinsky5"
+            or "kandinsky5_image"
+            or "ltxv"
+            or "newbie"
+            or "ace"
+            or null => 2,
+            _ => 1,
+        };
 
     /// <summary>
     /// Adds a new text encoder slot.

@@ -143,26 +143,31 @@ Most users should leave these alone unless they are troubleshooting a specific R
 | `COMFYUI_ENABLE_MIOPEN` | `1` | Tells ComfyUI to keep the MIOpen-backed path enabled on ROCm builds where it may otherwise be disabled by default. Without this enabled, ComfyUI disables the `cudnn` backend path in its backend calls for RDNA3, RDNA3.5, and RDNA4 AMD GPUs, which in turn disables the MIOpen-backed functions that rely on that path. This variable is needed for MIOpen to function properly in those setups. |
 | `TORCH_ROCM_AOTRITON_ENABLE_EXPERIMENTAL` | `1` | Enables the experimental ROCm AOTriton path in compatible PyTorch builds. In Stability Matrix's Windows ROCm ComfyUI integration, this is used for TheRock technical-preview PyTorch builds to enable AOTriton-provided built-in Flash Attention and PyTorch SDPA memory-efficient attention paths. |
 
-For some Windows ROCm-based ComfyUI launches, Stability Matrix already applies several of these optimizations automatically in package code, including:
+For Windows ROCm-based WebUI package launches, Stability Matrix already applies several of these optimizations automatically at package launch as a general all-round baseline. Variables automatically utilized at package launch include:
 
-`MIOPEN_FIND_MODE=2`
+| Variable | Value | Notes |
+|---|---|---|
+| `MIOPEN_FIND_MODE` | `2` | |
+| `MIOPEN_SEARCH_CUTOFF` | `1` | |
+| `MIOPEN_FIND_ENFORCE` | `1` | |
+| `TORCH_ROCM_AOTRITON_ENABLE_EXPERIMENTAL` | `1` | Enables the experimental ROCm AOTriton path. Applied only on RDNA3 / RDNA3.5 / RDNA4 GPUs, and additionally excluded on gfx1152/gfx1153 APU architectures where AOTriton isn't yet supported. |
+| `FLASH_ATTENTION_TRITON_AMD_ENABLE` | `TRUE` | Enables the Triton-based Flash Attention implementation for AMD GPUs, providing an efficient attention path when the native ROCm Flash Attention is unavailable and instead provided by a seperate FA python package. |
+| `COMFYUI_ENABLE_MIOPEN` | `1` | Keeps the MIOpen-backed path enabled in ComfyUI on RDNA3 / RDNA3.5 / RDNA4 GPUs. |
+| `PYTORCH_ALLOC_CONF` | `max_split_size_mb:512,garbage_collection_threshold:0.8` | |
 
-`MIOPEN_SEARCH_CUTOFF=1`
-
-`MIOPEN_FIND_ENFORCE=1`
-
-`TORCH_ROCM_AOTRITON_ENABLE_EXPERIMENTAL=1` (RDNA3 / RDNA3.5 / RDNA4 only, and additionally excluded on the gfx1152/gfx1153 APU architectures where AOTriton isn't yet supported)
-
-`FLASH_ATTENTION_TRITON_AMD_ENABLE=TRUE`
-
-`COMFYUI_ENABLE_MIOPEN=1` (RDNA3 / RDNA3.5 / RDNA4 only, no gfx1152/gfx1153 exclusion)
-
-`PYTORCH_ALLOC_CONF=max_split_size_mb:512,garbage_collection_threshold:0.8`
+Environment Variables automatically enabled for legacy AMD GPU architectures (Vega/GCN5, RDNA1, RDNA2) where certain backend paths are not supported by the hardware or supported well:
+| Variable | Value | Notes |
+|---|---|---|
+| `TORCH_BACKENDS_CUDA_FLASH_SDP_ENABLED` | `0` | Disables the Flash SDP backend. |
+| `TORCH_BACKENDS_CUDA_MEM_EFF_SDP_ENABLED` | `0` | Disables the memory-efficient SDP backend. |
+| `TORCH_BACKENDS_CUDA_MATH_SDP_ENABLED` | `1` | Enables the math SDP backend as the fallback attention implementation. |
 
 
-Linux installs do not currently get the same automatic overrides, so they will need to be enabled by the user.
+> [!NOTE]
+> Linux installs do not currently get the same automatic overrides, so they will need to be enabled by the user.
 
-If you're using the ComfyUI-Zluda package specifically, it also sets its own environment variables at launch on top of the above: `FLASH_ATTENTION_TRITON_AMD_ENABLE=TRUE`, `MIOPEN_FIND_MODE=2`, `MIOPEN_LOG_LEVEL=3`, and `ZLUDA_COMGR_LOG_LEVEL=1`. If you're wondering why those already appear to be set for a ZLUDA install, this is why.
+> [!NOTE]
+> ComfyUI-Zluda is not managed by Stability Matrix's internal ROCm handling. If you're using the ComfyUI-Zluda package specifically, it also sets its own environment variables at launch similar to some of the above: `FLASH_ATTENTION_TRITON_AMD_ENABLE=TRUE`, `MIOPEN_FIND_MODE=2`, `MIOPEN_LOG_LEVEL=3`, and `ZLUDA_COMGR_LOG_LEVEL=1`. If you're wondering why those already appear to be set for a ZLUDA install, this is why.
 
 Whatever you set in Stability Matrix's own environment-variable editor is applied last, so it always overrides these auto-applied defaults if the same variable name is used.
 

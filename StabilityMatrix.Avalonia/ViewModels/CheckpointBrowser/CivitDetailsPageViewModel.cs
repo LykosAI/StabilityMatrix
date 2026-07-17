@@ -701,7 +701,8 @@ public partial class CivitDetailsPageViewModel(
 
         foreach (var file in modelVersion.Files)
         {
-            if (file is not { Hashes.BLAKE3: not null } || !file.Type.IsModelWeights())
+            // Match install detection: hash-based only, so Unknown-typed files are also deleted
+            if (file is not { Hashes.BLAKE3: not null })
                 continue;
 
             var matchingModels = (await modelIndexService.FindByHashAsync(file.Hashes.BLAKE3)).ToList();

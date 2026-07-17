@@ -196,6 +196,7 @@ public partial class WanModelCardViewModel(
             );
         }
 
+<<<<<<< HEAD
         var modelSamplingSd3 = e.Nodes.AddTypedNode(
             new ComfyNodeBuilder.ModelSamplingSD3
             {
@@ -217,9 +218,45 @@ public partial class WanModelCardViewModel(
                 Type = "wan",
             }
         );
+=======
+        var clipName =
+            SelectedClipModel?.RelativePath ?? throw new ValidationException("No Clip Model Selected");
+>>>>>>> 36751fb8 (Merge pull request #1303 from ionite34/claude/bug-bash-2-16-2-5ac12b)
 
-        e.Builder.Connections.Base.Clip = clipLoader.Output;
+        // The GGUF loader variant can also load .safetensors encoders
+        var clipOutput = SelectedClipModel is { IsGguf: true }
+            ? e
+                .Nodes.AddTypedNode(
+                    new ComfyNodeBuilder.CLIPLoaderGGUF
+                    {
+                        Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.CLIPLoaderGGUF)),
+                        ClipName = clipName,
+                        Type = "wan",
+                    }
+                )
+                .Output
+            : e
+                .Nodes.AddTypedNode(
+                    new ComfyNodeBuilder.CLIPLoader
+                    {
+                        Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.CLIPLoader)),
+                        ClipName = clipName,
+                        Type = "wan",
+                    }
+                )
+                .Output;
 
+        e.Builder.Connections.Base.Clip = clipOutput;
+
+<<<<<<< HEAD
+=======
+        // Share the text encoder with the low-noise expert so its model-side LoRA patches apply.
+        if (lowNoiseConnections is not null)
+        {
+            lowNoiseConnections.Clip = clipOutput;
+        }
+
+>>>>>>> 36751fb8 (Merge pull request #1303 from ionite34/claude/bug-bash-2-16-2-5ac12b)
         var vaeLoader = e.Nodes.AddTypedNode(
             new ComfyNodeBuilder.VAELoader
             {

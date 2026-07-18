@@ -159,6 +159,10 @@ public class Reforge(
     // unpinned to match. Forge (the SDWebForge base) keeps its own default.
     protected override string TorchVersionSpec => "==2.9.0";
 
+    // The rocm7.2 index has no torch 2.9.x, so with the ==2.9.0 pin pip would fall back to the
+    // CUDA wheel from PyPI on Linux AMD installs (#1669). rocm6.4 hosts 2.9.0+rocm6.4.
+    protected override string RocmIndexName => "rocm6.4";
+
     protected override ImmutableDictionary<string, string> GetEnvVars(
         ImmutableDictionary<string, string> env,
         InstalledPackage installedPackage

@@ -520,11 +520,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         // Get CLIP model names from DualCLIPLoader node
         if (await Client.GetNodeOptionNamesAsync("DualCLIPLoader", "clip_name1") is { } clipModelNames)
         {
-            IEnumerable<HybridModelFile> models =
-            [
-                HybridModelFile.None,
-                .. clipModelNames.Select(HybridModelFile.FromRemote),
-            ];
+            var remoteNames = clipModelNames.ToHashSet();
 
             if (
                 await Client.GetRequiredNodeOptionNamesFromOptionalNodeAsync(
@@ -534,8 +530,28 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
                 { } ggufClipModelNames
             )
             {
-                models = models.Concat(ggufClipModelNames.Select(HybridModelFile.FromRemote));
+                remoteNames.UnionWith(ggufClipModelNames);
             }
+
+            // Prefer local index entries (richer metadata), and keep local files the server
+            // didn't report: core ComfyUI never lists .gguf text encoders (only the optional
+            // DualCLIPLoaderGGUF node does), but the shared TextEncoders folder is synced to
+            // the package, so they're loadable via the GGUF clip loaders once installed.
+            var localModels = modelIndexService
+                .FindByModelType(SharedFolderType.TextEncoders)
+                .Select(HybridModelFile.FromLocal)
+                .ToList();
+
+            var localIds = localModels.Select(m => m.GetId()).ToHashSet();
+
+            IEnumerable<HybridModelFile> models =
+            [
+                HybridModelFile.None,
+                .. localModels,
+                .. remoteNames
+                    .Select(HybridModelFile.FromRemote)
+                    .Where(remote => !localIds.Contains(remote.GetId())),
+            ];
 
             clipModelsSource.EditDiff(models, HybridModelFile.RemoteLocalComparer);
         }

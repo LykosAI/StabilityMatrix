@@ -53,9 +53,9 @@ public partial class CivitFileViewModel : DisposableViewModelBase
         this.vmFactory = vmFactory;
         this.downloadAction = downloadAction;
         CivitFile = civitFile;
+        // Hash-based only, so files with types we don't recognize (Unknown) still show as installed
         IsInstalled =
             CivitFile is { Hashes.BLAKE3: not null }
-            && CivitFile.Type.IsModelWeights()
             && modelIndexService.ModelIndexBlake3Hashes.Contains(CivitFile.Hashes.BLAKE3);
         EventManager.Instance.ModelIndexChanged += ModelIndexChanged;
 
@@ -97,7 +97,6 @@ public partial class CivitFileViewModel : DisposableViewModelBase
         {
             IsInstalled =
                 CivitFile is { Hashes.BLAKE3: not null }
-                && CivitFile.Type.IsModelWeights()
                 && modelIndexService.ModelIndexBlake3Hashes.Contains(CivitFile.Hashes.BLAKE3);
         });
     }

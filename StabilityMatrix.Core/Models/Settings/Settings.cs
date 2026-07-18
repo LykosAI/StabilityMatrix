@@ -5,6 +5,7 @@ using Semver;
 using StabilityMatrix.Core.Converters.Json;
 using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models.Api.CivArchive;
+using StabilityMatrix.Core.Models.Api.HuggingFace;
 using StabilityMatrix.Core.Models.Update;
 
 namespace StabilityMatrix.Core.Models.Settings;
@@ -84,6 +85,11 @@ public class Settings
     public bool ShowConnectedModelImages { get; set; }
     public WindowSettings? WindowSettings { get; set; }
 
+    // HuggingFace browser UI prefs
+    public bool HuggingFaceUseStructuredView { get; set; } = true;
+    public bool HuggingFaceHideInstalled { get; set; }
+    public HuggingFaceSearchSort HuggingFaceSearchSort { get; set; } = HuggingFaceSearchSort.Downloads;
+
     public ModelSearchOptions? ModelSearchOptions { get; set; }
     public CivArchiveBrowserOptions CivArchiveBrowserOptions { get; set; } = new();
 
@@ -111,6 +117,11 @@ public class Settings
     /// Whether the Inference Image Viewer shows pixel grids at high zoom levels
     /// </summary>
     public bool IsImageViewerPixelGridEnabled { get; set; } = true;
+
+    /// <summary>
+    /// Use the classic dropdown menu instead of the gallery dialog when adding a new Inference tab
+    /// </summary>
+    public bool UseClassicInferenceTabPicker { get; set; }
 
     /// <summary>
     /// Whether Inference Image Browser delete action uses recycle bin if available

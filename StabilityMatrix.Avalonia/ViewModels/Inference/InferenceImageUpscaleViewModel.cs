@@ -61,9 +61,17 @@ public class InferenceImageUpscaleViewModel : InferenceGenerationViewModelBase
         IInferenceClientManager inferenceClientManager,
         ISettingsManager settingsManager,
         IServiceManager<ViewModelBase> vmFactory,
-        RunningPackageService runningPackageService
+        RunningPackageService runningPackageService,
+        IPromptQueueService promptQueueService
     )
-        : base(vmFactory, inferenceClientManager, notificationService, settingsManager, runningPackageService)
+        : base(
+            vmFactory,
+            inferenceClientManager,
+            notificationService,
+            settingsManager,
+            runningPackageService,
+            promptQueueService
+        )
     {
         this.notificationService = notificationService;
 
@@ -134,7 +142,7 @@ public class InferenceImageUpscaleViewModel : InferenceGenerationViewModelBase
                         Image = builder.GetPrimaryAsImage(),
                         SharpenRadius = SharpenCardViewModel.SharpenRadius,
                         Sigma = SharpenCardViewModel.Sigma,
-                        Alpha = SharpenCardViewModel.Alpha
+                        Alpha = SharpenCardViewModel.Alpha,
                     }
                 )
                 .Output;
@@ -178,7 +186,7 @@ public class InferenceImageUpscaleViewModel : InferenceGenerationViewModelBase
             {
                 ModelName = UpscalerCardViewModel.SelectedUpscaler?.Name,
             },
-            Project = InferenceProjectDocument.FromLoadable(this)
+            Project = InferenceProjectDocument.FromLoadable(this),
         };
 
         await RunGeneration(generationArgs, cancellationToken);

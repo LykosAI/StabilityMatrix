@@ -6,5 +6,6 @@ public enum LatentType
     Sd3,
     Flux2,
     Hunyuan,
+    Wan22,
     Plasma,
 }

@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
 ## v2.16.2
+> Full technical notes for this release: [docs.lykos.ai/stability-matrix/release-notes/2.16.2](https://docs.lykos.ai/stability-matrix/release-notes/2.16.2)
 ### Added
 - 📚 **New documentation site** at [docs.lykos.ai](https://docs.lykos.ai/stability-matrix/) — getting started and installation guides, package manager and Inference walkthroughs, environment variable and advanced configuration references, a terminology glossary, and troubleshooting for common issues. Written by @NeuralFault!
 - Added **OneTrainer** to the native **Windows ROCm (AMD GPU)** helper — new OneTrainer installs on supported AMD hardware get the ROCm PyTorch build, ROCm-aware bitsandbytes and triton dependencies, and the right launch environment applied automatically. New OneTrainer installs also default to Python 3.12 on all platforms - thanks to @NeuralFault!

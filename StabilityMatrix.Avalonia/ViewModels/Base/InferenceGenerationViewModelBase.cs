@@ -820,12 +820,6 @@ public abstract partial class InferenceGenerationViewModelBase
             return true;
         }
 
-        var dialog = DialogHelper.CreateMarkdownDialog(
-            $"#### The following extensions are required for this workflow:\n"
-                + $"{string.Join("\n- ", missingExtensions.Select(ext => ext.Name))}"
-                + $"{string.Join("\n- ", outOfDateExtensions.Select(pair => $"{pair.Item1.Name} {pair.Specifier.Constraint} {pair.Specifier.Version} (Current Version: {pair.Installed.Version?.Tag})"))}",
-            "Install Required Extensions?"
-
         await ComfyExtensionInstallHelper.PromptInstallAndRestartAsync(
             manager,
             localPackagePair,

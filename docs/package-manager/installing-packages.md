@@ -96,7 +96,7 @@ The **PyTorch backend** determines which GPU acceleration library your package u
 | Backend | Platform | GPU | Notes |
 |---------|----------|-----|-------|
 | **CUDA** | Windows, Linux | NVIDIA (GTX 900-series and newer) | Best performance and broadest compatibility. CUDA toolkit is bundled with PyTorch; no separate driver installation beyond standard NVIDIA drivers. Turing (RTX 2000-series) or newer recommended. |
-| **ROCm** | Windows, Linux | AMD (select GPUs per platform) | Native AMD GPU acceleration. On Linux, requires system-level ROCm installation. On Windows, uses AMD's TheRock technical preview builds. Per-chip compatibility details are planned for a future Hardware Support page. |
+| **ROCm** | Windows, Linux | AMD (select GPUs per platform) | Native AMD GPU acceleration. On Linux, requires system-level ROCm installation. Package support is more limited on Windows. Per-chip compatibility details are planned for a future Hardware Support page. |
 | **DirectML** | Windows | AMD, Intel, some NVIDIA | Microsoft's DirectML API. Broad compatibility but slower performance than CUDA or ROCm. Development is largely stagnant; consider native ROCm, or ZLUDA if need be, as an alternative for AMD GPUs. |
 | **ZLUDA** | Windows | AMD (via CUDA translation layer) | Experimental CUDA-to-AMD translation layer. Used by the ComfyUI-Zluda, SD.Next, and AMDGPU Forge packages. Generally faster than DirectML for supported operations. |
 | **IPEX** | Windows, Linux | Intel Arc (discrete and integrated) | Intel Extension for PyTorch. Requires Intel Arc GPU (A-series, B-series) or modern Intel Core Ultra with integrated Arc graphics. |

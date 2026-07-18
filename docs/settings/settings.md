@@ -90,7 +90,7 @@ The Accounts sub-page manages external service credentials. Connecting accounts 
 
 #### Membership and Lykos Account
 
-A Lykos account is the central identity for Stability Matrix. Signing in unlocks membership benefits and account-linked features. Membership is managed at [lykos.ai/membership](https://lykos.ai/membership?).
+A Lykos account is the central identity for Stability Matrix. Signing in unlocks membership benefits and account-linked features. Membership is managed at [lykos.ai/membership](https://lykos.ai/membership).
 
 | Tier | Description |
 |---|---|

@@ -64,7 +64,7 @@ Architectures in the `gfx110x`, `gfx115x`, and `gfx120x` ranges are treated as "
 **Caveats:**
 
 - Windows AMD ROCm implementation for Stability Matrix is explicitly in an experimental state. While these package installations are generally in a working state, untested or edge-case issues and incompatibilities may appear. Stability Matrix prints a notice asking you to report issues to Stability Matrix first, since the setup may not be officially supported by the upstream package developers.
-- Only the architectures listed above are eligible. If your AMD GPU is not on the list, the recommended default becomes ZLUDA or DirectML instead. For a more detailed list of compatible AMD GPU architectures, please refer to the ROCm/TheRock [GPU Support](`https://github.com/ROCm/TheRock/blob/main/SUPPORTED_GPUS.md#rocm-on-windows`) table.
+- Only the architectures listed above are eligible. If your AMD GPU is not on the list, the recommended default becomes ZLUDA or DirectML instead. For a more detailed list of compatible AMD GPU architectures, please refer to the ROCm/TheRock [GPU Support](https://github.com/ROCm/TheRock/blob/main/SUPPORTED_GPUS.md#rocm-on-windows) table.
 
 ### ZLUDA
 

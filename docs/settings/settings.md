@@ -299,7 +299,7 @@ Read-only diagnostic information about your hardware:
 
 - **CPU** — processor model
 - **Memory** — total installed and available RAM
-- **GPU** — detected graphics cards with driver version and VRAM
+- **GPU** — detected graphics cards and VRAM
 
 ---
 

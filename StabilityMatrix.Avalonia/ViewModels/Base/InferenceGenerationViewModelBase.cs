@@ -820,26 +820,11 @@ public abstract partial class InferenceGenerationViewModelBase
             return true;
         }
 
-<<<<<<< HEAD
         var dialog = DialogHelper.CreateMarkdownDialog(
             $"#### The following extensions are required for this workflow:\n"
                 + $"{string.Join("\n- ", missingExtensions.Select(ext => ext.Name))}"
                 + $"{string.Join("\n- ", outOfDateExtensions.Select(pair => $"{pair.Item1.Name} {pair.Specifier.Constraint} {pair.Specifier.Version} (Current Version: {pair.Installed.Version?.Tag})"))}",
             "Install Required Extensions?"
-=======
-        // No interactive install prompt during queue replay - fail the item with a readable message
-        if (IsQueueReplay)
-        {
-            throw new ValidationException(
-                "Missing required extensions: "
-                    + string.Join(
-                        ", ",
-                        missingExtensions
-                            .Select(ext => ext.Name)
-                            .Concat(outOfDateExtensions.Select(pair => pair.Specifier.Name))
-                    )
-            );
-        }
 
         await ComfyExtensionInstallHelper.PromptInstallAndRestartAsync(
             manager,
@@ -848,7 +833,6 @@ public abstract partial class InferenceGenerationViewModelBase
             outOfDateExtensions,
             runningPackageService,
             notificationService
->>>>>>> 36751fb8 (Merge pull request #1303 from ionite34/claude/bug-bash-2-16-2-5ac12b)
         );
 
         return false;

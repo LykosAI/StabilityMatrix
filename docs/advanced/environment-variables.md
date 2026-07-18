@@ -151,7 +151,7 @@ For Windows ROCm-based WebUI package launches, Stability Matrix already applies 
 | `MIOPEN_SEARCH_CUTOFF` | `1` | |
 | `MIOPEN_FIND_ENFORCE` | `1` | |
 | `TORCH_ROCM_AOTRITON_ENABLE_EXPERIMENTAL` | `1` | Enables the experimental ROCm AOTriton path. Applied only on RDNA3 / RDNA3.5 / RDNA4 GPUs, and additionally excluded on gfx1152/gfx1153 APU architectures where AOTriton isn't yet supported. |
-| `FLASH_ATTENTION_TRITON_AMD_ENABLE` | `TRUE` | Enables the Triton-based Flash Attention implementation for AMD GPUs, providing an efficient attention path when the native ROCm Flash Attention is unavailable and instead provided by a seperate FA python package. |
+| `FLASH_ATTENTION_TRITON_AMD_ENABLE` | `TRUE` | Enables the Triton-based Flash Attention implementation for AMD GPUs, providing an efficient attention path when the native ROCm Flash Attention is unavailable and instead provided by a separate FA Python package. |
 | `COMFYUI_ENABLE_MIOPEN` | `1` | Keeps the MIOpen-backed path enabled in ComfyUI on RDNA3 / RDNA3.5 / RDNA4 GPUs. |
 | `PYTORCH_ALLOC_CONF` | `max_split_size_mb:512,garbage_collection_threshold:0.8` | |
 

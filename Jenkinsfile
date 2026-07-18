@@ -39,7 +39,7 @@ node("Diligence") {
                 // - pupnet 1.9.1 globally installed
                 sh "rm -rf StabilityMatrix.Avalonia/bin/*"
                 sh "rm -rf StabilityMatrix.Avalonia/obj/*"
-                sh "/home/jenkins/.dotnet/tools/pupnet -r linux-x64 -c Release --kind appimage --app-version $RELEASE_VERSION --clean"
+                sh "/home/jenkins/.dotnet/tools/pupnet -r linux-x64 -c Release --kind appimage --app-version ${version} --clean -y"
             }
         }
     } finally {

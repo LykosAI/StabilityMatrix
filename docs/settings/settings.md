@@ -135,7 +135,7 @@ Enables the **Nano Banana** image generation provider in the **Image Lab**, whic
 **To connect**: Go to [Google AI Studio](https://aistudio.google.com/api-keys), create an API key, and paste it into the Connect dialog under the **Image Generation APIs** section. The key is validated at generation time when the Image Lab makes its first request.
 
 > [!IMPORTANT]
-> When API keys are generated on their respective service website, it is recommended to save your API keys somewhere safe (ie: text file, password/note manager, etc.) as these services will typically only provide this key once.
+> When API keys are generated on their respective service website, it is recommended to save your API keys somewhere safe (e.g., text file, password/note manager, etc.) as these services will typically only provide this key once.
 
 #### How Credentials Are Stored
 

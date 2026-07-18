@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 
 ## v2.17.0-dev.2
 ### Added
+#### New Feature: 📋 Inference Prompt Queue
+- Queue up multiple generations from any Inference tab and run them one after another — a long-requested feature ([#1622](https://github.com/LykosAI/StabilityMatrix/issues/1622)):
+  - **Add to Queue** sits next to Generate (and in the tab's overflow menu) in every generation tab — Text-to-Image, Image-to-Image, Flux, Upscale, and the video tabs. The Generate button itself is unchanged; queueing is a separate action
+  - Queue items store the full project state, not a baked workflow — **Open in tab** re-opens any item as a real Inference tab for tweaking and re-queueing
+  - Cards show a prompt snippet, compact parameters, a status badge, live progress and preview while running, and the finished thumbnail when done (click it to open the full image viewer)
+  - Manage the queue freely: reorder, remove, cancel the running item, **re-queue** finished/failed/cancelled items (or re-queue all finished), and clear finished or pending items
+  - **Start** auto-connects to ComfyUI if it's already running, or shows the usual launch prompt if it isn't; **Pause** finishes the current item before stopping
+  - The queue is saved to your library folder and survives restarts — interrupted items come back as Pending, and finished items keep their thumbnails
 - 📚 **New documentation site** at [docs.lykos.ai](https://docs.lykos.ai/stability-matrix/) — getting started and installation guides, package manager and Inference walkthroughs, environment variable and advanced configuration references, a terminology glossary, and troubleshooting for common issues. Written by @NeuralFault!
 ### Changed
 - CivitAI downloads now pick their destination folder from the file's declared type — **Diffusion Model** and **UNet** files go to DiffusionModels, **Text Encoder** to TextEncoders, **CLIP Vision** to ClipVision, **ControlNet** to ControlNet, and **Upscaler** to the upscalers folder — instead of guessing from the model's name and base model. The name-based guess remains only as a fallback for files still typed plain "Model", and now also recognizes **Krea 2** checkpoints as UNet-only so they land in DiffusionModels

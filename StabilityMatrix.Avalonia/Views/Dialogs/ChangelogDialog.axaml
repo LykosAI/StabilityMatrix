@@ -13,7 +13,6 @@
     xmlns:ui="using:FluentAvalonia.UI.Controls"
     xmlns:update="clr-namespace:StabilityMatrix.Core.Models.Update;assembly=StabilityMatrix.Core"
     Width="900"
-    Height="650"
     d:DataContext="{x:Static mocks:DesignData.ChangelogViewModel}"
     d:DesignHeight="650"
     d:DesignWidth="900"
@@ -25,13 +24,13 @@
         <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
             <TextBlock
                 Grid.Column="0"
-                Margin="16,16,16,8"
+                Margin="0,0,16,4"
                 FontSize="24"
                 FontWeight="Thin"
                 Text="{x:Static lang:Resources.Label_WhatsNew}" />
             <Button
                 Grid.Column="1"
-                Margin="0,8,8,0"
+                Margin="0,-4,-4,0"
                 Padding="8"
                 VerticalAlignment="Top"
                 icons:Attached.Icon="fa-solid fa-xmark"
@@ -77,7 +76,7 @@
         <!--  Content: version list + markdown  -->
         <Grid
             Grid.Row="1"
-            Margin="16,0,16,16"
+            Margin="0,4,0,0"
             ColumnDefinitions="200,*">
             <Grid.IsVisible>
                 <MultiBinding Converter="{x:Static BoolConverters.And}">
@@ -106,7 +105,7 @@
                 CornerRadius="8">
                 <controls:BetterMarkdownScrollViewer
                     x:Name="MarkdownViewer"
-                    Margin="16"
+                    Margin="12"
                     Markdown="{Binding SelectedMarkdown, Mode=OneWay}" />
             </Border>
         </Grid>

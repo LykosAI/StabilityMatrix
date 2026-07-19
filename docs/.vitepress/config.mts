@@ -43,6 +43,17 @@ export default defineConfig({
 
   appearance: 'dark',
 
+  // Apply the saved layout-width preference (nav-bar toggle, see
+  // theme/LayoutWidthToggle.vue) before first paint so the page doesn't
+  // flash at the wrong width. Full-width is the default.
+  head: [
+    [
+      'script',
+      {},
+      `(function () { try { if (localStorage.getItem('sm-docs-layout') !== 'centered') document.documentElement.classList.add('sm-fluid') } catch (e) { document.documentElement.classList.add('sm-fluid') } })()`
+    ]
+  ],
+
   // Requires full git history at build time (fetch-depth: 0 in the deploy job).
   lastUpdated: true,
 

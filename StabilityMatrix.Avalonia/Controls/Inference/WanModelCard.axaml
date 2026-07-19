@@ -7,7 +7,6 @@
     xmlns:inference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
-    xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
     xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
     x:DataType="inference:WanModelCardViewModel">
     <Design.PreviewWith>
@@ -17,6 +16,7 @@
     </Design.PreviewWith>
 
     <Styles.Resources>
+        <converters:EnumToBooleanConverter x:Key="EnumBoolConverter" />
         <fluent:SymbolIconSource
             x:Key="IconCube"
             IconVariant="Filled"
@@ -25,6 +25,10 @@
             x:Key="IconQuestionCircle"
             IconVariant="Filled"
             Symbol="QuestionCircle" />
+        <fluent:SymbolIconSource
+            x:Key="IconSparkle"
+            IconVariant="Filled"
+            Symbol="Sparkle" />
         <fluent:SymbolIconSource
             x:Key="IconTableCellEdit"
             IconVariant="Filled"
@@ -36,170 +40,258 @@
         <Setter Property="Template">
             <ControlTemplate>
                 <controls:Card Padding="12">
-                    <sg:SpacedGrid
-                        ColumnDefinitions="90,*,Auto"
-                        ColumnSpacing="8"
-                        RowDefinitions="*,*,*,*,*,*,*"
-                        RowSpacing="0">
-                        <!--  Model  -->
-                        <TextBlock
-                            Grid.Column="0"
-                            VerticalAlignment="Center"
-                            Text="{x:Static lang:Resources.Label_Model}"
-                            TextAlignment="Left" />
+                    <StackPanel Spacing="0">
+                        <!--  High-Noise / primary model (relabels to "High-Noise" in dual-expert mode)  -->
+                        <Grid ColumnDefinitions="90,*,Auto" ColumnSpacing="4">
+                            <TextBlock
+                                Grid.Column="0"
+                                VerticalAlignment="Center"
+                                Text="{Binding PrimaryModelLabel}"
+                                TextAlignment="Left" />
 
-                        <controls:BetterComboBox
-                            Grid.Row="0"
-                            Grid.Column="1"
-                            Padding="8,6,4,6"
-                            HorizontalAlignment="Stretch"
-                            ItemsSource="{Binding ClientManager.UnetModels}"
-                            SelectedItem="{Binding SelectedModel}"
-                            Theme="{StaticResource BetterComboBoxHybridModelTheme}" />
+                            <controls:BetterComboBox
+                                Grid.Column="1"
+                                Padding="8,6,4,6"
+                                HorizontalAlignment="Stretch"
+                                ItemsSource="{Binding ClientManager.UnetModels}"
+                                SelectedItem="{Binding SelectedModel}"
+                                Theme="{StaticResource BetterComboBoxHybridModelTheme}" />
 
-                        <!--  Browse Button  -->
-                        <Button
-                            Grid.Row="0"
-                            Grid.Column="2"
-                            VerticalAlignment="Stretch"
-                            Command="{Binding OpenModelPickerCommand}"
-                            ToolTip.Tip="Browse all models">
-                            <fluent:SymbolIcon FontSize="16" Symbol="Search" />
-                        </Button>
+                            <!--  Browse + Recommended + Settings  -->
+                            <StackPanel
+                                Grid.Column="2"
+                                VerticalAlignment="Stretch"
+                                Orientation="Horizontal"
+                                Spacing="4">
+                                <Button
+                                    VerticalAlignment="Stretch"
+                                    Command="{Binding OpenModelPickerCommand}"
+                                    ToolTip.Tip="Browse all models">
+                                    <fluent:SymbolIcon FontSize="16" Symbol="Search" />
+                                </Button>
+                                <Button VerticalAlignment="Stretch" ToolTip.Tip="Model options">
+                                    <ui:SymbolIcon FontSize="16" Symbol="Setting" />
+                                    <Button.Flyout>
+                                        <ui:FAMenuFlyout Placement="BottomEdgeAlignedLeft">
+                                            <ui:MenuFlyoutItem
+                                                Command="{Binding ApplyRecommendedDefaultsCommand}"
+                                                IconSource="{StaticResource IconSparkle}"
+                                                IsEnabled="{Binding HasRecommendedDefaults}"
+                                                Text="Apply recommended settings"
+                                                ToolTip.Tip="{Binding RecommendedDefaultsToolTip}" />
+                                            <ui:MenuFlyoutSeparator />
+                                            <ui:ToggleMenuFlyoutItem
+                                                IconSource="{StaticResource IconCube}"
+                                                IsChecked="{Binding IsLowNoiseModelEnabled}"
+                                                Text="Dual expert (high / low noise)"
+                                                ToolTip.Tip="Wan 2.2 14B MoE: run a high-noise expert then hand off to a low-noise expert for a two-pass generation." />
+                                            <ui:MenuFlyoutSeparator />
+                                            <ui:MenuFlyoutSubItem Text="5B TI2V Latent" ToolTip.Tip="The Wan 2.2 5B model needs a different empty latent than the 14B / 2.1 models. Auto picks it from the selected model name; override if a renamed file is guessed wrong.">
+                                                <ui:RadioMenuFlyoutItem
+                                                    GroupName="WanLatentSource"
+                                                    IsChecked="{Binding LatentSourceMode, Converter={StaticResource EnumBoolConverter}, ConverterParameter={x:Static inference:WanLatentSourceMode.Auto}}"
+                                                    Text="Auto-detect" />
+                                                <ui:RadioMenuFlyoutItem
+                                                    GroupName="WanLatentSource"
+                                                    IsChecked="{Binding LatentSourceMode, Converter={StaticResource EnumBoolConverter}, ConverterParameter={x:Static inference:WanLatentSourceMode.Wan22FiveB}}"
+                                                    Text="Force Wan 2.2 5B" />
+                                                <ui:RadioMenuFlyoutItem
+                                                    GroupName="WanLatentSource"
+                                                    IsChecked="{Binding LatentSourceMode, Converter={StaticResource EnumBoolConverter}, ConverterParameter={x:Static inference:WanLatentSourceMode.Legacy}}"
+                                                    Text="Force Wan 2.1 / 14B" />
+                                            </ui:MenuFlyoutSubItem>
+                                        </ui:FAMenuFlyout>
+                                    </Button.Flyout>
+                                </Button>
+                            </StackPanel>
+                        </Grid>
 
-                        <!--  model precision  -->
-                        <TextBlock
-                            Grid.Row="1"
-                            Grid.Column="0"
+                        <!--  Nudge: selected model looks like a 14B MoE expert, offer to enable the pair  -->
+                        <controls:SmolInfoBar
                             Margin="0,8,0,0"
-                            VerticalAlignment="Center"
-                            Text="Precision"
-                            TextAlignment="Left" />
+                            ActionCommand="{Binding EnableLowNoiseExpertCommand}"
+                            ActionText="Enable"
+                            CloseCommand="{Binding DismissLowNoisePromptCommand}"
+                            IsOpen="{Binding ShowEnableLowNoisePrompt}"
+                            Message="This looks like a Wan 2.2 14B expert that pairs with a second one"
+                            Severity="Informational" />
 
-                        <ui:FAComboBox
-                            Grid.Row="1"
-                            Grid.Column="1"
-                            Grid.ColumnSpan="2"
+                        <!--  Low-Noise expert (Wan 2.2 14B MoE, toggled via "Dual expert")  -->
+                        <Grid
                             Margin="0,8,0,0"
-                            HorizontalAlignment="Stretch"
-                            IsTextSearchEnabled="True"
-                            ItemsSource="{Binding WeightDTypes}"
-                            SelectedItem="{Binding SelectedDType}" />
+                            ColumnDefinitions="90,*,Auto"
+                            ColumnSpacing="4"
+                            IsVisible="{Binding IsLowNoiseModelEnabled}">
+                            <TextBlock
+                                Grid.Column="0"
+                                VerticalAlignment="Center"
+                                Text="Low-Noise"
+                                TextAlignment="Left"
+                                ToolTip.Tip="Optional second Wan 2.2 14B expert that refines the high-noise pass. Leave empty to generate with a single model." />
+                            <controls:BetterComboBox
+                                Grid.Column="1"
+                                Padding="8,6,4,6"
+                                HorizontalAlignment="Stretch"
+                                ItemsSource="{Binding ClientManager.UnetModels}"
+                                SelectedItem="{Binding SelectedLowNoiseModel}"
+                                Theme="{StaticResource BetterComboBoxHybridModelTheme}" />
+                            <Button
+                                Grid.Column="2"
+                                VerticalAlignment="Stretch"
+                                Command="{Binding OpenLowNoiseModelPickerCommand}"
+                                ToolTip.Tip="Browse all models">
+                                <fluent:SymbolIcon FontSize="16" Symbol="Search" />
+                            </Button>
+                        </Grid>
 
-                        <!--  VAE  -->
-                        <TextBlock
-                            Grid.Row="2"
-                            Grid.Column="0"
+                        <!--  MoE boundary (dual-expert only)  -->
+                        <Grid
                             Margin="0,8,0,0"
-                            VerticalAlignment="Center"
-                            Text="{x:Static lang:Resources.Label_VAE}"
-                            TextAlignment="Left" />
+                            ColumnDefinitions="90,*"
+                            ColumnSpacing="4"
+                            IsVisible="{Binding IsLowNoiseModelEnabled}">
+                            <TextBlock
+                                Grid.Column="0"
+                                VerticalAlignment="Center"
+                                Text="Boundary"
+                                ToolTip.Tip="Fraction of sampling steps run by the high-noise expert before handing off to the low-noise expert. 0.5 splits the steps evenly." />
+                            <ui:NumberBox
+                                Grid.Column="1"
+                                HorizontalAlignment="Stretch"
+                                Maximum="1"
+                                Minimum="0"
+                                SelectionHighlightColor="Transparent"
+                                SimpleNumberFormat="F2"
+                                SmallChange="0.05"
+                                SpinButtonPlacementMode="Inline"
+                                ToolTip.Tip="Fraction of steps run by the high-noise expert before switching to the low-noise expert."
+                                Value="{Binding MoeBoundary}" />
+                        </Grid>
 
-                        <ui:FAComboBox
-                            Grid.Row="2"
-                            Grid.Column="1"
-                            Margin="0,8,0,0"
-                            HorizontalAlignment="Stretch"
-                            DisplayMemberBinding="{Binding ShortDisplayName}"
-                            IsTextSearchEnabled="True"
-                            ItemsSource="{Binding ClientManager.VaeModels}"
-                            SelectedItem="{Binding SelectedVae}" />
-                        <Button
-                            Grid.Row="2"
-                            Grid.Column="2"
-                            Margin="4,8,0,0"
-                            VerticalAlignment="Stretch"
-                            Command="{Binding OpenVaePickerCommand}"
-                            ToolTip.Tip="Browse all VAE models">
-                            <fluent:SymbolIcon FontSize="16" Symbol="Search" />
-                        </Button>
-
-                        <!--  Text Encoder  -->
-                        <TextBlock
-                            Grid.Row="3"
-                            Grid.Column="0"
-                            Margin="0,8,0,0"
-                            VerticalAlignment="Center"
-                            Text="Text Encoder"
-                            TextAlignment="Left" />
-
-                        <controls:BetterDownloadableComboBox
-                            Grid.Row="3"
-                            Grid.Column="1"
-                            Margin="0,8,0,0"
-                            Padding="8,6,4,6"
-                            HorizontalAlignment="Stretch"
-                            ItemsSource="{Binding ClientManager.ClipModels}"
-                            SelectedItem="{Binding SelectedClipModel}"
-                            Theme="{StaticResource BetterComboBoxHybridModelTheme}" />
-                        <Button
-                            Grid.Row="3"
-                            Grid.Column="2"
-                            Margin="4,8,0,0"
-                            VerticalAlignment="Stretch"
-                            Command="{Binding OpenClipPickerCommand}"
-                            ToolTip.Tip="Browse all CLIP models">
-                            <fluent:SymbolIcon FontSize="16" Symbol="Search" />
-                        </Button>
-
-                        <!--  CLIP Vision  -->
-                        <TextBlock
-                            Grid.Row="4"
-                            Grid.Column="0"
-                            Margin="0,8,0,0"
-                            VerticalAlignment="Center"
-                            IsVisible="{Binding IsClipVisionEnabled}"
-                            Text="CLIP Vision"
-                            TextAlignment="Left" />
-
-                        <controls:BetterDownloadableComboBox
-                            Grid.Row="4"
-                            Grid.Column="1"
-                            Margin="0,8,0,0"
-                            Padding="8,6,4,6"
-                            HorizontalAlignment="Stretch"
-                            IsVisible="{Binding IsClipVisionEnabled}"
-                            ItemsSource="{Binding ClientManager.ClipVisionModels}"
-                            SelectedItem="{Binding SelectedClipVisionModel}"
-                            Theme="{StaticResource BetterComboBoxHybridModelTheme}" />
-                        <Button
-                            Grid.Row="4"
-                            Grid.Column="2"
-                            Margin="4,8,0,0"
-                            VerticalAlignment="Stretch"
-                            Command="{Binding OpenClipVisionPickerCommand}"
-                            IsVisible="{Binding IsClipVisionEnabled}"
-                            ToolTip.Tip="Browse all CLIP Vision models">
-                            <fluent:SymbolIcon FontSize="16" Symbol="Search" />
-                        </Button>
-
-                        <!--  Shift  -->
-                        <TextBlock
-                            Grid.Row="5"
-                            Grid.Column="0"
-                            Margin="0,8,0,0"
-                            VerticalAlignment="Center"
-                            Text="Shift" />
-                        <ui:NumberBox
-                            Grid.Row="5"
-                            Grid.Column="1"
-                            Grid.ColumnSpan="2"
+                        <!--  Advanced (precision, VAE, text encoder, shift)  -->
+                        <Expander
                             Margin="0,8,0,0"
                             HorizontalAlignment="Stretch"
-                            SelectionHighlightColor="Transparent"
-                            SimpleNumberFormat="F2"
-                            SmallChange="0.25"
-                            SpinButtonPlacementMode="Inline"
-                            Value="{Binding Shift}" />
+                            Header="Advanced"
+                            IsExpanded="{Binding IsAdvancedExpanded}">
+                            <StackPanel Margin="0,4,0,0" Spacing="8">
+                                <!--  Precision  -->
+                                <Grid ColumnDefinitions="90,*" ColumnSpacing="4">
+                                    <TextBlock
+                                        Grid.Column="0"
+                                        VerticalAlignment="Center"
+                                        Text="Precision"
+                                        TextAlignment="Left"
+                                        ToolTip.Tip="Weight precision the model loads at. fp8 variants use much less VRAM with a small quality tradeoff; 'default' loads at full precision." />
+                                    <ui:FAComboBox
+                                        Grid.Column="1"
+                                        HorizontalAlignment="Stretch"
+                                        IsTextSearchEnabled="True"
+                                        ItemsSource="{Binding WeightDTypes}"
+                                        SelectedItem="{Binding SelectedDType}" />
+                                </Grid>
 
-                        <!--  Extra Networks  -->
-                        <Panel
-                            Grid.Row="6"
-                            Grid.Column="0"
-                            Grid.ColumnSpan="3">
-                            <controls:StackEditableCard Margin="0,8,0,0" DataContext="{Binding ExtraNetworksStackCardViewModel}" />
+                                <!--  VAE  -->
+                                <Grid ColumnDefinitions="90,*,Auto" ColumnSpacing="4">
+                                    <TextBlock
+                                        Grid.Column="0"
+                                        VerticalAlignment="Center"
+                                        Text="{x:Static lang:Resources.Label_VAE}"
+                                        TextAlignment="Left"
+                                        ToolTip.Tip="Decodes the generated latents into the final video frames. Use the VAE that matches your model (e.g. the Wan VAE)." />
+                                    <ui:FAComboBox
+                                        Grid.Column="1"
+                                        HorizontalAlignment="Stretch"
+                                        DisplayMemberBinding="{Binding ShortDisplayName}"
+                                        IsTextSearchEnabled="True"
+                                        ItemsSource="{Binding ClientManager.VaeModels}"
+                                        SelectedItem="{Binding SelectedVae}" />
+                                    <Button
+                                        Grid.Column="2"
+                                        VerticalAlignment="Stretch"
+                                        Command="{Binding OpenVaePickerCommand}"
+                                        ToolTip.Tip="Browse all VAE models">
+                                        <fluent:SymbolIcon FontSize="16" Symbol="Search" />
+                                    </Button>
+                                </Grid>
+
+                                <!--  Text Encoder  -->
+                                <Grid ColumnDefinitions="90,*,Auto" ColumnSpacing="4">
+                                    <TextBlock
+                                        Grid.Column="0"
+                                        VerticalAlignment="Center"
+                                        Text="Text Encoder"
+                                        TextAlignment="Left"
+                                        ToolTip.Tip="Turns your prompt text into conditioning the model understands (the Wan UMT5 text encoder)." />
+                                    <controls:BetterDownloadableComboBox
+                                        Grid.Column="1"
+                                        Padding="8,6,4,6"
+                                        HorizontalAlignment="Stretch"
+                                        ItemsSource="{Binding ClientManager.ClipModels}"
+                                        SelectedItem="{Binding SelectedClipModel}"
+                                        Theme="{StaticResource BetterComboBoxHybridModelTheme}" />
+                                    <Button
+                                        Grid.Column="2"
+                                        VerticalAlignment="Stretch"
+                                        Command="{Binding OpenClipPickerCommand}"
+                                        ToolTip.Tip="Browse all CLIP models">
+                                        <fluent:SymbolIcon FontSize="16" Symbol="Search" />
+                                    </Button>
+                                </Grid>
+
+                                <!--  CLIP Vision (image-to-video only)  -->
+                                <Grid
+                                    ColumnDefinitions="90,*,Auto"
+                                    ColumnSpacing="4"
+                                    IsVisible="{Binding IsClipVisionEnabled}">
+                                    <TextBlock
+                                        Grid.Column="0"
+                                        VerticalAlignment="Center"
+                                        Text="CLIP Vision"
+                                        TextAlignment="Left" />
+                                    <controls:BetterDownloadableComboBox
+                                        Grid.Column="1"
+                                        Padding="8,6,4,6"
+                                        HorizontalAlignment="Stretch"
+                                        ItemsSource="{Binding ClientManager.ClipVisionModels}"
+                                        SelectedItem="{Binding SelectedClipVisionModel}"
+                                        Theme="{StaticResource BetterComboBoxHybridModelTheme}" />
+                                    <Button
+                                        Grid.Column="2"
+                                        VerticalAlignment="Stretch"
+                                        Command="{Binding OpenClipVisionPickerCommand}"
+                                        ToolTip.Tip="Browse all CLIP Vision models">
+                                        <fluent:SymbolIcon FontSize="16" Symbol="Search" />
+                                    </Button>
+                                </Grid>
+
+                                <!--  Shift  -->
+                                <Grid ColumnDefinitions="90,*" ColumnSpacing="4">
+                                    <TextBlock
+                                        Grid.Column="0"
+                                        VerticalAlignment="Center"
+                                        Text="Shift"
+                                        ToolTip.Tip="Shifts the noise schedule (ModelSamplingSD3). Higher values spend more sampling on the high-noise (motion/structure) stage. 8.0 is the Wan default." />
+                                    <ui:NumberBox
+                                        Grid.Column="1"
+                                        HorizontalAlignment="Stretch"
+                                        SelectionHighlightColor="Transparent"
+                                        SimpleNumberFormat="F2"
+                                        SmallChange="0.25"
+                                        SpinButtonPlacementMode="Inline"
+                                        Value="{Binding Shift}" />
+                                </Grid>
+                            </StackPanel>
+                        </Expander>
+
+                        <!--  High-Noise LoRAs (primary model; title relabels in dual-expert mode)  -->
+                        <controls:StackEditableCard Margin="0,8,0,0" DataContext="{Binding ExtraNetworksStackCardViewModel}" />
+
+                        <!--  Low-Noise LoRAs (low-noise expert, Wan 2.2 14B)  -->
+                        <Panel IsVisible="{Binding IsLowNoiseModelEnabled}">
+                            <controls:StackEditableCard Margin="0,8,0,0" DataContext="{Binding LowNoiseExtraNetworksStackCardViewModel}" />
                         </Panel>
-                    </sg:SpacedGrid>
+                    </StackPanel>
                 </controls:Card>
             </ControlTemplate>
         </Setter>

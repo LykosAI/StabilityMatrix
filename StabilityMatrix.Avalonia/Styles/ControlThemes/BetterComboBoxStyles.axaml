@@ -459,6 +459,7 @@
                             Width="36"
                             Height="36"
                             CornerRadius="36"
+                            IsVisible="{Binding Local.PreviewImageFullPathGlobal, Converter={x:Static StringConverters.IsNotNullOrEmpty}, FallbackValue=False}"
                             RenderOptions.BitmapInterpolationMode="HighQuality"
                             Source="{Binding Local.PreviewImageFullPathGlobal, Converter={StaticResource FileUriConverter}}"
                             Stretch="UniformToFill" />

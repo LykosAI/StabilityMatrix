@@ -756,6 +756,63 @@
   <data name="Label_Upscale" xml:space="preserve">
     <value>Upscale</value>
   </data>
+  <data name="Label_NewProject" xml:space="preserve">
+    <value>New Project</value>
+  </data>
+  <data name="Label_CompactNewTabMenu" xml:space="preserve">
+    <value>Compact New Tab Menu</value>
+  </data>
+  <data name="Label_CompactNewTabMenuDescription" xml:space="preserve">
+    <value>Use the compact dropdown menu when adding a new Inference tab, instead of the project gallery dialog.</value>
+  </data>
+  <data name="Label_UseCompactMenuPrompt" xml:space="preserve">
+    <value>Prefer the quick menu? Use the compact dropdown</value>
+  </data>
+  <data name="Label_UseCompactMenuToolTip" xml:space="preserve">
+    <value>Switch to the compact dropdown menu. You can switch back in Settings → Inference.</value>
+  </data>
+  <data name="Label_Image" xml:space="preserve">
+    <value>Image</value>
+  </data>
+  <data name="Label_Video" xml:space="preserve">
+    <value>Video</value>
+  </data>
+  <data name="Label_Legacy" xml:space="preserve">
+    <value>Legacy</value>
+  </data>
+  <data name="Label_WanTextToVideo" xml:space="preserve">
+    <value>Wan Text to Video</value>
+  </data>
+  <data name="Label_WanImageToVideo" xml:space="preserve">
+    <value>Wan Image to Video</value>
+  </data>
+  <data name="Label_FluxTextToImage" xml:space="preserve">
+    <value>Flux Text to Image</value>
+  </data>
+  <data name="Label_SvdImageToVideo" xml:space="preserve">
+    <value>SVD Image to Video</value>
+  </data>
+  <data name="Label_TextToImageDescription" xml:space="preserve">
+    <value>Generate images from a text prompt. Works with SD1.5, SDXL, Pony, Flux and more.</value>
+  </data>
+  <data name="Label_ImageToImageDescription" xml:space="preserve">
+    <value>Transform an existing image using a text prompt.</value>
+  </data>
+  <data name="Label_UpscaleDescription" xml:space="preserve">
+    <value>Increase the resolution of an image with an upscaling model.</value>
+  </data>
+  <data name="Label_WanTextToVideoDescription" xml:space="preserve">
+    <value>Generate a video from a text prompt using Wan.</value>
+  </data>
+  <data name="Label_WanImageToVideoDescription" xml:space="preserve">
+    <value>Animate an input image into a video using Wan.</value>
+  </data>
+  <data name="Label_FluxTextToImageDescription" xml:space="preserve">
+    <value>Standalone Flux text-to-image. The Text to Image tab also handles Flux automatically.</value>
+  </data>
+  <data name="Label_SvdImageToVideoDescription" xml:space="preserve">
+    <value>Stable Video Diffusion image-to-video.</value>
+  </data>
   <data name="Label_OutputsPageTitle" xml:space="preserve">
     <value>Output Browser</value>
   </data>
@@ -1831,5 +1888,203 @@ Account tokens will not be viewable after saving, please make a note of them if 
   </data>
   <data name="Action_CustomFolderEllipsis" xml:space="preserve">
     <value>Custom...</value>
+  </data>
+  <data name="Label_HuggingFaceSearchWatermark" xml:space="preserve">
+    <value>Search HuggingFace, or paste a repo URL / id (owner/name)…</value>
+  </data>
+  <data name="Label_SortResults" xml:space="preserve">
+    <value>Sort results</value>
+  </data>
+  <data name="Label_HideInstalled" xml:space="preserve">
+    <value>Hide installed</value>
+  </data>
+  <data name="Label_ToggleFlatOrTree" xml:space="preserve">
+    <value>Toggle between a flat list and a folder tree</value>
+  </data>
+  <data name="Label_FlatList" xml:space="preserve">
+    <value>Flat list</value>
+  </data>
+  <data name="Label_FolderTree" xml:space="preserve">
+    <value>Folder tree</value>
+  </data>
+  <data name="Label_FilterFilesByName" xml:space="preserve">
+    <value>Filter files by name…</value>
+  </data>
+  <data name="Label_SelectAllFilesInFolder" xml:space="preserve">
+    <value>Select all files in this folder</value>
+  </data>
+  <data name="Label_DestinationFolder" xml:space="preserve">
+    <value>Destination folder</value>
+  </data>
+  <data name="Label_InstalledInFolder" xml:space="preserve">
+    <value>Installed in {0}</value>
+  </data>
+  <data name="Label_EndOfResults" xml:space="preserve">
+    <value>End of results</value>
+  </data>
+  <data name="Label_Likes" xml:space="preserve">
+    <value>Likes</value>
+  </data>
+  <data name="Label_SetDestination" xml:space="preserve">
+    <value>Set destination…</value>
+  </data>
+  <data name="Label_SetDestinationTooltip" xml:space="preserve">
+    <value>Set the destination folder for all selected files</value>
+  </data>
+  <data name="Action_ImportToFolder" xml:space="preserve">
+    <value>Import to folder</value>
+  </data>
+  <data name="Label_ImportToFolderDescription" xml:space="preserve">
+    <value>Download the selected files into one folder, keeping the repo's structure (needed for diffusers / multi-file models).</value>
+  </data>
+  <data name="Label_DiffusersDetected" xml:space="preserve">
+    <value>Detected a diffusers model — recommended.</value>
+  </data>
+  <data name="Label_MultiFileModelDetected" xml:space="preserve">
+    <value>Looks like a multi-file model — recommended.</value>
+  </data>
+  <data name="Label_Subfolder" xml:space="preserve">
+    <value>Subfolder</value>
+  </data>
+  <data name="Label_CustomFolder" xml:space="preserve">
+    <value>Custom folder</value>
+  </data>
+  <data name="Action_ClearCustomFolder" xml:space="preserve">
+    <value>Clear custom folder</value>
+  </data>
+  <data name="Action_Browse" xml:space="preserve">
+    <value>Browse…</value>
+  </data>
+  <data name="Label_RepoNameWatermark" xml:space="preserve">
+    <value>repo name</value>
+  </data>
+  <data name="Label_AutoDetected" xml:space="preserve">
+    <value>Auto (detected)</value>
+  </data>
+  <data name="Label_ChooseDestinationFolder" xml:space="preserve">
+    <value>Choose destination folder</value>
+  </data>
+  <data name="Label_HuggingFaceRepoGated" xml:space="preserve">
+    <value>This repository is gated or private. Add your HuggingFace token in Settings → Accounts to access it.</value>
+  </data>
+  <data name="Label_HuggingFaceRepoNotFound" xml:space="preserve">
+    <value>Repository '{0}' was not found.</value>
+  </data>
+  <data name="Label_HuggingFaceRepoLoadFailed" xml:space="preserve">
+    <value>Couldn't load '{0}' ({1})</value>
+  </data>
+  <data name="Label_HuggingFaceSearchFailed" xml:space="preserve">
+    <value>Search failed ({0})</value>
+  </data>
+  <data name="Label_NumSelected" xml:space="preserve">
+    <value>{0} selected</value>
+  </data>
+  <data name="Label_NumFilesWithSize" xml:space="preserve">
+    <value>{0} files · {1}</value>
+  </data>
+  <data name="Label_NotEnoughFreeSpace" xml:space="preserve">
+    <value>Not enough free space — need {0}, only {1} available.</value>
+  </data>
+  <data name="Label_AddedToDownloadQueue" xml:space="preserve">
+    <value>Added to the download queue.</value>
+  </data>
+  <data name="Label_AddedToDownloadQueueFormat" xml:space="preserve">
+    <value>{0} added to the download queue.</value>
+  </data>
+  <data name="Label_JustNow" xml:space="preserve">
+    <value>just now</value>
+  </data>
+  <data name="Label_TimeYearsAgo" xml:space="preserve">
+    <value>{0}y ago</value>
+  </data>
+  <data name="Label_TimeMonthsAgo" xml:space="preserve">
+    <value>{0}mo ago</value>
+  </data>
+  <data name="Label_TimeDaysAgo" xml:space="preserve">
+    <value>{0}d ago</value>
+  </data>
+  <data name="Label_TimeHoursAgo" xml:space="preserve">
+    <value>{0}h ago</value>
+  </data>
+  <data name="Label_TimeMinutesAgo" xml:space="preserve">
+    <value>{0}m ago</value>
+  </data>
+  <data name="Label_UpdatedAgo" xml:space="preserve">
+    <value>updated {0}</value>
+  </data>
+  <data name="Label_PromptQueue" xml:space="preserve">
+    <value>Prompt Queue</value>
+  </data>
+  <data name="Label_AddToQueue" xml:space="preserve">
+    <value>Add to Queue</value>
+  </data>
+  <data name="Label_AddedToQueue" xml:space="preserve">
+    <value>Added to the prompt queue</value>
+  </data>
+  <data name="Label_PromptQueueNotConnected" xml:space="preserve">
+    <value>Connect to ComfyUI to process the prompt queue</value>
+  </data>
+  <data name="Label_QueueEmpty" xml:space="preserve">
+    <value>Queue is empty</value>
+  </data>
+  <data name="Label_ClearFinished" xml:space="preserve">
+    <value>Clear finished</value>
+  </data>
+  <data name="Label_ClearPending" xml:space="preserve">
+    <value>Clear pending</value>
+  </data>
+  <data name="Label_OpenInTab" xml:space="preserve">
+    <value>Open in tab</value>
+  </data>
+  <data name="Action_StartQueue" xml:space="preserve">
+    <value>Start</value>
+  </data>
+  <data name="Action_PauseQueue" xml:space="preserve">
+    <value>Pause</value>
+  </data>
+  <data name="Label_StatusPending" xml:space="preserve">
+    <value>Pending</value>
+  </data>
+  <data name="Label_StatusRunning" xml:space="preserve">
+    <value>Running</value>
+  </data>
+  <data name="Label_StatusCompleted" xml:space="preserve">
+    <value>Completed</value>
+  </data>
+  <data name="Label_StatusFailed" xml:space="preserve">
+    <value>Failed</value>
+  </data>
+  <data name="Label_StatusCancelled" xml:space="preserve">
+    <value>Cancelled</value>
+  </data>
+  <data name="Action_MoveUp" xml:space="preserve">
+    <value>Move up</value>
+  </data>
+  <data name="Action_MoveDown" xml:space="preserve">
+    <value>Move down</value>
+  </data>
+  <data name="Label_QueueParamsSteps" xml:space="preserve">
+    <value>{0} steps</value>
+  </data>
+  <data name="Label_QueueParamsSeed" xml:space="preserve">
+    <value>seed {0}</value>
+  </data>
+  <data name="Action_Requeue" xml:space="preserve">
+    <value>Re-queue</value>
+  </data>
+  <data name="Action_RequeueAll" xml:space="preserve">
+    <value>Re-queue all finished</value>
+  </data>
+  <data name="Label_QueuePausing" xml:space="preserve">
+    <value>Pausing…</value>
+  </data>
+  <data name="Label_QueuePauseTooltip" xml:space="preserve">
+    <value>Finishes the current item, then stops</value>
+  </data>
+  <data name="Label_OpenImage" xml:space="preserve">
+    <value>Open image</value>
+  </data>
+  <data name="Label_ImageFileNotFound" xml:space="preserve">
+    <value>Image file not found</value>
   </data>
 </root>

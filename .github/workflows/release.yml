@@ -43,6 +43,10 @@ on:
           - stable
           - preview
           - development
+      sign-windows:
+        type: boolean
+        description: Sign Windows executable?
+        default: true
       test-release-artifacts:
         type: boolean
         description: "[Debug] Test release artifacts?"
@@ -131,6 +135,14 @@ jobs:
       platform-id: win-x64
       out-name: StabilityMatrix.exe
     runs-on: windows-latest
+    # Binds the OIDC subject to the environment (branch-agnostic), so releases from
+    # any branch (main, dev, ...) match a single federated credential.
+    environment: release
+    # OIDC (id-token) is required for passwordless Azure login used by code signing.
+    # contents: read is the minimum needed for checkout (overrides the workflow-level contents: write).
+    permissions:
+      id-token: write
+      contents: read
     steps:
       - uses: actions/checkout@v3
 
@@ -175,6 +187,43 @@ jobs:
       - name: Post Build
         run: mv ./out/StabilityMatrix.Avalonia.exe ./out/${{ env.out-name }}
 
+      # Passwordless login via OIDC federated credentials (no client secret stored).
+      # Skipped when sign-windows is explicitly disabled (escape hatch for unsigned releases).
+      - name: Azure Login (OIDC)
+        if: ${{ github.event.inputs.sign-windows != 'false' }}
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      # The signing action installs its tooling (sign CLI, SDK build tools) via NuGet
+      # with --add-source, which NuGet rejects while our packageSourceMapping is active.
+      # Move our config aside for the sign step; restored immediately after.
+      - name: Disable NuGet source mapping for signing
+        if: ${{ github.event.inputs.sign-windows != 'false' }}
+        run: Rename-Item NuGet.Config NuGet.Config.disabled
+
+      # Authenticode-sign the published single-file exe before upload, so every
+      # downstream channel (GitHub release, B2 / matrix auto-update) ships signed bytes.
+      - name: Sign Windows executable
+        if: ${{ github.event.inputs.sign-windows != 'false' }}
+        uses: azure/trusted-signing-action@v2.0.0
+        with:
+          endpoint: ${{ vars.SIGNING_ENDPOINT }}
+          signing-account-name: ${{ vars.SIGNING_ACCOUNT_NAME }}
+          certificate-profile-name: ${{ vars.SIGNING_CERT_PROFILE_NAME }}
+          files-folder: ${{ github.workspace }}\out
+          files-folder-filter: exe
+          file-digest: SHA256
+          timestamp-rfc3161: http://timestamp.acs.microsoft.com
+          timestamp-digest: SHA256
+
+      # Restore the config even if signing failed, so the tree stays consistent.
+      - name: Restore NuGet source mapping
+        if: ${{ always() && github.event.inputs.sign-windows != 'false' }}
+        run: Rename-Item NuGet.Config.disabled NuGet.Config
+
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
@@ -182,7 +231,7 @@ jobs:
           path: ./out/${{ env.out-name }}
           retention-days: 1
           if-no-files-found: error
-  
+
   release-macos:
     name: Release (macos-arm64)
     env:

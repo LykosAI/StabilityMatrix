@@ -5,6 +5,7 @@
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:dialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
+    xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:mdxaml="https://github.com/whistyun/Markdown.Avalonia.Tight"
@@ -20,12 +21,23 @@
     mc:Ignorable="d">
     <Grid RowDefinitions="Auto,*">
 
-        <TextBlock
-            Grid.Row="0"
-            Margin="16,16,16,8"
-            FontSize="24"
-            FontWeight="Thin"
-            Text="{x:Static lang:Resources.Label_WhatsNew}" />
+        <!--  Header: title + close button  -->
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+            <TextBlock
+                Grid.Column="0"
+                Margin="16,16,16,8"
+                FontSize="24"
+                FontWeight="Thin"
+                Text="{x:Static lang:Resources.Label_WhatsNew}" />
+            <Button
+                Grid.Column="1"
+                Margin="0,8,8,0"
+                Padding="8"
+                VerticalAlignment="Top"
+                icons:Attached.Icon="fa-solid fa-xmark"
+                Classes="transparent-full"
+                Command="{Binding OnCloseButtonClick}" />
+        </Grid>
 
         <!--  Loading state  -->
         <StackPanel
@@ -92,7 +104,10 @@
                 Grid.Column="1"
                 Background="{DynamicResource ButtonBackgroundPressed}"
                 CornerRadius="8">
-                <controls:BetterMarkdownScrollViewer Margin="16" Markdown="{Binding SelectedMarkdown, Mode=OneWay}" />
+                <controls:BetterMarkdownScrollViewer
+                    x:Name="MarkdownViewer"
+                    Margin="16"
+                    Markdown="{Binding SelectedMarkdown, Mode=OneWay}" />
             </Border>
         </Grid>
     </Grid>

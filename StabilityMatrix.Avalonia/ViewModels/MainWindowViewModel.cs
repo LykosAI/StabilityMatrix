@@ -146,12 +146,12 @@ public partial class MainWindowViewModel : ViewModelBase
         var vm = dialogFactory.Get<ChangelogViewModel>();
         var dialog = new BetterContentDialog
         {
-            Title = Resources.Label_WhatsNew,
             Content = new ChangelogDialog { DataContext = vm },
-            CloseButtonText = Resources.Action_Close,
             MaxDialogWidth = 1000,
             MaxDialogHeight = 750,
             FullSizeDesired = true,
+            IsFooterVisible = false,
+            CloseOnClickOutside = true,
             ContentVerticalScrollBarVisibility = ScrollBarVisibility.Disabled,
         };
 

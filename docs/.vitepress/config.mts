@@ -74,7 +74,8 @@ export default defineConfig({
       { text: 'Inference', link: '/stability-matrix/inference/overview' },
       { text: 'Advanced', link: '/stability-matrix/advanced/overview' },
       { text: 'Tips and Tricks', link: '/stability-matrix/tips/overview' },
-      { text: 'Troubleshooting', link: '/stability-matrix/troubleshooting/common-issues' }
+      { text: 'Troubleshooting', link: '/stability-matrix/troubleshooting/common-issues' },
+      { text: 'Release Notes', link: '/stability-matrix/release-notes/2.16.2' }
     ],
 
     sidebar: {
@@ -132,6 +133,14 @@ export default defineConfig({
           text: 'Troubleshooting',
           items: [
             { text: 'Common Issues', link: '/stability-matrix/troubleshooting/common-issues' }
+          ]
+        }
+      ],
+      '/stability-matrix/release-notes/': [
+        {
+          text: 'Release Notes',
+          items: [
+            { text: 'v2.16.2', link: '/stability-matrix/release-notes/2.16.2' }
           ]
         }
       ]

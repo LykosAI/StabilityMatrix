@@ -60,8 +60,22 @@ public static class HuggingFaceFolderInference
             return SharedFolderType.IpAdapter;
 
         if (
-            Contains(p, "text_encoder", "text_encoders", "/clip/")
-            || StartsWith(name, "clip_", "clip-", "t5", "umt5", "llava", "qwen_3")
+            Contains(p, "text_encoder", "text_encoders", "text-encoder", "/clip/")
+            || Contains(name, "enconly")
+            || StartsWith(
+                name,
+                "clip_",
+                "clip-",
+                "t5",
+                "umt5",
+                "byt5",
+                "mt5",
+                "llava",
+                "llama",
+                "gemma",
+                "qwen_3",
+                "qwen2"
+            )
         )
             return SharedFolderType.TextEncoders;
 

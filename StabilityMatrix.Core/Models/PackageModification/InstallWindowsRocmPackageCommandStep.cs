@@ -25,7 +25,7 @@ public class InstallWindowsRocmPackageCommandStep(
 ) : IPackageStep
 {
     private const string BitsAndBytesWheelUrl =
-        "https://github.com/0xDELUXA/bitsandbytes_win_rocm/releases/download/0.50.0.dev0-py3-rocm7-win_amd64_all/bitsandbytes-0.50.0.dev0-cp312-cp312-win_amd64.whl";
+        "https://github.com/0xDELUXA/bitsandbytes_win_rocm/releases/download/0.50.0.dev0-py3.12-rocm7.15-win_amd64_all/bitsandbytes-0.50.0.dev0-cp312-cp312-win_amd64.whl";
     private const string AmdAiterWheelUrl =
         "https://github.com/0xDELUXA/flash-attention/releases/download/v2.8.4_win-rocm/amd_aiter-0.0.0-py3-none-win_amd64.whl";
     private const string FlashAttentionWheelUrl =

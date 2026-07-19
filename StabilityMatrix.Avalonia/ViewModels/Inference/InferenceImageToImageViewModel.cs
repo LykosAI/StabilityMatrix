@@ -31,7 +31,8 @@ public class InferenceImageToImageViewModel : InferenceTextToImageViewModel
         ISettingsManager settingsManager,
         IModelIndexService modelIndexService,
         RunningPackageService runningPackageService,
-        TabContext tabContext
+        TabContext tabContext,
+        IPromptQueueService promptQueueService
     )
         : base(
             notificationService,
@@ -40,7 +41,8 @@ public class InferenceImageToImageViewModel : InferenceTextToImageViewModel
             vmFactory,
             modelIndexService,
             runningPackageService,
-            tabContext
+            tabContext,
+            promptQueueService
         )
     {
         SelectImageCardViewModel = vmFactory.Get<SelectImageCardViewModel>(vm =>

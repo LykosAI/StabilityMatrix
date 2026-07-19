@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <!--
+      Root landing fallback. On Azure SWA the "/" route in staticwebapp.config.json
+      302s to /stability-matrix/ before this file is ever served; this page exists
+      because the SWA deploy action requires an index.html at the app root, and it
+      doubles as the redirect for local preview (which has no SWA routing). Replaced
+      by a real product landing page when the site goes multi-product.
+    -->
+    <meta http-equiv="refresh" content="0; url=/stability-matrix/" />
+    <link rel="canonical" href="https://docs.lykos.ai/stability-matrix/" />
+    <title>Lykos Docs</title>
+  </head>
+  <body>
+    <p>Redirecting to the <a href="/stability-matrix/">Stability Matrix documentation</a>&hellip;</p>
+  </body>
+</html>

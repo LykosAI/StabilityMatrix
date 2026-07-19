@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Controls;
@@ -96,7 +97,7 @@ public partial class PackageImportViewModel(
 
     public override async Task OnLoadedAsync()
     {
-        SelectedBasePackage ??= AvailablePackages[0];
+        SelectedBasePackage ??= DetectPackageFromGitRemote() ?? AvailablePackages[0];
 
         if (Design.IsDesignMode)
             return;
@@ -338,4 +339,85 @@ public partial class PackageImportViewModel(
             x.Version.Major.Equals(SelectedBasePackage?.RecommendedPythonVersion.Major)
             && x.Version.Minor.Equals(SelectedBasePackage?.RecommendedPythonVersion.Minor)
         );
+
+    /// <summary>
+    /// Attempts to detect the package type of the folder being imported from its git remote origin url,
+    /// so the type dropdown doesn't silently default to the first (unrelated) package in the list.
+    /// </summary>
+    private BasePackage? DetectPackageFromGitRemote()
+    {
+        if (PackagePath is null)
+            return null;
+
+        try
+        {
+            var gitConfigPath = Path.Combine(PackagePath, ".git", "config");
+            if (!File.Exists(gitConfigPath))
+                return null;
+
+            var remoteMatch = GitConfigRemoteOriginUrlRegex().Match(File.ReadAllText(gitConfigPath));
+            if (!remoteMatch.Success || GetGitHubSlug(remoteMatch.Groups[1].Value) is not { } remoteSlug)
+                return null;
+
+            var candidates = AvailablePackages
+                .Where(p =>
+                    GetGitHubSlug(p.GithubUrl) is { } slug
+                    && string.Equals(slug, remoteSlug, StringComparison.OrdinalIgnoreCase)
+                )
+                .ToList();
+
+            if (candidates.Count > 1)
+            {
+                // Multiple packages share the same repository (e.g. Forge Classic / Neo),
+                // disambiguate by the currently checked-out branch
+                var headPath = Path.Combine(PackagePath, ".git", "HEAD");
+                const string refPrefix = "ref: refs/heads/";
+                if (
+                    File.Exists(headPath)
+                    && File.ReadAllText(headPath).Trim() is { } head
+                    && head.StartsWith(refPrefix, StringComparison.Ordinal)
+                    && candidates.FirstOrDefault(p =>
+                        string.Equals(
+                            p.MainBranch,
+                            head[refPrefix.Length..],
+                            StringComparison.OrdinalIgnoreCase
+                        )
+                    )
+                        is { } branchMatch
+                )
+                {
+                    return branchMatch;
+                }
+            }
+
+            if (candidates.FirstOrDefault() is { } detected)
+            {
+                Logger.Info(
+                    "Detected package type {Package} for import path {Path} from git remote",
+                    detected.Name,
+                    PackagePath.Name
+                );
+                return detected;
+            }
+
+            return null;
+        }
+        catch (Exception e)
+        {
+            Logger.Warn(e, "Failed to detect package type from git remote");
+            return null;
+        }
+    }
+
+    private static string? GetGitHubSlug(string url)
+    {
+        var match = GitHubUrlSlugRegex().Match(url.Trim());
+        return match.Success ? match.Groups["slug"].Value : null;
+    }
+
+    [GeneratedRegex("""\[remote "origin"\][\s\S]*?url\s*=\s*(.+)""")]
+    private static partial Regex GitConfigRemoteOriginUrlRegex();
+
+    [GeneratedRegex(@"github\.com[:/](?<slug>[^/\s]+/[^/\s]+?)(?:\.git)?/?$", RegexOptions.IgnoreCase)]
+    private static partial Regex GitHubUrlSlugRegex();
 }

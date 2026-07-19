@@ -104,7 +104,6 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
                 typeof(HiresFixModule),
                 typeof(SaveImageModule),
                 typeof(UpscalerModule),
-                typeof(FaceDetailerModule),
             };
             modulesCard.DefaultModules = new[] { typeof(HiresFixModule), typeof(UpscalerModule) };
             modulesCard.InitializeDefaults();

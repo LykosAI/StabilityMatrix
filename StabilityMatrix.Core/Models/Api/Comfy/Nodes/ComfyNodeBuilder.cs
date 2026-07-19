@@ -840,6 +840,58 @@ public class ComfyNodeBuilder
     }
 
     [TypedNodeOptions(
+        Name = "IPAdapterModelLoader",
+        RequiredExtensions = ["https://github.com/cubiq/ComfyUI_IPAdapter_plus"]
+    )]
+    public record IPAdapterModelLoader : ComfyTypedNodeBase<IpAdapterNodeConnection>
+    {
+        [JsonPropertyName("ipadapter_file")]
+        public required string IpadapterFile { get; init; }
+    }
+
+    [TypedNodeOptions(
+        Name = "IPAdapterAdvanced",
+        RequiredExtensions = ["https://github.com/cubiq/ComfyUI_IPAdapter_plus"]
+    )]
+    public record IPAdapterAdvanced : ComfyTypedNodeBase<ModelNodeConnection>
+    {
+        public required ModelNodeConnection Model { get; init; }
+
+        public required IpAdapterNodeConnection Ipadapter { get; init; }
+
+        public required ImageNodeConnection Image { get; init; }
+
+        [Range(-1d, 5d)]
+        public double Weight { get; init; } = 1.0;
+
+        /// <summary>
+        /// One of: "linear", "ease in", "ease out", "ease in-out", "reverse in-out",
+        /// "weak input", "weak output", "weak middle", "strong middle", "style transfer",
+        /// "composition", "strong style transfer", "style and composition",
+        /// "style transfer precise", "composition precise"
+        /// </summary>
+        public string WeightType { get; init; } = "linear";
+
+        /// <summary>
+        /// One of: "concat", "add", "subtract", "average", "norm average"
+        /// </summary>
+        public string CombineEmbeds { get; init; } = "concat";
+
+        [Range(0d, 1d)]
+        public double StartAt { get; init; }
+
+        [Range(0d, 1d)]
+        public double EndAt { get; init; } = 1.0;
+
+        /// <summary>
+        /// One of: "V only", "K+V", "K+V w/ C penalty", "K+mean(V) w/ C penalty"
+        /// </summary>
+        public string EmbedsScaling { get; init; } = "V only";
+
+        public ClipVisionNodeConnection? ClipVision { get; init; }
+    }
+
+    [TypedNodeOptions(
         Name = "Inference_Core_LayeredDiffusionApply",
         RequiredExtensions = ["https://github.com/LykosAI/ComfyUI-Inference-Core-Nodes >= 0.4.0"]
     )]

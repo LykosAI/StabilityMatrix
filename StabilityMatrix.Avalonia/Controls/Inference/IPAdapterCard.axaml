@@ -1,0 +1,199 @@
+﻿<Styles
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
+    xmlns:fluentIcons="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
+    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+    xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
+    xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
+    xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+    xmlns:vmInference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
+    x:DataType="vmInference:IPAdapterCardViewModel">
+    <Design.PreviewWith>
+        <StackPanel Width="400" Height="500">
+            <controls:IPAdapterCard DataContext="{x:Static mocks:DesignData.IPAdapterCardViewModel}" />
+        </StackPanel>
+    </Design.PreviewWith>
+
+    <Style Selector="controls|IPAdapterCard">
+        <Setter Property="Template">
+            <ControlTemplate>
+                <controls:Card Padding="12">
+                    <StackPanel Spacing="6">
+                        <sg:SpacedGrid
+                            ColumnDefinitions="0.34*,0.65*"
+                            ColumnSpacing="8"
+                            RowDefinitions="Auto,Auto,Auto"
+                            RowSpacing="4">
+
+                            <!--  Reference Image Select  -->
+                            <controls:SelectImageCard
+                                Grid.RowSpan="3"
+                                Padding="6"
+                                VerticalAlignment="Stretch"
+                                DataContext="{Binding SelectImageCardViewModel}"
+                                FontSize="13" />
+
+                            <!--  IPAdapter Model  -->
+                            <controls:FADownloadableComboBox
+                                Grid.Row="0"
+                                Grid.Column="1"
+                                HorizontalAlignment="Stretch"
+                                Header="{x:Static lang:Resources.Label_Model}"
+                                ItemContainerTheme="{StaticResource FAComboBoxItemHybridModelTheme}"
+                                ItemsSource="{Binding ClientManager.IpAdapterModels}"
+                                SelectedItem="{Binding SelectedModel}">
+
+                                <ui:FAComboBox.DataTemplates>
+                                    <controls:HybridModelTemplateSelector>
+                                        <DataTemplate x:Key="{x:Static models:HybridModelType.Downloadable}" DataType="models:HybridModelFile">
+                                            <Grid ColumnDefinitions="*,Auto">
+                                                <TextBlock Foreground="{DynamicResource ThemeGreyColor}" Text="{Binding ShortDisplayName}" />
+                                                <Button
+                                                    Grid.Column="1"
+                                                    Margin="8,0,0,0"
+                                                    Padding="0"
+                                                    Classes="transparent-full">
+                                                    <fluentIcons:SymbolIcon
+                                                        VerticalAlignment="Center"
+                                                        FontSize="18"
+                                                        Foreground="{DynamicResource ThemeGreyColor}"
+                                                        IconVariant="Filled"
+                                                        Symbol="CloudArrowDown" />
+                                                </Button>
+                                            </Grid>
+                                        </DataTemplate>
+                                        <DataTemplate x:Key="{x:Static models:HybridModelType.None}" DataType="models:HybridModelFile">
+                                            <TextBlock Text="{Binding ShortDisplayName}" />
+                                        </DataTemplate>
+                                    </controls:HybridModelTemplateSelector>
+                                </ui:FAComboBox.DataTemplates>
+
+                            </controls:FADownloadableComboBox>
+
+                            <!--  CLIP Vision Model  -->
+                            <controls:FADownloadableComboBox
+                                Grid.Row="1"
+                                Grid.Column="1"
+                                HorizontalAlignment="Stretch"
+                                Header="CLIP Vision"
+                                ItemContainerTheme="{StaticResource FAComboBoxItemHybridModelTheme}"
+                                ItemsSource="{Binding ClientManager.ClipVisionModels}"
+                                SelectedItem="{Binding SelectedClipVisionModel}">
+
+                                <ui:FAComboBox.DataTemplates>
+                                    <controls:HybridModelTemplateSelector>
+                                        <DataTemplate x:Key="{x:Static models:HybridModelType.Downloadable}" DataType="models:HybridModelFile">
+                                            <Grid ColumnDefinitions="*,Auto">
+                                                <TextBlock Foreground="{DynamicResource ThemeGreyColor}" Text="{Binding ShortDisplayName}" />
+                                                <Button
+                                                    Grid.Column="1"
+                                                    Margin="8,0,0,0"
+                                                    Padding="0"
+                                                    Classes="transparent-full">
+                                                    <fluentIcons:SymbolIcon
+                                                        VerticalAlignment="Center"
+                                                        FontSize="18"
+                                                        Foreground="{DynamicResource ThemeGreyColor}"
+                                                        IconVariant="Filled"
+                                                        Symbol="CloudArrowDown" />
+                                                </Button>
+                                            </Grid>
+                                        </DataTemplate>
+                                        <DataTemplate x:Key="{x:Static models:HybridModelType.None}" DataType="models:HybridModelFile">
+                                            <TextBlock Text="{Binding ShortDisplayName}" />
+                                        </DataTemplate>
+                                    </controls:HybridModelTemplateSelector>
+                                </ui:FAComboBox.DataTemplates>
+
+                            </controls:FADownloadableComboBox>
+
+                            <!--  Weight Type  -->
+                            <ui:FAComboBox
+                                Grid.Row="2"
+                                Grid.Column="1"
+                                HorizontalAlignment="Stretch"
+                                Header="Weight Type"
+                                ItemsSource="{Binding WeightTypes}"
+                                SelectedItem="{Binding SelectedWeightType}" />
+
+                        </sg:SpacedGrid>
+                        <sg:SpacedGrid
+                            ColumnDefinitions="*,Auto,Auto"
+                            RowDefinitions="Auto,Auto,Auto,Auto"
+                            RowSpacing="0">
+                            <!--  Weight  -->
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                Text="{x:Static lang:Resources.Label_ControlWeight}"
+                                TextAlignment="Left" />
+                            <ui:NumberBox
+                                Grid.Row="0"
+                                Grid.Column="1"
+                                Grid.ColumnSpan="2"
+                                HorizontalAlignment="Stretch"
+                                Maximum="5"
+                                Minimum="-1"
+                                SimpleNumberFormat="F2"
+                                SmallChange="0.01"
+                                SpinButtonPlacementMode="Inline"
+                                Value="{Binding Weight}" />
+                            <Slider
+                                Grid.Row="1"
+                                Grid.Column="0"
+                                Grid.ColumnSpan="3"
+                                Margin="0,-8,0,0"
+                                IsSnapToTickEnabled="True"
+                                Maximum="2"
+                                Minimum="0"
+                                SmallChange="0.01"
+                                TickFrequency="0.01"
+                                Value="{Binding Weight}" />
+
+                            <!--  Start end percent  -->
+                            <TextBlock
+                                Grid.Row="2"
+                                Grid.Column="0"
+                                VerticalAlignment="Center"
+                                Text="{x:Static lang:Resources.Label_ControlSteps}"
+                                TextAlignment="Left" />
+
+                            <ui:NumberBox
+                                Grid.Row="2"
+                                Grid.Column="1"
+                                HorizontalAlignment="Stretch"
+                                Maximum="1"
+                                Minimum="0"
+                                SimpleNumberFormat="P0"
+                                SmallChange="0.01"
+                                Value="{Binding StartAt}" />
+                            <ui:NumberBox
+                                Grid.Row="2"
+                                Grid.Column="2"
+                                HorizontalAlignment="Stretch"
+                                Maximum="1"
+                                Minimum="0"
+                                SimpleNumberFormat="P0"
+                                SmallChange="0.01"
+                                Value="{Binding EndAt}" />
+
+                            <ui:RangeSlider
+                                Grid.Row="3"
+                                Grid.Column="0"
+                                Grid.ColumnSpan="3"
+                                Margin="0,4,0,0"
+                                Maximum="1"
+                                Minimum="0"
+                                RangeEnd="{Binding EndAt}"
+                                RangeStart="{Binding StartAt}"
+                                ShowValueToolTip="False"
+                                StepFrequency="0.01"
+                                ToolTipStringFormat="P" />
+                        </sg:SpacedGrid>
+                    </StackPanel>
+                </controls:Card>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+</Styles>

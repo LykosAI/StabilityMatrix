@@ -120,7 +120,8 @@ public class PackageFactory : IPackageFactory
                 downloadService,
                 prerequisiteHelper,
                 pyInstallationManager,
-                pipWheelService
+                pipWheelService,
+                rocmPackageHelper
             ),
             "RuinedFooocus" => new RuinedFooocus(
                 githubApiCache,

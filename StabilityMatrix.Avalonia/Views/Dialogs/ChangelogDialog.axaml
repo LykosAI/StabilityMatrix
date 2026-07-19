@@ -1,0 +1,100 @@
+﻿<controls:UserControlBase
+    x:Class="StabilityMatrix.Avalonia.Views.Dialogs.ChangelogDialog"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:dialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
+    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:mdxaml="https://github.com/whistyun/Markdown.Avalonia.Tight"
+    xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:ui="using:FluentAvalonia.UI.Controls"
+    xmlns:update="clr-namespace:StabilityMatrix.Core.Models.Update;assembly=StabilityMatrix.Core"
+    Width="900"
+    Height="650"
+    d:DataContext="{x:Static mocks:DesignData.ChangelogViewModel}"
+    d:DesignHeight="650"
+    d:DesignWidth="900"
+    x:DataType="dialogs:ChangelogViewModel"
+    mc:Ignorable="d">
+    <Grid RowDefinitions="Auto,*">
+
+        <TextBlock
+            Grid.Row="0"
+            Margin="16,16,16,8"
+            FontSize="24"
+            FontWeight="Thin"
+            Text="{x:Static lang:Resources.Label_WhatsNew}" />
+
+        <!--  Loading state  -->
+        <StackPanel
+            Grid.Row="1"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            IsVisible="{Binding IsLoading}"
+            Orientation="Vertical"
+            Spacing="12">
+            <ui:ProgressRing
+                Width="48"
+                Height="48"
+                IsIndeterminate="True" />
+        </StackPanel>
+
+        <!--  Error state  -->
+        <StackPanel
+            Grid.Row="1"
+            Margin="32"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            IsVisible="{Binding HasError}"
+            Orientation="Vertical"
+            Spacing="12">
+            <TextBlock
+                HorizontalAlignment="Center"
+                Text="{x:Static lang:Resources.Label_UnableToLoadChangelog}"
+                TextAlignment="Center"
+                TextWrapping="Wrap" />
+            <Button
+                HorizontalAlignment="Center"
+                Classes="hyperlink"
+                Command="{Binding OpenGitHubChangelogCommand}"
+                Content="{x:Static lang:Resources.Label_ViewChangelogOnGitHub}" />
+        </StackPanel>
+
+        <!--  Content: version list + markdown  -->
+        <Grid
+            Grid.Row="1"
+            Margin="16,0,16,16"
+            ColumnDefinitions="200,*"
+            IsVisible="{Binding !IsLoading}">
+            <Grid.IsVisible>
+                <MultiBinding Converter="{x:Static BoolConverters.And}">
+                    <Binding Path="!IsLoading" />
+                    <Binding Path="!HasError" />
+                </MultiBinding>
+            </Grid.IsVisible>
+
+            <Border
+                Grid.Column="0"
+                Margin="0,0,8,0"
+                Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}"
+                CornerRadius="8">
+                <ListBox ItemsSource="{Binding Entries}" SelectedItem="{Binding SelectedEntry}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate DataType="{x:Type update:ChangelogEntry}">
+                            <TextBlock Text="{Binding Version, StringFormat='v{0}'}" />
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Border>
+
+            <Border
+                Grid.Column="1"
+                Background="{DynamicResource ButtonBackgroundPressed}"
+                CornerRadius="8">
+                <controls:BetterMarkdownScrollViewer Margin="16" Markdown="{Binding SelectedMarkdown, Mode=OneWay}" />
+            </Border>
+        </Grid>
+    </Grid>
+</controls:UserControlBase>

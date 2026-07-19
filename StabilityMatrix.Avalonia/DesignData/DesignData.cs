@@ -526,8 +526,35 @@ public static class DesignData
         UpdateViewModel.ReleaseNotes =
             "## v2.0.1\n- Fixed a bug\n- Added a feature\n- Removed a feature\n - Did some `--code` stuff";
 
+        var changelogEntries = new[]
+        {
+            new ChangelogEntry
+            {
+                Version = SemVersion.Parse("2.17.0-dev.2"),
+                Markdown =
+                    "## v2.17.0-dev.2\n### Added\n- In-app What's New changelog viewer\n### Fixed\n- Various bug fixes",
+            },
+            new ChangelogEntry
+            {
+                Version = SemVersion.Parse("2.17.0-dev.1"),
+                Markdown = "## v2.17.0-dev.1\n### Changed\n- Improved startup performance",
+            },
+            new ChangelogEntry
+            {
+                Version = SemVersion.Parse("2.16.1"),
+                Markdown = "## v2.16.1\n### Fixed\n- Fixed a `--crash` on launch",
+            },
+        };
+        ChangelogViewModel = Services.GetRequiredService<ChangelogViewModel>();
+        ChangelogViewModel.IsLoading = false;
+        ChangelogViewModel.Entries = changelogEntries;
+        ChangelogViewModel.SelectedEntry = changelogEntries[0];
+
         isInitialized = true;
     }
+
+    [NotNull]
+    public static ChangelogViewModel? ChangelogViewModel { get; private set; }
 
     [NotNull]
     public static PackageInstallBrowserViewModel? NewInstallerDialogViewModel { get; private set; }

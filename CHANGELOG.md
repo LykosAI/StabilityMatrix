@@ -46,6 +46,9 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Dragging an image layer with the **Move** tool in the layered mask editor now re-renders only the dragged layer instead of re-compositing every layer on each pointer move, so dragging stays smooth in multi-layer projects
 - Faster color-mask extraction for regional prompting — a 1024×1024 canvas with six regions previously did over six million dictionary lookups per extraction
 - Fixed a small native memory leak while drawing with the mouse (a path object per frame was never freed), and removed a redundant full-canvas scan after every paint-bucket fill
+### Supporters
+#### 🌟 Visionaries
+The prompt queue has been one of our most requested features ever, and builds like this only happen because our Visionaries give us the freedom to take them on. Thank you **Waterclouds**, **MrMxyzptlk12836**, **Psilocyfer18731**, **bluepopsicle**, **Ibixat**, **Droolguy**, **KalAbaddon**, **LG**, **snotty**, **whudunit**, **cusalapapen1481**, **moon_milky2843**, **SkynetFuture**, and **sn3232323233350** for standing behind us build after build. And to our three newest Visionaries, **tarekk071223**, **CC**, and **SnooSnooEternal**: welcome aboard, it means the world to have you with us. 💛
 
 ## v2.17.0-dev.1
 ### Added

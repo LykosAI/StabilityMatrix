@@ -1032,6 +1032,11 @@
                         <Button
                             Margin="8"
                             HorizontalAlignment="Left"
+                            Command="{Binding ShowWhatsNewDialogCommand}"
+                            Content="{x:Static lang:Resources.Label_WhatsNew}" />
+                        <Button
+                            Margin="8"
+                            HorizontalAlignment="Left"
                             Command="{Binding ShowLicensesDialogCommand}"
                             Content="{x:Static lang:Resources.Label_LicenseAndOpenSourceNotices}" />
                     </StackPanel>

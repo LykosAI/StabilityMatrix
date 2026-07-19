@@ -44,6 +44,7 @@ public class EventManager
     );
     public event EventHandler? ToggleProgressFlyout;
     public event EventHandler? ShowProgressFlyout;
+    public event EventHandler? ShowChangelogRequested;
     public event EventHandler<CultureInfo>? CultureChanged;
     public event EventHandler? ModelIndexChanged;
     public event EventHandler<FilePath>? ImageFileAdded;
@@ -91,6 +92,8 @@ public class EventManager
     public void OnToggleProgressFlyout() => ToggleProgressFlyout?.Invoke(this, EventArgs.Empty);
 
     public void OnShowProgressFlyout() => ShowProgressFlyout?.Invoke(this, EventArgs.Empty);
+
+    public void OnShowChangelogRequested() => ShowChangelogRequested?.Invoke(this, EventArgs.Empty);
 
     public void OnCultureChanged(CultureInfo culture) => CultureChanged?.Invoke(this, culture);
 

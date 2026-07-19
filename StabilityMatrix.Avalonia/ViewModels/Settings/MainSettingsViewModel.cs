@@ -1726,6 +1726,14 @@ public partial class MainSettingsViewModel : PageViewModelBase
     }
 
     [RelayCommand]
+    private void ShowWhatsNewDialog()
+    {
+        // Centralized in MainWindowViewModel so the same dialog is used by the
+        // post-update notification action.
+        EventManager.Instance.OnShowChangelogRequested();
+    }
+
+    [RelayCommand]
     private async Task ShowLicensesDialog()
     {
         try

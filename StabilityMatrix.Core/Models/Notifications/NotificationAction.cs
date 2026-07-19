@@ -10,6 +10,7 @@ namespace StabilityMatrix.Core.Models.Notifications;
 [JsonDerivedType(typeof(OpenFolderAction), "OpenFolder")]
 [JsonDerivedType(typeof(NavigateToPageAction), "NavigateToPage")]
 [JsonDerivedType(typeof(ToggleProgressFlyoutAction), "ToggleProgressFlyout")]
+[JsonDerivedType(typeof(ShowChangelogAction), "ShowChangelog")]
 public abstract record NotificationAction;
 
 /// <summary>Open the given filesystem path in the OS file manager.</summary>
@@ -23,3 +24,6 @@ public sealed record NavigateToPageAction(string PageTypeName) : NotificationAct
 
 /// <summary>Open the activity flyout in the sidebar footer.</summary>
 public sealed record ToggleProgressFlyoutAction : NotificationAction;
+
+/// <summary>Open the "What's New" changelog dialog.</summary>
+public sealed record ShowChangelogAction : NotificationAction;

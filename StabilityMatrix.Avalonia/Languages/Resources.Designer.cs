@@ -2597,6 +2597,60 @@ namespace StabilityMatrix.Avalonia.Languages {
                 return ResourceManager.GetString("Label_LicenseAndOpenSourceNotices", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to What&apos;s New.
+        /// </summary>
+        public static string Label_WhatsNew {
+            get {
+                return ResourceManager.GetString("Label_WhatsNew", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to See what&apos;s new.
+        /// </summary>
+        public static string Label_SeeWhatsNew {
+            get {
+                return ResourceManager.GetString("Label_SeeWhatsNew", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Updated to v{0} 🎉.
+        /// </summary>
+        public static string TextTemplate_UpdatedToVersion {
+            get {
+                return ResourceManager.GetString("TextTemplate_UpdatedToVersion", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to load the changelog. Please check your connection.
+        /// </summary>
+        public static string Label_UnableToLoadChangelog {
+            get {
+                return ResourceManager.GetString("Label_UnableToLoadChangelog", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to View changelog on GitHub.
+        /// </summary>
+        public static string Label_ViewChangelogOnGitHub {
+            get {
+                return ResourceManager.GetString("Label_ViewChangelogOnGitHub", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Show release notes after updating.
+        /// </summary>
+        public static string Label_ShowReleaseNotesAfterUpdate {
+            get {
+                return ResourceManager.GetString("Label_ShowReleaseNotesAfterUpdate", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to Local Model.

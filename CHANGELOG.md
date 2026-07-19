@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
   - Manage the queue freely: reorder, remove, cancel the running item, **re-queue** finished/failed/cancelled items (or re-queue all finished), and clear finished or pending items
   - **Start** auto-connects to ComfyUI if it's already running, or shows the usual launch prompt if it isn't; **Pause** finishes the current item before stopping
   - The queue is saved to your library folder and survives restarts — interrupted items come back as Pending, and finished items keep their thumbnails
+- Added a **What's New** viewer — browse release notes for any version right in the app from **Settings → About**, with a one-time heads-up after each update (can be turned off in update settings)
 - 📚 **New documentation site** at [docs.lykos.ai](https://docs.lykos.ai/stability-matrix/) — getting started and installation guides, package manager and Inference walkthroughs, environment variable and advanced configuration references, a terminology glossary, and troubleshooting for common issues. Written by @NeuralFault!
 - Added **OneTrainer** to the native **Windows ROCm (AMD GPU)** helper — new OneTrainer installs on supported AMD hardware get the ROCm PyTorch build, ROCm-aware bitsandbytes and triton dependencies, and the right launch environment applied automatically. New OneTrainer installs also default to Python 3.12 on all platforms - thanks to @NeuralFault!
 ### Changed

@@ -78,6 +78,17 @@ public class Settings
     [JsonConverter(typeof(SemVersionJsonConverter))]
     public SemVersion? UpdatingFromVersion { get; set; }
 
+    /// <summary>
+    /// The app version the "What's New" changelog was last shown for.
+    /// Null on a fresh install / first run of the feature.
+    /// </summary>
+    public string? LastSeenChangelogVersion { get; set; }
+
+    /// <summary>
+    /// Whether to show the "What's New" notice after the app is updated
+    /// </summary>
+    public bool ShowReleaseNotesAfterUpdate { get; set; } = true;
+
     // UI states
     public bool ModelBrowserNsfwEnabled { get; set; }
     public bool IsNavExpanded { get; set; }

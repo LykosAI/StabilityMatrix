@@ -4,9 +4,10 @@ using StabilityMatrix.Core.Models;
 
 namespace StabilityMatrix.Tests.Core;
 
+[TestClass]
 public class RemoteModelsTests
 {
-    [Fact]
+    [TestMethod]
     public void ExecutableHuggingFaceModelsUsePinnedRevisions()
     {
         var executableExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
@@ -40,6 +41,10 @@ public class RemoteModelsTests
             .Select(resource => resource.Url)
             .ToArray();
 
-        Assert.Empty(unpinnedModels);
+        Assert.AreEqual(
+            0,
+            unpinnedModels.Length,
+            $"Executable Hugging Face model URLs must use pinned revisions: {string.Join(", ", unpinnedModels.Select(url => url.AbsoluteUri))}"
+        );
     }
 }

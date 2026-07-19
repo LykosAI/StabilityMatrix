@@ -1,3 +1,4 @@
+using System.Security;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Injectio.Attributes;
@@ -43,7 +44,8 @@ public partial class ChangelogService : IChangelogService
     }
 
     [GeneratedRegex(
-        @"(##\s*(v[0-9]+\.[0-9]+\.[0-9]+(?:-(?:[0-9A-Za-z-.]+))?)((?:\n|.)+?))(?=(##\s*v[0-9]+\.[0-9]+\.[0-9]+)|\z)"
+        @"(##\s*(v[0-9]+\.[0-9]+\.[0-9]+(?:-(?:[0-9A-Za-z-.]+))?)(.+?))(?=(##\s*v[0-9]+\.[0-9]+\.[0-9]+)|\z)",
+        RegexOptions.Singleline
     )]
     private static partial Regex RegexChangelog();
 
@@ -57,7 +59,7 @@ public partial class ChangelogService : IChangelogService
 
         try
         {
-            var response = await client.GetAsync(changelogUrl, cancellationToken).ConfigureAwait(false);
+            using var response = await client.GetAsync(changelogUrl, cancellationToken).ConfigureAwait(false);
             if (response.IsSuccessStatusCode)
             {
                 var changelog = await response
@@ -135,7 +137,7 @@ public partial class ChangelogService : IChangelogService
             }
 
             using var client = httpClientFactory.CreateClient("UpdateClient");
-            var response = await client.GetAsync(changelogUrl, cancellationToken).ConfigureAwait(false);
+            using var response = await client.GetAsync(changelogUrl, cancellationToken).ConfigureAwait(false);
             if (!response.IsSuccessStatusCode)
             {
                 logger.LogWarning(
@@ -148,7 +150,8 @@ public partial class ChangelogService : IChangelogService
 
             return await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
         }
-        catch (Exception e) when (e is HttpRequestException or TaskCanceledException or IOException)
+        catch (Exception e)
+            when (e is HttpRequestException or TaskCanceledException or IOException or JsonException)
         {
             logger.LogWarning(e, "Failed to fetch changelog for channel {Channel}", channel);
             return null;
@@ -165,7 +168,9 @@ public partial class ChangelogService : IChangelogService
     )
     {
         var client = httpClientFactory.CreateClient("UpdateClient");
-        var response = await client.GetAsync(UpdateManifestUrl, cancellationToken).ConfigureAwait(false);
+        using var response = await client
+            .GetAsync(UpdateManifestUrl, cancellationToken)
+            .ConfigureAwait(false);
         if (!response.IsSuccessStatusCode)
         {
             logger.LogWarning("Update manifest fetch returned {StatusCode}", response.StatusCode);
@@ -218,7 +223,7 @@ public partial class ChangelogService : IChangelogService
         {
             return await cacheFile.ReadAllTextAsync(cancellationToken).ConfigureAwait(false);
         }
-        catch (IOException)
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException or SecurityException)
         {
             return null;
         }
@@ -235,7 +240,7 @@ public partial class ChangelogService : IChangelogService
             CacheDirectory.Create();
             await GetCacheFile(channel).WriteAllTextAsync(markdown, cancellationToken).ConfigureAwait(false);
         }
-        catch (IOException e)
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException or SecurityException)
         {
             logger.LogWarning(e, "Failed to write changelog cache for channel {Channel}", channel);
         }

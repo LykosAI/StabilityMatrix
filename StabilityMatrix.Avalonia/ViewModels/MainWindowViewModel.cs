@@ -136,7 +136,9 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private void OnShowChangelogRequested(object? sender, EventArgs e)
     {
-        Dispatcher.UIThread.InvokeAsync(ShowChangelogDialogAsync).SafeFireAndForget();
+        Dispatcher
+            .UIThread.InvokeAsync(ShowChangelogDialogAsync)
+            .SafeFireAndForget(ex => Logger.Error(ex, "Error showing changelog dialog"));
     }
 
     private async Task ShowChangelogDialogAsync()

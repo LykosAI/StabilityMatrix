@@ -66,8 +66,7 @@
         <Grid
             Grid.Row="1"
             Margin="16,0,16,16"
-            ColumnDefinitions="200,*"
-            IsVisible="{Binding !IsLoading}">
+            ColumnDefinitions="200,*">
             <Grid.IsVisible>
                 <MultiBinding Converter="{x:Static BoolConverters.And}">
                     <Binding Path="!IsLoading" />

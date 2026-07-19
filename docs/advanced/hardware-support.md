@@ -40,11 +40,11 @@ The lists below describe what the code checks for. Because hardware detection wo
 
 ## AMD on Windows
 
-AMD support on Windows is the most involved case, because there are three different paths depending on your GPU and package: native ROCm (technical preview), ZLUDA, and DirectML.
+AMD support on Windows is the most involved case, because there are three different paths depending on your GPU and package: native ROCm, ZLUDA, and DirectML.
 
-### Native ROCm (TheRock technical preview)
+### Native ROCm
 
-Stability Matrix can install AMD's native ROCm PyTorch on Windows using AMD's TheRock multi-architecture wheels. This path is gated to a specific set of GPU architectures. The code recognizes the following `gfx` architectures as supported on Windows:
+Stability Matrix can install AMD's native ROCm PyTorch on Windows using AMD's official multi-architecture wheels. This path is gated to a specific set of GPU architectures. The code recognizes the following `gfx` architectures as supported on Windows:
 
 - **RDNA4** — `gfx120x` (e.g. RX 9070, RX 9060 families).
 - **RDNA3 / RDNA3.5** — `gfx110x` (RDNA3 desktop and mobile) and `gfx115x` (RDNA3.5 APUs such as the 890M / 8060S / Z2 Extreme families).
@@ -54,15 +54,17 @@ Architectures in the `gfx110x`, `gfx115x`, and `gfx120x` ranges are treated as "
 
 **What Stability Matrix does automatically:**
 
-- When a supported AMD GPU is present on Windows, ROCm becomes the recommended backend for ROCm-capable packages (currently ComfyUI and Comfy-based flows via SwarmUI).
-- Torch is installed from AMD's ROCm multi-arch index (`repo.amd.com/rocm/whl-multi-arch/`) as device-specific wheels (`torch[device-gfxNNNN]`). Vega parts (`gfx900` / `gfx906`) pull from the nightly multi-arch feed instead, since TheRock currently only publishes their device packages there.
+- When a supported AMD GPU is present on Windows, ROCm becomes the recommended backend for ROCm-capable packages.
+- Torch is installed from AMD's ROCm multi-arch index (`repo.amd.com/rocm/whl-multi-arch/`) as device-specific wheels (`torch[device-gfxNNNN]`). Vega parts (`gfx900` / `gfx906`) pull from the 'TheRock' nightly multi-arch feed instead, since these architecture builds currently are only available there instead of the stable production distribution stream.
 - On modern architectures it applies a set of ROCm performance and attention environment variables at launch (MIOpen find-mode tuning, AOTriton experimental flash attention, `COMFYUI_ENABLE_MIOPEN`, and an allocator tuning string). AOTriton is excluded on the `gfx1152` / `gfx1153` APU architectures, which it does not yet support. Legacy architectures instead force a math SDP fallback. The full variable list and exactly which ones are auto-applied are documented in [Environment Variables](environment-variables.md#amd-and-rocm-variables).
-- ComfyUI offers optional extra commands for supported AMD GPUs, including **Install Triton and SageAttention (ROCm)**, **Install Flash Attention (ROCm)** (legacy architectures), an **Install ROCm Development SDK** step, and an **Install bitsandbytes (ROCm)** step for Python 3.12 environments.
+- ComfyUI offers optional extra commands for supported AMD GPUs, including **Install Triton and SageAttention (ROCm)** (Sage Attention 1.x), **Install Flash Attention (ROCm)** (legacy architectures), an **Install ROCm Development SDK** step, and an **Install bitsandbytes (ROCm)** step for Python 3.12 environments.
+- **Packages:** ComfyUI, Stable Diffusion WebUI Reforge, InvokeAI, SwarmUI, and Wan2GP are supported by this install path.
+  > [!NOTE] While not managed by Stability Matrix for ROCm installs, SD.Next has a Windows-native ROCm install when the "ROCm" Pytorch index is selected in Advanced Installation Options during initial package install and `--use-rocm` is set in launch options. This install path is internally handled by SD.Next itself and currently only supports RDNA2 dedicated GPUs, RDNA3, RDNA3.5, and RDNA4 GPUs.
 
 **Caveats:**
 
-- Windows AMD ROCm is explicitly experimental. Stability Matrix prints a notice asking you to report issues to Stability Matrix first, since the setup may not be officially supported by the upstream package developers.
-- Only the architectures listed above are eligible. If your AMD GPU is not on the list, the recommended default becomes ZLUDA or DirectML instead.
+- Windows AMD ROCm implementation for Stability Matrix is explicitly in an experimental state. While these package installations are generally in a working state, untested or edge-case issues and incompatibilities may appear. Stability Matrix prints a notice asking you to report issues to Stability Matrix first, since the setup may not be officially supported by the upstream package developers.
+- Only the architectures listed above are eligible. If your AMD GPU is not on the list, the recommended default becomes ZLUDA or DirectML instead. For a more detailed list of compatible AMD GPU architectures, please refer to the ROCm/TheRock [GPU Support](https://github.com/ROCm/TheRock/blob/main/SUPPORTED_GPUS.md#rocm-on-windows) table.
 
 ### ZLUDA
 

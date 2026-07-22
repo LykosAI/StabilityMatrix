@@ -52,11 +52,7 @@ Current Status: In-progress - Structure is in-place and planned docs are current
 - Community Workflows *(planned)* — Browsing community workflows via OpenArt
 
 ### Settings
-- Overview *(planned)* — Navigating the settings hub
-- General *(planned)* — Theme, language, data directory, and shared folder settings
-- Accounts *(planned)* — Lykos account, OAuth login, and API tokens
-- Inference Settings *(planned)* — Inference UI behavior and defaults
-- Updates *(planned)* — Auto-update channel and frequency settings
+- [Settings](settings/settings.md) — All application settings covering General, Accounts, Checkpoint Manager, Package Environment, Model Browser, Workflow Browser, Console, Appearance, System, and Debug Options
 
 ### Advanced
 - [Overview](advanced/overview.md) — Advanced configuration and technical reference

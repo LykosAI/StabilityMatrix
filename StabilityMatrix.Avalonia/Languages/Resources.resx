@@ -831,6 +831,12 @@
   <data name="Label_ControlSteps" xml:space="preserve">
     <value>Control Steps</value>
   </data>
+  <data name="Label_CLIPVision" xml:space="preserve">
+    <value>CLIP Vision</value>
+  </data>
+  <data name="Label_WeightType" xml:space="preserve">
+    <value>Weight Type</value>
+  </data>
   <data name="Label_PythonPackages" xml:space="preserve">
     <value>Python Packages</value>
   </data>

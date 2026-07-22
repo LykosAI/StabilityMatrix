@@ -77,7 +77,7 @@
                                 Grid.Row="1"
                                 Grid.Column="1"
                                 HorizontalAlignment="Stretch"
-                                Header="CLIP Vision"
+                                Header="{x:Static lang:Resources.Label_CLIPVision}"
                                 ItemContainerTheme="{StaticResource FAComboBoxItemHybridModelTheme}"
                                 ItemsSource="{Binding ClientManager.ClipVisionModels}"
                                 SelectedItem="{Binding SelectedClipVisionModel}">
@@ -114,7 +114,7 @@
                                 Grid.Row="2"
                                 Grid.Column="1"
                                 HorizontalAlignment="Stretch"
-                                Header="Weight Type"
+                                Header="{x:Static lang:Resources.Label_WeightType}"
                                 ItemsSource="{Binding WeightTypes}"
                                 SelectedItem="{Binding SelectedWeightType}" />
 

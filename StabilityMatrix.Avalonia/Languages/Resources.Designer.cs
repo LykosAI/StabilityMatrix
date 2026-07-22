@@ -1497,6 +1497,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to CLIP Vision.
+        /// </summary>
+        public static string Label_CLIPVision {
+            get {
+                return ResourceManager.GetString("Label_CLIPVision", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Close dialog when finished.
         /// </summary>
         public static string Label_CloseDialogWhenFinished {
@@ -4206,6 +4215,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_WebUi {
             get {
                 return ResourceManager.GetString("Label_WebUi", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Weight Type.
+        /// </summary>
+        public static string Label_WeightType {
+            get {
+                return ResourceManager.GetString("Label_WeightType", resourceCulture);
             }
         }
         

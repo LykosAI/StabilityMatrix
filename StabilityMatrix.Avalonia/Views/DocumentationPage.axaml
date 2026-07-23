@@ -1,0 +1,198 @@
+﻿<controls:UserControlBase
+    x:Class="StabilityMatrix.Avalonia.Views.DocumentationPage"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:docs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Documentation"
+    xmlns:fluentAvalonia="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
+    d:DesignHeight="650"
+    d:DesignWidth="900"
+    x:CompileBindings="True"
+    x:DataType="vm:DocumentationViewModel"
+    mc:Ignorable="d">
+
+    <Grid ColumnDefinitions="280,*">
+
+        <!--  Left pane: navigation tree  -->
+        <Border
+            Grid.Column="0"
+            Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+            BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+            BorderThickness="0,0,1,0">
+            <Grid RowDefinitions="Auto,*">
+                <TextBlock
+                    Grid.Row="0"
+                    Margin="16,16,16,8"
+                    FontSize="18"
+                    FontWeight="SemiBold"
+                    Text="Documentation" />
+
+                <!--  Loading tree indicator  -->
+                <controls:ProgressRing
+                    Grid.Row="1"
+                    Width="32"
+                    Height="32"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    BorderThickness="4"
+                    IsIndeterminate="True"
+                    IsVisible="{Binding IsTreeLoading}" />
+
+                <TreeView
+                    Grid.Row="1"
+                    Padding="8,0,8,8"
+                    IsVisible="{Binding !IsTreeLoading}"
+                    ItemsSource="{Binding TreeItems}"
+                    SelectedItem="{Binding SelectedTreeItem, Mode=TwoWay}">
+                    <TreeView.Styles>
+                        <!--  Bind expansion state for section nodes (leaves have no children; cast is safe for both types)  -->
+                        <Style Selector="TreeViewItem">
+                            <Setter Property="IsExpanded" Value="{Binding $self.((docs:DocumentationNavNode)DataContext).IsExpanded, Mode=TwoWay}" />
+                        </Style>
+                    </TreeView.Styles>
+                    <TreeView.DataTemplates>
+                        <TreeDataTemplate DataType="{x:Type docs:DocumentationSectionNavItem}" ItemsSource="{Binding Pages}">
+                            <TextBlock
+                                FontWeight="SemiBold"
+                                Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                Text="{Binding Title}" />
+                        </TreeDataTemplate>
+                        <DataTemplate DataType="{x:Type docs:DocumentationPageNavItem}">
+                            <TextBlock Text="{Binding Title}" TextWrapping="Wrap" />
+                        </DataTemplate>
+                    </TreeView.DataTemplates>
+                </TreeView>
+            </Grid>
+        </Border>
+
+        <!--  Right pane: content  -->
+        <Grid Grid.Column="1">
+
+            <!--  Docs-not-available state  -->
+            <StackPanel
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                IsVisible="{Binding IsDocsUnavailable}"
+                Spacing="8">
+                <fluentAvalonia:SymbolIcon
+                    HorizontalAlignment="Center"
+                    FontSize="48"
+                    Symbol="Document" />
+                <TextBlock
+                    HorizontalAlignment="Center"
+                    FontSize="18"
+                    FontWeight="SemiBold"
+                    Text="Documentation is not available yet" />
+                <TextBlock
+                    MaxWidth="420"
+                    HorizontalAlignment="Center"
+                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                    Text="The documentation is coming soon. Please check back in a future release."
+                    TextAlignment="Center"
+                    TextWrapping="Wrap" />
+                <Button
+                    HorizontalAlignment="Center"
+                    Command="{Binding RetryCommand}"
+                    Content="Retry" />
+            </StackPanel>
+
+            <!--  Normal content area  -->
+            <Grid IsVisible="{Binding IsContentVisible}">
+
+                <!--  Error state  -->
+                <StackPanel
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    IsVisible="{Binding HasError}"
+                    Spacing="8">
+                    <fluentAvalonia:SymbolIcon
+                        HorizontalAlignment="Center"
+                        FontSize="48"
+                        Symbol="CloudOff" />
+                    <TextBlock
+                        MaxWidth="420"
+                        HorizontalAlignment="Center"
+                        Text="{Binding ErrorMessage}"
+                        TextAlignment="Center"
+                        TextWrapping="Wrap" />
+                    <Button
+                        HorizontalAlignment="Center"
+                        Command="{Binding RetryCommand}"
+                        Content="Retry" />
+                </StackPanel>
+
+                <!--  Page loading indicator  -->
+                <controls:ProgressRing
+                    Width="48"
+                    Height="48"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    BorderThickness="4"
+                    IsIndeterminate="True"
+                    IsVisible="{Binding IsPageLoading}" />
+
+                <!--  Rendered markdown (MarkdownScrollViewer scrolls internally)  -->
+                <controls:DocumentationMarkdownViewer
+                    x:Name="MarkdownViewer"
+                    Margin="24,16"
+                    ContentZoom="{Binding ZoomFactor}"
+                    ImageBaseUrl="{Binding CurrentImageBaseUrl}"
+                    IsVisible="{Binding !HasError}"
+                    LinkCommand="{Binding LinkClickedCommand}"
+                    Markdown="{Binding CurrentMarkdown, Mode=OneWay}" />
+
+                <!--  Zoom overlay (bottom-right corner, clear of the scrollbar)  -->
+                <Border
+                    Margin="0,0,32,20"
+                    Padding="2"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Bottom"
+                    Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    IsVisible="{Binding !HasError}">
+                    <StackPanel Orientation="Horizontal" Spacing="2">
+                        <Button
+                            Padding="6"
+                            Classes="transparent"
+                            Command="{Binding ZoomOutCommand}"
+                            ToolTip.Tip="Zoom out">
+                            <!--  FluentIcons SymbolIcon measures greedily without explicit Width/Height  -->
+                            <fluentAvalonia:SymbolIcon
+                                Width="16"
+                                Height="16"
+                                FontSize="16"
+                                Symbol="ZoomOut" />
+                        </Button>
+                        <Button
+                            MinWidth="48"
+                            Padding="6"
+                            Classes="transparent"
+                            Command="{Binding ResetZoomCommand}"
+                            ToolTip.Tip="Reset zoom">
+                            <TextBlock
+                                HorizontalAlignment="Center"
+                                FontSize="12"
+                                Text="{Binding ZoomPercentText}" />
+                        </Button>
+                        <Button
+                            Padding="6"
+                            Classes="transparent"
+                            Command="{Binding ZoomInCommand}"
+                            ToolTip.Tip="Zoom in">
+                            <fluentAvalonia:SymbolIcon
+                                Width="16"
+                                Height="16"
+                                FontSize="16"
+                                Symbol="ZoomIn" />
+                        </Button>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Grid>
+    </Grid>
+</controls:UserControlBase>

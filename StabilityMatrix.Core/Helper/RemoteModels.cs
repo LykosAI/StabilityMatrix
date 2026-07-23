@@ -199,7 +199,7 @@ public static class RemoteModels
         [
             new()
             {
-                Url = new Uri("https://huggingface.co/Bingsu/adetailer/resolve/main/face_yolov8m.pt"),
+                Url = new Uri("https://huggingface.co/Bingsu/adetailer/resolve/b0a075fd35454c86bb453a1ca06b29ffee704c20/face_yolov8m.pt"),
                 HashSha256 = "f02b8a23e6f12bd2c1b1f6714f66f984c728fa41ed749d033e7d6dea511ef70c",
                 InfoUrl = new Uri("https://huggingface.co/Bingsu/adetailer"),
                 Author = "Bingsu",
@@ -212,7 +212,7 @@ public static class RemoteModels
             },
             new()
             {
-                Url = new Uri("https://huggingface.co/Bingsu/adetailer/resolve/main/hand_yolov8s.pt"),
+                Url = new Uri("https://huggingface.co/Bingsu/adetailer/resolve/b0a075fd35454c86bb453a1ca06b29ffee704c20/hand_yolov8s.pt"),
                 HashSha256 = "5c4faf8d17286ace2c3d3346c6d0d4a0c8d62404955263a7ae95c1dd7eb877af",
                 InfoUrl = new Uri("https://huggingface.co/Bingsu/adetailer"),
                 Author = "Bingsu",
@@ -225,7 +225,7 @@ public static class RemoteModels
             },
             new()
             {
-                Url = new Uri("https://huggingface.co/Bingsu/adetailer/resolve/main/person_yolov8m-seg.pt"),
+                Url = new Uri("https://huggingface.co/Bingsu/adetailer/resolve/b0a075fd35454c86bb453a1ca06b29ffee704c20/person_yolov8m-seg.pt"),
                 HashSha256 = "9d881ec50b831f546e37977081b18f4e3bf65664aec163f97a311b0955499795",
                 InfoUrl = new Uri("https://huggingface.co/Bingsu/adetailer"),
                 Author = "Bingsu",
@@ -238,7 +238,7 @@ public static class RemoteModels
             },
             new()
             {
-                Url = new Uri("https://huggingface.co/Bingsu/adetailer/resolve/main/person_yolov8s-seg.pt"),
+                Url = new Uri("https://huggingface.co/Bingsu/adetailer/resolve/b0a075fd35454c86bb453a1ca06b29ffee704c20/person_yolov8s-seg.pt"),
                 HashSha256 = "b5684835e79fd8b805459e0f7a0f9daa437e421cb4a214fff45ec4ac61767ef9",
                 InfoUrl = new Uri("https://huggingface.co/Bingsu/adetailer"),
                 Author = "Bingsu",

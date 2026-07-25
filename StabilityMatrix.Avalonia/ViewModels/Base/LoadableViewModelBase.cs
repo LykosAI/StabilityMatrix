@@ -47,6 +47,8 @@ namespace StabilityMatrix.Avalonia.ViewModels.Base;
 [JsonDerivedType(typeof(TiledVAEModule))]
 [JsonDerivedType(typeof(RegionalPromptModule))]
 [JsonDerivedType(typeof(RegionalPromptCardViewModel), RegionalPromptCardViewModel.ModuleKey)]
+[JsonDerivedType(typeof(IPAdapterModule))]
+[JsonDerivedType(typeof(IPAdapterCardViewModel), IPAdapterCardViewModel.ModuleKey)]
 public abstract class LoadableViewModelBase : ViewModelBase, IJsonLoadableState
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();

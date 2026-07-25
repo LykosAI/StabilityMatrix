@@ -1580,6 +1580,9 @@ The gallery images are often inpainted, but you will get something very similar 
     public static ControlNetCardViewModel ControlNetCardViewModel =>
         DialogFactory.Get<ControlNetCardViewModel>();
 
+    public static IPAdapterCardViewModel IPAdapterCardViewModel =>
+        DialogFactory.Get<IPAdapterCardViewModel>();
+
     public static ConfirmDeleteDialogViewModel ConfirmDeleteDialogViewModel =>
         DialogFactory.Get<ConfirmDeleteDialogViewModel>(vm =>
         {

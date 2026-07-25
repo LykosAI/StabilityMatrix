@@ -402,10 +402,63 @@ public static class RemoteModels
                 LicenseType = "MIT",
                 ContextType = SharedFolderType.ClipVision,
             },
+            // ViT-H image encoder used by most IPAdapter models (SD1.5 and SDXL vit-h variants)
+            new()
+            {
+                Url = new Uri(
+                    "https://huggingface.co/h94/IP-Adapter/resolve/main/models/image_encoder/model.safetensors"
+                ),
+                FileNameOverride = "CLIP-ViT-H-14-laion2B-s32B-b79K.safetensors",
+                InfoUrl = new Uri("https://huggingface.co/h94/IP-Adapter"),
+                HashSha256 = "6ca9667da1ca9e0b0f75e46bb030f7e011f44f86cbfb8d5a36590fcd7507b030",
+                Author = "h94",
+                LicenseType = "Apache 2.0",
+                ContextType = SharedFolderType.ClipVision,
+            },
         ];
 
     public static IEnumerable<HybridModelFile> ClipVisionModelFiles =>
         ClipVisionModels.Select(HybridModelFile.FromDownloadable);
+
+    private static Uri IpAdapterRoot { get; } = new("https://huggingface.co/h94/IP-Adapter/");
+
+    private static RemoteResource IpAdapterCommon(string path, string sha256) =>
+        new()
+        {
+            Url = IpAdapterRoot.Append("resolve/main/").Append(path),
+            HashSha256 = sha256,
+            InfoUrl = IpAdapterRoot,
+            Author = "h94",
+            LicenseType = "Apache 2.0",
+            ContextType = SharedFolderType.IpAdapter,
+        };
+
+    private static IEnumerable<RemoteResource> IpAdapters =>
+        [
+            IpAdapterCommon(
+                "sdxl_models/ip-adapter_sdxl_vit-h.safetensors",
+                "ebf05d918348aec7abb02a5e9ecef77e0aaea6914a5c4ea13f50d45eb1681831"
+            ),
+            IpAdapterCommon(
+                "sdxl_models/ip-adapter-plus_sdxl_vit-h.safetensors",
+                "3f5062b8400c94b7159665b21ba5c62acdcd7682262743d7f2aefedef00e6581"
+            ),
+            IpAdapterCommon(
+                "sdxl_models/ip-adapter-plus-face_sdxl_vit-h.safetensors",
+                "677ad8860204f7d0bfba12d29e6c31ded9beefdf3e4bbd102518357d31a292c1"
+            ),
+            IpAdapterCommon(
+                "models/ip-adapter_sd15.safetensors",
+                "289b45f16d043d0bf542e45831f971dcdaabe18b656f11e86d9dfba7e9ee3369"
+            ),
+            IpAdapterCommon(
+                "models/ip-adapter-plus_sd15.safetensors",
+                "a1c250be40455cc61a43da1201ec3f1edaea71214865fb47f57927e06cbe4996"
+            ),
+        ];
+
+    public static IEnumerable<HybridModelFile> IpAdapterModelFiles =>
+        IpAdapters.Select(HybridModelFile.FromDownloadable);
 
     #region Flux Kontext Models
 

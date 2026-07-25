@@ -191,8 +191,6 @@
                         </StackPanel>
                     </Button>
 
-                    <controls:DocsHelpButton DocsPath="{x:Static docs:DocumentationPages.InferenceOverview}" />
-
                     <!--  Successful connection icon  -->
                     <Button Classes="transparent-full">
 
@@ -226,6 +224,9 @@
                             </ui:FAMenuFlyout>
                         </Button.Flyout>
                     </Button>
+
+                    <!--  Sits after the connection cluster so it doesn't read as part of it  -->
+                    <controls:DocsHelpButton Margin="6,0,2,0" DocsPath="{x:Static docs:DocumentationPages.InferenceOverview}" />
 
                     <!--  Menu  -->
                     <Button Classes="transparent-full">

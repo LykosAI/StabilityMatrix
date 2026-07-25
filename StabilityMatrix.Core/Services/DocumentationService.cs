@@ -67,6 +67,17 @@ public class DocumentationService(
             {
                 logger.LogWarning(e, "Failed to fetch docs tree, attempting to use cached copy");
                 paths = await ReadCachedPathsAsync(cacheFile, cancellationToken).ConfigureAwait(false);
+
+                if (paths is null && BundledDocumentation.Paths is { Count: > 0 } bundledPaths)
+                {
+                    // The listing needs the GitHub API, whose anonymous budget the app also
+                    // spends on package version checks — so an install with many packages can
+                    // exhaust it before the viewer is ever opened. Falling back to the snapshot
+                    // keeps the nav usable; page content still comes from the network below.
+                    logger.LogInformation("Falling back to the bundled documentation listing");
+                    paths = bundledPaths.ToList();
+                }
+
                 if (paths is null)
                     throw;
             }
@@ -126,6 +137,12 @@ public class DocumentationService(
 
             if (cacheFile.Exists)
                 return await cacheFile.ReadAllTextAsync(cancellationToken).ConfigureAwait(false);
+
+            if (BundledDocumentation.TryReadPage(docsRelativePath) is { } bundled)
+            {
+                logger.LogInformation("Serving {Path} from the bundled documentation", docsRelativePath);
+                return bundled;
+            }
 
             throw;
         }

@@ -117,6 +117,14 @@ public class DocumentationMarkdownViewer : BetterMarkdownScrollViewer
         {
             ApplyContentZoom();
         }
+        else if (change.Property == MarkdownProperty)
+        {
+            // Page changes swap the document inside the same scroll viewer, which otherwise
+            // keeps the previous page's offset and drops the reader mid-way down a page they
+            // have never seen. Anchor navigation re-scrolls on a later layout pass, so a
+            // deep link to a heading still wins over this.
+            ScrollValue = new Vector(ScrollValue.X, 0);
+        }
     }
 
     private void ApplyContentZoom()

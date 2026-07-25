@@ -25,8 +25,12 @@ public class UpdateHelper : IUpdateHelper
     private readonly DebugOptions debugOptions;
     private readonly System.Timers.Timer timer = new(TimeSpan.FromMinutes(60));
 
-    private string UpdateManifestUrl =>
-        debugOptions.UpdateManifestUrl ?? "https://cdn.lykos.ai/update-v3.json";
+    /// <summary>
+    /// Default url to the update manifest, used when no debug override is set.
+    /// </summary>
+    public const string DefaultUpdateManifestUrl = "https://cdn.lykos.ai/update-v3.json";
+
+    private string UpdateManifestUrl => debugOptions.UpdateManifestUrl ?? DefaultUpdateManifestUrl;
 
     public const string UpdateFolderName = ".StabilityMatrixUpdate";
     public static DirectoryPath UpdateFolder => Compat.AppCurrentDir.JoinDir(UpdateFolderName);

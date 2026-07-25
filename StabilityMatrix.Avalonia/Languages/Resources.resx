@@ -522,6 +522,24 @@
   <data name="Label_LicenseAndOpenSourceNotices" xml:space="preserve">
     <value>License and Open Source Notices</value>
   </data>
+  <data name="Label_WhatsNew" xml:space="preserve">
+    <value>What's New</value>
+  </data>
+  <data name="Label_SeeWhatsNew" xml:space="preserve">
+    <value>See what's new</value>
+  </data>
+  <data name="TextTemplate_UpdatedToVersion" xml:space="preserve">
+    <value>Updated to v{0} 🎉</value>
+  </data>
+  <data name="Label_UnableToLoadChangelog" xml:space="preserve">
+    <value>Unable to load the changelog. Please check your connection.</value>
+  </data>
+  <data name="Label_ViewChangelogOnGitHub" xml:space="preserve">
+    <value>View changelog on GitHub</value>
+  </data>
+  <data name="Label_ShowReleaseNotesAfterUpdate" xml:space="preserve">
+    <value>Show release notes after updating</value>
+  </data>
   <data name="TeachingTip_ClickLaunchToGetStarted" xml:space="preserve">
     <value>Click Launch to get started!</value>
   </data>

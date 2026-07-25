@@ -44,6 +44,12 @@ public class NotificationActionDispatcher(
                     await Dispatcher.UIThread.InvokeAsync(() => EventManager.Instance.OnShowProgressFlyout());
                     break;
 
+                case ShowChangelogAction:
+                    await Dispatcher.UIThread.InvokeAsync(() =>
+                        EventManager.Instance.OnShowChangelogRequested()
+                    );
+                    break;
+
                 default:
                     logger.LogWarning("Unknown notification action {Action}", action);
                     break;

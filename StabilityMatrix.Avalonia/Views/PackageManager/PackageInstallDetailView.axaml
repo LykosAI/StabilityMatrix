@@ -9,6 +9,7 @@
     xmlns:database="clr-namespace:StabilityMatrix.Core.Models.Database;assembly=StabilityMatrix.Core"
     xmlns:designData="clr-namespace:StabilityMatrix.Avalonia.DesignData"
     xmlns:dialogs="clr-namespace:StabilityMatrix.Avalonia.Views.Dialogs"
+    xmlns:docs="clr-namespace:StabilityMatrix.Core.Models.Documentation;assembly=StabilityMatrix.Core"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
@@ -45,6 +46,7 @@
                     IsVisible="{Binding SelectedPackage.LicenseUrl, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
                     NavigateUri="{Binding SelectedPackage.LicenseUrl}" />
                 <controls:HyperlinkIconButton Content="{x:Static lang:Resources.Action_OpenGithub}" NavigateUri="{Binding SelectedPackage.GithubUrl}" />
+                <controls:DocsHelpButton DocsPath="{x:Static docs:DocumentationPages.InstallingPackages}" />
             </StackPanel>
 
             <!--  Version Selector  -->
@@ -153,7 +155,13 @@
                     </StackPanel>
 
                     <StackPanel Margin="0,4,24,0" Orientation="Vertical">
-                        <Label Content="PyTorch Index" IsVisible="{Binding ShowTorchIndexOptions}" />
+                        <StackPanel
+                            IsVisible="{Binding ShowTorchIndexOptions}"
+                            Orientation="Horizontal"
+                            Spacing="2">
+                            <Label VerticalAlignment="Center" Content="PyTorch Index" />
+                            <controls:DocsHelpButton DocsPath="{x:Static docs:DocumentationPages.HardwareSupport}" />
+                        </StackPanel>
                         <controls:BetterComboBox
                             MinWidth="150"
                             MinHeight="38"

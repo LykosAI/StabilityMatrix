@@ -6,6 +6,7 @@
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
     xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:docs="clr-namespace:StabilityMatrix.Core.Models.Documentation;assembly=StabilityMatrix.Core"
     xmlns:fluentIcons="using:FluentIcons.Avalonia.Fluent"
     xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
     xmlns:inference="clr-namespace:StabilityMatrix.Core.Models.Inference;assembly=StabilityMatrix.Core"
@@ -189,6 +190,8 @@
                             <TextBlock Text="{x:Static lang:Resources.Action_Launch}" />
                         </StackPanel>
                     </Button>
+
+                    <controls:DocsHelpButton DocsPath="{x:Static docs:DocumentationPages.InferenceOverview}" />
 
                     <!--  Successful connection icon  -->
                     <Button Classes="transparent-full">

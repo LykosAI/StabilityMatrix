@@ -6,6 +6,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:docs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Documentation"
     xmlns:fluentAvalonia="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
+    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
     d:DesignHeight="650"
@@ -28,7 +29,7 @@
                     Margin="16,16,16,8"
                     FontSize="18"
                     FontWeight="SemiBold"
-                    Text="Documentation" />
+                    Text="{x:Static lang:Resources.Label_Documentation}" />
 
                 <!--  Loading tree indicator  -->
                 <controls:ProgressRing
@@ -85,18 +86,18 @@
                     HorizontalAlignment="Center"
                     FontSize="18"
                     FontWeight="SemiBold"
-                    Text="Documentation is not available yet" />
+                    Text="{x:Static lang:Resources.Label_DocumentationNotAvailable}" />
                 <TextBlock
                     MaxWidth="420"
                     HorizontalAlignment="Center"
                     Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                    Text="The documentation is coming soon. Please check back in a future release."
+                    Text="{x:Static lang:Resources.Text_DocumentationNotAvailable}"
                     TextAlignment="Center"
                     TextWrapping="Wrap" />
                 <Button
                     HorizontalAlignment="Center"
                     Command="{Binding RetryCommand}"
-                    Content="Retry" />
+                    Content="{x:Static lang:Resources.Action_Retry}" />
             </StackPanel>
 
             <!--  Normal content area  -->
@@ -121,7 +122,7 @@
                     <Button
                         HorizontalAlignment="Center"
                         Command="{Binding RetryCommand}"
-                        Content="Retry" />
+                        Content="{x:Static lang:Resources.Action_Retry}" />
                 </StackPanel>
 
                 <!--  Page loading indicator  -->
@@ -160,7 +161,7 @@
                             Padding="6"
                             Classes="transparent"
                             Command="{Binding ZoomOutCommand}"
-                            ToolTip.Tip="Zoom out">
+                            ToolTip.Tip="{x:Static lang:Resources.Label_ZoomOut}">
                             <!--  FluentIcons SymbolIcon measures greedily without explicit Width/Height  -->
                             <fluentAvalonia:SymbolIcon
                                 Width="16"
@@ -173,7 +174,7 @@
                             Padding="6"
                             Classes="transparent"
                             Command="{Binding ResetZoomCommand}"
-                            ToolTip.Tip="Reset zoom">
+                            ToolTip.Tip="{x:Static lang:Resources.Label_ResetZoom}">
                             <TextBlock
                                 HorizontalAlignment="Center"
                                 FontSize="12"
@@ -183,7 +184,7 @@
                             Padding="6"
                             Classes="transparent"
                             Command="{Binding ZoomInCommand}"
-                            ToolTip.Tip="Zoom in">
+                            ToolTip.Tip="{x:Static lang:Resources.Label_ZoomIn}">
                             <fluentAvalonia:SymbolIcon
                                 Width="16"
                                 Height="16"

@@ -34,6 +34,10 @@
         </DrawingImage>
     </controls:AppWindowBase.Resources>
 
+    <controls:AppWindowBase.KeyBindings>
+        <KeyBinding Command="{Binding OpenDocumentationCommand}" Gesture="F1" />
+    </controls:AppWindowBase.KeyBindings>
+
     <Grid RowDefinitions="Auto,Auto,Auto,*">
         <Grid
             Name="TitleBarHost"
@@ -124,19 +128,6 @@
                                 Foreground="LimeGreen"
                                 IconVariant="Filled"
                                 Symbol="ArrowDownload" />
-                        </ui:NavigationViewItem.IconSource>
-                    </ui:NavigationViewItem>
-
-                    <!--  Documentation  -->
-                    <ui:NavigationViewItem
-                        Name="FooterDocumentationItem"
-                        Content="Documentation"
-                        Tapped="FooterDocumentationItem_OnTapped">
-                        <ui:NavigationViewItem.IconSource>
-                            <fluentIcons:SymbolIconSource
-                                FontSize="18"
-                                IconVariant="Filled"
-                                Symbol="BookOpen" />
                         </ui:NavigationViewItem.IconSource>
                     </ui:NavigationViewItem>
 

@@ -1,0 +1,62 @@
+﻿<ResourceDictionary
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+    xmlns:fluentIcons="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
+    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages">
+
+    <Design.PreviewWith>
+        <StackPanel
+            Margin="8"
+            Orientation="Horizontal"
+            Spacing="6">
+            <controls:DocsHelpButton DocsPath="README.md" />
+            <controls:DocsHelpButton DocsPath="README.md" IsEnabled="False" />
+        </StackPanel>
+    </Design.PreviewWith>
+
+    <ControlTheme x:Key="{x:Type controls:DocsHelpButton}" TargetType="controls:DocsHelpButton">
+
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="4" />
+        <Setter Property="CornerRadius" Value="4" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+        <Setter Property="ToolTip.Tip" Value="{x:Static lang:Resources.Label_ViewDocumentation}" />
+
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border
+                    Name="Root"
+                    Padding="{TemplateBinding Padding}"
+                    Background="{TemplateBinding Background}"
+                    CornerRadius="{TemplateBinding CornerRadius}">
+                    <!--  FluentIcons SymbolIcon measures greedily without explicit Width/Height  -->
+                    <fluentIcons:SymbolIcon
+                        Width="16"
+                        Height="16"
+                        FontSize="16"
+                        Foreground="{TemplateBinding Foreground}"
+                        Symbol="QuestionCircle" />
+                </Border>
+            </ControlTemplate>
+        </Setter>
+
+        <Style Selector="^:pointerover">
+            <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+            <Setter Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
+        </Style>
+        <Style Selector="^:pressed">
+            <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+            <Setter Property="Background" Value="{DynamicResource SubtleFillColorTertiaryBrush}" />
+        </Style>
+        <Style Selector="^:disabled">
+            <Setter Property="Foreground" Value="{DynamicResource TextFillColorDisabledBrush}" />
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+
+    </ControlTheme>
+
+</ResourceDictionary>

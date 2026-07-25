@@ -12,6 +12,7 @@ using FluentAvalonia.UI.Controls;
 using FluentIcons.Common;
 using Injectio.Attributes;
 using Microsoft.Extensions.Logging;
+using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Documentation;
 using StabilityMatrix.Core.Attributes;
@@ -35,7 +36,7 @@ public partial class DocumentationViewModel : PageViewModelBase
     private readonly IDocumentationService documentationService;
     private readonly ISettingsManager settingsManager;
 
-    public override string Title => "Documentation";
+    public override string Title => Resources.Label_Documentation;
 
     public override IconSource IconSource =>
         new SymbolIconSource { Symbol = Symbol.BookOpen, IconVariant = IconVariant.Filled };
@@ -105,6 +106,12 @@ public partial class DocumentationViewModel : PageViewModelBase
     /// <summary>Anchor slug to scroll to after the next page load completes (cross-page anchor links).</summary>
     private string? pendingAnchor;
 
+    /// <summary>
+    /// Page requested via <see cref="RequestPage"/> before the nav tree was available.
+    /// <see cref="LoadTreeAsync"/> applies it in place of the default landing page.
+    /// </summary>
+    private (string Path, string? Anchor)? pendingDeepLink;
+
     public DocumentationViewModel(
         ILogger<DocumentationViewModel> logger,
         IDocumentationService documentationService,
@@ -138,6 +145,31 @@ public partial class DocumentationViewModel : PageViewModelBase
         if (!hasLoadedTree)
         {
             await LoadTreeAsync();
+        }
+    }
+
+    /// <summary>
+    /// Opens a specific documentation page, for contextual help entry points such as a
+    /// <c>?</c> button. Safe to call before this page has ever been shown: the request is
+    /// queued and applied once the nav tree loads, so it cannot be overwritten by the
+    /// default landing page.
+    /// </summary>
+    /// <param name="docsRelativePath">
+    /// Path relative to the docs root, e.g. <c>advanced/environment-variables.md</c>.
+    /// </param>
+    /// <param name="anchor">Optional heading slug to scroll to.</param>
+    public void RequestPage(string docsRelativePath, string? anchor = null)
+    {
+        if (string.IsNullOrWhiteSpace(docsRelativePath))
+            return;
+
+        if (hasLoadedTree)
+        {
+            NavigateToPath(docsRelativePath, anchor);
+        }
+        else
+        {
+            pendingDeepLink = (docsRelativePath, anchor);
         }
     }
 
@@ -203,11 +235,20 @@ public partial class DocumentationViewModel : PageViewModelBase
 
             hasLoadedTree = true;
 
-            // Select the first available page (docs README landing page comes first).
-            var firstPage = Sections.SelectMany(s => s.Pages).FirstOrDefault();
-            if (firstPage is not null)
+            // A queued deep link (contextual help button) wins over the default landing page.
+            if (pendingDeepLink is { } deepLink)
             {
-                SelectedPage = firstPage;
+                pendingDeepLink = null;
+                NavigateToPath(deepLink.Path, deepLink.Anchor);
+            }
+            else
+            {
+                // Select the first available page (docs README landing page comes first).
+                var firstPage = Sections.SelectMany(s => s.Pages).FirstOrDefault();
+                if (firstPage is not null)
+                {
+                    SelectedPage = firstPage;
+                }
             }
         }
         catch (DocumentationNotAvailableException e)
@@ -220,7 +261,7 @@ public partial class DocumentationViewModel : PageViewModelBase
         catch (Exception e)
         {
             logger.LogWarning(e, "Failed to load documentation tree");
-            ErrorMessage = "Could not load the documentation listing. Check your connection and try again.";
+            ErrorMessage = Resources.Error_DocumentationListingLoadFailed;
             Sections.Clear();
             TreeItems.Clear();
         }
@@ -296,7 +337,7 @@ public partial class DocumentationViewModel : PageViewModelBase
         catch (Exception e)
         {
             logger.LogWarning(e, "Failed to load documentation page {Path}", docsRelativePath);
-            ErrorMessage = "Could not load this page. Check your connection and try again.";
+            ErrorMessage = Resources.Error_DocumentationPageLoadFailed;
             CurrentMarkdown = null;
         }
         finally

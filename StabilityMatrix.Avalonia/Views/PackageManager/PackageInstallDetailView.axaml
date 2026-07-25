@@ -46,7 +46,6 @@
                     IsVisible="{Binding SelectedPackage.LicenseUrl, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
                     NavigateUri="{Binding SelectedPackage.LicenseUrl}" />
                 <controls:HyperlinkIconButton Content="{x:Static lang:Resources.Action_OpenGithub}" NavigateUri="{Binding SelectedPackage.GithubUrl}" />
-                <controls:DocsHelpButton DocsPath="{x:Static docs:DocumentationPages.InstallingPackages}" />
             </StackPanel>
 
             <!--  Version Selector  -->

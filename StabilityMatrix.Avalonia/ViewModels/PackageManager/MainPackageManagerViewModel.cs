@@ -18,6 +18,7 @@ using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Documentation;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Services;
@@ -45,6 +46,9 @@ public partial class MainPackageManagerViewModel : PageViewModelBase
     public override string Title => Resources.Label_Packages;
     public override IconSource IconSource =>
         new SymbolIconSource { Symbol = Symbol.Box, IconVariant = IconVariant.Filled };
+
+    /// <inheritdoc />
+    public override string? DocsPath => DocumentationPages.SupportedPackages;
 
     /// <summary>
     /// List of installed packages

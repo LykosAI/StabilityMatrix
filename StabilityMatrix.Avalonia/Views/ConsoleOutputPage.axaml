@@ -73,13 +73,6 @@
             </ui:CommandBar.PrimaryCommands>
         </ui:CommandBar>
 
-        <controls:DocsHelpButton
-            Grid.Row="0"
-            Margin="0,0,16,4"
-            HorizontalAlignment="Right"
-            VerticalAlignment="Center"
-            DocsPath="{x:Static docs:DocumentationPages.CommonIssues}" />
-
         <avaloniaEdit:TextEditor
             x:Name="Console"
             Grid.Row="1"

@@ -39,6 +39,7 @@
                         Height="16"
                         FontSize="16"
                         Foreground="{TemplateBinding Foreground}"
+                        IconVariant="Filled"
                         Symbol="QuestionCircle" />
                 </Border>
             </ControlTemplate>

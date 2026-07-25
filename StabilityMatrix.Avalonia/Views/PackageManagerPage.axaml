@@ -29,22 +29,27 @@
         <!--  ReSharper restore Xaml.RedundantResource  -->
     </controls:UserControlBase.Resources>
 
-    <!--
-        No docs button on this shell: each page hosted in the frame below owns its own
-        contextual help, so a shell-level one would stack a second ? in the same corner.
-    -->
     <Grid RowDefinitions="Auto,*">
-        <ui:BreadcrumbBar
-            x:Name="BreadcrumbBar"
-            Grid.Row="0"
-            Margin="16,8"
-            ItemsSource="{Binding CurrentPagePath}">
-            <ui:BreadcrumbBar.ItemTemplate>
-                <DataTemplate x:DataType="base:PageViewModelBase">
-                    <ui:BreadcrumbBarItem Content="{Binding Title}" />
-                </DataTemplate>
-            </ui:BreadcrumbBar.ItemTemplate>
-        </ui:BreadcrumbBar>
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+            <ui:BreadcrumbBar
+                x:Name="BreadcrumbBar"
+                Grid.Column="0"
+                Margin="16,8"
+                ItemsSource="{Binding CurrentPagePath}">
+                <ui:BreadcrumbBar.ItemTemplate>
+                    <DataTemplate x:DataType="base:PageViewModelBase">
+                        <ui:BreadcrumbBarItem Content="{Binding Title}" />
+                    </DataTemplate>
+                </ui:BreadcrumbBar.ItemTemplate>
+            </ui:BreadcrumbBar>
+
+            <!--  One button for the whole shell, targeting whichever page is showing.  -->
+            <controls:DocsHelpButton
+                Grid.Column="1"
+                Margin="0,8,16,8"
+                DocsPath="{Binding CurrentPage.DocsPath}"
+                IsVisible="{Binding CurrentPage.DocsPath, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+        </Grid>
 
         <controls1:Frame Name="FrameView" Grid.Row="1">
             <controls1:Frame.NavigationPageFactory>

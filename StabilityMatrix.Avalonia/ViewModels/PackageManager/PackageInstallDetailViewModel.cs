@@ -25,6 +25,7 @@ using StabilityMatrix.Core.Helper.Analytics;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Database;
+using StabilityMatrix.Core.Models.Documentation;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Models.Packages;
@@ -51,6 +52,9 @@ public partial class PackageInstallDetailViewModel(
     public BasePackage SelectedPackage { get; } = package;
     public override string Title { get; } = package.DisplayName;
     public override IconSource IconSource => new SymbolIconSource();
+
+    /// <inheritdoc />
+    public override string? DocsPath => DocumentationPages.InstallingPackages;
 
     public string FullInstallPath => Path.Combine(settingsManager.LibraryDir, "Packages", InstallName);
     public bool ShowReleaseMode => SelectedPackage.ShouldIgnoreReleases == false;

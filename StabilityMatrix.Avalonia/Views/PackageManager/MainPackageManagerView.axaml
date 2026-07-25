@@ -28,11 +28,6 @@
     </controls:UserControlBase.Resources>
 
     <Grid Margin="16" RowDefinitions="Auto,*,Auto">
-        <controls:DocsHelpButton
-            Grid.Row="0"
-            HorizontalAlignment="Right"
-            DocsPath="{x:Static docs:DocumentationPages.SupportedPackages}" />
-
         <ScrollViewer Grid.Row="1">
             <ui:ItemsRepeater x:Name="PackageCardsRepeater" ItemsSource="{Binding PackageCards}">
                 <ui:ItemsRepeater.Layout>

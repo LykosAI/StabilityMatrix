@@ -182,7 +182,13 @@
                                 <Binding Path="!IsWaitingForConnection" />
                             </MultiBinding>
                         </Button.IsVisible>
-                        <TextBlock Text="{x:Static lang:Resources.Action_Launch}" />
+                        <StackPanel Orientation="Horizontal">
+                            <icons:Icon
+                                Margin="0,0,8,0"
+                                FontSize="14"
+                                Value="fa-solid fa-rocket" />
+                            <TextBlock Text="{x:Static lang:Resources.Action_Launch}" />
+                        </StackPanel>
                     </Button>
 
                     <!--  Successful connection icon  -->

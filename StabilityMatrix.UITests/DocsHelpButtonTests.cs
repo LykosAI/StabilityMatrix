@@ -1,6 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.VisualTree;
-using FluentIcons.Avalonia.Fluent;
+using Projektanker.Icons.Avalonia;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Core.Models.Documentation;
 
@@ -21,9 +21,10 @@ public class DocsHelpButtonTests : TestBase
 
         window.Show();
 
-        var icon = button.GetVisualDescendants().OfType<SymbolIcon>().FirstOrDefault();
+        var icon = button.GetVisualDescendants().OfType<Icon>().FirstOrDefault();
 
         Assert.NotNull(icon);
+        Assert.Equal("fa-solid fa-circle-question", icon.Value);
         Assert.Equal("Hand", button.Cursor?.ToString());
     }
 }

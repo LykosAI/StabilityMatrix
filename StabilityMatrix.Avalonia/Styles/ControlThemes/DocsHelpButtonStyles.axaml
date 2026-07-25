@@ -2,7 +2,7 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
-    xmlns:fluentIcons="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
+    xmlns:icons="https://github.com/projektanker/icons.avalonia"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages">
 
     <Design.PreviewWith>
@@ -33,14 +33,11 @@
                     Padding="{TemplateBinding Padding}"
                     Background="{TemplateBinding Background}"
                     CornerRadius="{TemplateBinding CornerRadius}">
-                    <!--  FluentIcons SymbolIcon measures greedily without explicit Width/Height  -->
-                    <fluentIcons:SymbolIcon
-                        Width="16"
-                        Height="16"
+                    <!--  Matches the FontAwesome help glyphs used elsewhere in the app  -->
+                    <icons:Icon
                         FontSize="16"
                         Foreground="{TemplateBinding Foreground}"
-                        IconVariant="Filled"
-                        Symbol="QuestionCircle" />
+                        Value="fa-solid fa-circle-question" />
                 </Border>
             </ControlTemplate>
         </Setter>

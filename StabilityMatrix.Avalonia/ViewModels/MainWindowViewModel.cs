@@ -8,6 +8,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Controls.Primitives;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using FluentAvalonia.UI.Media.Animation;
 using MessagePipe;
@@ -55,6 +56,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly ISecretsManager secretsManager;
     private readonly INavigationService<MainWindowViewModel> navigationService;
     private readonly INavigationService<SettingsViewModel> settingsNavService;
+    private readonly IDocumentationNavigationService documentationNavigationService;
     private readonly IDistributedSubscriber<string, Uri> showWindowSubscriber;
     public string Greeting => "Welcome to Avalonia!";
 
@@ -108,6 +110,7 @@ public partial class MainWindowViewModel : ViewModelBase
         ISecretsManager secretsManager,
         INavigationService<MainWindowViewModel> navigationService,
         INavigationService<SettingsViewModel> settingsNavService,
+        IDocumentationNavigationService documentationNavigationService,
         IDistributedSubscriber<string, Uri> showWindowSubscriber
     )
     {
@@ -124,6 +127,7 @@ public partial class MainWindowViewModel : ViewModelBase
         this.secretsManager = secretsManager;
         this.navigationService = navigationService;
         this.settingsNavService = settingsNavService;
+        this.documentationNavigationService = documentationNavigationService;
         this.showWindowSubscriber = showWindowSubscriber;
         ProgressManagerViewModel = dialogFactory.Get<ProgressManagerViewModel>();
         UpdateViewModel = dialogFactory.Get<UpdateViewModel>();
@@ -137,6 +141,16 @@ public partial class MainWindowViewModel : ViewModelBase
         // Set only if null, since this may be called again when content dialogs open
         CurrentPage ??= Pages.FirstOrDefault();
         SelectedCategory ??= Pages.FirstOrDefault();
+    }
+
+    /// <summary>
+    /// Opens the documentation viewer. Bound to F1 as the app-wide help gesture, which is the
+    /// global entry point now that documentation is not a sidebar item.
+    /// </summary>
+    [RelayCommand]
+    private void OpenDocumentation()
+    {
+        documentationNavigationService.OpenDocumentation();
     }
 
     protected override async Task OnInitialLoadedAsync()

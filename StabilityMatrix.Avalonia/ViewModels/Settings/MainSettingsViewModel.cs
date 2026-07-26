@@ -87,6 +87,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
     private readonly ITrackedDownloadService trackedDownloadService;
     private readonly IModelIndexService modelIndexService;
     private readonly INavigationService<SettingsViewModel> settingsNavigationService;
+    private readonly IDocumentationNavigationService documentationNavigationService;
     private readonly IAccountsService accountsService;
     private readonly ICivitBaseModelTypeService baseModelTypeService;
 
@@ -234,6 +235,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
         ICompletionProvider completionProvider,
         IModelIndexService modelIndexService,
         INavigationService<SettingsViewModel> settingsNavigationService,
+        IDocumentationNavigationService documentationNavigationService,
         IAccountsService accountsService,
         ICivitBaseModelTypeService baseModelTypeService
     )
@@ -247,6 +249,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
         this.completionProvider = completionProvider;
         this.modelIndexService = modelIndexService;
         this.settingsNavigationService = settingsNavigationService;
+        this.documentationNavigationService = documentationNavigationService;
         this.accountsService = accountsService;
         this.baseModelTypeService = baseModelTypeService;
 
@@ -1723,6 +1726,12 @@ public partial class MainSettingsViewModel : PageViewModelBase
                 IsVersionTapTeachingTipOpen = true;
                 break;
         }
+    }
+
+    [RelayCommand]
+    private void OpenDocumentation()
+    {
+        documentationNavigationService.OpenDocumentation();
     }
 
     [RelayCommand]

@@ -5041,5 +5041,59 @@ namespace StabilityMatrix.Avalonia.Languages {
                 return ResourceManager.GetString("Error_GeminiAccessForbidden", resourceCulture);
             }
         }
+
+        public static string Label_Documentation {
+            get {
+                return ResourceManager.GetString("Label_Documentation", resourceCulture);
+            }
+        }
+
+        public static string Label_ViewDocumentation {
+            get {
+                return ResourceManager.GetString("Label_ViewDocumentation", resourceCulture);
+            }
+        }
+
+        public static string Label_DocumentationNotAvailable {
+            get {
+                return ResourceManager.GetString("Label_DocumentationNotAvailable", resourceCulture);
+            }
+        }
+
+        public static string Label_ZoomIn {
+            get {
+                return ResourceManager.GetString("Label_ZoomIn", resourceCulture);
+            }
+        }
+
+        public static string Label_ZoomOut {
+            get {
+                return ResourceManager.GetString("Label_ZoomOut", resourceCulture);
+            }
+        }
+
+        public static string Label_ResetZoom {
+            get {
+                return ResourceManager.GetString("Label_ResetZoom", resourceCulture);
+            }
+        }
+
+        public static string Text_DocumentationNotAvailable {
+            get {
+                return ResourceManager.GetString("Text_DocumentationNotAvailable", resourceCulture);
+            }
+        }
+
+        public static string Error_DocumentationListingLoadFailed {
+            get {
+                return ResourceManager.GetString("Error_DocumentationListingLoadFailed", resourceCulture);
+            }
+        }
+
+        public static string Error_DocumentationPageLoadFailed {
+            get {
+                return ResourceManager.GetString("Error_DocumentationPageLoadFailed", resourceCulture);
+            }
+        }
     }
 }

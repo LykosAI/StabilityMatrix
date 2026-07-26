@@ -5,6 +5,7 @@ using AsyncAwaitBestPractices;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Controls.Notifications;
 using Avalonia.Controls.Primitives;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -30,6 +31,7 @@ using StabilityMatrix.Core.Helper.Analytics;
 using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.Lykos.Analytics;
+using StabilityMatrix.Core.Models.Notifications;
 using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Models.Update;
 using StabilityMatrix.Core.Services;
@@ -132,6 +134,64 @@ public partial class MainWindowViewModel : ViewModelBase
         ProgressManagerViewModel = dialogFactory.Get<ProgressManagerViewModel>();
         UpdateViewModel = dialogFactory.Get<UpdateViewModel>();
         NotificationBannerViewModel = new NotificationBannerViewModel(appNotificationService);
+
+        EventManager.Instance.ShowChangelogRequested += OnShowChangelogRequested;
+    }
+
+    private void OnShowChangelogRequested(object? sender, EventArgs e)
+    {
+        Dispatcher
+            .UIThread.InvokeAsync(ShowChangelogDialogAsync)
+            .SafeFireAndForget(ex => Logger.Error(ex, "Error showing changelog dialog"));
+    }
+
+    private async Task ShowChangelogDialogAsync()
+    {
+        var vm = dialogFactory.Get<ChangelogViewModel>();
+        var dialog = new BetterContentDialog
+        {
+            Content = new ChangelogDialog { DataContext = vm },
+            MaxDialogWidth = 1000,
+            MaxDialogHeight = 750,
+            FullSizeDesired = true,
+            IsFooterVisible = false,
+            CloseOnClickOutside = true,
+            ContentVerticalScrollBarVisibility = ScrollBarVisibility.Disabled,
+        };
+
+        await dialog.ShowAsync(App.TopLevel);
+    }
+
+    /// <summary>
+    /// Shows a one-time "What's New" notice when the running version differs from the last
+    /// seen version. On a fresh install / first run of the feature, the version is stored
+    /// silently without showing a notice.
+    /// </summary>
+    private void ShowWhatsNewNoticeIfNeeded()
+    {
+        var currentVersionString = Compat.AppVersion.ToString();
+
+        if (settingsManager.Settings.LastSeenChangelogVersion is not { } lastSeen)
+        {
+            // Fresh install / first run of this feature — store silently
+            settingsManager.Transaction(s => s.LastSeenChangelogVersion = currentVersionString);
+            return;
+        }
+
+        if (lastSeen == currentVersionString)
+            return;
+
+        settingsManager.Transaction(s => s.LastSeenChangelogVersion = currentVersionString);
+
+        if (!settingsManager.Settings.ShowReleaseNotesAfterUpdate)
+            return;
+
+        notificationService.Show(
+            string.Format(Resources.TextTemplate_UpdatedToVersion, Compat.AppVersion.ToDisplayString()),
+            Resources.Label_SeeWhatsNew,
+            NotificationType.Success,
+            action: new ShowChangelogAction()
+        );
     }
 
     public override void OnLoaded()
@@ -309,6 +369,9 @@ public partial class MainWindowViewModel : ViewModelBase
 
             settingsManager.Transaction(s => s.UpdatingFromVersion = null);
         }
+
+        // What's New post-update notice (one-time per version)
+        ShowWhatsNewNoticeIfNeeded();
 
         // Start checking for updates
         await updateHelper.StartCheckingForUpdates();

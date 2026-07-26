@@ -68,6 +68,7 @@
         <StyleInclude Source="Controls/FrameCarousel.axaml" />
         <StyleInclude Source="Controls/CodeCompletion/CompletionWindow.axaml" />
         <StyleInclude Source="Controls/Paginator.axaml" />
+        <StyleInclude Source="Controls/SmolInfoBar.axaml" />
         <StyleInclude Source="Controls/SelectableImageCard/SelectableImageButton.axaml" />
         <StyleInclude Source="Controls/SettingsAccountLinkExpander.axaml" />
         <StyleInclude Source="Controls/StarsRating.axaml" />
@@ -104,6 +105,7 @@
         <StyleInclude Source="Controls/Inference/PlasmaNoiseCard.axaml" />
         <StyleInclude Source="Controls/Inference/NrsCard.axaml" />
         <StyleInclude Source="Controls/Inference/CfzCudnnToggleCard.axaml" />
+        <StyleInclude Source="Controls/Inference/IPAdapterCard.axaml" />
         <labs:ControlThemes />
 
         <Style Selector="DockControl">

@@ -1497,6 +1497,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to CLIP Vision.
+        /// </summary>
+        public static string Label_CLIPVision {
+            get {
+                return ResourceManager.GetString("Label_CLIPVision", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Close dialog when finished.
         /// </summary>
         public static string Label_CloseDialogWhenFinished {
@@ -2595,6 +2604,60 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_LicenseAndOpenSourceNotices {
             get {
                 return ResourceManager.GetString("Label_LicenseAndOpenSourceNotices", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to What&apos;s New.
+        /// </summary>
+        public static string Label_WhatsNew {
+            get {
+                return ResourceManager.GetString("Label_WhatsNew", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to See what&apos;s new.
+        /// </summary>
+        public static string Label_SeeWhatsNew {
+            get {
+                return ResourceManager.GetString("Label_SeeWhatsNew", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Updated to v{0} 🎉.
+        /// </summary>
+        public static string TextTemplate_UpdatedToVersion {
+            get {
+                return ResourceManager.GetString("TextTemplate_UpdatedToVersion", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to load the changelog. Please check your connection.
+        /// </summary>
+        public static string Label_UnableToLoadChangelog {
+            get {
+                return ResourceManager.GetString("Label_UnableToLoadChangelog", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to View changelog on GitHub.
+        /// </summary>
+        public static string Label_ViewChangelogOnGitHub {
+            get {
+                return ResourceManager.GetString("Label_ViewChangelogOnGitHub", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Show release notes after updating.
+        /// </summary>
+        public static string Label_ShowReleaseNotesAfterUpdate {
+            get {
+                return ResourceManager.GetString("Label_ShowReleaseNotesAfterUpdate", resourceCulture);
             }
         }
         
@@ -3767,7 +3830,178 @@ namespace StabilityMatrix.Avalonia.Languages {
                 return ResourceManager.GetString("Label_TextToImage", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to New Project.
+        /// </summary>
+        public static string Label_NewProject {
+            get {
+                return ResourceManager.GetString("Label_NewProject", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Compact New Tab Menu.
+        /// </summary>
+        public static string Label_CompactNewTabMenu {
+            get {
+                return ResourceManager.GetString("Label_CompactNewTabMenu", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Use the compact dropdown menu when adding a new Inference tab, instead of the project gallery dialog.
+        /// </summary>
+        public static string Label_CompactNewTabMenuDescription {
+            get {
+                return ResourceManager.GetString("Label_CompactNewTabMenuDescription", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Prefer the quick menu? Use the compact dropdown.
+        /// </summary>
+        public static string Label_UseCompactMenuPrompt {
+            get {
+                return ResourceManager.GetString("Label_UseCompactMenuPrompt", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Switch to the compact dropdown menu. You can switch back in Settings -&gt; Inference.
+        /// </summary>
+        public static string Label_UseCompactMenuToolTip {
+            get {
+                return ResourceManager.GetString("Label_UseCompactMenuToolTip", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Image.
+        /// </summary>
+        public static string Label_Image {
+            get {
+                return ResourceManager.GetString("Label_Image", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Video.
+        /// </summary>
+        public static string Label_Video {
+            get {
+                return ResourceManager.GetString("Label_Video", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Legacy.
+        /// </summary>
+        public static string Label_Legacy {
+            get {
+                return ResourceManager.GetString("Label_Legacy", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Wan Text to Video.
+        /// </summary>
+        public static string Label_WanTextToVideo {
+            get {
+                return ResourceManager.GetString("Label_WanTextToVideo", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Wan Image to Video.
+        /// </summary>
+        public static string Label_WanImageToVideo {
+            get {
+                return ResourceManager.GetString("Label_WanImageToVideo", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Flux Text to Image.
+        /// </summary>
+        public static string Label_FluxTextToImage {
+            get {
+                return ResourceManager.GetString("Label_FluxTextToImage", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to SVD Image to Video.
+        /// </summary>
+        public static string Label_SvdImageToVideo {
+            get {
+                return ResourceManager.GetString("Label_SvdImageToVideo", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Generate images from a text prompt. Works with SD1.5, SDXL, Pony, Flux and more.
+        /// </summary>
+        public static string Label_TextToImageDescription {
+            get {
+                return ResourceManager.GetString("Label_TextToImageDescription", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Transform an existing image using a text prompt.
+        /// </summary>
+        public static string Label_ImageToImageDescription {
+            get {
+                return ResourceManager.GetString("Label_ImageToImageDescription", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Increase the resolution of an image with an upscaling model.
+        /// </summary>
+        public static string Label_UpscaleDescription {
+            get {
+                return ResourceManager.GetString("Label_UpscaleDescription", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Generate a video from a text prompt using Wan.
+        /// </summary>
+        public static string Label_WanTextToVideoDescription {
+            get {
+                return ResourceManager.GetString("Label_WanTextToVideoDescription", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Animate an input image into a video using Wan.
+        /// </summary>
+        public static string Label_WanImageToVideoDescription {
+            get {
+                return ResourceManager.GetString("Label_WanImageToVideoDescription", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Standalone Flux text-to-image. The Text to Image tab also handles Flux automatically.
+        /// </summary>
+        public static string Label_FluxTextToImageDescription {
+            get {
+                return ResourceManager.GetString("Label_FluxTextToImageDescription", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Stable Video Diffusion image-to-video.
+        /// </summary>
+        public static string Label_SvdImageToVideoDescription {
+            get {
+                return ResourceManager.GetString("Label_SvdImageToVideoDescription", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Thanks for building with us 💙.
         /// </summary>
@@ -4035,6 +4269,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_WebUi {
             get {
                 return ResourceManager.GetString("Label_WebUi", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Weight Type.
+        /// </summary>
+        public static string Label_WeightType {
+            get {
+                return ResourceManager.GetString("Label_WeightType", resourceCulture);
             }
         }
         
@@ -5093,6 +5336,477 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Error_DocumentationPageLoadFailed {
             get {
                 return ResourceManager.GetString("Error_DocumentationPageLoadFailed", resourceCulture);
+            }
+        }
+
+        public static string Label_HuggingFaceSearchWatermark {
+            get {
+                return ResourceManager.GetString("Label_HuggingFaceSearchWatermark", resourceCulture);
+            }
+        }
+
+        public static string Label_SortResults {
+            get {
+                return ResourceManager.GetString("Label_SortResults", resourceCulture);
+            }
+        }
+
+        public static string Label_HideInstalled {
+            get {
+                return ResourceManager.GetString("Label_HideInstalled", resourceCulture);
+            }
+        }
+
+        public static string Label_ToggleFlatOrTree {
+            get {
+                return ResourceManager.GetString("Label_ToggleFlatOrTree", resourceCulture);
+            }
+        }
+
+        public static string Label_FlatList {
+            get {
+                return ResourceManager.GetString("Label_FlatList", resourceCulture);
+            }
+        }
+
+        public static string Label_FolderTree {
+            get {
+                return ResourceManager.GetString("Label_FolderTree", resourceCulture);
+            }
+        }
+
+        public static string Label_FilterFilesByName {
+            get {
+                return ResourceManager.GetString("Label_FilterFilesByName", resourceCulture);
+            }
+        }
+
+        public static string Label_SelectAllFilesInFolder {
+            get {
+                return ResourceManager.GetString("Label_SelectAllFilesInFolder", resourceCulture);
+            }
+        }
+
+        public static string Label_DestinationFolder {
+            get {
+                return ResourceManager.GetString("Label_DestinationFolder", resourceCulture);
+            }
+        }
+
+        public static string Label_InstalledInFolder {
+            get {
+                return ResourceManager.GetString("Label_InstalledInFolder", resourceCulture);
+            }
+        }
+
+        public static string Label_EndOfResults {
+            get {
+                return ResourceManager.GetString("Label_EndOfResults", resourceCulture);
+            }
+        }
+
+        public static string Label_Likes {
+            get {
+                return ResourceManager.GetString("Label_Likes", resourceCulture);
+            }
+        }
+
+        public static string Label_SetDestination {
+            get {
+                return ResourceManager.GetString("Label_SetDestination", resourceCulture);
+            }
+        }
+
+        public static string Label_SetDestinationTooltip {
+            get {
+                return ResourceManager.GetString("Label_SetDestinationTooltip", resourceCulture);
+            }
+        }
+
+        public static string Action_ImportToFolder {
+            get {
+                return ResourceManager.GetString("Action_ImportToFolder", resourceCulture);
+            }
+        }
+
+        public static string Label_ImportToFolderDescription {
+            get {
+                return ResourceManager.GetString("Label_ImportToFolderDescription", resourceCulture);
+            }
+        }
+
+        public static string Label_DiffusersDetected {
+            get {
+                return ResourceManager.GetString("Label_DiffusersDetected", resourceCulture);
+            }
+        }
+
+        public static string Label_MultiFileModelDetected {
+            get {
+                return ResourceManager.GetString("Label_MultiFileModelDetected", resourceCulture);
+            }
+        }
+
+        public static string Label_Subfolder {
+            get {
+                return ResourceManager.GetString("Label_Subfolder", resourceCulture);
+            }
+        }
+
+        public static string Label_CustomFolder {
+            get {
+                return ResourceManager.GetString("Label_CustomFolder", resourceCulture);
+            }
+        }
+
+        public static string Action_ClearCustomFolder {
+            get {
+                return ResourceManager.GetString("Action_ClearCustomFolder", resourceCulture);
+            }
+        }
+
+        public static string Action_Browse {
+            get {
+                return ResourceManager.GetString("Action_Browse", resourceCulture);
+            }
+        }
+
+        public static string Label_RepoNameWatermark {
+            get {
+                return ResourceManager.GetString("Label_RepoNameWatermark", resourceCulture);
+            }
+        }
+
+        public static string Label_AutoDetected {
+            get {
+                return ResourceManager.GetString("Label_AutoDetected", resourceCulture);
+            }
+        }
+
+        public static string Label_ChooseDestinationFolder {
+            get {
+                return ResourceManager.GetString("Label_ChooseDestinationFolder", resourceCulture);
+            }
+        }
+
+        public static string Label_HuggingFaceRepoGated {
+            get {
+                return ResourceManager.GetString("Label_HuggingFaceRepoGated", resourceCulture);
+            }
+        }
+
+        public static string Label_HuggingFaceRepoNotFound {
+            get {
+                return ResourceManager.GetString("Label_HuggingFaceRepoNotFound", resourceCulture);
+            }
+        }
+
+        public static string Label_HuggingFaceRepoLoadFailed {
+            get {
+                return ResourceManager.GetString("Label_HuggingFaceRepoLoadFailed", resourceCulture);
+            }
+        }
+
+        public static string Label_HuggingFaceSearchFailed {
+            get {
+                return ResourceManager.GetString("Label_HuggingFaceSearchFailed", resourceCulture);
+            }
+        }
+
+        public static string Label_NumSelected {
+            get {
+                return ResourceManager.GetString("Label_NumSelected", resourceCulture);
+            }
+        }
+
+        public static string Label_NumFilesWithSize {
+            get {
+                return ResourceManager.GetString("Label_NumFilesWithSize", resourceCulture);
+            }
+        }
+
+        public static string Label_NotEnoughFreeSpace {
+            get {
+                return ResourceManager.GetString("Label_NotEnoughFreeSpace", resourceCulture);
+            }
+        }
+
+        public static string Label_AddedToDownloadQueue {
+            get {
+                return ResourceManager.GetString("Label_AddedToDownloadQueue", resourceCulture);
+            }
+        }
+
+        public static string Label_AddedToDownloadQueueFormat {
+            get {
+                return ResourceManager.GetString("Label_AddedToDownloadQueueFormat", resourceCulture);
+            }
+        }
+
+        public static string Label_JustNow {
+            get {
+                return ResourceManager.GetString("Label_JustNow", resourceCulture);
+            }
+        }
+
+        public static string Label_TimeYearsAgo {
+            get {
+                return ResourceManager.GetString("Label_TimeYearsAgo", resourceCulture);
+            }
+        }
+
+        public static string Label_TimeMonthsAgo {
+            get {
+                return ResourceManager.GetString("Label_TimeMonthsAgo", resourceCulture);
+            }
+        }
+
+        public static string Label_TimeDaysAgo {
+            get {
+                return ResourceManager.GetString("Label_TimeDaysAgo", resourceCulture);
+            }
+        }
+
+        public static string Label_TimeHoursAgo {
+            get {
+                return ResourceManager.GetString("Label_TimeHoursAgo", resourceCulture);
+            }
+        }
+
+        public static string Label_TimeMinutesAgo {
+            get {
+                return ResourceManager.GetString("Label_TimeMinutesAgo", resourceCulture);
+            }
+        }
+
+        public static string Label_UpdatedAgo {
+            get {
+                return ResourceManager.GetString("Label_UpdatedAgo", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Prompt Queue.
+        /// </summary>
+        public static string Label_PromptQueue {
+            get {
+                return ResourceManager.GetString("Label_PromptQueue", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Add to Queue.
+        /// </summary>
+        public static string Label_AddToQueue {
+            get {
+                return ResourceManager.GetString("Label_AddToQueue", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Added to the prompt queue.
+        /// </summary>
+        public static string Label_AddedToQueue {
+            get {
+                return ResourceManager.GetString("Label_AddedToQueue", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Connect to ComfyUI to process the prompt queue.
+        /// </summary>
+        public static string Label_PromptQueueNotConnected {
+            get {
+                return ResourceManager.GetString("Label_PromptQueueNotConnected", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Queue is empty.
+        /// </summary>
+        public static string Label_QueueEmpty {
+            get {
+                return ResourceManager.GetString("Label_QueueEmpty", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Clear finished.
+        /// </summary>
+        public static string Label_ClearFinished {
+            get {
+                return ResourceManager.GetString("Label_ClearFinished", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Clear pending.
+        /// </summary>
+        public static string Label_ClearPending {
+            get {
+                return ResourceManager.GetString("Label_ClearPending", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Open in tab.
+        /// </summary>
+        public static string Label_OpenInTab {
+            get {
+                return ResourceManager.GetString("Label_OpenInTab", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Start.
+        /// </summary>
+        public static string Action_StartQueue {
+            get {
+                return ResourceManager.GetString("Action_StartQueue", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Pause.
+        /// </summary>
+        public static string Action_PauseQueue {
+            get {
+                return ResourceManager.GetString("Action_PauseQueue", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Pending.
+        /// </summary>
+        public static string Label_StatusPending {
+            get {
+                return ResourceManager.GetString("Label_StatusPending", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Running.
+        /// </summary>
+        public static string Label_StatusRunning {
+            get {
+                return ResourceManager.GetString("Label_StatusRunning", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Completed.
+        /// </summary>
+        public static string Label_StatusCompleted {
+            get {
+                return ResourceManager.GetString("Label_StatusCompleted", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Failed.
+        /// </summary>
+        public static string Label_StatusFailed {
+            get {
+                return ResourceManager.GetString("Label_StatusFailed", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Cancelled.
+        /// </summary>
+        public static string Label_StatusCancelled {
+            get {
+                return ResourceManager.GetString("Label_StatusCancelled", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Move up.
+        /// </summary>
+        public static string Action_MoveUp {
+            get {
+                return ResourceManager.GetString("Action_MoveUp", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Move down.
+        /// </summary>
+        public static string Action_MoveDown {
+            get {
+                return ResourceManager.GetString("Action_MoveDown", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to {0} steps.
+        /// </summary>
+        public static string Label_QueueParamsSteps {
+            get {
+                return ResourceManager.GetString("Label_QueueParamsSteps", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to seed {0}.
+        /// </summary>
+        public static string Label_QueueParamsSeed {
+            get {
+                return ResourceManager.GetString("Label_QueueParamsSeed", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Re-queue.
+        /// </summary>
+        public static string Action_Requeue {
+            get {
+                return ResourceManager.GetString("Action_Requeue", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Re-queue all finished.
+        /// </summary>
+        public static string Action_RequeueAll {
+            get {
+                return ResourceManager.GetString("Action_RequeueAll", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Pausing….
+        /// </summary>
+        public static string Label_QueuePausing {
+            get {
+                return ResourceManager.GetString("Label_QueuePausing", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Finishes the current item, then stops.
+        /// </summary>
+        public static string Label_QueuePauseTooltip {
+            get {
+                return ResourceManager.GetString("Label_QueuePauseTooltip", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Open image.
+        /// </summary>
+        public static string Label_OpenImage {
+            get {
+                return ResourceManager.GetString("Label_OpenImage", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Image file not found.
+        /// </summary>
+        public static string Label_ImageFileNotFound {
+            get {
+                return ResourceManager.GetString("Label_ImageFileNotFound", resourceCulture);
             }
         }
     }

@@ -28,6 +28,7 @@ public record GenerationParameters
     public double MinCfg { get; set; }
     public double AugmentationLevel { get; set; }
     public string? VideoOutputMethod { get; set; }
+    public string? VideoOutputFormat { get; set; }
     public int? ModelVersionId { get; set; }
     public List<int>? ExtraNetworkModelVersionIds { get; set; }
 

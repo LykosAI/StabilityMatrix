@@ -1,93 +1,116 @@
-﻿<Styles xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
-        x:DataType="video:VideoOutputSettingsCardViewModel"
-        xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
-        xmlns:video="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference.Video"
-        xmlns:controls1="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
-        xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages">
+﻿<Styles
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
+    xmlns:controls1="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+    xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:video="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference.Video"
+    x:DataType="video:VideoOutputSettingsCardViewModel">
     <Design.PreviewWith>
         <Grid MinWidth="400">
-            <controls:VideoOutputSettingsCard
-                DataContext="{x:Static mocks:DesignData.SvdImgToVidConditioningViewModel}" />
+            <controls:VideoOutputSettingsCard DataContext="{x:Static mocks:DesignData.SvdImgToVidConditioningViewModel}" />
         </Grid>
     </Design.PreviewWith>
 
     <Style Selector="controls|VideoOutputSettingsCard">
-        <!-- Set Defaults -->
+        <!--  Set Defaults  -->
         <Setter Property="HorizontalAlignment" Value="Stretch" />
         <Setter Property="Template">
             <ControlTemplate>
                 <controls:Card Padding="8" HorizontalAlignment="{TemplateBinding HorizontalAlignment}">
-                    <Grid Margin="4" RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto, *">
-                        <TextBlock 
+                    <Grid
+                        Margin="4"
+                        ColumnDefinitions="Auto, *"
+                        RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto">
+                        <TextBlock
                             Grid.Row="0"
                             Grid.Column="0"
                             Grid.ColumnSpan="2"
-                            Text="Video Output Settings"
+                            Margin="0,0,0,16"
                             FontSize="16"
                             FontWeight="DemiBold"
-                            Margin="0,0,0,16"
-                            />
+                            Text="Video Output Settings" />
                         <TextBlock
                             Grid.Row="1"
                             Grid.Column="0"
                             Margin="0,0,8,0"
                             VerticalAlignment="Center"
-                            Text="{x:Static lang:Resources.Label_Fps}" />
-                        <controls1:NumberBox
+                            Text="Format" />
+                        <ComboBox
                             Grid.Row="1"
                             Grid.Column="1"
-                            SelectionHighlightColor="Transparent"
-                            Value="{Binding Fps}"
+                            MinWidth="100"
                             Margin="8,0,0,0"
-                            SimpleNumberFormat="F0"
-                            SmallChange="1"
                             HorizontalAlignment="Stretch"
-                            SpinButtonPlacementMode="Inline" />
+                            ItemsSource="{Binding AvailableFormats}"
+                            SelectedItem="{Binding SelectedFormat}" />
 
                         <TextBlock
                             Grid.Row="2"
                             Grid.Column="0"
                             Margin="0,8,8,0"
                             VerticalAlignment="Center"
+                            Text="{x:Static lang:Resources.Label_Fps}" />
+                        <controls1:NumberBox
+                            Grid.Row="2"
+                            Grid.Column="1"
+                            Margin="8,8,0,0"
+                            HorizontalAlignment="Stretch"
+                            SelectionHighlightColor="Transparent"
+                            SimpleNumberFormat="F0"
+                            SmallChange="1"
+                            SpinButtonPlacementMode="Inline"
+                            Value="{Binding Fps}" />
+
+                        <TextBlock
+                            Grid.Row="3"
+                            Grid.Column="0"
+                            Margin="0,8,8,0"
+                            VerticalAlignment="Center"
+                            IsVisible="{Binding IsWebPFormat}"
                             Text="{x:Static lang:Resources.Label_Lossless}" />
                         <CheckBox
-                            Grid.Row="2"
+                            Grid.Row="3"
                             Grid.Column="1"
-                            IsChecked="{Binding Lossless}"
                             Margin="8,8,0,0"
-                            HorizontalAlignment="Stretch" />
+                            HorizontalAlignment="Stretch"
+                            IsChecked="{Binding Lossless}"
+                            IsVisible="{Binding IsWebPFormat}" />
 
                         <TextBlock
-                            Grid.Row="3"
+                            Grid.Row="4"
                             Grid.Column="0"
                             Margin="0,8,8,0"
                             VerticalAlignment="Center"
+                            IsVisible="{Binding IsWebPFormat}"
                             Text="{x:Static lang:Resources.Label_VideoQuality}" />
                         <controls1:NumberBox
-                            Margin="8,8,0,0"
-                            Grid.Row="3"
+                            Grid.Row="4"
                             Grid.Column="1"
+                            Margin="8,8,0,0"
+                            HorizontalAlignment="Stretch"
+                            IsVisible="{Binding IsWebPFormat}"
+                            Maximum="100"
                             SelectionHighlightColor="Transparent"
-                            Value="{Binding Quality}"
                             SimpleNumberFormat="F0"
                             SmallChange="1"
-                            Maximum="100"
-                            HorizontalAlignment="Stretch"
-                            SpinButtonPlacementMode="Inline" />
+                            SpinButtonPlacementMode="Inline"
+                            Value="{Binding Quality}" />
 
                         <TextBlock
-                            Margin="0,8,8,0"
-                            Grid.Row="4"
+                            Grid.Row="5"
                             Grid.Column="0"
+                            Margin="0,8,8,0"
                             VerticalAlignment="Center"
+                            IsVisible="{Binding IsWebPFormat}"
                             Text="{x:Static lang:Resources.Label_VideoOutputMethod}" />
                         <ComboBox
-                            Grid.Row="4"
+                            Grid.Row="5"
                             Grid.Column="1"
-                            Margin="8,8,0,0"
                             MinWidth="100"
+                            Margin="8,8,0,0"
+                            IsVisible="{Binding IsWebPFormat}"
                             ItemsSource="{Binding AvailableMethods}"
                             SelectedIndex="{Binding SelectedMethod}" />
                     </Grid>

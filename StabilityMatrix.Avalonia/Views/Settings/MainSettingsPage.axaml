@@ -7,6 +7,7 @@
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
     xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:docs="clr-namespace:StabilityMatrix.Core.Models.Documentation;assembly=StabilityMatrix.Core"
     xmlns:fluentIcons="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
     xmlns:hardwareInfo="clr-namespace:StabilityMatrix.Core.Helper.HardwareInfo;assembly=StabilityMatrix.Core"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
@@ -169,7 +170,10 @@
                     Header="{x:Static lang:Resources.Label_EnvironmentVariables}"
                     IconSource="OtherUser">
                     <ui:SettingsExpander.Footer>
-                        <Button Command="{Binding OpenEnvVarsDialogCommand}" Content="{x:Static lang:Resources.Action_Edit}" />
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <controls:DocsHelpButton DocsPath="{x:Static docs:DocumentationPages.EnvironmentVariables}" />
+                            <Button Command="{Binding OpenEnvVarsDialogCommand}" Content="{x:Static lang:Resources.Action_Edit}" />
+                        </StackPanel>
                     </ui:SettingsExpander.Footer>
                 </ui:SettingsExpander>
 
@@ -613,6 +617,9 @@
                     Grid.Row="7"
                     Header="{x:Static lang:Resources.Label_AppFolders}"
                     IconSource="FolderLink">
+                    <ui:SettingsExpander.Footer>
+                        <controls:DocsHelpButton DocsPath="{x:Static docs:DocumentationPages.DataDirectory}" />
+                    </ui:SettingsExpander.Footer>
 
                     <ui:SettingsExpanderItem>
                         <ItemsRepeater ItemsSource="{Binding DirectoryShortcutCommands}">
@@ -1029,6 +1036,11 @@
                     </Panel>
 
                     <StackPanel HorizontalAlignment="Left" Orientation="Horizontal">
+                        <Button
+                            Margin="8"
+                            HorizontalAlignment="Left"
+                            Command="{Binding OpenDocumentationCommand}"
+                            Content="{x:Static lang:Resources.Label_Documentation}" />
                         <Button
                             Margin="8"
                             HorizontalAlignment="Left"

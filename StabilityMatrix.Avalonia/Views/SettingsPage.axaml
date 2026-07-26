@@ -1,51 +1,57 @@
-<controls:UserControlBase
+﻿<controls:UserControlBase
     x:Class="StabilityMatrix.Avalonia.Views.SettingsPage"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:docs="clr-namespace:StabilityMatrix.Core.Models.Documentation;assembly=StabilityMatrix.Core"
+    xmlns:local="clr-namespace:StabilityMatrix.Avalonia"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
     xmlns:ui="using:FluentAvalonia.UI.Controls"
     xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
     xmlns:vmBase="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Base"
-    xmlns:local="clr-namespace:StabilityMatrix.Avalonia"
-    Focusable="True"
     d:DataContext="{x:Static mocks:DesignData.SettingsViewModel}"
     d:DesignHeight="700"
     d:DesignWidth="800"
     x:CompileBindings="True"
     x:DataType="vm:SettingsViewModel"
+    Focusable="True"
     mc:Ignorable="d">
-    
+
     <controls:UserControlBase.Resources>
-        <!-- Override styles for BreadcrumbBar -->
-        <!-- ReSharper disable Xaml.RedundantResource -->
+        <!--  Override styles for BreadcrumbBar  -->
+        <!--  ReSharper disable Xaml.RedundantResource  -->
         <x:Double x:Key="BreadcrumbBarItemThemeFontSize">24</x:Double>
         <x:Double x:Key="BreadcrumbBarChevronFontSize">17</x:Double>
         <Thickness x:Key="BreadcrumbBarChevronPadding">6,3</Thickness>
         <FontWeight x:Key="BreadcrumbBarItemFontWeight">Medium</FontWeight>
-        <!-- ReSharper restore Xaml.RedundantResource -->
+        <!--  ReSharper restore Xaml.RedundantResource  -->
     </controls:UserControlBase.Resources>
-    
+
     <Grid RowDefinitions="Auto,*">
-        <ui:BreadcrumbBar
-            Grid.Row="0"
-            Margin="16,8"
-            x:Name="BreadcrumbBar"
-            ItemsSource="{Binding CurrentPagePath}">
-            <ui:BreadcrumbBar.ItemTemplate>
-                <DataTemplate x:DataType="vmBase:PageViewModelBase">
-                    <ui:BreadcrumbBarItem Content="{Binding Title}" />
-                </DataTemplate>
-            </ui:BreadcrumbBar.ItemTemplate>
-        </ui:BreadcrumbBar>
-        
-        <ui:Frame
-            Grid.Row="1"
-            Name="FrameView">
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+            <ui:BreadcrumbBar
+                x:Name="BreadcrumbBar"
+                Grid.Column="0"
+                Margin="16,8"
+                ItemsSource="{Binding CurrentPagePath}">
+                <ui:BreadcrumbBar.ItemTemplate>
+                    <DataTemplate x:DataType="vmBase:PageViewModelBase">
+                        <ui:BreadcrumbBarItem Content="{Binding Title}" />
+                    </DataTemplate>
+                </ui:BreadcrumbBar.ItemTemplate>
+            </ui:BreadcrumbBar>
+
+            <controls:DocsHelpButton
+                Grid.Column="1"
+                Margin="0,8,16,8"
+                DocsPath="{x:Static docs:DocumentationPages.Settings}" />
+        </Grid>
+
+        <ui:Frame Name="FrameView" Grid.Row="1">
             <ui:Frame.NavigationPageFactory>
-                <local:ViewLocator/>
+                <local:ViewLocator />
             </ui:Frame.NavigationPageFactory>
         </ui:Frame>
     </Grid>

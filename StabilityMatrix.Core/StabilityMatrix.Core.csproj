@@ -86,4 +86,15 @@
     <ItemGroup>
       <Folder Include="Api\PromptGen\Generated\" />
     </ItemGroup>
+
+    <!--
+      Snapshot of the docs tree, used by DocumentationService when the live copy is
+      unreachable. Excludes the VitePress site build and its dependencies, whose bundled
+      READMEs are several times the size of the documentation itself.
+    -->
+    <ItemGroup>
+      <EmbeddedResource Include="..\docs\**\*.md" Exclude="..\docs\node_modules\**;..\docs\.vitepress\**">
+        <LogicalName>BundledDocs/$([System.String]::Copy('%(RecursiveDir)').Replace('\','/'))%(Filename)%(Extension)</LogicalName>
+      </EmbeddedResource>
+    </ItemGroup>
 </Project>

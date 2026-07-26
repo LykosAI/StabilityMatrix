@@ -15,6 +15,12 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
   - Manage the queue freely: reorder, remove, cancel the running item, **re-queue** finished/failed/cancelled items (or re-queue all finished), and clear finished or pending items
   - **Start** auto-connects to ComfyUI if it's already running, or shows the usual launch prompt if it isn't; **Pause** finishes the current item before stopping
   - The queue is saved to your library folder and survives restarts — interrupted items come back as Pending, and finished items keep their thumbnails
+#### New Feature: 📖 In-App Documentation
+- Read the Stability Matrix guides without leaving the app:
+  - Press **F1** from anywhere, or open it from **Settings → About → Documentation**
+  - New **?** buttons on the Package Manager, install details, the running package console, Inference, and the Environment Variables and App Folders settings open the page for what you're looking at
+  - Browse every section from a nav tree, follow links between pages, and zoom the text in or out — your zoom level is remembered
+  - Pages are read live from [docs.lykos.ai](https://docs.lykos.ai/stability-matrix/), so new and updated writing shows up without an app update, and a copy ships inside the app so it still works offline
 - Added a **What's New** viewer — browse release notes for any version right in the app from **Settings → About**, with a one-time heads-up after each update (can be turned off in update settings)
 - 📚 **New documentation site** at [docs.lykos.ai](https://docs.lykos.ai/stability-matrix/) — getting started and installation guides, package manager and Inference walkthroughs, environment variable and advanced configuration references, a terminology glossary, and troubleshooting for common issues. Written by @NeuralFault!
 - Added **OneTrainer** to the native **Windows ROCm (AMD GPU)** helper — new OneTrainer installs on supported AMD hardware get the ROCm PyTorch build, ROCm-aware bitsandbytes and triton dependencies, and the right launch environment applied automatically. New OneTrainer installs also default to Python 3.12 on all platforms - thanks to @NeuralFault!
@@ -51,6 +57,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Dragging an image layer with the **Move** tool in the layered mask editor now re-renders only the dragged layer instead of re-compositing every layer on each pointer move, so dragging stays smooth in multi-layer projects
 - Faster color-mask extraction for regional prompting — a 1024×1024 canvas with six regions previously did over six million dictionary lookups per extraction
 - Fixed a small native memory leak while drawing with the mouse (a path object per frame was never freed), and removed a redundant full-canvas scan after every paint-bucket fill
+### Security
+- Bundled **ADetailer** model downloads now point at a fixed Hugging Face revision instead of the repository's moving `main` branch, so an upstream re-upload can't change what you get - thanks to @ungrav!
 ### Supporters
 #### 🌟 Visionaries
 The prompt queue has been one of our most requested features ever, and builds like this only happen because our Visionaries give us the freedom to take them on. Thank you **Waterclouds**, **MrMxyzptlk12836**, **Psilocyfer18731**, **bluepopsicle**, **Ibixat**, **Droolguy**, **KalAbaddon**, **LG**, **snotty**, **whudunit**, **cusalapapen1481**, **moon_milky2843**, **SkynetFuture**, and **sn3232323233350** for standing behind us build after build. And to our three newest Visionaries, **tarekk071223**, **CC**, and **SnooSnooEternal**: welcome aboard, it means the world to have you with us. 💛
@@ -91,6 +99,12 @@ This build leans hard into what's next: a live HuggingFace browser and Wan 2.2 v
 ## v2.16.2
 > Full technical notes for this release: [docs.lykos.ai/stability-matrix/release-notes/2.16.2](https://docs.lykos.ai/stability-matrix/release-notes/2.16.2)
 ### Added
+#### New Feature: 📖 In-App Documentation
+- Read the Stability Matrix guides without leaving the app:
+  - Press **F1** from anywhere, or open it from **Settings → About → Documentation**
+  - New **?** buttons on the Package Manager, install details, the running package console, Inference, and the Environment Variables and App Folders settings open the page for what you're looking at
+  - Browse every section from a nav tree, follow links between pages, and zoom the text in or out — your zoom level is remembered
+  - Pages are read live from [docs.lykos.ai](https://docs.lykos.ai/stability-matrix/), so new and updated writing shows up without an app update, and a copy ships inside the app so it still works offline
 - 📚 **New documentation site** at [docs.lykos.ai](https://docs.lykos.ai/stability-matrix/) — getting started and installation guides, package manager and Inference walkthroughs, environment variable and advanced configuration references, a terminology glossary, and troubleshooting for common issues. Written by @NeuralFault!
 - Added **OneTrainer** to the native **Windows ROCm (AMD GPU)** helper — new OneTrainer installs on supported AMD hardware get the ROCm PyTorch build, ROCm-aware bitsandbytes and triton dependencies, and the right launch environment applied automatically. New OneTrainer installs also default to Python 3.12 on all platforms - thanks to @NeuralFault!
 ### Changed
@@ -126,6 +140,8 @@ This build leans hard into what's next: a live HuggingFace browser and Wan 2.2 v
 - The **Checkpoints** and **Outputs** galleries now load thumbnails at display size instead of full resolution, using far less memory and scrolling much more smoothly with large libraries
 - The **CivitAI** and **OpenModelDB** browsers now keep card images in memory, so scrolling back over models you've already seen no longer re-loads them from disk
 - Lightened the CivitAI model cards so they render faster while scrolling
+### Security
+- Bundled **ADetailer** model downloads now point at a fixed Hugging Face revision instead of the repository's moving `main` branch, so an upstream re-upload can't change what you get - thanks to @ungrav!
 
 ## v2.16.1
 ### Added

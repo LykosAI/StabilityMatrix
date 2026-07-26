@@ -10,6 +10,7 @@ using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Documentation;
 using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
@@ -32,6 +33,9 @@ public partial class RunningPackageViewModel : PageViewModelBase, IDisposable, I
     public ConsoleViewModel Console { get; }
     public override string Title => RunningPackage.InstalledPackage.DisplayName ?? "Running Package";
     public override IconSource IconSource => new SymbolIconSource();
+
+    /// <inheritdoc />
+    public override string? DocsPath => DocumentationPages.CommonIssues;
 
     [ObservableProperty]
     private bool autoScrollToEnd;

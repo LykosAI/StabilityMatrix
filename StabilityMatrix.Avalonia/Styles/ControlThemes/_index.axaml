@@ -4,6 +4,7 @@
     x:CompileBindings="True">
     <ResourceDictionary.MergedDictionaries>
         <ResourceInclude Source="avares://StabilityMatrix.Avalonia/Styles/ControlThemes/BetterComboBoxStyles.axaml" />
+        <ResourceInclude Source="avares://StabilityMatrix.Avalonia/Styles/ControlThemes/DocsHelpButtonStyles.axaml" />
         <ResourceInclude Source="avares://StabilityMatrix.Avalonia/Styles/ControlThemes/HyperlinkIconButtonStyles.axaml" />
         <ResourceInclude Source="avares://StabilityMatrix.Avalonia/Styles/ControlThemes/LabelStyles.axaml" />
         <ResourceInclude Source="avares://StabilityMatrix.Avalonia/Styles/ControlThemes/LabelStyles.Dark.axaml" />

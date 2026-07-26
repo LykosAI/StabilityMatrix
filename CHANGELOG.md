@@ -6,8 +6,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
 ## v2.17.0-dev.2
-### Security
-- Bundled **ADetailer** model downloads now point at a fixed Hugging Face revision instead of the repository's moving `main` branch, so an upstream re-upload can't change what you get - thanks to @ungrav!
 ### Added
 #### New Feature: 📋 Inference Prompt Queue
 - Queue up multiple generations from any Inference tab and run them one after another — a long-requested feature ([#1622](https://github.com/LykosAI/StabilityMatrix/issues/1622)):
@@ -59,6 +57,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Dragging an image layer with the **Move** tool in the layered mask editor now re-renders only the dragged layer instead of re-compositing every layer on each pointer move, so dragging stays smooth in multi-layer projects
 - Faster color-mask extraction for regional prompting — a 1024×1024 canvas with six regions previously did over six million dictionary lookups per extraction
 - Fixed a small native memory leak while drawing with the mouse (a path object per frame was never freed), and removed a redundant full-canvas scan after every paint-bucket fill
+### Security
+- Bundled **ADetailer** model downloads now point at a fixed Hugging Face revision instead of the repository's moving `main` branch, so an upstream re-upload can't change what you get - thanks to @ungrav!
 ### Supporters
 #### 🌟 Visionaries
 The prompt queue has been one of our most requested features ever, and builds like this only happen because our Visionaries give us the freedom to take them on. Thank you **Waterclouds**, **MrMxyzptlk12836**, **Psilocyfer18731**, **bluepopsicle**, **Ibixat**, **Droolguy**, **KalAbaddon**, **LG**, **snotty**, **whudunit**, **cusalapapen1481**, **moon_milky2843**, **SkynetFuture**, and **sn3232323233350** for standing behind us build after build. And to our three newest Visionaries, **tarekk071223**, **CC**, and **SnooSnooEternal**: welcome aboard, it means the world to have you with us. 💛
@@ -98,8 +98,6 @@ This build leans hard into what's next: a live HuggingFace browser and Wan 2.2 v
 
 ## v2.16.2
 > Full technical notes for this release: [docs.lykos.ai/stability-matrix/release-notes/2.16.2](https://docs.lykos.ai/stability-matrix/release-notes/2.16.2)
-### Security
-- Bundled **ADetailer** model downloads now point at a fixed Hugging Face revision instead of the repository's moving `main` branch, so an upstream re-upload can't change what you get - thanks to @ungrav!
 ### Added
 #### New Feature: 📖 In-App Documentation
 - Read the Stability Matrix guides without leaving the app:
@@ -142,6 +140,8 @@ This build leans hard into what's next: a live HuggingFace browser and Wan 2.2 v
 - The **Checkpoints** and **Outputs** galleries now load thumbnails at display size instead of full resolution, using far less memory and scrolling much more smoothly with large libraries
 - The **CivitAI** and **OpenModelDB** browsers now keep card images in memory, so scrolling back over models you've already seen no longer re-loads them from disk
 - Lightened the CivitAI model cards so they render faster while scrolling
+### Security
+- Bundled **ADetailer** model downloads now point at a fixed Hugging Face revision instead of the repository's moving `main` branch, so an upstream re-upload can't change what you get - thanks to @ungrav!
 
 ## v2.16.1
 ### Added

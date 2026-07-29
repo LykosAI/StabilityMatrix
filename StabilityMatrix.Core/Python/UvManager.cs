@@ -163,7 +163,7 @@ public partial class UvManager : IUvManager
             )
             .Select(e => new UvPythonInfo
             {
-                InstallPath = Path.GetDirectoryName(e.Path!) ?? string.Empty,
+                InstallPath = e.Path != null ? (Path.GetDirectoryName(e.Path) ?? string.Empty) : string.Empty,
                 Version = e.VersionParts,
                 Architecture = e.Arch,
                 IsInstalled = e.Path != null,

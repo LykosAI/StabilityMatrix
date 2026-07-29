@@ -1832,4 +1832,31 @@ Account tokens will not be viewable after saving, please make a note of them if 
   <data name="Action_CustomFolderEllipsis" xml:space="preserve">
     <value>Custom...</value>
   </data>
+  <data name="Label_Documentation" xml:space="preserve">
+    <value>Documentation</value>
+  </data>
+  <data name="Label_ViewDocumentation" xml:space="preserve">
+    <value>View documentation</value>
+  </data>
+  <data name="Label_DocumentationNotAvailable" xml:space="preserve">
+    <value>Documentation is not available yet</value>
+  </data>
+  <data name="Label_ZoomIn" xml:space="preserve">
+    <value>Zoom in</value>
+  </data>
+  <data name="Label_ZoomOut" xml:space="preserve">
+    <value>Zoom out</value>
+  </data>
+  <data name="Label_ResetZoom" xml:space="preserve">
+    <value>Reset zoom</value>
+  </data>
+  <data name="Text_DocumentationNotAvailable" xml:space="preserve">
+    <value>The documentation is coming soon. Please check back in a future release.</value>
+  </data>
+  <data name="Error_DocumentationListingLoadFailed" xml:space="preserve">
+    <value>Could not load the documentation listing. Check your connection and try again.</value>
+  </data>
+  <data name="Error_DocumentationPageLoadFailed" xml:space="preserve">
+    <value>Could not load this page. Check your connection and try again.</value>
+  </data>
 </root>

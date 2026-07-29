@@ -34,6 +34,10 @@
         </DrawingImage>
     </controls:AppWindowBase.Resources>
 
+    <controls:AppWindowBase.KeyBindings>
+        <KeyBinding Command="{Binding OpenDocumentationCommand}" Gesture="F1" />
+    </controls:AppWindowBase.KeyBindings>
+
     <Grid RowDefinitions="Auto,Auto,Auto,*">
         <Grid
             Name="TitleBarHost"

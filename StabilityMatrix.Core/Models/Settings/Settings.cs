@@ -260,6 +260,9 @@ public class Settings
 
     public double CivArchiveBrowserResizeFactor { get; set; } = 1.0d;
 
+    /// <summary>Content zoom factor for the in-app documentation viewer (1.0 = 100%).</summary>
+    public double DocumentationZoomFactor { get; set; } = 1.0d;
+
     public bool CivArchiveBrowserFitCardImages { get; set; } = true;
 
     public bool HideEarlyAccessModels { get; set; }

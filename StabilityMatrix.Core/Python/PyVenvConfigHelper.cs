@@ -30,31 +30,33 @@ public static class PyVenvConfigHelper
         foreach (var line in lines)
         {
             var trimmed = line.Trim();
+            var eqIdx = trimmed.IndexOf('=');
 
-            if (trimmed.StartsWith("home", StringComparison.OrdinalIgnoreCase) && trimmed.Contains('='))
+            // Preserve lines without an = sign (comments, blank lines, etc.)
+            if (eqIdx < 0)
+            {
+                sb.AppendLine(line);
+                continue;
+            }
+
+            var key = trimmed.Substring(0, eqIdx).TrimEnd();
+
+            if (key.Equals("home", StringComparison.OrdinalIgnoreCase))
             {
                 sb.AppendLine($"home = {pythonDirectory}");
                 hasHome = true;
             }
-            else if (
-                trimmed.StartsWith("base-prefix", StringComparison.OrdinalIgnoreCase) && trimmed.Contains('=')
-            )
+            else if (key.Equals("base-prefix", StringComparison.OrdinalIgnoreCase))
             {
                 sb.AppendLine($"base-prefix = {pythonDirectory}");
                 hasBasePrefix = true;
             }
-            else if (
-                trimmed.StartsWith("base-exec-prefix", StringComparison.OrdinalIgnoreCase)
-                && trimmed.Contains('=')
-            )
+            else if (key.Equals("base-exec-prefix", StringComparison.OrdinalIgnoreCase))
             {
                 sb.AppendLine($"base-exec-prefix = {pythonDirectory}");
                 hasBaseExecPrefix = true;
             }
-            else if (
-                trimmed.StartsWith("base-executable", StringComparison.OrdinalIgnoreCase)
-                && trimmed.Contains('=')
-            )
+            else if (key.Equals("base-executable", StringComparison.OrdinalIgnoreCase))
             {
                 sb.AppendLine($"base-executable = {baseExecutable}");
                 hasBaseExecutable = true;

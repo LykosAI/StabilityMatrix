@@ -3,7 +3,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using System.Text.Json;
 using NLog;
-using Salaros.Configuration;
 using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
@@ -208,25 +207,12 @@ public class UvVenvRunner : IPyVenvRunner
 
         Logger.Info("Updating pyvenv.cfg with embedded Python directory {PyDir}", pythonDirectory);
 
-        // Insert a top section
-        var topSection = "[top]" + Environment.NewLine;
-        var cfg = new ConfigParser(topSection + File.ReadAllText(cfgPath));
-
-        // Need to set all path keys - home, base-prefix, base-exec-prefix, base-executable
-        cfg.SetValue("top", "home", pythonDirectory);
-        cfg.SetValue("top", "base-prefix", pythonDirectory);
-
-        cfg.SetValue("top", "base-exec-prefix", pythonDirectory);
-
-        cfg.SetValue(
-            "top",
-            "base-executable",
-            Path.Combine(pythonDirectory, Compat.IsWindows ? "python.exe" : RelativePythonPath)
+        var baseExecutable = Path.Combine(
+            pythonDirectory,
+            Compat.IsWindows ? "python.exe" : RelativePythonPath
         );
 
-        // Convert to string for writing, strip the top section
-        var cfgString = cfg.ToString()!.Replace(topSection, "");
-        File.WriteAllText(cfgPath, cfgString);
+        PyVenvConfigHelper.WritePyVenvCfg(cfgPath, pythonDirectory, baseExecutable);
 
         // Update last set path
         lastSetPyvenvCfgPath = pythonDirectory;

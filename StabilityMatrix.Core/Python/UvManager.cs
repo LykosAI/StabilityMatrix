@@ -149,15 +149,21 @@ public partial class UvManager : IUvManager
             return pythons.AsReadOnly();
         }
 
+        // When only installed Pythons are requested, exclude entries with no path (not installed).
+        // Also guard against null paths reaching PyInstallation constructor which throws ArgumentException.
         var filteredPythons = uvPythonListEntries
-            .Where(e => e.Path == null || e.Path.StartsWith(uvPythonInstallPath))
+            .Where(e =>
+                installedOnly
+                    ? e.Path != null && e.Path.StartsWith(uvPythonInstallPath)
+                    : e.Path == null || e.Path.StartsWith(uvPythonInstallPath)
+            )
             .Where(e =>
                 settingsManager.Settings.ShowAllAvailablePythonVersions
                 || (!e.Version.Contains("a") && !e.Version.Contains("b"))
             )
             .Select(e => new UvPythonInfo
             {
-                InstallPath = Path.GetDirectoryName(e.Path) ?? string.Empty,
+                InstallPath = Path.GetDirectoryName(e.Path!) ?? string.Empty,
                 Version = e.VersionParts,
                 Architecture = e.Arch,
                 IsInstalled = e.Path != null,
@@ -287,6 +293,10 @@ public partial class UvManager : IUvManager
         Logger.Debug($"Attempting fallback path discovery in central directory: {uvPythonInstallPath}");
         try
         {
+            // Build a version prefix that won't accidentally match higher minor/patch versions.
+            // e.g. "3.12." so that "cpython-3.12.10" matches but "cpython-3.13.12" does not.
+            var versionPrefix = $"{version.Major}.{version.Minor}.";
+
             var subdirectories = Directory.GetDirectories(uvPythonInstallPath);
             var potentialDirs = subdirectories
                 .Select(dir => new { Path = dir, DirInfo = new DirectoryInfo(dir) })
@@ -294,7 +304,13 @@ public partial class UvManager : IUvManager
                     x.DirInfo.Name.StartsWith("cpython-", StringComparison.OrdinalIgnoreCase)
                     || x.DirInfo.Name.StartsWith("pypy-", StringComparison.OrdinalIgnoreCase)
                 )
-                .Where(x => x.DirInfo.Name.Contains($"{version.Major}.{version.Minor}"))
+                .Where(x =>
+                    x.DirInfo.Name.Contains(versionPrefix)
+                    || x.DirInfo.Name.EndsWith(
+                        $"-{version.Major}.{version.Minor}",
+                        StringComparison.OrdinalIgnoreCase
+                    )
+                )
                 .OrderByDescending(x => x.DirInfo.CreationTimeUtc)
                 .ToList();
 

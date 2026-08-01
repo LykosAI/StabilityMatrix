@@ -2,8 +2,8 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
+using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Models.Inference;
-using StabilityMatrix.Avalonia.ViewModels.Inference;
 using StabilityMatrix.Core.Models.Inference;
 
 namespace StabilityMatrix.Avalonia.Models;
@@ -14,8 +14,11 @@ namespace StabilityMatrix.Avalonia.Models;
 public class InferenceProjectDocument : ICloneable
 {
     [JsonIgnore]
-    private static readonly JsonSerializerOptions SerializerOptions =
-        new() { IgnoreReadOnlyProperties = true, WriteIndented = true, };
+    private static readonly JsonSerializerOptions SerializerOptions = new()
+    {
+        IgnoreReadOnlyProperties = true,
+        WriteIndented = true,
+    };
 
     public int Version { get; set; } = 2;
 
@@ -24,21 +27,18 @@ public class InferenceProjectDocument : ICloneable
 
     public JsonObject? State { get; set; }
 
+    /// <summary>
+    /// Serialized dock layout of the tab's view, if the project was saved with one.
+    /// Optional: older app versions ignore it and projects load fine without it.
+    /// </summary>
+    public JsonObject? DockLayout { get; set; }
+
     public static InferenceProjectDocument FromLoadable(IJsonLoadableState loadableModel)
     {
         return new InferenceProjectDocument
         {
-            ProjectType = loadableModel switch
-            {
-                InferenceImageToImageViewModel => InferenceProjectType.ImageToImage,
-                InferenceTextToImageViewModel => InferenceProjectType.TextToImage,
-                InferenceImageUpscaleViewModel => InferenceProjectType.Upscale,
-                InferenceImageToVideoViewModel => InferenceProjectType.ImageToVideo,
-                InferenceFluxTextToImageViewModel => InferenceProjectType.FluxTextToImage,
-                InferenceWanImageToVideoViewModel => InferenceProjectType.WanImageToVideo,
-                InferenceWanTextToVideoViewModel => InferenceProjectType.WanTextToVideo
-            },
-            State = loadableModel.SaveStateToJsonObject()
+            ProjectType = loadableModel.ToProjectType(),
+            State = loadableModel.SaveStateToJsonObject(),
         };
     }
 

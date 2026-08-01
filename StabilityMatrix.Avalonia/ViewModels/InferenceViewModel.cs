@@ -6,6 +6,7 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
@@ -21,6 +22,7 @@ using Injectio.Attributes;
 using Microsoft.Extensions.DependencyInjection;
 using NLog;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Controls.Dock;
 using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Languages;
@@ -324,6 +326,18 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
     /// </summary>
     public async ValueTask DisposeAsync()
     {
+        // App shutdown never closes the window through the visual tree (services are disposed
+        // and the process exits instead), so views don't get their detach-time layout save.
+        // Capture dock layouts here while the visual tree is still alive; the selected tab
+        // goes last so its layout wins for its project type.
+        foreach (var tab in Tabs.ToImmutableArray().OrderBy(tab => tab == SelectedTab))
+        {
+            if (((IPersistentViewProvider)tab).AttachedPersistentView is DockUserControlBase dockView)
+            {
+                dockView.PersistDefaultTypeLayout();
+            }
+        }
+
         await SyncTabStatesWithDatabase();
 
         foreach (var scope in scopes)
@@ -597,6 +611,11 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
 
         var document = InferenceProjectDocument.FromLoadable(currentTab);
 
+        if (await currentTab.TrySaveViewStateAsync() is { DockLayout: { } dockLayout })
+        {
+            document.DockLayout = JsonNode.Parse(dockLayout) as JsonObject;
+        }
+
         // Save to file
         try
         {
@@ -648,6 +667,11 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
 
         // Otherwise, save to the current project file
         var document = InferenceProjectDocument.FromLoadable(currentTab);
+
+        if (await currentTab.TrySaveViewStateAsync() is { DockLayout: { } dockLayout })
+        {
+            document.DockLayout = JsonNode.Parse(dockLayout) as JsonObject;
+        }
 
         // Save to file
         try
@@ -892,6 +916,11 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
 
         vm.LoadStateFromJsonObject(document.State);
         vm.ProjectFile = file;
+
+        if (document.DockLayout is { } dockLayout)
+        {
+            vm.PendingViewState = new ViewState { DockLayout = dockLayout.ToJsonString() };
+        }
 
         Tabs.Add(vm);
 

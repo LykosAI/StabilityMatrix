@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using FluentIcons.Common;
 using StabilityMatrix.Avalonia.Languages;
+using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
 using StabilityMatrix.Core.Models.Inference;
@@ -25,6 +26,25 @@ public static class InferenceProjectTypeExtensions
             InferenceProjectType.WanImageToVideo => typeof(InferenceWanImageToVideoViewModel),
             InferenceProjectType.Unknown => null,
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, null),
+        };
+    }
+
+    /// <summary>
+    /// Maps a loadable inference view model back to its project type.
+    /// Pattern order matters: derived view models must precede their bases.
+    /// </summary>
+    public static InferenceProjectType ToProjectType(this IJsonLoadableState loadableModel)
+    {
+        return loadableModel switch
+        {
+            InferenceImageToImageViewModel => InferenceProjectType.ImageToImage,
+            InferenceFluxTextToImageViewModel => InferenceProjectType.FluxTextToImage,
+            InferenceTextToImageViewModel => InferenceProjectType.TextToImage,
+            InferenceImageUpscaleViewModel => InferenceProjectType.Upscale,
+            InferenceImageToVideoViewModel => InferenceProjectType.ImageToVideo,
+            InferenceWanImageToVideoViewModel => InferenceProjectType.WanImageToVideo,
+            InferenceWanTextToVideoViewModel => InferenceProjectType.WanTextToVideo,
+            _ => InferenceProjectType.Unknown,
         };
     }
 

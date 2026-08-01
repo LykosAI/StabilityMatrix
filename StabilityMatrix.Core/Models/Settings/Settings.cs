@@ -316,6 +316,12 @@ public class Settings
 
     public int InferenceDimensionStepChange { get; set; } = 128;
 
+    /// <summary>
+    /// Last-used Inference dock layouts (serialized Dock layout JSON) keyed by
+    /// <see cref="Inference.InferenceProjectType"/> name, applied to new tabs of that type.
+    /// </summary>
+    public Dictionary<string, string> InferenceDockLayouts { get; set; } = [];
+
     [JsonIgnore]
     public bool IsHolidayModeActive =>
         HolidayModeSetting == HolidayMode.Automatic

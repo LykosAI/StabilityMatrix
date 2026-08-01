@@ -34,6 +34,13 @@ public abstract class DockUserControlBase : DropTargetUserControlBase
     private bool hasAppliedPersistedLayout;
 
     /// <summary>
+    /// Resolved once while the view is attached. Layout persistence also runs during app
+    /// shutdown, inside the service provider's own dispose, where resolving services throws
+    /// ObjectDisposedException - so it must never be resolved at persist time.
+    /// </summary>
+    private ISettingsManager? settingsManager;
+
+    /// <summary>
     /// Serialized snapshot of the XAML-defined layout, captured before any persisted layout is
     /// applied. Restore-default must go through a snapshot: the layout object tree is mutated
     /// in place by user drag operations, so holding a reference to it cannot restore anything.
@@ -66,6 +73,11 @@ public abstract class DockUserControlBase : DropTargetUserControlBase
     protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
     {
         base.OnAttachedToVisualTree(e);
+
+        if (!Design.IsDesignMode)
+        {
+            settingsManager ??= App.Services.GetRequiredService<ISettingsManager>();
+        }
 
         // Attach handlers for view state saving and loading
         if (DataContext is InferenceTabViewModelBase vm)
@@ -135,10 +147,8 @@ public abstract class DockUserControlBase : DropTargetUserControlBase
                 return;
         }
 
-        if (GetLayoutKey() is { } key)
+        if (GetLayoutKey() is { } key && settingsManager is not null)
         {
-            var settingsManager = App.Services.GetRequiredService<ISettingsManager>();
-
             if (settingsManager.Settings.InferenceDockLayouts.GetValueOrDefault(key) is { } layoutJson)
             {
                 TryLoadDockLayout(layoutJson);
@@ -152,7 +162,7 @@ public abstract class DockUserControlBase : DropTargetUserControlBase
     /// </summary>
     internal void PersistDefaultTypeLayout()
     {
-        if (Design.IsDesignMode || baseDock?.Layout is null)
+        if (Design.IsDesignMode || baseDock?.Layout is null || settingsManager is null)
             return;
 
         if (GetLayoutKey() is not { } key)
@@ -162,8 +172,6 @@ public abstract class DockUserControlBase : DropTargetUserControlBase
         {
             if (SaveDockLayout() is not { } layoutJson)
                 return;
-
-            var settingsManager = App.Services.GetRequiredService<ISettingsManager>();
 
             if (settingsManager.Settings.InferenceDockLayouts.GetValueOrDefault(key) == layoutJson)
                 return;
@@ -184,13 +192,11 @@ public abstract class DockUserControlBase : DropTargetUserControlBase
         if (defaultLayoutJson is null || !TryLoadDockLayout(defaultLayoutJson))
             return;
 
-        if (Design.IsDesignMode || GetLayoutKey() is not { } key)
+        if (Design.IsDesignMode || GetLayoutKey() is not { } key || settingsManager is null)
             return;
 
         try
         {
-            var settingsManager = App.Services.GetRequiredService<ISettingsManager>();
-
             if (settingsManager.Settings.InferenceDockLayouts.ContainsKey(key))
             {
                 settingsManager.Transaction(s => s.InferenceDockLayouts.Remove(key));

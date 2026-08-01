@@ -150,7 +150,7 @@ public abstract class DockUserControlBase : DropTargetUserControlBase
     /// Remembers the current layout as the default for this tab's project type,
     /// so new tabs of the same type open with it.
     /// </summary>
-    private void PersistDefaultTypeLayout()
+    internal void PersistDefaultTypeLayout()
     {
         if (Design.IsDesignMode || baseDock?.Layout is null)
             return;

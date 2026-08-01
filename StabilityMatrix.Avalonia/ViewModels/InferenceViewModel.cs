@@ -22,6 +22,7 @@ using Injectio.Attributes;
 using Microsoft.Extensions.DependencyInjection;
 using NLog;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Controls.Dock;
 using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Languages;
@@ -325,6 +326,18 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
     /// </summary>
     public async ValueTask DisposeAsync()
     {
+        // App shutdown never closes the window through the visual tree (services are disposed
+        // and the process exits instead), so views don't get their detach-time layout save.
+        // Capture dock layouts here while the visual tree is still alive; the selected tab
+        // goes last so its layout wins for its project type.
+        foreach (var tab in Tabs.ToImmutableArray().OrderBy(tab => tab == SelectedTab))
+        {
+            if (((IPersistentViewProvider)tab).AttachedPersistentView is DockUserControlBase dockView)
+            {
+                dockView.PersistDefaultTypeLayout();
+            }
+        }
+
         await SyncTabStatesWithDatabase();
 
         foreach (var scope in scopes)

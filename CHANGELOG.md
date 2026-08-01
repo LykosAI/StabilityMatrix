@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ## v2.17.0-dev.3
 ### Added
 #### New Feature: 🧩 Persistent Inference Layouts
-- Rearranged panes in Inference now stick — a feature requested for over a year ([#1340](https://github.com/LykosAI/StabilityMatrix/issues/1340)):
+- Rearranged panes in Inference now stick — one of our most-asked-for features, on Discord, GitHub ([#1340](https://github.com/LykosAI/StabilityMatrix/issues/1340)), and our feature tracker alike:
   - Move and resize panes in any Inference tab and the arrangement is remembered for that tab type, including across restarts — new tabs of the same type open with your layout
   - **Saving a project** stores the layout in the `.smproj` file, so every project can keep its own arrangement and it comes back when you reopen it
   - **Restore Default Layout** now resets the current tab in place (no more page flicker) and returns that tab type to the standard arrangement

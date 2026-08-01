@@ -44,14 +44,14 @@
                         <ToolDock
                             x:Name="SelectImagePane"
                             Alignment="Left"
-                            Id="ConfigPane"
+                            Id="SelectImagePane"
                             Proportion="0.3">
                             <Tool
                                 x:Name="SelectImageTool"
                                 Title="Image Input"
                                 x:DataType="Tool"
                                 CanClose="False"
-                                Id="ConfigTool">
+                                Id="SelectImageTool">
                                 <controls:SelectImageCard DataContext="{Binding #Dock.((vmInference:InferenceImageToVideoViewModel)DataContext).SelectImageCardViewModel}" />
                             </Tool>
                         </ToolDock>
@@ -112,7 +112,7 @@
                         <ToolDock
                             x:Name="GeneratePane"
                             Alignment="Top"
-                            Id="ConfigPane"
+                            Id="GeneratePane"
                             Proportion="0.1">
                             <Tool
                                 x:Name="GenerateTool"

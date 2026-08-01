@@ -91,7 +91,7 @@
                         <ToolDock
                             x:Name="GeneratePane"
                             Alignment="Left"
-                            Id="PromptPane"
+                            Id="GeneratePane"
                             Proportion="0.1">
                             <Tool
                                 x:Name="GenerateTool"

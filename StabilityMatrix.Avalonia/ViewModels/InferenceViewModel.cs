@@ -6,6 +6,7 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
@@ -597,6 +598,11 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
 
         var document = InferenceProjectDocument.FromLoadable(currentTab);
 
+        if (await currentTab.TrySaveViewStateAsync() is { DockLayout: { } dockLayout })
+        {
+            document.DockLayout = JsonNode.Parse(dockLayout) as JsonObject;
+        }
+
         // Save to file
         try
         {
@@ -648,6 +654,11 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
 
         // Otherwise, save to the current project file
         var document = InferenceProjectDocument.FromLoadable(currentTab);
+
+        if (await currentTab.TrySaveViewStateAsync() is { DockLayout: { } dockLayout })
+        {
+            document.DockLayout = JsonNode.Parse(dockLayout) as JsonObject;
+        }
 
         // Save to file
         try
@@ -892,6 +903,11 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
 
         vm.LoadStateFromJsonObject(document.State);
         vm.ProjectFile = file;
+
+        if (document.DockLayout is { } dockLayout)
+        {
+            vm.PendingViewState = new ViewState { DockLayout = dockLayout.ToJsonString() };
+        }
 
         Tabs.Add(vm);
 

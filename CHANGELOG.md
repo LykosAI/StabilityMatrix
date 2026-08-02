@@ -48,8 +48,6 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - The **Checkpoints** and **Outputs** galleries now load thumbnails at display size instead of full resolution, using far less memory and scrolling much more smoothly with large libraries
 - The **CivitAI** and **OpenModelDB** browsers now keep card images in memory, so scrolling back over models you've already seen no longer re-loads them from disk
 - Lightened the CivitAI model cards so they render faster while scrolling
-<<<<<<< HEAD
-=======
 ### Security
 - Bundled **ADetailer** model downloads now point at a fixed Hugging Face revision instead of the repository's moving `main` branch, so an upstream re-upload can't change what you get - thanks to @ungrav!
 ### Supporters
@@ -57,7 +55,6 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 There's not much glamour in a release like this one: crashes hunted down in the mask editor, downloads finally landing in the folders they belong in, Linux installs that just start. Our Visionaries are the reason we can hand a whole cycle to that kind of work, and to writing the documentation that now lives inside the app. Thank you **Waterclouds**, **MrMxyzptlk12836**, **Psilocyfer18731**, **bluepopsicle**, **Ibixat**, **Droolguy**, **KalAbaddon**, **LG**, **snotty**, **whudunit**, **cusalapapen1481**, and **moon_milky2843** for backing the unglamorous parts as generously as the exciting ones. And a warm welcome to **tarekk071223**, **CC**, and **SnooSnooEternal**, the newest names on this list; it's genuinely good to have you here. 💛
 #### 🚀 Pioneers
 Our Pioneers hold up the other half of this, and what a steady crew you are: **Szir777**, **[USA]TechDude**, **SinthCore**, **Jisuren**, **Tigon**, **jweg79**, **rwx14662**, **Hurbie53**, **ahnhj.al**, **drew.lukas**, **Tuskaruho**, **Cjloha**, **Alligator1907**, **Bitti**, **Ghislain G**, **CommissarGiygas16050**, **qob97515211**, **bastardofbethlehem**, and **Zombop**, thank you for sticking around release after release. A big hello as well to **Silerae**, **joshsciascia72**, and **rad64741317**, who join the Pioneers this time; we're really happy you're with us. Every fix in this changelog has a bit of all of you behind it. 💛
->>>>>>> 6e2a64e3 (Merge pull request #1320 from ionite34/changelog/v2.16.2-shoutouts)
 
 ## v2.16.1
 ### Added

@@ -195,7 +195,7 @@ public partial class WanModelCardViewModel(
                 }
             );
         }
-
+        
         var modelSamplingSd3 = e.Nodes.AddTypedNode(
             new ComfyNodeBuilder.ModelSamplingSD3
             {
@@ -206,19 +206,34 @@ public partial class WanModelCardViewModel(
         );
 
         e.Builder.Connections.Base.Model = modelSamplingSd3.Output;
+        
+        var clipName =
+            SelectedClipModel?.RelativePath ?? throw new ValidationException("No Clip Model Selected");
 
-        var clipLoader = e.Nodes.AddTypedNode(
-            new ComfyNodeBuilder.CLIPLoader
-            {
-                Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.CLIPLoader)),
-                ClipName =
-                    SelectedClipModel?.RelativePath
-                    ?? throw new ValidationException("No Clip Model Selected"),
-                Type = "wan",
-            }
-        );
+        // The GGUF loader variant can also load .safetensors encoders
+        var clipOutput = SelectedClipModel is { IsGguf: true }
+            ? e
+                .Nodes.AddTypedNode(
+                    new ComfyNodeBuilder.CLIPLoaderGGUF
+                    {
+                        Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.CLIPLoaderGGUF)),
+                        ClipName = clipName,
+                        Type = "wan",
+                    }
+                )
+                .Output
+            : e
+                .Nodes.AddTypedNode(
+                    new ComfyNodeBuilder.CLIPLoader
+                    {
+                        Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.CLIPLoader)),
+                        ClipName = clipName,
+                        Type = "wan",
+                    }
+                )
+                .Output;
 
-        e.Builder.Connections.Base.Clip = clipLoader.Output;
+        e.Builder.Connections.Base.Clip = clipOutput;
 
         var vaeLoader = e.Nodes.AddTypedNode(
             new ComfyNodeBuilder.VAELoader

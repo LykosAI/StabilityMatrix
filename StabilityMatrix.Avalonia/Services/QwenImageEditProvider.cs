@@ -10,8 +10,10 @@ namespace StabilityMatrix.Avalonia.Services;
 /// </summary>
 public class QwenImageEditProvider(
     ILogger<QwenImageEditProvider> logger,
-    IInferenceClientManager clientManager
-) : ComfyImageGenerationProviderBase(logger, clientManager)
+    IInferenceClientManager clientManager,
+    RunningPackageService runningPackageService,
+    INotificationService notificationService
+) : ComfyImageGenerationProviderBase(logger, clientManager, runningPackageService, notificationService)
 {
     public override string ProviderId => BananaVisionProviderIds.QwenImageEdit;
     public override string ProviderName => "Qwen Image Edit (Local)";

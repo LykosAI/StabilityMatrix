@@ -520,11 +520,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         // Get CLIP model names from DualCLIPLoader node
         if (await Client.GetNodeOptionNamesAsync("DualCLIPLoader", "clip_name1") is { } clipModelNames)
         {
-            IEnumerable<HybridModelFile> models =
-            [
-                HybridModelFile.None,
-                .. clipModelNames.Select(HybridModelFile.FromRemote),
-            ];
+            var remoteNames = clipModelNames.ToHashSet();
 
             if (
                 await Client.GetRequiredNodeOptionNamesFromOptionalNodeAsync(
@@ -534,8 +530,28 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
                 { } ggufClipModelNames
             )
             {
-                models = models.Concat(ggufClipModelNames.Select(HybridModelFile.FromRemote));
+                remoteNames.UnionWith(ggufClipModelNames);
             }
+
+            // Prefer local index entries (richer metadata), and keep local files the server
+            // didn't report: core ComfyUI never lists .gguf text encoders (only the optional
+            // DualCLIPLoaderGGUF node does), but the shared TextEncoders folder is synced to
+            // the package, so they're loadable via the GGUF clip loaders once installed.
+            var localModels = modelIndexService
+                .FindByModelType(SharedFolderType.TextEncoders)
+                .Select(HybridModelFile.FromLocal)
+                .ToList();
+
+            var localIds = localModels.Select(m => m.GetId()).ToHashSet();
+
+            IEnumerable<HybridModelFile> models =
+            [
+                HybridModelFile.None,
+                .. localModels,
+                .. remoteNames
+                    .Select(HybridModelFile.FromRemote)
+                    .Where(remote => !localIds.Contains(remote.GetId())),
+            ];
 
             clipModelsSource.EditDiff(models, HybridModelFile.RemoteLocalComparer);
         }
@@ -815,7 +831,11 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
     }
 
     [MemberNotNull(nameof(Client))]
-    private async Task ConnectAsyncImpl(Uri uri, CancellationToken cancellationToken = default)
+    private async Task ConnectAsyncImpl(
+        Uri uri,
+        PackagePair? localServerPackage = null,
+        CancellationToken cancellationToken = default
+    )
     {
         if (IsConnected)
             return;
@@ -829,6 +849,16 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
 
             await tempClient.ConnectAsync(cancellationToken);
             logger.LogDebug("Connected to {@Uri}", uri);
+
+            // Set local server paths before publishing the client as connected, so that
+            // consumers observing IsConnected always see a fully-populated client (e.g.
+            // OutputImagesDir). Otherwise a generation resuming on the IsConnected change
+            // could race ahead of these being set.
+            if (localServerPackage is not null)
+            {
+                tempClient.LocalServerPackage = localServerPackage;
+                tempClient.LocalServerPath = localServerPackage.InstalledPackage.FullPath!;
+            }
 
             Client = tempClient;
 
@@ -884,7 +914,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
     /// <inheritdoc />
     public virtual Task ConnectAsync(CancellationToken cancellationToken = default)
     {
-        return ConnectAsyncImpl(new Uri("http://127.0.0.1:8188"), cancellationToken);
+        return ConnectAsyncImpl(new Uri("http://127.0.0.1:8188"), cancellationToken: cancellationToken);
     }
 
     /// <inheritdoc />
@@ -927,10 +957,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
 
         var uri = new UriBuilder("http", host, int.Parse(port)).Uri;
 
-        await ConnectAsyncImpl(uri, cancellationToken);
-
-        Client.LocalServerPackage = packagePair;
-        Client.LocalServerPath = packagePair.InstalledPackage.FullPath!;
+        await ConnectAsyncImpl(uri, packagePair, cancellationToken);
     }
 
     public async Task CloseAsync()

@@ -202,6 +202,18 @@ public partial class CivitDetailsPageViewModel(
             {
                 CivitModel = await civitApi.GetModelById(CivitModel.Id);
             }
+            catch (ApiException e) when (e.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                // Model page was deleted from CivitAI — fall through to render whatever local
+                // data we were navigated with instead of leaving a dead page (GH #1695).
+                logger.LogWarning("CivitModel {Id} no longer exists on CivitAI (404)", CivitModel.Id);
+                notificationService.Show(
+                    "Model removed from CivitAI",
+                    "This model's page no longer exists on CivitAI. Showing locally cached info. "
+                        + "You can right-click the model card and select \"Disconnect from Source\" to stop seeing this.",
+                    NotificationType.Warning
+                );
+            }
             catch (Exception e)
             {
                 logger.LogError(e, "Failed to load CivitModel {Id}", CivitModel.Id);
@@ -210,7 +222,6 @@ public partial class CivitDetailsPageViewModel(
                     e.Message,
                     NotificationType.Error
                 );
-                return;
             }
         }
 
@@ -777,11 +788,35 @@ public partial class CivitDetailsPageViewModel(
     private async Task NavigateToModelByIndexOffset(int offset)
     {
         var newIndex = CurrentIndex + offset;
-        var modelId = ModelIdList[newIndex];
 
-        try
+        while (newIndex >= 0 && newIndex < ModelIdList.Count)
         {
-            var newModel = await civitApi.GetModelById(modelId);
+            var modelId = ModelIdList[newIndex];
+
+            CivitModel newModel;
+            try
+            {
+                newModel = await civitApi.GetModelById(modelId);
+            }
+            catch (ApiException e) when (e.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                // Model page was deleted from CivitAI — skip past it in the same direction
+                // instead of getting stuck on an error at this index (GH #1695)
+                logger.LogWarning("CivitModel {Id} no longer exists on CivitAI (404); skipping", modelId);
+                newIndex += Math.Sign(offset);
+                continue;
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, "Failed to load CivitModel {Id}", modelId);
+                notificationService.Show(
+                    Resources.Label_UnexpectedErrorOccurred,
+                    e.Message,
+                    NotificationType.Error
+                );
+                return;
+            }
+
             CivitModel = newModel;
             CurrentIndex = newIndex;
 
@@ -796,16 +831,14 @@ public partial class CivitDetailsPageViewModel(
             ModelVersionDescription = string.IsNullOrWhiteSpace(SelectedVersion?.ModelVersion.Description)
                 ? string.Empty
                 : $"""<html><body class="markdown-body">{SelectedVersion.ModelVersion.Description}</body></html>""";
+            return;
         }
-        catch (Exception e)
-        {
-            logger.LogError(e, "Failed to load CivitModel {Id}", modelId);
-            notificationService.Show(
-                Resources.Label_UnexpectedErrorOccurred,
-                e.Message,
-                NotificationType.Error
-            );
-        }
+
+        notificationService.Show(
+            "Model removed from CivitAI",
+            "The remaining models in this direction are no longer available on CivitAI.",
+            NotificationType.Warning
+        );
     }
 
     private void VmOnNavigateToModelRequested(object? sender, int modelId)

@@ -69,6 +69,12 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
     public bool HasEarlyAccessUpdateOnly => CheckpointFile.HasEarlyAccessUpdateOnly;
     public bool HasStandardUpdate => CheckpointFile.HasUpdate && !CheckpointFile.HasEarlyAccessUpdateOnly;
 
+    public bool CanDisconnect =>
+        CheckpointFile.HasCivitMetadata
+        || CheckpointFile.HasOpenModelDbMetadata
+        || CheckpointFile.HasCivArchiveMetadata
+        || CheckpointFile.ConnectedModelInfo?.SourceUrl is not null;
+
     /// <inheritdoc/>
     public CheckpointFileViewModel(
         ISettingsManager settingsManager,
@@ -216,6 +222,67 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
         finally
         {
             IsLoading = false;
+        }
+    }
+
+    /// <summary>
+    /// Severs the link to the remote source (e.g. a CivitAI page that has since been deleted)
+    /// while keeping the local metadata (name, description, thumbnail, trigger words) as
+    /// custom metadata. After this, clicking the card selects it instead of opening the
+    /// remote details page.
+    /// </summary>
+    [RelayCommand]
+    private async Task DisconnectConnectedModelAsync()
+    {
+        if (CheckpointFile.ConnectedModelInfo is not { } cmInfo)
+            return;
+
+        var dialog = new ContentDialog
+        {
+            Title = "Disconnect from source",
+            Content =
+                "This removes the link to the model's original page (e.g. CivitAI), so clicking the card "
+                + "will no longer try to open it. The local metadata — name, description, thumbnail and "
+                + "trigger words — is kept and stays editable via Edit Metadata.",
+            PrimaryButtonText = Resources.Action_Disconnect,
+            CloseButtonText = Resources.Action_Cancel,
+            DefaultButton = ContentDialogButton.Close,
+        };
+
+        if (await dialog.ShowAsync() != ContentDialogResult.Primary)
+            return;
+
+        try
+        {
+            cmInfo.ModelId = null;
+            cmInfo.VersionId = null;
+            cmInfo.RemoteFileId = null;
+            cmInfo.SourceUrl = null;
+            // Click dispatch and source badges key off Source (OpenModelDb/CivArchive don't use
+            // integer ids), so clearing the ids alone wouldn't sever those — null means "custom".
+            cmInfo.Source = null;
+
+            var modelFilePath = new FilePath(
+                Path.Combine(settingsManager.ModelsDirectory, CheckpointFile.RelativePath)
+            );
+            var modelFolder =
+                modelFilePath.Directory
+                ?? Path.Combine(settingsManager.ModelsDirectory, CheckpointFile.SharedFolderType.ToString());
+
+            await cmInfo.SaveJsonToDirectory(modelFolder, modelFilePath.NameWithoutExtension);
+
+            await modelIndexService.RefreshIndex();
+
+            notificationService.Show(
+                "Model disconnected",
+                $"\"{CheckpointFile.DisplayModelName}\" is no longer linked to its original page.",
+                NotificationType.Success
+            );
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "Failed to disconnect model {Name}", CheckpointFile.RelativePath);
+            notificationService.Show("Failed to disconnect model", e.Message, NotificationType.Error);
         }
     }
 

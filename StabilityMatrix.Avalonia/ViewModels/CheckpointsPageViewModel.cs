@@ -685,7 +685,12 @@ public partial class CheckpointsPageViewModel(
         // Select item if we're in "select mode"
         if (NumItemsSelected > 0)
             item.IsSelected = !item.IsSelected;
-        else if (item.CheckpointFile.HasConnectedModel)
+        else if (
+            item.CheckpointFile
+            is { HasCivitMetadata: true }
+                or { HasOpenModelDbMetadata: true }
+                or { HasCivArchiveMetadata: true }
+        )
             return ShowVersionDialog(item);
         else
             item.IsSelected = !item.IsSelected;

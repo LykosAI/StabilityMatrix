@@ -13,6 +13,12 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
   - **Saving a project** stores the layout in the `.smproj` file, so every project can keep its own arrangement and it comes back when you reopen it
   - **Restore Default Layout** now resets the current tab in place (no more page flicker) and returns that tab type to the standard arrangement
   - Existing project files are unaffected and keep opening exactly as before
+### Fixed
+- Fixed the Model Browser failing with "CivitAI can't be reached right now (OK: OK)" — CivitAI recently started returning `null` for some model statistics (download counts, ratings), which broke loading the whole page of results. Missing stats are now read as 0
+- Fixed [#1695](https://github.com/LykosAI/StabilityMatrix/issues/1695) - models whose CivitAI page has since been deleted showing an error dialog on every click, with no way to break the link:
+  - The model details page now shows locally cached info instead of a dead page when the CivitAI page is gone
+  - **Next/Previous** on the details page skip over deleted models instead of getting stuck on an error
+  - New right-click **Disconnect from Source** action on Checkpoint Manager cards severs the link to the deleted page while keeping the local metadata (name, description, thumbnail, trigger words) — after disconnecting, clicking the card selects it like any other local model
 
 ## v2.17.0-dev.2
 ### Added

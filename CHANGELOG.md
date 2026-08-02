@@ -5,115 +5,6 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
-<<<<<<< HEAD
-=======
-## v2.17.0-dev.3
-### Added
-#### New Feature: 🧩 Persistent Inference Layouts
-- Rearranged panes in Inference now stick — one of our most-asked-for features, on Discord, GitHub ([#1340](https://github.com/LykosAI/StabilityMatrix/issues/1340)), and our feature tracker ([1](https://lykos.ai/feature/8f55f8d5-c25a-437f-a2ba-4093e3984754), [2](https://lykos.ai/feature/c407cc98-e355-4e8d-98a5-23be854ed6c0)) alike:
-  - Move and resize panes in any Inference tab and the arrangement is remembered for that tab type, including across restarts — new tabs of the same type open with your layout
-  - **Saving a project** stores the layout in the `.smproj` file, so every project can keep its own arrangement and it comes back when you reopen it
-  - **Restore Default Layout** now resets the current tab in place (no more page flicker) and returns that tab type to the standard arrangement
-  - Existing project files are unaffected and keep opening exactly as before
-### Fixed
-- Fixed the Model Browser failing with "CivitAI can't be reached right now (OK: OK)" — CivitAI recently started returning `null` for some model statistics (download counts, ratings), which broke loading the whole page of results. Missing stats are now read as 0
-- Fixed [#1695](https://github.com/LykosAI/StabilityMatrix/issues/1695) - models whose CivitAI page has since been deleted showing an error dialog on every click, with no way to break the link:
-  - The model details page now shows locally cached info instead of a dead page when the CivitAI page is gone
-  - **Next/Previous** on the details page skip over deleted models instead of getting stuck on an error
-  - New right-click **Disconnect from Source** action on Checkpoint Manager cards severs the link to the deleted page while keeping the local metadata (name, description, thumbnail, trigger words) — after disconnecting, clicking the card selects it like any other local model
-
-## v2.17.0-dev.2
-### Added
-#### New Feature: 📋 Inference Prompt Queue
-- Queue up multiple generations from any Inference tab and run them one after another — a long-requested feature ([#1622](https://github.com/LykosAI/StabilityMatrix/issues/1622)):
-  - **Add to Queue** sits next to Generate (and in the tab's overflow menu) in every generation tab — Text-to-Image, Image-to-Image, Flux, Upscale, and the video tabs. The Generate button itself is unchanged; queueing is a separate action
-  - Queue items store the full project state, not a baked workflow — **Open in tab** re-opens any item as a real Inference tab for tweaking and re-queueing
-  - Cards show a prompt snippet, compact parameters, a status badge, live progress and preview while running, and the finished thumbnail when done (click it to open the full image viewer)
-  - Manage the queue freely: reorder, remove, cancel the running item, **re-queue** finished/failed/cancelled items (or re-queue all finished), and clear finished or pending items
-  - **Start** auto-connects to ComfyUI if it's already running, or shows the usual launch prompt if it isn't; **Pause** finishes the current item before stopping
-  - The queue is saved to your library folder and survives restarts — interrupted items come back as Pending, and finished items keep their thumbnails
-#### New Feature: 📖 In-App Documentation
-- Read the Stability Matrix guides without leaving the app:
-  - Press **F1** from anywhere, or open it from **Settings → About → Documentation**
-  - New **?** buttons on the Package Manager, install details, the running package console, Inference, and the Environment Variables and App Folders settings open the page for what you're looking at
-  - Browse every section from a nav tree, follow links between pages, and zoom the text in or out — your zoom level is remembered
-  - Pages are read live from [docs.lykos.ai](https://docs.lykos.ai/stability-matrix/), so new and updated writing shows up without an app update, and a copy ships inside the app so it still works offline
-- Added a **What's New** viewer — browse release notes for any version right in the app from **Settings → About**, with a one-time heads-up after each update (can be turned off in update settings)
-- 📚 **New documentation site** at [docs.lykos.ai](https://docs.lykos.ai/stability-matrix/) — getting started and installation guides, package manager and Inference walkthroughs, environment variable and advanced configuration references, a terminology glossary, and troubleshooting for common issues. Written by @NeuralFault!
-- Added **OneTrainer** to the native **Windows ROCm (AMD GPU)** helper — new OneTrainer installs on supported AMD hardware get the ROCm PyTorch build, ROCm-aware bitsandbytes and triton dependencies, and the right launch environment applied automatically. New OneTrainer installs also default to Python 3.12 on all platforms - thanks to @NeuralFault!
-- Added Inference support for **IPAdapter** — guide a generation with a reference image alongside your prompt, for style, composition, or subject consistency without training a LoRA. Add it from the sampler's **Addons** section in any generation tab, right alongside ControlNet:
-  - Drop in a reference image, then pick an **IPAdapter model** and its matching **CLIP Vision** encoder — both dropdowns can download the files for you if you don't have them yet
-  - **Weight Type** chooses how the reference gets applied, from plain `linear` blending through the `style transfer` and `composition` modes that separate a reference's look from its layout
-  - **Control Weight** and **Control Steps** set how strongly the reference applies and over which portion of the generation, matching the controls on the ControlNet card
-  - Applies to every model loaded in the workflow, so base and refiner are both conditioned on the reference
-### Changed
-- CivitAI downloads now pick their destination folder from the file's declared type (**Diffusion Model**/**UNet** → DiffusionModels, **Text Encoder** → TextEncoders, **CLIP Vision** → ClipVision, **ControlNet** → ControlNet, **Upscaler** → upscalers) instead of guessing from the model's name. Name-based guessing remains only for files typed plain "Model", and now recognizes **Krea 2** checkpoints as UNet-only
-- Updated the **Windows ROCm helper**'s bundled bitsandbytes wheel to a build compatible with ROCm 7.13–7.15, so it keeps working as AMD's ROCm Technical Preview builds update - thanks to @NeuralFault!
-### Fixed
-- Fixed a class of random crashes in the Inference **mask editor** and **image annotation editor** — undo/redo, layer operations, exporting, or closing the editor could free graphics resources that were still being drawn with, occasionally crashing mid-stroke or while saving. Canvas rendering has been restructured so this can't happen
-- Fixed **pen pressure** re-widening the whole stroke instead of following the pen while drawing, and mouse-drawn strokes coming back ~25% thicker after saving and reopening a project. Existing project files load exactly as before
-- Fixed the mask editor and image annotation editor leaking graphics memory — the paint canvas wasn't released on close, and paint-bucket fills were never freed
-- Fixed fast brush strokes occasionally failing with a "collection was modified" error while the stroke was still being drawn
-- Fixed opening older projects whose masks contained stroke points outside the canvas failing with an overflow error
-- Fixed a potential crash when the paint canvas rendered before its size was set
-- Fixed CivitAI models showing an empty Files section with no download links when their files use CivitAI's newer type labels (e.g. **Krea 2 Turbo** and **Z-Image**, typed **Diffusion Model** or **Text Encoder**). All current CivitAI file types are now recognized across the browser, details page, version dialog, bulk download, and installed/update detection
-- Fixed CivitAI "Download with Stability Matrix" links saving UNet-only checkpoints (Flux, Wan Video, Hunyuan, Krea 2) into the **StableDiffusion** folder — external links now use the same destination logic as the in-app browser
-- Fixed [#1668](https://github.com/LykosAI/StabilityMatrix/issues/1668) - the **Output Browser** crashing on open when an output folder contained a broken junction or symlink (a folder whose target no longer exists); those entries are now skipped instead of taking the page down
-- Fixed [#1681](https://github.com/LykosAI/StabilityMatrix/issues/1681) - Inference generation with **FaceDetailer** failing instantly with "An item with the same key has already been added" when two installed custom node folders share the same git remote
-- Fixed [#1679](https://github.com/LykosAI/StabilityMatrix/issues/1679) - model details pages never showing the **Installed** label, delete button, or version checkmark for files whose type displays as "Unknown". Installed detection now goes by file hash, so it works no matter what type CivitAI reports
-- Fixed [#1667](https://github.com/LykosAI/StabilityMatrix/issues/1667) - importing an existing package folder silently pre-selecting **Forge** as the package type, misclassifying re-imported packages. The type is now auto-detected from the folder's git remote
-- Fixed [#1669](https://github.com/LykosAI/StabilityMatrix/issues/1669) - **Stable Diffusion WebUI reForge** installing the CUDA build of PyTorch on Linux AMD systems even with ROCm selected
-- Fixed [#1672](https://github.com/LykosAI/StabilityMatrix/issues/1672) - **Image Lab** failing with a generic "ComfyUI rejected the workflow" error when generating with a GGUF model while the **ComfyUI-GGUF** extension isn't installed — it now offers the same one-click **install and restart** prompt as Inference
-- Fixed GGUF-quantized **text encoders** failing with a ComfyUI error when selected — they now load through the ComfyUI-GGUF CLIP loaders in all Inference workflows and Image Lab (mixed GGUF + safetensors selections work too), with the install prompt appearing if the extension is missing
-- Fixed **Chroma** and other single-encoder models being impossible to configure in Inference UNet workflows — the encoder **Type** dropdown was missing `chroma` and other single-encoder types, and the closest option (`flux`) demanded a second encoder these models don't use. The missing types are now listed, and single-encoder types get a single encoder slot
-- Fixed GGUF text encoders in the shared **TextEncoders** folder not appearing in the Inference Text Encoder dropdowns while connected to ComfyUI
-- The **HuggingFace browser** now suggests the TextEncoders folder for recognizable text encoder files (`byt5`/`mt5`/`llama`/`gemma`/`qwen2` prefixes, `text-encoder`/`enconly` names) instead of defaulting every `.gguf` to DiffusionModels
-- Fixed [#1682](https://github.com/LykosAI/StabilityMatrix/issues/1682) - the Linux **AppImage** failing to start on modern distros (Ubuntu 24.04+, Fedora 40+) that no longer ship `libfuse2`. The AppImage now uses a FUSE3-based runtime, and falls back to extract-and-run when FUSE isn't available at all - thanks to @NeuralFault!
-- Fixed **OneTrainer** failing to launch with current upstream versions after its UI script was renamed (`train_ui.py` → `train_ui_ctk.py`) - thanks to @NeuralFault!
-### Performance
-- Dragging an image layer with the **Move** tool in the layered mask editor now re-renders only the dragged layer instead of re-compositing every layer on each pointer move, so dragging stays smooth in multi-layer projects
-- Faster color-mask extraction for regional prompting — a 1024×1024 canvas with six regions previously did over six million dictionary lookups per extraction
-- Fixed a small native memory leak while drawing with the mouse (a path object per frame was never freed), and removed a redundant full-canvas scan after every paint-bucket fill
-### Security
-- Bundled **ADetailer** model downloads now point at a fixed Hugging Face revision instead of the repository's moving `main` branch, so an upstream re-upload can't change what you get - thanks to @ungrav!
-### Supporters
-#### 🌟 Visionaries
-The prompt queue has been one of our most requested features ever, and builds like this only happen because our Visionaries give us the freedom to take them on. Thank you **Waterclouds**, **MrMxyzptlk12836**, **Psilocyfer18731**, **bluepopsicle**, **Ibixat**, **Droolguy**, **KalAbaddon**, **LG**, **snotty**, **whudunit**, **cusalapapen1481**, **moon_milky2843**, **SkynetFuture**, and **sn3232323233350** for standing behind us build after build. And to our three newest Visionaries, **tarekk071223**, **CC**, and **SnooSnooEternal**: welcome aboard, it means the world to have you with us. 💛
-
-## v2.17.0-dev.1
-### Added
-#### New Feature: 🤗 Live HuggingFace Model Browser
-- Reworked the HuggingFace tab into a full browser instead of a fixed list of links — the curated picks are still there as the default view:
-  - Search HuggingFace for models right from the tab, sorted by downloads, likes, or most recently updated
-  - Paste a repository link to browse all of its files directly
-  - Browse files as a flat list or a folder tree, with a quick name filter and a **Hide installed** toggle
-  - Choose where each file goes (auto-detected and editable), or send a whole multi-file model such as a diffusers repo into one folder with its structure intact
-  - Select multiple files at once and see the total download size before you start, with a warning if there isn't enough free space
-  - Gated or private repositories work once you add a HuggingFace token in **Settings → Accounts**
-- Added Inference support for the **Wan 2.2 14B** mixture-of-experts video models. Enable **Dual expert (high / low noise)** from the Wan model card's options menu (⚙️) to load a second low-noise expert alongside the high-noise model; generation then runs the two-pass high-noise → low-noise sampling the 14B architecture expects, switching at a configurable **Boundary** (the fraction of steps handled by the high-noise expert, default 0.5). Works in both Wan Text to Video and Image to Video, and leaving the low-noise slot empty keeps the existing single-model Wan behavior unchanged
-  - When you pick a model that looks like one half of a 14B expert pair (e.g. `wan2.2_t2v_high_noise_14B`), the card offers a one-click prompt to enable the second expert and auto-selects its matching low-noise counterpart
-  - The high-noise and low-noise model pickers sit together at the top as a labeled pair, with Precision, VAE, Text Encoder and Shift tucked into an **Advanced** section to keep the card approachable
-  - Added a separate **Low-Noise LoRAs** list so per-expert speed LoRAs (such as Wan 2.2-Lightning's high/low-noise pair) land on the correct model — the **High-Noise LoRAs** list applies to the high-noise/primary model, and the new Low-Noise LoRAs list applies to the low-noise expert
-  - Added hover tooltips to the Wan model card fields (Precision, VAE, Text Encoder, Shift, Low-Noise, Boundary) explaining what each one does
-- Added a **gallery picker** for the Inference "+" new-tab button, grouping the project types into **Image / Video / Legacy** sections with icons and descriptions instead of a flat dropdown. The redundant standalone Flux text-to-image and SVD image-to-video types now live under **Legacy** so existing projects still open, without cluttering the list for new users
-  - Prefer the old menu? A **Compact New Tab Menu** toggle under Settings → Inference (and a quick link at the bottom of the picker dialog) switches the "+" button back to the fast dropdown
-### Changed
-- **Windows builds are now code-signed.** The portable executable is signed with a verified certificate, so Windows SmartScreen no longer flags Stability Matrix as from an unknown publisher. You may still see a SmartScreen prompt on the first releases while the certificate builds reputation, but those warnings will taper off as more people run signed builds
-- **Generate now auto-resumes after launching ComfyUI.** If you press Generate in Inference while ComfyUI isn't connected and choose to launch it from the connection prompt, the queued generation now waits for startup and runs on its own once connected - no need to press Generate a second time
-### Fixed
-- Fixed the Inference **VAE** dropdown listing models in a seemingly random order, and the **Text Encoder** / **CLIP Vision** dropdowns occasionally reordering as the list finished loading; all three now sort alphabetically, with **Default** pinned to the top of the VAE list
-- Model dropdowns no longer reserve space for a thumbnail when the selected model has no preview image, so names are no longer squished into a narrow strip
-- Fixed [#1666](https://github.com/LykosAI/StabilityMatrix/issues/1666) - AppImage builds creating a broken `.desktop` entry (`NoDisplay=true`, missing icon) that never showed up in the application launcher and reverted any manual edits on the next launch. AppImage runs now write a correct `.desktop` entry with the extracted app icon so Stability Matrix appears in your launcher/menu, and report a matching `WM_CLASS` so the running window shows the Stability Matrix icon in the dock/taskbar instead of a generic one. Only applies to AppImage runs; deb/rpm/flatpak installs keep their package-managed entries
-- Fixed `stabilitymatrix://` deep links (e.g. CivitAI "Download with Stability Matrix" buttons) being ignored on Linux AppImage builds — the URI is now forwarded to the running instance and the download starts, instead of just opening another window
-### Performance
-- The **Checkpoints** and **Outputs** galleries now load thumbnails at display size instead of full resolution, using far less memory and scrolling much more smoothly with large libraries
-- The **CivitAI** and **OpenModelDB** browsers now keep card images in memory, so scrolling back over models you've already seen no longer re-loads them from disk
-- Lightened the CivitAI model cards so they render faster while scrolling
-### Supporters
-#### 🌟 Visionaries
-This build leans hard into what's next: a live HuggingFace browser and Wan 2.2 video generation. None of that exploration happens without our Visionaries giving us the room to chase it. So a huge thank you to **Waterclouds**, **MrMxyzptlk12836**, **Psilocyfer18731**, **bluepopsicle**, **Ibixat**, **Droolguy**, **KalAbaddon**, **LG**, **snotty**, **whudunit**, **cusalapapen1481**, and **moon_milky2843**. You make the experiments possible. And a big hello to **SkynetFuture** and **sn3232323233350**, who join the Visionary crew this time around. We're genuinely glad you're here. 💛
-
->>>>>>> 40c73af4 (Merge pull request #1318 from ionite34/civit-null-stats-deleted-pages)
 ## v2.16.2
 > Full technical notes for this release: [docs.lykos.ai/stability-matrix/release-notes/2.16.2](https://docs.lykos.ai/stability-matrix/release-notes/2.16.2)
 ### Added
@@ -144,6 +35,11 @@ This build leans hard into what's next: a live HuggingFace browser and Wan 2.2 v
 - Fixed **Chroma** and other single-encoder models being impossible to configure in Inference UNet workflows — the encoder **Type** dropdown was missing `chroma` and other single-encoder types, and the closest option (`flux`) demanded a second encoder these models don't use. The missing types are now listed, and single-encoder types get a single encoder slot
 - Fixed GGUF text encoders in the shared **TextEncoders** folder not appearing in the Inference Text Encoder dropdowns while connected to ComfyUI
 - Fixed [#1682](https://github.com/LykosAI/StabilityMatrix/issues/1682) - the Linux **AppImage** failing to start on modern distros (Ubuntu 24.04+, Fedora 40+) that no longer ship `libfuse2`. The AppImage now uses a FUSE3-based runtime, and falls back to extract-and-run when FUSE isn't available at all - thanks to @NeuralFault!
+- Fixed the Model Browser failing with "CivitAI can't be reached right now (OK: OK)" — CivitAI recently started returning `null` for some model statistics (download counts, ratings), which broke loading the whole page of results. Missing stats are now read as 0
+- Fixed [#1695](https://github.com/LykosAI/StabilityMatrix/issues/1695) - models whose CivitAI page has since been deleted showing an error dialog on every click, with no way to break the link:
+  - The model details page now shows locally cached info instead of a dead page when the CivitAI page is gone
+  - **Next/Previous** on the details page skip over deleted models instead of getting stuck on an error
+  - New right-click **Disconnect from Source** action on Checkpoint Manager cards severs the link to the deleted page while keeping the local metadata (name, description, thumbnail, trigger words) — after disconnecting, clicking the card selects it like any other local model
 - Fixed **OneTrainer** failing to launch with current upstream versions after its UI script was renamed (`train_ui.py` → `train_ui_ctk.py`) - thanks to @NeuralFault!
 ### Performance
 - Dragging an image layer with the **Move** tool in the layered mask editor now re-renders only the dragged layer instead of re-compositing every layer on each pointer move, so dragging stays smooth in multi-layer projects

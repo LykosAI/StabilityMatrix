@@ -35,6 +35,11 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed **Chroma** and other single-encoder models being impossible to configure in Inference UNet workflows — the encoder **Type** dropdown was missing `chroma` and other single-encoder types, and the closest option (`flux`) demanded a second encoder these models don't use. The missing types are now listed, and single-encoder types get a single encoder slot
 - Fixed GGUF text encoders in the shared **TextEncoders** folder not appearing in the Inference Text Encoder dropdowns while connected to ComfyUI
 - Fixed [#1682](https://github.com/LykosAI/StabilityMatrix/issues/1682) - the Linux **AppImage** failing to start on modern distros (Ubuntu 24.04+, Fedora 40+) that no longer ship `libfuse2`. The AppImage now uses a FUSE3-based runtime, and falls back to extract-and-run when FUSE isn't available at all - thanks to @NeuralFault!
+- Fixed the Model Browser failing with "CivitAI can't be reached right now (OK: OK)" — CivitAI recently started returning `null` for some model statistics (download counts, ratings), which broke loading the whole page of results. Missing stats are now read as 0
+- Fixed [#1695](https://github.com/LykosAI/StabilityMatrix/issues/1695) - models whose CivitAI page has since been deleted showing an error dialog on every click, with no way to break the link:
+  - The model details page now shows locally cached info instead of a dead page when the CivitAI page is gone
+  - **Next/Previous** on the details page skip over deleted models instead of getting stuck on an error
+  - New right-click **Disconnect from Source** action on Checkpoint Manager cards severs the link to the deleted page while keeping the local metadata (name, description, thumbnail, trigger words) — after disconnecting, clicking the card selects it like any other local model
 - Fixed **OneTrainer** failing to launch with current upstream versions after its UI script was renamed (`train_ui.py` → `train_ui_ctk.py`) - thanks to @NeuralFault!
 ### Performance
 - Dragging an image layer with the **Move** tool in the layered mask editor now re-renders only the dragged layer instead of re-compositing every layer on each pointer move, so dragging stays smooth in multi-layer projects

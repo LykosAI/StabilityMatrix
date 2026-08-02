@@ -520,6 +520,12 @@
                                     </ui:MenuFlyoutItem>
 
                                     <ui:MenuFlyoutItem
+                                        Command="{Binding DisconnectConnectedModelCommand}"
+                                        IconSource="Remove"
+                                        IsVisible="{Binding CanDisconnect}"
+                                        Text="Disconnect from Source" />
+
+                                    <ui:MenuFlyoutItem
                                         Command="{Binding OpenSafetensorMetadataViewerCommand}"
                                         IconSource="Tag"
                                         IsVisible="{Binding CheckpointFile.IsSafetensorFile}"

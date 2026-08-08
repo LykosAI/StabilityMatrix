@@ -193,14 +193,18 @@
                             Message="{Binding WorkflowProfileWarningText}"
                             Severity="Warning" />
 
-                        <!--  Missing companion components (encoder / VAE) with one-click official downloads.  -->
+                        <!--
+                            Missing companion components (encoder / VAE) with one-click official downloads.
+                            While the batch runs, the bar stays up showing progress (Activity tab has details).
+                        -->
                         <controls:SmolInfoBar
                             Margin="0,8,0,0"
                             ActionCommand="{Binding DownloadMissingCompanionsCommand}"
-                            ActionText="{x:Static lang:Resources.Action_Download}"
+                            ActionText="{Binding MissingCompanionsActionText}"
                             CloseCommand="{Binding DismissMissingCompanionsCommand}"
+                            IsClosable="{Binding !IsDownloadingCompanions}"
                             IsOpen="{Binding ShowMissingCompanionsBar}"
-                            Message="{Binding MissingCompanionsText}"
+                            Message="{Binding MissingCompanionsBarText}"
                             Severity="Informational" />
 
                         <!--  Encoder Type (shown for non-Auto workflows on UNet, and any time Custom is selected)  -->

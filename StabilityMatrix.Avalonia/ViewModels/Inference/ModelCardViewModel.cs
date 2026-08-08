@@ -1368,6 +1368,7 @@ public partial class ModelCardViewModel(
         OnPropertyChanged(nameof(ShowWorkflowProfileWarning));
         OnPropertyChanged(nameof(MoveModelToRecommendedFolderText));
         OnPropertyChanged(nameof(MissingCompanionsText));
+        OnPropertyChanged(nameof(MissingCompanionsBarText));
         OnPropertyChanged(nameof(ShowMissingCompanionsBar));
     }
 
@@ -1598,11 +1599,25 @@ public partial class ModelCardViewModel(
     private InferenceWorkflowProfile? dismissedCompanionsProfile;
 
     private bool isDownloadingCompanions;
+    private string? companionDownloadProgress;
+
+    public bool IsDownloadingCompanions => isDownloadingCompanions;
+
+    /// <summary>
+    /// While a download batch is in flight the bar stays visible showing live progress
+    /// (pointing at the Activity tab) instead of silently disappearing on click.
+    /// </summary>
+    public string? MissingCompanionsBarText =>
+        isDownloadingCompanions ? companionDownloadProgress : MissingCompanionsText;
+
+    /// <summary>
+    /// Null while downloading, which collapses the bar's action button.
+    /// </summary>
+    public string? MissingCompanionsActionText => isDownloadingCompanions ? null : Resources.Action_Download;
 
     public bool ShowMissingCompanionsBar =>
-        !isDownloadingCompanions
-        && dismissedCompanionsProfile != ResolvedWorkflowProfile
-        && MissingCompanionsText is not null;
+        isDownloadingCompanions
+        || (dismissedCompanionsProfile != ResolvedWorkflowProfile && MissingCompanionsText is not null);
 
     [RelayCommand]
     private void DismissMissingCompanions()
@@ -1636,18 +1651,15 @@ public partial class ModelCardViewModel(
             return;
 
         isDownloadingCompanions = true;
-        OnPropertyChanged(nameof(ShowMissingCompanionsBar));
-
-        notificationService.Show(
-            "Downloads Started",
-            $"Downloading {downloads.Count} component(s). Check the progress panel for status.",
-            NotificationType.Information
-        );
+        companionDownloadProgress =
+            $"⬇️ Downloading components (0/{downloads.Count})… — see the Activity tab for progress";
+        NotifyCompanionBarChanged();
 
         TrackCompanionDownloadsAsync(downloads)
             .SafeFireAndForget(ex =>
             {
                 isDownloadingCompanions = false;
+                NotifyCompanionBarChanged();
                 notificationService.ShowPersistent(
                     "Download tracking failed",
                     ex.Message,
@@ -1656,14 +1668,42 @@ public partial class ModelCardViewModel(
             });
     }
 
+    private void NotifyCompanionBarChanged()
+    {
+        OnPropertyChanged(nameof(IsDownloadingCompanions));
+        OnPropertyChanged(nameof(MissingCompanionsText));
+        OnPropertyChanged(nameof(MissingCompanionsBarText));
+        OnPropertyChanged(nameof(MissingCompanionsActionText));
+        OnPropertyChanged(nameof(ShowMissingCompanionsBar));
+    }
+
     /// <summary>
-    /// Waits for all companion downloads to finish, refreshes the model index, then re-runs
-    /// component auto-selection so the freshly downloaded files fill the empty slots without
-    /// the user touching anything.
+    /// Waits for all companion downloads to finish (bumping the bar's progress text as each
+    /// completes), refreshes the model index, then re-runs component auto-selection so the
+    /// freshly downloaded files fill the empty slots without the user touching anything.
     /// </summary>
     private async Task TrackCompanionDownloadsAsync(IReadOnlyList<TrackedDownload> downloads)
     {
-        var results = await Task.WhenAll(downloads.Select(WaitForTerminalStateAsync));
+        var total = downloads.Count;
+        var completed = 0;
+
+        async Task<bool> TrackOne(TrackedDownload download)
+        {
+            var success = await WaitForTerminalStateAsync(download);
+            var done = Interlocked.Increment(ref completed);
+            Dispatcher.UIThread.Post(() =>
+            {
+                if (isDownloadingCompanions)
+                {
+                    companionDownloadProgress =
+                        $"⬇️ Downloading components ({done}/{total})… — see the Activity tab for progress";
+                    OnPropertyChanged(nameof(MissingCompanionsBarText));
+                }
+            });
+            return success;
+        }
+
+        var results = await Task.WhenAll(downloads.Select(TrackOne));
 
         await modelIndexService.RefreshIndex();
 
@@ -1671,8 +1711,7 @@ public partial class ModelCardViewModel(
         {
             isDownloadingCompanions = false;
             AutoSelectComponentsForResolvedProfile();
-            OnPropertyChanged(nameof(MissingCompanionsText));
-            OnPropertyChanged(nameof(ShowMissingCompanionsBar));
+            NotifyCompanionBarChanged();
         });
 
         var failCount = results.Count(r => !r);

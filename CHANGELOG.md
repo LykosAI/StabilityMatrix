@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - When your selected model's workflow needs a text encoder or VAE you don't have installed, the Model card now says exactly what's missing and offers the official downloads in one click — no more hunting HuggingFace for "which encoder pairs with this model":
   - Works for every UNet-based workflow profile: Flux, Flux.2 (offers the 4B or 9B encoder to match your UNET), Z-Image, Anima, HiDream, Qwen Image, and Krea 2
   - Your model choice is never touched — bring any CivitAI fine-tune; only the shared official components (encoders + VAE) are offered
+  - While the batch runs, the bar shows live progress ("Downloading components (1/2)…") and points at the Activity tab for details
   - After the downloads finish, the empty encoder/VAE slots fill themselves automatically — ready to generate without touching anything
   - Dismissible per workflow, and the same matcher decides both "is it installed" and "what to download", so the offer can't disagree with auto-selection
 #### New Feature: 🧩 Persistent Inference Layouts

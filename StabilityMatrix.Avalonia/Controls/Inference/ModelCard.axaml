@@ -193,6 +193,16 @@
                             Message="{Binding WorkflowProfileWarningText}"
                             Severity="Warning" />
 
+                        <!--  Missing companion components (encoder / VAE) with one-click official downloads.  -->
+                        <controls:SmolInfoBar
+                            Margin="0,8,0,0"
+                            ActionCommand="{Binding DownloadMissingCompanionsCommand}"
+                            ActionText="{x:Static lang:Resources.Action_Download}"
+                            CloseCommand="{Binding DismissMissingCompanionsCommand}"
+                            IsOpen="{Binding ShowMissingCompanionsBar}"
+                            Message="{Binding MissingCompanionsText}"
+                            Severity="Informational" />
+
                         <!--  Encoder Type (shown for non-Auto workflows on UNet, and any time Custom is selected)  -->
                         <Grid
                             Margin="0,8,0,0"

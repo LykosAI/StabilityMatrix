@@ -13,6 +13,12 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
   - **Krea 2 Turbo** and **Krea 2 Raw** — Krea's open-weights 12.9B model. Turbo generates in 8 steps at CFG 1 (recommended defaults included); Raw is the full 52-step base for tinkerers. Both pair automatically with the Qwen3-VL 4B text encoder + Qwen Image VAE. Krea 2 is under the Krea AI Community License (free below $1M revenue / 50 seats)
   - Note: both need a recent ComfyUI (the `qwen_image` and `krea2` text-encoder types) — update your ComfyUI package if the workflow is rejected
 - Qwen-tagged CivitAI checkpoint files now route to the DiffusionModels folder like Wan/Flux/Krea already did
+#### New Feature: ⬇️ One-Click Text Encoder & VAE Downloads in Inference
+- When your selected model's workflow needs a text encoder or VAE you don't have installed, the Model card now says exactly what's missing and offers the official downloads in one click — no more hunting HuggingFace for "which encoder pairs with this model":
+  - Works for every UNet-based workflow profile: Flux, Flux.2 (offers the 4B or 9B encoder to match your UNET), Z-Image, Anima, HiDream, Qwen Image, and Krea 2
+  - Your model choice is never touched — bring any CivitAI fine-tune; only the shared official components (encoders + VAE) are offered
+  - After the downloads finish, the empty encoder/VAE slots fill themselves automatically — ready to generate without touching anything
+  - Dismissible per workflow, and the same matcher decides both "is it installed" and "what to download", so the offer can't disagree with auto-selection
 #### New Feature: 🧩 Persistent Inference Layouts
 - Rearranged panes in Inference now stick — one of our most-asked-for features, on Discord, GitHub ([#1340](https://github.com/LykosAI/StabilityMatrix/issues/1340)), and our feature tracker ([1](https://lykos.ai/feature/8f55f8d5-c25a-437f-a2ba-4093e3984754), [2](https://lykos.ai/feature/c407cc98-e355-4e8d-98a5-23be854ed6c0)) alike:
   - Move and resize panes in any Inference tab and the arrangement is remembered for that tab type, including across restarts — new tabs of the same type open with your layout

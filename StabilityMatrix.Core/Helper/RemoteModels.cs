@@ -468,6 +468,173 @@ public static class RemoteModels
     public static IEnumerable<HybridModelFile> IpAdapterModelFiles =>
         IpAdapters.Select(HybridModelFile.FromDownloadable);
 
+    #region Shared model components
+
+    /// <summary>
+    /// Individually addressable text encoders and VAEs shared across model families. Each is
+    /// stated once here and referenced by the provider download sets and the Inference
+    /// companion-download offers, so a URL can never drift between the two.
+    /// </summary>
+    public static RemoteResource FluxVae { get; } =
+        new()
+        {
+            Url = new Uri(
+                "https://huggingface.co/Comfy-Org/Lumina_Image_2.0_Repackaged/resolve/main/split_files/vae/ae.safetensors"
+            ),
+            InfoUrl = new Uri("https://huggingface.co/black-forest-labs/FLUX.1-dev"),
+            Author = "Black Forest Labs",
+            LicenseType = "FLUX.1 [dev] Non-Commercial",
+            LicenseUrl = new Uri("https://huggingface.co/black-forest-labs/FLUX.1-dev/blob/main/LICENSE.md"),
+            ContextType = SharedFolderType.VAE,
+        };
+
+    public static RemoteResource ClipLTextEncoder { get; } =
+        new()
+        {
+            Url = new Uri(
+                "https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/clip_l.safetensors"
+            ),
+            InfoUrl = new Uri("https://huggingface.co/comfyanonymous/flux_text_encoders"),
+            HashSha256 = "660c6f5b1abae9dc498ac2d21e1347d2abdb0cf6c0c0c8576cd796491d9a6cdd",
+            Author = "OpenAI",
+            LicenseType = "MIT",
+            ContextType = SharedFolderType.TextEncoders,
+        };
+
+    public static RemoteResource T5XxlFp8ScaledTextEncoder { get; } =
+        new()
+        {
+            Url = new Uri(
+                "https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/t5xxl_fp8_e4m3fn_scaled.safetensors"
+            ),
+            InfoUrl = new Uri("https://huggingface.co/comfyanonymous/flux_text_encoders"),
+            Author = "Google",
+            LicenseType = "Apache 2.0",
+            ContextType = SharedFolderType.TextEncoders,
+        };
+
+    public static RemoteResource QwenImageVae { get; } =
+        new()
+        {
+            Url = new Uri(
+                "https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/vae/qwen_image_vae.safetensors"
+            ),
+            InfoUrl = new Uri("https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI"),
+            Author = "Alibaba Qwen",
+            LicenseType = "Apache 2.0",
+            ContextType = SharedFolderType.VAE,
+        };
+
+    public static RemoteResource Qwen25Vl7bTextEncoder { get; } =
+        new()
+        {
+            Url = new Uri(
+                "https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/text_encoders/qwen_2.5_vl_7b_fp8_scaled.safetensors"
+            ),
+            InfoUrl = new Uri("https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI"),
+            Author = "Alibaba Qwen",
+            LicenseType = "Apache 2.0",
+            ContextType = SharedFolderType.TextEncoders,
+        };
+
+    public static RemoteResource Flux2Vae { get; } =
+        new()
+        {
+            Url = new Uri(
+                "https://huggingface.co/Comfy-Org/flux2-klein-4B/resolve/main/split_files/vae/flux2-vae.safetensors"
+            ),
+            InfoUrl = new Uri("https://huggingface.co/Comfy-Org/flux2-klein-4B"),
+            Author = "Black Forest Labs",
+            LicenseType = "Apache 2.0",
+            ContextType = SharedFolderType.VAE,
+        };
+
+    public static RemoteResource Qwen3_4bTextEncoder { get; } =
+        new()
+        {
+            Url = new Uri(
+                "https://huggingface.co/Comfy-Org/flux2-klein-4B/resolve/main/split_files/text_encoders/qwen_3_4b.safetensors"
+            ),
+            InfoUrl = new Uri("https://huggingface.co/Comfy-Org/flux2-klein-4B"),
+            Author = "Alibaba Qwen",
+            LicenseType = "Apache 2.0",
+            ContextType = SharedFolderType.TextEncoders,
+        };
+
+    public static RemoteResource Qwen3_8bTextEncoder { get; } =
+        new()
+        {
+            Url = new Uri(
+                "https://huggingface.co/Comfy-Org/flux2-klein-9B/resolve/main/split_files/text_encoders/qwen_3_8b.safetensors"
+            ),
+            InfoUrl = new Uri("https://huggingface.co/Comfy-Org/flux2-klein-9B"),
+            Author = "Alibaba Qwen",
+            LicenseType = "Apache 2.0",
+            ContextType = SharedFolderType.TextEncoders,
+        };
+
+    public static RemoteResource Qwen3_06bBaseTextEncoder { get; } =
+        new()
+        {
+            Url = new Uri(
+                "https://huggingface.co/circlestone-labs/Anima/resolve/main/split_files/text_encoders/qwen_3_06b_base.safetensors"
+            ),
+            InfoUrl = new Uri("https://huggingface.co/circlestone-labs/Anima"),
+            Author = "Alibaba Qwen",
+            LicenseType = "Apache 2.0",
+            ContextType = SharedFolderType.TextEncoders,
+        };
+
+    public static RemoteResource Qwen3Vl4bTextEncoder { get; } =
+        new()
+        {
+            Url = new Uri(
+                "https://huggingface.co/Comfy-Org/Krea-2/resolve/main/text_encoders/qwen3vl_4b_fp8_scaled.safetensors"
+            ),
+            InfoUrl = new Uri("https://huggingface.co/Comfy-Org/Krea-2"),
+            Author = "Alibaba Qwen",
+            LicenseType = "Apache 2.0",
+            ContextType = SharedFolderType.TextEncoders,
+        };
+
+    public static RemoteResource ClipLHiDreamTextEncoder { get; } =
+        new()
+        {
+            Url = new Uri(
+                "https://huggingface.co/Comfy-Org/HiDream-I1_ComfyUI/resolve/main/split_files/text_encoders/clip_l_hidream.safetensors"
+            ),
+            InfoUrl = new Uri("https://huggingface.co/Comfy-Org/HiDream-I1_ComfyUI"),
+            Author = "OpenAI",
+            LicenseType = "MIT",
+            ContextType = SharedFolderType.TextEncoders,
+        };
+
+    public static RemoteResource ClipGHiDreamTextEncoder { get; } =
+        new()
+        {
+            Url = new Uri(
+                "https://huggingface.co/Comfy-Org/HiDream-I1_ComfyUI/resolve/main/split_files/text_encoders/clip_g_hidream.safetensors"
+            ),
+            InfoUrl = new Uri("https://huggingface.co/Comfy-Org/HiDream-I1_ComfyUI"),
+            Author = "LAION",
+            LicenseType = "MIT",
+            ContextType = SharedFolderType.TextEncoders,
+        };
+
+    public static RemoteResource Llama31_8bInstructTextEncoder { get; } =
+        new()
+        {
+            Url = new Uri(
+                "https://huggingface.co/Comfy-Org/HiDream-I1_ComfyUI/resolve/main/split_files/text_encoders/llama_3.1_8b_instruct_fp8_scaled.safetensors"
+            ),
+            InfoUrl = new Uri("https://huggingface.co/Comfy-Org/HiDream-I1_ComfyUI"),
+            Author = "Meta",
+            LicenseType = "Llama 3.1 Community License",
+            ContextType = SharedFolderType.TextEncoders,
+        };
+
+    #endregion
+
     #region Flux Kontext Models
 
     /// <summary>
@@ -489,43 +656,9 @@ public static class RemoteModels
                 ),
                 ContextType = SharedFolderType.DiffusionModels,
             },
-            // Flux VAE (~335 MB)
-            new()
-            {
-                Url = new Uri(
-                    "https://huggingface.co/Comfy-Org/Lumina_Image_2.0_Repackaged/resolve/main/split_files/vae/ae.safetensors"
-                ),
-                InfoUrl = new Uri("https://huggingface.co/black-forest-labs/FLUX.1-dev"),
-                Author = "Black Forest Labs",
-                LicenseType = "FLUX.1 [dev] Non-Commercial",
-                LicenseUrl = new Uri(
-                    "https://huggingface.co/black-forest-labs/FLUX.1-dev/blob/main/LICENSE.md"
-                ),
-                ContextType = SharedFolderType.VAE,
-            },
-            // CLIP-L text encoder (~246 MB)
-            new()
-            {
-                Url = new Uri(
-                    "https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/clip_l.safetensors"
-                ),
-                InfoUrl = new Uri("https://huggingface.co/comfyanonymous/flux_text_encoders"),
-                HashSha256 = "660c6f5b1abae9dc498ac2d21e1347d2abdb0cf6c0c0c8576cd796491d9a6cdd",
-                Author = "OpenAI",
-                LicenseType = "MIT",
-                ContextType = SharedFolderType.TextEncoders,
-            },
-            // T5-XXL text encoder FP8 scaled (~4.8 GB)
-            new()
-            {
-                Url = new Uri(
-                    "https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/t5xxl_fp8_e4m3fn_scaled.safetensors"
-                ),
-                InfoUrl = new Uri("https://huggingface.co/comfyanonymous/flux_text_encoders"),
-                Author = "Google",
-                LicenseType = "Apache 2.0",
-                ContextType = SharedFolderType.TextEncoders,
-            },
+            FluxVae,
+            ClipLTextEncoder,
+            T5XxlFp8ScaledTextEncoder,
         ];
 
     #endregion
@@ -548,28 +681,8 @@ public static class RemoteModels
                 LicenseType = "Qwen License",
                 ContextType = SharedFolderType.DiffusionModels,
             },
-            // Qwen Image VAE
-            new()
-            {
-                Url = new Uri(
-                    "https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/vae/qwen_image_vae.safetensors"
-                ),
-                InfoUrl = new Uri("https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI"),
-                Author = "Alibaba Qwen",
-                LicenseType = "Qwen License",
-                ContextType = SharedFolderType.VAE,
-            },
-            // Qwen 2.5 VL 7B CLIP (fp8 scaled)
-            new()
-            {
-                Url = new Uri(
-                    "https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/text_encoders/qwen_2.5_vl_7b_fp8_scaled.safetensors"
-                ),
-                InfoUrl = new Uri("https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI"),
-                Author = "Alibaba Qwen",
-                LicenseType = "Qwen License",
-                ContextType = SharedFolderType.TextEncoders,
-            },
+            QwenImageVae,
+            Qwen25Vl7bTextEncoder,
         ];
 
     #endregion
@@ -598,28 +711,10 @@ public static class RemoteModels
                 ),
                 ContextType = SharedFolderType.DiffusionModels,
             },
-            // Flux.2 VAE (~336 MB, shared between all Flux.2 variants)
-            new()
-            {
-                Url = new Uri(
-                    "https://huggingface.co/Comfy-Org/flux2-klein-4B/resolve/main/split_files/vae/flux2-vae.safetensors"
-                ),
-                InfoUrl = new Uri("https://huggingface.co/Comfy-Org/flux2-klein-4B"),
-                Author = "Black Forest Labs",
-                LicenseType = "Apache 2.0",
-                ContextType = SharedFolderType.VAE,
-            },
-            // Qwen3 4B text encoder (~8 GB, paired with Klein 4B)
-            new()
-            {
-                Url = new Uri(
-                    "https://huggingface.co/Comfy-Org/flux2-klein-4B/resolve/main/split_files/text_encoders/qwen_3_4b.safetensors"
-                ),
-                InfoUrl = new Uri("https://huggingface.co/Comfy-Org/flux2-klein-4B"),
-                Author = "Alibaba Qwen",
-                LicenseType = "Apache 2.0",
-                ContextType = SharedFolderType.TextEncoders,
-            },
+            // Flux.2 VAE (~336 MB, shared between all Flux.2 variants) + Qwen3 4B text
+            // encoder (~8 GB, paired with Klein 4B)
+            Flux2Vae,
+            Qwen3_4bTextEncoder,
         ];
 
     #endregion
@@ -636,28 +731,10 @@ public static class RemoteModels
     /// </summary>
     public static IReadOnlyList<RemoteResource> Flux2Klein9BModels { get; } =
         [
-            // Flux.2 VAE (~336 MB, shared between all Flux.2 variants)
-            new()
-            {
-                Url = new Uri(
-                    "https://huggingface.co/Comfy-Org/flux2-klein-9B/resolve/main/split_files/vae/flux2-vae.safetensors"
-                ),
-                InfoUrl = new Uri("https://huggingface.co/Comfy-Org/flux2-klein-9B"),
-                Author = "Black Forest Labs",
-                LicenseType = "Apache 2.0",
-                ContextType = SharedFolderType.VAE,
-            },
-            // Qwen3 8B text encoder (~16.4 GB, paired with Klein 9B)
-            new()
-            {
-                Url = new Uri(
-                    "https://huggingface.co/Comfy-Org/flux2-klein-9B/resolve/main/split_files/text_encoders/qwen_3_8b.safetensors"
-                ),
-                InfoUrl = new Uri("https://huggingface.co/Comfy-Org/flux2-klein-9B"),
-                Author = "Alibaba Qwen",
-                LicenseType = "Apache 2.0",
-                ContextType = SharedFolderType.TextEncoders,
-            },
+            // Flux.2 VAE (~336 MB, shared between all Flux.2 variants) + Qwen3 8B text
+            // encoder (~16.4 GB, paired with Klein 9B)
+            Flux2Vae,
+            Qwen3_8bTextEncoder,
         ];
 
     #endregion

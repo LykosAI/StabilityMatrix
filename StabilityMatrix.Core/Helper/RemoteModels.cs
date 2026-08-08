@@ -302,19 +302,23 @@ public static class RemoteModels
     public static IEnumerable<HybridModelFile> SamModelFiles =>
         SamModels.Select(HybridModelFile.FromDownloadable);
 
+    /// <summary>
+    /// Text encoders offered as cloud-download entries in the Inference encoder dropdowns.
+    /// Companion encoders reference the shared statics above; the extra t5xxl / umt5
+    /// precision variants exist only here (they aren't any profile's official companion).
+    /// </summary>
     private static IEnumerable<RemoteResource> ClipModels =>
         [
-            new()
-            {
-                Url = new Uri(
-                    "https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/clip_l.safetensors"
-                ),
-                InfoUrl = new Uri("https://huggingface.co/comfyanonymous/flux_text_encoders"),
-                HashSha256 = "660c6f5b1abae9dc498ac2d21e1347d2abdb0cf6c0c0c8576cd796491d9a6cdd",
-                Author = "OpenAI",
-                LicenseType = "MIT",
-                ContextType = SharedFolderType.TextEncoders,
-            },
+            ClipLTextEncoder,
+            T5XxlFp8ScaledTextEncoder,
+            Qwen25Vl7bTextEncoder,
+            Qwen3_4bTextEncoder,
+            Qwen3_8bTextEncoder,
+            Qwen3_06bBaseTextEncoder,
+            Qwen3Vl4bTextEncoder,
+            ClipLHiDreamTextEncoder,
+            ClipGHiDreamTextEncoder,
+            Llama31_8bInstructTextEncoder,
             new()
             {
                 Url = new Uri(
@@ -357,39 +361,6 @@ public static class RemoteModels
                 HashSha256 = "7b8850f1961e1cf8a77cca4c964a358d303f490833c6c087d0cff4b2f99db2af",
                 Author = "Google",
                 LicenseType = "Apache 2.0",
-                ContextType = SharedFolderType.TextEncoders,
-            },
-            new()
-            {
-                Url = new Uri(
-                    "https://huggingface.co/Comfy-Org/HiDream-I1_ComfyUI/resolve/main/split_files/text_encoders/clip_l_hidream.safetensors"
-                ),
-                InfoUrl = new Uri("https://huggingface.co/Comfy-Org/HiDream-I1_ComfyUI"),
-                HashSha256 = "706fdb88e22e18177b207837c02f4b86a652abca0302821f2bfa24ac6aea4f71",
-                Author = "OpenAI",
-                LicenseType = "MIT",
-                ContextType = SharedFolderType.TextEncoders,
-            },
-            new()
-            {
-                Url = new Uri(
-                    "https://huggingface.co/Comfy-Org/HiDream-I1_ComfyUI/resolve/main/split_files/text_encoders/clip_g_hidream.safetensors"
-                ),
-                InfoUrl = new Uri("https://huggingface.co/Comfy-Org/HiDream-I1_ComfyUI"),
-                HashSha256 = "3771e70e36450e5199f30bad61a53faae85a2e02606974bcda0a6a573c0519d5",
-                Author = "OpenAI",
-                LicenseType = "MIT",
-                ContextType = SharedFolderType.TextEncoders,
-            },
-            new()
-            {
-                Url = new Uri(
-                    "https://huggingface.co/Comfy-Org/HiDream-I1_ComfyUI/resolve/main/split_files/text_encoders/llama_3.1_8b_instruct_fp8_scaled.safetensors"
-                ),
-                InfoUrl = new Uri("https://huggingface.co/Comfy-Org/HiDream-I1_ComfyUI"),
-                HashSha256 = "9f86897bbeb933ef4fd06297740edb8dd962c94efcd92b373a11460c33765ea6",
-                Author = "Meta",
-                LicenseType = "llama3.1",
                 ContextType = SharedFolderType.TextEncoders,
             },
         ];
@@ -508,6 +479,7 @@ public static class RemoteModels
                 "https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/t5xxl_fp8_e4m3fn_scaled.safetensors"
             ),
             InfoUrl = new Uri("https://huggingface.co/comfyanonymous/flux_text_encoders"),
+            HashSha256 = "a498f0485dc9536735258018417c3fd7758dc3bccc0a645feaa472b34955557a",
             Author = "Google",
             LicenseType = "Apache 2.0",
             ContextType = SharedFolderType.TextEncoders,
@@ -532,6 +504,7 @@ public static class RemoteModels
                 "https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/text_encoders/qwen_2.5_vl_7b_fp8_scaled.safetensors"
             ),
             InfoUrl = new Uri("https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI"),
+            HashSha256 = "cb5636d852a0ea6a9075ab1bef496c0db7aef13c02350571e388aea959c5c0b4",
             Author = "Alibaba Qwen",
             LicenseType = "Apache 2.0",
             ContextType = SharedFolderType.TextEncoders,
@@ -556,6 +529,7 @@ public static class RemoteModels
                 "https://huggingface.co/Comfy-Org/flux2-klein-4B/resolve/main/split_files/text_encoders/qwen_3_4b.safetensors"
             ),
             InfoUrl = new Uri("https://huggingface.co/Comfy-Org/flux2-klein-4B"),
+            HashSha256 = "6c671498573ac2f7a5501502ccce8d2b08ea6ca2f661c458e708f36b36edfc5a",
             Author = "Alibaba Qwen",
             LicenseType = "Apache 2.0",
             ContextType = SharedFolderType.TextEncoders,
@@ -568,6 +542,7 @@ public static class RemoteModels
                 "https://huggingface.co/Comfy-Org/flux2-klein-9B/resolve/main/split_files/text_encoders/qwen_3_8b.safetensors"
             ),
             InfoUrl = new Uri("https://huggingface.co/Comfy-Org/flux2-klein-9B"),
+            HashSha256 = "f0ff9239d56269ca1d05e5f86da6a79fac111af464955681f11c7ab0ec5ef6c1",
             Author = "Alibaba Qwen",
             LicenseType = "Apache 2.0",
             ContextType = SharedFolderType.TextEncoders,
@@ -580,6 +555,7 @@ public static class RemoteModels
                 "https://huggingface.co/circlestone-labs/Anima/resolve/main/split_files/text_encoders/qwen_3_06b_base.safetensors"
             ),
             InfoUrl = new Uri("https://huggingface.co/circlestone-labs/Anima"),
+            HashSha256 = "cd2a512003e2f9f3cd3c32a9c3573f820bb28c940f73c57b1ddaa983d9223eba",
             Author = "Alibaba Qwen",
             LicenseType = "Apache 2.0",
             ContextType = SharedFolderType.TextEncoders,
@@ -592,6 +568,7 @@ public static class RemoteModels
                 "https://huggingface.co/Comfy-Org/Krea-2/resolve/main/text_encoders/qwen3vl_4b_fp8_scaled.safetensors"
             ),
             InfoUrl = new Uri("https://huggingface.co/Comfy-Org/Krea-2"),
+            HashSha256 = "54bd5144df0bbc25dd6ccadfcb826b521445a1b06ae5a42570bdd2974ca87094",
             Author = "Alibaba Qwen",
             LicenseType = "Apache 2.0",
             ContextType = SharedFolderType.TextEncoders,
@@ -604,6 +581,7 @@ public static class RemoteModels
                 "https://huggingface.co/Comfy-Org/HiDream-I1_ComfyUI/resolve/main/split_files/text_encoders/clip_l_hidream.safetensors"
             ),
             InfoUrl = new Uri("https://huggingface.co/Comfy-Org/HiDream-I1_ComfyUI"),
+            HashSha256 = "706fdb88e22e18177b207837c02f4b86a652abca0302821f2bfa24ac6aea4f71",
             Author = "OpenAI",
             LicenseType = "MIT",
             ContextType = SharedFolderType.TextEncoders,
@@ -616,6 +594,7 @@ public static class RemoteModels
                 "https://huggingface.co/Comfy-Org/HiDream-I1_ComfyUI/resolve/main/split_files/text_encoders/clip_g_hidream.safetensors"
             ),
             InfoUrl = new Uri("https://huggingface.co/Comfy-Org/HiDream-I1_ComfyUI"),
+            HashSha256 = "3771e70e36450e5199f30bad61a53faae85a2e02606974bcda0a6a573c0519d5",
             Author = "LAION",
             LicenseType = "MIT",
             ContextType = SharedFolderType.TextEncoders,
@@ -628,6 +607,7 @@ public static class RemoteModels
                 "https://huggingface.co/Comfy-Org/HiDream-I1_ComfyUI/resolve/main/split_files/text_encoders/llama_3.1_8b_instruct_fp8_scaled.safetensors"
             ),
             InfoUrl = new Uri("https://huggingface.co/Comfy-Org/HiDream-I1_ComfyUI"),
+            HashSha256 = "9f86897bbeb933ef4fd06297740edb8dd962c94efcd92b373a11460c33765ea6",
             Author = "Meta",
             LicenseType = "Llama 3.1 Community License",
             ContextType = SharedFolderType.TextEncoders,

@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
   - While the batch runs, the bar shows live progress ("Downloading components (1/2)…") and points at the Activity tab for details
   - After the downloads finish, the empty encoder/VAE slots fill themselves automatically — ready to generate without touching anything
   - Dismissible per workflow, and the same matcher decides both "is it installed" and "what to download", so the offer can't disagree with auto-selection
+- The text-encoder dropdowns now list every companion encoder (Qwen2.5-VL 7B, Qwen3 4B/8B/0.6B, Qwen3-VL 4B, and the T5-XXL fp8-scaled variant) as cloud-download entries alongside the existing ones, with installed files sorted above the downloadable entries instead of interleaved
+- Fixed clicking a cloud-download entry in model dropdowns sometimes doing nothing — the selection reset raced the ComboBox's own commit, leaving the entry "selected" so a second click raised no event
 #### New Feature: 🧩 Persistent Inference Layouts
 - Rearranged panes in Inference now stick — one of our most-asked-for features, on Discord, GitHub ([#1340](https://github.com/LykosAI/StabilityMatrix/issues/1340)), and our feature tracker ([1](https://lykos.ai/feature/8f55f8d5-c25a-437f-a2ba-4093e3984754), [2](https://lykos.ai/feature/c407cc98-e355-4e8d-98a5-23be854ed6c0)) alike:
   - Move and resize panes in any Inference tab and the arrangement is remembered for that tab type, including across restarts — new tabs of the same type open with your layout

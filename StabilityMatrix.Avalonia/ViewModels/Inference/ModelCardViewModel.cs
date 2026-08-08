@@ -1737,20 +1737,28 @@ public partial class ModelCardViewModel(
     {
         var tcs = new TaskCompletionSource<bool>();
 
-        download.ProgressStateChanged += (_, state) =>
+        // Named so it can detach itself on the terminal state: TrackedDownload lives on in
+        // the download service's history, so a never-removed handler would leak once per
+        // tracked companion download.
+        void OnProgressStateChanged(object? sender, ProgressState state)
         {
             if (state is ProgressState.Success or ProgressState.Failed or ProgressState.Cancelled)
             {
+                download.ProgressStateChanged -= OnProgressStateChanged;
                 tcs.TrySetResult(state == ProgressState.Success);
             }
-        };
+        }
+
+        download.ProgressStateChanged += OnProgressStateChanged;
 
         // The handler can't fire for a download that reached a terminal state before it was
-        // attached, so resolve immediately in that case (TrySetResult makes double-fire safe).
+        // attached, so resolve (and detach) immediately in that case — TrySetResult and a
+        // double detach are both safe if the event fires anyway.
         if (
             download.ProgressState is ProgressState.Success or ProgressState.Failed or ProgressState.Cancelled
         )
         {
+            download.ProgressStateChanged -= OnProgressStateChanged;
             tcs.TrySetResult(download.ProgressState == ProgressState.Success);
         }
 

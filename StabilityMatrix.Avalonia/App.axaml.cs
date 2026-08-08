@@ -593,8 +593,6 @@ public sealed class App : Application
         services.AddSingleton<IImageGenerationProvider, FluxKontextProvider>();
         services.AddSingleton<IImageGenerationProvider, QwenImageEditProvider>();
         services.AddSingleton<IImageGenerationProvider, Flux2KleinProvider>();
-        services.AddSingleton<IImageGenerationProvider, QwenImageProvider>();
-        services.AddSingleton<IImageGenerationProvider, Krea2TurboProvider>();
         services.AddSingleton<IImageGenerationChatService, ImageGenerationChatService>();
 
         services.AddTransient<IGitHubClient, GitHubClient>(_ =>

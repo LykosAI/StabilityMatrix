@@ -37,10 +37,20 @@ public static class BananaVisionProviderIds
     public const string Flux2Klein = "flux2-klein";
 
     /// <summary>
+    /// Qwen Image text-to-image local generation provider (requires ComfyUI)
+    /// </summary>
+    public const string QwenImage = "qwen-image";
+
+    /// <summary>
+    /// Krea 2 Turbo text-to-image local generation provider (requires ComfyUI)
+    /// </summary>
+    public const string Krea2Turbo = "krea-2-turbo";
+
+    /// <summary>
     /// Check if a provider ID is a local provider that requires ComfyUI backend
     /// </summary>
     public static bool IsLocalProvider(string? providerId) =>
-        providerId is FluxKontext or QwenImageEdit or Flux2Klein;
+        providerId is FluxKontext or QwenImageEdit or Flux2Klein or QwenImage or Krea2Turbo;
 
     /// <summary>
     /// Check if a provider ID is a cloud/API provider (Gemini)

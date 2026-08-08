@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 
 ## v2.17.0-dev.3
 ### Added
+#### New Feature: 🎨 Qwen Image & Krea 2 Support
+- **Inference** picks up first-class workflow profiles for two of the strongest open image models of the past year:
+  - **Qwen Image** — the 2512 build, the top-ranked open text-to-image model, with best-in-class text rendering. Auto-detected from CivitAI metadata or filename, paired automatically with the Qwen2.5-VL 7B text encoder + Qwen Image VAE, with recommended defaults (Euler / Simple / 50 steps / CFG 4 / Shift 3.1) one click away
+  - **Krea 2 Turbo** and **Krea 2 Raw** — Krea's open-weights 12.9B model. Turbo generates in 8 steps at CFG 1 (recommended defaults included); Raw is the full 52-step base for tinkerers. Both pair automatically with the Qwen3-VL 4B text encoder + Qwen Image VAE
+  - Note: both need a recent ComfyUI (the `qwen_image` and `krea2` text-encoder types) — update your ComfyUI package if the workflow is rejected
+- **Image Lab** gains two local text-to-image providers with one-click model downloads: **Qwen Image (Local)** (~20 GB UNET — the VAE and text encoder are shared with Qwen Image Edit, so Edit users only need the UNET) and **Krea 2 Turbo (Local)** (~18.6 GB total, ~13 s per image on a 24 GB card). Krea 2 is under the Krea AI Community License (free below $1M revenue / 50 seats)
+- Qwen-tagged CivitAI checkpoint files now route to the DiffusionModels folder like Wan/Flux/Krea already did
 #### New Feature: 🧩 Persistent Inference Layouts
 - Rearranged panes in Inference now stick — one of our most-asked-for features, on Discord, GitHub ([#1340](https://github.com/LykosAI/StabilityMatrix/issues/1340)), and our feature tracker ([1](https://lykos.ai/feature/8f55f8d5-c25a-437f-a2ba-4093e3984754), [2](https://lykos.ai/feature/c407cc98-e355-4e8d-98a5-23be854ed6c0)) alike:
   - Move and resize panes in any Inference tab and the arrangement is remembered for that tab type, including across restarts — new tabs of the same type open with your layout
@@ -14,6 +21,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
   - **Restore Default Layout** now resets the current tab in place (no more page flicker) and returns that tab type to the standard arrangement
   - Existing project files are unaffected and keep opening exactly as before
 ### Fixed
+- Fixed Qwen Image Edit's model check accepting Krea 2's Qwen3-VL 4B text encoder as usable — it loads but fails mid-sampling with a tensor-shape mismatch; the correct 7B encoder download is now offered instead
 - Fixed the Model Browser failing with "CivitAI can't be reached right now (OK: OK)" — CivitAI recently started returning `null` for some model statistics (download counts, ratings), which broke loading the whole page of results. Missing stats are now read as 0
 - Fixed [#1695](https://github.com/LykosAI/StabilityMatrix/issues/1695) - models whose CivitAI page has since been deleted showing an error dialog on every click, with no way to break the link:
   - The model details page now shows locally cached info instead of a dead page when the CivitAI page is gone

@@ -247,6 +247,7 @@ public partial class ModelCardViewModel(
             "ltxv",
             "newbie",
             "ace",
+            "krea2",
             "lumina2",
             "qwen_image",
             "wan",
@@ -258,8 +259,15 @@ public partial class ModelCardViewModel(
             "stable_audio",
             "stable_diffusion",
         ];
+
+    // Custom pinned last: enum members are append-only (numeric values persist in saved
+    // projects), so display order can't come from member order.
     public List<InferenceWorkflowProfile> WorkflowProfiles { get; set; } =
-        Enum.GetValues<InferenceWorkflowProfile>().ToList();
+        [
+            .. Enum.GetValues<InferenceWorkflowProfile>()
+                .Where(p => p is not InferenceWorkflowProfile.Custom),
+            InferenceWorkflowProfile.Custom,
+        ];
 
     public StackEditableCardViewModel ExtraNetworksStackCardViewModel { get; } =
         new(vmFactory) { Title = Resources.Label_ExtraNetworks, AvailableModules = [typeof(LoraModule)] };
@@ -285,6 +293,12 @@ public partial class ModelCardViewModel(
     public bool IsZImageWorkflow =>
         ResolvedWorkflowProfile is InferenceWorkflowProfile.ZImageBase or InferenceWorkflowProfile.ZImageTurbo
         || (ResolvedWorkflowProfile is InferenceWorkflowProfile.Custom && SelectedClipType == "lumina2");
+    public bool IsQwenImageWorkflow =>
+        ResolvedWorkflowProfile is InferenceWorkflowProfile.QwenImage
+        || (ResolvedWorkflowProfile is InferenceWorkflowProfile.Custom && SelectedClipType == "qwen_image");
+    public bool IsKrea2Workflow =>
+        ResolvedWorkflowProfile is InferenceWorkflowProfile.Krea2Turbo or InferenceWorkflowProfile.Krea2Raw
+        || (ResolvedWorkflowProfile is InferenceWorkflowProfile.Custom && SelectedClipType == "krea2");
     public bool IsGguf => SelectedUnetModel?.RelativePath.EndsWith("gguf") ?? false;
 
     /// <summary>
@@ -315,9 +329,11 @@ public partial class ModelCardViewModel(
     public string TextEncodersHeader => $"Text Encoders ({TextEncoders.Count})";
 
     /// <summary>
-    /// Whether to show the Shift control (for HiDream and Z-Image workflows, only when in UNet mode).
+    /// Whether to show the Shift control (for HiDream, Z-Image and Qwen Image workflows, only
+    /// when in UNet mode). Krea 2 has no model-sampling shift in its reference workflow.
     /// </summary>
-    public bool ShowShift => ShowEncoderSection && (IsHiDreamWorkflow || IsZImageWorkflow);
+    public bool ShowShift =>
+        ShowEncoderSection && (IsHiDreamWorkflow || IsZImageWorkflow || IsQwenImageWorkflow);
     public bool ShowEncoderTypeSelection =>
         SelectedWorkflowProfile is InferenceWorkflowProfile.Custom
         || (ShowEncoderSection && SelectedWorkflowProfile is not InferenceWorkflowProfile.Auto);
@@ -332,7 +348,9 @@ public partial class ModelCardViewModel(
                 or InferenceWorkflowProfile.Flux2
                 or InferenceWorkflowProfile.ZImageBase
                 or InferenceWorkflowProfile.ZImageTurbo
-                or InferenceWorkflowProfile.Anima;
+                or InferenceWorkflowProfile.Anima
+                or InferenceWorkflowProfile.QwenImage
+                or InferenceWorkflowProfile.Krea2Turbo;
     public bool ShowWorkflowProfileStatus =>
         SelectedWorkflowProfile is InferenceWorkflowProfile.Auto
         && SelectedUnifiedModel is not null
@@ -353,6 +371,10 @@ public partial class ModelCardViewModel(
                 "Apply recommended sampler defaults: Res Multistep / Simple / 8 steps / CFG 1",
             InferenceWorkflowProfile.Anima =>
                 "Apply recommended sampler defaults: ER SDE / Simple / 30 steps / CFG 4",
+            InferenceWorkflowProfile.QwenImage =>
+                "Apply recommended sampler defaults: Euler / Simple / 50 steps / CFG 4 / Shift 3.1",
+            InferenceWorkflowProfile.Krea2Turbo =>
+                "Apply recommended sampler defaults: Euler / Simple / 8 steps / CFG 1",
             _ => "No recommended sampler defaults for this workflow",
         };
 
@@ -421,6 +443,9 @@ public partial class ModelCardViewModel(
                     or InferenceWorkflowProfile.ZImageTurbo
                     or InferenceWorkflowProfile.HiDream
                     or InferenceWorkflowProfile.Anima
+                    or InferenceWorkflowProfile.QwenImage
+                    or InferenceWorkflowProfile.Krea2Turbo
+                    or InferenceWorkflowProfile.Krea2Raw
             )
             {
                 return (
@@ -922,6 +947,21 @@ public partial class ModelCardViewModel(
 
             if (baseModel.Equals("HiDream", StringComparison.OrdinalIgnoreCase))
                 return InferenceWorkflowProfile.HiDream;
+
+            // Covers "Qwen" and "Qwen 2"; must stay after the Flux checks so "Flux.1 Krea"
+            // never reaches the Krea check below.
+            if (baseModel.StartsWith("Qwen", StringComparison.OrdinalIgnoreCase))
+                return InferenceWorkflowProfile.QwenImage;
+
+            if (baseModel.StartsWith("Krea", StringComparison.OrdinalIgnoreCase))
+            {
+                return (model?.RelativePath ?? string.Empty).Contains(
+                    "raw",
+                    StringComparison.OrdinalIgnoreCase
+                )
+                    ? InferenceWorkflowProfile.Krea2Raw
+                    : InferenceWorkflowProfile.Krea2Turbo;
+            }
         }
 
         var name = model?.RelativePath ?? string.Empty;
@@ -952,6 +992,29 @@ public partial class ModelCardViewModel(
 
         if (name.Contains("hidream", StringComparison.OrdinalIgnoreCase))
             return InferenceWorkflowProfile.HiDream;
+
+        // "qwen" alone is too broad (qwen_3_4b encoders, Anima pairings live in other
+        // folders but share the token); require the qwen-image compound. Edit-variant
+        // UNets (qwen_image_edit_*) also land here — they load and sample fine as t2i.
+        if (
+            name.Contains("qwen_image", StringComparison.OrdinalIgnoreCase)
+            || name.Contains("qwen-image", StringComparison.OrdinalIgnoreCase)
+            || name.Contains("qwenimage", StringComparison.OrdinalIgnoreCase)
+        )
+            return InferenceWorkflowProfile.QwenImage;
+
+        // "krea2" specifically, not bare "krea": Flux.1 Krea files ("flux-1-krea-dev")
+        // are Flux models and are already caught by the flux checks above.
+        if (
+            name.Contains("krea2", StringComparison.OrdinalIgnoreCase)
+            || name.Contains("krea-2", StringComparison.OrdinalIgnoreCase)
+            || name.Contains("krea_2", StringComparison.OrdinalIgnoreCase)
+        )
+        {
+            return name.Contains("raw", StringComparison.OrdinalIgnoreCase)
+                ? InferenceWorkflowProfile.Krea2Raw
+                : InferenceWorkflowProfile.Krea2Turbo;
+        }
 
         return InferenceWorkflowProfile.DefaultCheckpoint;
     }
@@ -1214,7 +1277,10 @@ public partial class ModelCardViewModel(
             or InferenceWorkflowProfile.Anima
             or InferenceWorkflowProfile.ZImageBase
             or InferenceWorkflowProfile.ZImageTurbo
-            or InferenceWorkflowProfile.HiDream => true,
+            or InferenceWorkflowProfile.HiDream
+            or InferenceWorkflowProfile.QwenImage
+            or InferenceWorkflowProfile.Krea2Turbo
+            or InferenceWorkflowProfile.Krea2Raw => true,
             // Auto follows the selected model's folder (diffusion_models -> UNet); Custom is
             // left entirely to the user.
             InferenceWorkflowProfile.Auto when SelectedUnifiedModel is not null => SelectedUnifiedModel
@@ -1288,6 +1354,8 @@ public partial class ModelCardViewModel(
         OnPropertyChanged(nameof(ResolvedWorkflowProfile));
         OnPropertyChanged(nameof(IsHiDreamWorkflow));
         OnPropertyChanged(nameof(IsZImageWorkflow));
+        OnPropertyChanged(nameof(IsQwenImageWorkflow));
+        OnPropertyChanged(nameof(IsKrea2Workflow));
         OnPropertyChanged(nameof(ShowShift));
         OnPropertyChanged(nameof(ShowEncoderTypeSelection));
         OnPropertyChanged(nameof(HasRecommendedDefaults));
@@ -1322,6 +1390,8 @@ public partial class ModelCardViewModel(
             InferenceWorkflowProfile.ZImageBase or InferenceWorkflowProfile.ZImageTurbo => "lumina2",
             InferenceWorkflowProfile.Anima => "stable_diffusion",
             InferenceWorkflowProfile.HiDream => "hidream",
+            InferenceWorkflowProfile.QwenImage => "qwen_image",
+            InferenceWorkflowProfile.Krea2Turbo or InferenceWorkflowProfile.Krea2Raw => "krea2",
             _ => SelectedClipType,
         };
 
@@ -1515,6 +1585,28 @@ public partial class ModelCardViewModel(
                         || name.Contains("t5-xxl", StringComparison.OrdinalIgnoreCase),
                     name => name.Contains("llama", StringComparison.OrdinalIgnoreCase),
                 ];
+            case InferenceWorkflowProfile.QwenImage:
+                // Official encoder is qwen_2.5_vl_7b_fp8_scaled.safetensors (Qwen2.5-VL 7B).
+                return
+                [
+                    name =>
+                        name.Contains("qwen_2.5_vl", StringComparison.OrdinalIgnoreCase)
+                        || name.Contains("qwen2.5_vl", StringComparison.OrdinalIgnoreCase)
+                        || name.Contains("qwen2.5-vl", StringComparison.OrdinalIgnoreCase)
+                        || name.Contains("qwen_2_5_vl", StringComparison.OrdinalIgnoreCase),
+                ];
+            case InferenceWorkflowProfile.Krea2Turbo:
+            case InferenceWorkflowProfile.Krea2Raw:
+                // Official encoder is qwen3vl_4b_fp8_scaled.safetensors (Qwen3-VL 4B) — a
+                // different family from both Klein's text-only qwen_3_4b and Qwen Image's
+                // qwen_2.5_vl.
+                return
+                [
+                    name =>
+                        name.Contains("qwen3vl", StringComparison.OrdinalIgnoreCase)
+                        || name.Contains("qwen3-vl", StringComparison.OrdinalIgnoreCase)
+                        || name.Contains("qwen3_vl", StringComparison.OrdinalIgnoreCase),
+                ];
             default:
                 return [];
         }
@@ -1523,7 +1615,7 @@ public partial class ModelCardViewModel(
     /// <summary>
     /// Whether <paramref name="fileName"/> is the known-default VAE for the profile.
     /// Flux.1, Z-Image and HiDream all use the Flux.1 VAE (ae.safetensors); Flux.2 has its
-    /// own VAE; Anima reuses the Qwen Image VAE.
+    /// own VAE; Anima, Qwen Image and Krea 2 all reuse the Qwen Image VAE.
     /// </summary>
     private static bool MatchesDefaultVaeForProfile(InferenceWorkflowProfile profile, string fileName) =>
         profile switch
@@ -1536,7 +1628,10 @@ public partial class ModelCardViewModel(
                 "ae.safetensors",
                 StringComparison.OrdinalIgnoreCase
             ),
-            InferenceWorkflowProfile.Anima => fileName.Contains(
+            InferenceWorkflowProfile.Anima
+            or InferenceWorkflowProfile.QwenImage
+            or InferenceWorkflowProfile.Krea2Turbo
+            or InferenceWorkflowProfile.Krea2Raw => fileName.Contains(
                 "qwen_image_vae",
                 StringComparison.OrdinalIgnoreCase
             ),

@@ -16,6 +16,8 @@ public static class LocalProviderModelManagerRegistry
         Register(new FluxKontextModelManager());
         Register(new QwenImageEditModelManager());
         Register(new Flux2KleinModelManager());
+        Register(new QwenImageModelManager());
+        Register(new Krea2TurboModelManager());
     }
 
     /// <summary>

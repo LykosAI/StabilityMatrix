@@ -278,12 +278,25 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
             )
         );
 
+    protected bool IsQwenImageUnet =>
+        IsUnetLoader
+        && (
+            ResolvedWorkflowProfile is InferenceWorkflowProfile.QwenImage
+            || (
+                ResolvedWorkflowProfile is InferenceWorkflowProfile.Custom
+                && ModelCardViewModel.SelectedClipType is "qwen_image"
+            )
+        );
+
     protected bool UsesSd3Latent =>
         ResolvedWorkflowProfile
             is InferenceWorkflowProfile.Flux
                 or InferenceWorkflowProfile.ZImageBase
                 or InferenceWorkflowProfile.ZImageTurbo
                 or InferenceWorkflowProfile.HiDream
+                or InferenceWorkflowProfile.QwenImage
+                or InferenceWorkflowProfile.Krea2Turbo
+                or InferenceWorkflowProfile.Krea2Raw
         || (
             ResolvedWorkflowProfile is InferenceWorkflowProfile.Custom
             && ModelCardViewModel.SelectedClipType is not "stable_diffusion" and not "flux2"
@@ -299,7 +312,7 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
 
     protected void ApplyModelSamplingForCurrentWorkflow(ModuleApplyStepEventArgs applyArgs)
     {
-        if (!IsZImageUnet)
+        if (!IsZImageUnet && !IsQwenImageUnet)
             return;
 
         var builder = applyArgs.Builder;
@@ -380,6 +393,19 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
                 SamplerCardViewModel.SelectedScheduler = ComfyScheduler.Simple;
                 SamplerCardViewModel.Steps = 30;
                 SamplerCardViewModel.CfgScale = 4.0d;
+                break;
+            case InferenceWorkflowProfile.QwenImage:
+                SamplerCardViewModel.SelectedSampler = ComfySampler.Euler;
+                SamplerCardViewModel.SelectedScheduler = ComfyScheduler.Simple;
+                SamplerCardViewModel.Steps = 50;
+                SamplerCardViewModel.CfgScale = 4.0d;
+                ModelCardViewModel.Shift = 3.1d;
+                break;
+            case InferenceWorkflowProfile.Krea2Turbo:
+                SamplerCardViewModel.SelectedSampler = ComfySampler.Euler;
+                SamplerCardViewModel.SelectedScheduler = ComfyScheduler.Simple;
+                SamplerCardViewModel.Steps = 8;
+                SamplerCardViewModel.CfgScale = 1.0d;
                 break;
         }
     }

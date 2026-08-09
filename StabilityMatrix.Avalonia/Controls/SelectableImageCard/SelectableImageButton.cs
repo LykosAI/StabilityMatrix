@@ -30,6 +30,11 @@ public class SelectableImageButton : Button
         bool
     >("IsVideo", false);
 
+    public static readonly StyledProperty<int> DecodeWidthProperty = AvaloniaProperty.Register<
+        SelectableImageButton,
+        int
+    >("DecodeWidth");
+
     static SelectableImageButton()
     {
         AffectsRender<SelectableImageButton>(ImageWidthProperty, ImageHeightProperty);
@@ -64,5 +69,15 @@ public class SelectableImageButton : Button
     {
         get => GetValue(IsVideoProperty);
         set => SetValue(IsVideoProperty, value);
+    }
+
+    /// <summary>
+    /// Width (px) to decode the image at, or 0 for source resolution. See
+    /// <see cref="VendorLabs.BetterAsyncImage.DecodeWidth"/>.
+    /// </summary>
+    public int DecodeWidth
+    {
+        get => GetValue(DecodeWidthProperty);
+        set => SetValue(DecodeWidthProperty, value);
     }
 }

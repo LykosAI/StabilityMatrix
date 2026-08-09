@@ -246,6 +246,7 @@ public partial class MaskEditorViewModel(IServiceManager<ViewModelBase> vmFactor
     {
         _cachedMaskRenderImage?.Dispose();
         _cachedMaskRenderInverseAlphaImage?.Dispose();
+        PaintCanvasViewModel.Dispose();
         GC.SuppressFinalize(this);
     }
 }

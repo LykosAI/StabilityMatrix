@@ -180,7 +180,7 @@ public class InferenceFluxTextToImageViewModel : InferenceGenerationViewModelBas
             }
         }
 
-        if (!await CheckClientConnectedWithPrompt() || !ClientManager.IsConnected)
+        if (!await CheckClientConnectedWithPrompt(cancellationToken) || !ClientManager.IsConnected)
             return;
 
         // If enabled, randomize the seed

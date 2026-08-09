@@ -123,11 +123,20 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
         // Set up Move tool callback to update image layer offsets
         PaintCanvasViewModel.OnMoveToolDrag = (newOffsetX, newOffsetY) =>
         {
-            if (SelectedLayer is { LayerType: MaskLayerType.Image })
+            if (SelectedLayer is { LayerType: MaskLayerType.Image } layer)
             {
-                SelectedLayer.ImageOffsetX = newOffsetX;
-                SelectedLayer.ImageOffsetY = newOffsetY;
-                SyncSelectedLayerToCanvas();
+                layer.ImageOffsetX = newOffsetX;
+                layer.ImageOffsetY = newOffsetY;
+
+                // Lightweight sync: only the dragged image layer changed, so re-render just its
+                // bitmap instead of re-compositing every other layer via SyncSelectedLayerToCanvas
+                if (layer.IsVisible && layer.SourceImage is not null && CanvasSize != Size.Empty)
+                {
+                    var selectedImageBitmap = RenderSingleImageLayer(layer);
+                    PaintCanvasViewModel.SetLayerBitmap("CurrentImage", selectedImageBitmap?.Copy());
+                }
+
+                PaintCanvasViewModel.RefreshCanvas?.Invoke();
             }
         };
 

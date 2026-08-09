@@ -78,23 +78,38 @@ public static class FluxKontextWorkflowBuilder
             }
         );
 
-        // DualCLIPLoader for Flux
-        var clipLoader = nodes.AddTypedNode(
-            new ComfyNodeBuilder.DualCLIPLoader
-            {
-                Name = nodes.GetUniqueName(nameof(ComfyNodeBuilder.DualCLIPLoader)),
-                ClipName1 = selectedModels.Clip1Model.RelativePath,
-                ClipName2 = selectedModels.Clip2Model.RelativePath,
-                Type = "flux",
-            }
-        );
+        // DualCLIPLoader for Flux (GGUF variant can also load .safetensors, so any gguf pick routes there)
+        var clipOutput =
+            selectedModels.Clip1Model.IsGguf || selectedModels.Clip2Model.IsGguf
+                ? nodes
+                    .AddTypedNode(
+                        new ComfyNodeBuilder.DualCLIPLoaderGGUF
+                        {
+                            Name = nodes.GetUniqueName(nameof(ComfyNodeBuilder.DualCLIPLoaderGGUF)),
+                            ClipName1 = selectedModels.Clip1Model.RelativePath,
+                            ClipName2 = selectedModels.Clip2Model.RelativePath,
+                            Type = "flux",
+                        }
+                    )
+                    .Output
+                : nodes
+                    .AddTypedNode(
+                        new ComfyNodeBuilder.DualCLIPLoader
+                        {
+                            Name = nodes.GetUniqueName(nameof(ComfyNodeBuilder.DualCLIPLoader)),
+                            ClipName1 = selectedModels.Clip1Model.RelativePath,
+                            ClipName2 = selectedModels.Clip2Model.RelativePath,
+                            Type = "flux",
+                        }
+                    )
+                    .Output;
 
         // Apply LoRAs if any
         var (currentModel, currentClip) = ComfyWorkflowHelper.ApplyLoras(
             nodes,
             loras,
             unetOutput,
-            clipLoader.Output
+            clipOutput
         );
 
         // 2. Encode text prompt

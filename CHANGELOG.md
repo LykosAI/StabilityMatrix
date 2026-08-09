@@ -5,6 +5,57 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.16.2
+> Full technical notes for this release: [docs.lykos.ai/stability-matrix/release-notes/2.16.2](https://docs.lykos.ai/stability-matrix/release-notes/2.16.2)
+### Added
+- 📚 **New documentation site** at [docs.lykos.ai](https://docs.lykos.ai/stability-matrix/) — getting started and installation guides, package manager and Inference walkthroughs, environment variable and advanced configuration references, a terminology glossary, and troubleshooting for common issues. Written by @NeuralFault!
+- Added **OneTrainer** to the native **Windows ROCm (AMD GPU)** helper — new OneTrainer installs on supported AMD hardware get the ROCm PyTorch build, ROCm-aware bitsandbytes and triton dependencies, and the right launch environment applied automatically. New OneTrainer installs also default to Python 3.12 on all platforms - thanks to @NeuralFault!
+### Changed
+- **Generate now auto-resumes after launching ComfyUI.** If you press Generate in Inference while ComfyUI isn't connected and choose to launch it from the connection prompt, the queued generation now waits for startup and runs on its own once connected - no need to press Generate a second time
+- Updated the **Windows ROCm helper**'s bundled bitsandbytes wheel to a build compatible with ROCm 7.13–7.15, so it keeps working as AMD's ROCm Technical Preview builds update - thanks to @NeuralFault!
+- CivitAI downloads now pick their destination folder from the file's declared type (**Diffusion Model**/**UNet** → DiffusionModels, **Text Encoder** → TextEncoders, **CLIP Vision** → ClipVision, **ControlNet** → ControlNet, **Upscaler** → upscalers) instead of guessing from the model's name. Name-based guessing remains only for files typed plain "Model", and now recognizes **Krea 2** checkpoints as UNet-only
+### Fixed
+- Fixed a class of random crashes in the Inference **mask editor** and **image annotation editor** — undo/redo, layer operations, exporting, or closing the editor could free graphics resources that were still being drawn with, occasionally crashing mid-stroke or while saving. Canvas rendering has been restructured so this can't happen
+- Fixed **pen pressure** re-widening the whole stroke instead of following the pen while drawing, and mouse-drawn strokes coming back ~25% thicker after saving and reopening a project. Existing project files load exactly as before
+- Fixed the mask editor and image annotation editor leaking graphics memory — the paint canvas wasn't released on close, and paint-bucket fills were never freed
+- Fixed fast brush strokes occasionally failing with a "collection was modified" error while the stroke was still being drawn
+- Fixed opening older projects whose masks contained stroke points outside the canvas failing with an overflow error
+- Fixed a potential crash when the paint canvas rendered before its size was set
+- Fixed CivitAI models showing an empty Files section with no download links when their files use CivitAI's newer type labels (e.g. **Krea 2 Turbo** and **Z-Image**, typed **Diffusion Model** or **Text Encoder**). All current CivitAI file types are now recognized across the browser, details page, version dialog, bulk download, and installed/update detection
+- Fixed CivitAI "Download with Stability Matrix" links saving UNet-only checkpoints (Flux, Wan Video, Hunyuan, Krea 2) into the **StableDiffusion** folder — external links now use the same destination logic as the in-app browser
+- Fixed [#1666](https://github.com/LykosAI/StabilityMatrix/issues/1666) - AppImage builds creating a broken `.desktop` entry that never appeared in the application launcher and reverted manual edits on the next launch. AppImage runs now install a proper launcher entry with the app icon, and the running window shows the correct icon in the dock/taskbar (deb/rpm/flatpak installs keep their package-managed entries)
+- Fixed `stabilitymatrix://` deep links (e.g. CivitAI "Download with Stability Matrix" buttons) being ignored on Linux AppImage builds
+- Fixed [#1668](https://github.com/LykosAI/StabilityMatrix/issues/1668) - the **Output Browser** crashing on open when an output folder contained a broken junction or symlink (a folder whose target no longer exists); those entries are now skipped instead of taking the page down
+- Fixed [#1681](https://github.com/LykosAI/StabilityMatrix/issues/1681) - Inference generation with **FaceDetailer** failing instantly with "An item with the same key has already been added" when two installed custom node folders share the same git remote
+- Fixed [#1679](https://github.com/LykosAI/StabilityMatrix/issues/1679) - model details pages never showing the **Installed** label, delete button, or version checkmark for files whose type displays as "Unknown". Installed detection now goes by file hash, so it works no matter what type CivitAI reports
+- Fixed [#1667](https://github.com/LykosAI/StabilityMatrix/issues/1667) - importing an existing package folder silently pre-selecting **Forge** as the package type, misclassifying re-imported packages. The type is now auto-detected from the folder's git remote
+- Fixed [#1669](https://github.com/LykosAI/StabilityMatrix/issues/1669) - **Stable Diffusion WebUI reForge** installing the CUDA build of PyTorch on Linux AMD systems even with ROCm selected
+- Fixed [#1672](https://github.com/LykosAI/StabilityMatrix/issues/1672) - **Image Lab** failing with a generic "ComfyUI rejected the workflow" error when generating with a GGUF model while the **ComfyUI-GGUF** extension isn't installed — it now offers the same one-click **install and restart** prompt as Inference
+- Fixed GGUF-quantized **text encoders** failing with a ComfyUI error when selected — they now load through the ComfyUI-GGUF CLIP loaders in all Inference workflows and Image Lab (mixed GGUF + safetensors selections work too), with the install prompt appearing if the extension is missing
+- Fixed **Chroma** and other single-encoder models being impossible to configure in Inference UNet workflows — the encoder **Type** dropdown was missing `chroma` and other single-encoder types, and the closest option (`flux`) demanded a second encoder these models don't use. The missing types are now listed, and single-encoder types get a single encoder slot
+- Fixed GGUF text encoders in the shared **TextEncoders** folder not appearing in the Inference Text Encoder dropdowns while connected to ComfyUI
+- Fixed [#1682](https://github.com/LykosAI/StabilityMatrix/issues/1682) - the Linux **AppImage** failing to start on modern distros (Ubuntu 24.04+, Fedora 40+) that no longer ship `libfuse2`. The AppImage now uses a FUSE3-based runtime, and falls back to extract-and-run when FUSE isn't available at all - thanks to @NeuralFault!
+- Fixed the Model Browser failing with "CivitAI can't be reached right now (OK: OK)" — CivitAI recently started returning `null` for some model statistics (download counts, ratings), which broke loading the whole page of results. Missing stats are now read as 0
+- Fixed [#1695](https://github.com/LykosAI/StabilityMatrix/issues/1695) - models whose CivitAI page has since been deleted showing an error dialog on every click, with no way to break the link:
+  - The model details page now shows locally cached info instead of a dead page when the CivitAI page is gone
+  - **Next/Previous** on the details page skip over deleted models instead of getting stuck on an error
+  - New right-click **Disconnect from Source** action on Checkpoint Manager cards severs the link to the deleted page while keeping the local metadata (name, description, thumbnail, trigger words) — after disconnecting, clicking the card selects it like any other local model
+- Fixed **OneTrainer** failing to launch with current upstream versions after its UI script was renamed (`train_ui.py` → `train_ui_ctk.py`) - thanks to @NeuralFault!
+### Performance
+- Dragging an image layer with the **Move** tool in the layered mask editor now re-renders only the dragged layer instead of re-compositing every layer on each pointer move, so dragging stays smooth in multi-layer projects
+- Faster color-mask extraction for regional prompting — a 1024×1024 canvas with six regions previously did over six million dictionary lookups per extraction
+- Fixed a small native memory leak while drawing with the mouse (a path object per frame was never freed), and removed a redundant full-canvas scan after every paint-bucket fill
+- The **Checkpoints** and **Outputs** galleries now load thumbnails at display size instead of full resolution, using far less memory and scrolling much more smoothly with large libraries
+- The **CivitAI** and **OpenModelDB** browsers now keep card images in memory, so scrolling back over models you've already seen no longer re-loads them from disk
+- Lightened the CivitAI model cards so they render faster while scrolling
+### Security
+- Bundled **ADetailer** model downloads now point at a fixed Hugging Face revision instead of the repository's moving `main` branch, so an upstream re-upload can't change what you get - thanks to @ungrav!
+### Supporters
+#### 🌟 Visionaries
+There's not much glamour in a release like this one: crashes hunted down in the mask editor, downloads finally landing in the folders they belong in, Linux installs that just start. Our Visionaries are the reason we can hand a whole cycle to that kind of work, and to writing the documentation that now lives inside the app. Thank you **Waterclouds**, **MrMxyzptlk12836**, **Psilocyfer18731**, **bluepopsicle**, **Ibixat**, **Droolguy**, **KalAbaddon**, **LG**, **snotty**, **whudunit**, **cusalapapen1481**, and **moon_milky2843** for backing the unglamorous parts as generously as the exciting ones. And a warm welcome to **tarekk071223**, **CC**, and **SnooSnooEternal**, the newest names on this list; it's genuinely good to have you here. 💛
+#### 🚀 Pioneers
+Our Pioneers hold up the other half of this, and what a steady crew you are: **Szir777**, **[USA]TechDude**, **SinthCore**, **Jisuren**, **Tigon**, **jweg79**, **rwx14662**, **Hurbie53**, **ahnhj.al**, **drew.lukas**, **Tuskaruho**, **Cjloha**, **Alligator1907**, **Bitti**, **Ghislain G**, **CommissarGiygas16050**, **qob97515211**, **bastardofbethlehem**, and **Zombop**, thank you for sticking around release after release. A big hello as well to **Silerae**, **joshsciascia72**, and **rad64741317**, who join the Pioneers this time; we're really happy you're with us. Every fix in this changelog has a bit of all of you behind it. 💛
+
 ## v2.16.1
 ### Added
 - Added **automatic text encoder and VAE selection** to the Inference Model card. Selecting a model now fills any empty encoder slots and the default VAE with the matching local files for the detected workflow, so you don't need to know which files pair with which architecture (e.g. `qwen_3_4b` or `qwen_3_8b` + Flux.2 VAE for Flux.2 Klein, `clip_l` + `t5xxl` for Flux, `qwen_3_06b` + `qwen_image_vae` for Anima). Anything you pick manually is never overridden

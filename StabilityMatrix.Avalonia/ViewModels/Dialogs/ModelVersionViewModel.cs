@@ -23,9 +23,11 @@ public partial class ModelVersionViewModel : DisposableViewModelBase
 
         ModelVersion = modelVersion;
 
+        // Install detection is purely hash-based: a file whose hash is in the local model index is
+        // on disk, regardless of the type Civitai reports (which may be Unknown for new types)
         IsInstalled =
             ModelVersion.Files?.Any(file =>
-                file is { Type: CivitFileType.Model, Hashes.BLAKE3: not null }
+                file is { Hashes.BLAKE3: not null }
                 && modelIndexService.ModelIndexBlake3Hashes.Contains(file.Hashes.BLAKE3)
             ) ?? false;
 
@@ -36,7 +38,7 @@ public partial class ModelVersionViewModel : DisposableViewModelBase
     {
         IsInstalled =
             ModelVersion.Files?.Any(file =>
-                file is { Type: CivitFileType.Model, Hashes.BLAKE3: not null }
+                file is { Hashes.BLAKE3: not null }
                 && modelIndexService.ModelIndexBlake3Hashes.Contains(file.Hashes.BLAKE3)
             ) ?? false;
     }

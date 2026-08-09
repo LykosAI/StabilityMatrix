@@ -43,6 +43,17 @@ export default defineConfig({
 
   appearance: 'dark',
 
+  // Apply the saved layout-width preference (nav-bar toggle, see
+  // theme/LayoutWidthToggle.vue) before first paint so the page doesn't
+  // flash at the wrong width. Full-width is the default.
+  head: [
+    [
+      'script',
+      {},
+      `(function () { try { if (localStorage.getItem('sm-docs-layout') !== 'centered') document.documentElement.classList.add('sm-fluid') } catch (e) { document.documentElement.classList.add('sm-fluid') } })()`
+    ]
+  ],
+
   // Requires full git history at build time (fetch-depth: 0 in the deploy job).
   lastUpdated: true,
 
@@ -74,7 +85,8 @@ export default defineConfig({
       { text: 'Inference', link: '/stability-matrix/inference/overview' },
       { text: 'Advanced', link: '/stability-matrix/advanced/overview' },
       { text: 'Tips and Tricks', link: '/stability-matrix/tips/overview' },
-      { text: 'Troubleshooting', link: '/stability-matrix/troubleshooting/common-issues' }
+      { text: 'Troubleshooting', link: '/stability-matrix/troubleshooting/common-issues' },
+      { text: 'Release Notes', link: '/stability-matrix/release-notes/2.16.2' }
     ],
 
     sidebar: {
@@ -132,6 +144,14 @@ export default defineConfig({
           text: 'Troubleshooting',
           items: [
             { text: 'Common Issues', link: '/stability-matrix/troubleshooting/common-issues' }
+          ]
+        }
+      ],
+      '/stability-matrix/release-notes/': [
+        {
+          text: 'Release Notes',
+          items: [
+            { text: 'v2.16.2', link: '/stability-matrix/release-notes/2.16.2' }
           ]
         }
       ]

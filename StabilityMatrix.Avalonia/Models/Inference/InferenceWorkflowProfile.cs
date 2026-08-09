@@ -1,12 +1,16 @@
+using System.Text.Json.Serialization;
 using StabilityMatrix.Core.Extensions;
 
 namespace StabilityMatrix.Avalonia.Models.Inference;
 
 /// <summary>
-/// Saved Inference projects persist this enum by numeric value, so members are append-only:
-/// never insert, reorder, or renumber. Dropdown ordering (Custom last) is handled by
+/// Persisted in saved Inference projects as the member name (see
+/// <see cref="InferenceWorkflowProfileJsonConverter"/>); the explicit numeric values remain
+/// the read-compatibility contract for projects saved by pre-2.17 builds, so they are still
+/// append-only. Dropdown ordering (Custom last) is handled by
 /// <see cref="ViewModels.Inference.ModelCardViewModel.WorkflowProfiles"/>, not member order.
 /// </summary>
+[JsonConverter(typeof(InferenceWorkflowProfileJsonConverter))]
 public enum InferenceWorkflowProfile
 {
     [StringValue("Auto")]

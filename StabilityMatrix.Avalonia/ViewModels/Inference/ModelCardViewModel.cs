@@ -1517,9 +1517,12 @@ public partial class ModelCardViewModel(
     }
 
     /// <summary>
-    /// Waits for all companion downloads to finish (bumping the bar's progress text as each
-    /// completes), refreshes the model index, then re-runs component auto-selection so the
-    /// freshly downloaded files fill the empty slots without the user touching anything.
+    /// Waits for the companion downloads, refreshing the index and re-running component
+    /// auto-selection as EACH one finishes (so a VAE that completes early fills its slot
+    /// immediately instead of waiting for the whole batch). The final pass waits — bounded —
+    /// for the client manager's model collections to actually contain the downloaded files:
+    /// they repopulate from the index change asynchronously, and auto-selecting before the
+    /// rebind lands silently misses the last file ("VAE popped in but not the TE").
     /// </summary>
     private async Task TrackCompanionDownloadsAsync(IReadOnlyList<TrackedDownload> downloads)
     {
@@ -1530,6 +1533,12 @@ public partial class ModelCardViewModel(
         {
             var success = await WaitForTerminalStateAsync(download);
             var done = Interlocked.Increment(ref completed);
+
+            if (success)
+            {
+                await modelIndexService.RefreshIndex();
+            }
+
             Dispatcher.UIThread.Post(() =>
             {
                 if (isDownloadingCompanions)
@@ -1538,22 +1547,37 @@ public partial class ModelCardViewModel(
                         $"⬇️ Downloading components ({done}/{total})… — see the Activity tab for progress";
                     OnPropertyChanged(nameof(MissingCompanionsBarText));
                 }
+
+                // Opportunistic early fill; the final pass below is the guaranteed one.
+                AutoSelectComponentsForResolvedProfile();
             });
+
             return success;
         }
 
         var results = await Task.WhenAll(downloads.Select(TrackOne));
+        var failCount = results.Count(r => !r);
 
         await modelIndexService.RefreshIndex();
 
-        await Dispatcher.UIThread.InvokeAsync(() =>
+        await Dispatcher.UIThread.InvokeAsync(async () =>
         {
+            if (failCount == 0)
+            {
+                // Give the index-to-collections rebind time to surface every downloaded
+                // file. Bounded: if something genuinely never appears, fall through and the
+                // bar simply shows it as still missing.
+                for (var i = 0; i < 20 && GetMissingCompanions().Count > 0; i++)
+                {
+                    await Task.Delay(250);
+                }
+            }
+
             isDownloadingCompanions = false;
             AutoSelectComponentsForResolvedProfile();
             NotifyCompanionBarChanged();
         });
 
-        var failCount = results.Count(r => !r);
         if (failCount == 0)
         {
             notificationService.Show(

@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed clicking a cloud-download entry in model dropdowns sometimes doing nothing until you clicked a different item first
 - Fixed jumpy, hard-to-reach scrolling near the cloud-download entries in model dropdowns
 - Fixed switching model families after an app restart keeping the previous family's text encoders and slot count (e.g. Flux.2 Klein holding onto clip_l) — restored auto-picked components are now recognized as replaceable again; your own manual encoder picks stay protected
+- Fixed companion downloads sometimes not filling their slot when the batch finished (e.g. the text encoder staying empty while the VAE filled) — each component now fills in as soon as its download completes, and the final pass waits for the model list to catch up
 - Fixed the Model Browser failing with "CivitAI can't be reached right now (OK: OK)" — CivitAI recently started returning `null` for some model statistics (download counts, ratings), which broke loading the whole page of results. Missing stats are now read as 0
 - Fixed [#1695](https://github.com/LykosAI/StabilityMatrix/issues/1695) - models whose CivitAI page has since been deleted showing an error dialog on every click, with no way to break the link:
   - The model details page now shows locally cached info instead of a dead page when the CivitAI page is gone

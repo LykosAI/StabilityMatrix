@@ -5,29 +5,17 @@ namespace StabilityMatrix.Tests.Avalonia;
 [TestClass]
 public class InferenceProfileCompanionsTests
 {
-    private static readonly InferenceWorkflowProfile[] StandaloneProfiles =
-    [
-        InferenceWorkflowProfile.Flux,
-        InferenceWorkflowProfile.Flux2,
-        InferenceWorkflowProfile.ZImageBase,
-        InferenceWorkflowProfile.ZImageTurbo,
-        InferenceWorkflowProfile.Anima,
-        InferenceWorkflowProfile.HiDream,
-        InferenceWorkflowProfile.QwenImage,
-        InferenceWorkflowProfile.Krea2Turbo,
-        InferenceWorkflowProfile.Krea2Raw,
-    ];
+    private static IEnumerable<InferenceWorkflowProfile> StandaloneProfiles =>
+        InferenceWorkflowProfiles.All.Where(p => p.UsesStandaloneLoader is true);
 
     [TestMethod]
     public void StandaloneProfiles_HaveEncoderAndVaeCompanions()
     {
         foreach (var profile in StandaloneProfiles)
         {
-            var encoders = InferenceProfileCompanions.GetEncoderCompanions(profile, unetModel: null);
-            Assert.IsTrue(encoders.Count > 0, $"{profile} should have at least one encoder companion");
-
-            var vae = InferenceProfileCompanions.GetVaeCompanion(profile);
-            Assert.IsNotNull(vae, $"{profile} should have a VAE companion");
+            var encoders = profile.GetEncoderCompanions(null);
+            Assert.IsTrue(encoders.Count > 0, $"{profile.Key} should have at least one encoder companion");
+            Assert.IsNotNull(profile.VaeCompanion, $"{profile.Key} should have a VAE companion");
         }
     }
 
@@ -41,11 +29,9 @@ public class InferenceProfileCompanionsTests
     {
         foreach (var profile in StandaloneProfiles)
         {
-            var companions = InferenceProfileCompanions
-                .GetEncoderCompanions(profile, unetModel: null)
-                .ToList();
+            var companions = profile.GetEncoderCompanions(null).ToList();
 
-            if (InferenceProfileCompanions.GetVaeCompanion(profile) is { } vae)
+            if (profile.VaeCompanion is { } vae)
             {
                 companions.Add(vae);
             }
@@ -55,7 +41,7 @@ public class InferenceProfileCompanionsTests
                 var fileName = companion.Resource.FileName;
                 Assert.IsTrue(
                     companion.MatchesFileName(fileName),
-                    $"{profile}: matcher for '{companion.DisplayName}' rejects its own download '{fileName}'"
+                    $"{profile.Key}: matcher for '{companion.DisplayName}' rejects its own download '{fileName}'"
                 );
             }
         }
@@ -75,13 +61,10 @@ public class InferenceProfileCompanionsTests
         {
             Assert.AreEqual(
                 0,
-                InferenceProfileCompanions.GetEncoderCompanions(profile, unetModel: null).Count,
-                $"{profile} should have no encoder companions"
+                profile.GetEncoderCompanions(null).Count,
+                $"{profile.Key} should have no encoder companions"
             );
-            Assert.IsNull(
-                InferenceProfileCompanions.GetVaeCompanion(profile),
-                $"{profile} should have no VAE companion"
-            );
+            Assert.IsNull(profile.VaeCompanion, $"{profile.Key} should have no VAE companion");
         }
     }
 
@@ -98,18 +81,10 @@ public class InferenceProfileCompanionsTests
         const string qwenImageEncoder = "qwen_2.5_vl_7b_fp8_scaled.safetensors";
         const string animaEncoder = "qwen_3_06b_base.safetensors";
 
-        var qwenImage = InferenceProfileCompanions
-            .GetEncoderCompanions(InferenceWorkflowProfile.QwenImage, null)
-            .Single();
-        var krea = InferenceProfileCompanions
-            .GetEncoderCompanions(InferenceWorkflowProfile.Krea2Turbo, null)
-            .Single();
-        var flux2 = InferenceProfileCompanions
-            .GetEncoderCompanions(InferenceWorkflowProfile.Flux2, null)
-            .Single();
-        var anima = InferenceProfileCompanions
-            .GetEncoderCompanions(InferenceWorkflowProfile.Anima, null)
-            .Single();
+        var qwenImage = InferenceWorkflowProfile.QwenImage.GetEncoderCompanions(null).Single();
+        var krea = InferenceWorkflowProfile.Krea2Turbo.GetEncoderCompanions(null).Single();
+        var flux2 = InferenceWorkflowProfile.Flux2.GetEncoderCompanions(null).Single();
+        var anima = InferenceWorkflowProfile.Anima.GetEncoderCompanions(null).Single();
 
         Assert.IsFalse(qwenImage.MatchesFileName(kreaEncoder));
         Assert.IsFalse(qwenImage.MatchesFileName(kleinEncoder));
@@ -126,5 +101,23 @@ public class InferenceProfileCompanionsTests
         Assert.IsFalse(anima.MatchesFileName(kreaEncoder));
         Assert.IsFalse(anima.MatchesFileName(qwenImageEncoder));
         Assert.IsFalse(anima.MatchesFileName(kleinEncoder));
+    }
+
+    /// <summary>
+    /// Legacy numeric values and string keys must both be unique — they are the persisted
+    /// identities of saved projects.
+    /// </summary>
+    [TestMethod]
+    public void ProfileIdentities_AreUnique()
+    {
+        var all = InferenceWorkflowProfiles.All;
+
+        CollectionAssert.AllItemsAreUnique(all.Select(p => p.Key).ToList());
+        CollectionAssert.AllItemsAreUnique(all.Select(p => p.LegacyValue).ToList());
+        Assert.AreSame(
+            InferenceWorkflowProfile.Custom,
+            all[^1],
+            "Custom must stay last in the dropdown order"
+        );
     }
 }

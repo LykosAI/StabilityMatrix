@@ -4,8 +4,8 @@ using System.Text.Json.Serialization;
 namespace StabilityMatrix.Avalonia.Models.Inference;
 
 /// <summary>
-/// Persists <see cref="InferenceWorkflowProfile"/> as its stable string name ("Flux2") while
-/// still reading the numeric values that pre-2.17 saved projects carry. Unknown names or
+/// Persists <see cref="InferenceWorkflowProfile"/> as its stable <c>Key</c> ("Flux2") while
+/// still reading the numeric values that pre-2.17 saved projects carry. Unknown keys or
 /// out-of-range numbers fall back to Auto — a project saved by a newer app version with a
 /// profile this build doesn't know must load rather than throw.
 /// </summary>
@@ -15,25 +15,13 @@ public class InferenceWorkflowProfileJsonConverter : JsonConverter<InferenceWork
         ref Utf8JsonReader reader,
         Type typeToConvert,
         JsonSerializerOptions options
-    )
-    {
-        switch (reader.TokenType)
+    ) =>
+        reader.TokenType switch
         {
-            case JsonTokenType.Number:
-                var value = (InferenceWorkflowProfile)reader.GetInt32();
-                return Enum.IsDefined(value) ? value : InferenceWorkflowProfile.Auto;
-            case JsonTokenType.String:
-                return Enum.TryParse<InferenceWorkflowProfile>(
-                    reader.GetString(),
-                    ignoreCase: true,
-                    out var parsed
-                )
-                    ? parsed
-                    : InferenceWorkflowProfile.Auto;
-            default:
-                return InferenceWorkflowProfile.Auto;
-        }
-    }
+            JsonTokenType.Number => InferenceWorkflowProfiles.FromLegacyValue(reader.GetInt32()),
+            JsonTokenType.String => InferenceWorkflowProfiles.FromKey(reader.GetString()),
+            _ => InferenceWorkflowProfile.Auto,
+        };
 
     public override void Write(
         Utf8JsonWriter writer,
@@ -41,6 +29,6 @@ public class InferenceWorkflowProfileJsonConverter : JsonConverter<InferenceWork
         JsonSerializerOptions options
     )
     {
-        writer.WriteStringValue(value.ToString());
+        writer.WriteStringValue(value.Key);
     }
 }

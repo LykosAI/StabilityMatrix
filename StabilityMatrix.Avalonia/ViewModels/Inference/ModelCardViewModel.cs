@@ -2,6 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
+using AsyncAwaitBestPractices;
 using Avalonia.Controls.Notifications;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -24,6 +25,7 @@ using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 using StabilityMatrix.Core.Models.Api.Comfy.NodeTypes;
 using StabilityMatrix.Core.Models.Inference;
+using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
@@ -1365,6 +1367,9 @@ public partial class ModelCardViewModel(
         OnPropertyChanged(nameof(WorkflowProfileWarningText));
         OnPropertyChanged(nameof(ShowWorkflowProfileWarning));
         OnPropertyChanged(nameof(MoveModelToRecommendedFolderText));
+        OnPropertyChanged(nameof(MissingCompanionsText));
+        OnPropertyChanged(nameof(MissingCompanionsBarText));
+        OnPropertyChanged(nameof(ShowMissingCompanionsBar));
     }
 
     private void RefreshWorkflowProfileState()
@@ -1528,115 +1533,237 @@ public partial class ModelCardViewModel(
 
     /// <summary>
     /// Per-slot filename matchers for the encoder files each profile expects, in slot order.
-    /// Empty for profiles where the encoder is baked into the checkpoint or unknown.
+    /// Sourced from <see cref="InferenceProfileCompanions"/> so these matchers and the
+    /// missing-companion download offers can never disagree about what a profile needs.
     /// </summary>
     private IReadOnlyList<Func<string, bool>> GetDefaultEncoderMatchersForProfile(
         InferenceWorkflowProfile profile
-    )
-    {
-        switch (profile)
-        {
-            case InferenceWorkflowProfile.Flux2:
-                // Klein 4B pairs with qwen_3_4b, Klein 9B with qwen_3_8b — picking the wrong
-                // size fails at sampling with a tensor-shape mismatch.
-                var encoderSize = SelectedUnetModel is { } unet
-                    ? Flux2KleinModelManager.GetExpectedEncoderSize(unet)
-                    : "4b";
-                return
-                [
-                    name =>
-                        Flux2KleinModelManager.IsKleinTextEncoder(name)
-                        && Flux2KleinModelManager.MatchesEncoderSize(name, encoderSize),
-                ];
-            case InferenceWorkflowProfile.Flux:
-                return
-                [
-                    name => name.Contains("clip_l", StringComparison.OrdinalIgnoreCase),
-                    name =>
-                        name.Contains("t5xxl", StringComparison.OrdinalIgnoreCase)
-                        || name.Contains("t5-xxl", StringComparison.OrdinalIgnoreCase),
-                ];
-            case InferenceWorkflowProfile.ZImageBase:
-            case InferenceWorkflowProfile.ZImageTurbo:
-                // Z-Image uses the Qwen3 4B encoder (the same qwen_3_4b.safetensors file
-                // Flux.2 Klein 4B uses).
-                return
-                [
-                    name =>
-                        Flux2KleinModelManager.IsKleinTextEncoder(name)
-                        && Flux2KleinModelManager.MatchesEncoderSize(name, "4b"),
-                ];
-            case InferenceWorkflowProfile.Anima:
-                // Official Anima encoder is qwen_3_06b_base.safetensors (Qwen3 0.6B).
-                return
-                [
-                    name =>
-                        name.Contains("qwen_3_06b", StringComparison.OrdinalIgnoreCase)
-                        || name.Contains("qwen3_06b", StringComparison.OrdinalIgnoreCase)
-                        || name.Contains("qwen_3_0.6b", StringComparison.OrdinalIgnoreCase),
-                ];
-            case InferenceWorkflowProfile.HiDream:
-                return
-                [
-                    name => name.Contains("clip_l", StringComparison.OrdinalIgnoreCase),
-                    name => name.Contains("clip_g", StringComparison.OrdinalIgnoreCase),
-                    name =>
-                        name.Contains("t5xxl", StringComparison.OrdinalIgnoreCase)
-                        || name.Contains("t5-xxl", StringComparison.OrdinalIgnoreCase),
-                    name => name.Contains("llama", StringComparison.OrdinalIgnoreCase),
-                ];
-            case InferenceWorkflowProfile.QwenImage:
-                // Official encoder is qwen_2.5_vl_7b_fp8_scaled.safetensors (Qwen2.5-VL 7B).
-                return
-                [
-                    name =>
-                        name.Contains("qwen_2.5_vl", StringComparison.OrdinalIgnoreCase)
-                        || name.Contains("qwen2.5_vl", StringComparison.OrdinalIgnoreCase)
-                        || name.Contains("qwen2.5-vl", StringComparison.OrdinalIgnoreCase)
-                        || name.Contains("qwen_2_5_vl", StringComparison.OrdinalIgnoreCase),
-                ];
-            case InferenceWorkflowProfile.Krea2Turbo:
-            case InferenceWorkflowProfile.Krea2Raw:
-                // Official encoder is qwen3vl_4b_fp8_scaled.safetensors (Qwen3-VL 4B) — a
-                // different family from both Klein's text-only qwen_3_4b and Qwen Image's
-                // qwen_2.5_vl.
-                return
-                [
-                    name =>
-                        name.Contains("qwen3vl", StringComparison.OrdinalIgnoreCase)
-                        || name.Contains("qwen3-vl", StringComparison.OrdinalIgnoreCase)
-                        || name.Contains("qwen3_vl", StringComparison.OrdinalIgnoreCase),
-                ];
-            default:
-                return [];
-        }
-    }
+    ) =>
+        InferenceProfileCompanions
+            .GetEncoderCompanions(profile, SelectedUnetModel)
+            .Select(c => c.MatchesFileName)
+            .ToList();
 
     /// <summary>
     /// Whether <paramref name="fileName"/> is the known-default VAE for the profile.
-    /// Flux.1, Z-Image and HiDream all use the Flux.1 VAE (ae.safetensors); Flux.2 has its
-    /// own VAE; Anima, Qwen Image and Krea 2 all reuse the Qwen Image VAE.
     /// </summary>
     private static bool MatchesDefaultVaeForProfile(InferenceWorkflowProfile profile, string fileName) =>
-        profile switch
+        InferenceProfileCompanions.GetVaeCompanion(profile)?.MatchesFileName(fileName) ?? false;
+
+    /// <summary>
+    /// Companions (encoders + VAE) the resolved profile expects but no local file satisfies.
+    /// Empty for checkpoint profiles, Custom, or when no UNET is selected yet. The UNET slot
+    /// is never part of this — users bring their own (including CivitAI fine-tunes); only the
+    /// official shared components are offered.
+    /// </summary>
+    private IReadOnlyList<InferenceCompanion> GetMissingCompanions()
+    {
+        if (!IsStandaloneModelLoader || SelectedUnetModel is null)
+            return [];
+
+        var profile = ResolvedWorkflowProfile;
+        var missing = new List<InferenceCompanion>();
+
+        foreach (var companion in InferenceProfileCompanions.GetEncoderCompanions(profile, SelectedUnetModel))
         {
-            InferenceWorkflowProfile.Flux2 => Flux2KleinModelManager.IsFlux2Vae(fileName),
-            InferenceWorkflowProfile.Flux
-            or InferenceWorkflowProfile.ZImageBase
-            or InferenceWorkflowProfile.ZImageTurbo
-            or InferenceWorkflowProfile.HiDream => fileName.Equals(
-                "ae.safetensors",
-                StringComparison.OrdinalIgnoreCase
-            ),
-            InferenceWorkflowProfile.Anima
-            or InferenceWorkflowProfile.QwenImage
-            or InferenceWorkflowProfile.Krea2Turbo
-            or InferenceWorkflowProfile.Krea2Raw => fileName.Contains(
-                "qwen_image_vae",
-                StringComparison.OrdinalIgnoreCase
-            ),
-            _ => false,
-        };
+            if (!ClientManager.ClipModels.Any(m => m.Local != null && companion.MatchesFileName(m.FileName)))
+            {
+                missing.Add(companion);
+            }
+        }
+
+        if (
+            InferenceProfileCompanions.GetVaeCompanion(profile) is { } vaeCompanion
+            && !ClientManager.VaeModels.Any(m => m.Local != null && vaeCompanion.MatchesFileName(m.FileName))
+        )
+        {
+            missing.Add(vaeCompanion);
+        }
+
+        return missing;
+    }
+
+    public string? MissingCompanionsText =>
+        GetMissingCompanions() is { Count: > 0 } missing
+            ? string.Format(
+                "{0} needs components that aren't installed: {1}",
+                ResolvedWorkflowProfile.GetStringValue(),
+                string.Join(", ", missing.Select(c => c.DisplayName))
+            )
+            : null;
+
+    /// <summary>
+    /// Profile whose missing-companion offer the user dismissed. Switching to a different
+    /// profile shows the offer again; re-resolving the dismissed one stays quiet.
+    /// </summary>
+    private InferenceWorkflowProfile? dismissedCompanionsProfile;
+
+    private bool isDownloadingCompanions;
+    private string? companionDownloadProgress;
+
+    public bool IsDownloadingCompanions => isDownloadingCompanions;
+
+    /// <summary>
+    /// While a download batch is in flight the bar stays visible showing live progress
+    /// (pointing at the Activity tab) instead of silently disappearing on click.
+    /// </summary>
+    public string? MissingCompanionsBarText =>
+        isDownloadingCompanions ? companionDownloadProgress : MissingCompanionsText;
+
+    /// <summary>
+    /// Null while downloading, which collapses the bar's action button.
+    /// </summary>
+    public string? MissingCompanionsActionText => isDownloadingCompanions ? null : Resources.Action_Download;
+
+    public bool ShowMissingCompanionsBar =>
+        isDownloadingCompanions
+        || (dismissedCompanionsProfile != ResolvedWorkflowProfile && MissingCompanionsText is not null);
+
+    [RelayCommand]
+    private void DismissMissingCompanions()
+    {
+        dismissedCompanionsProfile = ResolvedWorkflowProfile;
+        OnPropertyChanged(nameof(ShowMissingCompanionsBar));
+    }
+
+    [RelayCommand]
+    private async Task DownloadMissingCompanionsAsync()
+    {
+        var missing = GetMissingCompanions();
+        if (missing.Count == 0)
+            return;
+
+        var profileName = ResolvedWorkflowProfile.GetStringValue();
+
+        var dialogVm = vmFactory.Get<DownloadMissingModelsViewModel>();
+        dialogVm.DialogTitle = $"{profileName} Setup";
+        dialogVm.Description =
+            $"{profileName} pairs with the following components. You can deselect any you already have installed elsewhere:";
+        dialogVm.SetModels(missing.Select(c => c.Resource));
+
+        var result = await dialogVm.GetDialog().ShowAsync();
+
+        if (result != ContentDialogResult.Primary || dialogVm.SelectedCount == 0)
+            return;
+
+        var downloads = await dialogVm.StartDownloadsAsync();
+        if (downloads.Count == 0)
+            return;
+
+        isDownloadingCompanions = true;
+        companionDownloadProgress =
+            $"⬇️ Downloading components (0/{downloads.Count})… — see the Activity tab for progress";
+        NotifyCompanionBarChanged();
+
+        TrackCompanionDownloadsAsync(downloads)
+            .SafeFireAndForget(ex =>
+            {
+                isDownloadingCompanions = false;
+                NotifyCompanionBarChanged();
+                notificationService.ShowPersistent(
+                    "Download tracking failed",
+                    ex.Message,
+                    NotificationType.Error
+                );
+            });
+    }
+
+    private void NotifyCompanionBarChanged()
+    {
+        OnPropertyChanged(nameof(IsDownloadingCompanions));
+        OnPropertyChanged(nameof(MissingCompanionsText));
+        OnPropertyChanged(nameof(MissingCompanionsBarText));
+        OnPropertyChanged(nameof(MissingCompanionsActionText));
+        OnPropertyChanged(nameof(ShowMissingCompanionsBar));
+    }
+
+    /// <summary>
+    /// Waits for all companion downloads to finish (bumping the bar's progress text as each
+    /// completes), refreshes the model index, then re-runs component auto-selection so the
+    /// freshly downloaded files fill the empty slots without the user touching anything.
+    /// </summary>
+    private async Task TrackCompanionDownloadsAsync(IReadOnlyList<TrackedDownload> downloads)
+    {
+        var total = downloads.Count;
+        var completed = 0;
+
+        async Task<bool> TrackOne(TrackedDownload download)
+        {
+            var success = await WaitForTerminalStateAsync(download);
+            var done = Interlocked.Increment(ref completed);
+            Dispatcher.UIThread.Post(() =>
+            {
+                if (isDownloadingCompanions)
+                {
+                    companionDownloadProgress =
+                        $"⬇️ Downloading components ({done}/{total})… — see the Activity tab for progress";
+                    OnPropertyChanged(nameof(MissingCompanionsBarText));
+                }
+            });
+            return success;
+        }
+
+        var results = await Task.WhenAll(downloads.Select(TrackOne));
+
+        await modelIndexService.RefreshIndex();
+
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            isDownloadingCompanions = false;
+            AutoSelectComponentsForResolvedProfile();
+            NotifyCompanionBarChanged();
+        });
+
+        var failCount = results.Count(r => !r);
+        if (failCount == 0)
+        {
+            notificationService.Show(
+                "Components Ready",
+                "All components downloaded and selected — ready to generate.",
+                NotificationType.Success
+            );
+        }
+        else
+        {
+            notificationService.Show(
+                "Downloads Partially Complete",
+                $"{failCount} download(s) failed. Check the progress panel for details.",
+                NotificationType.Warning
+            );
+        }
+    }
+
+    private static Task<bool> WaitForTerminalStateAsync(TrackedDownload download)
+    {
+        var tcs = new TaskCompletionSource<bool>();
+
+        // Named so it can detach itself on the terminal state: TrackedDownload lives on in
+        // the download service's history, so a never-removed handler would leak once per
+        // tracked companion download.
+        void OnProgressStateChanged(object? sender, ProgressState state)
+        {
+            if (state is ProgressState.Success or ProgressState.Failed or ProgressState.Cancelled)
+            {
+                download.ProgressStateChanged -= OnProgressStateChanged;
+                tcs.TrySetResult(state == ProgressState.Success);
+            }
+        }
+
+        download.ProgressStateChanged += OnProgressStateChanged;
+
+        // The handler can't fire for a download that reached a terminal state before it was
+        // attached, so resolve (and detach) immediately in that case — TrySetResult and a
+        // double detach are both safe if the event fires anyway.
+        if (
+            download.ProgressState is ProgressState.Success or ProgressState.Failed or ProgressState.Cancelled
+        )
+        {
+            download.ProgressStateChanged -= OnProgressStateChanged;
+            tcs.TrySetResult(download.ProgressState == ProgressState.Success);
+        }
+
+        return tcs.Task;
+    }
 
     /// <summary>
     /// Sets the default number of encoder slots based on the selected clip type.

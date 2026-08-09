@@ -274,13 +274,17 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             .ObserveOn(SynchronizationContext.Current)
             .Subscribe();
 
+        // Type-first sort (matching ControlNet/SAM/etc.) groups installed files above the
+        // cloud-download entries instead of interleaving them alphabetically.
         clipModelsSource
             .Connect()
             .Or(downloadableClipModelsSource.Connect())
             .DeferUntilLoaded()
             .SortAndBind(
                 ClipModels,
-                SortExpressionComparer<HybridModelFile>.Ascending(f => f.ShortDisplayName)
+                SortExpressionComparer<HybridModelFile>
+                    .Ascending(f => f.Type)
+                    .ThenByAscending(f => f.ShortDisplayName)
             )
             .ObserveOn(SynchronizationContext.Current)
             .Subscribe();
@@ -291,7 +295,9 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             .DeferUntilLoaded()
             .SortAndBind(
                 ClipVisionModels,
-                SortExpressionComparer<HybridModelFile>.Ascending(f => f.ShortDisplayName)
+                SortExpressionComparer<HybridModelFile>
+                    .Ascending(f => f.Type)
+                    .ThenByAscending(f => f.ShortDisplayName)
             )
             .ObserveOn(SynchronizationContext.Current)
             .Subscribe();

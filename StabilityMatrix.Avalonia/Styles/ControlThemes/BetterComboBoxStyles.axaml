@@ -331,13 +331,23 @@
 
         <ControlTheme.Resources>
             <controls:HybridModelTemplateSelector x:Key="HybridModelTemplateSelector">
+                <!--
+                    MinHeight matches the Local template's thumbnail row: the dropdown is
+                    virtualized and estimates scroll extent from realized items, so mixed
+                    item heights make the scrollbar jump around (and fight reaching the
+                    end) once scrolling enters the downloadable block.
+                -->
                 <DataTemplate x:Key="{x:Static models:HybridModelType.Downloadable}" DataType="models:HybridModelFile">
-                    <Grid ColumnDefinitions="*,Auto">
-                        <TextBlock Foreground="{DynamicResource ThemeGreyColor}" Text="{Binding ShortDisplayName}" />
+                    <Grid MinHeight="42" ColumnDefinitions="*,Auto">
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            Foreground="{DynamicResource ThemeGreyColor}"
+                            Text="{Binding ShortDisplayName}" />
                         <Button
                             Grid.Column="1"
                             Margin="8,0,0,0"
                             Padding="0"
+                            VerticalAlignment="Center"
                             Classes="transparent-full">
                             <fluentIcons:SymbolIcon
                                 VerticalAlignment="Center"

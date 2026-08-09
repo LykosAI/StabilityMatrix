@@ -5,6 +5,7 @@
     xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
     xmlns:fluent="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
     xmlns:inference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
+    xmlns:inferenceModels="clr-namespace:StabilityMatrix.Avalonia.Models.Inference"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
     xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
@@ -151,17 +152,14 @@
                                 HorizontalAlignment="Stretch"
                                 ItemsSource="{Binding WorkflowProfiles}"
                                 SelectedItem="{Binding SelectedWorkflowProfile}">
-                                <controls:BetterComboBox.Resources>
-                                    <converters:EnumStringConverter x:Key="EnumStringConverter" />
-                                </controls:BetterComboBox.Resources>
                                 <controls:BetterComboBox.ItemTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding ., Converter={StaticResource EnumStringConverter}}" />
+                                    <DataTemplate x:DataType="inferenceModels:InferenceWorkflowProfile">
+                                        <TextBlock Text="{Binding DisplayName}" />
                                     </DataTemplate>
                                 </controls:BetterComboBox.ItemTemplate>
                                 <controls:BetterComboBox.SelectionBoxItemTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding ., Converter={StaticResource EnumStringConverter}}" />
+                                    <DataTemplate x:DataType="inferenceModels:InferenceWorkflowProfile">
+                                        <TextBlock Text="{Binding DisplayName}" />
                                     </DataTemplate>
                                 </controls:BetterComboBox.SelectionBoxItemTemplate>
                             </controls:BetterComboBox>

@@ -442,7 +442,7 @@ public partial class ModelPickerDialogViewModel : ContentDialogViewModelBase
 
     private void SaveFilterStateForCurrentSource()
     {
-        if (isApplyingSavedFilterState || PreferredWorkflowProfile is not InferenceWorkflowProfile.Auto)
+        if (isApplyingSavedFilterState || PreferredWorkflowProfile != InferenceWorkflowProfile.Auto)
             return;
 
         var selectedBaseModels =
@@ -469,35 +469,23 @@ public partial class ModelPickerDialogViewModel : ContentDialogViewModelBase
     {
         if (
             Source is not ModelPickerSource.CheckpointAndUnet
-            || PreferredWorkflowProfile is InferenceWorkflowProfile.Auto or InferenceWorkflowProfile.Custom
+            || PreferredWorkflowProfile == InferenceWorkflowProfile.Auto
+            || PreferredWorkflowProfile == InferenceWorkflowProfile.Custom
         )
         {
             return;
         }
 
-        if (PreferredWorkflowProfile is InferenceWorkflowProfile.DefaultCheckpoint)
+        if (PreferredWorkflowProfile == InferenceWorkflowProfile.DefaultCheckpoint)
         {
             ShowCheckpointsOnly = true;
             return;
         }
 
         ShowUnetsOnly = true;
-        pendingSelectedBaseModels = GetPreferredBaseModels(PreferredWorkflowProfile)
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
-    }
-
-    private static IEnumerable<string> GetPreferredBaseModels(InferenceWorkflowProfile profile)
-    {
-        return profile switch
-        {
-            InferenceWorkflowProfile.Flux => ["Flux.1"],
-            InferenceWorkflowProfile.Flux2 => ["Flux.2"],
-            InferenceWorkflowProfile.ZImageBase => ["ZImageBase"],
-            InferenceWorkflowProfile.ZImageTurbo => ["ZImageTurbo"],
-            InferenceWorkflowProfile.Anima => ["Anima"],
-            InferenceWorkflowProfile.HiDream => ["HiDream"],
-            _ => [],
-        };
+        pendingSelectedBaseModels = PreferredWorkflowProfile.PreferredBaseModels.ToHashSet(
+            StringComparer.OrdinalIgnoreCase
+        );
     }
 
     private void UpdateFilteredModels()

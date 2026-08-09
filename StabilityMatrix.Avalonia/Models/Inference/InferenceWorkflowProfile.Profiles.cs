@@ -9,11 +9,12 @@ using StabilityMatrix.Core.Models.Api.Comfy;
 namespace StabilityMatrix.Avalonia.Models.Inference;
 
 /// <summary>
-/// Registry of the built-in workflow profiles and the model-to-profile detection logic.
+/// The built-in workflow profiles and the model-to-profile detection logic — the data half
+/// of the partial class (the contract half lives in InferenceWorkflowProfile.cs).
 /// Declaration here is the whole act of adding a model family; display order comes from
 /// <see cref="All"/> (Custom deliberately last), free of the legacy numeric values.
 /// </summary>
-public static partial class InferenceWorkflowProfiles
+public sealed partial class InferenceWorkflowProfile
 {
     // Shared companion instances — several profiles pair with the same official files.
     // Declared BEFORE the profiles: static members initialize in textual order, so a profile

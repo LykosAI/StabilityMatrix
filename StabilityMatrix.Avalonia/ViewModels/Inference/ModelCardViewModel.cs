@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
@@ -263,7 +263,7 @@ public partial class ModelCardViewModel(
         ];
 
     public List<InferenceWorkflowProfile> WorkflowProfiles { get; set; } =
-        InferenceWorkflowProfiles.All.ToList();
+        InferenceWorkflowProfile.All.ToList();
 
     public StackEditableCardViewModel ExtraNetworksStackCardViewModel { get; } =
         new(vmFactory) { Title = Resources.Label_ExtraNetworks, AvailableModules = [typeof(LoraModule)] };
@@ -393,7 +393,7 @@ public partial class ModelCardViewModel(
             var taggedBase = local.ConnectedModelInfo?.BaseModel;
             if (
                 !string.IsNullOrWhiteSpace(taggedBase)
-                && InferenceWorkflowProfiles.IsKnownCheckpointBaseModelTag(taggedBase)
+                && InferenceWorkflowProfile.IsKnownCheckpointBaseModelTag(taggedBase)
             )
                 return null;
 
@@ -401,7 +401,7 @@ public partial class ModelCardViewModel(
             // (the classic "z-image in the StableDiffusion folder" support thread).
             // RequiresStandaloneFile is null for Flux since Flux.1 all-in-one checkpoints
             // are common and valid.
-            var impliedProfile = InferenceWorkflowProfiles.Detect(SelectedUnifiedModel, isUnetModel: true);
+            var impliedProfile = InferenceWorkflowProfile.Detect(SelectedUnifiedModel, isUnetModel: true);
             if (impliedProfile.RequiresStandaloneFile is true)
             {
                 return (
@@ -903,7 +903,7 @@ public partial class ModelCardViewModel(
     }
 
     private InferenceWorkflowProfile InferWorkflowProfile() =>
-        InferenceWorkflowProfiles.Detect(
+        InferenceWorkflowProfile.Detect(
             SelectedUnifiedModel,
             SelectedModelLoader is ModelLoader.Unet
                 || SelectedUnifiedModel?.Local?.SharedFolderType is SharedFolderType.DiffusionModels

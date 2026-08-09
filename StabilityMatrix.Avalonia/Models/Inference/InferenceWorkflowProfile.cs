@@ -13,10 +13,12 @@ namespace StabilityMatrix.Avalonia.Models.Inference;
 /// Persisted in saved projects by <see cref="Key"/> (see
 /// <see cref="InferenceWorkflowProfileJsonConverter"/>); <see cref="LegacyValue"/> is the
 /// numeric value pre-2.17 projects stored and exists only for reading them.
-/// Instances are singletons — compare by reference.
+/// Instances are singletons — compare by reference. This file is the contract half of the
+/// partial class; the profile instances and detection live in
+/// InferenceWorkflowProfile.Profiles.cs.
 /// </summary>
 [JsonConverter(typeof(InferenceWorkflowProfileJsonConverter))]
-public sealed class InferenceWorkflowProfile
+public sealed partial class InferenceWorkflowProfile
 {
     /// <summary>Stable persisted identity — never rename.</summary>
     public required string Key { get; init; }
@@ -75,19 +77,6 @@ public sealed class InferenceWorkflowProfile
     public bool UsesShift => UsesAuraFlowShift || UsesSd3ModelSamplingShift;
 
     public override string ToString() => DisplayName;
-
-    public static InferenceWorkflowProfile Auto => InferenceWorkflowProfiles.Auto;
-    public static InferenceWorkflowProfile DefaultCheckpoint => InferenceWorkflowProfiles.DefaultCheckpoint;
-    public static InferenceWorkflowProfile Flux => InferenceWorkflowProfiles.Flux;
-    public static InferenceWorkflowProfile Flux2 => InferenceWorkflowProfiles.Flux2;
-    public static InferenceWorkflowProfile ZImageBase => InferenceWorkflowProfiles.ZImageBase;
-    public static InferenceWorkflowProfile ZImageTurbo => InferenceWorkflowProfiles.ZImageTurbo;
-    public static InferenceWorkflowProfile Anima => InferenceWorkflowProfiles.Anima;
-    public static InferenceWorkflowProfile HiDream => InferenceWorkflowProfiles.HiDream;
-    public static InferenceWorkflowProfile Custom => InferenceWorkflowProfiles.Custom;
-    public static InferenceWorkflowProfile QwenImage => InferenceWorkflowProfiles.QwenImage;
-    public static InferenceWorkflowProfile Krea2Turbo => InferenceWorkflowProfiles.Krea2Turbo;
-    public static InferenceWorkflowProfile Krea2Raw => InferenceWorkflowProfiles.Krea2Raw;
 }
 
 /// <summary>

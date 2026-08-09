@@ -58,7 +58,7 @@ public class InferenceWorkflowProfileSerializationTests
     [TestMethod]
     public void RoundTrips_EveryProfile()
     {
-        foreach (var profile in InferenceWorkflowProfiles.All)
+        foreach (var profile in InferenceWorkflowProfile.All)
         {
             var json = JsonSerializer.Serialize(profile);
             Assert.AreSame(profile, JsonSerializer.Deserialize<InferenceWorkflowProfile>(json));

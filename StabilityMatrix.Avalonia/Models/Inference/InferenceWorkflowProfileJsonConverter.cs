@@ -18,8 +18,8 @@ public class InferenceWorkflowProfileJsonConverter : JsonConverter<InferenceWork
     ) =>
         reader.TokenType switch
         {
-            JsonTokenType.Number => InferenceWorkflowProfiles.FromLegacyValue(reader.GetInt32()),
-            JsonTokenType.String => InferenceWorkflowProfiles.FromKey(reader.GetString()),
+            JsonTokenType.Number => InferenceWorkflowProfile.FromLegacyValue(reader.GetInt32()),
+            JsonTokenType.String => InferenceWorkflowProfile.FromKey(reader.GetString()),
             _ => InferenceWorkflowProfile.Auto,
         };
 

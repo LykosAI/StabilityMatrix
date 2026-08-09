@@ -6,7 +6,7 @@ namespace StabilityMatrix.Tests.Avalonia;
 public class InferenceProfileCompanionsTests
 {
     private static IEnumerable<InferenceWorkflowProfile> StandaloneProfiles =>
-        InferenceWorkflowProfiles.All.Where(p => p.UsesStandaloneLoader is true);
+        InferenceWorkflowProfile.All.Where(p => p.UsesStandaloneLoader is true);
 
     [TestMethod]
     public void StandaloneProfiles_HaveEncoderAndVaeCompanions()
@@ -110,7 +110,7 @@ public class InferenceProfileCompanionsTests
     [TestMethod]
     public void ProfileIdentities_AreUnique()
     {
-        var all = InferenceWorkflowProfiles.All;
+        var all = InferenceWorkflowProfile.All;
 
         CollectionAssert.AllItemsAreUnique(all.Select(p => p.Key).ToList());
         CollectionAssert.AllItemsAreUnique(all.Select(p => p.LegacyValue).ToList());

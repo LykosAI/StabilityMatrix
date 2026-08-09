@@ -170,8 +170,9 @@ public class QwenImageEditModelManager : ILocalProviderModelManager
     // Qwen Image Edit pairs with the Qwen2.5-VL **7B** encoder (hidden size 3584). Other
     // sizes produce "Given normalized_shape=[3584], expected input with shape [*, 3584]"
     // deep in the sampler, so they are treated as not installed. Files without any size
-    // hint are accepted (likely a renamed 7B).
-    private static readonly string[] WrongVlEncoderSizeHints = ["2b", "3b", "32b", "72b"];
+    // hint are accepted (likely a renamed 7B). "4b" covers Krea 2's Qwen3-VL 4B encoder
+    // (qwen3vl_4b_fp8_scaled), which also matches the loose qwen+vl check.
+    private static readonly string[] WrongVlEncoderSizeHints = ["2b", "3b", "4b", "32b", "72b"];
 
     private static bool IsUsableQwenVlEncoder(string fileName) =>
         IsQwenVlEncoder(fileName)

@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed Qwen Image Edit's model check accepting an incompatible Krea 2 text encoder — the correct 7B encoder download is now offered instead
 - Fixed clicking a cloud-download entry in model dropdowns sometimes doing nothing until you clicked a different item first
 - Fixed jumpy, hard-to-reach scrolling near the cloud-download entries in model dropdowns
+- Fixed switching model families after an app restart keeping the previous family's text encoders and slot count (e.g. Flux.2 Klein holding onto clip_l) — restored auto-picked components are now recognized as replaceable again; your own manual encoder picks stay protected
 - Fixed the Model Browser failing with "CivitAI can't be reached right now (OK: OK)" — CivitAI recently started returning `null` for some model statistics (download counts, ratings), which broke loading the whole page of results. Missing stats are now read as 0
 - Fixed [#1695](https://github.com/LykosAI/StabilityMatrix/issues/1695) - models whose CivitAI page has since been deleted showing an error dialog on every click, with no way to break the link:
   - The model details page now shows locally cached info instead of a dead page when the CivitAI page is gone

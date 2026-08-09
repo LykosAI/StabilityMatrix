@@ -864,7 +864,41 @@ public partial class ModelCardViewModel(
         finally
         {
             isLoadingState = false;
+            SeedAutoSelectedComponentsFromState();
             NotifyWorkflowProfileStateChanged();
+        }
+    }
+
+    /// <summary>
+    /// Re-adopts restored encoder/VAE selections that match the resolved profile's companion
+    /// defaults as auto-selected. The auto-selected set is session state, so without this a
+    /// restart turns every earlier auto-pick into an untouchable "user pick" — switching to a
+    /// different model family then neither resizes the slots nor re-pairs the encoders (the
+    /// "Klein keeps clip_l after restart" report). Selections that don't match the profile's
+    /// defaults are genuinely the user's and stay protected.
+    /// </summary>
+    private void SeedAutoSelectedComponentsFromState()
+    {
+        var profile = ResolvedWorkflowProfile;
+        var matchers = profile.GetEncoderCompanions(SelectedUnetModel);
+
+        foreach (var slot in TextEncoders)
+        {
+            if (
+                slot.SelectedModel is { IsNone: false, IsDefault: false } model
+                && matchers.Any(c => c.MatchesFileName(model.FileName))
+            )
+            {
+                autoSelectedComponentPaths.Add(model.RelativePath);
+            }
+        }
+
+        if (
+            SelectedVae is { IsNone: false, IsDefault: false } vae
+            && profile.VaeCompanion?.MatchesFileName(vae.FileName) == true
+        )
+        {
+            autoSelectedComponentPaths.Add(vae.RelativePath);
         }
     }
 

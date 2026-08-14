@@ -11,6 +11,7 @@ namespace StabilityMatrix.Core.Models.Notifications;
 [JsonDerivedType(typeof(NavigateToPageAction), "NavigateToPage")]
 [JsonDerivedType(typeof(ToggleProgressFlyoutAction), "ToggleProgressFlyout")]
 [JsonDerivedType(typeof(ShowChangelogAction), "ShowChangelog")]
+[JsonDerivedType(typeof(PurgeUvCacheAction), "PurgeUvCache")]
 public abstract record NotificationAction;
 
 /// <summary>Open the given filesystem path in the OS file manager.</summary>
@@ -27,3 +28,6 @@ public sealed record ToggleProgressFlyoutAction : NotificationAction;
 
 /// <summary>Open the "What's New" changelog dialog.</summary>
 public sealed record ShowChangelogAction : NotificationAction;
+
+/// <summary>Purge the uv package cache and report the freed space.</summary>
+public sealed record PurgeUvCacheAction : NotificationAction;

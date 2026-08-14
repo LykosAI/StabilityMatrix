@@ -60,6 +60,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly INavigationService<SettingsViewModel> settingsNavService;
     private readonly IDocumentationNavigationService documentationNavigationService;
     private readonly IDistributedSubscriber<string, Uri> showWindowSubscriber;
+    private readonly IUvCacheService uvCacheService;
     public string Greeting => "Welcome to Avalonia!";
 
     [ObservableProperty]
@@ -113,7 +114,8 @@ public partial class MainWindowViewModel : ViewModelBase
         INavigationService<MainWindowViewModel> navigationService,
         INavigationService<SettingsViewModel> settingsNavService,
         IDocumentationNavigationService documentationNavigationService,
-        IDistributedSubscriber<string, Uri> showWindowSubscriber
+        IDistributedSubscriber<string, Uri> showWindowSubscriber,
+        IUvCacheService uvCacheService
     )
     {
         this.settingsManager = settingsManager;
@@ -131,6 +133,7 @@ public partial class MainWindowViewModel : ViewModelBase
         this.settingsNavService = settingsNavService;
         this.documentationNavigationService = documentationNavigationService;
         this.showWindowSubscriber = showWindowSubscriber;
+        this.uvCacheService = uvCacheService;
         ProgressManagerViewModel = dialogFactory.Get<ProgressManagerViewModel>();
         UpdateViewModel = dialogFactory.Get<UpdateViewModel>();
         NotificationBannerViewModel = new NotificationBannerViewModel(appNotificationService);
@@ -232,6 +235,12 @@ public partial class MainWindowViewModel : ViewModelBase
             .SafeFireAndForget(ex =>
             {
                 Logger.Error(ex, "Error setting up shared model folders");
+            });
+
+        Task.Run(() => CheckUvCacheSizeAsync())
+            .SafeFireAndForget(ex =>
+            {
+                Logger.Error(ex, "Error checking uv cache size");
             });
 
         try
@@ -521,6 +530,50 @@ public partial class MainWindowViewModel : ViewModelBase
                         Debug.Fail(exception.Message);
                     }
                 });
+        }
+    }
+
+    /// <summary>
+    /// Warns (or auto-purges, when opted in) when the uv cache exceeds the configured
+    /// size limit. Runs once per startup; a limit of 0 disables the check.
+    /// </summary>
+    private async Task CheckUvCacheSizeAsync()
+    {
+        var limitGb = settingsManager.Settings.UvCacheMaxSizeGb;
+        if (limitGb <= 0)
+            return;
+
+        var sizeBytes = await uvCacheService.GetSizeBytesAsync();
+        if (sizeBytes < limitGb * SystemInfo.Gibibyte)
+            return;
+
+        if (settingsManager.Settings.IsUvCacheAutoPurgeEnabled)
+        {
+            var freedBytes = await uvCacheService.PurgeAsync();
+            await notificationService.ShowAsync(
+                NotificationKey.UvCache_OverLimit,
+                new DesktopNotifications.Notification
+                {
+                    Title = "uv cache purged",
+                    Body =
+                        $"The uv cache was over {limitGb} GB and was purged automatically, "
+                        + $"freeing {Core.Helper.Size.FormatBytes((ulong)freedBytes)}.",
+                }
+            );
+        }
+        else
+        {
+            await notificationService.ShowAsync(
+                NotificationKey.UvCache_OverLimit,
+                new DesktopNotifications.Notification
+                {
+                    Title = "uv cache is getting large",
+                    Body =
+                        $"The uv cache is using {Core.Helper.Size.FormatBytes((ulong)sizeBytes)}. "
+                        + "Click to purge it, or adjust the limit in Settings.",
+                },
+                action: new PurgeUvCacheAction()
+            );
         }
     }
 

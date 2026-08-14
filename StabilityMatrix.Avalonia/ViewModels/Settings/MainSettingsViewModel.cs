@@ -173,6 +173,13 @@ public partial class MainSettingsViewModel : PageViewModelBase
     [ObservableProperty]
     private bool showAllAvailablePythonVersions;
 
+    // Package Environment section
+    [ObservableProperty]
+    public partial int UvCacheMaxSizeGb { get; set; }
+
+    [ObservableProperty]
+    public partial bool IsUvCacheAutoPurgeEnabled { get; set; }
+
     [ObservableProperty]
     public partial List<BaseModelOptionViewModel> AllBaseModelTypes { get; set; } = [];
 
@@ -280,6 +287,20 @@ public partial class MainSettingsViewModel : PageViewModelBase
             this,
             vm => vm.ScrollBarsAlwaysVisible,
             settings => settings.ScrollBarsAlwaysVisible,
+            true
+        );
+
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.UvCacheMaxSizeGb,
+            settings => settings.UvCacheMaxSizeGb,
+            true
+        );
+
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.IsUvCacheAutoPurgeEnabled,
+            settings => settings.IsUvCacheAutoPurgeEnabled,
             true
         );
 

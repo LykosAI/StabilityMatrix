@@ -74,6 +74,14 @@ public record NotificationKey(string Value) : StringValue(Value), IParsable<Noti
             DisplayName = "Package Install Failed",
         };
 
+    public static NotificationKey UvCache_OverLimit =>
+        new("UvCache_OverLimit")
+        {
+            DefaultOption = NotificationOption.AppToast,
+            Level = NotificationLevel.Warning,
+            DisplayName = "uv Cache Over Size Limit",
+        };
+
     public static Dictionary<string, NotificationKey> All { get; } = GetValues<NotificationKey>();
 
     /// <inheritdoc />

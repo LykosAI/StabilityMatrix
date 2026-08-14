@@ -1,3 +1,4 @@
+using Avalonia.Controls.Notifications;
 using Avalonia.Threading;
 using Injectio.Attributes;
 using Microsoft.Extensions.Logging;
@@ -5,13 +6,16 @@ using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.Notifications;
 using StabilityMatrix.Core.Processes;
+using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.Services;
 
 [RegisterSingleton<INotificationActionDispatcher, NotificationActionDispatcher>]
 public class NotificationActionDispatcher(
     ILogger<NotificationActionDispatcher> logger,
-    INavigationService<MainWindowViewModel> navigationService
+    INavigationService<MainWindowViewModel> navigationService,
+    IUvCacheService uvCacheService,
+    Lazy<INotificationService> notificationService
 ) : INotificationActionDispatcher
 {
     public async Task DispatchAsync(NotificationAction action)
@@ -47,6 +51,15 @@ public class NotificationActionDispatcher(
                 case ShowChangelogAction:
                     await Dispatcher.UIThread.InvokeAsync(() =>
                         EventManager.Instance.OnShowChangelogRequested()
+                    );
+                    break;
+
+                case PurgeUvCacheAction:
+                    var freedBytes = await uvCacheService.PurgeAsync();
+                    notificationService.Value.Show(
+                        "uv cache purged",
+                        $"Freed {Size.FormatBytes((ulong)freedBytes)}",
+                        NotificationType.Success
                     );
                     break;
 

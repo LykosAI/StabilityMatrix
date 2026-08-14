@@ -1,4 +1,5 @@
 ﻿using System.Web;
+using AsyncAwaitBestPractices;
 using Avalonia.Controls.Notifications;
 using Avalonia.Threading;
 using Injectio.Attributes;
@@ -45,6 +46,16 @@ public class ModelDownloadLinkHandler(
     }
 
     private void UriReceivedHandler(Uri receivedUri)
+    {
+        // Async flow so the subscriber thread is never blocked — the duplicate-download
+        // prompt can keep a DoImport pending on user input for arbitrarily long
+        HandleUriReceivedAsync(receivedUri)
+            .SafeFireAndForget(ex =>
+                logger.LogError(ex, "ModelDownloadLinkHandler: Error handling URI {Uri}", receivedUri)
+            );
+    }
+
+    private async Task HandleUriReceivedAsync(Uri receivedUri)
     {
         if (!receivedUri.Host.Equals(DownloadCivitModel, StringComparison.OrdinalIgnoreCase))
             return;
@@ -100,9 +111,7 @@ public class ModelDownloadLinkHandler(
             )
         );
 
-        var modelTask = civitApi.GetModelById(modelId);
-        modelTask.Wait();
-        var model = modelTask.Result;
+        var model = await civitApi.GetModelById(modelId);
 
         var useModelVersion = int.TryParse(modelVersionIdStr, out var modelVersionId);
 
@@ -224,16 +233,18 @@ public class ModelDownloadLinkHandler(
                 .GetStringValue()
         );
 
-        var importTask = modelImportService.DoImport(
+        var downloadStarted = await modelImportService.DoImport(
             model,
             downloadDirectory,
             selectedVersion: modelVersion,
             selectedFile: selectedFile
         );
-        importTask.Wait();
 
-        Dispatcher.UIThread.Post(() =>
-            notificationService.Show("Download Started", $"Downloading {selectedFile.Name}")
-        );
+        if (downloadStarted)
+        {
+            Dispatcher.UIThread.Post(() =>
+                notificationService.Show("Download Started", $"Downloading {selectedFile.Name}")
+            );
+        }
     }
 }

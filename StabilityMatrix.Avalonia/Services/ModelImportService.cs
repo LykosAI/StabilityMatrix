@@ -1,10 +1,13 @@
 ﻿using AsyncAwaitBestPractices;
 using Avalonia.Controls.Notifications;
+using FluentAvalonia.UI.Controls;
 using Injectio.Attributes;
+using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Api.OpenModelsDb;
+using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Services;
@@ -16,7 +19,9 @@ namespace StabilityMatrix.Avalonia.Services;
 public class ModelImportService(
     IDownloadService downloadService,
     INotificationService notificationService,
-    ITrackedDownloadService trackedDownloadService
+    ITrackedDownloadService trackedDownloadService,
+    IModelIndexService modelIndexService,
+    ISettingsManager settingsManager
 ) : IModelImportService
 {
     public static async Task<FilePath> SaveCmInfo(
@@ -91,7 +96,7 @@ public class ModelImportService(
         return null;
     }
 
-    public async Task DoImport(
+    public async Task<bool> DoImport(
         CivitModel model,
         DirectoryPath downloadFolder,
         CivitModelVersion? selectedVersion = null,
@@ -101,7 +106,8 @@ public class ModelImportService(
         IProgress<ProgressReport>? progress = null,
         Func<Task>? onImportComplete = null,
         Func<Task>? onImportCanceled = null,
-        Func<Task>? onImportFailed = null
+        Func<Task>? onImportFailed = null,
+        DuplicateDownloadHandling duplicateHandling = DuplicateDownloadHandling.Prompt
     )
     {
         // Get latest version
@@ -115,7 +121,7 @@ public class ModelImportService(
                     NotificationType.Warning
                 )
             );
-            return;
+            return false;
         }
 
         // Get latest version file
@@ -129,7 +135,45 @@ public class ModelImportService(
                     NotificationType.Warning
                 )
             );
-            return;
+            return false;
+        }
+
+        // Guard against downloading a file whose hash is already in the library
+        if (
+            duplicateHandling is not DuplicateDownloadHandling.Allow
+            && await FindInstalledDuplicateAsync(modelFile.Hashes.BLAKE3, modelFile.Hashes.SHA256)
+                is { } duplicate
+        )
+        {
+            if (duplicateHandling is DuplicateDownloadHandling.Prompt)
+            {
+                var downloadAnyway = await Dispatcher.UIThread.InvokeAsync(() =>
+                    ShowDuplicateDownloadDialogAsync(modelFile.Name, duplicate.RelativePath)
+                );
+
+                if (!downloadAnyway)
+                {
+                    // Cancel path so callers reset their in-progress UI state
+                    onImportCanceled?.Invoke().SafeFireAndForget();
+                    return false;
+                }
+            }
+            else
+            {
+                Dispatcher.UIThread.Post(() =>
+                {
+                    notificationService.Show(
+                        new Notification(
+                            "Already in library",
+                            $"\"{modelFile.Name}\" matches an installed file: \"{duplicate.RelativePath}\". Download skipped.",
+                            NotificationType.Information
+                        )
+                    );
+                });
+
+                onImportCanceled?.Invoke().SafeFireAndForget();
+                return false;
+            }
         }
 
         if (fileNameOverride != null && (fileNameOverride.Contains("\\") || fileNameOverride.Contains("/")))
@@ -175,6 +219,30 @@ public class ModelImportService(
         }
 
         var downloadPath = downloadFolder.JoinFile(uniqueFileName);
+
+        // A stale paused/pending download for the same target (e.g. loaded from a previous
+        // session) shares this download's sidecar file names — cancelling it later would
+        // delete them out from under us. Supersede it now: its temp file is removed, the
+        // sidecars stay with this download.
+        var staleDownloads = trackedDownloadService
+            .Downloads.Where(existing =>
+                existing.ProgressState
+                    is ProgressState.Inactive
+                        or ProgressState.Paused
+                        or ProgressState.Pending
+                && string.Equals(existing.FileName, uniqueFileName, StringComparison.OrdinalIgnoreCase)
+                && string.Equals(
+                    existing.DownloadDirectory.ToString(),
+                    downloadFolder.ToString(),
+                    StringComparison.OrdinalIgnoreCase
+                )
+            )
+            .ToList();
+
+        foreach (var staleDownload in staleDownloads)
+        {
+            staleDownload.Supersede();
+        }
 
         // Download model info and preview first
         var cmInfoPath = await SaveCmInfo(
@@ -226,6 +294,68 @@ public class ModelImportService(
         download.ContextAction = CivitPostDownloadContextAction.FromCivitFile(modelFile);
 
         await trackedDownloadService.TryStartDownload(download);
+
+        return true;
+    }
+
+    /// <summary>
+    /// Asks whether to download a file that matches an already-installed model.
+    /// Returns true to download anyway; defaults to skipping.
+    /// </summary>
+    private static async Task<bool> ShowDuplicateDownloadDialogAsync(
+        string fileName,
+        string existingRelativePath
+    )
+    {
+        var dialog = DialogHelper.CreateTaskDialog(
+            "Already in library",
+            $"\"{fileName}\" matches an installed file: \"{existingRelativePath}\"."
+        );
+
+        dialog.ShowProgressBar = false;
+        dialog.Buttons = new List<TaskDialogButton>
+        {
+            new("Download Anyway", TaskDialogStandardResult.Yes),
+            new("Skip", TaskDialogStandardResult.Cancel) { IsDefault = true },
+        };
+
+        return (TaskDialogStandardResult)await dialog.ShowAsync(true) == TaskDialogStandardResult.Yes;
+    }
+
+    /// <summary>
+    /// Finds an installed model matching either of the given hashes, verifying the indexed
+    /// file still exists on disk so a stale index entry can't block a legitimate re-download.
+    /// </summary>
+    private async Task<LocalModelFile?> FindInstalledDuplicateAsync(string? hashBlake3, string? hashSha256)
+    {
+        var candidates = new List<LocalModelFile>();
+
+        if (!string.IsNullOrEmpty(hashBlake3))
+        {
+            candidates.AddRange(await modelIndexService.FindByHashAsync(hashBlake3));
+        }
+
+        if (candidates.Count == 0 && !string.IsNullOrEmpty(hashSha256))
+        {
+            candidates.AddRange(await modelIndexService.FindBySha256Async(hashSha256));
+        }
+
+        if (candidates.Count == 0)
+        {
+            return null;
+        }
+
+        var existing = candidates.FirstOrDefault(candidate =>
+            File.Exists(candidate.GetFullPath(settingsManager.ModelsDirectory))
+        );
+
+        if (existing is null)
+        {
+            // Indexed files were removed outside the app; refresh so the index catches up
+            modelIndexService.BackgroundRefreshIndex();
+        }
+
+        return existing;
     }
 
     public Task DoOpenModelDbImport(

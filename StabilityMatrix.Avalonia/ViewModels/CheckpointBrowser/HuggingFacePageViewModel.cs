@@ -1175,6 +1175,9 @@ public partial class HuggingFacePageViewModel : TabViewModelBase, IHandleNavigat
         // attribution. Only LFS files have a hash; small non-LFS files (configs) are skipped.
         if (!Design.IsDesignMode && path.Directory is { } dir && metadataSource?.Sha256 is { } sha256)
         {
+            // LFS files expose their sha256, so the download can verify integrity on completion
+            download.ExpectedHashSha256 = sha256;
+
             var info = ConnectedModelInfo.FromHuggingFace(
                 metadataSource.RepositoryPath,
                 metadataSource.FileName,

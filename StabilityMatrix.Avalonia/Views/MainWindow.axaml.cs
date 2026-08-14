@@ -63,6 +63,10 @@ public partial class MainWindow : AppWindowBase
 
     private FlyoutBase? progressFlyout;
 
+    private KeyBinding? quickHideKeyBinding;
+
+    private bool isQuickHideBindingWired;
+
     /*[DesignOnly(true)]
     [SuppressMessage("ReSharper", "UnusedMember.Global")]
     public MainWindow()
@@ -310,6 +314,46 @@ public partial class MainWindow : AppWindowBase
         });
     }
 
+    /// <summary>
+    /// Creates the quick-hide KeyBinding and keeps its gesture in sync with the
+    /// user-configurable setting. Managed here rather than in AXAML because
+    /// KeyBindings can't bind to the DataContext.
+    /// </summary>
+    private void WireQuickHideKeyBinding()
+    {
+        if (isQuickHideBindingWired || DataContext is not MainWindowViewModel viewModel)
+            return;
+
+        isQuickHideBindingWired = true;
+
+        viewModel.PropertyChanged += (_, args) =>
+        {
+            if (args.PropertyName == nameof(MainWindowViewModel.QuickHideKeyGesture))
+            {
+                UpdateQuickHideKeyBinding(viewModel);
+            }
+        };
+
+        UpdateQuickHideKeyBinding(viewModel);
+    }
+
+    private void UpdateQuickHideKeyBinding(MainWindowViewModel viewModel)
+    {
+        if (quickHideKeyBinding is null)
+        {
+            quickHideKeyBinding = new KeyBinding
+            {
+                Command = viewModel.QuickHideCommand,
+                Gesture = viewModel.QuickHideKeyGesture,
+            };
+            KeyBindings.Add(quickHideKeyBinding);
+        }
+        else
+        {
+            quickHideKeyBinding.Gesture = viewModel.QuickHideKeyGesture;
+        }
+    }
+
     private bool IsAnyDialogVisible() =>
         this.FindDescendantOfType<DialogHost>()
             ?.GetVisualDescendants()
@@ -343,6 +387,8 @@ public partial class MainWindow : AppWindowBase
         base.OnLoaded(e);
         // Initialize notification service using this window as the visual root
         notificationService.Initialize(this);
+
+        WireQuickHideKeyBinding();
 
         // Attach error notification handler for image loader
         if (ImageLoader.AsyncImageLoader is FallbackRamCachedWebImageLoader loader)

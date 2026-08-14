@@ -2293,11 +2293,47 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Instantly minimize Stability Matrix by pressing Ctrl+Shift+H (Cmd+Shift+H on macOS). Handy for shared computers..
+        ///   Looks up a localized string similar to Instantly minimize or exit Stability Matrix with a hotkey. Handy for shared computers..
         /// </summary>
         public static string Label_QuickHideHotkey_Details {
             get {
                 return ResourceManager.GetString("Label_QuickHideHotkey_Details", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Action.
+        /// </summary>
+        public static string Label_QuickHideAction {
+            get {
+                return ResourceManager.GetString("Label_QuickHideAction", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Minimize the window, or exit immediately without confirmation prompts.
+        /// </summary>
+        public static string Label_QuickHideAction_Details {
+            get {
+                return ResourceManager.GetString("Label_QuickHideAction_Details", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Shortcut.
+        /// </summary>
+        public static string Label_QuickHideShortcut {
+            get {
+                return ResourceManager.GetString("Label_QuickHideShortcut", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Key combination, e.g. Ctrl+Shift+H. Ctrl maps to Cmd on macOS..
+        /// </summary>
+        public static string Label_QuickHideShortcut_Details {
+            get {
+                return ResourceManager.GetString("Label_QuickHideShortcut_Details", resourceCulture);
             }
         }
 

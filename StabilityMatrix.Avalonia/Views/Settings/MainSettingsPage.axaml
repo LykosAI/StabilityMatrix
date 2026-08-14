@@ -562,6 +562,19 @@
                     <ui:SettingsExpander.Footer>
                         <ToggleSwitch IsChecked="{Binding IsQuickHideHotkeyEnabled}" />
                     </ui:SettingsExpander.Footer>
+                    <ui:SettingsExpanderItem Content="{x:Static lang:Resources.Label_QuickHideAction}" Description="{x:Static lang:Resources.Label_QuickHideAction_Details}">
+                        <ui:SettingsExpanderItem.Footer>
+                            <ComboBox ItemsSource="{Binding QuickHideModes}" SelectedItem="{Binding SelectedQuickHideMode}" />
+                        </ui:SettingsExpanderItem.Footer>
+                    </ui:SettingsExpanderItem>
+                    <ui:SettingsExpanderItem Content="{x:Static lang:Resources.Label_QuickHideShortcut}" Description="{x:Static lang:Resources.Label_QuickHideShortcut_Details}">
+                        <ui:SettingsExpanderItem.Footer>
+                            <TextBox
+                                MinWidth="160"
+                                Text="{Binding QuickHideHotkeyGesture}"
+                                Watermark="Ctrl+Shift+H" />
+                        </ui:SettingsExpanderItem.Footer>
+                    </ui:SettingsExpanderItem>
                 </ui:SettingsExpander>
 
                 <!--  Select Data Directory  -->

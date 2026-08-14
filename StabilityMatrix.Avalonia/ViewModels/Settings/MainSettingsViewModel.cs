@@ -40,6 +40,7 @@ using StabilityMatrix.Avalonia.DesignData;
 using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Languages;
+using StabilityMatrix.Avalonia.MarkupExtensions;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.TagCompletion;
 using StabilityMatrix.Avalonia.Services;
@@ -144,6 +145,14 @@ public partial class MainSettingsViewModel : PageViewModelBase
     // System section
     [ObservableProperty]
     public partial bool IsQuickHideHotkeyEnabled { get; set; }
+
+    public IReadOnlyList<QuickHideMode> QuickHideModes { get; } = Enum.GetValues<QuickHideMode>().ToList();
+
+    [ObservableProperty]
+    public partial QuickHideMode SelectedQuickHideMode { get; set; }
+
+    [ObservableProperty]
+    public partial string QuickHideHotkeyGesture { get; set; } = "Ctrl+Shift+H";
 
     // Console section
     [ObservableProperty]
@@ -293,6 +302,17 @@ public partial class MainSettingsViewModel : PageViewModelBase
             settings => settings.IsQuickHideHotkeyEnabled,
             true
         );
+
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.SelectedQuickHideMode,
+            settings => settings.QuickHideMode,
+            true
+        );
+
+        // The gesture is validated in OnQuickHideHotkeyGestureChanged instead of relayed,
+        // so an unparsable string never reaches settings (and thus the live KeyBinding)
+        QuickHideHotkeyGesture = settingsManager.Settings.QuickHideHotkeyGesture;
 
         // Push the initial value into the global DynamicResources that the
         // ScrollBarStyles read from, so the loaded setting actually takes effect.
@@ -558,6 +578,35 @@ public partial class MainSettingsViewModel : PageViewModelBase
     partial void OnScrollBarsAlwaysVisibleChanged(bool value)
     {
         ApplyScrollBarSetting(value);
+    }
+
+    /// <summary>
+    /// Validates the quick-hide gesture before persisting: an unparsable string is
+    /// reverted (with a toast) instead of written to settings.
+    /// </summary>
+    partial void OnQuickHideHotkeyGestureChanged(string value)
+    {
+        var storedValue = settingsManager.Settings.QuickHideHotkeyGesture;
+
+        if (value == storedValue)
+            return;
+
+        try
+        {
+            PlatformGestureExtension.Parse(value);
+        }
+        catch (Exception)
+        {
+            notificationService.Show(
+                "Invalid shortcut",
+                $"Could not parse \"{value}\". Use a gesture like \"Ctrl+Shift+H\".",
+                NotificationType.Warning
+            );
+            QuickHideHotkeyGesture = storedValue;
+            return;
+        }
+
+        settingsManager.Transaction(s => s.QuickHideHotkeyGesture, value);
     }
 
     /// <summary>

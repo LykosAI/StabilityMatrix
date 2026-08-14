@@ -152,10 +152,21 @@ public class Settings
     public bool ScrollBarsAlwaysVisible { get; set; } = true;
 
     /// <summary>
-    /// Enables the app-wide quick-hide hotkey (Ctrl+Shift+H, Cmd+Shift+H on macOS)
-    /// that instantly minimizes the main window.
+    /// Enables the app-wide quick-hide hotkey that instantly minimizes the main window
+    /// or exits the app, per <see cref="QuickHideMode"/>.
     /// </summary>
     public bool IsQuickHideHotkeyEnabled { get; set; }
+
+    /// <summary>
+    /// What the quick-hide hotkey does when pressed.
+    /// </summary>
+    public QuickHideMode QuickHideMode { get; set; } = QuickHideMode.Minimize;
+
+    /// <summary>
+    /// Gesture string for the quick-hide hotkey, e.g. "Ctrl+Shift+H".
+    /// The Ctrl token maps to Cmd (⌘) on macOS.
+    /// </summary>
+    public string QuickHideHotkeyGesture { get; set; } = "Ctrl+Shift+H";
 
     public HashSet<string> DisabledBaseModelTypes { get; set; } = [];
 

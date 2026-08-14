@@ -7,6 +7,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Controls.Notifications;
 using Avalonia.Controls.Primitives;
+using Avalonia.Input;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -17,6 +18,7 @@ using NLog;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Languages;
+using StabilityMatrix.Avalonia.MarkupExtensions;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
@@ -74,6 +76,29 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(QuickHideCommand))]
     public partial bool IsQuickHideHotkeyEnabled { get; set; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(QuickHideKeyGesture))]
+    public partial string QuickHideHotkeyGesture { get; set; } = "Ctrl+Shift+H";
+
+    /// <summary>
+    /// Parsed quick-hide gesture for the window's KeyBinding; falls back to the default
+    /// when the stored gesture string is invalid (e.g. hand-edited settings).
+    /// </summary>
+    public KeyGesture QuickHideKeyGesture
+    {
+        get
+        {
+            try
+            {
+                return PlatformGestureExtension.Parse(QuickHideHotkeyGesture);
+            }
+            catch (Exception)
+            {
+                return PlatformGestureExtension.Parse("Ctrl+Shift+H");
+            }
+        }
+    }
 
     [ObservableProperty]
     private List<PageViewModelBase> pages = new();
@@ -218,18 +243,28 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// Instantly minimizes the main window. Bound app-wide to Ctrl+Shift+H (Cmd+Shift+H on
-    /// macOS) as an opt-in privacy quick-hide for shared PCs.
+    /// Opt-in privacy quick-hide for shared PCs, bound app-wide to the configurable
+    /// quick-hide gesture. Minimizes the main window or, in Exit mode, hides it and
+    /// shuts down immediately without confirmation prompts.
     /// </summary>
     [RelayCommand(CanExecute = nameof(IsQuickHideHotkeyEnabled))]
     private void QuickHide()
     {
         if (
-            Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime
-            {
-                MainWindow: { } mainWindow
-            }
+            Application.Current?.ApplicationLifetime
+            is not IClassicDesktopStyleApplicationLifetime { MainWindow: { } mainWindow }
         )
+        {
+            return;
+        }
+
+        if (settingsManager.Settings.QuickHideMode is QuickHideMode.Exit)
+        {
+            // Hide first so the window is gone instantly while shutdown cleanup runs
+            mainWindow.Hide();
+            App.Shutdown(skipConfirmation: true);
+        }
+        else
         {
             mainWindow.WindowState = WindowState.Minimized;
         }
@@ -281,6 +316,13 @@ public partial class MainWindowViewModel : ViewModelBase
             this,
             vm => vm.IsQuickHideHotkeyEnabled,
             settings => settings.IsQuickHideHotkeyEnabled,
+            true
+        );
+
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.QuickHideHotkeyGesture,
+            settings => settings.QuickHideHotkeyGesture,
             true
         );
 

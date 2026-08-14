@@ -1024,7 +1024,19 @@
     <value>Quick-Hide Hotkey</value>
   </data>
   <data name="Label_QuickHideHotkey_Details" xml:space="preserve">
-    <value>Instantly minimize Stability Matrix by pressing Ctrl+Shift+H (Cmd+Shift+H on macOS). Handy for shared computers.</value>
+    <value>Instantly minimize or exit Stability Matrix with a hotkey. Handy for shared computers.</value>
+  </data>
+  <data name="Label_QuickHideAction" xml:space="preserve">
+    <value>Action</value>
+  </data>
+  <data name="Label_QuickHideAction_Details" xml:space="preserve">
+    <value>Minimize the window, or exit immediately without confirmation prompts</value>
+  </data>
+  <data name="Label_QuickHideShortcut" xml:space="preserve">
+    <value>Shortcut</value>
+  </data>
+  <data name="Label_QuickHideShortcut_Details" xml:space="preserve">
+    <value>Key combination, e.g. Ctrl+Shift+H. Ctrl maps to Cmd on macOS.</value>
   </data>
   <data name="Label_CLIPSkip" xml:space="preserve">
     <value>CLIP Skip</value>

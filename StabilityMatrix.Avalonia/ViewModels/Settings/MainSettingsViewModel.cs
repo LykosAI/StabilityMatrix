@@ -91,6 +91,8 @@ public partial class MainSettingsViewModel : PageViewModelBase
     private readonly IDocumentationNavigationService documentationNavigationService;
     private readonly IAccountsService accountsService;
     private readonly ICivitBaseModelTypeService baseModelTypeService;
+    private readonly IUvCacheService uvCacheService;
+    private readonly IUvCachePurgeRunner uvCachePurgeRunner;
 
     public SharedState SharedState { get; }
 
@@ -194,6 +196,11 @@ public partial class MainSettingsViewModel : PageViewModelBase
     public partial bool IsUvCacheAutoPurgeEnabled { get; set; }
 
     [ObservableProperty]
+    public partial string? UvCacheSizeText { get; set; }
+
+    private long lastKnownUvCacheSizeBytes;
+
+    [ObservableProperty]
     public partial List<BaseModelOptionViewModel> AllBaseModelTypes { get; set; } = [];
 
     private SourceCache<string, string> BaseModelTypesCache { get; } = new(s => s);
@@ -257,7 +264,9 @@ public partial class MainSettingsViewModel : PageViewModelBase
         INavigationService<SettingsViewModel> settingsNavigationService,
         IDocumentationNavigationService documentationNavigationService,
         IAccountsService accountsService,
-        ICivitBaseModelTypeService baseModelTypeService
+        ICivitBaseModelTypeService baseModelTypeService,
+        IUvCacheService uvCacheService,
+        IUvCachePurgeRunner uvCachePurgeRunner
     )
     {
         this.notificationService = notificationService;
@@ -272,6 +281,8 @@ public partial class MainSettingsViewModel : PageViewModelBase
         this.documentationNavigationService = documentationNavigationService;
         this.accountsService = accountsService;
         this.baseModelTypeService = baseModelTypeService;
+        this.uvCacheService = uvCacheService;
+        this.uvCachePurgeRunner = uvCachePurgeRunner;
 
         SharedState = sharedState;
 
@@ -323,7 +334,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
             settings => settings.UvCacheMaxSizeGb,
             true
         );
-        
+
         settingsManager.RelayPropertyFor(
             this,
             vm => vm.IsUvCacheAutoPurgeEnabled,
@@ -800,6 +811,25 @@ public partial class MainSettingsViewModel : PageViewModelBase
         };
 
         ConsoleProcessRunner.RunProcessStepAsync(step).SafeFireAndForget();
+    }
+
+    [RelayCommand]
+    private async Task CheckUvCacheSize()
+    {
+        lastKnownUvCacheSizeBytes = await uvCacheService.GetSizeBytesAsync();
+        UvCacheSizeText = Core.Helper.Size.FormatBase10Bytes(lastKnownUvCacheSizeBytes);
+    }
+
+    [RelayCommand]
+    private async Task PurgeUvCache()
+    {
+        var freedBytes = await uvCachePurgeRunner.RunPurgeWithConfirmAsync(lastKnownUvCacheSizeBytes);
+
+        // Refresh the displayed size after a completed purge
+        if (freedBytes > 0)
+        {
+            await CheckUvCacheSize();
+        }
     }
 
     [RelayCommand]

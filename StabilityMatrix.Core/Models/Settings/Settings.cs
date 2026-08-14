@@ -188,11 +188,12 @@ public class Settings
         ];
 
     /// <summary>
-    /// Size limit in GB for the uv package cache. When exceeded, a warning notification is
-    /// shown at startup (or the cache is purged, if <see cref="IsUvCacheAutoPurgeEnabled"/>).
-    /// 0 disables the check.
+    /// Size limit in GB for the uv package cache. When set, the cache size is checked at
+    /// startup and a warning notification is shown when exceeded (or the cache is purged,
+    /// if <see cref="IsUvCacheAutoPurgeEnabled"/>). 0 (the default) disables the startup
+    /// check entirely — the size scan is expensive on large caches, so it is opt-in.
     /// </summary>
-    public int UvCacheMaxSizeGb { get; set; } = 20;
+    public int UvCacheMaxSizeGb { get; set; }
 
     /// <summary>
     /// When the uv cache exceeds <see cref="UvCacheMaxSizeGb"/> at startup, purge it

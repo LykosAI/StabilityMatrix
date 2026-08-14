@@ -1,5 +1,6 @@
 using Avalonia.Controls.Notifications;
 using Avalonia.Threading;
+using FluentAvalonia.UI.Controls;
 using Injectio.Attributes;
 using NLog;
 using StabilityMatrix.Core.Helper;
@@ -16,6 +17,13 @@ public interface IUvCachePurgeRunner
     /// Returns the number of bytes freed.
     /// </summary>
     Task<long> RunPurgeAsync();
+
+    /// <summary>
+    /// Shows a plain-language confirmation dialog (pass the last known cache size for the
+    /// dialog text, or 0 when unknown), then purges as <see cref="RunPurgeAsync"/>.
+    /// Returns the number of bytes freed, or 0 when the user cancels.
+    /// </summary>
+    Task<long> RunPurgeWithConfirmAsync(long sizeBytes);
 }
 
 [RegisterSingleton<IUvCachePurgeRunner, UvCachePurgeRunner>]
@@ -75,6 +83,41 @@ public class UvCachePurgeRunner(
         {
             Interlocked.Exchange(ref isRunning, 0);
         }
+    }
+
+    /// <inheritdoc />
+    public async Task<long> RunPurgeWithConfirmAsync(long sizeBytes)
+    {
+        var confirmed = await Dispatcher.UIThread.InvokeAsync(() => ShowConfirmDialogAsync(sizeBytes));
+
+        return confirmed ? await RunPurgeAsync() : 0;
+    }
+
+    /// <summary>
+    /// Explains what clearing the uv cache means before doing it.
+    /// Returns true when the user confirms.
+    /// </summary>
+    private static async Task<bool> ShowConfirmDialogAsync(long sizeBytes)
+    {
+        var sizeText = sizeBytes > 0 ? $" about {Size.FormatBase10Bytes(sizeBytes)} of" : "";
+
+        var dialog = DialogHelper.CreateTaskDialog(
+            "Clear the uv cache?",
+            $"This frees{sizeText} disk space used by cached package downloads. "
+                + "Nothing you have installed is removed, but the next package install or "
+                + "update will re-download anything it needs, so it may take a bit longer.\n\n"
+                + "Large caches can take a few minutes to clear. You can keep using "
+                + "Stability Matrix while it runs — progress shows in the Activity panel."
+        );
+
+        dialog.ShowProgressBar = false;
+        dialog.Buttons = new List<TaskDialogButton>
+        {
+            new("Clear Cache", TaskDialogStandardResult.Yes) { IsDefault = true },
+            TaskDialogButton.CancelButton,
+        };
+
+        return (TaskDialogStandardResult)await dialog.ShowAsync(true) == TaskDialogStandardResult.Yes;
     }
 
     private static void PostProgress(Guid progressId, ProgressReport report, bool failed = false)

@@ -609,13 +609,18 @@ public partial class MainWindowViewModel : ViewModelBase
 
     /// <summary>
     /// Warns (or auto-purges, when opted in) when the uv cache exceeds the configured
-    /// size limit. Runs once per startup; a limit of 0 disables the check.
+    /// size limit. Runs once per startup; opt-in — a limit of 0 (the default) disables
+    /// the check, since the size scan is expensive on large caches.
     /// </summary>
     private async Task CheckUvCacheSizeAsync()
     {
         var limitGb = settingsManager.Settings.UvCacheMaxSizeGb;
         if (limitGb <= 0)
             return;
+
+        // Let the app's own startup IO settle before scanning, so the check never
+        // competes with launch (matters most on spinning drives)
+        await Task.Delay(TimeSpan.FromSeconds(15));
 
         var sizeBytes = await uvCacheService.GetSizeBytesAsync();
         if (sizeBytes < limitGb * SystemInfo.Gibibyte)

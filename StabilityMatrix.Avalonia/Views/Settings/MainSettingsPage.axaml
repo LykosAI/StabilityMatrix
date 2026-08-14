@@ -246,21 +246,33 @@
                 <ui:SettingsExpander
                     Grid.Row="5"
                     Margin="8,4,8,4"
-                    Description="Warn at startup when the uv download cache grows beyond this size, in GB. Set to 0 to disable."
-                    Header="uv Cache Size Limit">
+                    Description="Cached package downloads that speed up installs and updates. Checking the size can take a while for large caches."
+                    Header="uv Cache">
                     <ui:SettingsExpander.IconSource>
                         <fluentIcons:SymbolIconSource FontSize="10" Symbol="Broom" />
                     </ui:SettingsExpander.IconSource>
                     <ui:SettingsExpander.Footer>
-                        <ui:NumberBox
-                            Maximum="100000"
-                            Minimum="0"
-                            PlaceholderText="20"
-                            SimpleNumberFormat="F0"
-                            SpinButtonPlacementMode="Compact"
-                            ValidationMode="InvalidInputOverwritten"
-                            Value="{Binding UvCacheMaxSizeGb}" />
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                IsVisible="{Binding UvCacheSizeText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                Text="{Binding UvCacheSizeText}" />
+                            <Button Command="{Binding CheckUvCacheSizeCommand}" Content="Check Size" />
+                            <Button Command="{Binding PurgeUvCacheCommand}" Content="Clear..." />
+                        </StackPanel>
                     </ui:SettingsExpander.Footer>
+                    <ui:SettingsExpanderItem Content="Check size at startup" Description="Warn when the cache grows beyond this size, in GB. 0 (default) skips the startup check — it can be slow on large caches or spinning drives.">
+                        <ui:SettingsExpanderItem.Footer>
+                            <ui:NumberBox
+                                Maximum="100000"
+                                Minimum="0"
+                                PlaceholderText="0"
+                                SimpleNumberFormat="F0"
+                                SpinButtonPlacementMode="Compact"
+                                ValidationMode="InvalidInputOverwritten"
+                                Value="{Binding UvCacheMaxSizeGb}" />
+                        </ui:SettingsExpanderItem.Footer>
+                    </ui:SettingsExpanderItem>
                     <ui:SettingsExpanderItem Content="Purge automatically" Description="When over the limit, clear the cache at startup instead of only warning. Cached downloads will be re-fetched when next needed.">
                         <ui:SettingsExpanderItem.Footer>
                             <ToggleSwitch IsChecked="{Binding IsUvCacheAutoPurgeEnabled}" />

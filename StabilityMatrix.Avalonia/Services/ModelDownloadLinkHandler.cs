@@ -232,8 +232,11 @@ public class ModelDownloadLinkHandler(
         );
         importTask.Wait();
 
-        Dispatcher.UIThread.Post(() =>
-            notificationService.Show("Download Started", $"Downloading {selectedFile.Name}")
-        );
+        if (importTask.Result)
+        {
+            Dispatcher.UIThread.Post(() =>
+                notificationService.Show("Download Started", $"Downloading {selectedFile.Name}")
+            );
+        }
     }
 }

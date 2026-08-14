@@ -248,6 +248,74 @@ public class ModelImportServiceTests
     }
 
     [TestMethod]
+    public async Task DoImport_SupersedesStalePausedDownloadForSameTarget()
+    {
+        var downloadService = Substitute.For<IDownloadService>();
+        var notificationService = Substitute.For<INotificationService>();
+        var trackedDownloadService = Substitute.For<ITrackedDownloadService>();
+        var service = CreateService(downloadService, notificationService, trackedDownloadService);
+
+        var tempDir = Directory.CreateTempSubdirectory();
+
+        try
+        {
+            // Stale paused download for the same target file (e.g. loaded from a previous
+            // session), with a temp file and a sidecar on disk
+            var staleTempPath = Path.Combine(tempDir.FullName, "Unconfirmed 1234567.smdownload");
+            var sidecarPath = Path.Combine(tempDir.FullName, "model.preview.jpeg");
+            await File.WriteAllTextAsync(staleTempPath, "partial");
+            await File.WriteAllTextAsync(sidecarPath, "preview");
+
+            var staleDownload = new TrackedDownload
+            {
+                Id = Guid.NewGuid(),
+                SourceUrl = new Uri("https://example.org/model.safetensors"),
+                DownloadDirectory = new DirectoryPath(tempDir.FullName),
+                FileName = "model.safetensors",
+                TempFileName = "Unconfirmed 1234567.smdownload",
+                ProgressState = ProgressState.Paused,
+                ExtraCleanupFileNames = { "model.preview.jpeg" },
+            };
+
+            trackedDownloadService.Downloads.Returns([staleDownload]);
+            trackedDownloadService
+                .NewDownload(Arg.Any<string>(), Arg.Any<FilePath>())
+                .Returns(call => new TrackedDownload
+                {
+                    Id = Guid.NewGuid(),
+                    SourceUrl = new Uri(call.Arg<string>()),
+                    DownloadDirectory = call.Arg<FilePath>().Directory!,
+                    FileName = call.Arg<FilePath>().Name,
+                    TempFileName = "model.safetensors.tmp",
+                });
+
+            var started = await service.DoImport(
+                new CivitModel(),
+                new DirectoryPath(tempDir.FullName),
+                selectedVersion: new CivitModelVersion(),
+                selectedFile: new CivitFile
+                {
+                    Name = "model.safetensors",
+                    DownloadUrl = "https://example.org/model.safetensors",
+                    Hashes = new CivitFileHashes(),
+                }
+            );
+
+            Assert.IsTrue(started);
+            Assert.AreEqual(ProgressState.Cancelled, staleDownload.ProgressState);
+            Assert.IsFalse(File.Exists(staleTempPath), "Stale temp file should be deleted");
+            Assert.IsTrue(
+                File.Exists(sidecarPath),
+                "Sidecar files must survive superseding — they belong to the new download"
+            );
+        }
+        finally
+        {
+            tempDir.Delete(recursive: true);
+        }
+    }
+
+    [TestMethod]
     public async Task DoImport_AllowBypassesDuplicateCheck()
     {
         var downloadService = Substitute.For<IDownloadService>();

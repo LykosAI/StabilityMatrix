@@ -18,7 +18,11 @@ public interface IModelImportService
     /// <returns>The file path of the saved preview image</returns>
     Task<FilePath?> SavePreviewImage(CivitModelVersion modelVersion, FilePath modelFilePath);
 
-    Task DoImport(
+    /// <summary>
+    /// Imports a model file from Civitai. Returns true if a download was started,
+    /// false if the import was skipped (duplicate) or had nothing to download.
+    /// </summary>
+    Task<bool> DoImport(
         CivitModel model,
         DirectoryPath downloadFolder,
         CivitModelVersion? selectedVersion = null,

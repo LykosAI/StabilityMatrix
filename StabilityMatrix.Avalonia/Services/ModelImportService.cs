@@ -96,7 +96,7 @@ public class ModelImportService(
         return null;
     }
 
-    public async Task DoImport(
+    public async Task<bool> DoImport(
         CivitModel model,
         DirectoryPath downloadFolder,
         CivitModelVersion? selectedVersion = null,
@@ -121,7 +121,7 @@ public class ModelImportService(
                     NotificationType.Warning
                 )
             );
-            return;
+            return false;
         }
 
         // Get latest version file
@@ -135,7 +135,7 @@ public class ModelImportService(
                     NotificationType.Warning
                 )
             );
-            return;
+            return false;
         }
 
         // Guard against downloading a file whose hash is already in the library
@@ -155,7 +155,7 @@ public class ModelImportService(
                 {
                     // Cancel path so callers reset their in-progress UI state
                     onImportCanceled?.Invoke().SafeFireAndForget();
-                    return;
+                    return false;
                 }
             }
             else
@@ -172,7 +172,7 @@ public class ModelImportService(
                 });
 
                 onImportCanceled?.Invoke().SafeFireAndForget();
-                return;
+                return false;
             }
         }
 
@@ -219,6 +219,30 @@ public class ModelImportService(
         }
 
         var downloadPath = downloadFolder.JoinFile(uniqueFileName);
+
+        // A stale paused/pending download for the same target (e.g. loaded from a previous
+        // session) shares this download's sidecar file names — cancelling it later would
+        // delete them out from under us. Supersede it now: its temp file is removed, the
+        // sidecars stay with this download.
+        var staleDownloads = trackedDownloadService
+            .Downloads.Where(existing =>
+                existing.ProgressState
+                    is ProgressState.Inactive
+                        or ProgressState.Paused
+                        or ProgressState.Pending
+                && string.Equals(existing.FileName, uniqueFileName, StringComparison.OrdinalIgnoreCase)
+                && string.Equals(
+                    existing.DownloadDirectory.ToString(),
+                    downloadFolder.ToString(),
+                    StringComparison.OrdinalIgnoreCase
+                )
+            )
+            .ToList();
+
+        foreach (var staleDownload in staleDownloads)
+        {
+            staleDownload.Supersede();
+        }
 
         // Download model info and preview first
         var cmInfoPath = await SaveCmInfo(
@@ -270,6 +294,8 @@ public class ModelImportService(
         download.ContextAction = CivitPostDownloadContextAction.FromCivitFile(modelFile);
 
         await trackedDownloadService.TryStartDownload(download);
+
+        return true;
     }
 
     /// <summary>

@@ -518,7 +518,7 @@ public partial class CivitDetailsPageViewModel(
             viewModel.CivitFile
         );
 
-        await modelImportService.DoImport(
+        var downloadStarted = await modelImportService.DoImport(
             CivitModel,
             finalDestinationDir,
             SelectedVersion?.ModelVersion,
@@ -532,14 +532,17 @@ public partial class CivitDetailsPageViewModel(
                 )
         );
 
-        notificationService.Show(
-            Resources.Label_DownloadStarted,
-            string.Format(
-                Resources.Label_DownloadWillBeSavedToLocation,
-                viewModel.CivitFile.Name,
-                finalDestinationDir.JoinFile(fileNameOverride).Directory
-            )
-        );
+        if (downloadStarted)
+        {
+            notificationService.Show(
+                Resources.Label_DownloadStarted,
+                string.Format(
+                    Resources.Label_DownloadWillBeSavedToLocation,
+                    viewModel.CivitFile.Name,
+                    finalDestinationDir.JoinFile(fileNameOverride).Directory
+                )
+            );
+        }
 
         if (CivitModel.Type != CivitModelType.Unknown)
         {
@@ -569,6 +572,8 @@ public partial class CivitDetailsPageViewModel(
         if (result != ContentDialogResult.Primary)
             return;
 
+        var startedCount = 0;
+
         foreach (var file in dialogVm.FilesToDownload)
         {
             var sharedFolderPath = GetSharedFolderPath(
@@ -591,7 +596,7 @@ public partial class CivitDetailsPageViewModel(
                 file.FileViewModel.CivitFile
             );
 
-            await modelImportService.DoImport(
+            var downloadStarted = await modelImportService.DoImport(
                 CivitModel,
                 destinationDir,
                 file.ModelVersion,
@@ -605,13 +610,21 @@ public partial class CivitDetailsPageViewModel(
                 // Skip duplicates silently rather than prompting once per file
                 duplicateHandling: DuplicateDownloadHandling.Skip
             );
+
+            if (downloadStarted)
+            {
+                startedCount++;
+            }
         }
 
-        notificationService.Show(
-            Resources.Label_BulkDownloadStarted,
-            string.Format(Resources.Label_BulkDownloadStartedMessage, dialogVm.FilesToDownload.Count),
-            NotificationType.Success
-        );
+        if (startedCount > 0)
+        {
+            notificationService.Show(
+                Resources.Label_BulkDownloadStarted,
+                string.Format(Resources.Label_BulkDownloadStartedMessage, startedCount),
+                NotificationType.Success
+            );
+        }
     }
 
     [RelayCommand]

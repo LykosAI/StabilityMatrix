@@ -27,6 +27,8 @@ public class DownloadProgressItemViewModel : PausableProgressItemViewModelBase
         {
             var current = download.DownloadedBytes / (double)download.TotalBytes;
             Progress.Value = (float)Math.Ceiling(Math.Clamp(current, 0, 1) * 100);
+            Progress.DownloadedBytes = download.DownloadedBytes;
+            Progress.TotalBytes = download.TotalBytes;
         }
 
         download.ProgressUpdate += (s, e) =>
@@ -34,6 +36,15 @@ public class DownloadProgressItemViewModel : PausableProgressItemViewModelBase
             Progress.Value = e.Percentage;
             Progress.IsIndeterminate = e.IsIndeterminate;
             Progress.DownloadSpeedInMBps = e.SpeedInMBps;
+
+            // Byte counts are only meaningful on real transfer reports; phase markers
+            // (hashing, extraction, completion) carry zeroed Current/Total, so keep
+            // the last known values in that case.
+            if (e is { Total: > 0 })
+            {
+                Progress.DownloadedBytes = (long)(e.Current ?? 0);
+                Progress.TotalBytes = (long)e.Total.Value;
+            }
         };
 
         download.ProgressStateChanged += (s, e) =>

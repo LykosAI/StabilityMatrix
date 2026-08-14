@@ -5,6 +5,7 @@ using StabilityMatrix.Avalonia.ViewModels.Inference;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Api.OpenModelsDb;
+using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Services;
@@ -16,7 +17,9 @@ namespace StabilityMatrix.Avalonia.Services;
 public class ModelImportService(
     IDownloadService downloadService,
     INotificationService notificationService,
-    ITrackedDownloadService trackedDownloadService
+    ITrackedDownloadService trackedDownloadService,
+    IModelIndexService modelIndexService,
+    ISettingsManager settingsManager
 ) : IModelImportService
 {
     public static async Task<FilePath> SaveCmInfo(
@@ -132,6 +135,28 @@ public class ModelImportService(
             return;
         }
 
+        // Skip the download if a file with the same hash is already in the library
+        if (
+            await FindInstalledDuplicateAsync(modelFile.Hashes.BLAKE3, modelFile.Hashes.SHA256) is
+            { } duplicate
+        )
+        {
+            Dispatcher.UIThread.Post(() =>
+            {
+                notificationService.Show(
+                    new Notification(
+                        "Already in library",
+                        $"\"{modelFile.Name}\" matches an installed file: \"{duplicate.RelativePath}\". Download skipped.",
+                        NotificationType.Information
+                    )
+                );
+            });
+
+            // Cancel path so callers reset their in-progress UI state
+            onImportCanceled?.Invoke().SafeFireAndForget();
+            return;
+        }
+
         if (fileNameOverride != null && (fileNameOverride.Contains("\\") || fileNameOverride.Contains("/")))
         {
             // figure out the folder path to add to downloadFolder
@@ -226,6 +251,42 @@ public class ModelImportService(
         download.ContextAction = CivitPostDownloadContextAction.FromCivitFile(modelFile);
 
         await trackedDownloadService.TryStartDownload(download);
+    }
+
+    /// <summary>
+    /// Finds an installed model matching either of the given hashes, verifying the indexed
+    /// file still exists on disk so a stale index entry can't block a legitimate re-download.
+    /// </summary>
+    private async Task<LocalModelFile?> FindInstalledDuplicateAsync(string? hashBlake3, string? hashSha256)
+    {
+        var candidates = new List<LocalModelFile>();
+
+        if (!string.IsNullOrEmpty(hashBlake3))
+        {
+            candidates.AddRange(await modelIndexService.FindByHashAsync(hashBlake3));
+        }
+
+        if (candidates.Count == 0 && !string.IsNullOrEmpty(hashSha256))
+        {
+            candidates.AddRange(await modelIndexService.FindBySha256Async(hashSha256));
+        }
+
+        if (candidates.Count == 0)
+        {
+            return null;
+        }
+
+        var existing = candidates.FirstOrDefault(candidate =>
+            File.Exists(candidate.GetFullPath(settingsManager.ModelsDirectory))
+        );
+
+        if (existing is null)
+        {
+            // Indexed files were removed outside the app; refresh so the index catches up
+            modelIndexService.BackgroundRefreshIndex();
+        }
+
+        return existing;
     }
 
     public Task DoOpenModelDbImport(

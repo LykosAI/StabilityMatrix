@@ -23,7 +23,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
   - **Saving a project** stores the layout in the `.smproj` file, so every project can keep its own arrangement and it comes back when you reopen it
   - **Restore Default Layout** now resets the current tab in place (no more page flicker) and returns that tab type to the standard arrangement
   - Existing project files are unaffected and keep opening exactly as before
-- Stability Matrix now warns at startup when the **uv cache** grows past a size limit ([feature request](https://lykos.ai/feature/4dc8ab9d-e35f-436b-9a3f-d3abc2db1800)) — click the notification to clear it and see how much space was freed, or turn on automatic cleanup. Limit and auto-clean live under **Settings → Package Environment** (default 20 GB)
+- Stability Matrix now warns at startup when the **uv cache** grows past a size limit ([feature request](https://lykos.ai/feature/4dc8ab9d-e35f-436b-9a3f-d3abc2db1800)) — click the notification to clear it (after a quick explanation of what that means), watch progress in the **Activity** panel, and see how much space was freed. Or turn on automatic cleanup. Limit and auto-clean live under **Settings → Package Environment** (default 20 GB)
 ### Fixed
 - Fixed Qwen Image Edit's model check accepting an incompatible Krea 2 text encoder — the correct 7B encoder download is now offered instead
 - Fixed clicking a cloud-download entry in model dropdowns sometimes doing nothing until you clicked a different item first

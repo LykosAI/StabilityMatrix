@@ -29,5 +29,9 @@ public sealed record ToggleProgressFlyoutAction : NotificationAction;
 /// <summary>Open the "What's New" changelog dialog.</summary>
 public sealed record ShowChangelogAction : NotificationAction;
 
-/// <summary>Purge the uv package cache and report the freed space.</summary>
-public sealed record PurgeUvCacheAction : NotificationAction;
+/// <summary>Confirm and purge the uv package cache, reporting the freed space.</summary>
+public sealed record PurgeUvCacheAction : NotificationAction
+{
+    /// <summary>Cache size in bytes at notification time, for the confirmation dialog text.</summary>
+    public long SizeBytes { get; init; }
+}

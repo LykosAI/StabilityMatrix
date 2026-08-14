@@ -61,6 +61,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly IDocumentationNavigationService documentationNavigationService;
     private readonly IDistributedSubscriber<string, Uri> showWindowSubscriber;
     private readonly IUvCacheService uvCacheService;
+    private readonly IUvCachePurgeRunner uvCachePurgeRunner;
     public string Greeting => "Welcome to Avalonia!";
 
     [ObservableProperty]
@@ -115,7 +116,8 @@ public partial class MainWindowViewModel : ViewModelBase
         INavigationService<SettingsViewModel> settingsNavService,
         IDocumentationNavigationService documentationNavigationService,
         IDistributedSubscriber<string, Uri> showWindowSubscriber,
-        IUvCacheService uvCacheService
+        IUvCacheService uvCacheService,
+        IUvCachePurgeRunner uvCachePurgeRunner
     )
     {
         this.settingsManager = settingsManager;
@@ -134,6 +136,7 @@ public partial class MainWindowViewModel : ViewModelBase
         this.documentationNavigationService = documentationNavigationService;
         this.showWindowSubscriber = showWindowSubscriber;
         this.uvCacheService = uvCacheService;
+        this.uvCachePurgeRunner = uvCachePurgeRunner;
         ProgressManagerViewModel = dialogFactory.Get<ProgressManagerViewModel>();
         UpdateViewModel = dialogFactory.Get<UpdateViewModel>();
         NotificationBannerViewModel = new NotificationBannerViewModel(appNotificationService);
@@ -549,17 +552,8 @@ public partial class MainWindowViewModel : ViewModelBase
 
         if (settingsManager.Settings.IsUvCacheAutoPurgeEnabled)
         {
-            var freedBytes = await uvCacheService.PurgeAsync();
-            await notificationService.ShowAsync(
-                NotificationKey.UvCache_OverLimit,
-                new DesktopNotifications.Notification
-                {
-                    Title = "uv cache purged",
-                    Body =
-                        $"The uv cache was over {limitGb} GB and was purged automatically, "
-                        + $"freeing {Core.Helper.Size.FormatBytes((ulong)freedBytes)}.",
-                }
-            );
+            // Progress shows in the Activity panel; the runner toasts the freed amount
+            await uvCachePurgeRunner.RunPurgeAsync();
         }
         else
         {
@@ -569,10 +563,10 @@ public partial class MainWindowViewModel : ViewModelBase
                 {
                     Title = "uv cache is getting large",
                     Body =
-                        $"The uv cache is using {Core.Helper.Size.FormatBytes((ulong)sizeBytes)}. "
-                        + "Click to purge it, or adjust the limit in Settings.",
+                        $"The uv cache is using {Core.Helper.Size.FormatBase10Bytes(sizeBytes)}. "
+                        + "Click to clear it, or adjust the limit in Settings.",
                 },
-                action: new PurgeUvCacheAction()
+                action: new PurgeUvCacheAction { SizeBytes = sizeBytes }
             );
         }
     }

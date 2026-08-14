@@ -1,12 +1,11 @@
-using Avalonia.Controls.Notifications;
 using Avalonia.Threading;
+using FluentAvalonia.UI.Controls;
 using Injectio.Attributes;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.Notifications;
 using StabilityMatrix.Core.Processes;
-using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.Services;
 
@@ -14,8 +13,7 @@ namespace StabilityMatrix.Avalonia.Services;
 public class NotificationActionDispatcher(
     ILogger<NotificationActionDispatcher> logger,
     INavigationService<MainWindowViewModel> navigationService,
-    IUvCacheService uvCacheService,
-    Lazy<INotificationService> notificationService
+    IUvCachePurgeRunner uvCachePurgeRunner
 ) : INotificationActionDispatcher
 {
     public async Task DispatchAsync(NotificationAction action)
@@ -54,13 +52,15 @@ public class NotificationActionDispatcher(
                     );
                     break;
 
-                case PurgeUvCacheAction:
-                    var freedBytes = await uvCacheService.PurgeAsync();
-                    notificationService.Value.Show(
-                        "uv cache purged",
-                        $"Freed {Size.FormatBytes((ulong)freedBytes)}",
-                        NotificationType.Success
+                case PurgeUvCacheAction purgeAction:
+                    var confirmed = await Dispatcher.UIThread.InvokeAsync(() =>
+                        ShowPurgeConfirmDialogAsync(purgeAction.SizeBytes)
                     );
+
+                    if (confirmed)
+                    {
+                        await uvCachePurgeRunner.RunPurgeAsync();
+                    }
                     break;
 
                 default:
@@ -72,5 +72,32 @@ public class NotificationActionDispatcher(
         {
             logger.LogError(ex, "Failed to dispatch notification action {Action}", action);
         }
+    }
+
+    /// <summary>
+    /// Explains what clearing the uv cache means before doing it.
+    /// Returns true when the user confirms.
+    /// </summary>
+    private static async Task<bool> ShowPurgeConfirmDialogAsync(long sizeBytes)
+    {
+        var sizeText = sizeBytes > 0 ? $" about {Size.FormatBase10Bytes(sizeBytes)} of" : "";
+
+        var dialog = DialogHelper.CreateTaskDialog(
+            "Clear the uv cache?",
+            $"This frees{sizeText} disk space used by cached package downloads. "
+                + "Nothing you have installed is removed, but the next package install or "
+                + "update will re-download anything it needs, so it may take a bit longer.\n\n"
+                + "Large caches can take a few minutes to clear. You can keep using "
+                + "Stability Matrix while it runs — progress shows in the Activity panel."
+        );
+
+        dialog.ShowProgressBar = false;
+        dialog.Buttons = new List<TaskDialogButton>
+        {
+            new("Clear Cache", TaskDialogStandardResult.Yes) { IsDefault = true },
+            TaskDialogButton.CancelButton,
+        };
+
+        return (TaskDialogStandardResult)await dialog.ShowAsync(true) == TaskDialogStandardResult.Yes;
     }
 }

@@ -1,7 +1,9 @@
+using System.Diagnostics;
 using Injectio.Attributes;
 using NLog;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 
 namespace StabilityMatrix.Core.Services;
@@ -20,9 +22,13 @@ public interface IUvCacheService
 
     /// <summary>
     /// Clears the uv cache via <c>uv cache clean</c> (safe against concurrent uv use,
-    /// unlike deleting the directory). Returns the number of bytes freed.
+    /// unlike deleting the directory). Reports percentage progress by watching the cache
+    /// shrink. Returns the number of bytes freed; throws on a failed uv process.
     /// </summary>
-    Task<long> PurgeAsync(CancellationToken cancellationToken = default);
+    Task<long> PurgeAsync(
+        IProgress<ProgressReport>? progress = null,
+        CancellationToken cancellationToken = default
+    );
 }
 
 [RegisterSingleton<IUvCacheService, UvCacheService>]
@@ -57,7 +63,10 @@ public class UvCacheService(ISettingsManager settingsManager, IPrerequisiteHelpe
     }
 
     /// <inheritdoc />
-    public async Task<long> PurgeAsync(CancellationToken cancellationToken = default)
+    public async Task<long> PurgeAsync(
+        IProgress<ProgressReport>? progress = null,
+        CancellationToken cancellationToken = default
+    )
     {
         if (!prerequisiteHelper.IsUvInstalled)
         {
@@ -67,26 +76,62 @@ public class UvCacheService(ISettingsManager settingsManager, IPrerequisiteHelpe
 
         var sizeBefore = await GetSizeBytesAsync(cancellationToken).ConfigureAwait(false);
 
-        var result = await ProcessRunner
-            .GetProcessResultAsync(
-                prerequisiteHelper.UvExePath,
-                ["cache", "clean"],
-                Compat.AppCurrentDir,
-                settingsManager.Settings.EnvironmentVariables
-            )
-            .ConfigureAwait(false);
+        progress?.Report(new ProgressReport(0, message: "Clearing uv cache...", isIndeterminate: true));
 
-        if (!result.IsSuccessExitCode)
+        var processTask = ProcessRunner.GetProcessResultAsync(
+            prerequisiteHelper.UvExePath,
+            ["cache", "clean"],
+            Compat.AppCurrentDir,
+            settingsManager.Settings.EnvironmentVariables
+        );
+
+        // Report progress by watching the cache shrink. The poll interval scales with the
+        // scan cost so huge caches aren't re-enumerated back to back, and scan errors are
+        // expected (enumeration races the deletion) — they just skip an update.
+        var pollDelay = TimeSpan.FromSeconds(3);
+
+        while (true)
         {
-            Logger.Error(
-                "uv cache clean failed. Exit Code: {ExitCode}. Error: {Error}",
-                result.ExitCode,
-                result.StandardError
-            );
-            return 0;
+            var completed = await Task.WhenAny(processTask, Task.Delay(pollDelay, cancellationToken))
+                .ConfigureAwait(false);
+
+            if (completed == processTask)
+                break;
+
+            try
+            {
+                var stopwatch = Stopwatch.StartNew();
+                var currentSize = await GetSizeBytesAsync(cancellationToken).ConfigureAwait(false);
+                pollDelay = TimeSpan.FromSeconds(Math.Max(3, stopwatch.Elapsed.TotalSeconds * 2));
+
+                if (sizeBefore > 0)
+                {
+                    var freedSoFar = Math.Clamp(sizeBefore - currentSize, 0, sizeBefore);
+                    progress?.Report(
+                        new ProgressReport(
+                            current: (ulong)freedSoFar,
+                            total: (ulong)sizeBefore,
+                            message: $"Cleared {Size.FormatBase10Bytes(freedSoFar)} of {Size.FormatBase10Bytes(sizeBefore)}"
+                        )
+                    );
+                }
+            }
+            catch (Exception e) when (e is not OperationCanceledException)
+            {
+                Logger.Debug(e, "uv cache size poll failed, skipping progress update");
+            }
         }
 
+        var result = await processTask.ConfigureAwait(false);
+        result.EnsureSuccessExitCode();
+
         var sizeAfter = await GetSizeBytesAsync(cancellationToken).ConfigureAwait(false);
-        return Math.Max(0, sizeBefore - sizeAfter);
+        var freed = Math.Max(0, sizeBefore - sizeAfter);
+
+        progress?.Report(
+            new ProgressReport(current: 1, total: 1, message: $"Freed {Size.FormatBase10Bytes(freed)}")
+        );
+
+        return freed;
     }
 }

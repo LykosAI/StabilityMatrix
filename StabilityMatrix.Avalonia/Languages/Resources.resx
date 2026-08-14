@@ -1020,6 +1020,27 @@
   <data name="Label_AlwaysShowScrollbars_Details" xml:space="preserve">
     <value>When on, vertical scrollbars stay visible at full thickness. When off, they fade to a thin bar that only expands on hover.</value>
   </data>
+  <data name="Label_QuickHideHotkey" xml:space="preserve">
+    <value>Quick-Hide Hotkey</value>
+  </data>
+  <data name="Label_QuickHideHotkey_Details" xml:space="preserve">
+    <value>Instantly minimize or exit Stability Matrix with a hotkey. Handy for shared computers.</value>
+  </data>
+  <data name="Label_QuickHideAction" xml:space="preserve">
+    <value>Action</value>
+  </data>
+  <data name="Label_QuickHideAction_Details" xml:space="preserve">
+    <value>Minimize the window, or exit immediately without confirmation prompts</value>
+  </data>
+  <data name="Label_QuickHideShortcut" xml:space="preserve">
+    <value>Shortcut</value>
+  </data>
+  <data name="Label_QuickHideShortcut_Details" xml:space="preserve">
+    <value>Click the box, then press the key combination you want. Esc cancels.</value>
+  </data>
+  <data name="Label_PressShortcut" xml:space="preserve">
+    <value>Press shortcut...</value>
+  </data>
   <data name="Label_CLIPSkip" xml:space="preserve">
     <value>CLIP Skip</value>
   </data>

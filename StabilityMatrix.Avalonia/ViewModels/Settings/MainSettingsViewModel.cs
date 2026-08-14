@@ -91,6 +91,8 @@ public partial class MainSettingsViewModel : PageViewModelBase
     private readonly IDocumentationNavigationService documentationNavigationService;
     private readonly IAccountsService accountsService;
     private readonly ICivitBaseModelTypeService baseModelTypeService;
+    private readonly IUvCacheService uvCacheService;
+    private readonly IUvCachePurgeRunner uvCachePurgeRunner;
 
     public SharedState SharedState { get; }
 
@@ -186,6 +188,25 @@ public partial class MainSettingsViewModel : PageViewModelBase
     [ObservableProperty]
     private bool showAllAvailablePythonVersions;
 
+    // Package Environment section
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsUvCacheLimitSet))]
+    public partial int UvCacheMaxSizeGb { get; set; }
+
+    /// <summary>
+    /// The auto-purge toggle only means something once a startup size limit exists,
+    /// so it is disabled (not just inert) without one.
+    /// </summary>
+    public bool IsUvCacheLimitSet => UvCacheMaxSizeGb > 0;
+
+    [ObservableProperty]
+    public partial bool IsUvCacheAutoPurgeEnabled { get; set; }
+
+    [ObservableProperty]
+    public partial string? UvCacheSizeText { get; set; }
+
+    private long lastKnownUvCacheSizeBytes;
+
     [ObservableProperty]
     public partial List<BaseModelOptionViewModel> AllBaseModelTypes { get; set; } = [];
 
@@ -250,7 +271,9 @@ public partial class MainSettingsViewModel : PageViewModelBase
         INavigationService<SettingsViewModel> settingsNavigationService,
         IDocumentationNavigationService documentationNavigationService,
         IAccountsService accountsService,
-        ICivitBaseModelTypeService baseModelTypeService
+        ICivitBaseModelTypeService baseModelTypeService,
+        IUvCacheService uvCacheService,
+        IUvCachePurgeRunner uvCachePurgeRunner
     )
     {
         this.notificationService = notificationService;
@@ -265,6 +288,8 @@ public partial class MainSettingsViewModel : PageViewModelBase
         this.documentationNavigationService = documentationNavigationService;
         this.accountsService = accountsService;
         this.baseModelTypeService = baseModelTypeService;
+        this.uvCacheService = uvCacheService;
+        this.uvCachePurgeRunner = uvCachePurgeRunner;
 
         SharedState = sharedState;
 
@@ -307,6 +332,20 @@ public partial class MainSettingsViewModel : PageViewModelBase
             this,
             vm => vm.SelectedQuickHideMode,
             settings => settings.QuickHideMode,
+            true
+        );
+
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.UvCacheMaxSizeGb,
+            settings => settings.UvCacheMaxSizeGb,
+            true
+        );
+
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.IsUvCacheAutoPurgeEnabled,
+            settings => settings.IsUvCacheAutoPurgeEnabled,
             true
         );
 
@@ -765,20 +804,22 @@ public partial class MainSettingsViewModel : PageViewModelBase
     }
 
     [RelayCommand]
-    private async Task ClearUvCache()
+    private async Task CheckUvCacheSize()
     {
-        await prerequisiteHelper.InstallUvIfNecessary();
-        var processPath = new FilePath(prerequisiteHelper.UvExePath);
+        lastKnownUvCacheSizeBytes = await uvCacheService.GetSizeBytesAsync();
+        UvCacheSizeText = Core.Helper.Size.FormatBase10Bytes(lastKnownUvCacheSizeBytes);
+    }
 
-        var step = new ProcessStep
+    [RelayCommand]
+    private async Task PurgeUvCache()
+    {
+        var freedBytes = await uvCachePurgeRunner.RunPurgeWithConfirmAsync(lastKnownUvCacheSizeBytes);
+
+        // Refresh the displayed size unless the user cancelled the dialog
+        if (freedBytes is not null)
         {
-            FileName = processPath,
-            Args = ["cache", "clean"],
-            WorkingDirectory = Compat.AppCurrentDir,
-            EnvironmentVariables = settingsManager.Settings.EnvironmentVariables.ToImmutableDictionary(),
-        };
-
-        ConsoleProcessRunner.RunProcessStepAsync(step).SafeFireAndForget();
+            await CheckUvCacheSize();
+        }
     }
 
     [RelayCommand]

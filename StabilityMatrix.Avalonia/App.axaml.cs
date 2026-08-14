@@ -458,7 +458,9 @@ public sealed class App : Application
             provider.GetRequiredService<INavigationService<MainWindowViewModel>>(),
             provider.GetRequiredService<INavigationService<SettingsViewModel>>(),
             provider.GetRequiredService<IDocumentationNavigationService>(),
-            provider.GetRequiredService<IDistributedSubscriber<string, Uri>>()
+            provider.GetRequiredService<IDistributedSubscriber<string, Uri>>(),
+            provider.GetRequiredService<IUvCacheService>(),
+            provider.GetRequiredService<IUvCachePurgeRunner>()
         )
         {
             Pages =

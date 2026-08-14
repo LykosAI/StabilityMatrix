@@ -941,11 +941,20 @@ public sealed class App : Application
     /// </summary>
     /// <remarks>This returns asynchronously *without waiting* for Shutdown</remarks>
     /// <param name="exitCode">Exit code for the application.</param>
+    /// <param name="skipConfirmation">
+    /// When true, the running-packages exit confirmation in <see cref="OnShutdownRequested"/>
+    /// is bypassed (used by the quick-hide hotkey's Exit mode).
+    /// </param>
     /// <exception cref="NullReferenceException">If Application.Current is null</exception>
-    public static void Shutdown(int exitCode = 0)
+    public static void Shutdown(int exitCode = 0, bool skipConfirmation = false)
     {
         if (Current is null)
             throw new NullReferenceException("Current Application was null when Shutdown called");
+
+        if (skipConfirmation && Current is App app)
+        {
+            app.isExitConfirmed = true;
+        }
 
         if (Current.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime lifetime)
         {

@@ -105,7 +105,7 @@ public class DownloadService : IDownloadService
             totalBytesRead += bytesRead;
 
             var elapsedSeconds = stopwatch.Elapsed.TotalSeconds;
-            var speedInMBps = (totalBytesRead / elapsedSeconds) / (1024 * 1024);
+            var speedBytesPerSec = totalBytesRead / elapsedSeconds;
 
             if (isIndeterminate)
             {
@@ -119,7 +119,7 @@ public class DownloadService : IDownloadService
                         total: Convert.ToUInt64(contentLength),
                         message: "Downloading...",
                         printToConsole: false,
-                        speedInMBps: speedInMBps
+                        speedBytesPerSec: speedBytesPerSec
                     )
                 );
             }
@@ -306,7 +306,7 @@ public class DownloadService : IDownloadService
             totalBytesRead += bytesRead;
 
             var elapsedSeconds = stopwatch.Elapsed.TotalSeconds;
-            var speedInMBps = (totalBytesRead / elapsedSeconds) / (1024 * 1024);
+            var speedBytesPerSec = totalBytesRead / elapsedSeconds;
 
             if (isIndeterminate)
             {
@@ -321,7 +321,7 @@ public class DownloadService : IDownloadService
                         // Total as the original total
                         total: Convert.ToUInt64(originalContentLength),
                         message: "Downloading...",
-                        speedInMBps: speedInMBps
+                        speedBytesPerSec: speedBytesPerSec
                     )
                 );
             }

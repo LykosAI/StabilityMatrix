@@ -35,7 +35,7 @@ public class DownloadProgressItemViewModel : PausableProgressItemViewModelBase
         {
             Progress.Value = e.Percentage;
             Progress.IsIndeterminate = e.IsIndeterminate;
-            Progress.DownloadSpeedInMBps = e.SpeedInMBps;
+            Progress.DownloadSpeedBytesPerSec = e.SpeedBytesPerSec;
 
             // Byte counts are only meaningful on real transfer reports; phase markers
             // (hashing, extraction, completion) carry zeroed Current/Total, so keep

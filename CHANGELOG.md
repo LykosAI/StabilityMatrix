@@ -23,7 +23,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
   - **Saving a project** stores the layout in the `.smproj` file, so every project can keep its own arrangement and it comes back when you reopen it
   - **Restore Default Layout** now resets the current tab in place (no more page flicker) and returns that tab type to the standard arrangement
   - Existing project files are unaffected and keep opening exactly as before
-- Downloads in the **Activity** popout now show downloaded and total size (e.g. 1.2 GiB / 6.5 GiB) alongside the percentage and speed ([feature request](https://lykos.ai/feature/f571997c-3607-48db-a62f-b315fc733280))
+- Downloads in the **Activity** popout now show downloaded and total size (e.g. 1.2 GB / 6.5 GB) alongside the percentage and speed ([feature request](https://lykos.ai/feature/f571997c-3607-48db-a62f-b315fc733280))
 - Model downloads now skip files you already have ([feature request](https://lykos.ai/feature/3dc89d55-4859-4484-bde9-5951ad87a48a)) — when a download's hash matches an installed model, a notification points at the existing file instead of downloading a duplicate
 ### Fixed
 - Fixed Qwen Image Edit's model check accepting an incompatible Krea 2 text encoder — the correct 7B encoder download is now offered instead

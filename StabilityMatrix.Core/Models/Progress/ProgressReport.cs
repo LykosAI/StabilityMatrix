@@ -25,7 +25,7 @@ public readonly record struct ProgressReport
     public float Percentage => (float)Math.Ceiling(Math.Clamp(Progress ?? 0, 0, 1) * 100);
     public ProgressType Type { get; init; } = ProgressType.Generic;
     public bool PrintToConsole { get; init; } = true;
-    public double SpeedInMBps { get; init; } = 0f;
+    public double SpeedBytesPerSec { get; init; } = 0f;
 
     public static ProgressReport ForProcessOutput(ProcessOutput output) =>
         new(-1f, isIndeterminate: true) { ProcessOutput = output };
@@ -36,7 +36,7 @@ public readonly record struct ProgressReport
         string? message = null,
         bool isIndeterminate = false,
         bool printToConsole = true,
-        double speedInMBps = 0,
+        double speedBytesPerSec = 0,
         ProgressType type = ProgressType.Generic
     )
     {
@@ -46,7 +46,7 @@ public readonly record struct ProgressReport
         IsIndeterminate = isIndeterminate;
         Type = type;
         PrintToConsole = printToConsole;
-        SpeedInMBps = speedInMBps;
+        SpeedBytesPerSec = speedBytesPerSec;
     }
 
     public ProgressReport(
@@ -56,7 +56,7 @@ public readonly record struct ProgressReport
         string? message = null,
         bool isIndeterminate = false,
         bool printToConsole = true,
-        double speedInMBps = 0,
+        double speedBytesPerSec = 0,
         ProgressType type = ProgressType.Generic
     )
     {
@@ -68,7 +68,7 @@ public readonly record struct ProgressReport
         IsIndeterminate = isIndeterminate;
         Type = type;
         PrintToConsole = printToConsole;
-        SpeedInMBps = speedInMBps;
+        SpeedBytesPerSec = speedBytesPerSec;
     }
 
     public ProgressReport(
@@ -78,7 +78,7 @@ public readonly record struct ProgressReport
         string? message = null,
         bool isIndeterminate = false,
         bool printToConsole = true,
-        double speedInMBps = 0,
+        double speedBytesPerSec = 0,
         ProgressType type = ProgressType.Generic
     )
     {
@@ -94,7 +94,7 @@ public readonly record struct ProgressReport
         IsIndeterminate = isIndeterminate;
         Type = type;
         PrintToConsole = printToConsole;
-        SpeedInMBps = speedInMBps;
+        SpeedBytesPerSec = speedBytesPerSec;
     }
 
     public ProgressReport(

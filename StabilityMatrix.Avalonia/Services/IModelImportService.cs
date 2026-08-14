@@ -1,4 +1,5 @@
-﻿using StabilityMatrix.Avalonia.ViewModels.Inference;
+﻿using StabilityMatrix.Avalonia.Models;
+using StabilityMatrix.Avalonia.ViewModels.Inference;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Api.OpenModelsDb;
@@ -27,7 +28,8 @@ public interface IModelImportService
         IProgress<ProgressReport>? progress = null,
         Func<Task>? onImportComplete = null,
         Func<Task>? onImportCanceled = null,
-        Func<Task>? onImportFailed = null
+        Func<Task>? onImportFailed = null,
+        DuplicateDownloadHandling duplicateHandling = DuplicateDownloadHandling.Prompt
     );
 
     /// <summary>

@@ -1,6 +1,8 @@
 ﻿using AsyncAwaitBestPractices;
 using Avalonia.Controls.Notifications;
+using FluentAvalonia.UI.Controls;
 using Injectio.Attributes;
+using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
@@ -104,7 +106,8 @@ public class ModelImportService(
         IProgress<ProgressReport>? progress = null,
         Func<Task>? onImportComplete = null,
         Func<Task>? onImportCanceled = null,
-        Func<Task>? onImportFailed = null
+        Func<Task>? onImportFailed = null,
+        DuplicateDownloadHandling duplicateHandling = DuplicateDownloadHandling.Prompt
     )
     {
         // Get latest version
@@ -135,26 +138,42 @@ public class ModelImportService(
             return;
         }
 
-        // Skip the download if a file with the same hash is already in the library
+        // Guard against downloading a file whose hash is already in the library
         if (
-            await FindInstalledDuplicateAsync(modelFile.Hashes.BLAKE3, modelFile.Hashes.SHA256) is
-            { } duplicate
+            duplicateHandling is not DuplicateDownloadHandling.Allow
+            && await FindInstalledDuplicateAsync(modelFile.Hashes.BLAKE3, modelFile.Hashes.SHA256)
+                is { } duplicate
         )
         {
-            Dispatcher.UIThread.Post(() =>
+            if (duplicateHandling is DuplicateDownloadHandling.Prompt)
             {
-                notificationService.Show(
-                    new Notification(
-                        "Already in library",
-                        $"\"{modelFile.Name}\" matches an installed file: \"{duplicate.RelativePath}\". Download skipped.",
-                        NotificationType.Information
-                    )
+                var downloadAnyway = await Dispatcher.UIThread.InvokeAsync(() =>
+                    ShowDuplicateDownloadDialogAsync(modelFile.Name, duplicate.RelativePath)
                 );
-            });
 
-            // Cancel path so callers reset their in-progress UI state
-            onImportCanceled?.Invoke().SafeFireAndForget();
-            return;
+                if (!downloadAnyway)
+                {
+                    // Cancel path so callers reset their in-progress UI state
+                    onImportCanceled?.Invoke().SafeFireAndForget();
+                    return;
+                }
+            }
+            else
+            {
+                Dispatcher.UIThread.Post(() =>
+                {
+                    notificationService.Show(
+                        new Notification(
+                            "Already in library",
+                            $"\"{modelFile.Name}\" matches an installed file: \"{duplicate.RelativePath}\". Download skipped.",
+                            NotificationType.Information
+                        )
+                    );
+                });
+
+                onImportCanceled?.Invoke().SafeFireAndForget();
+                return;
+            }
         }
 
         if (fileNameOverride != null && (fileNameOverride.Contains("\\") || fileNameOverride.Contains("/")))
@@ -251,6 +270,30 @@ public class ModelImportService(
         download.ContextAction = CivitPostDownloadContextAction.FromCivitFile(modelFile);
 
         await trackedDownloadService.TryStartDownload(download);
+    }
+
+    /// <summary>
+    /// Asks whether to download a file that matches an already-installed model.
+    /// Returns true to download anyway; defaults to skipping.
+    /// </summary>
+    private static async Task<bool> ShowDuplicateDownloadDialogAsync(
+        string fileName,
+        string existingRelativePath
+    )
+    {
+        var dialog = DialogHelper.CreateTaskDialog(
+            "Already in library",
+            $"\"{fileName}\" matches an installed file: \"{existingRelativePath}\"."
+        );
+
+        dialog.ShowProgressBar = false;
+        dialog.Buttons = new List<TaskDialogButton>
+        {
+            new("Download Anyway", TaskDialogStandardResult.Yes),
+            new("Skip", TaskDialogStandardResult.Cancel) { IsDefault = true },
+        };
+
+        return (TaskDialogStandardResult)await dialog.ShowAsync(true) == TaskDialogStandardResult.Yes;
     }
 
     /// <summary>

@@ -601,7 +601,9 @@ public partial class CivitDetailsPageViewModel(
                     TryMoveDownloadedCheckpointToDiffusionModelsIfNeededAsync(
                         file.FileViewModel.CivitFile,
                         destinationDir
-                    )
+                    ),
+                // Skip duplicates silently rather than prompting once per file
+                duplicateHandling: DuplicateDownloadHandling.Skip
             );
         }
 

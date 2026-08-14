@@ -569,10 +569,10 @@
                     </ui:SettingsExpanderItem>
                     <ui:SettingsExpanderItem Content="{x:Static lang:Resources.Label_QuickHideShortcut}" Description="{x:Static lang:Resources.Label_QuickHideShortcut_Details}">
                         <ui:SettingsExpanderItem.Footer>
-                            <TextBox
+                            <controls:KeyGestureBox
                                 MinWidth="160"
-                                Text="{Binding QuickHideHotkeyGesture}"
-                                Watermark="Ctrl+Shift+H" />
+                                Gesture="{Binding QuickHideHotkeyGesture}"
+                                Watermark="{x:Static lang:Resources.Label_PressShortcut}" />
                         </ui:SettingsExpanderItem.Footer>
                     </ui:SettingsExpanderItem>
                 </ui:SettingsExpander>

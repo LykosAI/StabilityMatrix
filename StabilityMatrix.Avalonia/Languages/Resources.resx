@@ -1036,7 +1036,10 @@
     <value>Shortcut</value>
   </data>
   <data name="Label_QuickHideShortcut_Details" xml:space="preserve">
-    <value>Key combination, e.g. Ctrl+Shift+H. Ctrl maps to Cmd on macOS.</value>
+    <value>Click the box, then press the key combination you want. Esc cancels.</value>
+  </data>
+  <data name="Label_PressShortcut" xml:space="preserve">
+    <value>Press shortcut...</value>
   </data>
   <data name="Label_CLIPSkip" xml:space="preserve">
     <value>CLIP Skip</value>

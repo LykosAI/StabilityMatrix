@@ -2329,11 +2329,20 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Key combination, e.g. Ctrl+Shift+H. Ctrl maps to Cmd on macOS..
+        ///   Looks up a localized string similar to Click the box, then press the key combination you want. Esc cancels..
         /// </summary>
         public static string Label_QuickHideShortcut_Details {
             get {
                 return ResourceManager.GetString("Label_QuickHideShortcut_Details", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Press shortcut....
+        /// </summary>
+        public static string Label_PressShortcut {
+            get {
+                return ResourceManager.GetString("Label_PressShortcut", resourceCulture);
             }
         }
 

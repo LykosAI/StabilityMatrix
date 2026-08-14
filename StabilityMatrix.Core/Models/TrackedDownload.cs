@@ -303,6 +303,35 @@ public class TrackedDownload
         OnProgressStateChanged(ProgressState);
     }
 
+    /// <summary>
+    /// Cancels a non-active download whose target file is being taken over by a newer
+    /// download for the same directory and file name. Deletes the temp file but keeps
+    /// sidecar files (.cm-info.json, preview image), which now belong to the new download —
+    /// unlike <see cref="Cancel"/>, which would delete them out from under it.
+    /// </summary>
+    public void Supersede()
+    {
+        if (ProgressState is not (ProgressState.Inactive or ProgressState.Paused or ProgressState.Pending))
+        {
+            Logger.Warn(
+                "Attempted to supersede download {Download} but it is active ({State})",
+                FileName,
+                ProgressState
+            );
+            return;
+        }
+
+        CancelRetryDelay();
+
+        Logger.Debug("Superseding download {Download}", FileName);
+
+        DoCleanup(includeExtraCleanupFiles: false);
+
+        OnProgressStateChanging(ProgressState.Cancelled);
+        ProgressState = ProgressState.Cancelled;
+        OnProgressStateChanged(ProgressState);
+    }
+
     public void Cancel()
     {
         if (ProgressState is not (ProgressState.Working or ProgressState.Inactive))

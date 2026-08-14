@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
   - **Saving a project** stores the layout in the `.smproj` file, so every project can keep its own arrangement and it comes back when you reopen it
   - **Restore Default Layout** now resets the current tab in place (no more page flicker) and returns that tab type to the standard arrangement
   - Existing project files are unaffected and keep opening exactly as before
+- Added a **Quick-Hide Hotkey** for shared computers ([feature request](https://lykos.ai/feature/3dbfa0e1-650a-426a-906d-b81d6f414104)) — press a shortcut to instantly minimize Stability Matrix, or exit with no confirmation prompts. Off by default; enable it in **Settings → System** and bind any combination with the game-style key picker (default Ctrl+Shift+H)
 ### Fixed
 - Fixed Qwen Image Edit's model check accepting an incompatible Krea 2 text encoder — the correct 7B encoder download is now offered instead
 - Fixed clicking a cloud-download entry in model dropdowns sometimes doing nothing until you clicked a different item first

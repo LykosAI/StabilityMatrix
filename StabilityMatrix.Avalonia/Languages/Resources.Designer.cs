@@ -2284,6 +2284,24 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Quick-Hide Hotkey.
+        /// </summary>
+        public static string Label_QuickHideHotkey {
+            get {
+                return ResourceManager.GetString("Label_QuickHideHotkey", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Instantly minimize Stability Matrix by pressing Ctrl+Shift+H (Cmd+Shift+H on macOS). Handy for shared computers..
+        /// </summary>
+        public static string Label_QuickHideHotkey_Details {
+            get {
+                return ResourceManager.GetString("Label_QuickHideHotkey_Details", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Hugging Face.
         /// </summary>
         public static string Label_HuggingFace {

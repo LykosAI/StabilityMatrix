@@ -456,7 +456,7 @@
             </Grid>
 
             <!--  System Options  -->
-            <sg:SpacedGrid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,*" RowSpacing="4">
+            <sg:SpacedGrid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,*" RowSpacing="4">
                 <TextBlock
                     Margin="0,0,0,4"
                     FontWeight="Medium"
@@ -551,9 +551,22 @@
                     </ui:SettingsExpander.Footer>
                 </ui:SettingsExpander>
 
-                <!--  Select Data Directory  -->
+                <!--  Quick-hide hotkey  -->
                 <ui:SettingsExpander
                     Grid.Row="5"
+                    Description="{x:Static lang:Resources.Label_QuickHideHotkey_Details}"
+                    Header="{x:Static lang:Resources.Label_QuickHideHotkey}">
+                    <ui:SettingsExpander.IconSource>
+                        <fluentIcons:SymbolIconSource FontSize="10" Symbol="EyeOff" />
+                    </ui:SettingsExpander.IconSource>
+                    <ui:SettingsExpander.Footer>
+                        <ToggleSwitch IsChecked="{Binding IsQuickHideHotkeyEnabled}" />
+                    </ui:SettingsExpander.Footer>
+                </ui:SettingsExpander>
+
+                <!--  Select Data Directory  -->
+                <ui:SettingsExpander
+                    Grid.Row="6"
                     Description="{x:Static lang:Resources.Label_SelectNewDataDirectory_Details}"
                     IconSource="MoveToFolder">
                     <ui:SettingsExpander.Header>
@@ -583,7 +596,7 @@
                 </ui:SettingsExpander>
 
                 <ui:SettingsExpander
-                    Grid.Row="6"
+                    Grid.Row="7"
                     Description="{x:Static lang:Resources.Label_SelectNewDataDirectory_Details}"
                     IconSource="MoveToFolder">
                     <ui:SettingsExpander.Header>
@@ -614,7 +627,7 @@
 
                 <!--  App Folders  -->
                 <ui:SettingsExpander
-                    Grid.Row="7"
+                    Grid.Row="8"
                     Header="{x:Static lang:Resources.Label_AppFolders}"
                     IconSource="FolderLink">
                     <ui:SettingsExpander.Footer>
@@ -643,7 +656,7 @@
 
                 <!--  System Settings  -->
                 <ui:SettingsExpander
-                    Grid.Row="8"
+                    Grid.Row="9"
                     Header="{x:Static lang:Resources.Label_SystemSettings}"
                     IconSource="Settings">
 
@@ -687,7 +700,7 @@
                 </ui:SettingsExpander>
 
                 <!--  System Information  -->
-                <ui:SettingsExpander Grid.Row="9" Header="{x:Static lang:Resources.Label_SystemInformation}">
+                <ui:SettingsExpander Grid.Row="10" Header="{x:Static lang:Resources.Label_SystemInformation}">
                     <ui:SettingsExpander.IconSource>
                         <fluentIcons:SymbolIconSource
                             FontSize="10"

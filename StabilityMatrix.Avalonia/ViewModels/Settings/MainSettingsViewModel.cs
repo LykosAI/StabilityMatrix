@@ -141,6 +141,10 @@ public partial class MainSettingsViewModel : PageViewModelBase
     [ObservableProperty]
     private bool scrollBarsAlwaysVisible = true;
 
+    // System section
+    [ObservableProperty]
+    public partial bool IsQuickHideHotkeyEnabled { get; set; }
+
     // Console section
     [ObservableProperty]
     private int consoleLogHistorySize;
@@ -280,6 +284,13 @@ public partial class MainSettingsViewModel : PageViewModelBase
             this,
             vm => vm.ScrollBarsAlwaysVisible,
             settings => settings.ScrollBarsAlwaysVisible,
+            true
+        );
+
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.IsQuickHideHotkeyEnabled,
+            settings => settings.IsQuickHideHotkeyEnabled,
             true
         );
 

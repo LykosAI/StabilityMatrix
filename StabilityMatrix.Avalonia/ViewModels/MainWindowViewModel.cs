@@ -72,6 +72,10 @@ public partial class MainWindowViewModel : ViewModelBase
     public partial bool IsPaneOpen { get; set; }
 
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(QuickHideCommand))]
+    public partial bool IsQuickHideHotkeyEnabled { get; set; }
+
+    [ObservableProperty]
     private List<PageViewModelBase> pages = new();
 
     [ObservableProperty]
@@ -213,6 +217,24 @@ public partial class MainWindowViewModel : ViewModelBase
         documentationNavigationService.OpenDocumentation();
     }
 
+    /// <summary>
+    /// Instantly minimizes the main window. Bound app-wide to Ctrl+Shift+H (Cmd+Shift+H on
+    /// macOS) as an opt-in privacy quick-hide for shared PCs.
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(IsQuickHideHotkeyEnabled))]
+    private void QuickHide()
+    {
+        if (
+            Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime
+            {
+                MainWindow: { } mainWindow
+            }
+        )
+        {
+            mainWindow.WindowState = WindowState.Minimized;
+        }
+    }
+
     protected override async Task OnInitialLoadedAsync()
     {
         await base.OnLoadedAsync();
@@ -252,6 +274,13 @@ public partial class MainWindowViewModel : ViewModelBase
             this,
             vm => vm.IsPaneOpen,
             settings => settings.IsMainWindowSidebarOpen,
+            true
+        );
+
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.IsQuickHideHotkeyEnabled,
+            settings => settings.IsQuickHideHotkeyEnabled,
             true
         );
 

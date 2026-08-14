@@ -1020,6 +1020,12 @@
   <data name="Label_AlwaysShowScrollbars_Details" xml:space="preserve">
     <value>When on, vertical scrollbars stay visible at full thickness. When off, they fade to a thin bar that only expands on hover.</value>
   </data>
+  <data name="Label_QuickHideHotkey" xml:space="preserve">
+    <value>Quick-Hide Hotkey</value>
+  </data>
+  <data name="Label_QuickHideHotkey_Details" xml:space="preserve">
+    <value>Instantly minimize Stability Matrix by pressing Ctrl+Shift+H (Cmd+Shift+H on macOS). Handy for shared computers.</value>
+  </data>
   <data name="Label_CLIPSkip" xml:space="preserve">
     <value>CLIP Skip</value>
   </data>

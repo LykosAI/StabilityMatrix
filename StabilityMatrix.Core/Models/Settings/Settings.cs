@@ -151,6 +151,12 @@ public class Settings
     /// </summary>
     public bool ScrollBarsAlwaysVisible { get; set; } = true;
 
+    /// <summary>
+    /// Enables the app-wide quick-hide hotkey (Ctrl+Shift+H, Cmd+Shift+H on macOS)
+    /// that instantly minimizes the main window.
+    /// </summary>
+    public bool IsQuickHideHotkeyEnabled { get; set; }
+
     public HashSet<string> DisabledBaseModelTypes { get; set; } = [];
 
     public HashSet<string> SavedInferenceDimensions { get; set; } =

@@ -8,6 +8,7 @@
     xmlns:fluentIcons="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     xmlns:local="using:StabilityMatrix.Avalonia"
+    xmlns:markupExtensions="clr-namespace:StabilityMatrix.Avalonia.MarkupExtensions"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
     xmlns:ui="using:FluentAvalonia.UI.Controls"
@@ -36,6 +37,7 @@
 
     <controls:AppWindowBase.KeyBindings>
         <KeyBinding Command="{Binding OpenDocumentationCommand}" Gesture="F1" />
+        <KeyBinding Command="{Binding QuickHideCommand}" Gesture="{markupExtensions:PlatformGesture Ctrl+Shift+H}" />
     </controls:AppWindowBase.KeyBindings>
 
     <Grid RowDefinitions="Auto,Auto,Auto,*">

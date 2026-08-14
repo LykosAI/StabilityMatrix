@@ -637,10 +637,11 @@ public partial class MainWindowViewModel : ViewModelBase
                 NotificationKey.UvCache_OverLimit,
                 new DesktopNotifications.Notification
                 {
-                    Title = "uv cache is getting large",
-                    Body =
-                        $"The uv cache is using {Core.Helper.Size.FormatBase10Bytes(sizeBytes)}. "
-                        + "Click to clear it, or adjust the limit in Settings.",
+                    Title = Resources.Label_UvCacheOverLimit,
+                    Body = string.Format(
+                        Resources.TextTemplate_UvCacheOverLimit,
+                        Core.Helper.Size.FormatBase10Bytes(sizeBytes)
+                    ),
                 },
                 action: new PurgeUvCacheAction { SizeBytes = sizeBytes }
             );

@@ -1041,6 +1041,70 @@
   <data name="Label_PressShortcut" xml:space="preserve">
     <value>Press shortcut...</value>
   </data>
+  <data name="Label_UvCache" xml:space="preserve">
+    <value>uv Cache</value>
+  </data>
+  <data name="Label_UvCache_Details" xml:space="preserve">
+    <value>Cached package downloads that speed up installs and updates. Checking the size can take a while for large caches.</value>
+  </data>
+  <data name="Action_CheckSize" xml:space="preserve">
+    <value>Check Size</value>
+  </data>
+  <data name="Action_ClearEllipsis" xml:space="preserve">
+    <value>Clear...</value>
+  </data>
+  <data name="Label_UvCacheStartupCheck" xml:space="preserve">
+    <value>Check size at startup</value>
+  </data>
+  <data name="Label_UvCacheStartupCheck_Details" xml:space="preserve">
+    <value>Warn when the cache grows beyond this size, in GB. 0 (default) skips the startup check — it can be slow on large caches or spinning drives.</value>
+  </data>
+  <data name="Label_UvCachePurgeAutomatically" xml:space="preserve">
+    <value>Purge automatically</value>
+  </data>
+  <data name="Label_UvCachePurgeAutomatically_Details" xml:space="preserve">
+    <value>When over the size limit, clear the cache at startup instead of only warning. Requires a startup size limit. Cached downloads will be re-fetched when next needed.</value>
+  </data>
+  <data name="Label_ClearUvCacheConfirmTitle" xml:space="preserve">
+    <value>Clear the uv cache?</value>
+  </data>
+  <data name="TextTemplate_ClearUvCacheConfirmSized" xml:space="preserve">
+    <value>This frees about {0} of disk space used by cached package downloads. Nothing you have installed is removed, but the next package install or update will re-download anything it needs, so it may take a bit longer.
+
+Large caches can take a few minutes to clear. You can keep using Stability Matrix while it runs — progress shows in the Activity panel.</value>
+  </data>
+  <data name="Label_ClearUvCacheConfirm" xml:space="preserve">
+    <value>This frees disk space used by cached package downloads. Nothing you have installed is removed, but the next package install or update will re-download anything it needs, so it may take a bit longer.
+
+Large caches can take a few minutes to clear. You can keep using Stability Matrix while it runs — progress shows in the Activity panel.</value>
+  </data>
+  <data name="Action_ClearCache" xml:space="preserve">
+    <value>Clear Cache</value>
+  </data>
+  <data name="Label_ClearingUvCache" xml:space="preserve">
+    <value>Clearing uv cache...</value>
+  </data>
+  <data name="TextTemplate_UvCacheClearedOfTotal" xml:space="preserve">
+    <value>Cleared {0} of {1}</value>
+  </data>
+  <data name="TextTemplate_UvCacheFreed" xml:space="preserve">
+    <value>Freed {0}</value>
+  </data>
+  <data name="Label_UvCacheCleared" xml:space="preserve">
+    <value>uv cache cleared</value>
+  </data>
+  <data name="Label_UvCacheClearFailed" xml:space="preserve">
+    <value>Couldn't clear the uv cache</value>
+  </data>
+  <data name="Label_UvCacheClearFailed_Details" xml:space="preserve">
+    <value>See the logs for details, or try again from Settings.</value>
+  </data>
+  <data name="Label_UvCacheOverLimit" xml:space="preserve">
+    <value>uv cache is getting large</value>
+  </data>
+  <data name="TextTemplate_UvCacheOverLimit" xml:space="preserve">
+    <value>The uv cache is using {0}. Click to clear it, or adjust the limit in Settings.</value>
+  </data>
   <data name="Label_CLIPSkip" xml:space="preserve">
     <value>CLIP Skip</value>
   </data>

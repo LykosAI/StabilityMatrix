@@ -2346,6 +2346,187 @@ namespace StabilityMatrix.Avalonia.Languages {
             }
         }
 
+
+        /// <summary>
+        ///   Looks up a localized string similar to uv Cache.
+        /// </summary>
+        public static string Label_UvCache {
+            get {
+                return ResourceManager.GetString("Label_UvCache", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Cached package downloads that speed up installs and updates. Checking the size can take a while for large caches..
+        /// </summary>
+        public static string Label_UvCache_Details {
+            get {
+                return ResourceManager.GetString("Label_UvCache_Details", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Check Size.
+        /// </summary>
+        public static string Action_CheckSize {
+            get {
+                return ResourceManager.GetString("Action_CheckSize", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Clear.....
+        /// </summary>
+        public static string Action_ClearEllipsis {
+            get {
+                return ResourceManager.GetString("Action_ClearEllipsis", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Check size at startup.
+        /// </summary>
+        public static string Label_UvCacheStartupCheck {
+            get {
+                return ResourceManager.GetString("Label_UvCacheStartupCheck", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Warn when the cache grows beyond this size, in GB. 0 (default) skips the startup check — it can be slow on large caches or spinning drives..
+        /// </summary>
+        public static string Label_UvCacheStartupCheck_Details {
+            get {
+                return ResourceManager.GetString("Label_UvCacheStartupCheck_Details", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Purge automatically.
+        /// </summary>
+        public static string Label_UvCachePurgeAutomatically {
+            get {
+                return ResourceManager.GetString("Label_UvCachePurgeAutomatically", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to When over the size limit, clear the cache at startup instead of only warning. Requires a startup size limit. Cached downloads will be re-fetched when next needed..
+        /// </summary>
+        public static string Label_UvCachePurgeAutomatically_Details {
+            get {
+                return ResourceManager.GetString("Label_UvCachePurgeAutomatically_Details", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Clear the uv cache?..
+        /// </summary>
+        public static string Label_ClearUvCacheConfirmTitle {
+            get {
+                return ResourceManager.GetString("Label_ClearUvCacheConfirmTitle", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to This frees about {0} of disk space used by cached package downloads. Nothing you have installed is removed [rest of string was truncated].
+        /// </summary>
+        public static string TextTemplate_ClearUvCacheConfirmSized {
+            get {
+                return ResourceManager.GetString("TextTemplate_ClearUvCacheConfirmSized", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to This frees disk space used by cached package downloads. Nothing you have installed is removed [rest of string was truncated].
+        /// </summary>
+        public static string Label_ClearUvCacheConfirm {
+            get {
+                return ResourceManager.GetString("Label_ClearUvCacheConfirm", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Clear Cache.
+        /// </summary>
+        public static string Action_ClearCache {
+            get {
+                return ResourceManager.GetString("Action_ClearCache", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Clearing uv cache.....
+        /// </summary>
+        public static string Label_ClearingUvCache {
+            get {
+                return ResourceManager.GetString("Label_ClearingUvCache", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Cleared {0} of {1}.
+        /// </summary>
+        public static string TextTemplate_UvCacheClearedOfTotal {
+            get {
+                return ResourceManager.GetString("TextTemplate_UvCacheClearedOfTotal", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Freed {0}.
+        /// </summary>
+        public static string TextTemplate_UvCacheFreed {
+            get {
+                return ResourceManager.GetString("TextTemplate_UvCacheFreed", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to uv cache cleared.
+        /// </summary>
+        public static string Label_UvCacheCleared {
+            get {
+                return ResourceManager.GetString("Label_UvCacheCleared", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Couldn't clear the uv cache.
+        /// </summary>
+        public static string Label_UvCacheClearFailed {
+            get {
+                return ResourceManager.GetString("Label_UvCacheClearFailed", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to See the logs for details, or try again from Settings..
+        /// </summary>
+        public static string Label_UvCacheClearFailed_Details {
+            get {
+                return ResourceManager.GetString("Label_UvCacheClearFailed_Details", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to uv cache is getting large.
+        /// </summary>
+        public static string Label_UvCacheOverLimit {
+            get {
+                return ResourceManager.GetString("Label_UvCacheOverLimit", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The uv cache is using {0}. Click to clear it, or adjust the limit in Settings..
+        /// </summary>
+        public static string TextTemplate_UvCacheOverLimit {
+            get {
+                return ResourceManager.GetString("TextTemplate_UvCacheOverLimit", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Hugging Face.
         /// </summary>

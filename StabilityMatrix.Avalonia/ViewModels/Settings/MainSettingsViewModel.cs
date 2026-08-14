@@ -190,7 +190,14 @@ public partial class MainSettingsViewModel : PageViewModelBase
 
     // Package Environment section
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsUvCacheLimitSet))]
     public partial int UvCacheMaxSizeGb { get; set; }
+
+    /// <summary>
+    /// The auto-purge toggle only means something once a startup size limit exists,
+    /// so it is disabled (not just inert) without one.
+    /// </summary>
+    public bool IsUvCacheLimitSet => UvCacheMaxSizeGb > 0;
 
     [ObservableProperty]
     public partial bool IsUvCacheAutoPurgeEnabled { get; set; }
@@ -797,23 +804,6 @@ public partial class MainSettingsViewModel : PageViewModelBase
     }
 
     [RelayCommand]
-    private async Task ClearUvCache()
-    {
-        await prerequisiteHelper.InstallUvIfNecessary();
-        var processPath = new FilePath(prerequisiteHelper.UvExePath);
-
-        var step = new ProcessStep
-        {
-            FileName = processPath,
-            Args = ["cache", "clean"],
-            WorkingDirectory = Compat.AppCurrentDir,
-            EnvironmentVariables = settingsManager.Settings.EnvironmentVariables.ToImmutableDictionary(),
-        };
-
-        ConsoleProcessRunner.RunProcessStepAsync(step).SafeFireAndForget();
-    }
-
-    [RelayCommand]
     private async Task CheckUvCacheSize()
     {
         lastKnownUvCacheSizeBytes = await uvCacheService.GetSizeBytesAsync();
@@ -825,8 +815,8 @@ public partial class MainSettingsViewModel : PageViewModelBase
     {
         var freedBytes = await uvCachePurgeRunner.RunPurgeWithConfirmAsync(lastKnownUvCacheSizeBytes);
 
-        // Refresh the displayed size after a completed purge
-        if (freedBytes > 0)
+        // Refresh the displayed size unless the user cancelled the dialog
+        if (freedBytes is not null)
         {
             await CheckUvCacheSize();
         }

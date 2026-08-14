@@ -22,8 +22,10 @@ public interface IUvCacheService
 
     /// <summary>
     /// Clears the uv cache via <c>uv cache clean</c> (safe against concurrent uv use,
-    /// unlike deleting the directory). Reports percentage progress by watching the cache
-    /// shrink. Returns the number of bytes freed; throws on a failed uv process.
+    /// unlike deleting the directory), installing uv first if needed. Reports numeric
+    /// progress (freed / total bytes) by watching the cache shrink; presentation text is
+    /// the caller's concern. Returns the number of bytes freed; throws on a failed uv
+    /// process.
     /// </summary>
     Task<long> PurgeAsync(
         IProgress<ProgressReport>? progress = null,
@@ -40,13 +42,10 @@ public class UvCacheService(ISettingsManager settingsManager, IPrerequisiteHelpe
     /// <inheritdoc />
     public DirectoryPath GetCacheDirectory()
     {
-        // Settings.EnvironmentVariables always carries UV_CACHE_DIR (default or user override)
-        return new DirectoryPath(
-            settingsManager.Settings.EnvironmentVariables.GetValueOrDefault(
-                "UV_CACHE_DIR",
-                Path.Combine(settingsManager.LibraryDir, "Assets", "uv", "cache")
-            )
-        );
+        // Settings.EnvironmentVariables always carries UV_CACHE_DIR (default or user
+        // override); index directly so a broken invariant fails loud instead of this
+        // silently measuring a restated default path
+        return new DirectoryPath(settingsManager.Settings.EnvironmentVariables["UV_CACHE_DIR"]);
     }
 
     /// <inheritdoc />
@@ -58,8 +57,7 @@ public class UvCacheService(ISettingsManager settingsManager, IPrerequisiteHelpe
             return 0;
         }
 
-        return await Task.Run(() => cacheDir.GetSize(includeSymbolicLinks: false), cancellationToken)
-            .ConfigureAwait(false);
+        return await cacheDir.GetSizeAsync(includeSymbolicLinks: false).ConfigureAwait(false);
     }
 
     /// <inheritdoc />
@@ -68,15 +66,11 @@ public class UvCacheService(ISettingsManager settingsManager, IPrerequisiteHelpe
         CancellationToken cancellationToken = default
     )
     {
-        if (!prerequisiteHelper.IsUvInstalled)
-        {
-            Logger.Info("uv is not installed, skipping cache purge");
-            return 0;
-        }
+        await prerequisiteHelper.InstallUvIfNecessary().ConfigureAwait(false);
 
         var sizeBefore = await GetSizeBytesAsync(cancellationToken).ConfigureAwait(false);
 
-        progress?.Report(new ProgressReport(0, message: "Clearing uv cache...", isIndeterminate: true));
+        progress?.Report(new ProgressReport(0, isIndeterminate: true));
 
         var processTask = ProcessRunner.GetProcessResultAsync(
             prerequisiteHelper.UvExePath,
@@ -108,11 +102,7 @@ public class UvCacheService(ISettingsManager settingsManager, IPrerequisiteHelpe
                 {
                     var freedSoFar = Math.Clamp(sizeBefore - currentSize, 0, sizeBefore);
                     progress?.Report(
-                        new ProgressReport(
-                            current: (ulong)freedSoFar,
-                            total: (ulong)sizeBefore,
-                            message: $"Cleared {Size.FormatBase10Bytes(freedSoFar)} of {Size.FormatBase10Bytes(sizeBefore)}"
-                        )
+                        new ProgressReport(current: (ulong)freedSoFar, total: (ulong)sizeBefore)
                     );
                 }
             }
@@ -126,12 +116,6 @@ public class UvCacheService(ISettingsManager settingsManager, IPrerequisiteHelpe
         result.EnsureSuccessExitCode();
 
         var sizeAfter = await GetSizeBytesAsync(cancellationToken).ConfigureAwait(false);
-        var freed = Math.Max(0, sizeBefore - sizeAfter);
-
-        progress?.Report(
-            new ProgressReport(current: 1, total: 1, message: $"Freed {Size.FormatBase10Bytes(freed)}")
-        );
-
-        return freed;
+        return Math.Max(0, sizeBefore - sizeAfter);
     }
 }

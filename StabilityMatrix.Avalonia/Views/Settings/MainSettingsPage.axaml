@@ -196,7 +196,6 @@
                                     <MenuFlyout Placement="Bottom">
                                         <MenuItem Command="{Binding RunPythonProcessCommand}" Header="Command" />
                                         <MenuItem Command="{Binding ClearPipCacheCommand}" Header="Clear Pip Cache" />
-                                        <MenuItem Command="{Binding ClearUvCacheCommand}" Header="Clear uv Cache" />
                                     </MenuFlyout>
                                 </DropDownButton.Flyout>
                             </DropDownButton>
@@ -246,22 +245,27 @@
                 <ui:SettingsExpander
                     Grid.Row="5"
                     Margin="8,4,8,4"
-                    Description="Cached package downloads that speed up installs and updates. Checking the size can take a while for large caches."
-                    Header="uv Cache">
+                    Description="{x:Static lang:Resources.Label_UvCache_Details}"
+                    Header="{x:Static lang:Resources.Label_UvCache}">
                     <ui:SettingsExpander.IconSource>
                         <fluentIcons:SymbolIconSource FontSize="10" Symbol="Broom" />
                     </ui:SettingsExpander.IconSource>
                     <ui:SettingsExpander.Footer>
                         <StackPanel Orientation="Horizontal" Spacing="8">
+                            <controls:ProgressRing
+                                BorderThickness="3"
+                                IsEnabled="{Binding CheckUvCacheSizeCommand.IsRunning}"
+                                IsIndeterminate="True"
+                                IsVisible="{Binding CheckUvCacheSizeCommand.IsRunning}" />
                             <TextBlock
                                 VerticalAlignment="Center"
                                 IsVisible="{Binding UvCacheSizeText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
                                 Text="{Binding UvCacheSizeText}" />
-                            <Button Command="{Binding CheckUvCacheSizeCommand}" Content="Check Size" />
-                            <Button Command="{Binding PurgeUvCacheCommand}" Content="Clear..." />
+                            <Button Command="{Binding CheckUvCacheSizeCommand}" Content="{x:Static lang:Resources.Action_CheckSize}" />
+                            <Button Command="{Binding PurgeUvCacheCommand}" Content="{x:Static lang:Resources.Action_ClearEllipsis}" />
                         </StackPanel>
                     </ui:SettingsExpander.Footer>
-                    <ui:SettingsExpanderItem Content="Check size at startup" Description="Warn when the cache grows beyond this size, in GB. 0 (default) skips the startup check — it can be slow on large caches or spinning drives.">
+                    <ui:SettingsExpanderItem Content="{x:Static lang:Resources.Label_UvCacheStartupCheck}" Description="{x:Static lang:Resources.Label_UvCacheStartupCheck_Details}">
                         <ui:SettingsExpanderItem.Footer>
                             <ui:NumberBox
                                 Maximum="100000"
@@ -273,9 +277,9 @@
                                 Value="{Binding UvCacheMaxSizeGb}" />
                         </ui:SettingsExpanderItem.Footer>
                     </ui:SettingsExpanderItem>
-                    <ui:SettingsExpanderItem Content="Purge automatically" Description="When over the limit, clear the cache at startup instead of only warning. Cached downloads will be re-fetched when next needed.">
+                    <ui:SettingsExpanderItem Content="{x:Static lang:Resources.Label_UvCachePurgeAutomatically}" Description="{x:Static lang:Resources.Label_UvCachePurgeAutomatically_Details}">
                         <ui:SettingsExpanderItem.Footer>
-                            <ToggleSwitch IsChecked="{Binding IsUvCacheAutoPurgeEnabled}" />
+                            <ToggleSwitch IsChecked="{Binding IsUvCacheAutoPurgeEnabled}" IsEnabled="{Binding IsUvCacheLimitSet}" />
                         </ui:SettingsExpanderItem.Footer>
                     </ui:SettingsExpanderItem>
                 </ui:SettingsExpander>

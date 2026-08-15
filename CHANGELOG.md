@@ -27,9 +27,12 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Downloads in the **Activity** popout now show downloaded and total size (e.g. 1.2 GB / 6.5 GB) alongside the percentage and speed ([feature request](https://lykos.ai/feature/f571997c-3607-48db-a62f-b315fc733280))
 - Model downloads now skip files you already have ([feature request](https://lykos.ai/feature/3dc89d55-4859-4484-bde9-5951ad87a48a)) — when a download's hash matches an installed model, a notification points at the existing file instead of downloading a duplicate
 - Added a **Quick-Hide Hotkey** for shared computers ([feature request](https://lykos.ai/feature/3dbfa0e1-650a-426a-906d-b81d6f414104)) — press a shortcut to instantly minimize Stability Matrix, or exit with no confirmation prompts. Off by default; enable it in **Settings → System** and bind any combination with the game-style key picker (default Ctrl+Shift+H)
+- Added **Sort** options to the Inference model picker — file name, title, base model, type, size, and dates, remembered between sessions; search relevance still takes over while you type
 ### Changed
 - Updated **AI-Toolkit** installs to PyTorch 2.13.0 on CUDA 13.0 with Python 3.12, matching current upstream requirements ([#1714](https://github.com/LykosAI/StabilityMatrix/issues/1714)) — with a console warning at launch if your NVIDIA driver is older than the 580 series CUDA 13.0 needs
 - Updated the bundled **uv** package manager to 0.12.5, adding newer Python builds to the Python picker — including the 3.10 security releases requested in [#1709](https://github.com/LykosAI/StabilityMatrix/issues/1709)
+- Refreshed the **Checkpoint Manager** model card badges — compact chips instead of the chunky pills, the update’s release date in a tooltip, and a distinct style for early-access-only updates
+- **Checkpoint Manager** search is now typo-tolerant, sharing the Inference model picker’s fuzzy matching (`#tag` search unchanged)
 ### Fixed
 - Fixed Qwen Image Edit's model check accepting an incompatible Krea 2 text encoder — the correct 7B encoder download is now offered instead
 - Fixed clicking a cloud-download entry in model dropdowns sometimes doing nothing until you clicked a different item first
@@ -46,6 +49,11 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed [#1703](https://github.com/LykosAI/StabilityMatrix/issues/1703) - model cover/preview images not displaying when your **File Name Pattern** contains a `#`
 - Fixed [#1705](https://github.com/LykosAI/StabilityMatrix/issues/1705) - the **Model Browser** showing results in a scrambled order after refreshing with the **Search** button
 - Fixed [#1715](https://github.com/LykosAI/StabilityMatrix/issues/1715) - the app crashing on startup on Linux when the models folder contains folders or files differing only in letter case (e.g. `unet` and `Unet`, also [#1149](https://github.com/LykosAI/StabilityMatrix/issues/1149)/[#1357](https://github.com/LykosAI/StabilityMatrix/issues/1357)) — models in differently-cased folders now show up in the Checkpoint Manager instead of being silently skipped, and a model index error can no longer take down the app
+- Fixed [#1716](https://github.com/LykosAI/StabilityMatrix/issues/1716) - phantom **Update Available** badges on embeddings, VAEs, upscalers, and ControlNets — the update check didn’t count those file types as evidence of being up to date, so it flagged them all forever; wrong badges clear on the next check
+- Fixed metadata scans always reporting success — the completion message now shows real counts, tells CivitAI rate limiting apart from "not on CivitAI", and stops early when CivitAI stops responding instead of grinding the whole library into a rate limit; the per-card **Find Metadata** action reports its outcome too instead of silently doing nothing
+- Fixed **Update Metadata** silently skipping models imported from HuggingFace or OpenModelDB (their files are now hashed on demand), and metadata scans freezing the app while hashing large files
+- Fixed **Organize Models** appearing to do nothing with its default pattern — the dialog now shows what it evaluated and offers a one-click starting pattern (`{base_model}/{file_name}`) that actually sorts models into folders
+- Fixed model card text being hard to read in light theme (dark text over the dark card overlay)
 
 ## v2.17.0-dev.2
 ### Added

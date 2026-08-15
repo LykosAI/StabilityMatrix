@@ -697,7 +697,13 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
             return;
         }
 
-        var startIndex = modelCache.Count;
+        // A replacement page restarts ordering at zero; an appended page continues after the
+        // highest existing order. Count is not a valid order base — it lags the max order
+        // whenever a fresh search replaces an uncleared cache (Search button re-click) or an
+        // append is de-duplicated, handing out colliding orders that scramble the sorted view.
+        var startIndex = addCards
+            ? modelCache.Items.Select(static ov => ov.Order).DefaultIfEmpty(-1).Max() + 1
+            : 0;
 
         var modelsToAdd = models.Select((m, i) => new OrderedValue<CivitModel>(startIndex + i, m));
 

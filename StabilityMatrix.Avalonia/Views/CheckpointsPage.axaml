@@ -95,6 +95,57 @@
             </Style>
         </Style>
 
+        <!--  Model card tag chips: one shared shape, variants only recolor  -->
+        <Style Selector="Border.tag-chip">
+            <Setter Property="Height" Value="22" />
+            <Setter Property="CornerRadius" Value="11" />
+            <Setter Property="Padding" Value="9,0" />
+            <Setter Property="Margin" Value="0,0,4,4" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="VerticalAlignment" Value="Top" />
+            <Setter Property="Background" Value="{DynamicResource SolidBackgroundFillColorBaseBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="{DynamicResource CardStrokeColorDefaultBrush}" />
+
+            <Style Selector="^ StackPanel">
+                <Setter Property="Orientation" Value="Horizontal" />
+                <Setter Property="Spacing" Value="4" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+            </Style>
+            <Style Selector="^ TextBlock">
+                <Setter Property="VerticalAlignment" Value="Center" />
+                <Setter Property="FontSize" Value="11" />
+                <Setter Property="FontWeight" Value="Medium" />
+                <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+            </Style>
+            <Style Selector="^ ui|SymbolIcon">
+                <Setter Property="VerticalAlignment" Value="Center" />
+                <Setter Property="FontSize" Value="12" />
+            </Style>
+        </Style>
+
+        <!--  Update chips use the soft semantic fills so the preview image stays the hero  -->
+        <Style Selector="Border.tag-chip.update">
+            <Setter Property="Background" Value="{DynamicResource SystemFillColorSuccessBackgroundBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource SystemFillColorSuccessBackgroundBrush}" />
+            <Style Selector="^ TextBlock">
+                <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+            </Style>
+            <Style Selector="^ ui|SymbolIcon">
+                <Setter Property="Foreground" Value="{DynamicResource SystemFillColorSuccessBrush}" />
+            </Style>
+        </Style>
+        <Style Selector="Border.tag-chip.early-access">
+            <Setter Property="Background" Value="{DynamicResource SystemFillColorCautionBackgroundBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource SystemFillColorCautionBackgroundBrush}" />
+            <Style Selector="^ TextBlock">
+                <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+            </Style>
+            <Style Selector="^ ui|SymbolIcon">
+                <Setter Property="Foreground" Value="{DynamicResource SystemFillColorCautionBrush}" />
+            </Style>
+        </Style>
+
         <!--  markdown table styles  -->
         <Style Selector="Border.TableHeader">
             <Setter Property="Margin" Value="2" />
@@ -602,74 +653,40 @@
                                     <LayoutTransformControl.LayoutTransform>
                                         <ScaleTransform ScaleX="{Binding $parent[scroll:BetterScrollViewer].((viewModels:CheckpointsPageViewModel)DataContext).ModelCardBottomResizeFactor, FallbackValue=1, TargetNullValue=1}" ScaleY="{Binding $parent[scroll:BetterScrollViewer].((viewModels:CheckpointsPageViewModel)DataContext).ModelCardBottomResizeFactor, FallbackValue=1, TargetNullValue=1}" />
                                     </LayoutTransformControl.LayoutTransform>
-                                    <WrapPanel IsVisible="{Binding CheckpointFile.HasConnectedModel}" Orientation="Horizontal">
-                                        <controls:Card
-                                            Height="24"
-                                            Margin="8,8,0,0"
-                                            Padding="4"
-                                            HorizontalAlignment="Left"
-                                            VerticalAlignment="Top"
-                                            Classes="info">
-
-                                            <TextBlock
-                                                HorizontalAlignment="Center"
-                                                VerticalAlignment="Center"
-                                                FontSize="11"
-                                                FontWeight="Medium"
-                                                Text="{Binding ModelType}" />
-                                        </controls:Card>
-                                        <controls:Card
-                                            Height="24"
-                                            Margin="4,8,0,0"
-                                            Padding="4"
-                                            HorizontalAlignment="Left"
-                                            VerticalAlignment="Top"
-                                            Classes="info">
-
-                                            <TextBlock
-                                                HorizontalAlignment="Center"
-                                                VerticalAlignment="Center"
-                                                FontSize="11"
-                                                FontWeight="Medium"
-                                                IsVisible="{Binding BaseModelName, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                                                Text="{Binding BaseModelName}" />
-                                        </controls:Card>
-                                        <controls:Card
-                                            Height="24"
-                                            Margin="4,8,0,0"
-                                            Padding="4"
-                                            HorizontalAlignment="Left"
-                                            VerticalAlignment="Top"
-                                            Classes="success"
-                                            IsVisible="{Binding HasStandardUpdate}">
-
-                                            <TextBlock
-                                                HorizontalAlignment="Center"
-                                                VerticalAlignment="Center"
-                                                FontSize="11"
-                                                FontWeight="Medium">
-                                                <Run Text="{x:Static lang:Resources.Label_UpdateAvailable}" />
-                                                <Run Text="{Binding CheckpointFile.LatestModelInfo.LatestVersionCreatedAt}" />
-                                            </TextBlock>
-                                        </controls:Card>
-                                        <controls:Card
-                                            Height="24"
-                                            Margin="4,8,0,0"
-                                            Padding="4"
-                                            HorizontalAlignment="Left"
-                                            VerticalAlignment="Top"
-                                            Classes="early-access"
-                                            IsVisible="{Binding HasEarlyAccessUpdateOnly}">
-
-                                            <TextBlock
-                                                HorizontalAlignment="Center"
-                                                VerticalAlignment="Center"
-                                                FontSize="11"
-                                                FontWeight="Medium">
-                                                <Run Text="{x:Static lang:Resources.Label_EarlyAccessUpdateAvailable}" />
-                                                <Run Text="{Binding CheckpointFile.LatestModelInfo.LatestVersionCreatedAt}" />
-                                            </TextBlock>
-                                        </controls:Card>
+                                    <WrapPanel
+                                        Margin="8,8,44,0"
+                                        IsVisible="{Binding CheckpointFile.HasConnectedModel}"
+                                        Orientation="Horizontal">
+                                        <Border Classes="tag-chip">
+                                            <TextBlock Text="{Binding ModelType}" />
+                                        </Border>
+                                        <Border Classes="tag-chip" IsVisible="{Binding BaseModelName, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                                            <TextBlock Text="{Binding BaseModelName}" />
+                                        </Border>
+                                        <Border Classes="tag-chip update" IsVisible="{Binding HasStandardUpdate}">
+                                            <ToolTip.Tip>
+                                                <TextBlock>
+                                                    <Run Text="{x:Static lang:Resources.Label_UpdateAvailable}" />
+                                                    <Run Text="{Binding CheckpointFile.LatestModelInfo.LatestVersionCreatedAt}" />
+                                                </TextBlock>
+                                            </ToolTip.Tip>
+                                            <StackPanel>
+                                                <ui:SymbolIcon Symbol="Up" />
+                                                <TextBlock Text="{x:Static lang:Resources.Action_Update}" />
+                                            </StackPanel>
+                                        </Border>
+                                        <Border Classes="tag-chip early-access" IsVisible="{Binding HasEarlyAccessUpdateOnly}">
+                                            <ToolTip.Tip>
+                                                <TextBlock>
+                                                    <Run Text="{x:Static lang:Resources.Label_EarlyAccessUpdateAvailable}" />
+                                                    <Run Text="{Binding CheckpointFile.LatestModelInfo.LatestVersionCreatedAt}" />
+                                                </TextBlock>
+                                            </ToolTip.Tip>
+                                            <StackPanel>
+                                                <ui:SymbolIcon Symbol="Clock" />
+                                                <TextBlock Text="{x:Static lang:Resources.Label_EarlyAccess}" />
+                                            </StackPanel>
+                                        </Border>
                                     </WrapPanel>
                                 </LayoutTransformControl>
 

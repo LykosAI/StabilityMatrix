@@ -1942,6 +1942,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Early Access.
+        /// </summary>
+        public static string Label_EarlyAccess {
+            get {
+                return ResourceManager.GetString("Label_EarlyAccess", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Early Access Models.
         /// </summary>
         public static string Label_EarlyAccessModels {

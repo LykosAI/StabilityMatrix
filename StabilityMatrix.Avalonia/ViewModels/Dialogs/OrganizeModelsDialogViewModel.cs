@@ -46,6 +46,7 @@ public partial class OrganizeModelsDialogViewModel(
     public partial ModelOrganizationPlan? Plan { get; set; }
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowPatternHint))]
     public partial string OrganizePattern { get; set; } = FileNameFormat.DefaultOrganizationTemplate;
 
     [ObservableProperty]
@@ -92,18 +93,26 @@ public partial class OrganizeModelsDialogViewModel(
     public bool CanOrganize => Plan?.ReadyCount > 0;
 
     /// <summary>
-    /// True when the pattern is valid but moves nothing - the out-of-box state with the
-    /// default single-segment pattern - so the dialog can explain instead of sitting inert.
-    /// Conflicts don't suppress the hint: with zero ready items nothing moves either way.
+    /// True when the pattern is valid but moves nothing, so the dialog can explain and offer
+    /// the default sorting pattern instead of sitting inert. Conflicts don't suppress the
+    /// hint (with zero ready items nothing moves either way), but a pattern that already
+    /// equals the suggestion does - there is nothing better to offer then.
     /// </summary>
     public bool ShowPatternHint =>
-        PatternValidationError == null && Plan is { ReadyCount: 0 } && UnchangedCount > 0;
+        PatternValidationError == null
+        && Plan is { ReadyCount: 0 }
+        && UnchangedCount > 0
+        && !string.Equals(
+            OrganizePattern?.Trim(),
+            FileNameFormat.DefaultOrganizationTemplate,
+            StringComparison.Ordinal
+        );
 
     public string PatternHintText =>
-        string.Format(Resources.Text_OrganizePatternHint, FileNameFormat.SuggestedOrganizationTemplate);
+        string.Format(Resources.Text_OrganizePatternHint, FileNameFormat.DefaultOrganizationTemplate);
 
     public string UseSuggestedPatternLabel =>
-        string.Format(Resources.Action_UsePattern, FileNameFormat.SuggestedOrganizationTemplate);
+        string.Format(Resources.Action_UsePattern, FileNameFormat.DefaultOrganizationTemplate);
 
     public bool ShowMissingMetadataWarning => MissingMetadataCount > 0;
 
@@ -254,7 +263,7 @@ public partial class OrganizeModelsDialogViewModel(
     }
 
     [RelayCommand]
-    private void UseSuggestedPattern() => OrganizePattern = FileNameFormat.SuggestedOrganizationTemplate;
+    private void UseSuggestedPattern() => OrganizePattern = FileNameFormat.DefaultOrganizationTemplate;
 
     [RelayCommand]
     private void OpenVariablesTip() => IsVariablesTipOpen = true;

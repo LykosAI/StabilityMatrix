@@ -6,6 +6,7 @@ using Octokit;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
+using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
@@ -885,7 +886,7 @@ public abstract class BaseGitPackage : BasePackage
     /// Returns true when the incompatibility was detected; callers typically abort the launch.
     /// </summary>
     protected async Task<bool> WarnIfNvidiaDriverBelowCu130MinimumAsync(
-        PyVenvRunner venvRunner,
+        IPyVenvRunner venvRunner,
         Action<ProcessOutput>? onConsoleOutput
     )
     {

@@ -201,8 +201,11 @@ public class AiToolkit(
 
     private ImmutableDictionary<string, string> GetEnvVars(ImmutableDictionary<string, string> env)
     {
-        // set SETUPTOOLS_USE_DISTUTILS=setuptools to avoid job errors
-        env = env.SetItem("SETUPTOOLS_USE_DISTUTILS", "setuptools");
+        // Keep distutils importable for setuptools-based builds and training jobs. Must be
+        // "local" (setuptools' bundled copy): any other value falls back to stdlib distutils,
+        // which no longer exists on Python 3.12+ and breaks source builds (e.g. the pinned
+        // diffusers git commit in ai-toolkit's requirements).
+        env = env.SetItem("SETUPTOOLS_USE_DISTUTILS", "local");
 
         var pathBuilder = new EnvPathBuilder();
 

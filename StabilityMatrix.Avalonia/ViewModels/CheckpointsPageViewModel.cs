@@ -223,14 +223,15 @@ public partial class CheckpointsPageViewModel(
                                 ) ?? false
                             )
                         )
-                        || file.DisplayModelFileName.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase)
-                        || file.DisplayModelName.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase)
-                        || file.DisplayModelVersion.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase)
-                        || (
-                            file.ConnectedModelInfo?.TrainedWordsString.Contains(
-                                SearchQuery,
-                                StringComparison.OrdinalIgnoreCase
-                            ) ?? false
+                        || FuzzySearchHelper.IsMatch(
+                            SearchQuery,
+                            string.Join(
+                                ' ',
+                                file.DisplayModelFileName,
+                                file.DisplayModelName,
+                                file.DisplayModelVersion,
+                                file.ConnectedModelInfo?.TrainedWordsString ?? string.Empty
+                            )
                         )
                 )
             )

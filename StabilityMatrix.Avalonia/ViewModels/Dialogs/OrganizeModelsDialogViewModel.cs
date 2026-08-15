@@ -94,9 +94,10 @@ public partial class OrganizeModelsDialogViewModel(
     /// <summary>
     /// True when the pattern is valid but moves nothing - the out-of-box state with the
     /// default single-segment pattern - so the dialog can explain instead of sitting inert.
+    /// Conflicts don't suppress the hint: with zero ready items nothing moves either way.
     /// </summary>
     public bool ShowPatternHint =>
-        PatternValidationError == null && Plan is { ReadyCount: 0, ConflictCount: 0 } && UnchangedCount > 0;
+        PatternValidationError == null && Plan is { ReadyCount: 0 } && UnchangedCount > 0;
 
     public string PatternHintText =>
         string.Format(Resources.Text_OrganizePatternHint, FileNameFormat.SuggestedOrganizationTemplate);

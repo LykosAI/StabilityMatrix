@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Immutable;
 using System.Diagnostics;
+using System.Globalization;
 using System.Text;
 using AsyncAwaitBestPractices;
 using AutoCtor;
@@ -213,6 +214,68 @@ public partial class ModelIndexService : IModelIndexService
         return RefreshIndexParallelCore();
     }
 
+    /// <summary>
+    /// Resolves a top-level models folder name to its <see cref="SharedFolderType"/>.
+    /// Case-insensitive, so a folder whose casing diverges from the canonical name (possible on
+    /// case-sensitive file systems, e.g. "textencoders" next to "TextEncoders") still indexes as
+    /// its canonical type. Unmatched names resolve to <see cref="SharedFolderType.Unknown"/>.
+    /// </summary>
+    internal static SharedFolderType ParseSharedFolderType(string folderName) =>
+        Enum.TryParse<SharedFolderType>(folderName, ignoreCase: true, out var type)
+            ? type
+            : SharedFolderType.Unknown;
+
+    /// <summary>
+    /// Filters models so no two entries collide on the <see cref="LocalModelFile.RelativePath"/>
+    /// primary key under the database's collation. The main database uses Ordinal collation, where
+    /// distinct paths never collide; under a case-insensitive collation, paths differing only in
+    /// case (possible on case-sensitive file systems) would otherwise fail the bulk insert with a
+    /// duplicate key error.
+    /// </summary>
+    internal static IReadOnlyList<LocalModelFile> DeduplicateForDbCollation(
+        IReadOnlyCollection<LocalModelFile> models,
+        Collation collation,
+        ILogger logger
+    )
+    {
+        var deduplicated = new List<LocalModelFile>(models.Count);
+        var seenPaths = new HashSet<string>(models.Count, GetKeyComparer(collation));
+
+        foreach (var model in models)
+        {
+            if (seenPaths.Add(model.RelativePath))
+            {
+                deduplicated.Add(model);
+            }
+            else
+            {
+                logger.LogWarning(
+                    "Skipping model {Path}: its path collides with an already indexed model "
+                        + "under the database collation ({Collation})",
+                    model.RelativePath,
+                    collation
+                );
+            }
+        }
+
+        return deduplicated;
+    }
+
+    /// <summary>
+    /// A <see cref="StringComparer"/> with the same equality semantics as a LiteDB collation,
+    /// for detecting primary key collisions ahead of insert.
+    /// </summary>
+    internal static StringComparer GetKeyComparer(Collation collation) =>
+        collation.SortOptions switch
+        {
+            CompareOptions.Ordinal => StringComparer.Ordinal,
+            CompareOptions.OrdinalIgnoreCase => StringComparer.OrdinalIgnoreCase,
+            var options => StringComparer.Create(
+                collation.Culture,
+                options.HasFlag(CompareOptions.IgnoreCase)
+            ),
+        };
+
     private async Task RefreshIndexCore()
     {
         if (!settingsManager.IsLibraryDirSet)
@@ -255,7 +318,8 @@ public partial class ModelIndexService : IModelIndexService
                 StringSplitOptions.RemoveEmptyEntries
             )[0];
             // Try Convert to enum
-            if (!Enum.TryParse<SharedFolderType>(sharedFolderName, out var sharedFolderType))
+            var sharedFolderType = ParseSharedFolderType(sharedFolderName);
+            if (sharedFolderType is SharedFolderType.Unknown)
             {
                 continue;
             }
@@ -341,14 +405,25 @@ public partial class ModelIndexService : IModelIndexService
         // Insert to db as transaction
         stopwatch.Restart();
 
-        using var db = await liteDbContext.Database.BeginTransactionAsync().ConfigureAwait(false);
+        var dbModels = DeduplicateForDbCollation(newIndexFlat, liteDbContext.Database.Collation, logger);
 
-        var localModelFiles = db.GetCollection<LocalModelFile>("LocalModelFiles")!;
+        try
+        {
+            using var db = await liteDbContext.Database.BeginTransactionAsync().ConfigureAwait(false);
 
-        await localModelFiles.DeleteAllAsync().ConfigureAwait(false);
-        await localModelFiles.InsertBulkAsync(newIndexFlat).ConfigureAwait(false);
+            var localModelFiles = db.GetCollection<LocalModelFile>("LocalModelFiles")!;
 
-        await db.CommitAsync().ConfigureAwait(false);
+            await localModelFiles.DeleteAllAsync().ConfigureAwait(false);
+            await localModelFiles.InsertBulkAsync(dbModels).ConfigureAwait(false);
+
+            await db.CommitAsync().ConfigureAwait(false);
+        }
+        catch (Exception e) when (e is LiteException or LiteAsyncException)
+        {
+            // A failed persist must not propagate: callers await refreshes from UI contexts where
+            // an exception crashes the app, and the in-memory index above is already updated.
+            logger.LogError(e, "Failed to persist model index to database");
+        }
 
         stopwatch.Stop();
         var dbTime = stopwatch.Elapsed;
@@ -415,10 +490,7 @@ public partial class ModelIndexService : IModelIndexService
                     StringSplitOptions.RemoveEmptyEntries
                 )[0];
                 // Try Convert to enum
-                if (!Enum.TryParse<SharedFolderType>(sharedFolderName, out var sharedFolderType))
-                {
-                    sharedFolderType = SharedFolderType.Unknown;
-                }
+                var sharedFolderType = ParseSharedFolderType(sharedFolderName);
 
                 // Since RelativePath is the database key, for LiteDB this is limited to 1021 bytes
                 if (Encoding.UTF8.GetByteCount(relativePath) is var byteCount and > 1021)
@@ -554,13 +626,24 @@ public partial class ModelIndexService : IModelIndexService
         // Insert to db as transaction
         stopwatch.Restart();
 
-        using var db = await liteDbContext.Database.BeginTransactionAsync().ConfigureAwait(false);
-        var localModelFiles = db.GetCollection<LocalModelFile>("LocalModelFiles")!;
+        var dbModels = DeduplicateForDbCollation(newIndexComplete, liteDbContext.Database.Collation, logger);
 
-        await localModelFiles.DeleteAllAsync().ConfigureAwait(false);
-        await localModelFiles.InsertBulkAsync(newIndexComplete).ConfigureAwait(false);
+        try
+        {
+            using var db = await liteDbContext.Database.BeginTransactionAsync().ConfigureAwait(false);
+            var localModelFiles = db.GetCollection<LocalModelFile>("LocalModelFiles")!;
 
-        await db.CommitAsync().ConfigureAwait(false);
+            await localModelFiles.DeleteAllAsync().ConfigureAwait(false);
+            await localModelFiles.InsertBulkAsync(dbModels).ConfigureAwait(false);
+
+            await db.CommitAsync().ConfigureAwait(false);
+        }
+        catch (Exception e) when (e is LiteException or LiteAsyncException)
+        {
+            // A failed persist must not propagate: callers await refreshes from UI contexts where
+            // an exception crashes the app, and the in-memory index above is already updated.
+            logger.LogError(e, "Failed to persist model index to database");
+        }
 
         stopwatch.Stop();
         var dbTime = stopwatch.Elapsed;

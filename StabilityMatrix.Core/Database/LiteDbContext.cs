@@ -62,6 +62,15 @@ public class LiteDbContext : ILiteDbContext
         lazyDatabase = new Lazy<LiteDatabaseAsync>(CreateDatabase);
     }
 
+    /// <summary>
+    /// Collation for all databases: Ordinal, so keys differing only in case (possible for model
+    /// paths on case-sensitive file systems) never collide in unique indexes.
+    /// </summary>
+    private static Collation OrdinalCollation =>
+        new(CultureInfo.InvariantCulture.LCID, CompareOptions.Ordinal);
+
+    private static ConnectionString TempConnectionString => new(":temp:") { Collation = OrdinalCollation };
+
     private LiteDatabaseAsync CreateDatabase()
     {
         // Try at most twice:
@@ -78,7 +87,7 @@ public class LiteDbContext : ILiteDbContext
             {
                 if (debugOptions.TempDatabase)
                 {
-                    db = new LiteDatabaseAsync(":temp:");
+                    db = new LiteDatabaseAsync(TempConnectionString);
                     RegisterRefs();
                     return db;
                 }
@@ -94,10 +103,7 @@ public class LiteDbContext : ILiteDbContext
                         "Database collation is not Ordinal ({SortOption}), rebuilding...",
                         sortOption
                     );
-                    var options = new RebuildOptions
-                    {
-                        Collation = new Collation(CultureInfo.InvariantCulture.LCID, CompareOptions.Ordinal),
-                    };
+                    var options = new RebuildOptions { Collation = OrdinalCollation };
                     db.RebuildAsync(options).GetAwaiter().GetResult();
                 }
 
@@ -148,7 +154,7 @@ public class LiteDbContext : ILiteDbContext
         }
 
         // Fallback to temporary database
-        var tempDb = new LiteDatabaseAsync(":temp:");
+        var tempDb = new LiteDatabaseAsync(TempConnectionString);
         RegisterRefs();
         return tempDb;
 

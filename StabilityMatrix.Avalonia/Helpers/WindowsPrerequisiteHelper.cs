@@ -56,7 +56,7 @@ public class WindowsPrerequisiteHelper(
     private const string PythonLibsDownloadUrl = "https://cdn.lykos.ai/python_libs_for_sage.zip";
 
     private const string UvWindowsDownloadUrl =
-        "https://github.com/astral-sh/uv/releases/download/0.9.30/uv-x86_64-pc-windows-msvc.zip";
+        "https://github.com/astral-sh/uv/releases/download/0.12.5/uv-x86_64-pc-windows-msvc.zip";
 
     private string HomeDir => settingsManager.LibraryDir;
 
@@ -122,7 +122,7 @@ public class WindowsPrerequisiteHelper(
     private string UvExtractPath => Path.Combine(AssetsDir, "uv");
     public string UvExePath => Path.Combine(UvExtractPath, "uv.exe");
     public bool IsUvInstalled => File.Exists(UvExePath);
-    private string ExpectedUvVersion => "0.9.30";
+    private string ExpectedUvVersion => "0.12.5";
 
     // FFmpeg paths
     private string FfmpegDownloadPath => Path.Combine(AssetsDir, "ffmpeg.zip");

@@ -188,7 +188,10 @@ public class ModelImportService(
         var previewImagePath = await SavePreviewImage(modelVersion, downloadPath);
 
         // Create tracked download
-        var download = trackedDownloadService.NewDownload(modelFile.DownloadUrl, downloadPath);
+        var download = trackedDownloadService.NewDownload(
+            modelFile.GetFileSpecificDownloadUrl(),
+            downloadPath
+        );
 
         // Add hash info
         download.ExpectedHashSha256 = modelFile.Hashes.SHA256;

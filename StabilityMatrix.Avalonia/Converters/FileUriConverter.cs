@@ -1,6 +1,6 @@
 using System.Globalization;
+using System.IO;
 using Avalonia.Data.Converters;
-using StabilityMatrix.Core.Extensions;
 
 namespace StabilityMatrix.Avalonia.Converters;
 
@@ -14,12 +14,22 @@ public class FileUriConverter : IValueConverter
             return null;
         }
 
-        return value switch
+        var str = value switch
         {
-            string str when str.StartsWith("avares://") => new Uri(str),
-            string str when (str.StartsWith("https://") || str.StartsWith("http://")) => new Uri(str),
-            string str => new Uri("file://" + str),
-            IFormattable formattable => new Uri("file://" + formattable.ToString(null, culture)),
+            string s => s,
+            IFormattable formattable => formattable.ToString(null, culture),
+            _ => null,
+        };
+
+        return str switch
+        {
+            null or "" => null,
+            _ when str.StartsWith("avares://") => new Uri(str),
+            _ when str.StartsWith("https://") || str.StartsWith("http://") => new Uri(str),
+            // Raw absolute file path: Uri's file-path parsing escapes reserved characters
+            // ("#", "%", spaces). Prepending "file://" instead would parse "#" as a fragment
+            // delimiter and truncate the path.
+            _ when Path.IsPathRooted(str) => new Uri(str),
             _ => null,
         };
     }
@@ -29,7 +39,7 @@ public class FileUriConverter : IValueConverter
     {
         if (targetType == typeof(string) && value is Uri uri)
         {
-            return uri.ToString().StripStart("file://");
+            return uri.IsFile ? uri.LocalPath : uri.ToString();
         }
 
         return null;

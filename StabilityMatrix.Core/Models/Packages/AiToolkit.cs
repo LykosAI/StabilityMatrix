@@ -60,7 +60,7 @@ public class AiToolkit(
     public override PackageType PackageType => PackageType.SdTraining;
     public override bool OfferInOneClickInstaller => false;
     public override bool ShouldIgnoreReleases => true;
-    public override PyVersion RecommendedPythonVersion => Python.PyInstallationManager.Python_3_11_13;
+    public override PyVersion RecommendedPythonVersion => Python.PyInstallationManager.Python_3_12_10;
 
     public override IEnumerable<PackagePrerequisite> Prerequisites =>
         base.Prerequisites.Concat([PackagePrerequisite.Node]);
@@ -88,12 +88,13 @@ public class AiToolkit(
         var config = new PipInstallConfig
         {
             RequirementsFilePaths = ["requirements.txt"],
-            // Upstream (ostris/ai-toolkit README) installs torch 2.9.1 / cu128.
-            TorchVersion = "==2.9.1",
-            TorchvisionVersion = "==0.24.1",
-            TorchaudioVersion = "==2.9.1",
-            // cu128 by default; keep cu126 for legacy NVIDIA GPUs without cu128 support.
-            CudaIndex = isLegacyNvidia ? "cu126" : "cu128",
+            // Upstream (ostris/ai-toolkit README) installs torch 2.13.0 / cu130.
+            TorchVersion = "==2.13.0",
+            TorchvisionVersion = "==0.28.0",
+            TorchaudioVersion = "==2.11.0",
+            // cu130 by default (requires NVIDIA driver 580+); keep cu126 for legacy NVIDIA GPUs.
+            // torch 2.13.0 publishes wheels on both indexes.
+            CudaIndex = isLegacyNvidia ? "cu126" : "cu130",
             ExtraPipArgs = [Compat.IsWindows ? "triton-windows" : "triton"],
             // ai-toolkit doesn't pin numpy, so it floats to 2.x and breaks the scipy/diffusers
             // C-extensions (built for numpy 1.x): "numpy.dtype size changed... binary incompatibility".
@@ -139,6 +140,11 @@ public class AiToolkit(
         await SetupVenv(installLocation, pythonVersion: PyVersion.Parse(installedPackage.PythonVersion))
             .ConfigureAwait(false);
         VenvRunner.UpdateEnvironmentVariables(GetEnvVars);
+
+        if (await WarnIfNvidiaDriverBelowCu130MinimumAsync(VenvRunner, onConsoleOutput).ConfigureAwait(false))
+        {
+            return;
+        }
 
         var uiDirectory = new DirectoryPath(installLocation, "ui");
         var envVars = GetEnvVars(VenvRunner.EnvironmentVariables);
@@ -195,8 +201,11 @@ public class AiToolkit(
 
     private ImmutableDictionary<string, string> GetEnvVars(ImmutableDictionary<string, string> env)
     {
-        // set SETUPTOOLS_USE_DISTUTILS=setuptools to avoid job errors
-        env = env.SetItem("SETUPTOOLS_USE_DISTUTILS", "setuptools");
+        // Keep distutils importable for setuptools-based builds and training jobs. Must be
+        // "local" (setuptools' bundled copy): any other value falls back to stdlib distutils,
+        // which no longer exists on Python 3.12+ and breaks source builds (e.g. the pinned
+        // diffusers git commit in ai-toolkit's requirements).
+        env = env.SetItem("SETUPTOOLS_USE_DISTUTILS", "local");
 
         var pathBuilder = new EnvPathBuilder();
 

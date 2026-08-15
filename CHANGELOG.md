@@ -52,7 +52,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed [#1716](https://github.com/LykosAI/StabilityMatrix/issues/1716) - phantom **Update Available** badges on embeddings, VAEs, upscalers, and ControlNets — the update check didn’t count those file types as evidence of being up to date, so it flagged them all forever; wrong badges clear on the next check
 - Fixed metadata scans always reporting success — the completion message now shows real counts, tells CivitAI rate limiting apart from "not on CivitAI", and stops early when CivitAI stops responding instead of grinding the whole library into a rate limit; the per-card **Find Metadata** action reports its outcome too instead of silently doing nothing
 - Fixed **Update Metadata** silently skipping models imported from HuggingFace or OpenModelDB (their files are now hashed on demand), and metadata scans freezing the app while hashing large files
-- Fixed **Organize Models** appearing to do nothing with its default pattern — the dialog now shows what it evaluated and offers a one-click starting pattern (`{base_model}/{file_name}`) that actually sorts models into folders
+- Fixed **Organize Models** appearing to do nothing out of the box — the default pattern is now `{base_model}/{file_name}` so the first preview actually proposes sorting into folders (saved patterns are untouched), and a pattern that would move nothing gets an explanation plus a one-click fix instead of an empty dialog
 - Fixed model card text being hard to read in light theme (dark text over the dark card overlay)
 
 ## v2.17.0-dev.2

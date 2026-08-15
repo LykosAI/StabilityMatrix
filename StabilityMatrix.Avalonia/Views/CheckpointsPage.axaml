@@ -694,6 +694,10 @@
                                     <LayoutTransformControl.LayoutTransform>
                                         <ScaleTransform ScaleX="{Binding $parent[scroll:BetterScrollViewer].((viewModels:CheckpointsPageViewModel)DataContext).ModelCardBottomResizeFactor, FallbackValue=1, TargetNullValue=1}" ScaleY="{Binding $parent[scroll:BetterScrollViewer].((viewModels:CheckpointsPageViewModel)DataContext).ModelCardBottomResizeFactor, FallbackValue=1, TargetNullValue=1}" />
                                     </LayoutTransformControl.LayoutTransform>
+                                    <!--
+                                        The scrim is a fixed dark overlay in both themes, so its text
+                                        uses fixed light foregrounds rather than theme brushes
+                                    -->
                                     <Border
                                         Name="ModelCardBottom"
                                         Padding="8"
@@ -705,6 +709,7 @@
                                                 <TextBlock
                                                     MaxWidth="300"
                                                     HorizontalAlignment="Left"
+                                                    Foreground="#F5FFFFFF"
                                                     Text="{Binding CheckpointFile.DisplayModelName}"
                                                     TextWrapping="NoWrap"
                                                     ToolTip.Tip="{Binding CheckpointFile.DisplayModelName}" />
@@ -715,7 +720,7 @@
                                                     HorizontalAlignment="Left"
                                                     VerticalAlignment="Center"
                                                     FontSize="13"
-                                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                    Foreground="#C9FFFFFF"
                                                     Text="{Binding FileSize, Converter={x:Static converters:FileSizeConverters.HumanizeBinaryFileSizeConverter}}"
                                                     TextWrapping="NoWrap" />
                                             </Grid>
@@ -723,7 +728,7 @@
                                                 Margin="0,4"
                                                 HorizontalAlignment="Left"
                                                 FontSize="13"
-                                                Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                                Foreground="#A6FFFFFF"
                                                 IsVisible="{Binding CheckpointFile.HasConnectedModel}"
                                                 Text="{Binding CheckpointFile.DisplayModelVersion, FallbackValue=''}"
                                                 TextWrapping="NoWrap" />
@@ -733,7 +738,7 @@
                                                 Margin="0,0,0,4"
                                                 HorizontalAlignment="Left"
                                                 FontSize="13"
-                                                Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                                Foreground="#A6FFFFFF"
                                                 Text="{Binding CheckpointFile.FileName}"
                                                 TextWrapping="NoWrap"
                                                 ToolTip.Tip="{Binding CheckpointFile.FileName}" />
@@ -742,7 +747,7 @@
                                                 MaxWidth="300"
                                                 HorizontalAlignment="Left"
                                                 FontSize="13"
-                                                Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                                Foreground="#A6FFFFFF"
                                                 IsVisible="{Binding CanShowTriggerWords}"
                                                 TextWrapping="NoWrap"
                                                 ToolTip.Tip="{Binding CheckpointFile.ConnectedModelInfo.TrainedWordsString}">

@@ -45,6 +45,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed [#1710](https://github.com/LykosAI/StabilityMatrix/issues/1710) - CivitAI downloads sometimes fetching a different file from the same model version (then failing hash verification) when several files share identical metadata — downloads now pin the exact file
 - Fixed [#1703](https://github.com/LykosAI/StabilityMatrix/issues/1703) - model cover/preview images not displaying when your **File Name Pattern** contains a `#`
 - Fixed [#1705](https://github.com/LykosAI/StabilityMatrix/issues/1705) - the **Model Browser** showing results in a scrambled order after refreshing with the **Search** button
+- Fixed [#1715](https://github.com/LykosAI/StabilityMatrix/issues/1715) - the app crashing on startup on Linux when the models folder contains folders or files differing only in letter case (e.g. `unet` and `Unet`, also [#1149](https://github.com/LykosAI/StabilityMatrix/issues/1149)/[#1357](https://github.com/LykosAI/StabilityMatrix/issues/1357)) — models in differently-cased folders now show up in the Checkpoint Manager instead of being silently skipped, and a model index error can no longer take down the app
 
 ## v2.17.0-dev.2
 ### Added
@@ -146,6 +147,7 @@ This build leans hard into what's next: a live HuggingFace browser and Wan 2.2 v
 - Fixed [#1710](https://github.com/LykosAI/StabilityMatrix/issues/1710) - CivitAI downloads sometimes fetching a different file from the same model version (then failing hash verification) when several files share identical metadata — downloads now pin the exact file
 - Fixed [#1703](https://github.com/LykosAI/StabilityMatrix/issues/1703) - model cover/preview images not displaying when your **File Name Pattern** contains a `#`
 - Fixed [#1705](https://github.com/LykosAI/StabilityMatrix/issues/1705) - the **Model Browser** showing results in a scrambled order after refreshing with the **Search** button
+- Fixed [#1715](https://github.com/LykosAI/StabilityMatrix/issues/1715) - the app crashing on startup on Linux when the models folder contains folders or files differing only in letter case (e.g. `unet` and `Unet`, also [#1149](https://github.com/LykosAI/StabilityMatrix/issues/1149)/[#1357](https://github.com/LykosAI/StabilityMatrix/issues/1357)) — models in differently-cased folders now show up in the Checkpoint Manager instead of being silently skipped, and a model index error can no longer take down the app
 
 ## v2.16.2
 > Full technical notes for this release: [docs.lykos.ai/stability-matrix/release-notes/2.16.2](https://docs.lykos.ai/stability-matrix/release-notes/2.16.2)

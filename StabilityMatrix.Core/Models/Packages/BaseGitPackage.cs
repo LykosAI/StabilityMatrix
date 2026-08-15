@@ -6,6 +6,7 @@ using Octokit;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
+using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
@@ -877,6 +878,75 @@ public abstract class BaseGitPackage : BasePackage
             return;
         }
         await process.StandardInput.WriteLineAsync(input).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Emits a console and log warning when the venv's installed torch is a cu130 build but the
+    /// NVIDIA driver is older than the 580.x minimum required by CUDA 13.0.
+    /// Returns true when the incompatibility was detected; callers typically abort the launch.
+    /// </summary>
+    protected async Task<bool> WarnIfNvidiaDriverBelowCu130MinimumAsync(
+        IPyVenvRunner venvRunner,
+        Action<ProcessOutput>? onConsoleOutput
+    )
+    {
+        var isNvidia = SettingsManager.Settings.PreferredGpu?.IsNvidia ?? HardwareHelper.HasNvidiaGpu();
+        var isLegacyNvidia =
+            SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu() ?? HardwareHelper.HasLegacyNvidiaGpu();
+
+        if (!isNvidia || isLegacyNvidia)
+        {
+            return false;
+        }
+
+        var driverVersion = HardwareHelper.GetNvidiaDriverVersion();
+        if (driverVersion is null || driverVersion.Major >= 580)
+        {
+            return false;
+        }
+
+        var torchInfo = await venvRunner.PipShow("torch").ConfigureAwait(false);
+        if (torchInfo is null)
+        {
+            return false;
+        }
+
+        var version = torchInfo.Version;
+        var plusPos = version.IndexOf('+');
+        var torchIndex = plusPos >= 0 ? version[(plusPos + 1)..] : string.Empty;
+
+        if (!torchIndex.Equals("cu130", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        var warningMessage = $"""
+
+            ============================================================
+                            NVIDIA DRIVER WARNING
+            ============================================================
+
+            Your NVIDIA driver version ({driverVersion}) is older than
+            the minimum required version (580.x) for CUDA 13.0 (cu130).
+
+            This may cause {DisplayName} to fail to start or experience issues.
+
+            Recommended actions:
+              1. Update your NVIDIA driver to version 580 or newer
+              2. Or manually downgrade your torch version to use an
+                 older torch index (e.g. cu128)
+
+            ============================================================
+
+            """;
+
+        Logger.Warn(
+            "NVIDIA driver version {DriverVersion} is below 580.x minimum for cu130 (torch index: {TorchIndex})",
+            driverVersion,
+            torchIndex
+        );
+        onConsoleOutput?.Invoke(ProcessOutput.FromStdErrLine(warningMessage));
+        return true;
     }
 
     protected PipInstallArgs GetTorchPipArgs(

@@ -27,6 +27,9 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Downloads in the **Activity** popout now show downloaded and total size (e.g. 1.2 GB / 6.5 GB) alongside the percentage and speed ([feature request](https://lykos.ai/feature/f571997c-3607-48db-a62f-b315fc733280))
 - Model downloads now skip files you already have ([feature request](https://lykos.ai/feature/3dc89d55-4859-4484-bde9-5951ad87a48a)) — when a download's hash matches an installed model, a notification points at the existing file instead of downloading a duplicate
 - Added a **Quick-Hide Hotkey** for shared computers ([feature request](https://lykos.ai/feature/3dbfa0e1-650a-426a-906d-b81d6f414104)) — press a shortcut to instantly minimize Stability Matrix, or exit with no confirmation prompts. Off by default; enable it in **Settings → System** and bind any combination with the game-style key picker (default Ctrl+Shift+H)
+### Changed
+- Updated **AI-Toolkit** installs to PyTorch 2.13.0 on CUDA 13.0 with Python 3.12, matching current upstream requirements ([#1714](https://github.com/LykosAI/StabilityMatrix/issues/1714)) — with a console warning at launch if your NVIDIA driver is older than the 580 series CUDA 13.0 needs
+- Updated the bundled **uv** package manager to 0.12.5, adding newer Python builds to the Python picker — including the 3.10 security releases requested in [#1709](https://github.com/LykosAI/StabilityMatrix/issues/1709)
 ### Fixed
 - Fixed Qwen Image Edit's model check accepting an incompatible Krea 2 text encoder — the correct 7B encoder download is now offered instead
 - Fixed clicking a cloud-download entry in model dropdowns sometimes doing nothing until you clicked a different item first
@@ -38,6 +41,11 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
   - The model details page now shows locally cached info instead of a dead page when the CivitAI page is gone
   - **Next/Previous** on the details page skip over deleted models instead of getting stuck on an error
   - New right-click **Disconnect from Source** action on Checkpoint Manager cards severs the link to the deleted page while keeping the local metadata (name, description, thumbnail, trigger words) — after disconnecting, clicking the card selects it like any other local model
+- Fixed [#1708](https://github.com/LykosAI/StabilityMatrix/issues/1708) - OneTrainer on **Windows ROCm** crashing at the start of training with bitsandbytes 8-bit optimizers — the incompatible bitsandbytes build is no longer installed, and a launch notice explains why until OneTrainer supports the new version - thanks to @NeuralFault for the diagnosis!
+- Fixed [#1710](https://github.com/LykosAI/StabilityMatrix/issues/1710) - CivitAI downloads sometimes fetching a different file from the same model version (then failing hash verification) when several files share identical metadata — downloads now pin the exact file
+- Fixed [#1703](https://github.com/LykosAI/StabilityMatrix/issues/1703) - model cover/preview images not displaying when your **File Name Pattern** contains a `#`
+- Fixed [#1705](https://github.com/LykosAI/StabilityMatrix/issues/1705) - the **Model Browser** showing results in a scrambled order after refreshing with the **Search** button
+- Fixed [#1715](https://github.com/LykosAI/StabilityMatrix/issues/1715) - the app crashing on startup on Linux when the models folder contains folders or files differing only in letter case (e.g. `unet` and `Unet`, also [#1149](https://github.com/LykosAI/StabilityMatrix/issues/1149)/[#1357](https://github.com/LykosAI/StabilityMatrix/issues/1357)) — models in differently-cased folders now show up in the Checkpoint Manager instead of being silently skipped, and a model index error can no longer take down the app
 
 ## v2.17.0-dev.2
 ### Added
@@ -129,6 +137,17 @@ The prompt queue has been one of our most requested features ever, and builds li
 ### Supporters
 #### 🌟 Visionaries
 This build leans hard into what's next: a live HuggingFace browser and Wan 2.2 video generation. None of that exploration happens without our Visionaries giving us the room to chase it. So a huge thank you to **Waterclouds**, **MrMxyzptlk12836**, **Psilocyfer18731**, **bluepopsicle**, **Ibixat**, **Droolguy**, **KalAbaddon**, **LG**, **snotty**, **whudunit**, **cusalapapen1481**, and **moon_milky2843**. You make the experiments possible. And a big hello to **SkynetFuture** and **sn3232323233350**, who join the Visionary crew this time around. We're genuinely glad you're here. 💛
+
+## v2.16.3
+### Changed
+- Updated **AI-Toolkit** installs to PyTorch 2.13.0 on CUDA 13.0 with Python 3.12, matching current upstream requirements ([#1714](https://github.com/LykosAI/StabilityMatrix/issues/1714)) — with a console warning at launch if your NVIDIA driver is older than the 580 series CUDA 13.0 needs
+- Updated the bundled **uv** package manager to 0.12.5, adding newer Python builds to the Python picker — including the 3.10 security releases requested in [#1709](https://github.com/LykosAI/StabilityMatrix/issues/1709)
+### Fixed
+- Fixed [#1708](https://github.com/LykosAI/StabilityMatrix/issues/1708) - OneTrainer on **Windows ROCm** crashing at the start of training with bitsandbytes 8-bit optimizers — the incompatible bitsandbytes build is no longer installed, and a launch notice explains why until OneTrainer supports the new version - thanks to @NeuralFault for the diagnosis!
+- Fixed [#1710](https://github.com/LykosAI/StabilityMatrix/issues/1710) - CivitAI downloads sometimes fetching a different file from the same model version (then failing hash verification) when several files share identical metadata — downloads now pin the exact file
+- Fixed [#1703](https://github.com/LykosAI/StabilityMatrix/issues/1703) - model cover/preview images not displaying when your **File Name Pattern** contains a `#`
+- Fixed [#1705](https://github.com/LykosAI/StabilityMatrix/issues/1705) - the **Model Browser** showing results in a scrambled order after refreshing with the **Search** button
+- Fixed [#1715](https://github.com/LykosAI/StabilityMatrix/issues/1715) - the app crashing on startup on Linux when the models folder contains folders or files differing only in letter case (e.g. `unet` and `Unet`, also [#1149](https://github.com/LykosAI/StabilityMatrix/issues/1149)/[#1357](https://github.com/LykosAI/StabilityMatrix/issues/1357)) — models in differently-cased folders now show up in the Checkpoint Manager instead of being silently skipped, and a model index error can no longer take down the app
 
 ## v2.16.2
 > Full technical notes for this release: [docs.lykos.ai/stability-matrix/release-notes/2.16.2](https://docs.lykos.ai/stability-matrix/release-notes/2.16.2)

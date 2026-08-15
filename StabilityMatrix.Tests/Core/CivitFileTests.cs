@@ -37,6 +37,36 @@ public class CivitFileTests
     }
 
     [TestMethod]
+    public void GetFileSpecificDownloadUrl_FileIdSubstringOfOtherParam_StillAppendsFileId()
+    {
+        var file = new CivitFile
+        {
+            Id = 3054868,
+            DownloadUrl = "https://civitai.com/api/download/models/3174361?notfileId=5",
+        };
+
+        Assert.AreEqual(
+            "https://civitai.com/api/download/models/3174361?notfileId=5&fileId=3054868",
+            file.GetFileSpecificDownloadUrl()
+        );
+    }
+
+    [TestMethod]
+    public void GetFileSpecificDownloadUrl_UrlWithFragment_InsertsFileIdBeforeFragment()
+    {
+        var file = new CivitFile
+        {
+            Id = 3054868,
+            DownloadUrl = "https://civitai.com/api/download/models/3174361#section",
+        };
+
+        Assert.AreEqual(
+            "https://civitai.com/api/download/models/3174361?fileId=3054868#section",
+            file.GetFileSpecificDownloadUrl()
+        );
+    }
+
+    [TestMethod]
     public void GetFileSpecificDownloadUrl_UrlAlreadyHasFileId_Unchanged()
     {
         var file = new CivitFile

@@ -67,13 +67,31 @@ public class CivitFile
             || !Uri.TryCreate(DownloadUrl, UriKind.Absolute, out var uri)
             || !uri.Host.Equals("civitai.com", StringComparison.OrdinalIgnoreCase)
             || !uri.AbsolutePath.StartsWith("/api/download/", StringComparison.OrdinalIgnoreCase)
-            || uri.Query.Contains("fileId=", StringComparison.OrdinalIgnoreCase)
         )
         {
             return DownloadUrl;
         }
 
-        var separator = string.IsNullOrEmpty(uri.Query) ? '?' : '&';
-        return $"{DownloadUrl}{separator}fileId={Id}";
+        var query = uri.Query.TrimStart('?');
+        var hasFileId = query
+            .Split('&', StringSplitOptions.RemoveEmptyEntries)
+            .Any(p => p.StartsWith("fileId=", StringComparison.OrdinalIgnoreCase));
+        if (hasFileId)
+        {
+            return DownloadUrl;
+        }
+
+        // Insert ahead of any fragment so the parameter stays in the query string
+        var fragmentIndex = DownloadUrl.IndexOf('#');
+        var baseUrl = fragmentIndex >= 0 ? DownloadUrl[..fragmentIndex] : DownloadUrl;
+        var fragment = fragmentIndex >= 0 ? DownloadUrl[fragmentIndex..] : string.Empty;
+
+        var separator = query.Length == 0 ? "?" : "&";
+        if (query.Length == 0)
+        {
+            baseUrl = baseUrl.TrimEnd('?');
+        }
+
+        return $"{baseUrl}{separator}fileId={Id}{fragment}";
     }
 }

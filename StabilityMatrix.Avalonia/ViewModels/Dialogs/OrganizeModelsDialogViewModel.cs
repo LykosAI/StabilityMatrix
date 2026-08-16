@@ -42,15 +42,18 @@ public partial class OrganizeModelsDialogViewModel(
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanOrganize))]
     [NotifyPropertyChangedFor(nameof(ReadySummary))]
+    [NotifyPropertyChangedFor(nameof(ShowPatternHint))]
     public partial ModelOrganizationPlan? Plan { get; set; }
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowPatternHint))]
     public partial string OrganizePattern { get; set; } = FileNameFormat.DefaultOrganizationTemplate;
 
     [ObservableProperty]
     public partial string PatternPreviewSample { get; set; } = string.Empty;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowPatternHint))]
     public partial string? PatternValidationError { get; set; }
 
     [ObservableProperty]
@@ -82,11 +85,34 @@ public partial class OrganizeModelsDialogViewModel(
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ShowUnchangedLabel))]
+    [NotifyPropertyChangedFor(nameof(ShowPatternHint))]
     public partial int UnchangedCount { get; set; }
 
     public ObservableCollection<ModelOrganizationPreviewItem> Items { get; } = [];
 
     public bool CanOrganize => Plan?.ReadyCount > 0;
+
+    /// <summary>
+    /// True when the pattern is valid but moves nothing, so the dialog can explain and offer
+    /// the default sorting pattern instead of sitting inert. Conflicts don't suppress the
+    /// hint (with zero ready items nothing moves either way), but a pattern that already
+    /// equals the suggestion does - there is nothing better to offer then.
+    /// </summary>
+    public bool ShowPatternHint =>
+        PatternValidationError == null
+        && Plan is { ReadyCount: 0 }
+        && UnchangedCount > 0
+        && !string.Equals(
+            OrganizePattern?.Trim(),
+            FileNameFormat.DefaultOrganizationTemplate,
+            StringComparison.Ordinal
+        );
+
+    public string PatternHintText =>
+        string.Format(Resources.Text_OrganizePatternHint, FileNameFormat.DefaultOrganizationTemplate);
+
+    public string UseSuggestedPatternLabel =>
+        string.Format(Resources.Action_UsePattern, FileNameFormat.DefaultOrganizationTemplate);
 
     public bool ShowMissingMetadataWarning => MissingMetadataCount > 0;
 
@@ -161,18 +187,22 @@ public partial class OrganizeModelsDialogViewModel(
         // Store all sorted items and update visible items
         allSortedItems = plan.Items.OrderBy(i => i.SortOrder).ToList();
         UnchangedCount = plan.Items.Count(i => i.IsUnchanged);
+
+        // A plan where nothing moves would otherwise render an empty list with a disabled
+        // button - reveal the unchanged items so the user can see what was evaluated
+        if (!ShowUnchangedItems && allSortedItems.Count > 0 && allSortedItems.All(i => i.IsUnchanged))
+        {
+            ShowUnchangedItems = true;
+        }
+
         RefreshVisibleItems();
 
-        // Count models with no connected metadata at all
         MissingMetadataCount = plan.Items.Count(i =>
-            i.Status == ModelOrganizationPreviewStatus.Skipped && !i.Model.HasConnectedModel
+            i.SkipReason == ModelOrganizationSkipReason.MissingMetadata
         );
 
-        // Count models with connected metadata but missing fields needed by the template
         IncompleteMetadataCount = plan.Items.Count(i =>
-            i.Status == ModelOrganizationPreviewStatus.Skipped
-            && i.Model.HasConnectedModel
-            && i.Reason?.Contains("not available", StringComparison.OrdinalIgnoreCase) == true
+            i.SkipReason == ModelOrganizationSkipReason.VariableUnavailable
         );
     }
 
@@ -231,6 +261,9 @@ public partial class OrganizeModelsDialogViewModel(
         dialog.ContentVerticalScrollBarVisibility = ScrollBarVisibility.Disabled;
         return dialog;
     }
+
+    [RelayCommand]
+    private void UseSuggestedPattern() => OrganizePattern = FileNameFormat.DefaultOrganizationTemplate;
 
     [RelayCommand]
     private void OpenVariablesTip() => IsVariablesTipOpen = true;

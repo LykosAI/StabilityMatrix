@@ -1895,6 +1895,15 @@ Account tokens will not be viewable after saving, please make a note of them if 
   <data name="TextTemplate_FilesIncompleteMetadata" xml:space="preserve">
     <value>{0} file(s) have incomplete metadata for the current pattern.</value>
   </data>
+  <data name="Label_NothingWillMove" xml:space="preserve">
+    <value>Nothing will move with this pattern</value>
+  </data>
+  <data name="Text_OrganizePatternHint" xml:space="preserve">
+    <value>Add a folder to the naming pattern to sort models into subfolders — for example {0}.</value>
+  </data>
+  <data name="Action_UsePattern" xml:space="preserve">
+    <value>Use {0}</value>
+  </data>
   <data name="Action_FindMetadata" xml:space="preserve">
     <value>Find Metadata</value>
   </data>

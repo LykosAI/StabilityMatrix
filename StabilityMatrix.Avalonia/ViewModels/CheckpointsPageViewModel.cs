@@ -593,13 +593,69 @@ public partial class CheckpointsPageViewModel(
         };
 
         EventManager.Instance.OnPackageInstallProgressAdded(runner);
-        await Dispatcher.UIThread.InvokeAsync(async () => await runner.ExecuteSteps([scanMetadataStep]));
+        await runner.ExecuteSteps([scanMetadataStep]);
 
         await modelIndexService.RefreshIndex();
-        var message = updateExistingMetadata
-            ? "Finished updating metadata."
-            : "Finished scanning for missing metadata.";
-        notificationService.Show("Scan Complete", message, NotificationType.Success);
+        ShowScanResultNotification(scanMetadataStep.Result, updateExistingMetadata);
+    }
+
+    private void ShowScanResultNotification(MetadataScanResult? result, bool updateExistingMetadata)
+    {
+        if (result is null)
+        {
+            notificationService.Show(
+                "Scan Complete",
+                updateExistingMetadata
+                    ? "Finished updating metadata."
+                    : "Finished scanning for missing metadata.",
+                NotificationType.Success
+            );
+            return;
+        }
+
+        if (result.Aborted)
+        {
+            notificationService.ShowPersistent(
+                "Scan Stopped Early",
+                $"CivitAI stopped responding (rate limited or unreachable) after "
+                    + $"{result.Found} of {result.Total} files. Try again in a few minutes.",
+                NotificationType.Warning
+            );
+            return;
+        }
+
+        if (result.Total == 0)
+        {
+            notificationService.Show(
+                "Nothing To Scan",
+                updateExistingMetadata
+                    ? "No files in this category have connected metadata to refresh."
+                    : "All files in this category already have metadata.",
+                NotificationType.Information
+            );
+            return;
+        }
+
+        var details = new List<string>();
+        if (result.NotFound > 0)
+            details.Add($"{result.NotFound} not found on CivitAI");
+        if (result.Failed > 0)
+            details.Add($"{result.Failed} failed");
+        if (result.Skipped > 0)
+            details.Add($"{result.Skipped} skipped (no file to hash)");
+
+        var verb = updateExistingMetadata ? "Refreshed metadata for" : "Found metadata for";
+        var message = $"{verb} {result.Found} of {result.Total} files.";
+        if (details.Count > 0)
+            message += $" ({string.Join(", ", details)})";
+
+        notificationService.Show(
+            "Scan Complete",
+            message,
+            result.Found > 0 || result.Total == result.NotFound
+                ? NotificationType.Success
+                : NotificationType.Warning
+        );
     }
 
     [RelayCommand]

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
@@ -9,22 +9,28 @@ namespace StabilityMatrix.Avalonia.DesignData;
 
 public class MockMetadataImportService : IMetadataImportService
 {
-    public Task ScanDirectoryForMissingInfo(DirectoryPath directory, IProgress<ProgressReport>? progress = null)
+    public Task<MetadataScanResult> ScanDirectoryForMissingInfo(
+        DirectoryPath directory,
+        IProgress<ProgressReport>? progress = null
+    )
     {
-        return Task.CompletedTask;
+        return Task.FromResult(new MetadataScanResult { Total = 0 });
     }
 
-    public Task<ConnectedModelInfo?> GetMetadataForFile(
+    public Task<MetadataFetchResult> GetMetadataForFile(
         FilePath filePath,
         IProgress<ProgressReport>? progress = null,
         bool forceReimport = false
     )
     {
-        return null;
+        return Task.FromResult(new MetadataFetchResult(MetadataFetchStatus.NotFound, null));
     }
 
-    public Task UpdateExistingMetadata(DirectoryPath directory, IProgress<ProgressReport>? progress = null)
+    public Task<MetadataScanResult> UpdateExistingMetadata(
+        DirectoryPath directory,
+        IProgress<ProgressReport>? progress = null
+    )
     {
-        return Task.CompletedTask;
+        return Task.FromResult(new MetadataScanResult { Total = 0 });
     }
 }

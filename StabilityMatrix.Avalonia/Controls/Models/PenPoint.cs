@@ -115,11 +115,13 @@ public class PenPointJsonConverter : JsonConverter<PenPoint>
 [JsonConverter(typeof(PenPointJsonConverter))]
 public readonly record struct PenPoint(ulong X, ulong Y)
 {
+    // Clamp negatives to 0: Convert.ToUInt64 throws OverflowException on negative
+    // coordinates, which can occur in legacy serialized paths or off-canvas points
     public PenPoint(double x, double y)
-        : this(Convert.ToUInt64(x), Convert.ToUInt64(y)) { }
+        : this(Convert.ToUInt64(Math.Max(0, x)), Convert.ToUInt64(Math.Max(0, y))) { }
 
     public PenPoint(SKPoint skPoint)
-        : this(Convert.ToUInt64(skPoint.X), Convert.ToUInt64(skPoint.Y)) { }
+        : this(Convert.ToUInt64(Math.Max(0, skPoint.X)), Convert.ToUInt64(Math.Max(0, skPoint.Y))) { }
 
     /// <summary>
     /// Radius of the point.

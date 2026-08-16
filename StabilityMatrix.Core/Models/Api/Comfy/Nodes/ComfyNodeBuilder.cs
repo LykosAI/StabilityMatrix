@@ -761,6 +761,65 @@ public class ComfyNodeBuilder
         public required string UnetName { get; init; }
     }
 
+    // The GGUF CLIP loaders below can also load .safetensors encoders, so a mixed
+    // gguf + safetensors selection can be routed entirely through the GGUF variant
+
+    [TypedNodeOptions(
+        Name = "CLIPLoaderGGUF",
+        RequiredExtensions = ["https://github.com/city96/ComfyUI-GGUF"]
+    )]
+    public record CLIPLoaderGGUF : ComfyTypedNodeBase<ClipNodeConnection>
+    {
+        public required string ClipName { get; init; }
+
+        /// <summary>
+        /// Same values as <see cref="CLIPLoader"/>
+        /// </summary>
+        public required string Type { get; init; }
+    }
+
+    [TypedNodeOptions(
+        Name = "DualCLIPLoaderGGUF",
+        RequiredExtensions = ["https://github.com/city96/ComfyUI-GGUF"]
+    )]
+    public record DualCLIPLoaderGGUF : ComfyTypedNodeBase<ClipNodeConnection>
+    {
+        public required string ClipName1 { get; init; }
+        public required string ClipName2 { get; init; }
+
+        /// <summary>
+        /// Same values as <see cref="DualCLIPLoader"/>
+        /// </summary>
+        public required string Type { get; init; }
+    }
+
+    [TypedNodeOptions(
+        Name = "TripleCLIPLoaderGGUF",
+        RequiredExtensions = ["https://github.com/city96/ComfyUI-GGUF"]
+    )]
+    public record TripleCLIPLoaderGGUF : ComfyTypedNodeBase<ClipNodeConnection>
+    {
+        public required string ClipName1 { get; init; }
+        public required string ClipName2 { get; init; }
+        public required string ClipName3 { get; init; }
+
+        // no type input, like TripleCLIPLoader
+    }
+
+    [TypedNodeOptions(
+        Name = "QuadrupleCLIPLoaderGGUF",
+        RequiredExtensions = ["https://github.com/city96/ComfyUI-GGUF"]
+    )]
+    public record QuadrupleCLIPLoaderGGUF : ComfyTypedNodeBase<ClipNodeConnection>
+    {
+        public required string ClipName1 { get; init; }
+        public required string ClipName2 { get; init; }
+        public required string ClipName3 { get; init; }
+        public required string ClipName4 { get; init; }
+
+        // no type input, like QuadrupleCLIPLoader
+    }
+
     [TypedNodeOptions(
         Name = "Inference_Core_PromptExpansion",
         RequiredExtensions = ["https://github.com/LykosAI/ComfyUI-Inference-Core-Nodes >= 0.2.0"]

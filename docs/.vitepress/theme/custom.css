@@ -1,0 +1,29 @@
+/*
+ * Fluid layout, toggleable from the nav bar (LayoutWidthToggle.vue).
+ *
+ * The default theme fixes the page shell at 1440px and the prose column at
+ * ~688px, which leaves most of a large monitor empty and forces wide tables
+ * (e.g. the environment-variables reference) into cramped horizontal
+ * scrolling. When <html> carries the `sm-fluid` class (the default; users
+ * can opt out via the toggle, persisted in localStorage as
+ * `sm-docs-layout`), the layout tracks the window width instead.
+ *
+ * --vp-layout-max-width drives the nav bar, sidebar positioning, and doc
+ * container. The per-column overrides below lift the default theme's inner
+ * caps; !important is required because those caps live in Vue scoped styles
+ * (`.content-container[data-v-…]`), which outrank any plain selector here.
+ */
+html.sm-fluid {
+  --vp-layout-max-width: 100%;
+}
+
+/* Pages with the right-hand "On this page" aside (most doc pages). */
+html.sm-fluid .VPDoc.has-aside .content-container {
+  max-width: none !important;
+}
+
+/* Pages without a sidebar/aside (e.g. plain content pages). */
+html.sm-fluid .VPDoc:not(.has-sidebar) .container,
+html.sm-fluid .VPDoc:not(.has-sidebar) .content {
+  max-width: none !important;
+}

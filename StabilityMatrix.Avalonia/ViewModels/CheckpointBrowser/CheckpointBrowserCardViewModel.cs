@@ -7,6 +7,7 @@ using CommunityToolkit.Mvvm.Input;
 using Injectio.Attributes;
 using NLog;
 using StabilityMatrix.Avalonia.Animations;
+using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Api;
@@ -47,6 +48,7 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
             civitModel = value;
             IsFavorite = settingsManager.Settings.FavoriteModels.Contains(value.Id);
             UpdateImage();
+            UpdateDisplayVersion();
             CheckIfInstalled();
         }
     }
@@ -70,6 +72,16 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
 
     [ObservableProperty]
     private bool showUpdateCard;
+
+    [ObservableProperty]
+    private bool isEarlyAccessUpdate;
+
+    /// <summary>
+    /// Version name shown on the card. Follows the same Hide Early Access filtering as the
+    /// card image so the two always describe the same version.
+    /// </summary>
+    [ObservableProperty]
+    private string displayVersionName = string.Empty;
 
     [ObservableProperty]
     private bool isFavorite;
@@ -109,7 +121,13 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
             ),
             settingsManager.RegisterPropertyChangedHandler(
                 s => s.HideEarlyAccessModels,
-                _ => Dispatcher.UIThread.Post(UpdateImage)
+                _ =>
+                    Dispatcher.UIThread.Post(() =>
+                    {
+                        UpdateImage();
+                        UpdateDisplayVersion();
+                        CheckIfInstalled();
+                    })
             )
         );
 
@@ -125,6 +143,10 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
             return;
         }
 
+        UpdateCardText = string.Empty;
+        ShowUpdateCard = false;
+        IsEarlyAccessUpdate = false;
+
         if (CivitModel.ModelVersions == null)
             return;
 
@@ -132,46 +154,87 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
         if (installedModels.Count == 0)
             return;
 
-        // check if latest version is installed
-        var latestVersion = CivitModel.ModelVersions.FirstOrDefault();
-        if (latestVersion == null)
+        // Versions hidden by the Hide Early Access setting don't participate in the
+        // installed/update state either - a hidden version can't be an "update"
+        var hideEarlyAccessModels = settingsManager.Settings.HideEarlyAccessModels;
+        var versions = CivitModel
+            .ModelVersions.Where(v => !hideEarlyAccessModels || !v.IsEarlyAccess)
+            .ToList();
+        if (versions.Count == 0)
             return;
 
-        var latestVersionInstalled =
-            latestVersion.Files != null
-            && latestVersion.Files.Any(file =>
+        bool IsVersionInstalled(CivitModelVersion version) =>
+            version.Files?.Any(file =>
                 file is { Hashes.BLAKE3: not null }
-                && file.Type.IsModelWeights()
+                && file.Type.IsDownloadableModelFile()
                 && installedModels.Contains(file.Hashes.BLAKE3)
-            );
+            ) == true;
 
-        // check if any of the ModelVersion.Files.Hashes.BLAKE3 hashes are in the installedModels list
-        var anyVersionInstalled =
-            latestVersionInstalled
-            || CivitModel.ModelVersions.Any(version =>
-                version.Files != null
-                && version.Files.Any(file =>
-                    file is { Hashes.BLAKE3: not null }
-                    && file.Type.IsModelWeights()
-                    && installedModels.Contains(file.Hashes.BLAKE3)
-                )
-            );
+        var installedVersionIds = versions.Where(IsVersionInstalled).Select(v => v.Id).ToHashSet();
+        if (installedVersionIds.Count == 0)
+            return;
 
-        UpdateCardText =
-            latestVersionInstalled ? "Installed"
-            : anyVersionInstalled ? "Update Available"
-            : string.Empty;
+        // Multi-architecture models publish parallel tracks in one version list; a newer
+        // version only counts as an update for an installed version on the same base-model
+        // track (a Pony release is not an update to an Illustrious file)
+        var newerUninstalled = new Dictionary<int, CivitModelVersion>();
+        foreach (var installedVersion in versions.Where(v => installedVersionIds.Contains(v.Id)))
+        {
+            var track = string.IsNullOrWhiteSpace(installedVersion.BaseModel)
+                ? versions
+                : versions
+                    .Where(v =>
+                        string.Equals(
+                            v.BaseModel,
+                            installedVersion.BaseModel,
+                            StringComparison.OrdinalIgnoreCase
+                        )
+                    )
+                    .ToList();
 
-        ShowUpdateCard = anyVersionInstalled;
+            var installedIndex = track.FindIndex(v => v.Id == installedVersion.Id);
+            foreach (
+                var newer in track
+                    .Take(Math.Max(installedIndex, 0))
+                    .Where(v => !installedVersionIds.Contains(v.Id))
+            )
+            {
+                newerUninstalled[newer.Id] = newer;
+            }
+        }
+
+        ShowUpdateCard = true;
+
+        if (newerUninstalled.Count == 0)
+        {
+            UpdateCardText = "Installed";
+        }
+        else if (newerUninstalled.Values.All(v => v.IsEarlyAccess))
+        {
+            UpdateCardText = Resources.Label_EarlyAccess;
+            IsEarlyAccessUpdate = true;
+        }
+        else
+        {
+            UpdateCardText = "Update Available";
+        }
+    }
+
+    private CivitModelVersion? GetDisplayedVersion()
+    {
+        var hideEarlyAccessModels = settingsManager.Settings.HideEarlyAccessModels;
+        return CivitModel.ModelVersions?.FirstOrDefault(v => !hideEarlyAccessModels || !v.IsEarlyAccess);
+    }
+
+    private void UpdateDisplayVersion()
+    {
+        DisplayVersionName = GetDisplayedVersion()?.Name ?? string.Empty;
     }
 
     private void UpdateImage()
     {
         var nsfwEnabled = settingsManager.Settings.ModelBrowserNsfwEnabled;
-        var hideEarlyAccessModels = settingsManager.Settings.HideEarlyAccessModels;
-        var version = CivitModel.ModelVersions?.FirstOrDefault(v =>
-            !hideEarlyAccessModels || !v.IsEarlyAccess
-        );
+        var version = GetDisplayedVersion();
         var images = version?.Images;
 
         // Try to find a valid image

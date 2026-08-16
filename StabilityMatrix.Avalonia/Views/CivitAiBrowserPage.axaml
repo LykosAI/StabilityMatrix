@@ -223,7 +223,11 @@
                             <Border Classes="tag-chip" IsVisible="{Binding CivitModel.BaseModelType, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
                                 <TextBlock Text="{Binding CivitModel.BaseModelType}" />
                             </Border>
-                            <Border Classes="tag-chip success" IsVisible="{Binding ShowUpdateCard}">
+                            <Border
+                                Classes="tag-chip"
+                                Classes.caution="{Binding IsEarlyAccessUpdate}"
+                                Classes.success="{Binding !IsEarlyAccessUpdate}"
+                                IsVisible="{Binding ShowUpdateCard}">
                                 <TextBlock Text="{Binding UpdateCardText}" />
                             </Border>
                         </WrapPanel>
@@ -294,7 +298,7 @@
                                     VerticalAlignment="Center"
                                     FontSize="11"
                                     Foreground="#C9FFFFFF"
-                                    Text="{Binding CivitModel.LatestModelVersionName, FallbackValue=''}" />
+                                    Text="{Binding DisplayVersionName, FallbackValue=''}" />
                                 <LayoutTransformControl
                                     Grid.Row="2"
                                     Grid.Column="0"

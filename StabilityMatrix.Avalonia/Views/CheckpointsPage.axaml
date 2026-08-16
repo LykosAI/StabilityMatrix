@@ -8,6 +8,7 @@
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
     xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:fluent="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
     xmlns:helpers="clr-namespace:StabilityMatrix.Avalonia.Helpers"
     xmlns:input="clr-namespace:FluentAvalonia.UI.Input;assembly=FluentAvalonia"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
@@ -602,74 +603,46 @@
                                     <LayoutTransformControl.LayoutTransform>
                                         <ScaleTransform ScaleX="{Binding $parent[scroll:BetterScrollViewer].((viewModels:CheckpointsPageViewModel)DataContext).ModelCardBottomResizeFactor, FallbackValue=1, TargetNullValue=1}" ScaleY="{Binding $parent[scroll:BetterScrollViewer].((viewModels:CheckpointsPageViewModel)DataContext).ModelCardBottomResizeFactor, FallbackValue=1, TargetNullValue=1}" />
                                     </LayoutTransformControl.LayoutTransform>
-                                    <WrapPanel IsVisible="{Binding CheckpointFile.HasConnectedModel}" Orientation="Horizontal">
-                                        <controls:Card
-                                            Height="24"
-                                            Margin="8,8,0,0"
-                                            Padding="4"
-                                            HorizontalAlignment="Left"
-                                            VerticalAlignment="Top"
-                                            Classes="info">
-
-                                            <TextBlock
-                                                HorizontalAlignment="Center"
-                                                VerticalAlignment="Center"
-                                                FontSize="11"
-                                                FontWeight="Medium"
-                                                Text="{Binding ModelType}" />
-                                        </controls:Card>
-                                        <controls:Card
-                                            Height="24"
-                                            Margin="4,8,0,0"
-                                            Padding="4"
-                                            HorizontalAlignment="Left"
-                                            VerticalAlignment="Top"
-                                            Classes="info">
-
-                                            <TextBlock
-                                                HorizontalAlignment="Center"
-                                                VerticalAlignment="Center"
-                                                FontSize="11"
-                                                FontWeight="Medium"
-                                                IsVisible="{Binding BaseModelName, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                                                Text="{Binding BaseModelName}" />
-                                        </controls:Card>
-                                        <controls:Card
-                                            Height="24"
-                                            Margin="4,8,0,0"
-                                            Padding="4"
-                                            HorizontalAlignment="Left"
-                                            VerticalAlignment="Top"
-                                            Classes="success"
-                                            IsVisible="{Binding HasStandardUpdate}">
-
-                                            <TextBlock
-                                                HorizontalAlignment="Center"
-                                                VerticalAlignment="Center"
-                                                FontSize="11"
-                                                FontWeight="Medium">
-                                                <Run Text="{x:Static lang:Resources.Label_UpdateAvailable}" />
-                                                <Run Text="{Binding CheckpointFile.LatestModelInfo.LatestVersionCreatedAt}" />
-                                            </TextBlock>
-                                        </controls:Card>
-                                        <controls:Card
-                                            Height="24"
-                                            Margin="4,8,0,0"
-                                            Padding="4"
-                                            HorizontalAlignment="Left"
-                                            VerticalAlignment="Top"
-                                            Classes="early-access"
-                                            IsVisible="{Binding HasEarlyAccessUpdateOnly}">
-
-                                            <TextBlock
-                                                HorizontalAlignment="Center"
-                                                VerticalAlignment="Center"
-                                                FontSize="11"
-                                                FontWeight="Medium">
-                                                <Run Text="{x:Static lang:Resources.Label_EarlyAccessUpdateAvailable}" />
-                                                <Run Text="{Binding CheckpointFile.LatestModelInfo.LatestVersionCreatedAt}" />
-                                            </TextBlock>
-                                        </controls:Card>
+                                    <WrapPanel
+                                        Margin="8,8,44,0"
+                                        IsVisible="{Binding CheckpointFile.HasConnectedModel}"
+                                        Orientation="Horizontal">
+                                        <Border Classes="tag-chip">
+                                            <TextBlock Text="{Binding ModelType}" />
+                                        </Border>
+                                        <Border Classes="tag-chip" IsVisible="{Binding BaseModelName, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                                            <TextBlock Text="{Binding BaseModelName}" />
+                                        </Border>
+                                        <Border Classes="tag-chip success" IsVisible="{Binding HasStandardUpdate}">
+                                            <ToolTip.Tip>
+                                                <TextBlock>
+                                                    <Run Text="{x:Static lang:Resources.Label_UpdateAvailable}" />
+                                                    <Run Text="{Binding CheckpointFile.LatestModelInfo.LatestVersionCreatedAt}" />
+                                                </TextBlock>
+                                            </ToolTip.Tip>
+                                            <StackPanel>
+                                                <fluent:SymbolIcon
+                                                    Width="14"
+                                                    Height="14"
+                                                    Margin="1,1,0,0"
+                                                    FontSize="14"
+                                                    IconVariant="Filled"
+                                                    Symbol="CloudArrowUp" />
+                                                <TextBlock IsVisible="{Binding CheckpointFile.LatestModelInfo.LatestVersionCreatedAtShort, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" Text="{Binding CheckpointFile.LatestModelInfo.LatestVersionCreatedAtShort}" />
+                                            </StackPanel>
+                                        </Border>
+                                        <Border Classes="tag-chip caution" IsVisible="{Binding HasEarlyAccessUpdateOnly}">
+                                            <ToolTip.Tip>
+                                                <TextBlock>
+                                                    <Run Text="{x:Static lang:Resources.Label_EarlyAccessUpdateAvailable}" />
+                                                    <Run Text="{Binding CheckpointFile.LatestModelInfo.LatestVersionCreatedAt}" />
+                                                </TextBlock>
+                                            </ToolTip.Tip>
+                                            <StackPanel>
+                                                <ui:SymbolIcon Symbol="Clock" />
+                                                <TextBlock Text="{x:Static lang:Resources.Label_EarlyAccess}" />
+                                            </StackPanel>
+                                        </Border>
                                     </WrapPanel>
                                 </LayoutTransformControl>
 
@@ -677,6 +650,10 @@
                                     <LayoutTransformControl.LayoutTransform>
                                         <ScaleTransform ScaleX="{Binding $parent[scroll:BetterScrollViewer].((viewModels:CheckpointsPageViewModel)DataContext).ModelCardBottomResizeFactor, FallbackValue=1, TargetNullValue=1}" ScaleY="{Binding $parent[scroll:BetterScrollViewer].((viewModels:CheckpointsPageViewModel)DataContext).ModelCardBottomResizeFactor, FallbackValue=1, TargetNullValue=1}" />
                                     </LayoutTransformControl.LayoutTransform>
+                                    <!--
+                                        The scrim is a fixed dark overlay in both themes, so its text
+                                        uses fixed light foregrounds rather than theme brushes
+                                    -->
                                     <Border
                                         Name="ModelCardBottom"
                                         Padding="8"
@@ -688,6 +665,7 @@
                                                 <TextBlock
                                                     MaxWidth="300"
                                                     HorizontalAlignment="Left"
+                                                    Foreground="#F5FFFFFF"
                                                     Text="{Binding CheckpointFile.DisplayModelName}"
                                                     TextWrapping="NoWrap"
                                                     ToolTip.Tip="{Binding CheckpointFile.DisplayModelName}" />
@@ -698,7 +676,7 @@
                                                     HorizontalAlignment="Left"
                                                     VerticalAlignment="Center"
                                                     FontSize="13"
-                                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                    Foreground="#C9FFFFFF"
                                                     Text="{Binding FileSize, Converter={x:Static converters:FileSizeConverters.HumanizeBinaryFileSizeConverter}}"
                                                     TextWrapping="NoWrap" />
                                             </Grid>
@@ -706,7 +684,7 @@
                                                 Margin="0,4"
                                                 HorizontalAlignment="Left"
                                                 FontSize="13"
-                                                Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                                Foreground="#A6FFFFFF"
                                                 IsVisible="{Binding CheckpointFile.HasConnectedModel}"
                                                 Text="{Binding CheckpointFile.DisplayModelVersion, FallbackValue=''}"
                                                 TextWrapping="NoWrap" />
@@ -716,7 +694,7 @@
                                                 Margin="0,0,0,4"
                                                 HorizontalAlignment="Left"
                                                 FontSize="13"
-                                                Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                                Foreground="#A6FFFFFF"
                                                 Text="{Binding CheckpointFile.FileName}"
                                                 TextWrapping="NoWrap"
                                                 ToolTip.Tip="{Binding CheckpointFile.FileName}" />
@@ -725,7 +703,7 @@
                                                 MaxWidth="300"
                                                 HorizontalAlignment="Left"
                                                 FontSize="13"
-                                                Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                                Foreground="#A6FFFFFF"
                                                 IsVisible="{Binding CanShowTriggerWords}"
                                                 TextWrapping="NoWrap"
                                                 ToolTip.Tip="{Binding CheckpointFile.ConnectedModelInfo.TrainedWordsString}">

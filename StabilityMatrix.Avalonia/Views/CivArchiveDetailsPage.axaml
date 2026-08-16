@@ -81,52 +81,35 @@
                     ToolTip.Tip="{Binding Model.Name}" />
 
                 <!--  Type chip  -->
-                <controls:Card
+                <Border
                     Margin="8,0,0,0"
-                    Padding="8,2"
                     VerticalAlignment="Center"
+                    Classes="tag-chip"
                     IsVisible="{Binding Model.Type, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-                    <TextBlock
-                        FontSize="12"
-                        FontWeight="SemiBold"
-                        Text="{Binding Model.Type}" />
-                </controls:Card>
+                    <TextBlock Text="{Binding Model.Type}" />
+                </Border>
 
                 <!--  NSFW badge  -->
-                <controls:Card
-                    Padding="8,2"
+                <Border
+                    Margin="0"
                     VerticalAlignment="Center"
-                    Background="#AAB91C1C"
-                    BorderThickness="0"
+                    Classes="tag-chip caution"
                     IsVisible="{Binding Model.IsNsfw}">
-                    <TextBlock
-                        FontSize="12"
-                        FontWeight="SemiBold"
-                        Foreground="White"
-                        Text="NSFW" />
-                </controls:Card>
+                    <TextBlock Text="NSFW" />
+                </Border>
 
                 <!--  Installed badge  -->
-                <controls:Card
-                    Padding="8,2"
+                <Border
+                    Margin="0"
                     VerticalAlignment="Center"
-                    Background="#AA059669"
-                    BorderThickness="0"
+                    Classes="tag-chip success"
                     IsVisible="{Binding IsInstalled}"
                     ToolTip.Tip="{Binding InstalledLocation, FallbackValue='Already in your library'}">
-                    <StackPanel Orientation="Horizontal" Spacing="6">
-                        <avalonia:Icon
-                            VerticalAlignment="Center"
-                            FontSize="11"
-                            Foreground="White"
-                            Value="fa-solid fa-check" />
-                        <TextBlock
-                            FontSize="12"
-                            FontWeight="SemiBold"
-                            Foreground="White"
-                            Text="Installed" />
+                    <StackPanel>
+                        <ui:SymbolIcon Symbol="Checkmark" />
+                        <TextBlock Text="Installed" />
                     </StackPanel>
-                </controls:Card>
+                </Border>
             </StackPanel>
 
             <StackPanel

@@ -12,29 +12,43 @@
     d:DesignWidth="550"
     x:DataType="dialogs:WorkflowNodesDialogViewModel"
     mc:Ignorable="d">
-    <Grid Width="550" RowDefinitions="Auto, Auto, *">
+    <Grid Width="550" RowDefinitions="Auto, Auto, Auto, *">
         <TextBlock
             Grid.Row="0"
             Margin="8,8,8,4"
             FontSize="20"
             Text="{x:Static lang:Resources.Label_RequiredCustomNodes}" />
 
-        <ComboBox
+        <TextBlock
             Grid.Row="1"
+            Margin="8,0,8,4"
+            Opacity="0.7"
+            Text="{x:Static lang:Resources.Text_WorkflowNodesExplanation}"
+            TextWrapping="Wrap" />
+
+        <StackPanel
+            Grid.Row="2"
             Margin="8,4"
-            HorizontalAlignment="Stretch"
-            IsVisible="{Binding HasMultiplePackages}"
-            ItemsSource="{Binding AvailablePackages}"
-            SelectedItem="{Binding SelectedPackage}">
-            <ComboBox.ItemTemplate>
-                <DataTemplate>
-                    <TextBlock Text="{Binding DisplayName}" />
-                </DataTemplate>
-            </ComboBox.ItemTemplate>
-        </ComboBox>
+            Orientation="Vertical"
+            Spacing="4">
+            <TextBlock
+                FontSize="12"
+                Opacity="0.7"
+                Text="{x:Static lang:Resources.Label_WorkflowNodesTargetPackage}" />
+            <ComboBox
+                HorizontalAlignment="Stretch"
+                ItemsSource="{Binding AvailablePackages}"
+                SelectedItem="{Binding SelectedPackage}">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding DisplayName}" />
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+        </StackPanel>
 
         <controls:ProgressRing
-            Grid.Row="2"
+            Grid.Row="3"
             Width="64"
             Height="64"
             Margin="16"
@@ -42,7 +56,7 @@
             IsVisible="{Binding IsLoading}" />
 
         <StackPanel
-            Grid.Row="2"
+            Grid.Row="3"
             Margin="16"
             HorizontalAlignment="Center"
             IsVisible="{Binding HasNoPacks}"
@@ -56,10 +70,10 @@
         </StackPanel>
 
         <ScrollViewer
-            Grid.Row="2"
+            Grid.Row="3"
             MaxHeight="400"
             IsVisible="{Binding !IsLoading}">
-            <ItemsControl Margin="8" ItemsSource="{Binding Packs}">
+            <ItemsControl Margin="8,8,24,8" ItemsSource="{Binding Packs}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
                         <StackPanel Orientation="Vertical" Spacing="8" />

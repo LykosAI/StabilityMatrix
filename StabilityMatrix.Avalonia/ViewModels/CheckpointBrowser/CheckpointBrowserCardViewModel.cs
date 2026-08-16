@@ -1,4 +1,5 @@
 ﻿using System.Text.RegularExpressions;
+using AsyncAwaitBestPractices;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Threading;
@@ -37,6 +38,7 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
     private readonly ILiteDbContext liteDbContext;
     private readonly CivitCompatApiManager civitApi;
     private readonly INavigationService<MainWindowViewModel> navigationService;
+    private readonly IWorkflowLibraryIndex workflowLibraryIndex;
 
     public Action<CheckpointBrowserCardViewModel>? OnDownloadStart { get; set; }
 
@@ -99,9 +101,11 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
         IModelImportService modelImportService,
         ILiteDbContext liteDbContext,
         CivitCompatApiManager civitApi,
-        INavigationService<MainWindowViewModel> navigationService
+        INavigationService<MainWindowViewModel> navigationService,
+        IWorkflowLibraryIndex workflowLibraryIndex
     )
     {
+        this.workflowLibraryIndex = workflowLibraryIndex;
         this.downloadService = downloadService;
         this.trackedDownloadService = trackedDownloadService;
         this.settingsManager = settingsManager;
@@ -146,6 +150,14 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
         UpdateCardText = string.Empty;
         ShowUpdateCard = false;
         IsEarlyAccessUpdate = false;
+
+        if (CivitModel.Type is CivitModelType.Workflows)
+        {
+            // Workflow imports never enter the model file index - detect them via the
+            // metadata embedded in the workflow library instead
+            CheckIfWorkflowInstalledAsync().SafeFireAndForget();
+            return;
+        }
 
         if (CivitModel.ModelVersions == null)
             return;
@@ -218,6 +230,25 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
         {
             UpdateCardText = "Update Available";
         }
+    }
+
+    private async Task CheckIfWorkflowInstalledAsync()
+    {
+        var installedVersions = await workflowLibraryIndex.GetInstalledCivitVersionsAsync();
+
+        if (!installedVersions.TryGetValue(CivitModel.Id, out var versions) || versions.Count == 0)
+            return;
+
+        var latestVersionId = GetDisplayedVersion()?.Id;
+
+        Dispatcher.UIThread.Post(() =>
+        {
+            ShowUpdateCard = true;
+            UpdateCardText =
+                latestVersionId is { } latest && !versions.Contains(latest)
+                    ? "Update Available"
+                    : "Installed";
+        });
     }
 
     private CivitModelVersion? GetDisplayedVersion()

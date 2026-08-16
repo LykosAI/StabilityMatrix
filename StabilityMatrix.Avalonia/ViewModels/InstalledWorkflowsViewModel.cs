@@ -52,12 +52,13 @@ public partial class InstalledWorkflowsViewModel(
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasFolders))]
-    private ObservableCollection<WorkflowFolder> folders = [];
+    private ObservableCollection<WorkflowCategory> categories = [];
 
     [ObservableProperty]
-    private WorkflowFolder? selectedFolder;
+    private WorkflowCategory? selectedCategory;
 
-    public bool HasFolders => Folders.Count > 1;
+    public bool HasFolders =>
+        Categories.Any(c => c.SubDirectories.Count > 0 || c.FilterPath is { Length: > 0 });
 
     protected override async Task OnInitialLoadedAsync()
     {
@@ -67,7 +68,7 @@ public partial class InstalledWorkflowsViewModel(
             .Throttle(TimeSpan.FromMilliseconds(100))
             .DistinctUntilChanged()
             .Select(_ => Unit.Default)
-            .Merge(this.WhenPropertyChanged(vm => vm.SelectedFolder).Select(_ => Unit.Default))
+            .Merge(this.WhenPropertyChanged(vm => vm.SelectedCategory).Select(_ => Unit.Default))
             .Select(_ => (Func<InstalledWorkflow, bool>)FilterWorkflows);
 
         AddDisposable(
@@ -126,7 +127,7 @@ public partial class InstalledWorkflowsViewModel(
                 }
 
                 metadata.Index = count++;
-                metadata.Folder = GetTopLevelFolder(workflowPath);
+                metadata.Folder = GetRelativeFolder(workflowPath);
                 metadata.LocalPreviewPath = FindPreviewSidecar(workflowPath);
                 metadata.FilePath = [await App.StorageProvider.TryGetFileFromPathAsync(workflowPath)];
                 workflowsCache.AddOrUpdate(metadata);
@@ -137,7 +138,7 @@ public partial class InstalledWorkflowsViewModel(
             }
         }
 
-        RefreshFolders();
+        RefreshCategories();
     }
 
     private static string? FindPreviewSidecar(string workflowPath)
@@ -151,37 +152,112 @@ public partial class InstalledWorkflowsViewModel(
             .FirstOrDefault();
     }
 
-    private string GetTopLevelFolder(string workflowPath)
+    /// <summary>
+    /// Folder of the file relative to the workflow library root, using '/' separators;
+    /// empty for files directly in the root.
+    /// </summary>
+    private string GetRelativeFolder(string workflowPath)
     {
         var relative = Path.GetRelativePath(settingsManager.WorkflowDirectory, workflowPath);
-        var folder = Path.GetDirectoryName(relative)
-            ?.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
-            .FirstOrDefault();
+        var folder = Path.GetDirectoryName(relative);
 
-        return folder is null or "." ? string.Empty : folder;
+        return folder is null or "." or ""
+            ? string.Empty
+            : folder.Replace(Path.DirectorySeparatorChar, '/').Replace(Path.AltDirectorySeparatorChar, '/');
     }
 
-    private void RefreshFolders()
+    private void RefreshCategories()
     {
-        var folderNames = workflowsCache
-            .Items.Select(x => x.Folder)
-            .Where(f => f.Length > 0)
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .OrderBy(f => f, StringComparer.OrdinalIgnoreCase)
-            .ToList();
+        var workflows = workflowsCache.Items.ToList();
+        var libraryRoot = settingsManager.WorkflowDirectory;
 
-        var entries = new List<WorkflowFolder> { new(null, Resources.Label_AllWorkflows) };
+        int CountSubtree(string folderPath) =>
+            workflows.Count(x =>
+                x.Folder.Equals(folderPath, StringComparison.OrdinalIgnoreCase)
+                || x.Folder.StartsWith($"{folderPath}/", StringComparison.OrdinalIgnoreCase)
+            );
 
-        if (folderNames.Count > 0 && workflowsCache.Items.Any(x => x.Folder.Length == 0))
+        var allNode = new WorkflowCategory
         {
-            entries.Add(new WorkflowFolder(string.Empty, Resources.Label_Ungrouped));
+            Name = Resources.Label_AllWorkflows,
+            Path = libraryRoot,
+            FilterPath = null,
+            Count = workflows.Count,
+            IsExpanded = true,
+        };
+
+        var nodesByPath = new Dictionary<string, WorkflowCategory>(StringComparer.OrdinalIgnoreCase);
+        var rootNodes = new List<WorkflowCategory>();
+
+        foreach (
+            var folderPath in workflows
+                .Select(x => x.Folder)
+                .Where(f => f.Length > 0)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(f => f, StringComparer.OrdinalIgnoreCase)
+        )
+        {
+            // Materialize every level of the path so intermediate folders become nodes
+            var segments = folderPath.Split('/');
+            for (var depth = 1; depth <= segments.Length; depth++)
+            {
+                var path = string.Join('/', segments.Take(depth));
+                if (nodesByPath.ContainsKey(path))
+                    continue;
+
+                var node = new WorkflowCategory
+                {
+                    Name = segments[depth - 1],
+                    Path = Path.Combine(libraryRoot, path.Replace('/', Path.DirectorySeparatorChar)),
+                    FilterPath = path,
+                    Count = CountSubtree(path),
+                };
+                nodesByPath[path] = node;
+
+                if (depth == 1)
+                {
+                    rootNodes.Add(node);
+                }
+                else
+                {
+                    nodesByPath[string.Join('/', segments.Take(depth - 1))].SubDirectories.Add(node);
+                }
+            }
         }
 
-        entries.AddRange(folderNames.Select(f => new WorkflowFolder(f, f)));
+        var entries = new List<WorkflowCategory> { allNode };
 
-        var previousKey = SelectedFolder?.Key;
-        Folders = new ObservableCollection<WorkflowFolder>(entries);
-        SelectedFolder = entries.FirstOrDefault(e => e.Key == previousKey) ?? entries[0];
+        var rootFileCount = workflows.Count(x => x.Folder.Length == 0);
+        if (rootNodes.Count > 0 && rootFileCount > 0)
+        {
+            entries.Add(
+                new WorkflowCategory
+                {
+                    Name = Resources.Label_Ungrouped,
+                    Path = libraryRoot,
+                    FilterPath = string.Empty,
+                    Count = rootFileCount,
+                }
+            );
+        }
+
+        entries.AddRange(rootNodes);
+
+        var previousFilter = SelectedCategory?.FilterPath;
+        Categories = new ObservableCollection<WorkflowCategory>(entries);
+        SelectedCategory =
+            (
+                previousFilter is null
+                    ? null
+                    : entries
+                        .SelectMany(Flatten)
+                        .FirstOrDefault(c =>
+                            string.Equals(c.FilterPath, previousFilter, StringComparison.OrdinalIgnoreCase)
+                        )
+            ) ?? allNode;
+
+        static IEnumerable<WorkflowCategory> Flatten(WorkflowCategory node) =>
+            new[] { node }.Concat(node.SubDirectories.SelectMany(Flatten));
     }
 
     [RelayCommand]
@@ -285,11 +361,17 @@ public partial class InstalledWorkflowsViewModel(
 
     private bool FilterWorkflows(InstalledWorkflow workflow)
     {
-        if (
-            SelectedFolder is { Key: { } folderKey }
-            && !workflow.Folder.Equals(folderKey, StringComparison.OrdinalIgnoreCase)
-        )
-            return false;
+        if (SelectedCategory is { FilterPath: { } filterPath })
+        {
+            var isMatch =
+                filterPath.Length == 0
+                    ? workflow.Folder.Length == 0
+                    : workflow.Folder.Equals(filterPath, StringComparison.OrdinalIgnoreCase)
+                        || workflow.Folder.StartsWith($"{filterPath}/", StringComparison.OrdinalIgnoreCase);
+
+            if (!isMatch)
+                return false;
+        }
 
         if (string.IsNullOrWhiteSpace(SearchQuery))
             return true;

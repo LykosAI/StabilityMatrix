@@ -56,8 +56,6 @@ public partial class WorkflowNodesDialogViewModel(
     public PackagePair? SelectedPackagePair =>
         SelectedPackage is { } package ? packageFactory.GetPackagePair(package) : null;
 
-    public bool HasMultiplePackages => AvailablePackages.Count > 1;
-
     /// <summary>
     /// True when analysis finished and the workflows need no custom nodes at all.
     /// </summary>

@@ -3275,6 +3275,24 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to This workflow uses the node packs below. Missing packs can be installed from the extension index, like extensions from the package&apos;s Extensions tab..
+        /// </summary>
+        public static string Text_WorkflowNodesExplanation {
+            get {
+                return ResourceManager.GetString("Text_WorkflowNodesExplanation", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to ComfyUI installation to check against and install into.
+        /// </summary>
+        public static string Label_WorkflowNodesTargetPackage {
+            get {
+                return ResourceManager.GetString("Label_WorkflowNodesTargetPackage", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to No Extension Packs Found.
         /// </summary>
         public static string Label_NoExtensionPacksFound {

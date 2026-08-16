@@ -1234,6 +1234,12 @@ Large caches can take a few minutes to clear. You can keep using Stability Matri
   <data name="Action_ChooseImage" xml:space="preserve">
     <value>Choose Image…</value>
   </data>
+  <data name="Text_WorkflowNodesExplanation" xml:space="preserve">
+    <value>This workflow uses the node packs below. Missing packs can be installed from the extension index, like extensions from the package's Extensions tab.</value>
+  </data>
+  <data name="Label_WorkflowNodesTargetPackage" xml:space="preserve">
+    <value>ComfyUI installation to check against and install into</value>
+  </data>
   <data name="Label_WorkflowDescription" xml:space="preserve">
     <value>Workflow Description</value>
   </data>

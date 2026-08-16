@@ -271,6 +271,43 @@
                     </StackPanel>
                 </Grid>
             </Border>
+
+            <!--  Pattern hint (when the current pattern would move nothing)  -->
+            <Border
+                Padding="14,10"
+                Background="{DynamicResource ControlFillColorDefaultBrush}"
+                BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="8"
+                IsVisible="{Binding ShowPatternHint}">
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                    <fluentIcons:SymbolIcon
+                        Grid.Column="0"
+                        VerticalAlignment="Center"
+                        FontSize="18"
+                        Foreground="{DynamicResource AccentFillColorDefaultBrush}"
+                        Symbol="Lightbulb" />
+                    <StackPanel
+                        Grid.Column="1"
+                        VerticalAlignment="Center"
+                        Spacing="2">
+                        <TextBlock
+                            FontSize="13"
+                            FontWeight="SemiBold"
+                            Text="{x:Static lang:Resources.Label_NothingWillMove}" />
+                        <TextBlock
+                            FontSize="12"
+                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                            Text="{Binding PatternHintText}"
+                            TextWrapping="Wrap" />
+                    </StackPanel>
+                    <Button
+                        Grid.Column="2"
+                        VerticalAlignment="Center"
+                        Command="{Binding UseSuggestedPatternCommand}"
+                        Content="{Binding UseSuggestedPatternLabel}" />
+                </Grid>
+            </Border>
         </StackPanel>
 
         <!--  Row 3: Items List  -->

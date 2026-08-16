@@ -81,5 +81,11 @@ public record FileNameFormat
 
     public const string DefaultTemplate = "{date}_{time}-{model_name}-{seed}";
     public const string DefaultModelBrowserTemplate = "{file_name}";
-    public const string DefaultOrganizationTemplate = "{file_name}";
+
+    /// <summary>
+    /// Starting pattern for Organize Models when the user has not saved one: sorts into
+    /// base-model folders so the first-run preview proposes something visible. Also offered
+    /// as the one-click suggestion when a saved pattern would move nothing.
+    /// </summary>
+    public const string DefaultOrganizationTemplate = "{base_model}/{file_name}";
 }

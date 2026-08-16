@@ -344,6 +344,8 @@ public class Settings
 
     public bool ModelPickerIsGridView { get; set; }
     public Dictionary<string, ModelPickerFilterState> ModelPickerFilterStates { get; set; } = [];
+    public CheckpointSortMode ModelPickerSortMode { get; set; } = CheckpointSortMode.Title;
+    public ListSortDirection ModelPickerSortDirection { get; set; } = ListSortDirection.Ascending;
 
     public int InferenceDimensionStepChange { get; set; } = 128;
 

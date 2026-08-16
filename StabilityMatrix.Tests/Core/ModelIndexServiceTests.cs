@@ -98,6 +98,36 @@ public class ModelIndexServiceTests
     }
 
     [TestMethod]
+    public void IsEarlyAccess_TrueForFutureDeadline_DespitePublicAvailability()
+    {
+        // Current CivitAI responses report availability "Public" for early-access versions
+        // and signal the state via earlyAccessDeadline instead (observed on model 1377820)
+        var version = CreateVersion(id: 100, isEarlyAccess: false);
+        version.Availability = "Public";
+        version.EarlyAccessDeadline = DateTimeOffset.UtcNow.AddDays(7);
+
+        Assert.IsTrue(version.IsEarlyAccess);
+    }
+
+    [TestMethod]
+    public void IsEarlyAccess_FalseForPastDeadline()
+    {
+        var version = CreateVersion(id: 100, isEarlyAccess: false);
+        version.Availability = "Public";
+        version.EarlyAccessDeadline = DateTimeOffset.UtcNow.AddDays(-1);
+
+        Assert.IsFalse(version.IsEarlyAccess);
+    }
+
+    [TestMethod]
+    public void IsEarlyAccess_TrueForExplicitAvailability()
+    {
+        var version = CreateVersion(id: 100, isEarlyAccess: true);
+
+        Assert.IsTrue(version.IsEarlyAccess);
+    }
+
+    [TestMethod]
     public void ComputeHasUpdate_ReturnsFalse_WhenLatestNonWeightFileIsInstalled()
     {
         // Embeddings/VAEs/upscalers publish files typed Negative/VAE/Upscaler rather than

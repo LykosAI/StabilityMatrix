@@ -841,7 +841,25 @@ namespace StabilityMatrix.Avalonia.Languages {
                 return ResourceManager.GetString("Action_UpdateMetadata", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Use {0}.
+        /// </summary>
+        public static string Action_UsePattern {
+            get {
+                return ResourceManager.GetString("Action_UsePattern", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Nothing will move with this pattern.
+        /// </summary>
+        public static string Label_NothingWillMove {
+            get {
+                return ResourceManager.GetString("Label_NothingWillMove", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Upgrade.
         /// </summary>
@@ -5060,7 +5078,16 @@ namespace StabilityMatrix.Avalonia.Languages {
                 return ResourceManager.GetString("Text_OrganizeModelsDescription", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Add a folder to the naming pattern to sort models into subfolders — for example {0}..
+        /// </summary>
+        public static string Text_OrganizePatternHint {
+            get {
+                return ResourceManager.GetString("Text_OrganizePatternHint", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to This will delete the package folder and all its contents, including any generated images and files you may have added..
         /// </summary>

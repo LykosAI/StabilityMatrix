@@ -213,53 +213,19 @@
                             </Button>
                         </Border>
 
-                        <WrapPanel Grid.Row="0" Orientation="Horizontal">
-                            <controls:Card
-                                Height="24"
-                                Margin="8,8,0,0"
-                                Padding="4"
-                                HorizontalAlignment="Left"
-                                VerticalAlignment="Top"
-                                Classes="info">
-
-                                <TextBlock
-                                    HorizontalAlignment="Center"
-                                    VerticalAlignment="Center"
-                                    FontSize="11"
-                                    FontWeight="Medium"
-                                    Text="{Binding CivitModel.Type}" />
-                            </controls:Card>
-                            <controls:Card
-                                Height="24"
-                                Margin="4,8,0,0"
-                                Padding="4"
-                                HorizontalAlignment="Left"
-                                VerticalAlignment="Top"
-                                Classes="info">
-
-                                <TextBlock
-                                    HorizontalAlignment="Center"
-                                    VerticalAlignment="Center"
-                                    FontSize="11"
-                                    FontWeight="Medium"
-                                    Text="{Binding CivitModel.BaseModelType}" />
-                            </controls:Card>
-                            <controls:Card
-                                Height="24"
-                                Margin="4,8,0,0"
-                                Padding="4"
-                                HorizontalAlignment="Left"
-                                VerticalAlignment="Top"
-                                Classes="success"
-                                IsVisible="{Binding ShowUpdateCard}">
-
-                                <TextBlock
-                                    HorizontalAlignment="Center"
-                                    VerticalAlignment="Center"
-                                    FontSize="11"
-                                    FontWeight="Medium"
-                                    Text="{Binding UpdateCardText}" />
-                            </controls:Card>
+                        <WrapPanel
+                            Grid.Row="0"
+                            Margin="8,8,44,0"
+                            Orientation="Horizontal">
+                            <Border Classes="tag-chip">
+                                <TextBlock Text="{Binding CivitModel.Type}" />
+                            </Border>
+                            <Border Classes="tag-chip" IsVisible="{Binding CivitModel.BaseModelType, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                                <TextBlock Text="{Binding CivitModel.BaseModelType}" />
+                            </Border>
+                            <Border Classes="tag-chip success" IsVisible="{Binding ShowUpdateCard}">
+                                <TextBlock Text="{Binding UpdateCardText}" />
+                            </Border>
                         </WrapPanel>
                         <Border
                             Grid.Row="0"

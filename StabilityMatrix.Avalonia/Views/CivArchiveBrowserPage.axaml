@@ -177,99 +177,49 @@
                                 </Border>
 
                                 <!--  Top-left chip stack: kind / type / base model  -->
-                                <StackPanel
-                                    Margin="8"
+                                <WrapPanel
+                                    Margin="8,8,8,0"
                                     HorizontalAlignment="Left"
                                     VerticalAlignment="Top"
-                                    Orientation="Horizontal"
-                                    Spacing="6">
-                                    <controls:Card
-                                        Padding="6,2"
-                                        Background="#AA000000"
-                                        BorderThickness="0"
-                                        IsVisible="{Binding ShouldShowKindBadge}">
-                                        <TextBlock
-                                            FontSize="11"
-                                            FontWeight="SemiBold"
-                                            Foreground="White"
-                                            Text="{Binding KindRaw}" />
-                                    </controls:Card>
-                                    <controls:Card
-                                        Padding="6,2"
-                                        Background="#AA000000"
-                                        BorderThickness="0"
-                                        IsVisible="{Binding Type, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-                                        <TextBlock
-                                            FontSize="11"
-                                            Foreground="White"
-                                            Text="{Binding Type}" />
-                                    </controls:Card>
-                                    <controls:Card
-                                        Padding="6,2"
-                                        Background="#AA000000"
-                                        BorderThickness="0"
-                                        IsVisible="{Binding BaseModel, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-                                        <TextBlock
-                                            FontSize="11"
-                                            Foreground="White"
-                                            Text="{Binding BaseModel}" />
-                                    </controls:Card>
-                                </StackPanel>
+                                    Orientation="Horizontal">
+                                    <Border Classes="tag-chip" IsVisible="{Binding ShouldShowKindBadge}">
+                                        <TextBlock Text="{Binding KindRaw}" />
+                                    </Border>
+                                    <Border Classes="tag-chip" IsVisible="{Binding Type, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                                        <TextBlock Text="{Binding Type}" />
+                                    </Border>
+                                    <Border Classes="tag-chip" IsVisible="{Binding BaseModel, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                                        <TextBlock Text="{Binding BaseModel}" />
+                                    </Border>
+                                </WrapPanel>
 
                                 <!--  Top-right badges (Installed / NSFW / Deleted)  -->
                                 <StackPanel
-                                    Margin="8"
+                                    Margin="8,8,4,8"
                                     HorizontalAlignment="Right"
                                     VerticalAlignment="Top"
-                                    Orientation="Horizontal"
-                                    Spacing="6">
-                                    <controls:Card
-                                        Padding="6,2"
-                                        Background="#AA059669"
-                                        BorderThickness="0"
+                                    Orientation="Horizontal">
+                                    <Border
+                                        Classes="tag-chip success"
                                         IsVisible="{Binding IsInstalled}"
                                         ToolTip.Tip="Already in your library">
-                                        <StackPanel Orientation="Horizontal" Spacing="4">
-                                            <fa:Icon
-                                                FontSize="10"
-                                                Foreground="White"
-                                                Value="fa-solid fa-check" />
-                                            <TextBlock
-                                                FontSize="11"
-                                                FontWeight="SemiBold"
-                                                Foreground="White"
-                                                Text="Installed" />
+                                        <StackPanel>
+                                            <ui:SymbolIcon Symbol="Checkmark" />
+                                            <TextBlock Text="Installed" />
                                         </StackPanel>
-                                    </controls:Card>
-                                    <controls:Card
-                                        Padding="6,2"
-                                        Background="#AAEA580C"
-                                        BorderThickness="0"
+                                    </Border>
+                                    <Border
+                                        Classes="tag-chip caution"
                                         IsVisible="{Binding IsNsfw}"
                                         ToolTip.Tip="Not safe for work">
-                                        <TextBlock
-                                            FontSize="11"
-                                            FontWeight="SemiBold"
-                                            Foreground="White"
-                                            Text="NSFW" />
-                                    </controls:Card>
-                                    <controls:Card
-                                        Padding="6,2"
-                                        Background="#AAB91C1C"
-                                        BorderThickness="0"
-                                        IsVisible="{Binding IsDeleted}">
-                                        <StackPanel Orientation="Horizontal" Spacing="4">
-                                            <fa:Icon
-                                                FontSize="10"
-                                                Foreground="White"
-                                                Value="fa-solid fa-trash" />
-                                            <TextBlock
-                                                FontSize="11"
-                                                FontWeight="SemiBold"
-                                                Foreground="White"
-                                                Text="Deleted" />
+                                        <TextBlock Text="NSFW" />
+                                    </Border>
+                                    <Border Classes="tag-chip critical" IsVisible="{Binding IsDeleted}">
+                                        <StackPanel>
+                                            <ui:SymbolIcon Symbol="Delete" />
+                                            <TextBlock Text="Deleted" />
                                         </StackPanel>
-                                    </controls:Card>
+                                    </Border>
                                 </StackPanel>
                             </Grid>
 

@@ -95,57 +95,6 @@
             </Style>
         </Style>
 
-        <!--  Model card tag chips: one shared shape, variants only recolor  -->
-        <Style Selector="Border.tag-chip">
-            <Setter Property="Height" Value="22" />
-            <Setter Property="CornerRadius" Value="11" />
-            <Setter Property="Padding" Value="9,0" />
-            <Setter Property="Margin" Value="0,0,4,4" />
-            <Setter Property="HorizontalAlignment" Value="Left" />
-            <Setter Property="VerticalAlignment" Value="Top" />
-            <Setter Property="Background" Value="{DynamicResource SolidBackgroundFillColorBaseBrush}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="BorderBrush" Value="{DynamicResource CardStrokeColorDefaultBrush}" />
-
-            <Style Selector="^ StackPanel">
-                <Setter Property="Orientation" Value="Horizontal" />
-                <Setter Property="Spacing" Value="4" />
-                <Setter Property="VerticalAlignment" Value="Center" />
-            </Style>
-            <Style Selector="^ TextBlock">
-                <Setter Property="VerticalAlignment" Value="Center" />
-                <Setter Property="FontSize" Value="11" />
-                <Setter Property="FontWeight" Value="Medium" />
-                <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
-            </Style>
-            <Style Selector="^ ui|SymbolIcon">
-                <Setter Property="VerticalAlignment" Value="Center" />
-                <Setter Property="FontSize" Value="12" />
-            </Style>
-        </Style>
-
-        <!--  Update chips use the soft semantic fills so the preview image stays the hero  -->
-        <Style Selector="Border.tag-chip.update">
-            <Setter Property="Background" Value="{DynamicResource SystemFillColorSuccessBackgroundBrush}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource SystemFillColorSuccessBackgroundBrush}" />
-            <Style Selector="^ TextBlock">
-                <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
-            </Style>
-            <Style Selector="^ ui|SymbolIcon">
-                <Setter Property="Foreground" Value="{DynamicResource SystemFillColorSuccessBrush}" />
-            </Style>
-        </Style>
-        <Style Selector="Border.tag-chip.early-access">
-            <Setter Property="Background" Value="{DynamicResource SystemFillColorCautionBackgroundBrush}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource SystemFillColorCautionBackgroundBrush}" />
-            <Style Selector="^ TextBlock">
-                <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
-            </Style>
-            <Style Selector="^ ui|SymbolIcon">
-                <Setter Property="Foreground" Value="{DynamicResource SystemFillColorCautionBrush}" />
-            </Style>
-        </Style>
-
         <!--  markdown table styles  -->
         <Style Selector="Border.TableHeader">
             <Setter Property="Margin" Value="2" />
@@ -663,7 +612,7 @@
                                         <Border Classes="tag-chip" IsVisible="{Binding BaseModelName, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
                                             <TextBlock Text="{Binding BaseModelName}" />
                                         </Border>
-                                        <Border Classes="tag-chip update" IsVisible="{Binding HasStandardUpdate}">
+                                        <Border Classes="tag-chip success" IsVisible="{Binding HasStandardUpdate}">
                                             <ToolTip.Tip>
                                                 <TextBlock>
                                                     <Run Text="{x:Static lang:Resources.Label_UpdateAvailable}" />
@@ -675,7 +624,7 @@
                                                 <TextBlock Text="{x:Static lang:Resources.Action_Update}" />
                                             </StackPanel>
                                         </Border>
-                                        <Border Classes="tag-chip early-access" IsVisible="{Binding HasEarlyAccessUpdateOnly}">
+                                        <Border Classes="tag-chip caution" IsVisible="{Binding HasEarlyAccessUpdateOnly}">
                                             <ToolTip.Tip>
                                                 <TextBlock>
                                                     <Run Text="{x:Static lang:Resources.Label_EarlyAccessUpdateAvailable}" />

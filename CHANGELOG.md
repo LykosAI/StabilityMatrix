@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 #### New Feature: 🔀 CivitAI Workflow Browsing
 - The **Model Browser** now browses and imports **ComfyUI workflows** from CivitAI — pick the new **Workflows** model type (or spot them in All-type searches), open one, and import it straight into your workflow library; archives are unpacked automatically
 - Your workflow library is now **linked into ComfyUI itself** — imported workflows appear under a "Stability Matrix" folder in ComfyUI's own workflow browser, for every installed ComfyUI-based package
+- **Custom node install assist**: after importing a workflow that needs custom nodes, Stability Matrix reads the node packs right out of the workflow file, shows which are already installed, and offers one-click installs for the rest — also available any time via **Check Required Nodes** on an installed workflow's context menu
+- The Workflows page groups your library **by folder** (imports get a folder per model), with a sidebar to jump between them
+- New **Edit Metadata** on workflow cards — rename, describe, and give any workflow a picture, including files you dropped in yourself years ago
 #### New Feature: 🎨 Qwen Image & Krea 2 in Inference
 - New workflow profiles with auto-detection, automatic text encoder + VAE pairing, and one-click recommended sampler settings:
   - **Qwen Image** (2512) — the top-ranked open text-to-image model, with best-in-class text rendering

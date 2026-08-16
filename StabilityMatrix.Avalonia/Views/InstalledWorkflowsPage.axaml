@@ -71,13 +71,37 @@
     <UserControl.Resources>
         <input:StandardUICommand x:Key="OpenInExplorerCommand" Command="{Binding OpenInExplorerCommand}" />
         <input:StandardUICommand x:Key="OpenSourcePageCommand" Command="{Binding OpenSourcePageCommand}" />
+        <input:StandardUICommand x:Key="CheckRequiredNodesCommand" Command="{Binding CheckRequiredNodesCommand}" />
+        <input:StandardUICommand x:Key="EditMetadataCommand" Command="{Binding EditMetadataCommand}" />
         <input:StandardUICommand x:Key="DeleteCommand" Command="{Binding DeleteCommand}" />
     </UserControl.Resources>
 
-    <Grid ColumnDefinitions="*, Auto" RowDefinitions="Auto, *">
+    <Grid ColumnDefinitions="Auto, *, Auto" RowDefinitions="Auto, *">
+        <ListBox
+            Grid.Row="0"
+            Grid.RowSpan="2"
+            Grid.Column="0"
+            MinWidth="160"
+            MaxWidth="240"
+            Margin="4,8,0,8"
+            IsVisible="{Binding HasFolders}"
+            ItemsSource="{Binding Folders}"
+            SelectedItem="{Binding SelectedFolder}">
+            <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="{x:Type models:WorkflowFolder}">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <fluent:SymbolIcon VerticalAlignment="Center" Symbol="Folder" />
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            Text="{Binding DisplayName}"
+                            TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
         <controls1:CommandBar
             Grid.Row="0"
-            Grid.Column="1"
+            Grid.Column="2"
             Margin="4,8,4,0"
             HorizontalAlignment="Left"
             VerticalAlignment="Center"
@@ -106,7 +130,7 @@
 
         <TextBox
             Grid.Row="0"
-            Grid.Column="0"
+            Grid.Column="1"
             MinHeight="40"
             Margin="4,8,4,0"
             VerticalAlignment="Center"
@@ -119,7 +143,7 @@
 
         <ScrollViewer
             Grid.Row="1"
-            Grid.Column="0"
+            Grid.Column="1"
             Grid.ColumnSpan="2">
             <ItemsRepeater ItemsSource="{Binding DisplayedWorkflows}">
                 <ItemsRepeater.Layout>
@@ -156,6 +180,22 @@
                                         </MenuItem.Icon>
                                     </MenuItem>
                                     <MenuItem
+                                        Command="{StaticResource EditMetadataCommand}"
+                                        CommandParameter="{Binding}"
+                                        Header="{x:Static lang:Resources.Action_EditMetadata}">
+                                        <MenuItem.Icon>
+                                            <fluent:SymbolIcon Symbol="Edit" />
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+                                    <MenuItem
+                                        Command="{StaticResource CheckRequiredNodesCommand}"
+                                        CommandParameter="{Binding}"
+                                        Header="{x:Static lang:Resources.Action_CheckRequiredNodes}">
+                                        <MenuItem.Icon>
+                                            <fluent:SymbolIcon Symbol="PuzzlePiece" />
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+                                    <MenuItem
                                         Command="{StaticResource OpenInExplorerCommand}"
                                         CommandParameter="{Binding}"
                                         Header="{x:Static lang:Resources.Action_OpenInExplorer}">
@@ -187,8 +227,8 @@
                                         Width="330"
                                         Height="400"
                                         CornerRadius="8"
-                                        IsVisible="{Binding FirstThumbnail, Converter={x:Static ObjectConverters.IsNotNull}, FallbackValue=False}"
-                                        Source="{Binding FirstThumbnail}"
+                                        IsVisible="{Binding DisplayThumbnail, Converter={x:Static ObjectConverters.IsNotNull}, FallbackValue=False}"
+                                        Source="{Binding DisplayThumbnail}"
                                         Stretch="UniformToFill" />
 
                                     <avalonia:Icon
@@ -198,7 +238,7 @@
                                         Height="400"
                                         CornerRadius="8"
                                         FontSize="100"
-                                        IsVisible="{Binding FirstThumbnail, Converter={x:Static ObjectConverters.IsNull}, FallbackValue=False}"
+                                        IsVisible="{Binding DisplayThumbnail, Converter={x:Static ObjectConverters.IsNull}, FallbackValue=False}"
                                         Value="fa-regular fa-file-code" />
 
                                     <!--  Username pill card  -->

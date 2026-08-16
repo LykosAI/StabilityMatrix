@@ -24,6 +24,11 @@ public class DownloadCivitWorkflowStep(
 {
     public string ProgressTitle => "Downloading Workflow";
 
+    /// <summary>
+    /// Library paths of the workflow files this step imported, populated during execution.
+    /// </summary>
+    public List<FilePath> ImportedFiles { get; } = [];
+
     public async Task ExecuteAsync(IProgress<ProgressReport>? progress = null)
     {
         var tempFile = new FilePath(
@@ -141,6 +146,7 @@ public class DownloadCivitWorkflowStep(
         var filePath = targetDir.JoinFile($"{SanitizeFileName(name)}.json");
         await File.WriteAllTextAsync(filePath, JsonSerializer.Serialize(workflow)).ConfigureAwait(false);
 
+        ImportedFiles.Add(filePath);
         return true;
     }
 

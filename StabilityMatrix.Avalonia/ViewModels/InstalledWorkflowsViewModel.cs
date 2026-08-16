@@ -1,3 +1,5 @@
+using System.Collections.ObjectModel;
+using System.Reactive;
 using System.Reactive.Linq;
 using System.Text.Json;
 using AsyncAwaitBestPractices;
@@ -14,10 +16,13 @@ using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models.Api.OpenArt;
+using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
 
@@ -27,7 +32,8 @@ namespace StabilityMatrix.Avalonia.ViewModels;
 [RegisterSingleton<InstalledWorkflowsViewModel>]
 public partial class InstalledWorkflowsViewModel(
     ISettingsManager settingsManager,
-    INotificationService notificationService
+    INotificationService notificationService,
+    IPackageFactory packageFactory
 ) : PageViewModelBase
 {
     public override string Title => Resources.Label_Workflows;
@@ -44,20 +50,31 @@ public partial class InstalledWorkflowsViewModel(
     [ObservableProperty]
     private string searchQuery = string.Empty;
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasFolders))]
+    private ObservableCollection<WorkflowFolder> folders = [];
+
+    [ObservableProperty]
+    private WorkflowFolder? selectedFolder;
+
+    public bool HasFolders => Folders.Count > 1;
+
     protected override async Task OnInitialLoadedAsync()
     {
         await base.OnInitialLoadedAsync();
 
-        var searchPredicate = this.WhenPropertyChanged(vm => vm.SearchQuery)
+        var filterPredicate = this.WhenPropertyChanged(vm => vm.SearchQuery)
             .Throttle(TimeSpan.FromMilliseconds(100))
             .DistinctUntilChanged()
+            .Select(_ => Unit.Default)
+            .Merge(this.WhenPropertyChanged(vm => vm.SelectedFolder).Select(_ => Unit.Default))
             .Select(_ => (Func<InstalledWorkflow, bool>)FilterWorkflows);
 
         AddDisposable(
             workflowsCache
                 .Connect()
                 .DeferUntilLoaded()
-                .Filter(searchPredicate)
+                .Filter(filterPredicate)
                 .SortBy(x => x.Index)
                 .Bind(DisplayedWorkflows)
                 .ObserveOn(SynchronizationContext.Current!)
@@ -109,6 +126,8 @@ public partial class InstalledWorkflowsViewModel(
                 }
 
                 metadata.Index = count++;
+                metadata.Folder = GetTopLevelFolder(workflowPath);
+                metadata.LocalPreviewPath = FindPreviewSidecar(workflowPath);
                 metadata.FilePath = [await App.StorageProvider.TryGetFileFromPathAsync(workflowPath)];
                 workflowsCache.AddOrUpdate(metadata);
             }
@@ -117,6 +136,52 @@ public partial class InstalledWorkflowsViewModel(
                 Console.WriteLine(e);
             }
         }
+
+        RefreshFolders();
+    }
+
+    private static string? FindPreviewSidecar(string workflowPath)
+    {
+        var directory = Path.GetDirectoryName(workflowPath);
+        if (directory is null)
+            return null;
+
+        return Directory
+            .EnumerateFiles(directory, $"{Path.GetFileNameWithoutExtension(workflowPath)}.preview.*")
+            .FirstOrDefault();
+    }
+
+    private string GetTopLevelFolder(string workflowPath)
+    {
+        var relative = Path.GetRelativePath(settingsManager.WorkflowDirectory, workflowPath);
+        var folder = Path.GetDirectoryName(relative)
+            ?.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+            .FirstOrDefault();
+
+        return folder is null or "." ? string.Empty : folder;
+    }
+
+    private void RefreshFolders()
+    {
+        var folderNames = workflowsCache
+            .Items.Select(x => x.Folder)
+            .Where(f => f.Length > 0)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(f => f, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        var entries = new List<WorkflowFolder> { new(null, Resources.Label_AllWorkflows) };
+
+        if (folderNames.Count > 0 && workflowsCache.Items.Any(x => x.Folder.Length == 0))
+        {
+            entries.Add(new WorkflowFolder(string.Empty, Resources.Label_Ungrouped));
+        }
+
+        entries.AddRange(folderNames.Select(f => new WorkflowFolder(f, f)));
+
+        var previousKey = SelectedFolder?.Key;
+        Folders = new ObservableCollection<WorkflowFolder>(entries);
+        SelectedFolder = entries.FirstOrDefault(e => e.Key == previousKey) ?? entries[0];
     }
 
     [RelayCommand]
@@ -139,6 +204,44 @@ public partial class InstalledWorkflowsViewModel(
         {
             ProcessRunner.OpenUrl(url);
         }
+    }
+
+    [RelayCommand]
+    private async Task EditMetadataAsync(InstalledWorkflow workflow)
+    {
+        var vm = new WorkflowMetadataEditorViewModel { Workflow = workflow };
+
+        var dialog = new BetterContentDialog
+        {
+            IsPrimaryButtonEnabled = true,
+            IsSecondaryButtonEnabled = true,
+            PrimaryButtonText = Resources.Action_Save,
+            SecondaryButtonText = Resources.Action_Cancel,
+            DefaultButton = ContentDialogButton.Primary,
+            IsFooterVisible = true,
+            MaxDialogWidth = 560,
+            CloseOnClickOutside = true,
+            Content = vm,
+        };
+
+        if (await dialog.ShowAsync() != ContentDialogResult.Primary)
+            return;
+
+        await notificationService.TryAsync(vm.SaveAsync(), message: "Error saving workflow metadata");
+        await LoadInstalledWorkflowsAsync();
+    }
+
+    [RelayCommand]
+    private async Task CheckRequiredNodesAsync(InstalledWorkflow workflow)
+    {
+        if (workflow.FilePath?.FirstOrDefault()?.TryGetLocalPath() is not { } path)
+            return;
+
+        await WorkflowNodesDialogViewModel.ShowDialogAsync(
+            settingsManager,
+            packageFactory,
+            [new FilePath(path)]
+        );
     }
 
     [RelayCommand]
@@ -182,6 +285,12 @@ public partial class InstalledWorkflowsViewModel(
 
     private bool FilterWorkflows(InstalledWorkflow workflow)
     {
+        if (
+            SelectedFolder is { Key: { } folderKey }
+            && !workflow.Folder.Equals(folderKey, StringComparison.OrdinalIgnoreCase)
+        )
+            return false;
+
         if (string.IsNullOrWhiteSpace(SearchQuery))
             return true;
 

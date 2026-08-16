@@ -2,6 +2,21 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia">
+    <Styles.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.ThemeDictionaries>
+                <!--  Default covers Dark; the success fill stays translucent so busy previews show through  -->
+                <ResourceDictionary x:Key="Default">
+                    <SolidColorBrush x:Key="TagChipSuccessBackground" Color="#3D22C55E" />
+                    <SolidColorBrush x:Key="TagChipSuccessForeground" Color="#4ADE80" />
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Light">
+                    <SolidColorBrush x:Key="TagChipSuccessBackground" Color="#BBF7D0" />
+                    <SolidColorBrush x:Key="TagChipSuccessForeground" Color="#15803D" />
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+        </ResourceDictionary>
+    </Styles.Resources>
     <Design.PreviewWith>
         <Border Padding="16">
             <StackPanel Orientation="Horizontal">
@@ -58,13 +73,13 @@
 
     <!--  Stateful chips use the soft semantic fills so imagery stays the visual hero  -->
     <Style Selector="Border.tag-chip.success">
-        <Setter Property="Background" Value="{DynamicResource SystemFillColorSuccessBackgroundBrush}" />
-        <Setter Property="BorderBrush" Value="{DynamicResource SystemFillColorSuccessBackgroundBrush}" />
+        <Setter Property="Background" Value="{DynamicResource TagChipSuccessBackground}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource TagChipSuccessBackground}" />
         <Style Selector="^ TextBlock">
-            <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TagChipSuccessForeground}" />
         </Style>
         <Style Selector="^ ui|SymbolIcon">
-            <Setter Property="Foreground" Value="{DynamicResource SystemFillColorSuccessBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TagChipSuccessForeground}" />
         </Style>
     </Style>
     <Style Selector="Border.tag-chip.caution">

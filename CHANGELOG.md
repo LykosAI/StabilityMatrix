@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 
 ## v2.17.0-dev.3
 ### Added
+#### New Feature: 🔀 CivitAI Workflow Browsing
+- The **Model Browser** now browses and imports **ComfyUI workflows** from CivitAI — pick the new **Workflows** model type (or spot them in All-type searches), open one, and import it straight into your workflow library; archives are unpacked automatically
+- Your workflow library is now **linked into ComfyUI itself** — imported workflows appear under a "Stability Matrix" folder in ComfyUI's own workflow browser, for every installed ComfyUI-based package
 #### New Feature: 🎨 Qwen Image & Krea 2 in Inference
 - New workflow profiles with auto-detection, automatic text encoder + VAE pairing, and one-click recommended sampler settings:
   - **Qwen Image** (2512) — the top-ranked open text-to-image model, with best-in-class text rendering
@@ -29,6 +32,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added a **Quick-Hide Hotkey** for shared computers ([feature request](https://lykos.ai/feature/3dbfa0e1-650a-426a-906d-b81d6f414104)) — press a shortcut to instantly minimize Stability Matrix, or exit with no confirmation prompts. Off by default; enable it in **Settings → System** and bind any combination with the game-style key picker (default Ctrl+Shift+H)
 - Added **Sort** options to the Inference model picker — file name, title, base model, type, size, and dates, remembered between sessions; search relevance still takes over while you type
 ### Changed
+- The **Workflows** page is now your installed workflow library, front and center — no more tabs, since browsing moved to the Model Browser. Cards for CivitAI-imported workflows link back to their CivitAI page
+- Removed the **OpenArt workflow browser**: OpenArt has discontinued its ComfyUI workflow community (the site no longer has workflow pages, nothing new has been uploaded since March, and the unmoderated feed had filled with spam). Workflows you already imported from OpenArt stay fully usable in your library
 - Updated **AI-Toolkit** installs to PyTorch 2.13.0 on CUDA 13.0 with Python 3.12, matching current upstream requirements ([#1714](https://github.com/LykosAI/StabilityMatrix/issues/1714)) — with a console warning at launch if your NVIDIA driver is older than the 580 series CUDA 13.0 needs
 - Updated the bundled **uv** package manager to 0.12.5, adding newer Python builds to the Python picker — including the 3.10 security releases requested in [#1709](https://github.com/LykosAI/StabilityMatrix/issues/1709)
 - Refreshed the model card badges across the **Checkpoint Manager** and the **CivitAI / CivArchive browsers** — one shared family of compact chips instead of the chunky pills: the update badge becomes a cloud-up icon with a short release date (year shown when it isn't recent), early-access-only updates get their own distinct style, and Installed / NSFW / Deleted states are clearer

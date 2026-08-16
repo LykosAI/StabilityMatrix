@@ -15,7 +15,6 @@
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="clr-namespace:StabilityMatrix.Avalonia.Models"
-    xmlns:openArt="clr-namespace:StabilityMatrix.Core.Models.Api.OpenArt"
     xmlns:vendorLabs="clr-namespace:StabilityMatrix.Avalonia.Controls.VendorLabs"
     xmlns:viewModels="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
     d:DataContext="{x:Static designData:DesignData.InstalledWorkflowsViewModel}"
@@ -71,7 +70,7 @@
 
     <UserControl.Resources>
         <input:StandardUICommand x:Key="OpenInExplorerCommand" Command="{Binding OpenInExplorerCommand}" />
-        <input:StandardUICommand x:Key="OpenOnOpenArtCommand" Command="{Binding OpenOnOpenArtCommand}" />
+        <input:StandardUICommand x:Key="OpenSourcePageCommand" Command="{Binding OpenSourcePageCommand}" />
         <input:StandardUICommand x:Key="DeleteCommand" Command="{Binding DeleteCommand}" />
     </UserControl.Resources>
 
@@ -128,7 +127,7 @@
                     <UniformGridLayout MinColumnSpacing="4" MinRowSpacing="4" />
                 </ItemsRepeater.Layout>
                 <ItemsRepeater.ItemTemplate>
-                    <DataTemplate x:DataType="{x:Type models:OpenArtMetadata}">
+                    <DataTemplate x:DataType="{x:Type models:InstalledWorkflow}">
                         <Border
                             Name="HoverBorder"
                             Margin="8"
@@ -148,10 +147,10 @@
                             <Border.ContextFlyout>
                                 <MenuFlyout>
                                     <MenuItem
-                                        Command="{StaticResource OpenOnOpenArtCommand}"
+                                        Command="{StaticResource OpenSourcePageCommand}"
                                         CommandParameter="{Binding}"
-                                        Header="{x:Static lang:Resources.Action_OpenOnOpenArt}"
-                                        IsVisible="{Binding HasMetadata}">
+                                        Header="{x:Static lang:Resources.Action_OpenOnCivitAi}"
+                                        IsVisible="{Binding SourceUrl, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
                                         <MenuItem.Icon>
                                             <fluent:SymbolIcon Symbol="Open" />
                                         </MenuItem.Icon>

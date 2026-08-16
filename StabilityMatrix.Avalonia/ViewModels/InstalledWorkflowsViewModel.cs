@@ -1,4 +1,4 @@
-﻿using System.Reactive.Linq;
+using System.Reactive.Linq;
 using System.Text.Json;
 using AsyncAwaitBestPractices;
 using Avalonia.Controls;
@@ -28,16 +28,18 @@ namespace StabilityMatrix.Avalonia.ViewModels;
 public partial class InstalledWorkflowsViewModel(
     ISettingsManager settingsManager,
     INotificationService notificationService
-) : TabViewModelBase
+) : PageViewModelBase
 {
-    public override string Header => Resources.TabLabel_InstalledWorkflows;
+    public override string Title => Resources.Label_Workflows;
+    public override IconSource IconSource => new FASymbolIconSource { Symbol = "fa-solid fa-circle-nodes" };
 
-    private readonly SourceCache<OpenArtMetadata, string> workflowsCache =
-        new(x => x.Workflow?.Id ?? Guid.NewGuid().ToString());
+    private readonly SourceCache<InstalledWorkflow, string> workflowsCache = new(x =>
+        x.Workflow?.Id ?? Guid.NewGuid().ToString()
+    );
 
     [ObservableProperty]
-    private IObservableCollection<OpenArtMetadata> displayedWorkflows =
-        new ObservableCollectionExtended<OpenArtMetadata>();
+    private IObservableCollection<InstalledWorkflow> displayedWorkflows =
+        new ObservableCollectionExtended<InstalledWorkflow>();
 
     [ObservableProperty]
     private string searchQuery = string.Empty;
@@ -49,7 +51,7 @@ public partial class InstalledWorkflowsViewModel(
         var searchPredicate = this.WhenPropertyChanged(vm => vm.SearchQuery)
             .Throttle(TimeSpan.FromMilliseconds(100))
             .DistinctUntilChanged()
-            .Select(_ => (Func<OpenArtMetadata, bool>)FilterWorkflows);
+            .Select(_ => (Func<InstalledWorkflow, bool>)FilterWorkflows);
 
         AddDisposable(
             workflowsCache
@@ -92,21 +94,21 @@ public partial class InstalledWorkflowsViewModel(
             try
             {
                 var json = await File.ReadAllTextAsync(workflowPath);
-                var metadata = JsonSerializer.Deserialize<OpenArtMetadata>(json);
+                var metadata = JsonSerializer.Deserialize<InstalledWorkflow>(json);
 
                 if (metadata?.Workflow == null)
                 {
-                    metadata = new OpenArtMetadata
+                    metadata = new InstalledWorkflow
                     {
                         Workflow = new OpenArtSearchResult
                         {
                             Id = Guid.NewGuid().ToString(),
                             Name = Path.GetFileNameWithoutExtension(workflowPath),
                         },
-                        Index = count++,
                     };
                 }
 
+                metadata.Index = count++;
                 metadata.FilePath = [await App.StorageProvider.TryGetFileFromPathAsync(workflowPath)];
                 workflowsCache.AddOrUpdate(metadata);
             }
@@ -118,12 +120,12 @@ public partial class InstalledWorkflowsViewModel(
     }
 
     [RelayCommand]
-    private async Task OpenInExplorer(OpenArtMetadata metadata)
+    private async Task OpenInExplorer(InstalledWorkflow workflow)
     {
-        if (metadata.FilePath == null)
+        if (workflow.FilePath == null)
             return;
 
-        var path = metadata.FilePath.FirstOrDefault()?.Path.ToString();
+        var path = workflow.FilePath.FirstOrDefault()?.Path.ToString();
         if (string.IsNullOrWhiteSpace(path))
             return;
 
@@ -131,16 +133,16 @@ public partial class InstalledWorkflowsViewModel(
     }
 
     [RelayCommand]
-    private void OpenOnOpenArt(OpenArtMetadata metadata)
+    private void OpenSourcePage(InstalledWorkflow workflow)
     {
-        if (metadata.Workflow == null)
-            return;
-
-        ProcessRunner.OpenUrl($"https://openart.ai/workflows/{metadata.Workflow.Id}");
+        if (workflow.SourceUrl is { } url && !string.IsNullOrWhiteSpace(url))
+        {
+            ProcessRunner.OpenUrl(url);
+        }
     }
 
     [RelayCommand]
-    private async Task DeleteAsync(OpenArtMetadata metadata)
+    private async Task DeleteAsync(InstalledWorkflow workflow)
     {
         var confirmationDialog = new BetterContentDialog
         {
@@ -157,7 +159,7 @@ public partial class InstalledWorkflowsViewModel(
 
         await using var delay = new MinimumDelay(200, 500);
 
-        var path = metadata?.FilePath?.FirstOrDefault()?.Path.ToString().Replace("file:///", "");
+        var path = workflow?.FilePath?.FirstOrDefault()?.Path.ToString().Replace("file:///", "");
         if (!string.IsNullOrWhiteSpace(path) && File.Exists(path))
         {
             await notificationService.TryAsync(
@@ -165,7 +167,7 @@ public partial class InstalledWorkflowsViewModel(
                 message: "Error deleting workflow"
             );
 
-            var id = metadata?.Workflow?.Id;
+            var id = workflow?.Workflow?.Id;
             if (!string.IsNullOrWhiteSpace(id))
             {
                 workflowsCache.Remove(id);
@@ -174,22 +176,22 @@ public partial class InstalledWorkflowsViewModel(
 
         notificationService.Show(
             Resources.Label_WorkflowDeleted,
-            string.Format(Resources.Label_WorkflowDeletedSuccessfully, metadata?.Workflow?.Name)
+            string.Format(Resources.Label_WorkflowDeletedSuccessfully, workflow?.Workflow?.Name)
         );
     }
 
-    private bool FilterWorkflows(OpenArtMetadata metadata)
+    private bool FilterWorkflows(InstalledWorkflow workflow)
     {
         if (string.IsNullOrWhiteSpace(SearchQuery))
             return true;
 
-        if (metadata.HasMetadata)
+        if (workflow.HasMetadata)
         {
-            return metadata.Workflow.Creator.Name.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase)
-                || metadata.Workflow.Name.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase);
+            return workflow.Workflow.Creator.Name.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase)
+                || workflow.Workflow.Name.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase);
         }
 
-        return metadata.Workflow?.Name.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase) ?? false;
+        return workflow.Workflow?.Name.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase) ?? false;
     }
 
     private void OnWorkflowInstalled(object? sender, EventArgs e)

@@ -215,6 +215,7 @@
                 <ui:CommandBarButton
                     Command="{Binding ShowBulkDownloadDialogCommand}"
                     IconSource="Download"
+                    IsVisible="{Binding !IsWorkflowModel}"
                     Label="{x:Static lang:Resources.Label_DownloadAllFilesAllVersions}" />
             </ui:CommandBar.SecondaryCommands>
         </ui:CommandBar>

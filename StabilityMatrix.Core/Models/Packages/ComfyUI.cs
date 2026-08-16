@@ -226,6 +226,46 @@ public class ComfyUI(
     public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>
         new() { [SharedOutputType.Text2Img] = ["output"] };
 
+    public override async Task SetupModelFolders(
+        DirectoryPath installDirectory,
+        SharedFolderMethod sharedFolderMethod
+    )
+    {
+        await base.SetupModelFolders(installDirectory, sharedFolderMethod).ConfigureAwait(false);
+
+        if (sharedFolderMethod is SharedFolderMethod.None)
+            return;
+
+        // Link the shared workflow library into ComfyUI's own workflow browser
+        var linkDir = GetSharedWorkflowsLinkDir(installDirectory);
+        linkDir.Parent?.Create();
+
+        await Helper
+            .SharedFolders.CreateOrUpdateLink(settingsManager.WorkflowDirectory, linkDir)
+            .ConfigureAwait(false);
+    }
+
+    public override async Task RemoveModelFolderLinks(
+        DirectoryPath installDirectory,
+        SharedFolderMethod sharedFolderMethod
+    )
+    {
+        await base.RemoveModelFolderLinks(installDirectory, sharedFolderMethod).ConfigureAwait(false);
+
+        var linkDir = GetSharedWorkflowsLinkDir(installDirectory);
+        if (linkDir.IsSymbolicLink)
+        {
+            await linkDir.DeleteAsync(false).ConfigureAwait(false);
+        }
+    }
+
+    /// <summary>
+    /// The "Stability Matrix" folder inside ComfyUI's default user workflows directory,
+    /// linked to the shared workflow library.
+    /// </summary>
+    private static DirectoryPath GetSharedWorkflowsLinkDir(DirectoryPath installDirectory) =>
+        installDirectory.JoinDir("user", "default", "workflows", "Stability Matrix");
+
     public override List<LaunchOptionDefinition> LaunchOptions =>
         [
             new()

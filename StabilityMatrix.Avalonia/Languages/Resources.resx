@@ -234,6 +234,9 @@
   <data name="Label_EarlyAccessUpdateAvailable" xml:space="preserve">
     <value>Early Access Update Available</value>
   </data>
+  <data name="Label_EarlyAccess" xml:space="preserve">
+    <value>Early Access</value>
+  </data>
   <data name="Label_BecomeAPatron" xml:space="preserve">
     <value>Become a Patron</value>
   </data>

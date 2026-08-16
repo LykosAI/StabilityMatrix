@@ -1,5 +1,7 @@
+using System.Net;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
+using Refit;
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Database;
 using StabilityMatrix.Core.Helper;
@@ -57,7 +59,10 @@ public class MetadataImportServiceTests
             var service = CreateMetadataImportService();
             ConfigureCivitLookup(service.Api, "blake3-hash");
 
-            await service.Instance.UpdateExistingMetadata(new DirectoryPath(tempRoot));
+            var scanResult = await service.Instance.UpdateExistingMetadata(new DirectoryPath(tempRoot));
+
+            Assert.AreEqual(1, scanResult.Found);
+            Assert.IsFalse(scanResult.Aborted);
 
             var updated = ConnectedModelInfo.FromJson(
                 await File.ReadAllTextAsync(Path.Combine(tempRoot, "model.cm-info.json"))
@@ -112,9 +117,10 @@ public class MetadataImportServiceTests
                 forceReimport: true
             );
 
-            Assert.IsNotNull(result);
+            Assert.AreEqual(MetadataFetchStatus.Found, result.Status);
+            Assert.IsNotNull(result.Metadata);
             var expectedPreviewPath = Path.Combine(tempRoot, "model.preview.png");
-            Assert.AreEqual(expectedPreviewPath, result.ThumbnailImageUrl);
+            Assert.AreEqual(expectedPreviewPath, result.Metadata.ThumbnailImageUrl);
             Assert.IsTrue(File.Exists(expectedPreviewPath));
 
             var saved = ConnectedModelInfo.FromJson(
@@ -127,6 +133,121 @@ public class MetadataImportServiceTests
         {
             Directory.Delete(tempRoot, true);
         }
+    }
+
+    [TestMethod]
+    public async Task UpdateExistingMetadata_HashMissing_RehashesModelFile()
+    {
+        var tempRoot = CreateTempDirectory();
+
+        try
+        {
+            var modelPath = Path.Combine(tempRoot, "model.safetensors");
+            await File.WriteAllTextAsync(modelPath, "small model file");
+            var hash = await FileHash.GetBlake3Async(new FilePath(modelPath));
+
+            // e.g. a HuggingFace / OpenModelDb import, which records only SHA256
+            var existingInfo = new ConnectedModelInfo
+            {
+                ModelName = "Old Name",
+                Hashes = new CivitFileHashes { SHA256 = "sha256-only" },
+                Source = ConnectedModelSource.OpenModelDb,
+            };
+            await existingInfo.SaveJsonToDirectory(tempRoot, "model");
+
+            var service = CreateMetadataImportService();
+            ConfigureCivitLookup(service.Api, hash);
+
+            var scanResult = await service.Instance.UpdateExistingMetadata(new DirectoryPath(tempRoot));
+
+            Assert.AreEqual(1, scanResult.Found);
+            Assert.AreEqual(0, scanResult.Skipped);
+
+            var updated = ConnectedModelInfo.FromJson(
+                await File.ReadAllTextAsync(Path.Combine(tempRoot, "model.cm-info.json"))
+            );
+            Assert.IsNotNull(updated);
+            Assert.AreEqual("Remote Model", updated.ModelName);
+        }
+        finally
+        {
+            Directory.Delete(tempRoot, true);
+        }
+    }
+
+    [TestMethod]
+    public async Task ScanDirectoryForMissingInfo_RateLimited_AbortsEarly()
+    {
+        var tempRoot = CreateTempDirectory();
+
+        try
+        {
+            for (var i = 0; i < 5; i++)
+            {
+                await File.WriteAllTextAsync(Path.Combine(tempRoot, $"model{i}.safetensors"), $"file {i}");
+            }
+
+            var service = CreateMetadataImportService();
+            service
+                .Api.GetModelVersionByHash(Arg.Any<string>())
+                .Returns<Task<CivitModelVersionResponse>>(_ =>
+                    throw CreateApiException(HttpStatusCode.TooManyRequests).Result
+                );
+
+            var scanResult = await service.Instance.ScanDirectoryForMissingInfo(new DirectoryPath(tempRoot));
+
+            Assert.IsTrue(scanResult.Aborted);
+            Assert.AreEqual(3, scanResult.Failed);
+            Assert.AreEqual(0, scanResult.Found);
+            await service.Api.Received(3).GetModelVersionByHash(Arg.Any<string>());
+        }
+        finally
+        {
+            Directory.Delete(tempRoot, true);
+        }
+    }
+
+    [TestMethod]
+    public async Task ScanDirectoryForMissingInfo_NotFound_CountsWithoutAborting()
+    {
+        var tempRoot = CreateTempDirectory();
+
+        try
+        {
+            for (var i = 0; i < 4; i++)
+            {
+                await File.WriteAllTextAsync(Path.Combine(tempRoot, $"model{i}.safetensors"), $"file {i}");
+            }
+
+            var service = CreateMetadataImportService();
+            service
+                .Api.GetModelVersionByHash(Arg.Any<string>())
+                .Returns<Task<CivitModelVersionResponse>>(_ =>
+                    throw CreateApiException(HttpStatusCode.NotFound).Result
+                );
+
+            var scanResult = await service.Instance.ScanDirectoryForMissingInfo(new DirectoryPath(tempRoot));
+
+            Assert.IsFalse(scanResult.Aborted);
+            Assert.AreEqual(4, scanResult.NotFound);
+            Assert.AreEqual(0, scanResult.Found);
+            await service.Api.Received(4).GetModelVersionByHash(Arg.Any<string>());
+        }
+        finally
+        {
+            Directory.Delete(tempRoot, true);
+        }
+    }
+
+    private static async Task<ApiException> CreateApiException(HttpStatusCode statusCode)
+    {
+        using var response = new HttpResponseMessage(statusCode);
+        return await ApiException.Create(
+            new HttpRequestMessage(HttpMethod.Get, "https://example.invalid"),
+            HttpMethod.Get,
+            response,
+            new RefitSettings()
+        );
     }
 
     private static string CreateTempDirectory()

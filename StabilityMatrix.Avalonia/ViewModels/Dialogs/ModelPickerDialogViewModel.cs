@@ -9,9 +9,9 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData;
 using DynamicData.Binding;
-using FuzzySharp;
 using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -62,6 +62,16 @@ public partial class ModelPickerDialogViewModel : ContentDialogViewModelBase
     private HashSet<string> pendingSelectedBaseModels = [];
     private bool isApplyingSavedFilterState;
     private bool isDialogActive;
+    private IReadOnlyDictionary<string, LocalFileSortData> fileSortDataById = ImmutableDictionary<
+        string,
+        LocalFileSortData
+    >.Empty;
+
+    private readonly record struct LocalFileSortData(
+        long FileSize,
+        DateTimeOffset Created,
+        DateTimeOffset LastModified
+    );
 
     /// <summary>
     /// Gets or sets the model source to use. Set before showing the dialog.
@@ -97,6 +107,21 @@ public partial class ModelPickerDialogViewModel : ContentDialogViewModelBase
     [ObservableProperty]
     private bool showNsfwContent;
 
+    [ObservableProperty]
+    public partial CheckpointSortMode SelectedSortOption { get; set; }
+
+    [ObservableProperty]
+    public partial ListSortDirection SelectedSortDirection { get; set; }
+
+    /// <summary>
+    /// Sort modes applicable to picker entries. <see cref="CheckpointSortMode.UpdateAvailable"/>
+    /// is excluded because update state is not tracked on <see cref="HybridModelFile"/>.
+    /// </summary>
+    public List<CheckpointSortMode> SortOptions { get; } =
+        Enum.GetValues<CheckpointSortMode>().Where(x => x != CheckpointSortMode.UpdateAvailable).ToList();
+
+    public List<ListSortDirection> SortDirections { get; } = Enum.GetValues<ListSortDirection>().ToList();
+
     public ObservableCollection<BaseModelOptionViewModel> BaseModelOptions { get; } = [];
 
     public IEnumerable<BaseModelOptionViewModel> SelectedBaseModelOptions =>
@@ -122,6 +147,17 @@ public partial class ModelPickerDialogViewModel : ContentDialogViewModelBase
         this.settingsManager = settingsManager;
         isGridView = settingsManager.Settings.ModelPickerIsGridView;
         showNsfwContent = settingsManager.Settings.ModelBrowserNsfwEnabled;
+
+        isApplyingSavedFilterState = true;
+        try
+        {
+            SelectedSortOption = settingsManager.Settings.ModelPickerSortMode;
+            SelectedSortDirection = settingsManager.Settings.ModelPickerSortDirection;
+        }
+        finally
+        {
+            isApplyingSavedFilterState = false;
+        }
 
         // Subscribe to search text and filter changes
         propertySubscriptions.Add(
@@ -175,6 +211,32 @@ public partial class ModelPickerDialogViewModel : ContentDialogViewModelBase
     partial void OnIsGridViewChanged(bool value)
     {
         settingsManager.Transaction(s => s.ModelPickerIsGridView = value);
+    }
+
+    partial void OnSelectedSortOptionChanged(CheckpointSortMode value)
+    {
+        if (isApplyingSavedFilterState)
+            return;
+
+        settingsManager.Transaction(s => s.ModelPickerSortMode = value);
+
+        if (isDialogActive)
+        {
+            UpdateFilteredModels();
+        }
+    }
+
+    partial void OnSelectedSortDirectionChanged(ListSortDirection value)
+    {
+        if (isApplyingSavedFilterState)
+            return;
+
+        settingsManager.Transaction(s => s.ModelPickerSortDirection = value);
+
+        if (isDialogActive)
+        {
+            UpdateFilteredModels();
+        }
     }
 
     partial void OnShowNsfwContentChanged(bool value)
@@ -323,7 +385,9 @@ public partial class ModelPickerDialogViewModel : ContentDialogViewModelBase
     {
         var requestId = Interlocked.Increment(ref refreshRequestId);
 
-        var sortedModels = await Task.Run(() =>
+        var modelsDirectory = settingsManager.IsLibraryDirSet ? settingsManager.ModelsDirectory : null;
+
+        var (sortedModels, sortData) = await Task.Run(() =>
         {
             IEnumerable<HybridModelFile> models = Source switch
             {
@@ -335,9 +399,11 @@ public partial class ModelPickerDialogViewModel : ContentDialogViewModelBase
                 _ => [],
             };
 
-            return models
+            var sorted = models
                 .OrderBy(m => m.ShortDisplayName, StringComparer.OrdinalIgnoreCase)
                 .ToImmutableList();
+
+            return (sorted, BuildFileSortData(sorted, modelsDirectory));
         });
 
         // Ignore stale refreshes if a newer one was queued while this was running.
@@ -352,8 +418,42 @@ public partial class ModelPickerDialogViewModel : ContentDialogViewModelBase
         }
 
         allModels = sortedModels;
+        fileSortDataById = sortData;
         UpdateAvailableBaseModels();
         UpdateFilteredModels();
+    }
+
+    /// <summary>
+    /// Stats local model files for size/date sort keys. Remote and placeholder entries
+    /// have no backing file and fall back to <see langword="default"/> sort data.
+    /// </summary>
+    private static Dictionary<string, LocalFileSortData> BuildFileSortData(
+        IEnumerable<HybridModelFile> models,
+        string? modelsDirectory
+    )
+    {
+        var sortData = new Dictionary<string, LocalFileSortData>();
+
+        if (modelsDirectory is null)
+            return sortData;
+
+        foreach (var model in models)
+        {
+            if (model.Local is not { } local)
+                continue;
+
+            var fileInfo = new FileInfo(local.GetFullPath(modelsDirectory));
+            if (!fileInfo.Exists)
+                continue;
+
+            sortData[model.GetId()] = new LocalFileSortData(
+                fileInfo.Length,
+                fileInfo.CreationTime,
+                fileInfo.LastWriteTime
+            );
+        }
+
+        return sortData;
     }
 
     public override void OnUnloaded()
@@ -368,6 +468,7 @@ public partial class ModelPickerDialogViewModel : ContentDialogViewModelBase
         // Release only internal heavy references. Avoid touching bound collections here,
         // because clearing ItemsSource during close can null out SelectedModel before caller reads it.
         allModels = [];
+        fileSortDataById = ImmutableDictionary<string, LocalFileSortData>.Empty;
         searchCache = new LRUCache<string, ImmutableList<HybridModelFile>>(100);
     }
 
@@ -536,19 +637,12 @@ public partial class ModelPickerDialogViewModel : ContentDialogViewModelBase
                 return;
             }
 
+            // Relevance ordering wins while a query is active; the chosen sort applies otherwise.
             var results = modelList
-                .Select(m =>
-                {
-                    var modelSearchText = m.DetailedSearchText;
-                    var weightedScore = Fuzz.WeightedRatio(query, modelSearchText);
-                    var partialScore = Fuzz.PartialRatio(query, modelSearchText);
-                    var score = Math.Max(weightedScore, partialScore);
-                    var contains = modelSearchText.Contains(query, StringComparison.OrdinalIgnoreCase);
-                    return (Model: m, Score: score, Contains: contains);
-                })
-                .Where(x => x.Contains || x.Score >= 70)
-                .OrderByDescending(x => x.Contains)
-                .ThenByDescending(x => x.Score)
+                .Select(m => (Model: m, Result: FuzzySearchHelper.Match(query, m.DetailedSearchText)))
+                .Where(x => x.Result.IsMatch)
+                .OrderByDescending(x => x.Result.ContainsQuery)
+                .ThenByDescending(x => x.Result.Score)
                 .Select(x => x.Model)
                 .ToImmutableList();
 
@@ -557,9 +651,45 @@ public partial class ModelPickerDialogViewModel : ContentDialogViewModelBase
         }
         else
         {
-            FilteredModels = modelList.ToImmutableList();
+            FilteredModels = SortModels(modelList);
         }
     }
+
+    private ImmutableList<HybridModelFile> SortModels(IEnumerable<HybridModelFile> models)
+    {
+        var ascending = SelectedSortDirection == ListSortDirection.Ascending;
+
+        // Placeholder entries (None / Default) always sort first regardless of mode.
+        var placeholdersFirst = models.OrderByDescending(m => m.IsNone || m.IsDefault);
+
+        var sorted = SelectedSortOption switch
+        {
+            CheckpointSortMode.FileName => ThenSortBy(m => m.FileName, StringComparer.OrdinalIgnoreCase),
+            CheckpointSortMode.Title => ThenSortBy(m => m.SortKey, StringComparer.OrdinalIgnoreCase),
+            CheckpointSortMode.BaseModel => ThenSortBy(
+                m => m.Local?.ConnectedModelInfo?.BaseModel ?? string.Empty,
+                StringComparer.OrdinalIgnoreCase
+            ),
+            CheckpointSortMode.SharedFolderType => ThenSortBy(m => m.Local?.SharedFolderType),
+            CheckpointSortMode.FileSize => ThenSortBy(m => GetFileSortData(m).FileSize),
+            CheckpointSortMode.Created => ThenSortBy(m => GetFileSortData(m).Created),
+            CheckpointSortMode.LastModified => ThenSortBy(m => GetFileSortData(m).LastModified),
+            _ => ThenSortBy(m => m.SortKey, StringComparer.OrdinalIgnoreCase),
+        };
+
+        return sorted.ThenBy(m => m.SortKey, StringComparer.OrdinalIgnoreCase).ToImmutableList();
+
+        IOrderedEnumerable<HybridModelFile> ThenSortBy<TKey>(
+            Func<HybridModelFile, TKey> keySelector,
+            IComparer<TKey>? comparer = null
+        ) =>
+            ascending
+                ? placeholdersFirst.ThenBy(keySelector, comparer)
+                : placeholdersFirst.ThenByDescending(keySelector, comparer);
+    }
+
+    private LocalFileSortData GetFileSortData(HybridModelFile model) =>
+        fileSortDataById.GetValueOrDefault(model.GetId());
 
     [RelayCommand]
     private void ClearOrSelectAllBaseModels()

@@ -3,12 +3,14 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:checkpointManager="clr-namespace:StabilityMatrix.Avalonia.ViewModels.CheckpointManager"
+    xmlns:componentModel="clr-namespace:System.ComponentModel;assembly=System.ComponentModel.TypeConverter"
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
     xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:dialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
     xmlns:fluentIcons="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
     xmlns:labs="clr-namespace:Avalonia.Labs.Controls;assembly=Avalonia.Labs.Controls"
+    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
     xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
@@ -27,6 +29,7 @@
         <converters:FileExistsConverter x:Key="FileExistsConverter" />
         <converters:FileNotExistsConverter x:Key="FileNotExistsConverter" />
         <converters:EnumToBooleanConverter x:Key="EnumToBooleanConverter" />
+        <converters:EnumStringConverter x:Key="EnumStringConverter" />
         <converters:ModelPickerNsfwOverlayVisibilityConverter x:Key="ModelPickerNsfwOverlayVisibilityConverter" />
         <converters:ObjectEqualsConverter x:Key="ObjectEqualsConverter" />
     </controls:UserControlBase.Resources>
@@ -171,6 +174,61 @@
                                         </DataTemplate>
                                     </ui:ItemsRepeater.ItemTemplate>
                                 </ui:ItemsRepeater>
+                            </StackPanel>
+                        </Flyout>
+                    </Button.Flyout>
+                </Button>
+
+                <!--  Sort Button  -->
+                <Button
+                    Height="32"
+                    VerticalAlignment="Stretch"
+                    VerticalContentAlignment="Center"
+                    BorderBrush="{DynamicResource ComboBoxBorderBrush}"
+                    BorderThickness="1">
+                    <Button.Content>
+                        <Grid HorizontalAlignment="Stretch" ColumnDefinitions="Auto,6,Auto,8,Auto">
+                            <fluentIcons:SymbolIcon
+                                VerticalAlignment="Center"
+                                FontSize="14"
+                                Symbol="ArrowSort" />
+                            <TextBlock Grid.Column="2" Text="{x:Static lang:Resources.Label_Sort}" />
+                            <ui:SymbolIcon
+                                Grid.Column="4"
+                                VerticalAlignment="Center"
+                                FontSize="12"
+                                Foreground="{DynamicResource TextFillColorSecondary}"
+                                Symbol="ChevronDown" />
+                        </Grid>
+                    </Button.Content>
+                    <Button.Flyout>
+                        <Flyout Placement="BottomEdgeAlignedLeft">
+                            <StackPanel Orientation="Vertical">
+                                <ListBox ItemsSource="{Binding SortOptions}" SelectedItem="{Binding SelectedSortOption}">
+                                    <ListBox.Template>
+                                        <ControlTemplate>
+                                            <ItemsPresenter />
+                                        </ControlTemplate>
+                                    </ListBox.Template>
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate DataType="{x:Type models:CheckpointSortMode}">
+                                            <TextBlock Text="{Binding ., Converter={StaticResource EnumStringConverter}}" />
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                                <Separator Margin="8" />
+                                <ListBox ItemsSource="{Binding SortDirections}" SelectedItem="{Binding SelectedSortDirection}">
+                                    <ListBox.Template>
+                                        <ControlTemplate>
+                                            <ItemsPresenter />
+                                        </ControlTemplate>
+                                    </ListBox.Template>
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate DataType="{x:Type componentModel:ListSortDirection}">
+                                            <TextBlock Text="{Binding ., Converter={StaticResource EnumStringConverter}}" />
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
                             </StackPanel>
                         </Flyout>
                     </Button.Flyout>

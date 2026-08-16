@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Your workflow library is now **linked into ComfyUI itself** — imported workflows appear under a "Stability Matrix" folder in ComfyUI's own workflow browser, for every installed ComfyUI-based package
 - **Custom node install assist**: after importing a workflow that needs custom nodes, Stability Matrix reads the node packs right out of the workflow file, shows which are already installed, and offers one-click installs for the rest — also available any time via **Check Required Nodes** on an installed workflow's context menu
 - The Workflows page groups your library **by folder** (imports get a folder per model), with a folder tree to jump between them
-- Model Browser cards show **Installed** / **Update Available** for workflows you've imported, detected from the library itself
+- Model Browser cards and details pages show **Installed** / **Update Available** for workflows you've imported, detected from the library itself — and the details page can delete an imported workflow again
 - New **Edit Metadata** on workflow cards — rename, describe, and give any workflow a picture, including files you dropped in yourself years ago
 #### New Feature: 🎨 Qwen Image & Krea 2 in Inference
 - New workflow profiles with auto-detection, automatic text encoder + VAE pairing, and one-click recommended sampler settings:
@@ -43,6 +43,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Refreshed the model card badges across the **Checkpoint Manager** and the **CivitAI / CivArchive browsers** — one shared family of compact chips instead of the chunky pills: the update badge becomes a cloud-up icon with a short release date (year shown when it isn't recent), early-access-only updates get their own distinct style, and Installed / NSFW / Deleted states are clearer
 - **Checkpoint Manager** search is now typo-tolerant, sharing the Inference model picker’s fuzzy matching (`#tag` search unchanged)
 ### Fixed
+- Fixed custom node installs failing on legacy source builds that import `pkg_resources` (e.g. `cupy-wheel`) — pip's isolated build environments now get the same `setuptools<82` constraint that package installs already applied for uv
 - Fixed Qwen Image Edit's model check accepting an incompatible Krea 2 text encoder — the correct 7B encoder download is now offered instead
 - Fixed clicking a cloud-download entry in model dropdowns sometimes doing nothing until you clicked a different item first
 - Fixed jumpy, hard-to-reach scrolling near the cloud-download entries in model dropdowns

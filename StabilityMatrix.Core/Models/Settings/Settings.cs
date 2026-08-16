@@ -280,6 +280,7 @@ public class Settings
     public CheckpointSortMode CheckpointSortMode { get; set; } = CheckpointSortMode.SharedFolderType;
     public ListSortDirection CheckpointSortDirection { get; set; } = ListSortDirection.Descending;
     public bool ShowModelsInSubfolders { get; set; } = true;
+    public bool ShowWorkflowsInSubfolders { get; set; } = true;
     public bool SortConnectedModelsFirst { get; set; } = true;
     public int ConsoleFontSize { get; set; } = 14;
     public bool AutoLoadCivitModels { get; set; } = true;

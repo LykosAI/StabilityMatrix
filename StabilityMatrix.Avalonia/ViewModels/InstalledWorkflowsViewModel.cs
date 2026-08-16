@@ -57,6 +57,9 @@ public partial class InstalledWorkflowsViewModel(
     [ObservableProperty]
     private WorkflowCategory? selectedCategory;
 
+    [ObservableProperty]
+    private bool showWorkflowsInSubfolders = true;
+
     public bool HasFolders =>
         Categories.Any(c => c.SubDirectories.Count > 0 || c.FilterPath is { Length: > 0 });
 
@@ -69,6 +72,7 @@ public partial class InstalledWorkflowsViewModel(
             .DistinctUntilChanged()
             .Select(_ => Unit.Default)
             .Merge(this.WhenPropertyChanged(vm => vm.SelectedCategory).Select(_ => Unit.Default))
+            .Merge(this.WhenPropertyChanged(vm => vm.ShowWorkflowsInSubfolders).Select(_ => Unit.Default))
             .Select(_ => (Func<InstalledWorkflow, bool>)FilterWorkflows);
 
         AddDisposable(
@@ -80,6 +84,15 @@ public partial class InstalledWorkflowsViewModel(
                 .Bind(DisplayedWorkflows)
                 .ObserveOn(SynchronizationContext.Current!)
                 .Subscribe()
+        );
+
+        AddDisposable(
+            settingsManager.RelayPropertyFor(
+                this,
+                vm => vm.ShowWorkflowsInSubfolders,
+                settings => settings.ShowWorkflowsInSubfolders,
+                true
+            )
         );
 
         if (Design.IsDesignMode)
@@ -361,17 +374,29 @@ public partial class InstalledWorkflowsViewModel(
 
     private bool FilterWorkflows(InstalledWorkflow workflow)
     {
-        if (SelectedCategory is { FilterPath: { } filterPath })
+        bool isCategoryMatch;
+        if (SelectedCategory?.FilterPath is not { } filterPath)
         {
-            var isMatch =
-                filterPath.Length == 0
-                    ? workflow.Folder.Length == 0
-                    : workflow.Folder.Equals(filterPath, StringComparison.OrdinalIgnoreCase)
-                        || workflow.Folder.StartsWith($"{filterPath}/", StringComparison.OrdinalIgnoreCase);
-
-            if (!isMatch)
-                return false;
+            // "All Workflows" - with nested display off, only library-root files
+            isCategoryMatch = ShowWorkflowsInSubfolders || workflow.Folder.Length == 0;
         }
+        else if (filterPath.Length == 0)
+        {
+            // "Ungrouped" - always library-root files only
+            isCategoryMatch = workflow.Folder.Length == 0;
+        }
+        else
+        {
+            isCategoryMatch =
+                workflow.Folder.Equals(filterPath, StringComparison.OrdinalIgnoreCase)
+                || (
+                    ShowWorkflowsInSubfolders
+                    && workflow.Folder.StartsWith($"{filterPath}/", StringComparison.OrdinalIgnoreCase)
+                );
+        }
+
+        if (!isCategoryMatch)
+            return false;
 
         if (string.IsNullOrWhiteSpace(SearchQuery))
             return true;

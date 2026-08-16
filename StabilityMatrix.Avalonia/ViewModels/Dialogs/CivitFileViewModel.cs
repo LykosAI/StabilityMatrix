@@ -23,6 +23,7 @@ public partial class CivitFileViewModel : DisposableViewModelBase
     private readonly ISettingsManager settingsManager;
     private readonly IServiceManager<ViewModelBase> vmFactory;
     private readonly Func<CivitFileViewModel, string?, Task>? downloadAction;
+    private readonly Func<CivitFileViewModel, Task>? deleteActionOverride;
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
     [ObservableProperty]
@@ -45,13 +46,15 @@ public partial class CivitFileViewModel : DisposableViewModelBase
         ISettingsManager settingsManager,
         CivitFile civitFile,
         IServiceManager<ViewModelBase> vmFactory,
-        Func<CivitFileViewModel, string?, Task>? downloadAction
+        Func<CivitFileViewModel, string?, Task>? downloadAction,
+        Func<CivitFileViewModel, Task>? deleteActionOverride = null
     )
     {
         this.modelIndexService = modelIndexService;
         this.settingsManager = settingsManager;
         this.vmFactory = vmFactory;
         this.downloadAction = downloadAction;
+        this.deleteActionOverride = deleteActionOverride;
         CivitFile = civitFile;
         // Hash-based only, so files with types we don't recognize (Unknown) still show as installed
         IsInstalled =
@@ -122,6 +125,13 @@ public partial class CivitFileViewModel : DisposableViewModelBase
     [RelayCommand]
     private async Task Delete()
     {
+        // Non-model files (e.g. workflows) supply their own deletion behavior
+        if (deleteActionOverride is not null)
+        {
+            await deleteActionOverride(this);
+            return;
+        }
+
         var hash = CivitFile.Hashes.BLAKE3;
         if (string.IsNullOrWhiteSpace(hash))
         {

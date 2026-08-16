@@ -3293,6 +3293,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Show Nested Workflows.
+        /// </summary>
+        public static string Label_ShowNestedWorkflows {
+            get {
+                return ResourceManager.GetString("Label_ShowNestedWorkflows", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to No Extension Packs Found.
         /// </summary>
         public static string Label_NoExtensionPacksFound {

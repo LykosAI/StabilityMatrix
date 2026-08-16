@@ -1240,6 +1240,9 @@ Large caches can take a few minutes to clear. You can keep using Stability Matri
   <data name="Label_WorkflowNodesTargetPackage" xml:space="preserve">
     <value>ComfyUI installation to check against and install into</value>
   </data>
+  <data name="Label_ShowNestedWorkflows" xml:space="preserve">
+    <value>Show Nested Workflows</value>
+  </data>
   <data name="Label_WorkflowDescription" xml:space="preserve">
     <value>Workflow Description</value>
   </data>

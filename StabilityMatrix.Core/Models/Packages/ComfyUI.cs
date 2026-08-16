@@ -924,6 +924,12 @@ public class ComfyUI(
                             )
                             .ConfigureAwait(false);
 
+                        // pip ignores UV_BUILD_CONSTRAINT; constrain its isolated build
+                        // environments too so legacy sdists needing pkg_resources still build
+                        venvRunner.UpdateEnvironmentVariables(env =>
+                            env.SetItem("PIP_CONSTRAINT", Path.Combine("venv", "uv-build-constraints.txt"))
+                        );
+
                         var pipArgs = new PipInstallArgs().WithParsedFromRequirementsTxt(requirementsContent);
 
                         await venvRunner
@@ -971,6 +977,9 @@ public class ComfyUI(
                             constraintsAbsPath
                         );
                         env = env.SetItem("UV_BUILD_CONSTRAINT", constraintsRelPath);
+                        // pip ignores UV_BUILD_CONSTRAINT; cover pip-based installs
+                        // that install.py scripts commonly run (e.g. "pip install cupy-wheel")
+                        env = env.SetItem("PIP_CONSTRAINT", constraintsRelPath);
 
                         // set env vars for Impact Pack for Face Detailer
                         env = env.SetItem("COMFYUI_PATH", installedPackage.FullPath!);

@@ -89,10 +89,26 @@ public partial class WorkflowNodesDialogViewModel(
         return false;
     }
 
+    private bool isInitialized;
+
     public override async Task OnLoadedAsync()
     {
         if (Design.IsDesignMode)
             return;
+
+        await EnsureInitializedAsync();
+    }
+
+    /// <summary>
+    /// Runs the pack analysis if it hasn't run yet. Callers may use this before showing
+    /// the dialog to decide whether showing it is worthwhile.
+    /// </summary>
+    public async Task EnsureInitializedAsync()
+    {
+        if (isInitialized)
+            return;
+
+        isInitialized = true;
 
         SelectedPackage =
             settingsManager.Settings.PreferredWorkflowPackage ?? AvailablePackages.FirstOrDefault();
@@ -238,13 +254,23 @@ public partial class WorkflowNodesDialogViewModel(
     public static async Task ShowDialogAsync(
         ISettingsManager settingsManager,
         IPackageFactory packageFactory,
-        IReadOnlyList<FilePath> workflowFiles
+        IReadOnlyList<FilePath> workflowFiles,
+        bool onlyWhenActionable = false
     )
     {
         var vm = new WorkflowNodesDialogViewModel(settingsManager, packageFactory)
         {
             WorkflowFiles = workflowFiles,
         };
+
+        if (onlyWhenActionable)
+        {
+            // Skip the dialog when there's nothing the user could do: everything is
+            // already installed or can't be installed from the index anyway
+            await vm.EnsureInitializedAsync();
+            if (!vm.Packs.Any(pack => pack.CanInstall))
+                return;
+        }
 
         var dialog = new BetterContentDialog
         {

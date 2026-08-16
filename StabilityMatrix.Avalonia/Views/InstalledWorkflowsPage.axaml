@@ -121,6 +121,11 @@
                     IconSource="Refresh"
                     Label="{x:Static lang:Resources.Action_Refresh}" />
 
+                <controls1:CommandBarToggleButton
+                    IsChecked="{Binding ShowWorkflowsInSubfolders, Mode=TwoWay}"
+                    IsVisible="{Binding HasFolders}"
+                    Label="{x:Static lang:Resources.Label_ShowNestedWorkflows}" />
+
                 <controls1:CommandBarSeparator />
 
                 <controls1:CommandBarElementContainer>

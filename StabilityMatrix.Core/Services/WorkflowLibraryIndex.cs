@@ -14,6 +14,12 @@ public interface IWorkflowLibraryIndex
     /// derived from the metadata embedded in imported workflow files.
     /// </summary>
     Task<IReadOnlyDictionary<int, IReadOnlySet<int>>> GetInstalledCivitVersionsAsync();
+
+    /// <summary>
+    /// Library file paths imported from the given CivitAI model,
+    /// optionally restricted to a single version.
+    /// </summary>
+    Task<IReadOnlyList<string>> GetInstalledFilesAsync(int modelId, int? versionId = null);
 }
 
 [RegisterSingleton<IWorkflowLibraryIndex, WorkflowLibraryIndex>]
@@ -23,7 +29,7 @@ public class WorkflowLibraryIndex : IWorkflowLibraryIndex
 
     private readonly ISettingsManager settingsManager;
     private readonly SemaphoreSlim scanLock = new(1, 1);
-    private IReadOnlyDictionary<int, IReadOnlySet<int>>? cache;
+    private IReadOnlyDictionary<(int ModelId, int VersionId), List<string>>? cache;
 
     public WorkflowLibraryIndex(ISettingsManager settingsManager)
     {
@@ -33,6 +39,29 @@ public class WorkflowLibraryIndex : IWorkflowLibraryIndex
     }
 
     public async Task<IReadOnlyDictionary<int, IReadOnlySet<int>>> GetInstalledCivitVersionsAsync()
+    {
+        var files = await GetCacheAsync().ConfigureAwait(false);
+
+        var result = new Dictionary<int, IReadOnlySet<int>>();
+        foreach (var group in files.Keys.GroupBy(key => key.ModelId))
+        {
+            result[group.Key] = group.Select(key => key.VersionId).ToHashSet();
+        }
+
+        return result;
+    }
+
+    public async Task<IReadOnlyList<string>> GetInstalledFilesAsync(int modelId, int? versionId = null)
+    {
+        var files = await GetCacheAsync().ConfigureAwait(false);
+
+        return files
+            .Where(kv => kv.Key.ModelId == modelId && (versionId is null || kv.Key.VersionId == versionId))
+            .SelectMany(kv => kv.Value)
+            .ToList();
+    }
+
+    private async Task<IReadOnlyDictionary<(int ModelId, int VersionId), List<string>>> GetCacheAsync()
     {
         if (cache is { } cached)
             return cached;
@@ -48,14 +77,12 @@ public class WorkflowLibraryIndex : IWorkflowLibraryIndex
         }
     }
 
-    private IReadOnlyDictionary<int, IReadOnlySet<int>> ScanLibrary()
+    private IReadOnlyDictionary<(int ModelId, int VersionId), List<string>> ScanLibrary()
     {
-        var result = new Dictionary<int, IReadOnlySet<int>>();
+        var result = new Dictionary<(int, int), List<string>>();
 
         if (!Directory.Exists(settingsManager.WorkflowDirectory))
             return result;
-
-        var versionsByModel = new Dictionary<int, HashSet<int>>();
 
         foreach (
             var workflowPath in Directory.EnumerateFiles(
@@ -78,23 +105,18 @@ public class WorkflowLibraryIndex : IWorkflowLibraryIndex
                 )
                     continue;
 
-                if (!versionsByModel.TryGetValue(modelId, out var versions))
+                if (!result.TryGetValue((modelId, versionId), out var files))
                 {
-                    versions = [];
-                    versionsByModel[modelId] = versions;
+                    files = [];
+                    result[(modelId, versionId)] = files;
                 }
 
-                versions.Add(versionId);
+                files.Add(workflowPath);
             }
             catch (Exception e)
             {
                 Logger.Debug(e, "Skipping unreadable workflow file {Path}", workflowPath);
             }
-        }
-
-        foreach (var (modelId, versions) in versionsByModel)
-        {
-            result[modelId] = versions;
         }
 
         return result;

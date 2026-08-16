@@ -31,7 +31,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Changed
 - Updated **AI-Toolkit** installs to PyTorch 2.13.0 on CUDA 13.0 with Python 3.12, matching current upstream requirements ([#1714](https://github.com/LykosAI/StabilityMatrix/issues/1714)) — with a console warning at launch if your NVIDIA driver is older than the 580 series CUDA 13.0 needs
 - Updated the bundled **uv** package manager to 0.12.5, adding newer Python builds to the Python picker — including the 3.10 security releases requested in [#1709](https://github.com/LykosAI/StabilityMatrix/issues/1709)
-- Refreshed the **Checkpoint Manager** model card badges — compact chips instead of the chunky pills, the update’s release date in a tooltip, and a distinct style for early-access-only updates
+- Refreshed the model card badges across the **Checkpoint Manager** and the **CivitAI / CivArchive browsers** — one shared family of compact chips instead of the chunky pills, with the update’s release date in a tooltip, a distinct style for early-access-only updates, and clearer Installed / NSFW / Deleted states
 - **Checkpoint Manager** search is now typo-tolerant, sharing the Inference model picker’s fuzzy matching (`#tag` search unchanged)
 ### Fixed
 - Fixed Qwen Image Edit's model check accepting an incompatible Krea 2 text encoder — the correct 7B encoder download is now offered instead

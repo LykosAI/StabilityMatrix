@@ -781,6 +781,9 @@ public partial class ModelIndexService : IModelIndexService
     /// evidence (any of the latest version's files already installed somewhere in the library);
     /// falls back to version-id position when the latest version publishes no hashable files.
     /// Indeterminate cases resolve to false so we never show an update badge we can't substantiate.
+    /// Multi-architecture models publish parallel version tracks in one list (v7_Illustrious,
+    /// v1_Anima, v4_Pony, ...), so comparisons stay within the installed file's base-model track —
+    /// a release for a different architecture is a cross-grade, not an update.
     /// </summary>
     private static bool ComputeHasUpdate(
         LocalModelFile model,
@@ -788,7 +791,10 @@ public partial class ModelIndexService : IModelIndexService
         IReadOnlySet<string> installedHashes
     )
     {
-        if (remoteModel.ModelVersions is not { Count: > 0 } versions)
+        if (
+            FilterToInstalledTrack(remoteModel.ModelVersions, model.ConnectedModelInfo?.BaseModel)
+            is not { Count: > 0 } versions
+        )
             return false;
 
         var latestVersion = versions[0];
@@ -811,6 +817,26 @@ public partial class ModelIndexService : IModelIndexService
         // No hash evidence — flag only when the installed version verifiably sits below the
         // latest in the published version list.
         return installedVersionId != null && versions.FindIndex(v => v.Id == installedVersionId.Value) > 0;
+    }
+
+    /// <summary>
+    /// Narrows a model's version list to the installed file's base-model track. Falls back to
+    /// the full list when the installed base model is unknown or matches nothing (e.g. the
+    /// track was renamed or delisted) rather than reporting nothing forever.
+    /// </summary>
+    private static List<CivitModelVersion>? FilterToInstalledTrack(
+        List<CivitModelVersion>? versions,
+        string? installedBaseModel
+    )
+    {
+        if (versions is null || string.IsNullOrWhiteSpace(installedBaseModel))
+            return versions;
+
+        var track = versions
+            .Where(v => string.Equals(v.BaseModel, installedBaseModel, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
+        return track.Count > 0 ? track : versions;
     }
 
     public async Task UpsertModelAsync(LocalModelFile model)
@@ -871,7 +897,10 @@ public partial class ModelIndexService : IModelIndexService
         if (!model.HasUpdate || !model.HasCivitMetadata)
             return false;
 
-        var versions = remoteModel?.ModelVersions;
+        var versions = FilterToInstalledTrack(
+            remoteModel?.ModelVersions,
+            model.ConnectedModelInfo?.BaseModel
+        );
         if (versions == null || versions.Count == 0)
             return false;
 

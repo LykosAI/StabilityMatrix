@@ -98,6 +98,67 @@ public class ModelIndexServiceTests
     }
 
     [TestMethod]
+    public void GetHasEarlyAccessUpdateOnly_TrackAware_IgnoresOtherArchitectures()
+    {
+        // Mirrors civitai model 1377820: the installed Illustrious file's real update (v7,
+        // early access) must not be masked by a newer public release for another architecture
+        var model = CreateLocalModel(installedVersionId: 100, hasUpdate: true, baseModel: "Illustrious");
+        var remoteModel = CreateRemoteModel(
+            CreateVersion(id: 300, isEarlyAccess: true, baseModel: "Illustrious"),
+            CreateVersion(id: 250, isEarlyAccess: false, baseModel: "Anima"),
+            CreateVersion(id: 100, isEarlyAccess: false, baseModel: "Illustrious")
+        );
+
+        var result = InvokeGetHasEarlyAccessUpdateOnly(model, remoteModel);
+
+        Assert.IsTrue(result);
+    }
+
+    [TestMethod]
+    public void ComputeHasUpdate_IgnoresCrossArchitectureReleases()
+    {
+        var model = CreateLocalModel(installedVersionId: 100, hasUpdate: false, baseModel: "Illustrious");
+        var remoteModel = CreateRemoteModel(
+            CreateVersion(id: 250, isEarlyAccess: false, "Anima", CreateFile(CivitFileType.Model, "anima1")),
+            CreateVersion(
+                id: 100,
+                isEarlyAccess: false,
+                "Illustrious",
+                CreateFile(CivitFileType.Model, "illu6")
+            )
+        );
+
+        var result = InvokeComputeHasUpdate(model, remoteModel, ["illu6"]);
+
+        Assert.IsFalse(result);
+    }
+
+    [TestMethod]
+    public void ComputeHasUpdate_FlagsSameTrackUpdate()
+    {
+        var model = CreateLocalModel(installedVersionId: 100, hasUpdate: false, baseModel: "Illustrious");
+        var remoteModel = CreateRemoteModel(
+            CreateVersion(
+                id: 300,
+                isEarlyAccess: true,
+                "Illustrious",
+                CreateFile(CivitFileType.Model, "illu7")
+            ),
+            CreateVersion(id: 250, isEarlyAccess: false, "Anima", CreateFile(CivitFileType.Model, "anima1")),
+            CreateVersion(
+                id: 100,
+                isEarlyAccess: false,
+                "Illustrious",
+                CreateFile(CivitFileType.Model, "illu6")
+            )
+        );
+
+        var result = InvokeComputeHasUpdate(model, remoteModel, ["illu6"]);
+
+        Assert.IsTrue(result);
+    }
+
+    [TestMethod]
     public void IsEarlyAccess_TrueForFutureDeadline_DespitePublicAvailability()
     {
         // Current CivitAI responses report availability "Public" for early-access versions
@@ -272,7 +333,11 @@ public class ModelIndexServiceTests
         return (bool)result;
     }
 
-    private static LocalModelFile CreateLocalModel(int installedVersionId, bool hasUpdate)
+    private static LocalModelFile CreateLocalModel(
+        int installedVersionId,
+        bool hasUpdate,
+        string? baseModel = null
+    )
     {
         return new LocalModelFile
         {
@@ -287,6 +352,7 @@ public class ModelIndexServiceTests
                 ModelName = "Test Model",
                 ModelDescription = string.Empty,
                 VersionName = $"v{installedVersionId}",
+                BaseModel = baseModel,
                 Tags = [],
                 Hashes = new CivitFileHashes(),
             },
@@ -309,6 +375,16 @@ public class ModelIndexServiceTests
 
     private static CivitModelVersion CreateVersion(int id, bool isEarlyAccess, params CivitFile[] files)
     {
+        return CreateVersion(id, isEarlyAccess, baseModel: null, files);
+    }
+
+    private static CivitModelVersion CreateVersion(
+        int id,
+        bool isEarlyAccess,
+        string? baseModel,
+        params CivitFile[] files
+    )
+    {
         return new CivitModelVersion
         {
             Id = id,
@@ -317,6 +393,7 @@ public class ModelIndexServiceTests
             DownloadUrl = string.Empty,
             TrainedWords = [],
             Availability = isEarlyAccess ? "EarlyAccess" : "Public",
+            BaseModel = baseModel,
             Stats = new CivitModelStats(),
             Files = files.Length > 0 ? files.ToList() : null,
         };

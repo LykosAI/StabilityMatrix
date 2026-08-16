@@ -169,7 +169,7 @@ public class ModelFinder
             }
             catch (Exception e)
             {
-                Logger.Error("Error while finding remote models by id: {Error}", e.Message);
+                Logger.Error(e, "Error while finding remote models by id");
             }
         }
 

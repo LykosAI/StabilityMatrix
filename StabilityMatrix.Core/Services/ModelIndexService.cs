@@ -721,8 +721,6 @@ public partial class ModelIndexService : IModelIndexService
             return;
         }
 
-        lastUpdateCheck = DateTimeOffset.UtcNow;
-
         var installedHashes = ModelIndexBlake3Hashes;
         var dbModels = (
             await liteDbContext.LocalModelFiles.FindAllAsync().ConfigureAwait(false) ?? []
@@ -731,9 +729,25 @@ public partial class ModelIndexService : IModelIndexService
         var ids = dbModels
             .Where(x => x.ConnectedModelInfo?.ModelId != null)
             .Select(x => x.ConnectedModelInfo!.ModelId.Value)
-            .Distinct();
+            .Distinct()
+            .ToList();
+
+        if (ids.Count == 0)
+        {
+            lastUpdateCheck = DateTimeOffset.UtcNow;
+            return;
+        }
 
         var remoteModels = (await modelFinder.FindRemoteModelsById(ids).ConfigureAwait(false)).ToList();
+
+        // An empty result for a non-empty id set means the API was unreachable; keep the
+        // existing flags and leave the throttle window unconsumed so the next visit retries.
+        if (remoteModels.Count == 0)
+        {
+            return;
+        }
+
+        lastUpdateCheck = DateTimeOffset.UtcNow;
 
         // update the civitmodels cache with this new result
         await liteDbContext.UpsertCivitModelAsync(remoteModels).ConfigureAwait(false);
@@ -746,20 +760,12 @@ public partial class ModelIndexService : IModelIndexService
 
             var remoteModel = remoteModels.FirstOrDefault(m => m.Id == dbModel.ConnectedModelInfo!.ModelId);
 
-            var latestVersion = remoteModel?.ModelVersions?.FirstOrDefault();
-
-            if (latestVersion?.Files is not { } latestVersionFiles)
-            {
+            // Absent from the response (removed from CivitAI or a partially failed batch):
+            // indeterminate, so keep the previous flags rather than inventing a change.
+            if (remoteModel == null)
                 continue;
-            }
 
-            var latestHashes = latestVersionFiles
-                .Where(f => f.Type.IsModelWeights())
-                .Select(f => f.Hashes.BLAKE3)
-                .Where(hash => hash is not null)
-                .ToList();
-
-            dbModel.HasUpdate = !latestHashes.Any(hash => installedHashes.Contains(hash!));
+            dbModel.HasUpdate = ComputeHasUpdate(dbModel, remoteModel, installedHashes);
             dbModel.HasEarlyAccessUpdateOnly = GetHasEarlyAccessUpdateOnly(dbModel, remoteModel);
             dbModel.LastUpdateCheck = DateTimeOffset.UtcNow;
             dbModel.LatestModelInfo = remoteModel;
@@ -768,6 +774,69 @@ public partial class ModelIndexService : IModelIndexService
         }
         await liteDbContext.LocalModelFiles.UpsertAsync(localModelsToUpdate).ConfigureAwait(false);
         await LoadFromDbAsync().ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Decides whether a newer installable version of a model exists on CivitAI. Prefers hash
+    /// evidence (any of the latest version's files already installed somewhere in the library);
+    /// falls back to version-id position when the latest version publishes no hashable files.
+    /// Indeterminate cases resolve to false so we never show an update badge we can't substantiate.
+    /// Multi-architecture models publish parallel version tracks in one list (v7_Illustrious,
+    /// v1_Anima, v4_Pony, ...), so comparisons stay within the installed file's base-model track —
+    /// a release for a different architecture is a cross-grade, not an update.
+    /// </summary>
+    private static bool ComputeHasUpdate(
+        LocalModelFile model,
+        CivitModel remoteModel,
+        IReadOnlySet<string> installedHashes
+    )
+    {
+        if (
+            FilterToInstalledTrack(remoteModel.ModelVersions, model.ConnectedModelInfo?.BaseModel)
+            is not { Count: > 0 } versions
+        )
+            return false;
+
+        var latestVersion = versions[0];
+        var installedVersionId = model.ConnectedModelInfo?.VersionId;
+
+        if (installedVersionId != null && installedVersionId == latestVersion.Id)
+            return false;
+
+        var latestHashes = (latestVersion.Files ?? [])
+            .Where(f => f.Type.IsDownloadableModelFile())
+            .Select(f => f.Hashes?.BLAKE3)
+            .Where(hash => !string.IsNullOrEmpty(hash))
+            .ToList();
+
+        if (latestHashes.Count > 0)
+        {
+            return !latestHashes.Any(hash => installedHashes.Contains(hash!));
+        }
+
+        // No hash evidence — flag only when the installed version verifiably sits below the
+        // latest in the published version list.
+        return installedVersionId != null && versions.FindIndex(v => v.Id == installedVersionId.Value) > 0;
+    }
+
+    /// <summary>
+    /// Narrows a model's version list to the installed file's base-model track. Falls back to
+    /// the full list when the installed base model is unknown or matches nothing (e.g. the
+    /// track was renamed or delisted) rather than reporting nothing forever.
+    /// </summary>
+    private static List<CivitModelVersion>? FilterToInstalledTrack(
+        List<CivitModelVersion>? versions,
+        string? installedBaseModel
+    )
+    {
+        if (versions is null || string.IsNullOrWhiteSpace(installedBaseModel))
+            return versions;
+
+        var track = versions
+            .Where(v => string.Equals(v.BaseModel, installedBaseModel, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
+        return track.Count > 0 ? track : versions;
     }
 
     public async Task UpsertModelAsync(LocalModelFile model)
@@ -785,7 +854,8 @@ public partial class ModelIndexService : IModelIndexService
 
     private static HashSet<string> CollectModelHashes(IEnumerable<LocalModelFile> models)
     {
-        var hashes = new HashSet<string>();
+        // CivitAI reports BLAKE3 uppercase while locally computed hashes are lowercase
+        var hashes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (var model in models)
         {
             if (model.ConnectedModelInfo?.Hashes?.BLAKE3 is { } hashBlake3)
@@ -827,7 +897,10 @@ public partial class ModelIndexService : IModelIndexService
         if (!model.HasUpdate || !model.HasCivitMetadata)
             return false;
 
-        var versions = remoteModel?.ModelVersions;
+        var versions = FilterToInstalledTrack(
+            remoteModel?.ModelVersions,
+            model.ConnectedModelInfo?.BaseModel
+        );
         if (versions == null || versions.Count == 0)
             return false;
 
@@ -836,9 +909,12 @@ public partial class ModelIndexService : IModelIndexService
             return false;
 
         var installedIndex = versions.FindIndex(version => version.Id == installedVersionId.Value);
-        if (installedIndex <= 0)
+        if (installedIndex == 0)
             return false;
 
-        return versions.Take(installedIndex).All(version => version.IsEarlyAccess);
+        // When the installed version no longer appears in the published list, every published
+        // version is a potential update; the badge is early-access-only when all of them are.
+        var newerVersions = installedIndex > 0 ? versions.Take(installedIndex) : versions;
+        return newerVersions.All(version => version.IsEarlyAccess);
     }
 }

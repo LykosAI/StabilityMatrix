@@ -15,6 +15,9 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed [#1703](https://github.com/LykosAI/StabilityMatrix/issues/1703) - model cover/preview images not displaying when your **File Name Pattern** contains a `#`
 - Fixed [#1705](https://github.com/LykosAI/StabilityMatrix/issues/1705) - the **Model Browser** showing results in a scrambled order after refreshing with the **Search** button
 - Fixed [#1715](https://github.com/LykosAI/StabilityMatrix/issues/1715) - the app crashing on startup on Linux when the models folder contains folders or files differing only in letter case (e.g. `unet` and `Unet`, also [#1149](https://github.com/LykosAI/StabilityMatrix/issues/1149)/[#1357](https://github.com/LykosAI/StabilityMatrix/issues/1357)) — models in differently-cased folders now show up in the Checkpoint Manager instead of being silently skipped, and a model index error can no longer take down the app
+- Fixed [#1716](https://github.com/LykosAI/StabilityMatrix/issues/1716) - phantom **Update Available** badges on embeddings, VAEs, upscalers, and ControlNets — the update check didn't count those file types as evidence of being up to date, so it flagged them all forever; wrong badges clear on the next check
+- Fixed early access versions no longer being detected — CivitAI now marks them via a deadline field while reporting them as public, which broke the early-access update badge and the Model Browser's **Hide Early Access Models** filter
+- Fixed multi-architecture models (e.g. Illustrious | Pony | NoobAI in one listing) counting a release for a different architecture as an update — update checks now compare within your installed version's base model, so the update and early-access badges reflect the actual successor on your track
 
 ## v2.16.2
 > Full technical notes for this release: [docs.lykos.ai/stability-matrix/release-notes/2.16.2](https://docs.lykos.ai/stability-matrix/release-notes/2.16.2)

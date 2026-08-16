@@ -8,6 +8,7 @@
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
     xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:fluent="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
     xmlns:helpers="clr-namespace:StabilityMatrix.Avalonia.Helpers"
     xmlns:input="clr-namespace:FluentAvalonia.UI.Input;assembly=FluentAvalonia"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
@@ -620,8 +621,14 @@
                                                 </TextBlock>
                                             </ToolTip.Tip>
                                             <StackPanel>
-                                                <ui:SymbolIcon Symbol="Up" />
-                                                <TextBlock Text="{x:Static lang:Resources.Action_Update}" />
+                                                <fluent:SymbolIcon
+                                                    Width="14"
+                                                    Height="14"
+                                                    Margin="1,1,0,0"
+                                                    FontSize="14"
+                                                    IconVariant="Filled"
+                                                    Symbol="CloudArrowUp" />
+                                                <TextBlock IsVisible="{Binding CheckpointFile.LatestModelInfo.LatestVersionCreatedAtShort, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" Text="{Binding CheckpointFile.LatestModelInfo.LatestVersionCreatedAtShort}" />
                                             </StackPanel>
                                         </Border>
                                         <Border Classes="tag-chip caution" IsVisible="{Binding HasEarlyAccessUpdateOnly}">

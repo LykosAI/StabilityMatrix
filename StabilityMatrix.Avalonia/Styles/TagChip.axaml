@@ -1,22 +1,8 @@
 ﻿<Styles
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:fluent="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
     xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia">
-    <Styles.Resources>
-        <ResourceDictionary>
-            <ResourceDictionary.ThemeDictionaries>
-                <!--  Default covers Dark; the success fill stays translucent so busy previews show through  -->
-                <ResourceDictionary x:Key="Default">
-                    <SolidColorBrush x:Key="TagChipSuccessBackground" Color="#3D22C55E" />
-                    <SolidColorBrush x:Key="TagChipSuccessForeground" Color="#4ADE80" />
-                </ResourceDictionary>
-                <ResourceDictionary x:Key="Light">
-                    <SolidColorBrush x:Key="TagChipSuccessBackground" Color="#BBF7D0" />
-                    <SolidColorBrush x:Key="TagChipSuccessForeground" Color="#15803D" />
-                </ResourceDictionary>
-            </ResourceDictionary.ThemeDictionaries>
-        </ResourceDictionary>
-    </Styles.Resources>
     <Design.PreviewWith>
         <Border Padding="16">
             <StackPanel Orientation="Horizontal">
@@ -42,17 +28,25 @@
         </Border>
     </Design.PreviewWith>
 
-    <!--  Compact metadata chips for model cards: one shared shape, variants only recolor  -->
+    <!--
+        Compact metadata chips for model cards. Fixed dark fills (no theme dictionaries):
+        these always sit on top of card artwork, so they must read the same over any image
+        in either app theme.
+    -->
     <Style Selector="Border.tag-chip">
         <Setter Property="Height" Value="22" />
-        <Setter Property="CornerRadius" Value="11" />
-        <Setter Property="Padding" Value="9,0" />
+        <Setter Property="CornerRadius" Value="6" />
+        <!--
+            Extra bottom padding compensates for the font line box placing glyphs low;
+            without it the text sits ~1px below optical center in the 22px chip
+        -->
+        <Setter Property="Padding" Value="8,0,8,1" />
         <Setter Property="Margin" Value="0,0,4,4" />
         <Setter Property="HorizontalAlignment" Value="Left" />
         <Setter Property="VerticalAlignment" Value="Top" />
-        <Setter Property="Background" Value="{DynamicResource SolidBackgroundFillColorBaseBrush}" />
+        <Setter Property="Background" Value="#CC3B82F6" />
         <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="BorderBrush" Value="{DynamicResource CardStrokeColorDefaultBrush}" />
+        <Setter Property="BorderBrush" Value="#4093C5FD" />
 
         <Style Selector="^ StackPanel">
             <Setter Property="Orientation" Value="Horizontal" />
@@ -63,43 +57,58 @@
             <Setter Property="VerticalAlignment" Value="Center" />
             <Setter Property="FontSize" Value="11" />
             <Setter Property="FontWeight" Value="Medium" />
-            <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+            <Setter Property="Foreground" Value="#F5FAFF" />
         </Style>
         <Style Selector="^ ui|SymbolIcon">
             <Setter Property="VerticalAlignment" Value="Center" />
             <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="#F5FAFF" />
+        </Style>
+        <Style Selector="^ fluent|SymbolIcon">
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="#F5FAFF" />
         </Style>
     </Style>
 
-    <!--  Stateful chips use the soft semantic fills so imagery stays the visual hero  -->
+    <!--  Semantic variants: solid dark colored fills with bright text of the same hue  -->
     <Style Selector="Border.tag-chip.success">
-        <Setter Property="Background" Value="{DynamicResource TagChipSuccessBackground}" />
-        <Setter Property="BorderBrush" Value="{DynamicResource TagChipSuccessBackground}" />
+        <Setter Property="Background" Value="#CC14532D" />
+        <Setter Property="BorderBrush" Value="#304ADE80" />
         <Style Selector="^ TextBlock">
-            <Setter Property="Foreground" Value="{DynamicResource TagChipSuccessForeground}" />
+            <Setter Property="Foreground" Value="#4ADE80" />
         </Style>
         <Style Selector="^ ui|SymbolIcon">
-            <Setter Property="Foreground" Value="{DynamicResource TagChipSuccessForeground}" />
+            <Setter Property="Foreground" Value="#4ADE80" />
+        </Style>
+        <Style Selector="^ fluent|SymbolIcon">
+            <Setter Property="Foreground" Value="#4ADE80" />
         </Style>
     </Style>
     <Style Selector="Border.tag-chip.caution">
-        <Setter Property="Background" Value="{DynamicResource SystemFillColorCautionBackgroundBrush}" />
-        <Setter Property="BorderBrush" Value="{DynamicResource SystemFillColorCautionBackgroundBrush}" />
+        <Setter Property="Background" Value="#CC713F12" />
+        <Setter Property="BorderBrush" Value="#30FCD34D" />
         <Style Selector="^ TextBlock">
-            <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+            <Setter Property="Foreground" Value="#FCD34D" />
         </Style>
         <Style Selector="^ ui|SymbolIcon">
-            <Setter Property="Foreground" Value="{DynamicResource SystemFillColorCautionBrush}" />
+            <Setter Property="Foreground" Value="#FCD34D" />
+        </Style>
+        <Style Selector="^ fluent|SymbolIcon">
+            <Setter Property="Foreground" Value="#FCD34D" />
         </Style>
     </Style>
     <Style Selector="Border.tag-chip.critical">
-        <Setter Property="Background" Value="{DynamicResource SystemFillColorCriticalBackgroundBrush}" />
-        <Setter Property="BorderBrush" Value="{DynamicResource SystemFillColorCriticalBackgroundBrush}" />
+        <Setter Property="Background" Value="#CC7F1D1D" />
+        <Setter Property="BorderBrush" Value="#30FCA5A5" />
         <Style Selector="^ TextBlock">
-            <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+            <Setter Property="Foreground" Value="#FCA5A5" />
         </Style>
         <Style Selector="^ ui|SymbolIcon">
-            <Setter Property="Foreground" Value="{DynamicResource SystemFillColorCriticalBrush}" />
+            <Setter Property="Foreground" Value="#FCA5A5" />
+        </Style>
+        <Style Selector="^ fluent|SymbolIcon">
+            <Setter Property="Foreground" Value="#FCA5A5" />
         </Style>
     </Style>
 </Styles>

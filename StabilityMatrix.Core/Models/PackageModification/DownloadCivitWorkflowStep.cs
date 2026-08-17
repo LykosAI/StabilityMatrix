@@ -174,7 +174,11 @@ public class DownloadCivitWorkflowStep(
         if (!await ImportWorkflowJsonAsync(workflowJson, name, targetDir, isMultiple).ConfigureAwait(false))
             return false;
 
-        await File.WriteAllBytesAsync(targetDir.JoinFile($"{SanitizeFileName(name)}.preview.png"), pngBytes)
+        // Workflow screenshots can be huge full-graph captures; store a bounded preview
+        await File.WriteAllBytesAsync(
+                targetDir.JoinFile($"{SanitizeFileName(name)}.preview.png"),
+                ImageThumbnailHelper.CreateThumbnail(pngBytes)
+            )
             .ConfigureAwait(false);
 
         return true;
@@ -223,6 +227,9 @@ public class DownloadCivitWorkflowStep(
             image => image.Type == "image"
         );
 
+        // Full-size workflow screenshots are heavy; cards never need more than this
+        var thumbnailUrl = thumbnail is null ? null : CivitaiUrlHelper.CapImageWidth(thumbnail.Url, 700);
+
         return new WorkflowMetadata
         {
             SourceUrl = $"https://civitai.com/models/{model.Id}?modelVersionId={version.Id}",
@@ -249,14 +256,14 @@ public class DownloadCivitWorkflowStep(
                     NumReviews = model.Stats?.RatingCount ?? 0,
                     Rating = model.Stats?.Rating ?? 0,
                 },
-                Thumbnails = thumbnail is null
+                Thumbnails = thumbnailUrl is null
                     ? []
                     :
                     [
                         new OpenArtThumbnail
                         {
-                            Url = new Uri(thumbnail.Url),
-                            Width = thumbnail.Width,
+                            Url = new Uri(thumbnailUrl),
+                            Width = thumbnail!.Width,
                             Height = thumbnail.Height,
                         },
                     ],

@@ -25,6 +25,7 @@
         <Setter Property="VerticalAlignment" Value="Center" />
         <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
         <Setter Property="ToolTip.Tip" Value="{x:Static lang:Resources.Label_ViewDocumentation}" />
+        <Setter Property="AutomationProperties.Name" Value="{x:Static lang:Resources.Label_ViewDocumentation}" />
 
         <Setter Property="Template">
             <ControlTemplate>

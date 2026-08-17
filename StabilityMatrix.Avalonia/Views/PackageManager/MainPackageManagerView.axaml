@@ -113,8 +113,10 @@
                                         VerticalAlignment="Top"
                                         HorizontalContentAlignment="Right"
                                         VerticalContentAlignment="Top"
+                                        AutomationProperties.Name="More Options"
                                         BorderThickness="0"
-                                        Classes="transparent">
+                                        Classes="transparent"
+                                        ToolTip.Tip="More Options">
                                         <ui:SymbolIcon FontSize="18" Symbol="MoreVertical" />
                                         <Button.Flyout>
                                             <MenuFlyout Placement="BottomEdgeAlignedLeft">
@@ -347,6 +349,7 @@
                                         <Button
                                             Margin="4,4,4,0"
                                             Padding="6"
+                                            AutomationProperties.Name="{x:Static lang:Resources.Action_CheckForUpdates}"
                                             Classes="transparent"
                                             Command="{Binding OnLoadedAsync}"
                                             ToolTip.Tip="{x:Static lang:Resources.Action_CheckForUpdates}">
@@ -363,6 +366,7 @@
                                         <Button
                                             Margin="4,4,4,0"
                                             Padding="4"
+                                            AutomationProperties.Name="{x:Static lang:Resources.Action_Update}"
                                             Classes="borderless-success"
                                             Command="{Binding Update}"
                                             IsEnabled="{Binding !IsRunning}"
@@ -414,6 +418,7 @@
                                         <Button
                                             Margin="4,4,4,0"
                                             Padding="6"
+                                            AutomationProperties.Name="Launch Options"
                                             Classes="transparent"
                                             Command="{Binding ShowLaunchOptionsCommand}"
                                             IsVisible="{Binding !IsUnknownPackage}"
@@ -423,6 +428,7 @@
                                         <Button
                                             Margin="4,4,4,0"
                                             Padding="6"
+                                            AutomationProperties.Name="Extensions"
                                             Classes="transparent"
                                             Command="{Binding OpenExtensionsDialogCommand}"
                                             IsVisible="{Binding CanUseExtensions}"
@@ -444,6 +450,7 @@
                                             Name="LaunchButton"
                                             HorizontalAlignment="Stretch"
                                             VerticalAlignment="Bottom"
+                                            AutomationProperties.Name="{x:Static lang:Resources.Action_Launch}"
                                             Classes="accent"
                                             Command="{Binding Launch}">
                                             <Button.IsVisible>
@@ -465,6 +472,7 @@
                                             Name="SplitLaunchButton"
                                             HorizontalAlignment="Stretch"
                                             VerticalAlignment="Bottom"
+                                            AutomationProperties.Name="{x:Static lang:Resources.Action_Launch}"
                                             Classes="accent"
                                             Command="{Binding Launch}">
                                             <Button.IsVisible>
@@ -503,6 +511,7 @@
                                         <Button
                                             HorizontalAlignment="Stretch"
                                             VerticalAlignment="Bottom"
+                                            AutomationProperties.Name="{x:Static lang:Resources.Action_Stop}"
                                             Classes="borderless-danger"
                                             Command="{Binding StopCommand}"
                                             IsVisible="{Binding IsRunning}">
@@ -517,6 +526,7 @@
                                         <Button
                                             HorizontalAlignment="Stretch"
                                             VerticalAlignment="Bottom"
+                                            AutomationProperties.Name="{x:Static lang:Resources.Action_Restart}"
                                             BorderBrush="Transparent"
                                             Classes="borderless-info"
                                             Command="{Binding RestartCommand}"
@@ -532,6 +542,7 @@
                                         <Button
                                             HorizontalAlignment="Stretch"
                                             VerticalAlignment="Bottom"
+                                            AutomationProperties.Name="{x:Static lang:Resources.Label_Console}"
                                             Classes="accent"
                                             Command="{Binding NavToConsole}"
                                             IsVisible="{Binding IsRunning}">
@@ -546,6 +557,7 @@
                                         <Button
                                             HorizontalAlignment="Stretch"
                                             VerticalAlignment="Bottom"
+                                            AutomationProperties.Name="{x:Static lang:Resources.Label_WebUi}"
                                             Classes="accent"
                                             Command="{Binding LaunchWebUi}"
                                             IsVisible="{Binding ShowWebUiButton}">
@@ -560,6 +572,7 @@
                                         <Button
                                             HorizontalAlignment="Stretch"
                                             VerticalAlignment="Bottom"
+                                            AutomationProperties.Name="{x:Static lang:Resources.Action_Import}"
                                             Classes="transparent-info"
                                             Command="{Binding Import}"
                                             IsVisible="{Binding IsUnknownPackage}">
@@ -641,6 +654,7 @@
             Margin="0,8,0,0"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Bottom"
+            AutomationProperties.Name="{x:Static lang:Resources.Action_AddPackage}"
             Classes="transparent"
             Command="{Binding ShowInstallDialog}">
             <StackPanel Margin="8" Orientation="Horizontal">

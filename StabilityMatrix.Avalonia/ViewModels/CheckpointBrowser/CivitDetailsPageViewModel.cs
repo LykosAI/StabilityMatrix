@@ -29,6 +29,7 @@ using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Api.CivitTRPC;
@@ -53,7 +54,8 @@ public partial class CivitDetailsPageViewModel(
     IModelIndexService modelIndexService,
     IServiceManager<ViewModelBase> vmFactory,
     IModelImportService modelImportService,
-    IDownloadService downloadService
+    IDownloadService downloadService,
+    IPackageFactory packageFactory
 ) : DisposableViewModelBase
 {
     [ObservableProperty]
@@ -603,17 +605,15 @@ public partial class CivitDetailsPageViewModel(
         };
         EventManager.Instance.OnPackageInstallProgressAdded(runner);
 
-        await runner.ExecuteSteps(
-            [
-                new DownloadCivitWorkflowStep(
-                    CivitModel,
-                    modelVersion,
-                    viewModel.CivitFile,
-                    downloadService,
-                    settingsManager
-                ),
-            ]
+        var downloadStep = new DownloadCivitWorkflowStep(
+            CivitModel,
+            modelVersion,
+            viewModel.CivitFile,
+            downloadService,
+            settingsManager
         );
+
+        await runner.ExecuteSteps([downloadStep]);
 
         if (runner.Failed)
             return;
@@ -625,6 +625,17 @@ public partial class CivitDetailsPageViewModel(
         );
 
         EventManager.Instance.OnWorkflowInstalled();
+
+        // Offer custom node installs when the imported workflows need any the user can act on
+        if (await WorkflowNodesDialogViewModel.HasRequiredPacksAsync(downloadStep.ImportedFiles))
+        {
+            await WorkflowNodesDialogViewModel.ShowDialogAsync(
+                settingsManager,
+                packageFactory,
+                downloadStep.ImportedFiles,
+                onlyWhenActionable: true
+            );
+        }
     }
 
     [RelayCommand]

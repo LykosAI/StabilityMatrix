@@ -1,6 +1,7 @@
 using System.IO.Compression;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Api.OpenArt;
 using StabilityMatrix.Core.Models.FileInterfaces;
@@ -40,24 +41,36 @@ public class DownloadCivitWorkflowStep(
             var targetDir = settingsManager.WorkflowDirectory.JoinDir(SanitizeFileName(model.Name));
             targetDir.Create();
 
-            var importedCount =
-                tempFile.Extension.Equals(".zip", StringComparison.OrdinalIgnoreCase)
-                    ? await ExtractArchiveAsync(tempFile, targetDir).ConfigureAwait(false)
-                : await ImportWorkflowJsonAsync(
-                        await File.ReadAllTextAsync(tempFile).ConfigureAwait(false),
-                        Path.GetFileNameWithoutExtension(file.Name),
+            var fileStem = Path.GetFileNameWithoutExtension(file.Name);
+
+            var importedCount = tempFile.Extension.ToLowerInvariant() switch
+            {
+                ".zip" => await ExtractArchiveAsync(tempFile, targetDir).ConfigureAwait(false),
+                ".png" => await ImportWorkflowFromPngAsync(
+                        await File.ReadAllBytesAsync(tempFile).ConfigureAwait(false),
+                        fileStem,
                         targetDir,
                         isMultiple: false
                     )
                     .ConfigureAwait(false)
                     ? 1
-                : 0;
+                    : 0,
+                _ => await ImportWorkflowJsonAsync(
+                        await File.ReadAllTextAsync(tempFile).ConfigureAwait(false),
+                        fileStem,
+                        targetDir,
+                        isMultiple: false
+                    )
+                    .ConfigureAwait(false)
+                    ? 1
+                    : 0,
+            };
 
             if (importedCount == 0)
             {
                 throw new InvalidOperationException(
-                    $"No ComfyUI workflow json found in \"{file.Name}\" - "
-                        + "the file may not contain importable workflows"
+                    $"No ComfyUI workflows found in \"{file.Name}\" - "
+                        + "the file contains neither workflow json nor images with an embedded workflow"
                 );
             }
 
@@ -79,32 +92,92 @@ public class DownloadCivitWorkflowStep(
         var entries = archive
             .Entries.Where(entry =>
                 !string.IsNullOrEmpty(entry.Name)
-                && entry.Name.EndsWith(".json", StringComparison.OrdinalIgnoreCase)
                 && !entry.FullName.Contains("__MACOSX", StringComparison.OrdinalIgnoreCase)
+                && (
+                    entry.Name.EndsWith(".json", StringComparison.OrdinalIgnoreCase)
+                    || entry.Name.EndsWith(".png", StringComparison.OrdinalIgnoreCase)
+                )
             )
             .ToList();
 
         var importedCount = 0;
         foreach (var entry in entries)
         {
-            using var reader = new StreamReader(entry.Open());
-            var json = await reader.ReadToEndAsync().ConfigureAwait(false);
+            var entryStem = Path.GetFileNameWithoutExtension(entry.Name);
+            bool imported;
 
-            if (
-                await ImportWorkflowJsonAsync(
-                        json,
-                        Path.GetFileNameWithoutExtension(entry.Name),
+            if (entry.Name.EndsWith(".png", StringComparison.OrdinalIgnoreCase))
+            {
+                using var memoryStream = new MemoryStream();
+                await using (var entryStream = entry.Open())
+                {
+                    await entryStream.CopyToAsync(memoryStream).ConfigureAwait(false);
+                }
+
+                imported = await ImportWorkflowFromPngAsync(
+                        memoryStream.ToArray(),
+                        entryStem,
                         targetDir,
                         isMultiple: entries.Count > 1
                     )
-                    .ConfigureAwait(false)
-            )
+                    .ConfigureAwait(false);
+            }
+            else
+            {
+                using var reader = new StreamReader(entry.Open());
+                var json = await reader.ReadToEndAsync().ConfigureAwait(false);
+
+                imported = await ImportWorkflowJsonAsync(
+                        json,
+                        entryStem,
+                        targetDir,
+                        isMultiple: entries.Count > 1
+                    )
+                    .ConfigureAwait(false);
+            }
+
+            if (imported)
             {
                 importedCount++;
             }
         }
 
         return importedCount;
+    }
+
+    /// <summary>
+    /// Imports a workflow from the "workflow" metadata chunk ComfyUI embeds in saved images
+    /// (the same data loaded when dragging the image into ComfyUI). The image itself is kept
+    /// as the imported workflow's preview. Returns false when no workflow is embedded.
+    /// </summary>
+    private async Task<bool> ImportWorkflowFromPngAsync(
+        byte[] pngBytes,
+        string name,
+        DirectoryPath targetDir,
+        bool isMultiple
+    )
+    {
+        string workflowJson;
+        try
+        {
+            using var reader = new BinaryReader(new MemoryStream(pngBytes));
+            workflowJson = ImageMetadata.ReadTextChunk(reader, "workflow");
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+
+        if (string.IsNullOrEmpty(workflowJson))
+            return false;
+
+        if (!await ImportWorkflowJsonAsync(workflowJson, name, targetDir, isMultiple).ConfigureAwait(false))
+            return false;
+
+        await File.WriteAllBytesAsync(targetDir.JoinFile($"{SanitizeFileName(name)}.preview.png"), pngBytes)
+            .ConfigureAwait(false);
+
+        return true;
     }
 
     /// <summary>

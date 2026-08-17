@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ## v2.16.3
 ### Added
 #### New Feature: 🔀 CivitAI Workflow Browsing
-- The **Model Browser** now browses and imports **ComfyUI workflows** from CivitAI — pick the new **Workflows** model type (or spot them in All-type searches), open one, and import it straight into your workflow library; archives are unpacked automatically
+- The **Model Browser** now browses and imports **ComfyUI workflows** from CivitAI — pick the new **Workflows** model type (or spot them in All-type searches), open one, and import it straight into your workflow library; archives are unpacked automatically, and images with an embedded workflow (the drag-into-ComfyUI kind) are converted into regular workflows with the image kept as the preview
 - Your workflow library is now **linked into ComfyUI itself** — imported workflows appear under a "Stability Matrix" folder in ComfyUI's own workflow browser, for every installed ComfyUI-based package
 ### Changed
 - The **Workflows** page is now your installed workflow library, front and center — no more tabs, since browsing moved to the Model Browser. Cards for CivitAI-imported workflows link back to their CivitAI page

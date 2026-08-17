@@ -11,6 +11,7 @@ using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.FileInterfaces;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
@@ -105,11 +106,14 @@ public partial class WorkflowMetadataEditorViewModel : ContentDialogViewModelBas
                 oldSidecar.Delete();
             }
 
-            var extension = Path.GetExtension(selectedImagePath).ToLowerInvariant();
-            File.Copy(
-                selectedImagePath,
-                workflowFile.Directory!.JoinFile($"{sidecarBaseName}{extension}"),
-                overwrite: true
+            // Bound the stored preview so oversized picks don't slow the cards down
+            var thumbnailBytes = ImageThumbnailHelper.CreateThumbnail(
+                await File.ReadAllBytesAsync(selectedImagePath)
+            );
+
+            await File.WriteAllBytesAsync(
+                workflowFile.Directory!.JoinFile($"{sidecarBaseName}.png"),
+                thumbnailBytes
             );
         }
     }

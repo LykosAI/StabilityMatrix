@@ -11,6 +11,26 @@ public static class CivitaiUrlHelper
         return modelVersionId is > 0 ? $"{baseUrl}?modelVersionId={modelVersionId}" : baseUrl;
     }
 
+    /// <summary>
+    /// Returns a CivitAI CDN image url with its width transform capped at
+    /// <paramref name="maxWidth"/>. Urls without a width transform, or from
+    /// other hosts, are returned unchanged.
+    /// </summary>
+    public static string CapImageWidth(string url, int maxWidth)
+    {
+        if (!url.Contains("image.civitai.com", StringComparison.OrdinalIgnoreCase))
+            return url;
+
+        return System.Text.RegularExpressions.Regex.Replace(
+            url,
+            @"width=(\d+)",
+            match =>
+                int.TryParse(match.Groups[1].Value, out var width) && width > maxWidth
+                    ? $"width={maxWidth}"
+                    : match.Value
+        );
+    }
+
     public static bool TryParseModelId(string? url, out int modelId)
     {
         modelId = 0;

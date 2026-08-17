@@ -73,6 +73,7 @@
         <input:StandardUICommand x:Key="OpenSourcePageCommand" Command="{Binding OpenSourcePageCommand}" />
         <input:StandardUICommand x:Key="CheckRequiredNodesCommand" Command="{Binding CheckRequiredNodesCommand}" />
         <input:StandardUICommand x:Key="EditMetadataCommand" Command="{Binding EditMetadataCommand}" />
+        <input:StandardUICommand x:Key="OpenDetailsCommand" Command="{Binding OpenDetailsCommand}" />
         <input:StandardUICommand x:Key="DeleteCommand" Command="{Binding DeleteCommand}" />
     </UserControl.Resources>
 
@@ -253,6 +254,8 @@
                                 VerticalContentAlignment="Top"
                                 BorderThickness="0"
                                 Classes="transparent-full"
+                                Command="{StaticResource OpenDetailsCommand}"
+                                CommandParameter="{Binding}"
                                 CornerRadius="8">
                                 <Grid RowDefinitions="*, Auto">
                                     <vendorLabs:BetterAsyncImage

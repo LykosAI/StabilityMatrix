@@ -11,6 +11,7 @@ using DynamicData;
 using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
 using Injectio.Attributes;
+using StabilityMatrix.Avalonia.Animations;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
@@ -21,6 +22,7 @@ using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Factory;
+using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Api.OpenArt;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Processes;
@@ -33,7 +35,9 @@ namespace StabilityMatrix.Avalonia.ViewModels;
 public partial class InstalledWorkflowsViewModel(
     ISettingsManager settingsManager,
     INotificationService notificationService,
-    IPackageFactory packageFactory
+    IPackageFactory packageFactory,
+    IServiceManager<ViewModelBase> vmFactory,
+    INavigationService<MainWindowViewModel> navigationService
 ) : PageViewModelBase
 {
     public override string Title => Resources.Label_Workflows;
@@ -293,6 +297,27 @@ public partial class InstalledWorkflowsViewModel(
         {
             ProcessRunner.OpenUrl(url);
         }
+    }
+
+    /// <summary>
+    /// Opens the CivitAI details page for workflows imported from there;
+    /// no-op for files without a resolvable source.
+    /// </summary>
+    [RelayCommand]
+    private void OpenDetails(InstalledWorkflow workflow)
+    {
+        if (!CivitaiUrlHelper.TryParseModelId(workflow.SourceUrl, out var modelId))
+            return;
+
+        var detailsVm = vmFactory.Get<CheckpointBrowser.CivitDetailsPageViewModel>(vm =>
+        {
+            vm.CivitModel = new CivitModel { Id = modelId };
+            vm.ModelIdList = [modelId];
+            vm.CurrentIndex = 0;
+            return vm;
+        });
+
+        navigationService.NavigateTo(detailsVm, BetterSlideNavigationTransition.PageSlideFromRight);
     }
 
     [RelayCommand]

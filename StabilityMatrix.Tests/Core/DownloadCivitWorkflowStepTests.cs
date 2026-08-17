@@ -141,6 +141,42 @@ public class DownloadCivitWorkflowStepTests
         );
     }
 
+    [TestMethod]
+    public async Task ImportsWorkflowEmbeddedInPng_KeepingImageAsPreview()
+    {
+        SetupDownloadBytes(BuildPngWithWorkflow(WorkflowJson));
+
+        await CreateStep(fileName: "workflow-image.png").ExecuteAsync();
+
+        var importedJson = Directory.EnumerateFiles(tempDir, "*.json", SearchOption.AllDirectories).Single();
+
+        var root = JsonNode.Parse(await File.ReadAllTextAsync(importedJson))!.AsObject();
+        Assert.IsNotNull(root["nodes"]);
+        Assert.IsNotNull(root["sm_workflow_data"]);
+
+        // The image is kept as the workflow's preview sidecar
+        var sidecar = Path.Combine(Path.GetDirectoryName(importedJson)!, "workflow-image.preview.png");
+        Assert.IsTrue(File.Exists(sidecar));
+    }
+
+    [TestMethod]
+    public async Task ImportsPngsFromZip_SkippingImagesWithoutEmbeddedWorkflow()
+    {
+        SetupDownloadBytes(
+            BuildZipBytes(
+                ("with-workflow.png", BuildPngWithWorkflow(WorkflowJson)),
+                ("plain-image.png", BuildPngWithWorkflow(null))
+            )
+        );
+
+        await CreateStep(fileName: "pngs.zip").ExecuteAsync();
+
+        var importedFiles = Directory.EnumerateFiles(tempDir, "*.json", SearchOption.AllDirectories).ToList();
+
+        Assert.AreEqual(1, importedFiles.Count);
+        Assert.IsTrue(importedFiles[0].EndsWith("with-workflow.json"));
+    }
+
     private DownloadCivitWorkflowStep CreateStep(string fileName) =>
         new(
             TestModel,
@@ -154,6 +190,53 @@ public class DownloadCivitWorkflowStepTests
             downloadService,
             settingsManager
         );
+
+    private void SetupDownloadBytes(byte[] content) => SetupDownload(content);
+
+    /// <summary>
+    /// Minimal PNG: signature + optional "workflow" tEXt chunk + IEND. Chunk CRCs are
+    /// zeroed - the metadata reader walks chunks without validating them.
+    /// </summary>
+    private static byte[] BuildPngWithWorkflow(string? workflowJson)
+    {
+        using var stream = new MemoryStream();
+        stream.Write([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]);
+
+        void WriteChunk(string type, byte[] data)
+        {
+            var length = BitConverter.GetBytes(data.Length);
+            Array.Reverse(length); // big-endian
+            stream.Write(length);
+            stream.Write(System.Text.Encoding.ASCII.GetBytes(type));
+            stream.Write(data);
+            stream.Write(new byte[4]); // crc, unvalidated
+        }
+
+        if (workflowJson is not null)
+        {
+            WriteChunk("tEXt", System.Text.Encoding.UTF8.GetBytes($"workflow\0{workflowJson}"));
+        }
+
+        WriteChunk("IEND", []);
+
+        return stream.ToArray();
+    }
+
+    private static byte[] BuildZipBytes(params (string Name, byte[] Content)[] entries)
+    {
+        using var stream = new MemoryStream();
+        using (var archive = new ZipArchive(stream, ZipArchiveMode.Create, leaveOpen: true))
+        {
+            foreach (var (name, content) in entries)
+            {
+                var entry = archive.CreateEntry(name);
+                using var entryStream = entry.Open();
+                entryStream.Write(content);
+            }
+        }
+
+        return stream.ToArray();
+    }
 
     private void SetupDownload(byte[] content)
     {

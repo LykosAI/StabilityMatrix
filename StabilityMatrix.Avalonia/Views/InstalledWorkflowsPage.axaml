@@ -92,6 +92,26 @@
                     <Setter Property="IsExpanded" Value="{Binding $self.((models:WorkflowCategory)DataContext).IsExpanded, Mode=TwoWay}" />
                 </Style>
             </TreeView.Styles>
+            <TreeView.ContextFlyout>
+                <controls1:FAMenuFlyout>
+                    <controls1:MenuFlyoutItem
+                        Command="{Binding OpenFolderInExplorerCommand}"
+                        CommandParameter="{Binding $parent[TreeView].SelectedItem}"
+                        Text="{x:Static lang:Resources.Action_OpenInExplorer}">
+                        <controls1:MenuFlyoutItem.IconSource>
+                            <controls1:SymbolIconSource Symbol="OpenFolder" />
+                        </controls1:MenuFlyoutItem.IconSource>
+                    </controls1:MenuFlyoutItem>
+                    <controls1:MenuFlyoutItem
+                        Command="{Binding DeleteFolderCommand}"
+                        CommandParameter="{Binding $parent[TreeView].SelectedItem}"
+                        Text="{x:Static lang:Resources.Action_Delete}">
+                        <controls1:MenuFlyoutItem.IconSource>
+                            <controls1:SymbolIconSource Symbol="Delete" />
+                        </controls1:MenuFlyoutItem.IconSource>
+                    </controls1:MenuFlyoutItem>
+                </controls1:FAMenuFlyout>
+            </TreeView.ContextFlyout>
             <TreeView.ItemTemplate>
                 <TreeDataTemplate ItemsSource="{Binding SubDirectories}">
                     <TextBlock

@@ -296,6 +296,52 @@ public partial class InstalledWorkflowsViewModel(
     }
 
     [RelayCommand]
+    private async Task OpenFolderInExplorer(WorkflowCategory? category)
+    {
+        if (category?.Path is { Length: > 0 } path && Directory.Exists(path))
+        {
+            await ProcessRunner.OpenFolderBrowser(path);
+        }
+    }
+
+    private static bool CanDeleteFolder(WorkflowCategory? category) =>
+        category?.FilterPath is { Length: > 0 };
+
+    [RelayCommand(CanExecute = nameof(CanDeleteFolder))]
+    private async Task DeleteFolderAsync(WorkflowCategory? category)
+    {
+        if (
+            category?.FilterPath is not { Length: > 0 }
+            || category.Path is not { Length: > 0 } folderPath
+            || !Directory.Exists(folderPath)
+        )
+        {
+            return;
+        }
+
+        var confirmationDialog = new BetterContentDialog
+        {
+            Title = Resources.Label_AreYouSure,
+            Content = $"{folderPath}\n{Resources.Label_ActionCannotBeUndone}",
+            PrimaryButtonText = Resources.Action_Delete,
+            SecondaryButtonText = Resources.Action_Cancel,
+            DefaultButton = ContentDialogButton.Primary,
+            IsSecondaryButtonEnabled = true,
+        };
+
+        if (await confirmationDialog.ShowAsync() != ContentDialogResult.Primary)
+            return;
+
+        await notificationService.TryAsync(
+            Task.Run(() => Directory.Delete(folderPath, true)),
+            message: "Error deleting folder"
+        );
+
+        // Reloads the library and invalidates the model browser's installed detection
+        EventManager.Instance.OnWorkflowInstalled();
+    }
+
+    [RelayCommand]
     private async Task EditMetadataAsync(InstalledWorkflow workflow)
     {
         var vm = new WorkflowMetadataEditorViewModel { Workflow = workflow };

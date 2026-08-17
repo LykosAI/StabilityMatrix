@@ -971,6 +971,10 @@ public class ComfyUI(
                             constraintsAbsPath
                         );
                         env = env.SetItem("UV_BUILD_CONSTRAINT", constraintsRelPath);
+                        // install.py scripts commonly shell out to plain pip themselves
+                        // (e.g. "pip install cupy-wheel"), which ignores UV_BUILD_CONSTRAINT -
+                        // PIP_CONSTRAINT applies the same setuptools pin to those installs
+                        env = env.SetItem("PIP_CONSTRAINT", constraintsRelPath);
 
                         // set env vars for Impact Pack for Face Detailer
                         env = env.SetItem("COMFYUI_PATH", installedPackage.FullPath!);

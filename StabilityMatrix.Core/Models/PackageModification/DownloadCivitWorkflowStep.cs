@@ -31,6 +31,8 @@ public class DownloadCivitWorkflowStep(
     /// </summary>
     public List<FilePath> ImportedFiles { get; } = [];
 
+    private bool foundGenerationParametersOnly;
+
     public async Task ExecuteAsync(IProgress<ProgressReport>? progress = null)
     {
         var tempFile = new FilePath(
@@ -75,8 +77,12 @@ public class DownloadCivitWorkflowStep(
             if (importedCount == 0)
             {
                 throw new InvalidOperationException(
-                    $"No ComfyUI workflows found in \"{file.Name}\" - "
-                        + "the file contains neither workflow json nor images with an embedded workflow"
+                    foundGenerationParametersOnly
+                        ? $"\"{file.Name}\" contains images with WebUI-style generation parameters, "
+                            + "but no embedded ComfyUI workflow - the creator may not have attached "
+                            + "the actual workflow to this file"
+                        : $"No ComfyUI workflows found in \"{file.Name}\" - "
+                            + "the file contains neither workflow json nor images with an embedded workflow"
                 );
             }
 
@@ -168,14 +174,23 @@ public class DownloadCivitWorkflowStep(
         {
             using var reader = new BinaryReader(new MemoryStream(pngBytes));
             workflowJson = ImageMetadata.ReadTextChunk(reader, "workflow");
+
+            if (string.IsNullOrEmpty(workflowJson))
+            {
+                // Distinguish A1111/Forge-style showcase renders for a clearer error when
+                // nothing in the download turns out to be importable
+                if (!string.IsNullOrEmpty(ImageMetadata.ReadTextChunk(reader, "parameters")))
+                {
+                    foundGenerationParametersOnly = true;
+                }
+
+                return false;
+            }
         }
         catch (Exception)
         {
             return false;
         }
-
-        if (string.IsNullOrEmpty(workflowJson))
-            return false;
 
         if (!await ImportWorkflowJsonAsync(workflowJson, name, targetDir, isMultiple).ConfigureAwait(false))
             return false;

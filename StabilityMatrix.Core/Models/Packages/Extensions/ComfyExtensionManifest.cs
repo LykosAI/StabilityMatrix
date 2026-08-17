@@ -8,23 +8,23 @@ public record ComfyExtensionManifest
 
     public IEnumerable<PackageExtension> GetPackageExtensions()
     {
-        return CustomNodes.Select(
-            x =>
-                new PackageExtension
-                {
-                    Author = x.Author,
-                    Title = x.Title,
-                    Reference = x.Reference,
-                    Files = x.Files,
-                    Pip = x.Pip,
-                    Description = x.Description,
-                    InstallType = x.InstallType
-                }
-        );
+        return CustomNodes.Select(x => new PackageExtension
+        {
+            Id = x.Id,
+            Author = x.Author,
+            Title = x.Title,
+            Reference = x.Reference,
+            Files = x.Files,
+            Pip = x.Pip,
+            Description = x.Description,
+            InstallType = x.InstallType,
+        });
     }
 
     public record ManifestEntry
     {
+        public string? Id { get; init; }
+
         public required string Author { get; init; }
 
         public required string Title { get; init; }

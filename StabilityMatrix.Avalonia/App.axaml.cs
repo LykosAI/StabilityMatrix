@@ -469,7 +469,7 @@ public sealed class App : Application
                 provider.GetRequiredService<CheckpointsPageViewModel>(),
                 provider.GetRequiredService<CheckpointBrowserViewModel>(),
                 provider.GetRequiredService<OutputsPageViewModel>(),
-                provider.GetRequiredService<WorkflowsPageViewModel>(),
+                provider.GetRequiredService<InstalledWorkflowsViewModel>(),
             },
             FooterPages = { provider.GetRequiredService<SettingsViewModel>() },
         });
@@ -834,15 +834,6 @@ public sealed class App : Application
                 }
             )
             .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false })
-            .AddPolicyHandler(retryPolicy);
-
-        services
-            .AddRefitClient<IOpenArtApi>(defaultRefitSettings)
-            .ConfigureHttpClient(c =>
-            {
-                c.BaseAddress = new Uri("https://openart.ai/api/public/workflows");
-                c.Timeout = TimeSpan.FromHours(1);
-            })
             .AddPolicyHandler(retryPolicy);
 
         services

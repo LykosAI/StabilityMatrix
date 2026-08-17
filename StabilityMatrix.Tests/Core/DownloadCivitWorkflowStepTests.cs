@@ -160,6 +160,19 @@ public class DownloadCivitWorkflowStepTests
     }
 
     [TestMethod]
+    public async Task ExplainsWebUiParameterImages_WhenNothingImportable()
+    {
+        // A1111/Forge showcase renders carry only a "parameters" chunk - no workflow
+        SetupDownloadBytes(BuildPngWithChunk("parameters", "masterpiece, steps: 20"));
+
+        var exception = await Assert.ThrowsExceptionAsync<InvalidOperationException>(() =>
+            CreateStep(fileName: "showcase.png").ExecuteAsync()
+        );
+
+        StringAssert.Contains(exception.Message, "generation parameters");
+    }
+
+    [TestMethod]
     public async Task ImportsPngsFromZip_SkippingImagesWithoutEmbeddedWorkflow()
     {
         SetupDownloadBytes(
@@ -193,11 +206,14 @@ public class DownloadCivitWorkflowStepTests
 
     private void SetupDownloadBytes(byte[] content) => SetupDownload(content);
 
+    private static byte[] BuildPngWithWorkflow(string? workflowJson) =>
+        workflowJson is null ? BuildPngWithChunk(null, null) : BuildPngWithChunk("workflow", workflowJson);
+
     /// <summary>
-    /// Minimal PNG: signature + optional "workflow" tEXt chunk + IEND. Chunk CRCs are
+    /// Minimal PNG: signature + optional tEXt chunk + IEND. Chunk CRCs are
     /// zeroed - the metadata reader walks chunks without validating them.
     /// </summary>
-    private static byte[] BuildPngWithWorkflow(string? workflowJson)
+    private static byte[] BuildPngWithChunk(string? keyword, string? text)
     {
         using var stream = new MemoryStream();
         stream.Write([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]);
@@ -212,9 +228,9 @@ public class DownloadCivitWorkflowStepTests
             stream.Write(new byte[4]); // crc, unvalidated
         }
 
-        if (workflowJson is not null)
+        if (keyword is not null)
         {
-            WriteChunk("tEXt", System.Text.Encoding.UTF8.GetBytes($"workflow\0{workflowJson}"));
+            WriteChunk("tEXt", System.Text.Encoding.UTF8.GetBytes($"{keyword}\0{text}"));
         }
 
         WriteChunk("IEND", []);

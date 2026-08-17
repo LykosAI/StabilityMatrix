@@ -18,7 +18,7 @@ public static class EnumHelpers
     public static IEnumerable<CivitModelType> AllCivitModelTypes { get; } =
         Enum.GetValues(typeof(CivitModelType))
             .Cast<CivitModelType>()
-            .Where(t => t == CivitModelType.All || t.ConvertTo<SharedFolderType>() > 0)
+            .Where(t => t == CivitModelType.All || t.IsBrowsable())
             .OrderBy(t => t.ToString());
 
     public static IEnumerable<CivitModelType> MetadataEditorCivitModelTypes { get; } =

@@ -1207,6 +1207,42 @@ Large caches can take a few minutes to clear. You can keep using Stability Matri
   <data name="Label_NodeDetails" xml:space="preserve">
     <value>Node Details</value>
   </data>
+  <data name="Label_RequiredCustomNodes" xml:space="preserve">
+    <value>Required Custom Nodes</value>
+  </data>
+  <data name="Label_NotInExtensionIndex" xml:space="preserve">
+    <value>Not found in extension index</value>
+  </data>
+  <data name="Action_InstallSelected" xml:space="preserve">
+    <value>Install Selected</value>
+  </data>
+  <data name="Action_CheckRequiredNodes" xml:space="preserve">
+    <value>Check Required Nodes</value>
+  </data>
+  <data name="Label_NoCustomNodesRequired" xml:space="preserve">
+    <value>This workflow only uses built-in nodes</value>
+  </data>
+  <data name="Label_AllWorkflows" xml:space="preserve">
+    <value>All Workflows</value>
+  </data>
+  <data name="Label_Ungrouped" xml:space="preserve">
+    <value>Ungrouped</value>
+  </data>
+  <data name="Action_EditMetadata" xml:space="preserve">
+    <value>Edit Metadata</value>
+  </data>
+  <data name="Action_ChooseImage" xml:space="preserve">
+    <value>Choose Image…</value>
+  </data>
+  <data name="Text_WorkflowNodesExplanation" xml:space="preserve">
+    <value>This workflow uses the node packs below. Missing packs can be installed from the extension index, like extensions from the package's Extensions tab.</value>
+  </data>
+  <data name="Label_WorkflowNodesTargetPackage" xml:space="preserve">
+    <value>ComfyUI installation to check against and install into</value>
+  </data>
+  <data name="Label_ShowNestedWorkflows" xml:space="preserve">
+    <value>Show Nested Workflows</value>
+  </data>
   <data name="Label_WorkflowDescription" xml:space="preserve">
     <value>Workflow Description</value>
   </data>

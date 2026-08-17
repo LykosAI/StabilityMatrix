@@ -3192,7 +3192,115 @@ namespace StabilityMatrix.Avalonia.Languages {
                 return ResourceManager.GetString("Label_NodeDetails", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Required Custom Nodes.
+        /// </summary>
+        public static string Label_RequiredCustomNodes {
+            get {
+                return ResourceManager.GetString("Label_RequiredCustomNodes", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Not found in extension index.
+        /// </summary>
+        public static string Label_NotInExtensionIndex {
+            get {
+                return ResourceManager.GetString("Label_NotInExtensionIndex", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Install Selected.
+        /// </summary>
+        public static string Action_InstallSelected {
+            get {
+                return ResourceManager.GetString("Action_InstallSelected", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Check Required Nodes.
+        /// </summary>
+        public static string Action_CheckRequiredNodes {
+            get {
+                return ResourceManager.GetString("Action_CheckRequiredNodes", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to This workflow only uses built-in nodes.
+        /// </summary>
+        public static string Label_NoCustomNodesRequired {
+            get {
+                return ResourceManager.GetString("Label_NoCustomNodesRequired", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to All Workflows.
+        /// </summary>
+        public static string Label_AllWorkflows {
+            get {
+                return ResourceManager.GetString("Label_AllWorkflows", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Ungrouped.
+        /// </summary>
+        public static string Label_Ungrouped {
+            get {
+                return ResourceManager.GetString("Label_Ungrouped", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Edit Metadata.
+        /// </summary>
+        public static string Action_EditMetadata {
+            get {
+                return ResourceManager.GetString("Action_EditMetadata", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Choose Image….
+        /// </summary>
+        public static string Action_ChooseImage {
+            get {
+                return ResourceManager.GetString("Action_ChooseImage", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to This workflow uses the node packs below. Missing packs can be installed from the extension index, like extensions from the package&apos;s Extensions tab..
+        /// </summary>
+        public static string Text_WorkflowNodesExplanation {
+            get {
+                return ResourceManager.GetString("Text_WorkflowNodesExplanation", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to ComfyUI installation to check against and install into.
+        /// </summary>
+        public static string Label_WorkflowNodesTargetPackage {
+            get {
+                return ResourceManager.GetString("Label_WorkflowNodesTargetPackage", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Show Nested Workflows.
+        /// </summary>
+        public static string Label_ShowNestedWorkflows {
+            get {
+                return ResourceManager.GetString("Label_ShowNestedWorkflows", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to No Extension Packs Found.
         /// </summary>

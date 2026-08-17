@@ -11,9 +11,10 @@ using StabilityMatrix.Core.Services;
 namespace StabilityMatrix.Core.Models.PackageModification;
 
 /// <summary>
-/// Downloads a CivitAI workflow file (a zip of ComfyUI workflow jsons, or a bare json) and
-/// imports the contained workflows into the shared workflow library, embedding
-/// <see cref="WorkflowMetadata"/> in each file for the installed workflows page.
+/// Downloads a CivitAI workflow file - an archive or bare file of workflow jsons and/or
+/// workflow-embedded images - and imports the contained workflows into the shared workflow
+/// library, embedding <see cref="WorkflowMetadata"/> in each file for the installed
+/// workflows page.
 /// </summary>
 public class DownloadCivitWorkflowStep(
     CivitModel model,

@@ -38,6 +38,13 @@
         <KeyBinding Command="{Binding OpenDocumentationCommand}" Gesture="F1" />
     </controls:AppWindowBase.KeyBindings>
 
+    <controls:AppWindowBase.Styles>
+        <!--  FluentAvalonia's template gives this icon-only button no accessible name  -->
+        <Style Selector="ui|NavigationView /template/ Button#TogglePaneButton">
+            <Setter Property="AutomationProperties.Name" Value="Toggle Navigation" />
+        </Style>
+    </controls:AppWindowBase.Styles>
+
     <Grid RowDefinitions="Auto,Auto,Auto,*">
         <Grid
             Name="TitleBarHost"

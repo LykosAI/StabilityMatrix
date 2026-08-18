@@ -215,17 +215,12 @@ public abstract class ComfyImageGenerationProviderBase(
                 return [];
             }
 
-            var installedUrls = (
-                await extensionManager.GetInstalledExtensionsLiteAsync(
-                    localPackagePair.InstalledPackage,
-                    cancellationToken
-                )
-            )
-                .Select(ext => ext.GitRepositoryUrl)
-                .OfType<string>()
-                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+            var installedExtensions = await extensionManager.GetInstalledExtensionsLiteAsync(
+                localPackagePair.InstalledPackage,
+                cancellationToken
+            );
 
-            return requiredExtensions.Where(specifier => !installedUrls.Contains(specifier.Name)).ToList();
+            return ExtensionMatcher.GetMissing(requiredExtensions, installedExtensions);
         }
         catch (Exception e)
         {

@@ -136,7 +136,10 @@ public abstract partial class GitPackageExtensionManager(IPrerequisiteHelper pre
     }
 
     /// <summary>
-    /// Like <see cref="GetInstalledExtensionsAsync"/>, but does not check git version and repository url.
+    /// Like <see cref="GetInstalledExtensionsAsync"/>, but reads the remote url from the git
+    /// config instead of running git, and does not resolve versions. Includes extensions
+    /// installed without git metadata, whose <see cref="InstalledPackageExtension.GitRepositoryUrl"/>
+    /// is null - use <see cref="ExtensionMatcher"/> to match these against required extensions.
     /// </summary>
     public virtual async Task<IEnumerable<InstalledPackageExtension>> GetInstalledExtensionsLiteAsync(
         InstalledPackage installedPackage,
@@ -171,13 +174,14 @@ public abstract partial class GitPackageExtensionManager(IPrerequisiteHelper pre
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                // Skip if not valid git repository
-                if (!subDirectory.JoinDir(".git").Exists)
+                // Skip hidden and python cache directories
+                if (subDirectory.Name.StartsWith('.') || subDirectory.Name == "__pycache__")
                 {
                     continue;
                 }
 
-                // Get remote url with manual parsing
+                // Get remote url with manual parsing. Extensions installed from a package
+                // registry rather than a clone have no git metadata and no remote url.
                 string? remoteUrl = null;
 
                 var gitConfigPath = subDirectory.JoinDir(".git").JoinFile("config");

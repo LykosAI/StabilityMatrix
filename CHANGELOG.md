@@ -62,6 +62,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed **Update Metadata** skipping models imported from HuggingFace or OpenModelDB (now hashed on demand), and scans freezing the app while hashing large files
 - Fixed **Organize Models** appearing to do nothing out of the box — the default pattern is now `{base_model}/{file_name}` so the first preview proposes real folders (saved patterns untouched), with an explanation and one-click fix when a pattern would move nothing
 - Fixed model card text being hard to read in light theme
+- Fixed the app sometimes crashing on exit with an **Inference** tab open, most often with **Remove folder links on shutdown** enabled — the crash also lost that session's Inference dock layout instead of remembering it
+- Fixed a problem while shutting down showing a crash dialog after you'd already closed the app — shutdown errors are now logged and the app just exits
 ### Supporters
 #### 🌟 Visionaries
 Three new model profiles, one-click downloads for the pieces that go with them, workflows you can browse and import from CivitAI, and Inference layouts that finally stay where you put them: this build is mostly people asking for things and us getting to say yes. Our Visionaries are why that's possible at all, so thank you **Waterclouds**, **MrMxyzptlk12836**, **bluepopsicle**, **Ibixat**, **Droolguy**, **snotty**, **whudunit**, **cusalapapen1481**, **moon_milky2843**, **CC**, and **SnooSnooEternal**. Every one of these features has a bit of your backing in it. And a warm hello to **TwistedDragon**, **Eaglebane**, and **hasezou11013179**, who join the Visionaries this time around; we're really glad you're here. 💛

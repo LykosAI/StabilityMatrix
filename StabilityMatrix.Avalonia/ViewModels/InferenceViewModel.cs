@@ -330,12 +330,17 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
         // and the process exits instead), so views don't get their detach-time layout save.
         // Capture dock layouts here while the visual tree is still alive; the selected tab
         // goes last so its layout wins for its project type.
-        foreach (var tab in Tabs.ToImmutableArray().OrderBy(tab => tab == SelectedTab))
+        //
+        // The container's DisposeAsync resumes with ConfigureAwait(false) as soon as any service
+        // ahead of this one disposes asynchronously, so this can arrive on a thread pool thread
+        // and the dock controls it reads are UI-thread affine.
+        if (Dispatcher.UIThread.CheckAccess())
         {
-            if (((IPersistentViewProvider)tab).AttachedPersistentView is DockUserControlBase dockView)
-            {
-                dockView.PersistDefaultTypeLayout();
-            }
+            PersistDockLayouts();
+        }
+        else
+        {
+            await Dispatcher.UIThread.InvokeAsync(PersistDockLayouts);
         }
 
         await SyncTabStatesWithDatabase();
@@ -346,6 +351,17 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
         }
 
         GC.SuppressFinalize(this);
+
+        void PersistDockLayouts()
+        {
+            foreach (var tab in Tabs.ToImmutableArray().OrderBy(tab => tab == SelectedTab))
+            {
+                if (((IPersistentViewProvider)tab).AttachedPersistentView is DockUserControlBase dockView)
+                {
+                    dockView.PersistDefaultTypeLayout();
+                }
+            }
+        }
     }
 
     /// <summary>

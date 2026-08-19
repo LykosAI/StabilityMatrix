@@ -100,6 +100,13 @@ public sealed class App : Application
     /// </summary>
     private bool isAsyncDisposeComplete;
 
+    /// <summary>
+    /// True once <see cref="ServiceProvider.DisposeAsync"/> has been entered. The container marks
+    /// itself disposed before it begins disposing services, so a dispose that throws partway still
+    /// leaves a provider that throws <see cref="ObjectDisposedException"/> on any further resolve.
+    /// </summary>
+    private bool isServiceProviderDisposeStarted;
+
     private bool isOnExitComplete;
 
     /// <summary>
@@ -1067,6 +1074,7 @@ public sealed class App : Application
                 try
                 {
                     OnServiceProviderDisposing(serviceProvider);
+                    isServiceProviderDisposeStarted = true;
                     await serviceProvider.DisposeAsync();
                     isAsyncDisposeComplete = true;
                 }
@@ -1133,13 +1141,26 @@ public sealed class App : Application
                 return;
             }
 
-            // Dispose services only if async dispose has not completed
-            if (!isAsyncDisposeComplete)
+            // Dispose services only if the async dispose never reached the container
+            if (isServiceProviderDisposeStarted)
+            {
+                Logger.Debug("OnExit: Service provider already disposed, skipping");
+            }
+            else
             {
                 Logger.Debug("OnExit: Disposing App Services");
 
-                OnServiceProviderDisposing(serviceProvider);
-                serviceProvider.Dispose();
+                try
+                {
+                    OnServiceProviderDisposing(serviceProvider);
+                    serviceProvider.Dispose();
+                }
+                catch (Exception disposeEx)
+                {
+                    // The process is on its way out either way, so a failed dispose is logged
+                    // rather than surfaced as a crash dialog for an exit the user asked for
+                    Logger.Error(disposeEx, "OnExit: Failed to dispose App Services");
+                }
             }
 
             Logger.Debug("OnExit: Finished");

@@ -68,6 +68,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed **Update Metadata** silently skipping models imported from HuggingFace or OpenModelDB (their files are now hashed on demand), and metadata scans freezing the app while hashing large files
 - Fixed **Organize Models** appearing to do nothing out of the box — the default pattern is now `{base_model}/{file_name}` so the first preview actually proposes sorting into folders (saved patterns are untouched), and a pattern that would move nothing gets an explanation plus a one-click fix instead of an empty dialog
 - Fixed model card text being hard to read in light theme (dark text over the dark card overlay)
+- Fixed the app sometimes crashing on exit with an **Inference** tab open, most often with **Remove folder links on shutdown** enabled — the crash also lost that session's Inference dock layout instead of remembering it
+- Fixed a problem while shutting down showing a crash dialog after you'd already closed the app — shutdown errors are now logged and the app just exits
 
 ## v2.17.0-dev.2
 ### Added

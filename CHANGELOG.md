@@ -38,8 +38,10 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Updated the bundled **uv** package manager to 0.12.5, adding newer Python builds to the Python picker — including the 3.10 security releases requested in [#1709](https://github.com/LykosAI/StabilityMatrix/issues/1709)
 - Refreshed the model card badges across the **Checkpoint Manager** and the **CivitAI / CivArchive browsers** — compact chips instead of chunky pills, with a cloud-up update badge showing the release date, a distinct style for early-access-only updates, and clearer Installed / NSFW / Deleted states
 - **Checkpoint Manager** search is now typo-tolerant, sharing the Inference picker's fuzzy matching (`#tag` search unchanged)
+- **Triton & SageAttention** installs now pick up the latest wheels again — an upstream naming change had quietly pinned them to older builds, and the newest wheels fix black or noisy outputs on some setups. A known-good fallback list covers GitHub being unreachable, instead of a slow source build
 ### Fixed
 - Fixed custom node installs failing on legacy source builds that import `pkg_resources` (e.g. `cupy-wheel`) — pip runs started by extension install scripts now get the same `setuptools<82` constraint that package installs already applied for uv
+- Fixed another cause of [#1717](https://github.com/LykosAI/StabilityMatrix/issues/1717)'s "install an extension you already have" prompt — installed extensions whose git config has Windows-style line endings weren't being recognized
 - Fixed Qwen Image Edit's model check accepting an incompatible Krea 2 text encoder; the correct 7B download is offered instead
 - Fixed cloud-download entries in model dropdowns doing nothing until you clicked another item first, and the jumpy scrolling around them
 - Fixed switching model families after a restart keeping the previous family's encoders and slot count (e.g. Flux.2 Klein holding onto clip_l); your manual picks stay protected

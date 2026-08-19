@@ -378,6 +378,7 @@ public abstract partial class GitPackageExtensionManager(IPrerequisiteHelper pre
         progress?.Report(new ProgressReport(1f, message: "Uninstalled extension"));
     }
 
-    [GeneratedRegex("""\[remote "origin"\][\s\S]*?url\s*=\s*(.+)""")]
+    // \S+ rather than .+ so a CRLF config file doesn't leave a trailing \r in the url
+    [GeneratedRegex("""\[remote "origin"\][\s\S]*?url\s*=\s*(\S+)""")]
     private static partial Regex GitConfigRemoteOriginUrlRegex();
 }

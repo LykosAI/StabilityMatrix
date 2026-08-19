@@ -5,6 +5,12 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.17.0-dev.4
+### Changed
+- **Triton & SageAttention** installs (ComfyUI, FramePack, Forge Classic) now pick up the latest SageAttention wheels again — a wheel naming change upstream had quietly pinned installs to older builds, and the newest wheels fix black or noisy outputs on some setups. If GitHub can't be reached (offline, rate-limited), a built-in list of known-good wheels steps in so installs no longer fall back to a slow source build that needs Visual Studio Build Tools
+### Fixed
+- Fixed installed ComfyUI extensions being missed by the required-nodes check when their git config file has Windows-style line endings — another cause of the "install an extension you already have" prompt from [#1717](https://github.com/LykosAI/StabilityMatrix/issues/1717)
+
 ## v2.17.0-dev.3
 ### Added
 #### New Feature: 🔀 CivitAI Workflow Browsing

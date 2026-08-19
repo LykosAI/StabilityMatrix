@@ -108,9 +108,9 @@
                                     DataContext="{Binding ElementName=Dock, Path=DataContext}">
                                     <!--  Recessed pill wrapping the generate button row  -->
                                     <Border
-                                        MinWidth="400"
+                                        MaxWidth="400"
                                         Padding="6,4"
-                                        HorizontalAlignment="Center"
+                                        HorizontalAlignment="Stretch"
                                         Background="#33000000"
                                         BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
                                         BorderThickness="1"

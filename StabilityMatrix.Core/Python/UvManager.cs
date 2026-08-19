@@ -293,45 +293,49 @@ public partial class UvManager : IUvManager
         Logger.Debug($"Attempting fallback path discovery in central directory: {uvPythonInstallPath}");
         try
         {
-            // Build a version prefix that won't accidentally match higher minor/patch versions.
-            // e.g. "3.12." so that "cpython-3.12.10" matches but "cpython-3.13.12" does not.
-            var versionPrefix = $"{version.Major}.{version.Minor}.";
-
             var subdirectories = Directory.GetDirectories(uvPythonInstallPath);
             var potentialDirs = subdirectories
-                .Select(dir => new { Path = dir, DirInfo = new DirectoryInfo(dir) })
+                .Select(dir =>
+                {
+                    var info = new DirectoryInfo(dir);
+                    return new
+                    {
+                        Path = dir,
+                        Name = info.Name,
+                        CreationTimeUtc = info.CreationTimeUtc,
+                        Version = ParseUvInstallDirVersion(info.Name),
+                    };
+                })
                 .Where(x =>
-                    x.DirInfo.Name.StartsWith("cpython-", StringComparison.OrdinalIgnoreCase)
-                    || x.DirInfo.Name.StartsWith("pypy-", StringComparison.OrdinalIgnoreCase)
-                )
-                .Where(x =>
-                    x.DirInfo.Name.Contains(versionPrefix)
-                    || x.DirInfo.Name.EndsWith(
-                        $"-{version.Major}.{version.Minor}",
-                        StringComparison.OrdinalIgnoreCase
+                    (
+                        x.Name.StartsWith("cpython-", StringComparison.OrdinalIgnoreCase)
+                        || x.Name.StartsWith("pypy-", StringComparison.OrdinalIgnoreCase)
                     )
+                    && x.Version is { } parsedVersion
+                    && parsedVersion.Major == version.Major
+                    && parsedVersion.Minor == version.Minor
                 )
-                .OrderByDescending(x => x.DirInfo.CreationTimeUtc)
+                .OrderByDescending(x => x.CreationTimeUtc)
                 .ToList();
 
             foreach (var potentialDir in potentialDirs)
             {
                 var actualInstallPath = potentialDir.Path;
-                var pyInstallCheck = new PyInstallation(version, actualInstallPath);
+                var actualVersion = potentialDir.Version!.Value;
+                var pyInstallCheck = new PyInstallation(actualVersion, actualInstallPath);
                 if (!pyInstallCheck.Exists())
                     continue;
 
                 Logger.Info($"Fallback discovery found likely installation at: {actualInstallPath}");
-                var inferredKey = Path.GetFileName(actualInstallPath);
-                var inferredSource = inferredKey.Split('-')[0];
+                var inferredSource = potentialDir.Name.Split('-')[0];
                 return new UvPythonInfo(
-                    version,
+                    actualVersion,
                     actualInstallPath,
                     true,
                     inferredSource,
                     null,
                     null,
-                    inferredKey,
+                    potentialDir.Name,
                     null,
                     null
                 );
@@ -344,6 +348,35 @@ public partial class UvManager : IUvManager
 
         Logger.Error($"Failed to verify and locate Python {version} after UV install command.");
         return null;
+    }
+
+    /// <summary>
+    /// Parses the version out of a uv Python install directory name
+    /// (e.g. "cpython-3.12.10-windows-x86_64-none"), or null if it doesn't match the expected shape.
+    /// </summary>
+    public static PyVersion? ParseUvInstallDirVersion(string dirName)
+    {
+        var parts = dirName.Split('-');
+        if (parts.Length < 2)
+        {
+            return null;
+        }
+
+        // The version is segment [1]; take its leading "major.minor[.micro]" numeric prefix
+        // so suffixes like "rc1" or "+freethreaded" are tolerated.
+        var segment = parts[1];
+        var prefixLength = 0;
+        while (
+            prefixLength < segment.Length
+            && (char.IsDigit(segment[prefixLength]) || segment[prefixLength] == '.')
+        )
+        {
+            prefixLength++;
+        }
+
+        return prefixLength > 0 && PyVersion.TryParse(segment[..prefixLength], out var parsed)
+            ? parsed
+            : null;
     }
 
     [GeneratedRegex(

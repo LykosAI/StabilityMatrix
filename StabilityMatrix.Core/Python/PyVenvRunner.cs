@@ -206,7 +206,12 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable, IPyVenvRunner
             Compat.IsWindows ? "python.exe" : RelativePythonPath
         );
 
-        PyVenvConfigHelper.WritePyVenvCfg(cfgPath, pythonDirectory, baseExecutable);
+        var cfg = PyVenvCfg.Load(cfgPath);
+        cfg["home"] = pythonDirectory;
+        cfg["base-prefix"] = pythonDirectory;
+        cfg["base-exec-prefix"] = pythonDirectory;
+        cfg["base-executable"] = baseExecutable;
+        cfg.Save(cfgPath);
 
         // Update last set path
         lastSetPyvenvCfgPath = pythonDirectory;

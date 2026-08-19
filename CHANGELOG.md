@@ -5,12 +5,6 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
-## v2.17.0-dev.4
-### Changed
-- **Triton & SageAttention** installs (ComfyUI, FramePack, Forge Classic) now pick up the latest SageAttention wheels again — a wheel naming change upstream had quietly pinned installs to older builds, and the newest wheels fix black or noisy outputs on some setups. If GitHub can't be reached (offline, rate-limited), a built-in list of known-good wheels steps in so installs no longer fall back to a slow source build that needs Visual Studio Build Tools
-### Fixed
-- Fixed installed ComfyUI extensions being missed by the required-nodes check when their git config file has Windows-style line endings — another cause of the "install an extension you already have" prompt from [#1717](https://github.com/LykosAI/StabilityMatrix/issues/1717)
-
 ## v2.17.0-dev.3
 ### Added
 #### New Feature: 🔀 CivitAI Workflow Browsing
@@ -44,8 +38,10 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Updated the bundled **uv** package manager to 0.12.5, adding newer Python builds to the Python picker — including the 3.10 security releases requested in [#1709](https://github.com/LykosAI/StabilityMatrix/issues/1709)
 - Refreshed the model card badges across the **Checkpoint Manager** and the **CivitAI / CivArchive browsers** — compact chips instead of chunky pills, with a cloud-up update badge showing the release date, a distinct style for early-access-only updates, and clearer Installed / NSFW / Deleted states
 - **Checkpoint Manager** search is now typo-tolerant, sharing the Inference picker's fuzzy matching (`#tag` search unchanged)
+- **Triton & SageAttention** installs (ComfyUI, FramePack, Forge Classic) now pick up the latest SageAttention wheels again — a wheel naming change upstream had quietly pinned installs to older builds, and the newest wheels fix black or noisy outputs on some setups. If GitHub can't be reached (offline, rate-limited), a built-in list of known-good wheels steps in so installs no longer fall back to a slow source build that needs Visual Studio Build Tools
 ### Fixed
 - Fixed custom node installs failing on legacy source builds that import `pkg_resources` (e.g. `cupy-wheel`) — pip runs started by extension install scripts now get the same `setuptools<82` constraint that package installs already applied for uv
+- Fixed installed ComfyUI extensions being missed by the required-nodes check when their git config file has Windows-style line endings — another cause of the "install an extension you already have" prompt from [#1717](https://github.com/LykosAI/StabilityMatrix/issues/1717)
 - Fixed Qwen Image Edit's model check accepting an incompatible Krea 2 text encoder; the correct 7B download is offered instead
 - Fixed cloud-download entries in model dropdowns doing nothing until you clicked another item first, and the jumpy scrolling around them
 - Fixed switching model families after a restart keeping the previous family's encoders and slot count (e.g. Flux.2 Klein holding onto clip_l); your manual picks stay protected

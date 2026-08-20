@@ -45,6 +45,15 @@
                                 <Style Selector="Button.transparent">
                                     <Setter Property="BorderThickness" Value="0" />
                                 </Style>
+                                <!--
+                                    Disabled flank buttons keep the pill's surface. The shared
+                                    transparent style fills them with the same brush it uses for
+                                    hover, which inside the pill reads as "hovered", not "disabled".
+                                -->
+                                <Style Selector="Button.transparent:disabled /template/ ContentPresenter#PART_ContentPresenter">
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Setter Property="BorderBrush" Value="Transparent" />
+                                </Style>
                             </Grid.Styles>
 
                             <!--  Left flank: hires, then divider hugging Generate's left edge  -->

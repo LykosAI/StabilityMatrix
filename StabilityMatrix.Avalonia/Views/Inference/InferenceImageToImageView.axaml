@@ -5,14 +5,9 @@
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:dock="clr-namespace:StabilityMatrix.Avalonia.Controls.Dock"
-    xmlns:fluentIcons="using:FluentIcons.Avalonia.Fluent"
-    xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
     xmlns:inference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
-    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
-    xmlns:markupExtensions="clr-namespace:StabilityMatrix.Avalonia.MarkupExtensions"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
-    xmlns:modelsInference="clr-namespace:StabilityMatrix.Avalonia.Models.Inference"
     xmlns:system="clr-namespace:System;assembly=System.Runtime"
     xmlns:ui="using:FluentAvalonia.UI.Controls"
     xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
@@ -121,115 +116,7 @@
 
                                     <!--  Generate Buttons  -->
                                     <StackPanel Grid.Row="2" Margin="0,6,0,0">
-                                        <controls:Card Padding="8">
-                                            <!--  Recessed pill wrapping the generate button row  -->
-                                            <Border
-                                                MaxWidth="400"
-                                                Padding="6,4"
-                                                HorizontalAlignment="Stretch"
-                                                Background="#33000000"
-                                                BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
-                                                BorderThickness="1"
-                                                CornerRadius="10">
-                                                <Grid ColumnDefinitions="*,Auto,*" RowDefinitions="Auto,*">
-                                                    <Grid.Styles>
-                                                        <Style Selector="Button">
-                                                            <Setter Property="MinHeight" Value="32" />
-                                                        </Style>
-                                                        <!--  Borderless icon buttons; hover highlight preserved  -->
-                                                        <Style Selector="Button.transparent">
-                                                            <Setter Property="BorderThickness" Value="0" />
-                                                        </Style>
-                                                    </Grid.Styles>
-
-                                                    <!--  Left flank: hires, then divider hugging Generate's left edge  -->
-                                                    <StackPanel
-                                                        Grid.Row="1"
-                                                        Grid.Column="0"
-                                                        HorizontalAlignment="Right"
-                                                        Orientation="Horizontal">
-                                                        <Button
-                                                            Margin="4,0"
-                                                            Padding="12,8"
-                                                            icons:Attached.Icon="fa-solid fa-magnifying-glass-plus"
-                                                            Classes="transparent"
-                                                            Command="{Binding GenerateImageCommand}"
-                                                            CommandParameter="{x:Static modelsInference:GenerateFlags.HiresFixAndUseCurrentSeed}"
-                                                            ToolTip.Tip="Generate with Hires Scaling" />
-                                                        <Border
-                                                            Width="1"
-                                                            Height="22"
-                                                            Margin="4,0"
-                                                            VerticalAlignment="Center"
-                                                            Background="{DynamicResource DividerStrokeColorDefaultBrush}" />
-                                                    </StackPanel>
-
-                                                    <!--  Center: Generate + Cancel overlay  -->
-                                                    <Panel Grid.Row="1" Grid.Column="1">
-                                                        <!--  Main Generate Button  -->
-                                                        <Button
-                                                            x:Name="GenerateButton"
-                                                            Width="130"
-                                                            HorizontalAlignment="Stretch"
-                                                            Classes="accent"
-                                                            Command="{Binding GenerateImageCommand}"
-                                                            CommandParameter="{x:Static modelsInference:GenerateFlags.None}"
-                                                            HotKey="{markupExtensions:PlatformGesture Ctrl+Enter}"
-                                                            IsVisible="{Binding !GenerateImageCommand.CanBeCanceled}"
-                                                            ToolTip.Tip="{Binding $self.HotKey}">
-                                                            <Panel>
-                                                                <TextBlock IsVisible="{Binding #GenerateButton.IsEnabled}" Text="Generate Image" />
-                                                                <controls:ProgressRing IsIndeterminate="True" IsVisible="{Binding !#GenerateButton.IsEnabled}" />
-                                                            </Panel>
-                                                        </Button>
-                                                        <!--  Cancel Button  -->
-                                                        <Button
-                                                            x:Name="CancelButton"
-                                                            Width="130"
-                                                            HorizontalAlignment="Stretch"
-                                                            icons:Attached.Icon="fa-solid fa-stop"
-                                                            Command="{Binding GenerateImageCancelCommand}"
-                                                            IsVisible="{Binding GenerateImageCommand.CanBeCanceled}" />
-                                                    </Panel>
-
-                                                    <!--  Right flank: divider, current-seed, then add-to-queue  -->
-                                                    <StackPanel
-                                                        Grid.Row="1"
-                                                        Grid.Column="2"
-                                                        HorizontalAlignment="Left"
-                                                        Orientation="Horizontal">
-                                                        <Border
-                                                            Width="1"
-                                                            Height="22"
-                                                            Margin="4,0"
-                                                            VerticalAlignment="Center"
-                                                            Background="{DynamicResource DividerStrokeColorDefaultBrush}" />
-                                                        <Button
-                                                            Margin="4,0"
-                                                            Padding="12,8"
-                                                            icons:Attached.Icon="fa-solid fa-repeat"
-                                                            Classes="transparent"
-                                                            Command="{Binding GenerateImageCommand}"
-                                                            CommandParameter="{x:Static modelsInference:GenerateFlags.UseCurrentSeed}"
-                                                            ToolTip.Tip="Generate with current seed" />
-                                                        <!--  Add to Queue  -->
-                                                        <Button
-                                                            Margin="4,0"
-                                                            Padding="12,8"
-                                                            VerticalAlignment="Center"
-                                                            Classes="transparent"
-                                                            Command="{Binding AddToQueueCommand}"
-                                                            ToolTip.Tip="{x:Static lang:Resources.Label_AddToQueue}">
-                                                            <fluentIcons:SymbolIcon
-                                                                Width="16"
-                                                                Height="16"
-                                                                FontSize="16"
-                                                                Symbol="AppsAddIn" />
-                                                        </Button>
-                                                    </StackPanel>
-                                                </Grid>
-                                            </Border>
-                                        </controls:Card>
+                                        <controls:GenerateButtonBar ShowCurrentSeedButton="True" ShowHiresFixButton="True" />
                                     </StackPanel>
                                 </Grid>
 

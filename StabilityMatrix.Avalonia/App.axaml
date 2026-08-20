@@ -82,6 +82,7 @@
         <StyleInclude Source="Controls/Inference/StackExpander.axaml" />
         <StyleInclude Source="Controls/Inference/SeedCard.axaml" />
         <StyleInclude Source="Controls/Inference/SamplerCard.axaml" />
+        <StyleInclude Source="Controls/Inference/GenerateButtonBar.axaml" />
         <StyleInclude Source="Controls/Inference/ImageGalleryCard.axaml" />
         <StyleInclude Source="Controls/Inference/PromptCard.axaml" />
         <StyleInclude Source="Controls/Inference/UpscalerCard.axaml" />

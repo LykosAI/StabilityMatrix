@@ -67,7 +67,6 @@
     <PackageVersion Include="Refit.HttpClientFactory" Version="8.0.0" />
     <PackageVersion Include="RockLib.Reflection.Optimized" Version="3.0.0" />
     <PackageVersion Include="Nito.AsyncEx" Version="5.1.2" />
-    <PackageVersion Include="Salaros.ConfigParser" Version="0.3.8" />
     <PackageVersion Include="Semi.Avalonia" Version="11.2.0" />
     <PackageVersion Include="Semver" Version="3.0.0-beta.1" />
     <PackageVersion Include="Sentry" Version="5.5.1" />

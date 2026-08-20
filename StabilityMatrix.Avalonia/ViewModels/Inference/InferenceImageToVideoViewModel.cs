@@ -76,8 +76,8 @@ public partial class InferenceImageToVideoViewModel
         SeedCardViewModel = vmFactory.Get<SeedCardViewModel>();
         SeedCardViewModel.GenerateNewSeed();
 
-        ModelCardViewModel = vmFactory.Get<ImgToVidModelCardViewModel>(
-            vm => vm.EnableModelLoaderSelection = false
+        ModelCardViewModel = vmFactory.Get<ImgToVidModelCardViewModel>(vm =>
+            vm.EnableModelLoaderSelection = false
         );
 
         SamplerCardViewModel = vmFactory.Get<SamplerCardViewModel>(samplerCard =>
@@ -120,7 +120,7 @@ public partial class InferenceImageToVideoViewModel
         builder.Connections.Seed = args.SeedOverride switch
         {
             { } seed => Convert.ToUInt64(seed),
-            _ => Convert.ToUInt64(SeedCardViewModel.Seed)
+            _ => Convert.ToUInt64(SeedCardViewModel.Seed),
         };
 
         // Load models
@@ -133,7 +133,7 @@ public partial class InferenceImageToVideoViewModel
                 Name = builder.Nodes.GetUniqueName("ControlNet_LoadImage"),
                 Image =
                     SelectImageCardViewModel.ImageSource?.GetHashGuidFileNameCached("Inference")
-                    ?? throw new ValidationException()
+                    ?? throw new ValidationException(),
             }
         );
         builder.Connections.Primary = imageLoad.Output1;
@@ -167,7 +167,7 @@ public partial class InferenceImageToVideoViewModel
         CancellationToken cancellationToken
     )
     {
-        if (!await CheckClientConnectedWithPrompt() || !ClientManager.IsConnected)
+        if (!await CheckClientConnectedWithPrompt(cancellationToken) || !ClientManager.IsConnected)
         {
             return;
         }
@@ -207,13 +207,13 @@ public partial class InferenceImageToVideoViewModel
                 OutputNodeNames = buildPromptArgs.Builder.Connections.OutputNodeNames.ToArray(),
                 Parameters = SaveStateToParameters(new GenerationParameters()) with
                 {
-                    Seed = Convert.ToUInt64(seed)
+                    Seed = Convert.ToUInt64(seed),
                 },
                 Project = inferenceProject,
                 FilesToTransfer = buildPromptArgs.FilesToTransfer,
                 BatchIndex = i,
                 // Only clear output images on the first batch
-                ClearOutputImages = i == 0
+                ClearOutputImages = i == 0,
             };
 
             batchArgs.Add(generationArgs);

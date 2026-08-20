@@ -118,20 +118,9 @@ public partial class ImageAnnotationEditorViewModel(IServiceManager<ViewModelBas
     /// </summary>
     public SKImage? RenderAnnotatedImage()
     {
-        var canvasSize = PaintCanvasViewModel.CanvasSize;
-        if (canvasSize.IsEmpty)
-        {
-            return null;
-        }
-
-        using var surface = SKSurface.Create(new SKImageInfo(canvasSize.Width, canvasSize.Height));
-        PaintCanvasViewModel.RenderToSurface(
-            surface,
-            renderBackgroundFill: false,
-            renderBackgroundImage: true
-        );
-
-        return surface.Snapshot();
+        // Composes from an immutable snapshot onto a CPU surface owned by the call,
+        // without touching the on-screen render pass or its surfaces
+        return PaintCanvasViewModel.RenderToImage(renderBackgroundImage: true);
     }
 
     /// <summary>
@@ -215,6 +204,7 @@ public partial class ImageAnnotationEditorViewModel(IServiceManager<ViewModelBas
 
     public void Dispose()
     {
+        PaintCanvasViewModel.Dispose();
         originalBitmap?.Dispose();
         cachedAnnotatedImage?.Dispose();
         GC.SuppressFinalize(this);

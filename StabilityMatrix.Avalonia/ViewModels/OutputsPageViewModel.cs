@@ -773,9 +773,22 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
             var category = new TreeViewDirectory { Name = dirName, Path = dir };
 
-            if (Directory.GetDirectories(dir, "*", EnumerationOptionConstants.TopLevelOnly).Length > 0)
+            try
             {
-                category.SubDirectories = GetSubfolders(dir);
+                if (Directory.GetDirectories(dir, "*", EnumerationOptionConstants.TopLevelOnly).Length > 0)
+                {
+                    category.SubDirectories = GetSubfolders(dir);
+                }
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                // Broken junction / symlink or inaccessible directory - skip it
+                logger.LogWarning(
+                    ex,
+                    "Skipping inaccessible directory {Dir} while building output tree",
+                    dir
+                );
+                continue;
             }
 
             subfolders.Add(category);

@@ -1,10 +1,11 @@
-using System;
+﻿using System;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAvalonia.UI.Controls;
+using NLog;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
@@ -19,6 +20,8 @@ namespace StabilityMatrix.Avalonia.Helpers;
 /// </summary>
 public static class InferenceConnectionHelper
 {
+    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
     /// <summary>
     /// Shows the connection help dialog if not connected, then waits for the connection when the
     /// user chose to launch ComfyUI from it. Returns whether the client ended up connected.
@@ -46,7 +49,8 @@ public static class InferenceConnectionHelper
         // it here and let the caller resume instead of forcing another button press.
         if (result == ContentDialogResult.Primary && vm.IsLaunchMode)
         {
-            return await WaitForConnectedAsync(
+            return await WaitForLaunchAndConnectionAsync(
+                vm.LaunchSelectedPackageCommand.ExecutionTask,
                 clientManager,
                 runningPackageService,
                 progress,
@@ -55,6 +59,50 @@ public static class InferenceConnectionHelper
         }
 
         return clientManager.IsConnected;
+    }
+
+    /// <summary>
+    /// Waits for a package launch to finish, then for the client to connect.
+    /// </summary>
+    /// <param name="launchTask">
+    /// The in-flight launch, or null if nothing was launched. The dialog runs its launch command
+    /// through <see cref="System.Windows.Input.ICommand.Execute"/>, which cannot be awaited, so
+    /// the package has not registered as running yet when the dialog closes - checking the
+    /// connection first would see nothing starting up and give up immediately.
+    /// </param>
+    public static async Task<bool> WaitForLaunchAndConnectionAsync(
+        Task? launchTask,
+        IInferenceClientManager clientManager,
+        RunningPackageService runningPackageService,
+        ProgressViewModel? progress = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (launchTask is { IsCompleted: false })
+        {
+            if (progress is not null)
+            {
+                progress.IsIndeterminate = true;
+                progress.Text = "Waiting for ComfyUI to start...";
+            }
+
+            try
+            {
+                await launchTask.WaitAsync(cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                progress?.ClearProgress();
+                return clientManager.IsConnected;
+            }
+            catch (Exception e)
+            {
+                // The launch surfaces its own errors; fall through so the connection state decides
+                Logger.Warn(e, "Package launch faulted while waiting to connect");
+            }
+        }
+
+        return await WaitForConnectedAsync(clientManager, runningPackageService, progress, cancellationToken);
     }
 
     /// <summary>

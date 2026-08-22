@@ -128,7 +128,7 @@ public class StableSwarm(
             {
                 Name = "Launch Mode",
                 Type = LaunchOptionType.Bool,
-                Options = ["--launch_mode web", "--launch_mode webinstall"],
+                Options = ["--launch_mode none", "--launch_mode web", "--launch_mode webinstall"],
             },
             LaunchOptionDefinition.Extras,
         ];

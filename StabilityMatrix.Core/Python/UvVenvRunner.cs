@@ -577,12 +577,14 @@ public class UvVenvRunner : IPyVenvRunner
         // Disable pip caching - uses significant memory for large packages like torch
         // env["PIP_NO_CACHE_DIR"] = "true";
 
+        // Add bundled uv to PATH so package launch scripts can invoke `uv`
+        var uvFolder = GlobalConfig.LibraryDir.JoinDir("Assets", "uv");
+
         // On windows, add portable git to PATH and binary as GIT
         if (Compat.IsWindows)
         {
             var portableGitBin = GlobalConfig.LibraryDir.JoinDir("PortableGit", "bin");
             var venvBin = RootPath.JoinDir(RelativeBinPath);
-            var uvFolder = GlobalConfig.LibraryDir.JoinDir("Assets", "uv");
             if (env.TryGetValue("PATH", out var pathValue))
             {
                 env = env.SetItem(
@@ -600,11 +602,11 @@ public class UvVenvRunner : IPyVenvRunner
         {
             if (env.TryGetValue("PATH", out var pathValue))
             {
-                env = env.SetItem("PATH", Compat.GetEnvPathWithExtensions(pathValue));
+                env = env.SetItem("PATH", Compat.GetEnvPathWithExtensions(uvFolder, pathValue));
             }
             else
             {
-                env = env.SetItem("PATH", Compat.GetEnvPathWithExtensions());
+                env = env.SetItem("PATH", Compat.GetEnvPathWithExtensions(uvFolder));
             }
         }
 

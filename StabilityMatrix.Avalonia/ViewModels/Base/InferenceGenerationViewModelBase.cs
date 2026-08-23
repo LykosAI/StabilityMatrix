@@ -9,6 +9,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
@@ -66,6 +67,7 @@ public abstract partial class InferenceGenerationViewModelBase
     private readonly RunningPackageService runningPackageService;
     private readonly IServiceManager<ViewModelBase> vmFactory;
     private readonly INotificationService notificationService;
+    private readonly IPromptQueueService promptQueueService;
 
     [JsonPropertyName("ImageGallery")]
     public ImageGalleryCardViewModel ImageGalleryCardViewModel { get; }
@@ -85,7 +87,8 @@ public abstract partial class InferenceGenerationViewModelBase
         IInferenceClientManager inferenceClientManager,
         INotificationService notificationService,
         ISettingsManager settingsManager,
-        RunningPackageService runningPackageService
+        RunningPackageService runningPackageService,
+        IPromptQueueService promptQueueService
     )
         : base(notificationService)
     {
@@ -93,6 +96,7 @@ public abstract partial class InferenceGenerationViewModelBase
         this.settingsManager = settingsManager;
         this.runningPackageService = runningPackageService;
         this.vmFactory = vmFactory;
+        this.promptQueueService = promptQueueService;
 
         ClientManager = inferenceClientManager;
 
@@ -332,6 +336,8 @@ public abstract partial class InferenceGenerationViewModelBase
             catch (ApiException e)
             {
                 Logger.Warn(e, "Api exception while queuing prompt");
+                if (IsQueueReplay)
+                    throw;
                 await DialogHelper.CreateApiExceptionDialog(e, "Api Error").ShowAsync();
                 return;
             }
@@ -376,6 +382,8 @@ public abstract partial class InferenceGenerationViewModelBase
             catch (ComfyNodeException e)
             {
                 Logger.Warn(e, "Comfy node exception while queuing prompt");
+                if (IsQueueReplay)
+                    throw;
                 await DialogHelper
                     .CreateJsonDialog(e.JsonData, "Comfy Error", "Node execution encountered an error")
                     .ShowAsync();
@@ -613,6 +621,154 @@ public abstract partial class InferenceGenerationViewModelBase
     }
 
     /// <summary>
+    /// Snapshots the current tab state and adds it to the prompt queue. Separate from the Generate
+    /// button; does not require a connected client (queueing while ComfyUI is off is allowed).
+    /// </summary>
+    [RelayCommand]
+    private void AddToQueue()
+    {
+        var project = InferenceProjectDocument.FromLoadable(this);
+
+        var item = new PromptQueueItem
+        {
+            Name = $"{TabTitle} - {DateTime.Now:t}",
+            ProjectType = project.ProjectType,
+            Project = project,
+            PromptSnippet = GetPromptSnippet(project),
+            ParamsSummary = GetParamsSummary(project),
+        };
+
+        promptQueueService.Enqueue(item);
+
+        notificationService.Show(
+            Resources.Label_PromptQueue,
+            Resources.Label_AddedToQueue,
+            NotificationType.Information
+        );
+    }
+
+    /// <summary>
+    /// Extracts the positive prompt text from a project snapshot as a single line for queue card
+    /// display. Returns null for tabs without a prompt card (e.g. Upscale) or empty prompts.
+    /// </summary>
+    private static string? GetPromptSnippet(InferenceProjectDocument project)
+    {
+        try
+        {
+            if (
+                project.State?["Prompt"] is not { } promptCard
+                || promptCard["Prompt"] is not JsonValue promptNode
+                || !promptNode.TryGetValue<string>(out var prompt)
+            )
+            {
+                return null;
+            }
+
+            var singleLine = string.Join(
+                ' ',
+                prompt.Split(
+                    ["\r\n", "\n", "\r"],
+                    StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries
+                )
+            );
+
+            return string.IsNullOrWhiteSpace(singleLine) ? null : singleLine;
+        }
+        catch (Exception e)
+        {
+            Logger.Debug(e, "Failed to extract prompt snippet from project snapshot");
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Extracts compact generation parameters (dimensions, steps, fixed seed) from a project
+    /// snapshot for queue card display. Returns null if nothing useful is available.
+    /// </summary>
+    private static string? GetParamsSummary(InferenceProjectDocument project)
+    {
+        try
+        {
+            if (project.State is not { } state)
+                return null;
+
+            var parts = new List<string>();
+
+            var sampler = state["Sampler"];
+
+            if (GetIntValue(sampler?["Width"]) is { } width && GetIntValue(sampler?["Height"]) is { } height)
+            {
+                parts.Add($"{width}×{height}");
+            }
+
+            if (GetIntValue(sampler?["Steps"]) is { } steps)
+            {
+                parts.Add(string.Format(Resources.Label_QueueParamsSteps, steps));
+            }
+
+            // Only show the seed when it's fixed; randomized seeds are regenerated at run time
+            if (project.GetSeedModel() is { IsRandomizeEnabled: false } seed)
+            {
+                parts.Add(string.Format(Resources.Label_QueueParamsSeed, seed.Seed));
+            }
+
+            return parts.Count > 0 ? string.Join(" · ", parts) : null;
+        }
+        catch (Exception e)
+        {
+            Logger.Debug(e, "Failed to extract params summary from project snapshot");
+            return null;
+        }
+    }
+
+    private static int? GetIntValue(JsonNode? node)
+    {
+        return node is JsonValue value && value.TryGetValue<int>(out var result) ? result : null;
+    }
+
+    /// <summary>
+    /// True while this view model is replaying a generation headlessly for the prompt queue.
+    /// Errors are then surfaced to the caller as exceptions instead of interactive dialogs.
+    /// </summary>
+    [JsonIgnore]
+    protected bool IsQueueReplay { get; private set; }
+
+    /// <summary>
+    /// Ensures all input image sources have their content hashes computed. Prompt building
+    /// requires cached hashes synchronously (<see cref="ImageSource.GetHashGuidFileNameCached()"/>);
+    /// interactive selection precomputes them in the background at selection time, but a state
+    /// restore followed by an immediate generation (queue replay) must await them explicitly.
+    /// </summary>
+    private async Task EnsureInputImagesHashedAsync()
+    {
+        foreach (var image in GetInputImages())
+        {
+            await image.GetBlake3HashAsync();
+        }
+    }
+
+    /// <summary>
+    /// Runs a single generation using the same implementation as the Generate button, for
+    /// headless replay by the prompt queue. Unlike the command, exceptions are not swallowed so
+    /// the queue can mark the item failed; <see cref="OperationCanceledException"/> propagates for
+    /// cancelled items.
+    /// </summary>
+    public async Task RunGenerationForQueueAsync(CancellationToken cancellationToken)
+    {
+        IsQueueReplay = true;
+        try
+        {
+            await EnsureInputImagesHashedAsync();
+
+            await GenerateImageImpl(GenerateOverrides.FromFlags(default), cancellationToken);
+        }
+        finally
+        {
+            IsQueueReplay = false;
+        }
+    }
+
+    /// <summary>
     /// Command for the Generate Image button
     /// </summary>
     /// <param name="options">Optional overrides (side buttons)</param>
@@ -648,97 +804,19 @@ public abstract partial class InferenceGenerationViewModelBase
         if (ClientManager.IsConnected)
             return true;
 
-        var vm = vmFactory.Get<InferenceConnectionHelpViewModel>();
-        var result = await vm.CreateDialog().ShowAsync();
-
-        if (ClientManager.IsConnected)
-            return true;
-
-        // If the user chose to launch ComfyUI, the package is now starting up. The connection
-        // is established automatically by InferenceViewModel once startup completes, so wait for
-        // it here and let the generation resume instead of forcing the user to press Generate again.
-        if (result == ContentDialogResult.Primary && vm.IsLaunchMode)
+        // No interactive connection prompt during queue replay - fail the item instead
+        if (IsQueueReplay)
         {
-            return await WaitForConnectedAsync(cancellationToken);
+            throw new ValidationException("ComfyUI is not connected");
         }
 
-        return ClientManager.IsConnected;
-    }
-
-    /// <summary>
-    /// Waits for the ClientManager to become connected, showing indeterminate progress.
-    /// Used after launching ComfyUI from the connection prompt so a queued generation can
-    /// resume automatically once the backend is ready. Stops waiting early if ComfyUI is
-    /// shut down or crashes before connecting (it is removed from RunningPackages either way).
-    /// </summary>
-    private async Task<bool> WaitForConnectedAsync(CancellationToken cancellationToken)
-    {
-        if (ClientManager.IsConnected)
-            return true;
-
-        // RunContinuationsAsynchronously so the await resumption (and UI updates in finally)
-        // don't run synchronously on the thread that raised the completing event.
-        var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-
-        bool IsAnyComfyRunning() =>
-            runningPackageService.RunningPackages.Values.Any(vm => vm.RunningPackage.BasePackage is ComfyUI);
-
-        void OnPropertyChanged(object? sender, PropertyChangedEventArgs args)
-        {
-            // null/empty PropertyName means "all properties changed" per INotifyPropertyChanged
-            if (
-                args.PropertyName is nameof(ClientManager.IsConnected) or null or ""
-                && ClientManager.IsConnected
-            )
-            {
-                tcs.TrySetResult();
-            }
-        }
-
-        void OnRunningPackagesChanged(object? sender, NotifyCollectionChangedEventArgs args)
-        {
-            // ComfyUI was shut down or crashed before connecting - stop waiting
-            if (!IsAnyComfyRunning())
-            {
-                tcs.TrySetResult();
-            }
-        }
-
-        ClientManager.PropertyChanged += OnPropertyChanged;
-        runningPackageService.RunningPackages.CollectionChanged += OnRunningPackagesChanged;
-        try
-        {
-            // Re-check in case it connected, or the package already stopped, between the
-            // initial checks and subscribing
-            if (ClientManager.IsConnected)
-                return true;
-            if (!IsAnyComfyRunning())
-                return false;
-
-            // Give up waiting after a generous timeout in case startup never completes
-            using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            timeoutCts.CancelAfter(TimeSpan.FromMinutes(5));
-
-            OutputProgress.IsIndeterminate = true;
-            OutputProgress.Text = "Waiting for ComfyUI to start...";
-
-            await using (timeoutCts.Token.Register(() => tcs.TrySetCanceled(timeoutCts.Token)))
-            {
-                await tcs.Task;
-            }
-
-            return ClientManager.IsConnected;
-        }
-        catch (OperationCanceledException)
-        {
-            return ClientManager.IsConnected;
-        }
-        finally
-        {
-            ClientManager.PropertyChanged -= OnPropertyChanged;
-            runningPackageService.RunningPackages.CollectionChanged -= OnRunningPackagesChanged;
-            OutputProgress.ClearProgress();
-        }
+        return await InferenceConnectionHelper.PromptAndWaitForConnectionAsync(
+            vmFactory,
+            ClientManager,
+            runningPackageService,
+            OutputProgress,
+            cancellationToken
+        );
     }
 
     /// <summary>
@@ -809,6 +887,20 @@ public abstract partial class InferenceGenerationViewModelBase
         if (missingExtensions.Count == 0 && outOfDateExtensions.Count == 0)
         {
             return true;
+        }
+
+        // No interactive install prompt during queue replay - fail the item with a readable message
+        if (IsQueueReplay)
+        {
+            throw new ValidationException(
+                "Missing required extensions: "
+                    + string.Join(
+                        ", ",
+                        missingExtensions
+                            .Select(ext => ext.Name)
+                            .Concat(outOfDateExtensions.Select(pair => pair.Specifier.Name))
+                    )
+            );
         }
 
         await ComfyExtensionInstallHelper.PromptInstallAndRestartAsync(

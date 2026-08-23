@@ -64,9 +64,17 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
         IServiceManager<ViewModelBase> vmFactory,
         IModelIndexService modelIndexService,
         RunningPackageService runningPackageService,
-        TabContext tabContext
+        TabContext tabContext,
+        IPromptQueueService promptQueueService
     )
-        : base(vmFactory, inferenceClientManager, notificationService, settingsManager, runningPackageService)
+        : base(
+            vmFactory,
+            inferenceClientManager,
+            notificationService,
+            settingsManager,
+            runningPackageService,
+            promptQueueService
+        )
     {
         this.notificationService = notificationService;
         this.modelIndexService = modelIndexService;
@@ -104,7 +112,6 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
                 typeof(HiresFixModule),
                 typeof(SaveImageModule),
                 typeof(UpscalerModule),
-                typeof(FaceDetailerModule),
             };
             modulesCard.DefaultModules = new[] { typeof(HiresFixModule), typeof(UpscalerModule) };
             modulesCard.InitializeDefaults();
@@ -249,50 +256,41 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
 
     protected InferenceWorkflowProfile ResolvedWorkflowProfile => ModelCardViewModel.ResolvedWorkflowProfile;
 
+    protected bool IsCustomProfile => ResolvedWorkflowProfile == InferenceWorkflowProfile.Custom;
+
     protected bool IsFlux2Unet =>
         IsUnetLoader
         && (
-            ResolvedWorkflowProfile is InferenceWorkflowProfile.Flux2
-            || (
-                ResolvedWorkflowProfile is InferenceWorkflowProfile.Custom
-                && ModelCardViewModel.SelectedClipType is "flux2"
-            )
+            ResolvedWorkflowProfile.UsesFlux2Scheduler
+            || (IsCustomProfile && ModelCardViewModel.SelectedClipType is "flux2")
         );
 
-    protected bool IsZImageUnet =>
+    /// <summary>
+    /// Whether the workflow applies ModelSamplingAuraFlow (Z-Image, Qwen Image — or their
+    /// clip types selected through the Custom profile).
+    /// </summary>
+    protected bool UsesAuraFlowModelSampling =>
         IsUnetLoader
         && (
-            ResolvedWorkflowProfile
-                is InferenceWorkflowProfile.ZImageBase
-                    or InferenceWorkflowProfile.ZImageTurbo
-            || (
-                ResolvedWorkflowProfile is InferenceWorkflowProfile.Custom
-                && ModelCardViewModel.SelectedClipType is "lumina2"
-            )
+            ResolvedWorkflowProfile.UsesAuraFlowShift
+            || (IsCustomProfile && ModelCardViewModel.SelectedClipType is "lumina2" or "qwen_image")
         );
 
     protected bool UsesSd3Latent =>
-        ResolvedWorkflowProfile
-            is InferenceWorkflowProfile.Flux
-                or InferenceWorkflowProfile.ZImageBase
-                or InferenceWorkflowProfile.ZImageTurbo
-                or InferenceWorkflowProfile.HiDream
-        || (
-            ResolvedWorkflowProfile is InferenceWorkflowProfile.Custom
-            && ModelCardViewModel.SelectedClipType is not "stable_diffusion" and not "flux2"
-        );
+        ResolvedWorkflowProfile.Latent == LatentType.Sd3
+        || (IsCustomProfile && ModelCardViewModel.SelectedClipType is not "stable_diffusion" and not "flux2");
 
     protected bool UsesFluxGuidanceSampler =>
-        ResolvedWorkflowProfile is InferenceWorkflowProfile.Flux or InferenceWorkflowProfile.HiDream
+        ResolvedWorkflowProfile.UsesFluxGuidance
         || (
-            ResolvedWorkflowProfile is InferenceWorkflowProfile.Custom
+            IsCustomProfile
             && IsUnetLoader
             && ModelCardViewModel.SelectedClipType is not "stable_diffusion" and not "lumina2" and not "flux2"
         );
 
     protected void ApplyModelSamplingForCurrentWorkflow(ModuleApplyStepEventArgs applyArgs)
     {
-        if (!IsZImageUnet)
+        if (!UsesAuraFlowModelSampling)
             return;
 
         var builder = applyArgs.Builder;
@@ -336,44 +334,17 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
 
     private void ApplyRecommendedDefaults(InferenceWorkflowProfile profile)
     {
-        switch (profile)
+        if (profile.RecommendedDefaults is not { } defaults)
+            return;
+
+        SamplerCardViewModel.SelectedSampler = defaults.Sampler;
+        SamplerCardViewModel.SelectedScheduler = defaults.Scheduler;
+        SamplerCardViewModel.Steps = defaults.Steps;
+        SamplerCardViewModel.CfgScale = defaults.CfgScale;
+
+        if (defaults.Shift is { } shift)
         {
-            case InferenceWorkflowProfile.DefaultCheckpoint:
-                SamplerCardViewModel.SelectedSampler = ComfySampler.EulerAncestral;
-                SamplerCardViewModel.SelectedScheduler = ComfyScheduler.Normal;
-                SamplerCardViewModel.Steps = 30;
-                SamplerCardViewModel.CfgScale = 5.0d;
-                break;
-            case InferenceWorkflowProfile.Flux:
-                SamplerCardViewModel.SelectedSampler = ComfySampler.Euler;
-                SamplerCardViewModel.SelectedScheduler = ComfyScheduler.Simple;
-                SamplerCardViewModel.Steps = 20;
-                SamplerCardViewModel.CfgScale = 3.5d;
-                break;
-            case InferenceWorkflowProfile.Flux2:
-                SamplerCardViewModel.SelectedSampler = ComfySampler.Euler;
-                SamplerCardViewModel.SelectedScheduler = ComfyScheduler.Normal;
-                SamplerCardViewModel.Steps = 20;
-                SamplerCardViewModel.CfgScale = 5.0d;
-                break;
-            case InferenceWorkflowProfile.ZImageTurbo:
-                SamplerCardViewModel.SelectedSampler = ComfySampler.ResMultistep;
-                SamplerCardViewModel.SelectedScheduler = ComfyScheduler.Simple;
-                SamplerCardViewModel.Steps = 8;
-                SamplerCardViewModel.CfgScale = 1.0d;
-                break;
-            case InferenceWorkflowProfile.ZImageBase:
-                SamplerCardViewModel.SelectedSampler = ComfySampler.ResMultistep;
-                SamplerCardViewModel.SelectedScheduler = ComfyScheduler.Simple;
-                SamplerCardViewModel.Steps = 30;
-                SamplerCardViewModel.CfgScale = 4.0d;
-                break;
-            case InferenceWorkflowProfile.Anima:
-                SamplerCardViewModel.SelectedSampler = ComfySampler.ErSde;
-                SamplerCardViewModel.SelectedScheduler = ComfyScheduler.Simple;
-                SamplerCardViewModel.Steps = 30;
-                SamplerCardViewModel.CfgScale = 4.0d;
-                break;
+            ModelCardViewModel.Shift = shift;
         }
     }
 

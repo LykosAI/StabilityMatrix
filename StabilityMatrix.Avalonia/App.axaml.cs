@@ -100,6 +100,13 @@ public sealed class App : Application
     /// </summary>
     private bool isAsyncDisposeComplete;
 
+    /// <summary>
+    /// True once <see cref="ServiceProvider.DisposeAsync"/> has been entered. The container marks
+    /// itself disposed before it begins disposing services, so a dispose that throws partway still
+    /// leaves a provider that throws <see cref="ObjectDisposedException"/> on any further resolve.
+    /// </summary>
+    private bool isServiceProviderDisposeStarted;
+
     private bool isOnExitComplete;
 
     /// <summary>
@@ -458,7 +465,9 @@ public sealed class App : Application
             provider.GetRequiredService<INavigationService<MainWindowViewModel>>(),
             provider.GetRequiredService<INavigationService<SettingsViewModel>>(),
             provider.GetRequiredService<IDocumentationNavigationService>(),
-            provider.GetRequiredService<IDistributedSubscriber<string, Uri>>()
+            provider.GetRequiredService<IDistributedSubscriber<string, Uri>>(),
+            provider.GetRequiredService<IUvCacheService>(),
+            provider.GetRequiredService<IUvCachePurgeRunner>()
         )
         {
             Pages =
@@ -930,11 +939,20 @@ public sealed class App : Application
     /// </summary>
     /// <remarks>This returns asynchronously *without waiting* for Shutdown</remarks>
     /// <param name="exitCode">Exit code for the application.</param>
+    /// <param name="skipConfirmation">
+    /// When true, the running-packages exit confirmation in <see cref="OnShutdownRequested"/>
+    /// is bypassed (used by the quick-hide hotkey's Exit mode).
+    /// </param>
     /// <exception cref="NullReferenceException">If Application.Current is null</exception>
-    public static void Shutdown(int exitCode = 0)
+    public static void Shutdown(int exitCode = 0, bool skipConfirmation = false)
     {
         if (Current is null)
             throw new NullReferenceException("Current Application was null when Shutdown called");
+
+        if (skipConfirmation && Current is App app)
+        {
+            app.isExitConfirmed = true;
+        }
 
         if (Current.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime lifetime)
         {
@@ -1056,6 +1074,7 @@ public sealed class App : Application
                 try
                 {
                     OnServiceProviderDisposing(serviceProvider);
+                    isServiceProviderDisposeStarted = true;
                     await serviceProvider.DisposeAsync();
                     isAsyncDisposeComplete = true;
                 }
@@ -1122,13 +1141,26 @@ public sealed class App : Application
                 return;
             }
 
-            // Dispose services only if async dispose has not completed
-            if (!isAsyncDisposeComplete)
+            // Dispose services only if the async dispose never reached the container
+            if (isServiceProviderDisposeStarted)
+            {
+                Logger.Debug("OnExit: Service provider already disposed, skipping");
+            }
+            else
             {
                 Logger.Debug("OnExit: Disposing App Services");
 
-                OnServiceProviderDisposing(serviceProvider);
-                serviceProvider.Dispose();
+                try
+                {
+                    OnServiceProviderDisposing(serviceProvider);
+                    serviceProvider.Dispose();
+                }
+                catch (Exception disposeEx)
+                {
+                    // The process is on its way out either way, so a failed dispose is logged
+                    // rather than surfaced as a crash dialog for an exit the user asked for
+                    Logger.Error(disposeEx, "OnExit: Failed to dispose App Services");
+                }
             }
 
             Logger.Debug("OnExit: Finished");

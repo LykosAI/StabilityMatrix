@@ -1,0 +1,78 @@
+﻿<controls:UserControlBase
+    x:Class="StabilityMatrix.Avalonia.Views.Dialogs.WorkflowMetadataEditorDialog"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
+    xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:dialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
+    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vendorLabs="clr-namespace:StabilityMatrix.Avalonia.Controls.VendorLabs"
+    d:DesignHeight="420"
+    d:DesignWidth="520"
+    x:DataType="dialogs:WorkflowMetadataEditorViewModel"
+    mc:Ignorable="d">
+    <Grid
+        Width="520"
+        ColumnDefinitions="Auto, *"
+        RowDefinitions="Auto, Auto, *">
+        <StackPanel
+            Grid.Row="0"
+            Grid.RowSpan="3"
+            Grid.Column="0"
+            Margin="8"
+            Orientation="Vertical"
+            Spacing="8">
+            <Border
+                Width="180"
+                Height="220"
+                ClipToBounds="True"
+                CornerRadius="8">
+                <Panel>
+                    <avalonia:Icon
+                        Width="180"
+                        Height="220"
+                        FontSize="64"
+                        IsVisible="{Binding PreviewImageSource, Converter={x:Static StringConverters.IsNullOrEmpty}}"
+                        Value="fa-regular fa-file-code" />
+                    <vendorLabs:BetterAsyncImage
+                        Width="180"
+                        Height="220"
+                        CornerRadius="8"
+                        IsVisible="{Binding PreviewImageSource, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                        Source="{Binding PreviewImageSource}"
+                        Stretch="UniformToFill" />
+                </Panel>
+            </Border>
+            <Button
+                HorizontalAlignment="Stretch"
+                Command="{Binding ChooseImageCommand}"
+                Content="{x:Static lang:Resources.Action_ChooseImage}" />
+        </StackPanel>
+
+        <StackPanel
+            Grid.Row="0"
+            Grid.Column="1"
+            Margin="8"
+            Orientation="Vertical"
+            Spacing="4">
+            <TextBlock Text="{x:Static lang:Resources.Label_DisplayName}" />
+            <TextBox Text="{Binding Name}" />
+        </StackPanel>
+
+        <StackPanel
+            Grid.Row="1"
+            Grid.Column="1"
+            Margin="8"
+            Orientation="Vertical"
+            Spacing="4">
+            <TextBlock Text="{x:Static lang:Resources.Label_WorkflowDescription}" />
+            <TextBox
+                MinHeight="140"
+                AcceptsReturn="True"
+                Text="{Binding Description}"
+                TextWrapping="Wrap" />
+        </StackPanel>
+    </Grid>
+</controls:UserControlBase>

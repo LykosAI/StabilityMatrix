@@ -1,7 +1,8 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
+using AsyncAwaitBestPractices;
 using Avalonia.Controls.Notifications;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -24,6 +25,7 @@ using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 using StabilityMatrix.Core.Models.Api.Comfy.NodeTypes;
 using StabilityMatrix.Core.Models.Inference;
+using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
@@ -180,8 +182,8 @@ public partial class ModelCardViewModel(
         nameof(IsSd3Clip),
         nameof(IsHiDreamClip),
         nameof(ResolvedWorkflowProfile),
+        nameof(IsCustomWorkflow),
         nameof(IsHiDreamWorkflow),
-        nameof(IsZImageWorkflow),
         nameof(ShowShift),
         nameof(ShowEncoderTypeSelection),
         nameof(HasRecommendedDefaults),
@@ -194,8 +196,8 @@ public partial class ModelCardViewModel(
     [ObservableProperty]
     [NotifyPropertyChangedFor(
         nameof(ResolvedWorkflowProfile),
+        nameof(IsCustomWorkflow),
         nameof(IsHiDreamWorkflow),
-        nameof(IsZImageWorkflow),
         nameof(ShowShift),
         nameof(ShowEncoderTypeSelection),
         nameof(HasRecommendedDefaults),
@@ -247,6 +249,7 @@ public partial class ModelCardViewModel(
             "ltxv",
             "newbie",
             "ace",
+            "krea2",
             "lumina2",
             "qwen_image",
             "wan",
@@ -258,8 +261,9 @@ public partial class ModelCardViewModel(
             "stable_audio",
             "stable_diffusion",
         ];
+
     public List<InferenceWorkflowProfile> WorkflowProfiles { get; set; } =
-        Enum.GetValues<InferenceWorkflowProfile>().ToList();
+        InferenceWorkflowProfile.All.ToList();
 
     public StackEditableCardViewModel ExtraNetworksStackCardViewModel { get; } =
         new(vmFactory) { Title = Resources.Label_ExtraNetworks, AvailableModules = [typeof(LoraModule)] };
@@ -279,12 +283,10 @@ public partial class ModelCardViewModel(
 
     public bool IsSd3Clip => SelectedClipType == "sd3";
     public bool IsHiDreamClip => SelectedClipType == "hidream";
+    public bool IsCustomWorkflow => ResolvedWorkflowProfile == InferenceWorkflowProfile.Custom;
     public bool IsHiDreamWorkflow =>
-        ResolvedWorkflowProfile is InferenceWorkflowProfile.HiDream
-        || (ResolvedWorkflowProfile is InferenceWorkflowProfile.Custom && SelectedClipType == "hidream");
-    public bool IsZImageWorkflow =>
-        ResolvedWorkflowProfile is InferenceWorkflowProfile.ZImageBase or InferenceWorkflowProfile.ZImageTurbo
-        || (ResolvedWorkflowProfile is InferenceWorkflowProfile.Custom && SelectedClipType == "lumina2");
+        ResolvedWorkflowProfile.UsesSd3ModelSamplingShift
+        || (IsCustomWorkflow && SelectedClipType == "hidream");
     public bool IsGguf => SelectedUnetModel?.RelativePath.EndsWith("gguf") ?? false;
 
     /// <summary>
@@ -315,46 +317,32 @@ public partial class ModelCardViewModel(
     public string TextEncodersHeader => $"Text Encoders ({TextEncoders.Count})";
 
     /// <summary>
-    /// Whether to show the Shift control (for HiDream and Z-Image workflows, only when in UNet mode).
+    /// Whether to show the Shift control (profiles with a model-sampling shift node, only
+    /// when in UNet mode — or their clip types selected through the Custom profile).
     /// </summary>
-    public bool ShowShift => ShowEncoderSection && (IsHiDreamWorkflow || IsZImageWorkflow);
+    public bool ShowShift =>
+        ShowEncoderSection
+        && (
+            ResolvedWorkflowProfile.UsesShift
+            || (IsCustomWorkflow && SelectedClipType is "hidream" or "lumina2" or "qwen_image")
+        );
     public bool ShowEncoderTypeSelection =>
-        SelectedWorkflowProfile is InferenceWorkflowProfile.Custom
-        || (ShowEncoderSection && SelectedWorkflowProfile is not InferenceWorkflowProfile.Auto);
+        SelectedWorkflowProfile == InferenceWorkflowProfile.Custom
+        || (ShowEncoderSection && SelectedWorkflowProfile != InferenceWorkflowProfile.Auto);
     public InferenceWorkflowProfile ResolvedWorkflowProfile =>
-        SelectedWorkflowProfile is InferenceWorkflowProfile.Auto
+        SelectedWorkflowProfile == InferenceWorkflowProfile.Auto
             ? InferWorkflowProfile()
             : SelectedWorkflowProfile;
-    public bool HasRecommendedDefaults =>
-        ResolvedWorkflowProfile
-            is InferenceWorkflowProfile.DefaultCheckpoint
-                or InferenceWorkflowProfile.Flux
-                or InferenceWorkflowProfile.Flux2
-                or InferenceWorkflowProfile.ZImageBase
-                or InferenceWorkflowProfile.ZImageTurbo
-                or InferenceWorkflowProfile.Anima;
+    public bool HasRecommendedDefaults => ResolvedWorkflowProfile.RecommendedDefaults is not null;
     public bool ShowWorkflowProfileStatus =>
-        SelectedWorkflowProfile is InferenceWorkflowProfile.Auto
+        SelectedWorkflowProfile == InferenceWorkflowProfile.Auto
         && SelectedUnifiedModel is not null
-        && ResolvedWorkflowProfile is not InferenceWorkflowProfile.Custom;
-    public string WorkflowProfileStatusText => $"Detected: {ResolvedWorkflowProfile.GetStringValue()}";
+        && ResolvedWorkflowProfile != InferenceWorkflowProfile.Custom;
+    public string WorkflowProfileStatusText => $"Detected: {ResolvedWorkflowProfile.DisplayName}";
     public string RecommendedDefaultsToolTip =>
-        ResolvedWorkflowProfile switch
-        {
-            InferenceWorkflowProfile.DefaultCheckpoint =>
-                "Apply recommended sampler defaults: Euler Ancestral / Normal / 30 steps / CFG 5",
-            InferenceWorkflowProfile.Flux =>
-                "Apply recommended sampler defaults: Euler / Simple / 20 steps / CFG 3.5",
-            InferenceWorkflowProfile.Flux2 =>
-                "Apply recommended sampler defaults: Euler / Flux2Scheduler / 20 steps / CFG 5",
-            InferenceWorkflowProfile.ZImageBase =>
-                "Apply recommended sampler defaults: Res Multistep / Simple / 30 steps / CFG 4",
-            InferenceWorkflowProfile.ZImageTurbo =>
-                "Apply recommended sampler defaults: Res Multistep / Simple / 8 steps / CFG 1",
-            InferenceWorkflowProfile.Anima =>
-                "Apply recommended sampler defaults: ER SDE / Simple / 30 steps / CFG 4",
-            _ => "No recommended sampler defaults for this workflow",
-        };
+        ResolvedWorkflowProfile.RecommendedDefaults is { } defaults
+            ? $"Apply recommended sampler defaults: {defaults.Description}"
+            : "No recommended sampler defaults for this workflow";
 
     /// <summary>
     /// Describes a mismatch between the selected model's physical folder and the selected
@@ -372,23 +360,21 @@ public partial class ModelCardViewModel(
 
         // Explicit profile that disagrees with the file's folder. Auto follows the
         // folder and Custom is the user's business.
-        if (SelectedWorkflowProfile is not (InferenceWorkflowProfile.Auto or InferenceWorkflowProfile.Custom))
+        if (
+            SelectedWorkflowProfile != InferenceWorkflowProfile.Auto
+            && SelectedWorkflowProfile != InferenceWorkflowProfile.Custom
+        )
         {
-            // Flux.1 is packaging-flexible: users commonly have either a split UNet in
-            // DiffusionModels or an all-in-one checkpoint in StableDiffusion.
-            var profileWantsStandalone = SelectedWorkflowProfile switch
-            {
-                InferenceWorkflowProfile.DefaultCheckpoint => false,
-                InferenceWorkflowProfile.Flux => (bool?)null,
-                _ => true,
-            };
+            // RequiresStandaloneFile is null for packaging-flexible profiles (Flux.1 ships
+            // both split UNets and all-in-one checkpoints) — no warning either way.
+            var profileWantsStandalone = SelectedWorkflowProfile.RequiresStandaloneFile;
 
             if (profileWantsStandalone is true && !isStandaloneFile)
             {
                 return (
                     string.Format(
                         Resources.TextTemplate_WorkflowNeedsDiffusionModelsFile,
-                        SelectedWorkflowProfile.GetStringValue(),
+                        SelectedWorkflowProfile.DisplayName,
                         local.SharedFolderType.GetStringValue()
                     ),
                     SharedFolderType.DiffusionModels
@@ -400,33 +386,28 @@ public partial class ModelCardViewModel(
                 return (Resources.Text_FileInDiffusionModelsNotCheckpoint, SharedFolderType.StableDiffusion);
             }
         }
-        else if (SelectedWorkflowProfile is InferenceWorkflowProfile.Auto && !isStandaloneFile)
+        else if (SelectedWorkflowProfile == InferenceWorkflowProfile.Auto && !isStandaloneFile)
         {
             // Respect explicit metadata: an SDXL-tagged checkpoint that merely contains
             // "anima" or "flux2" in its filename is not a misplaced standalone model.
             var taggedBase = local.ConnectedModelInfo?.BaseModel;
-            if (!string.IsNullOrWhiteSpace(taggedBase) && IsKnownCheckpointBaseModelTag(taggedBase))
+            if (
+                !string.IsNullOrWhiteSpace(taggedBase)
+                && InferenceWorkflowProfile.IsKnownCheckpointBaseModelTag(taggedBase)
+            )
                 return null;
 
             // Checkpoint-folder file whose name/metadata implies a UNet-only architecture
-            // (the classic "z-image in the StableDiffusion folder" support thread). Anima is
-            // UNet-only too — it always pairs with a separate qwen_3_06b encoder + Qwen Image
-            // VAE; the Civitai "Checkpoint" category on Anima models does not mean all-in-one.
-            // Flux is excluded since Flux.1 all-in-one checkpoints are common and valid.
-            var impliedProfile = InferWorkflowProfile(SelectedUnifiedModel, isUnetModel: true);
-            if (
-                impliedProfile
-                is InferenceWorkflowProfile.Flux2
-                    or InferenceWorkflowProfile.ZImageBase
-                    or InferenceWorkflowProfile.ZImageTurbo
-                    or InferenceWorkflowProfile.HiDream
-                    or InferenceWorkflowProfile.Anima
-            )
+            // (the classic "z-image in the StableDiffusion folder" support thread).
+            // RequiresStandaloneFile is null for Flux since Flux.1 all-in-one checkpoints
+            // are common and valid.
+            var impliedProfile = InferenceWorkflowProfile.Detect(SelectedUnifiedModel, isUnetModel: true);
+            if (impliedProfile.RequiresStandaloneFile is true)
             {
                 return (
                     string.Format(
                         Resources.TextTemplate_FileLooksLikeStandaloneModel,
-                        impliedProfile.GetStringValue(),
+                        impliedProfile.DisplayName,
                         local.SharedFolderType.GetStringValue()
                     ),
                     SharedFolderType.DiffusionModels
@@ -883,99 +864,50 @@ public partial class ModelCardViewModel(
         finally
         {
             isLoadingState = false;
+            SeedAutoSelectedComponentsFromState();
             NotifyWorkflowProfileStateChanged();
         }
     }
 
-    private InferenceWorkflowProfile InferWorkflowProfile()
+    /// <summary>
+    /// Re-adopts restored encoder/VAE selections that match the resolved profile's companion
+    /// defaults as auto-selected. The auto-selected set is session state, so without this a
+    /// restart turns every earlier auto-pick into an untouchable "user pick" — switching to a
+    /// different model family then neither resizes the slots nor re-pairs the encoders (the
+    /// "Klein keeps clip_l after restart" report). Selections that don't match the profile's
+    /// defaults are genuinely the user's and stay protected.
+    /// </summary>
+    private void SeedAutoSelectedComponentsFromState()
     {
-        return InferWorkflowProfile(
+        var profile = ResolvedWorkflowProfile;
+        var matchers = profile.GetEncoderCompanions(SelectedUnetModel);
+
+        foreach (var slot in TextEncoders)
+        {
+            if (
+                slot.SelectedModel is { IsNone: false, IsDefault: false } model
+                && matchers.Any(c => c.MatchesFileName(model.FileName))
+            )
+            {
+                autoSelectedComponentPaths.Add(model.RelativePath);
+            }
+        }
+
+        if (
+            SelectedVae is { IsNone: false, IsDefault: false } vae
+            && profile.VaeCompanion?.MatchesFileName(vae.FileName) == true
+        )
+        {
+            autoSelectedComponentPaths.Add(vae.RelativePath);
+        }
+    }
+
+    private InferenceWorkflowProfile InferWorkflowProfile() =>
+        InferenceWorkflowProfile.Detect(
             SelectedUnifiedModel,
             SelectedModelLoader is ModelLoader.Unet
                 || SelectedUnifiedModel?.Local?.SharedFolderType is SharedFolderType.DiffusionModels
         );
-    }
-
-    private static InferenceWorkflowProfile InferWorkflowProfile(HybridModelFile? model, bool isUnetModel)
-    {
-        if (!isUnetModel)
-            return InferenceWorkflowProfile.DefaultCheckpoint;
-
-        var baseModel = model?.Local?.ConnectedModelInfo?.BaseModel;
-
-        if (!string.IsNullOrWhiteSpace(baseModel))
-        {
-            if (baseModel.Equals("ZImageTurbo", StringComparison.OrdinalIgnoreCase))
-                return InferenceWorkflowProfile.ZImageTurbo;
-
-            if (baseModel.Equals("ZImageBase", StringComparison.OrdinalIgnoreCase))
-                return InferenceWorkflowProfile.ZImageBase;
-
-            if (baseModel.Equals("Anima", StringComparison.OrdinalIgnoreCase))
-                return InferenceWorkflowProfile.Anima;
-
-            if (baseModel.StartsWith("Flux.2", StringComparison.OrdinalIgnoreCase))
-                return InferenceWorkflowProfile.Flux2;
-
-            if (baseModel.StartsWith("Flux.1", StringComparison.OrdinalIgnoreCase))
-                return InferenceWorkflowProfile.Flux;
-
-            if (baseModel.Equals("HiDream", StringComparison.OrdinalIgnoreCase))
-                return InferenceWorkflowProfile.HiDream;
-        }
-
-        var name = model?.RelativePath ?? string.Empty;
-
-        if (
-            name.Contains("z_image", StringComparison.OrdinalIgnoreCase)
-            || name.Contains("z-image", StringComparison.OrdinalIgnoreCase)
-            || name.Contains("zimage", StringComparison.OrdinalIgnoreCase)
-        )
-        {
-            return name.Contains("turbo", StringComparison.OrdinalIgnoreCase)
-                ? InferenceWorkflowProfile.ZImageTurbo
-                : InferenceWorkflowProfile.ZImageBase;
-        }
-
-        if (
-            name.Contains("flux2", StringComparison.OrdinalIgnoreCase)
-            || name.Contains("flux-2", StringComparison.OrdinalIgnoreCase)
-            || name.Contains("flux_2", StringComparison.OrdinalIgnoreCase)
-        )
-            return InferenceWorkflowProfile.Flux2;
-
-        if (name.Contains("flux", StringComparison.OrdinalIgnoreCase))
-            return InferenceWorkflowProfile.Flux;
-
-        if (IsAnimaName(name))
-            return InferenceWorkflowProfile.Anima;
-
-        if (name.Contains("hidream", StringComparison.OrdinalIgnoreCase))
-            return InferenceWorkflowProfile.HiDream;
-
-        return InferenceWorkflowProfile.DefaultCheckpoint;
-    }
-
-    /// <summary>
-    /// Matches "anima" only as its own token — "animagine" / "animaPencil" are SDXL models
-    /// that must not be detected as the Anima architecture.
-    /// </summary>
-    private static bool IsAnimaName(string name) => AnimaNameRegex().IsMatch(name);
-
-    /// <summary>
-    /// Whether a CivitAI BaseModel tag is specific enough to override filename heuristics for
-    /// a checkpoint-folder file. "Other" remains inconclusive, while known UNet-only tags are
-    /// allowed to proceed to the misplaced-model check.
-    /// </summary>
-    private static bool IsKnownCheckpointBaseModelTag(string baseModel) =>
-        Enum.GetValues<CivitBaseModelType>()
-            .Any(type =>
-                type is not (CivitBaseModelType.Other or CivitBaseModelType.HiDream)
-                && type.GetStringValue().Equals(baseModel, StringComparison.OrdinalIgnoreCase)
-            );
-
-    [GeneratedRegex(@"(?<![\p{L}])anima(?![\p{L}])", RegexOptions.IgnoreCase)]
-    private static partial Regex AnimaNameRegex();
 
     /// <summary>
     /// Loads text encoders from the saved model state, supporting both new and legacy formats.
@@ -1205,23 +1137,14 @@ public partial class ModelCardViewModel(
     {
         // Whether the profile uses separate diffusion-model + encoder + VAE files (true) or an
         // all-in-one checkpoint (false). Null = leave the loader alone (Custom, or Auto with
-        // no model yet to infer from).
-        var wantStandalone = profile switch
-        {
-            InferenceWorkflowProfile.DefaultCheckpoint => false,
-            InferenceWorkflowProfile.Flux
-            or InferenceWorkflowProfile.Flux2
-            or InferenceWorkflowProfile.Anima
-            or InferenceWorkflowProfile.ZImageBase
-            or InferenceWorkflowProfile.ZImageTurbo
-            or InferenceWorkflowProfile.HiDream => true,
-            // Auto follows the selected model's folder (diffusion_models -> UNet); Custom is
-            // left entirely to the user.
-            InferenceWorkflowProfile.Auto when SelectedUnifiedModel is not null => SelectedUnifiedModel
-                .Local
-                ?.SharedFolderType is SharedFolderType.DiffusionModels,
-            _ => (bool?)null,
-        };
+        // no model yet to infer from). Auto follows the selected model's folder
+        // (diffusion_models -> UNet).
+        var wantStandalone =
+            profile == InferenceWorkflowProfile.Auto
+                ? SelectedUnifiedModel is not null
+                    ? SelectedUnifiedModel.Local?.SharedFolderType is SharedFolderType.DiffusionModels
+                    : (bool?)null
+                : profile.UsesStandaloneLoader;
 
         if (wantStandalone is not { } standalone)
             return;
@@ -1286,8 +1209,8 @@ public partial class ModelCardViewModel(
     private void NotifyWorkflowProfileStateChanged()
     {
         OnPropertyChanged(nameof(ResolvedWorkflowProfile));
+        OnPropertyChanged(nameof(IsCustomWorkflow));
         OnPropertyChanged(nameof(IsHiDreamWorkflow));
-        OnPropertyChanged(nameof(IsZImageWorkflow));
         OnPropertyChanged(nameof(ShowShift));
         OnPropertyChanged(nameof(ShowEncoderTypeSelection));
         OnPropertyChanged(nameof(HasRecommendedDefaults));
@@ -1297,6 +1220,9 @@ public partial class ModelCardViewModel(
         OnPropertyChanged(nameof(WorkflowProfileWarningText));
         OnPropertyChanged(nameof(ShowWorkflowProfileWarning));
         OnPropertyChanged(nameof(MoveModelToRecommendedFolderText));
+        OnPropertyChanged(nameof(MissingCompanionsText));
+        OnPropertyChanged(nameof(MissingCompanionsBarText));
+        OnPropertyChanged(nameof(ShowMissingCompanionsBar));
     }
 
     private void RefreshWorkflowProfileState()
@@ -1312,18 +1238,10 @@ public partial class ModelCardViewModel(
 
     private void ApplyDefaultClipTypeForResolvedProfile(bool preserveUserSelections)
     {
-        if (SelectedWorkflowProfile is InferenceWorkflowProfile.Custom)
+        if (SelectedWorkflowProfile == InferenceWorkflowProfile.Custom)
             return;
 
-        var clipType = ResolvedWorkflowProfile switch
-        {
-            InferenceWorkflowProfile.Flux => "flux",
-            InferenceWorkflowProfile.Flux2 => "flux2",
-            InferenceWorkflowProfile.ZImageBase or InferenceWorkflowProfile.ZImageTurbo => "lumina2",
-            InferenceWorkflowProfile.Anima => "stable_diffusion",
-            InferenceWorkflowProfile.HiDream => "hidream",
-            _ => SelectedClipType,
-        };
+        var clipType = ResolvedWorkflowProfile.ClipType ?? SelectedClipType;
 
         if (string.IsNullOrWhiteSpace(clipType) || SelectedClipType == clipType)
             return;
@@ -1458,90 +1376,257 @@ public partial class ModelCardViewModel(
 
     /// <summary>
     /// Per-slot filename matchers for the encoder files each profile expects, in slot order.
-    /// Empty for profiles where the encoder is baked into the checkpoint or unknown.
+    /// Sourced from the profile's own companion table so these matchers and the
+    /// missing-companion download offers can never disagree about what a profile needs.
     /// </summary>
     private IReadOnlyList<Func<string, bool>> GetDefaultEncoderMatchersForProfile(
         InferenceWorkflowProfile profile
-    )
-    {
-        switch (profile)
-        {
-            case InferenceWorkflowProfile.Flux2:
-                // Klein 4B pairs with qwen_3_4b, Klein 9B with qwen_3_8b — picking the wrong
-                // size fails at sampling with a tensor-shape mismatch.
-                var encoderSize = SelectedUnetModel is { } unet
-                    ? Flux2KleinModelManager.GetExpectedEncoderSize(unet)
-                    : "4b";
-                return
-                [
-                    name =>
-                        Flux2KleinModelManager.IsKleinTextEncoder(name)
-                        && Flux2KleinModelManager.MatchesEncoderSize(name, encoderSize),
-                ];
-            case InferenceWorkflowProfile.Flux:
-                return
-                [
-                    name => name.Contains("clip_l", StringComparison.OrdinalIgnoreCase),
-                    name =>
-                        name.Contains("t5xxl", StringComparison.OrdinalIgnoreCase)
-                        || name.Contains("t5-xxl", StringComparison.OrdinalIgnoreCase),
-                ];
-            case InferenceWorkflowProfile.ZImageBase:
-            case InferenceWorkflowProfile.ZImageTurbo:
-                // Z-Image uses the Qwen3 4B encoder (the same qwen_3_4b.safetensors file
-                // Flux.2 Klein 4B uses).
-                return
-                [
-                    name =>
-                        Flux2KleinModelManager.IsKleinTextEncoder(name)
-                        && Flux2KleinModelManager.MatchesEncoderSize(name, "4b"),
-                ];
-            case InferenceWorkflowProfile.Anima:
-                // Official Anima encoder is qwen_3_06b_base.safetensors (Qwen3 0.6B).
-                return
-                [
-                    name =>
-                        name.Contains("qwen_3_06b", StringComparison.OrdinalIgnoreCase)
-                        || name.Contains("qwen3_06b", StringComparison.OrdinalIgnoreCase)
-                        || name.Contains("qwen_3_0.6b", StringComparison.OrdinalIgnoreCase),
-                ];
-            case InferenceWorkflowProfile.HiDream:
-                return
-                [
-                    name => name.Contains("clip_l", StringComparison.OrdinalIgnoreCase),
-                    name => name.Contains("clip_g", StringComparison.OrdinalIgnoreCase),
-                    name =>
-                        name.Contains("t5xxl", StringComparison.OrdinalIgnoreCase)
-                        || name.Contains("t5-xxl", StringComparison.OrdinalIgnoreCase),
-                    name => name.Contains("llama", StringComparison.OrdinalIgnoreCase),
-                ];
-            default:
-                return [];
-        }
-    }
+    ) => profile.GetEncoderCompanions(SelectedUnetModel).Select(c => c.MatchesFileName).ToList();
 
     /// <summary>
     /// Whether <paramref name="fileName"/> is the known-default VAE for the profile.
-    /// Flux.1, Z-Image and HiDream all use the Flux.1 VAE (ae.safetensors); Flux.2 has its
-    /// own VAE; Anima reuses the Qwen Image VAE.
     /// </summary>
     private static bool MatchesDefaultVaeForProfile(InferenceWorkflowProfile profile, string fileName) =>
-        profile switch
+        profile.VaeCompanion?.MatchesFileName(fileName) ?? false;
+
+    /// <summary>
+    /// Companions (encoders + VAE) the resolved profile expects but no local file satisfies.
+    /// Empty for checkpoint profiles, Custom, or when no UNET is selected yet. The UNET slot
+    /// is never part of this — users bring their own (including CivitAI fine-tunes); only the
+    /// official shared components are offered.
+    /// </summary>
+    private IReadOnlyList<InferenceCompanion> GetMissingCompanions()
+    {
+        if (!IsStandaloneModelLoader || SelectedUnetModel is null)
+            return [];
+
+        var profile = ResolvedWorkflowProfile;
+        var missing = new List<InferenceCompanion>();
+
+        foreach (var companion in profile.GetEncoderCompanions(SelectedUnetModel))
         {
-            InferenceWorkflowProfile.Flux2 => Flux2KleinModelManager.IsFlux2Vae(fileName),
-            InferenceWorkflowProfile.Flux
-            or InferenceWorkflowProfile.ZImageBase
-            or InferenceWorkflowProfile.ZImageTurbo
-            or InferenceWorkflowProfile.HiDream => fileName.Equals(
-                "ae.safetensors",
-                StringComparison.OrdinalIgnoreCase
-            ),
-            InferenceWorkflowProfile.Anima => fileName.Contains(
-                "qwen_image_vae",
-                StringComparison.OrdinalIgnoreCase
-            ),
-            _ => false,
-        };
+            if (!ClientManager.ClipModels.Any(m => m.Local != null && companion.MatchesFileName(m.FileName)))
+            {
+                missing.Add(companion);
+            }
+        }
+
+        if (
+            profile.VaeCompanion is { } vaeCompanion
+            && !ClientManager.VaeModels.Any(m => m.Local != null && vaeCompanion.MatchesFileName(m.FileName))
+        )
+        {
+            missing.Add(vaeCompanion);
+        }
+
+        return missing;
+    }
+
+    public string? MissingCompanionsText =>
+        GetMissingCompanions() is { Count: > 0 } missing
+            ? string.Format(
+                "{0} needs components that aren't installed: {1}",
+                ResolvedWorkflowProfile.DisplayName,
+                string.Join(", ", missing.Select(c => c.DisplayName))
+            )
+            : null;
+
+    /// <summary>
+    /// Profile whose missing-companion offer the user dismissed. Switching to a different
+    /// profile shows the offer again; re-resolving the dismissed one stays quiet.
+    /// </summary>
+    private InferenceWorkflowProfile? dismissedCompanionsProfile;
+
+    private bool isDownloadingCompanions;
+    private string? companionDownloadProgress;
+
+    public bool IsDownloadingCompanions => isDownloadingCompanions;
+
+    /// <summary>
+    /// While a download batch is in flight the bar stays visible showing live progress
+    /// (pointing at the Activity tab) instead of silently disappearing on click.
+    /// </summary>
+    public string? MissingCompanionsBarText =>
+        isDownloadingCompanions ? companionDownloadProgress : MissingCompanionsText;
+
+    /// <summary>
+    /// Null while downloading, which collapses the bar's action button.
+    /// </summary>
+    public string? MissingCompanionsActionText => isDownloadingCompanions ? null : Resources.Action_Download;
+
+    public bool ShowMissingCompanionsBar =>
+        isDownloadingCompanions
+        || (dismissedCompanionsProfile != ResolvedWorkflowProfile && MissingCompanionsText is not null);
+
+    [RelayCommand]
+    private void DismissMissingCompanions()
+    {
+        dismissedCompanionsProfile = ResolvedWorkflowProfile;
+        OnPropertyChanged(nameof(ShowMissingCompanionsBar));
+    }
+
+    [RelayCommand]
+    private async Task DownloadMissingCompanionsAsync()
+    {
+        var missing = GetMissingCompanions();
+        if (missing.Count == 0)
+            return;
+
+        var profileName = ResolvedWorkflowProfile.DisplayName;
+
+        var dialogVm = vmFactory.Get<DownloadMissingModelsViewModel>();
+        dialogVm.DialogTitle = $"{profileName} Setup";
+        dialogVm.Description =
+            $"{profileName} pairs with the following components. You can deselect any you already have installed elsewhere:";
+        dialogVm.SetModels(missing.Select(c => c.Resource));
+
+        var result = await dialogVm.GetDialog().ShowAsync();
+
+        if (result != ContentDialogResult.Primary || dialogVm.SelectedCount == 0)
+            return;
+
+        var downloads = await dialogVm.StartDownloadsAsync();
+        if (downloads.Count == 0)
+            return;
+
+        isDownloadingCompanions = true;
+        companionDownloadProgress =
+            $"⬇️ Downloading components (0/{downloads.Count})… — see the Activity tab for progress";
+        NotifyCompanionBarChanged();
+
+        TrackCompanionDownloadsAsync(downloads)
+            .SafeFireAndForget(ex =>
+            {
+                isDownloadingCompanions = false;
+                NotifyCompanionBarChanged();
+                notificationService.ShowPersistent(
+                    "Download tracking failed",
+                    ex.Message,
+                    NotificationType.Error
+                );
+            });
+    }
+
+    private void NotifyCompanionBarChanged()
+    {
+        OnPropertyChanged(nameof(IsDownloadingCompanions));
+        OnPropertyChanged(nameof(MissingCompanionsText));
+        OnPropertyChanged(nameof(MissingCompanionsBarText));
+        OnPropertyChanged(nameof(MissingCompanionsActionText));
+        OnPropertyChanged(nameof(ShowMissingCompanionsBar));
+    }
+
+    /// <summary>
+    /// Waits for the companion downloads, refreshing the index and re-running component
+    /// auto-selection as EACH one finishes (so a VAE that completes early fills its slot
+    /// immediately instead of waiting for the whole batch). The final pass waits — bounded —
+    /// for the client manager's model collections to actually contain the downloaded files:
+    /// they repopulate from the index change asynchronously, and auto-selecting before the
+    /// rebind lands silently misses the last file ("VAE popped in but not the TE").
+    /// </summary>
+    private async Task TrackCompanionDownloadsAsync(IReadOnlyList<TrackedDownload> downloads)
+    {
+        var total = downloads.Count;
+        var completed = 0;
+
+        async Task<bool> TrackOne(TrackedDownload download)
+        {
+            var success = await WaitForTerminalStateAsync(download);
+            var done = Interlocked.Increment(ref completed);
+
+            if (success)
+            {
+                await modelIndexService.RefreshIndex();
+            }
+
+            Dispatcher.UIThread.Post(() =>
+            {
+                if (isDownloadingCompanions)
+                {
+                    companionDownloadProgress =
+                        $"⬇️ Downloading components ({done}/{total})… — see the Activity tab for progress";
+                    OnPropertyChanged(nameof(MissingCompanionsBarText));
+                }
+
+                // Opportunistic early fill; the final pass below is the guaranteed one.
+                AutoSelectComponentsForResolvedProfile();
+            });
+
+            return success;
+        }
+
+        var results = await Task.WhenAll(downloads.Select(TrackOne));
+        var failCount = results.Count(r => !r);
+
+        await modelIndexService.RefreshIndex();
+
+        await Dispatcher.UIThread.InvokeAsync(async () =>
+        {
+            if (failCount == 0)
+            {
+                // Give the index-to-collections rebind time to surface every downloaded
+                // file. Bounded: if something genuinely never appears, fall through and the
+                // bar simply shows it as still missing.
+                for (var i = 0; i < 20 && GetMissingCompanions().Count > 0; i++)
+                {
+                    await Task.Delay(250);
+                }
+            }
+
+            isDownloadingCompanions = false;
+            AutoSelectComponentsForResolvedProfile();
+            NotifyCompanionBarChanged();
+        });
+
+        if (failCount == 0)
+        {
+            notificationService.Show(
+                "Components Ready",
+                "All components downloaded and selected — ready to generate.",
+                NotificationType.Success
+            );
+        }
+        else
+        {
+            notificationService.Show(
+                "Downloads Partially Complete",
+                $"{failCount} download(s) failed. Check the progress panel for details.",
+                NotificationType.Warning
+            );
+        }
+    }
+
+    private static Task<bool> WaitForTerminalStateAsync(TrackedDownload download)
+    {
+        var tcs = new TaskCompletionSource<bool>();
+
+        // Named so it can detach itself on the terminal state: TrackedDownload lives on in
+        // the download service's history, so a never-removed handler would leak once per
+        // tracked companion download.
+        void OnProgressStateChanged(object? sender, ProgressState state)
+        {
+            if (state is ProgressState.Success or ProgressState.Failed or ProgressState.Cancelled)
+            {
+                download.ProgressStateChanged -= OnProgressStateChanged;
+                tcs.TrySetResult(state == ProgressState.Success);
+            }
+        }
+
+        download.ProgressStateChanged += OnProgressStateChanged;
+
+        // The handler can't fire for a download that reached a terminal state before it was
+        // attached, so resolve (and detach) immediately in that case — TrySetResult and a
+        // double detach are both safe if the event fires anyway.
+        if (
+            download.ProgressState is ProgressState.Success or ProgressState.Failed or ProgressState.Cancelled
+        )
+        {
+            download.ProgressStateChanged -= OnProgressStateChanged;
+            tcs.TrySetResult(download.ProgressState == ProgressState.Success);
+        }
+
+        return tcs.Task;
+    }
 
     /// <summary>
     /// Sets the default number of encoder slots based on the selected clip type.

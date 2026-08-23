@@ -251,25 +251,40 @@ public class FramePack(
         if (installedPackage.FullPath is null)
             return;
 
-        var installSageStep = new InstallSageAttentionStep(
-            DownloadService,
-            PrerequisiteHelper,
-            PyInstallationManager
-        )
-        {
-            InstalledPackage = installedPackage,
-            WorkingDirectory = new DirectoryPath(installedPackage.FullPath),
-            EnvironmentVariables = SettingsManager.Settings.EnvironmentVariables,
-            IsBlackwellGpu =
-                SettingsManager.Settings.PreferredGpu?.IsBlackwellGpu() ?? HardwareHelper.HasBlackwellGpu(),
-        };
-
         var runner = new PackageModificationRunner
         {
             ShowDialogOnStart = true,
             ModificationCompleteMessage = "Triton and SageAttention installed successfully",
         };
         EventManager.Instance.OnPackageInstallProgressAdded(runner);
-        await runner.ExecuteSteps([installSageStep]).ConfigureAwait(false);
+
+        await runner
+            .ExecuteSteps(
+                [
+                    new ActionPackageStep(
+                        async progress =>
+                        {
+                            await using var venvRunner = await SetupVenvPure(
+                                    installedPackage.FullPath,
+                                    pythonVersion: PyVersion.Parse(installedPackage.PythonVersion)
+                                )
+                                .ConfigureAwait(false);
+
+                            var gpuInfo =
+                                SettingsManager.Settings.PreferredGpu
+                                ?? HardwareHelper.IterGpuInfo().FirstOrDefault(x => x.IsNvidia);
+
+                            await PipWheelService
+                                .InstallTritonAsync(venvRunner, progress)
+                                .ConfigureAwait(false);
+                            await PipWheelService
+                                .InstallSageAttentionAsync(venvRunner, gpuInfo, progress)
+                                .ConfigureAwait(false);
+                        },
+                        "Installing Triton and SageAttention"
+                    ),
+                ]
+            )
+            .ConfigureAwait(false);
     }
 }

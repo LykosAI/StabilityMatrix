@@ -526,8 +526,35 @@ public static class DesignData
         UpdateViewModel.ReleaseNotes =
             "## v2.0.1\n- Fixed a bug\n- Added a feature\n- Removed a feature\n - Did some `--code` stuff";
 
+        var changelogEntries = new[]
+        {
+            new ChangelogEntry
+            {
+                Version = SemVersion.Parse("2.17.0-dev.2"),
+                Markdown =
+                    "## v2.17.0-dev.2\n### Added\n- In-app What's New changelog viewer\n### Fixed\n- Various bug fixes",
+            },
+            new ChangelogEntry
+            {
+                Version = SemVersion.Parse("2.17.0-dev.1"),
+                Markdown = "## v2.17.0-dev.1\n### Changed\n- Improved startup performance",
+            },
+            new ChangelogEntry
+            {
+                Version = SemVersion.Parse("2.16.1"),
+                Markdown = "## v2.16.1\n### Fixed\n- Fixed a `--crash` on launch",
+            },
+        };
+        ChangelogViewModel = Services.GetRequiredService<ChangelogViewModel>();
+        ChangelogViewModel.IsLoading = false;
+        ChangelogViewModel.Entries = changelogEntries;
+        ChangelogViewModel.SelectedEntry = changelogEntries[0];
+
         isInitialized = true;
     }
+
+    [NotNull]
+    public static ChangelogViewModel? ChangelogViewModel { get; private set; }
 
     [NotNull]
     public static PackageInstallBrowserViewModel? NewInstallerDialogViewModel { get; private set; }
@@ -1553,6 +1580,9 @@ The gallery images are often inpainted, but you will get something very similar 
     public static ControlNetCardViewModel ControlNetCardViewModel =>
         DialogFactory.Get<ControlNetCardViewModel>();
 
+    public static IPAdapterCardViewModel IPAdapterCardViewModel =>
+        DialogFactory.Get<IPAdapterCardViewModel>();
+
     public static ConfirmDeleteDialogViewModel ConfirmDeleteDialogViewModel =>
         DialogFactory.Get<ConfirmDeleteDialogViewModel>(vm =>
         {
@@ -1635,6 +1665,9 @@ The gallery images are often inpainted, but you will get something very similar 
 
     public static ModelPickerDialogViewModel ModelPickerDialogViewModel =>
         DialogFactory.Get<ModelPickerDialogViewModel>();
+
+    public static InferenceProjectTypePickerViewModel InferenceProjectTypePickerViewModel =>
+        DialogFactory.Get<InferenceProjectTypePickerViewModel>();
 
     public static PackageInstallProgressItemViewModel PackageInstallProgressItemViewModel =>
         new(

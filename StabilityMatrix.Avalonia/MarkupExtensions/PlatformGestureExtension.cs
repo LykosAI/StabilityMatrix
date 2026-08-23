@@ -32,8 +32,16 @@ public class PlatformGestureExtension : MarkupExtension
             throw new InvalidOperationException("PlatformGesture requires a gesture string.");
         }
 
-        var gesture = Gesture;
+        return Parse(Gesture);
+    }
 
+    /// <summary>
+    /// Parses a gesture string with the platform modifier convention applied:
+    /// the <c>Ctrl</c>/<c>Control</c> token resolves to <c>Cmd</c> (⌘ / Meta) on macOS.
+    /// Throws on invalid gesture strings, like <see cref="KeyGesture.Parse"/>.
+    /// </summary>
+    public static KeyGesture Parse(string gesture)
+    {
         if (Compat.IsMacOS)
         {
             // KeyGesture.Parse maps the "Cmd" token to KeyModifiers.Meta (⌘).

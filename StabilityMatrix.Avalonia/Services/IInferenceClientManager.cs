@@ -56,6 +56,7 @@ public interface IInferenceClientManager : IDisposable, INotifyPropertyChanged, 
     IObservableCollection<HybridModelFile> UnetModels { get; }
     IObservableCollection<HybridModelFile> ClipModels { get; }
     IObservableCollection<HybridModelFile> ClipVisionModels { get; }
+    IObservableCollection<HybridModelFile> IpAdapterModels { get; }
     IObservable<IChangeSet<HybridModelFile, string>> LoraModelsChangeSet { get; }
 
     Task CopyImageToInputAsync(FilePath imageFile, CancellationToken cancellationToken = default);

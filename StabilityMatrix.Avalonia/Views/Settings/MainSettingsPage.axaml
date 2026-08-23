@@ -158,7 +158,7 @@
             </Grid>
 
             <!--  Environment Options  -->
-            <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto">
+            <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto">
                 <TextBlock
                     Margin="0,0,0,8"
                     FontWeight="Medium"
@@ -196,7 +196,6 @@
                                     <MenuFlyout Placement="Bottom">
                                         <MenuItem Command="{Binding RunPythonProcessCommand}" Header="Command" />
                                         <MenuItem Command="{Binding ClearPipCacheCommand}" Header="Clear Pip Cache" />
-                                        <MenuItem Command="{Binding ClearUvCacheCommand}" Header="Clear uv Cache" />
                                     </MenuFlyout>
                                 </DropDownButton.Flyout>
                             </DropDownButton>
@@ -232,7 +231,7 @@
 
                 <ui:SettingsExpander
                     Grid.Row="4"
-                    Margin="8,4,8,4"
+                    Margin="8,4,8,0"
                     Description="{x:Static lang:Resources.Label_UnsupportedPythonVersionDetails}"
                     Header="{x:Static lang:Resources.Label_ShowUnsupportedPythonVersions}">
                     <ui:SettingsExpander.IconSource>
@@ -241,6 +240,48 @@
                     <ui:SettingsExpander.Footer>
                         <ToggleSwitch IsChecked="{Binding ShowAllAvailablePythonVersions}" />
                     </ui:SettingsExpander.Footer>
+                </ui:SettingsExpander>
+
+                <ui:SettingsExpander
+                    Grid.Row="5"
+                    Margin="8,4,8,4"
+                    Description="{x:Static lang:Resources.Label_UvCache_Details}"
+                    Header="{x:Static lang:Resources.Label_UvCache}">
+                    <ui:SettingsExpander.IconSource>
+                        <fluentIcons:SymbolIconSource FontSize="10" Symbol="Broom" />
+                    </ui:SettingsExpander.IconSource>
+                    <ui:SettingsExpander.Footer>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <controls:ProgressRing
+                                BorderThickness="3"
+                                IsEnabled="{Binding CheckUvCacheSizeCommand.IsRunning}"
+                                IsIndeterminate="True"
+                                IsVisible="{Binding CheckUvCacheSizeCommand.IsRunning}" />
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                IsVisible="{Binding UvCacheSizeText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                Text="{Binding UvCacheSizeText}" />
+                            <Button Command="{Binding CheckUvCacheSizeCommand}" Content="{x:Static lang:Resources.Action_CheckSize}" />
+                            <Button Command="{Binding PurgeUvCacheCommand}" Content="{x:Static lang:Resources.Action_ClearEllipsis}" />
+                        </StackPanel>
+                    </ui:SettingsExpander.Footer>
+                    <ui:SettingsExpanderItem Content="{x:Static lang:Resources.Label_UvCacheStartupCheck}" Description="{x:Static lang:Resources.Label_UvCacheStartupCheck_Details}">
+                        <ui:SettingsExpanderItem.Footer>
+                            <ui:NumberBox
+                                Maximum="100000"
+                                Minimum="0"
+                                PlaceholderText="0"
+                                SimpleNumberFormat="F0"
+                                SpinButtonPlacementMode="Compact"
+                                ValidationMode="InvalidInputOverwritten"
+                                Value="{Binding UvCacheMaxSizeGb}" />
+                        </ui:SettingsExpanderItem.Footer>
+                    </ui:SettingsExpanderItem>
+                    <ui:SettingsExpanderItem Content="{x:Static lang:Resources.Label_UvCachePurgeAutomatically}" Description="{x:Static lang:Resources.Label_UvCachePurgeAutomatically_Details}">
+                        <ui:SettingsExpanderItem.Footer>
+                            <ToggleSwitch IsChecked="{Binding IsUvCacheAutoPurgeEnabled}" IsEnabled="{Binding IsUvCacheLimitSet}" />
+                        </ui:SettingsExpanderItem.Footer>
+                    </ui:SettingsExpanderItem>
                 </ui:SettingsExpander>
             </Grid>
 
@@ -456,7 +497,7 @@
             </Grid>
 
             <!--  System Options  -->
-            <sg:SpacedGrid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,*" RowSpacing="4">
+            <sg:SpacedGrid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,*" RowSpacing="4">
                 <TextBlock
                     Margin="0,0,0,4"
                     FontWeight="Medium"
@@ -551,9 +592,35 @@
                     </ui:SettingsExpander.Footer>
                 </ui:SettingsExpander>
 
-                <!--  Select Data Directory  -->
+                <!--  Quick-hide hotkey  -->
                 <ui:SettingsExpander
                     Grid.Row="5"
+                    Description="{x:Static lang:Resources.Label_QuickHideHotkey_Details}"
+                    Header="{x:Static lang:Resources.Label_QuickHideHotkey}">
+                    <ui:SettingsExpander.IconSource>
+                        <fluentIcons:SymbolIconSource FontSize="10" Symbol="EyeOff" />
+                    </ui:SettingsExpander.IconSource>
+                    <ui:SettingsExpander.Footer>
+                        <ToggleSwitch IsChecked="{Binding IsQuickHideHotkeyEnabled}" />
+                    </ui:SettingsExpander.Footer>
+                    <ui:SettingsExpanderItem Content="{x:Static lang:Resources.Label_QuickHideAction}" Description="{x:Static lang:Resources.Label_QuickHideAction_Details}">
+                        <ui:SettingsExpanderItem.Footer>
+                            <ComboBox ItemsSource="{Binding QuickHideModes}" SelectedItem="{Binding SelectedQuickHideMode}" />
+                        </ui:SettingsExpanderItem.Footer>
+                    </ui:SettingsExpanderItem>
+                    <ui:SettingsExpanderItem Content="{x:Static lang:Resources.Label_QuickHideShortcut}" Description="{x:Static lang:Resources.Label_QuickHideShortcut_Details}">
+                        <ui:SettingsExpanderItem.Footer>
+                            <controls:KeyGestureBox
+                                MinWidth="160"
+                                Gesture="{Binding QuickHideHotkeyGesture}"
+                                Watermark="{x:Static lang:Resources.Label_PressShortcut}" />
+                        </ui:SettingsExpanderItem.Footer>
+                    </ui:SettingsExpanderItem>
+                </ui:SettingsExpander>
+
+                <!--  Select Data Directory  -->
+                <ui:SettingsExpander
+                    Grid.Row="6"
                     Description="{x:Static lang:Resources.Label_SelectNewDataDirectory_Details}"
                     IconSource="MoveToFolder">
                     <ui:SettingsExpander.Header>
@@ -583,7 +650,7 @@
                 </ui:SettingsExpander>
 
                 <ui:SettingsExpander
-                    Grid.Row="6"
+                    Grid.Row="7"
                     Description="{x:Static lang:Resources.Label_SelectNewDataDirectory_Details}"
                     IconSource="MoveToFolder">
                     <ui:SettingsExpander.Header>
@@ -614,7 +681,7 @@
 
                 <!--  App Folders  -->
                 <ui:SettingsExpander
-                    Grid.Row="7"
+                    Grid.Row="8"
                     Header="{x:Static lang:Resources.Label_AppFolders}"
                     IconSource="FolderLink">
                     <ui:SettingsExpander.Footer>
@@ -643,7 +710,7 @@
 
                 <!--  System Settings  -->
                 <ui:SettingsExpander
-                    Grid.Row="8"
+                    Grid.Row="9"
                     Header="{x:Static lang:Resources.Label_SystemSettings}"
                     IconSource="Settings">
 
@@ -687,7 +754,7 @@
                 </ui:SettingsExpander>
 
                 <!--  System Information  -->
-                <ui:SettingsExpander Grid.Row="9" Header="{x:Static lang:Resources.Label_SystemInformation}">
+                <ui:SettingsExpander Grid.Row="10" Header="{x:Static lang:Resources.Label_SystemInformation}">
                     <ui:SettingsExpander.IconSource>
                         <fluentIcons:SymbolIconSource
                             FontSize="10"
@@ -1041,6 +1108,11 @@
                             HorizontalAlignment="Left"
                             Command="{Binding OpenDocumentationCommand}"
                             Content="{x:Static lang:Resources.Label_Documentation}" />
+                        <Button
+                            Margin="8"
+                            HorizontalAlignment="Left"
+                            Command="{Binding ShowWhatsNewDialogCommand}"
+                            Content="{x:Static lang:Resources.Label_WhatsNew}" />
                         <Button
                             Margin="8"
                             HorizontalAlignment="Left"

@@ -5,7 +5,9 @@ using AsyncAwaitBestPractices;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Controls.Notifications;
 using Avalonia.Controls.Primitives;
+using Avalonia.Input;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -16,6 +18,7 @@ using NLog;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Languages;
+using StabilityMatrix.Avalonia.MarkupExtensions;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
@@ -30,6 +33,7 @@ using StabilityMatrix.Core.Helper.Analytics;
 using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.Lykos.Analytics;
+using StabilityMatrix.Core.Models.Notifications;
 using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Models.Update;
 using StabilityMatrix.Core.Services;
@@ -58,6 +62,8 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly INavigationService<SettingsViewModel> settingsNavService;
     private readonly IDocumentationNavigationService documentationNavigationService;
     private readonly IDistributedSubscriber<string, Uri> showWindowSubscriber;
+    private readonly IUvCacheService uvCacheService;
+    private readonly IUvCachePurgeRunner uvCachePurgeRunner;
     public string Greeting => "Welcome to Avalonia!";
 
     [ObservableProperty]
@@ -68,6 +74,33 @@ public partial class MainWindowViewModel : ViewModelBase
 
     [ObservableProperty]
     public partial bool IsPaneOpen { get; set; }
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(QuickHideCommand))]
+    public partial bool IsQuickHideHotkeyEnabled { get; set; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(QuickHideKeyGesture))]
+    public partial string QuickHideHotkeyGesture { get; set; } = "Ctrl+Shift+H";
+
+    /// <summary>
+    /// Parsed quick-hide gesture for the window's KeyBinding; falls back to the default
+    /// when the stored gesture string is invalid (e.g. hand-edited settings).
+    /// </summary>
+    public KeyGesture QuickHideKeyGesture
+    {
+        get
+        {
+            try
+            {
+                return PlatformGestureExtension.Parse(QuickHideHotkeyGesture);
+            }
+            catch (Exception)
+            {
+                return PlatformGestureExtension.Parse("Ctrl+Shift+H");
+            }
+        }
+    }
 
     [ObservableProperty]
     private List<PageViewModelBase> pages = new();
@@ -111,7 +144,9 @@ public partial class MainWindowViewModel : ViewModelBase
         INavigationService<MainWindowViewModel> navigationService,
         INavigationService<SettingsViewModel> settingsNavService,
         IDocumentationNavigationService documentationNavigationService,
-        IDistributedSubscriber<string, Uri> showWindowSubscriber
+        IDistributedSubscriber<string, Uri> showWindowSubscriber,
+        IUvCacheService uvCacheService,
+        IUvCachePurgeRunner uvCachePurgeRunner
     )
     {
         this.settingsManager = settingsManager;
@@ -129,9 +164,69 @@ public partial class MainWindowViewModel : ViewModelBase
         this.settingsNavService = settingsNavService;
         this.documentationNavigationService = documentationNavigationService;
         this.showWindowSubscriber = showWindowSubscriber;
+        this.uvCacheService = uvCacheService;
+        this.uvCachePurgeRunner = uvCachePurgeRunner;
         ProgressManagerViewModel = dialogFactory.Get<ProgressManagerViewModel>();
         UpdateViewModel = dialogFactory.Get<UpdateViewModel>();
         NotificationBannerViewModel = new NotificationBannerViewModel(appNotificationService);
+
+        EventManager.Instance.ShowChangelogRequested += OnShowChangelogRequested;
+    }
+
+    private void OnShowChangelogRequested(object? sender, EventArgs e)
+    {
+        Dispatcher
+            .UIThread.InvokeAsync(ShowChangelogDialogAsync)
+            .SafeFireAndForget(ex => Logger.Error(ex, "Error showing changelog dialog"));
+    }
+
+    private async Task ShowChangelogDialogAsync()
+    {
+        var vm = dialogFactory.Get<ChangelogViewModel>();
+        var dialog = new BetterContentDialog
+        {
+            Content = new ChangelogDialog { DataContext = vm },
+            MaxDialogWidth = 1000,
+            MaxDialogHeight = 750,
+            FullSizeDesired = true,
+            IsFooterVisible = false,
+            CloseOnClickOutside = true,
+            ContentVerticalScrollBarVisibility = ScrollBarVisibility.Disabled,
+        };
+
+        await dialog.ShowAsync(App.TopLevel);
+    }
+
+    /// <summary>
+    /// Shows a one-time "What's New" notice when the running version differs from the last
+    /// seen version. On a fresh install / first run of the feature, the version is stored
+    /// silently without showing a notice.
+    /// </summary>
+    private void ShowWhatsNewNoticeIfNeeded()
+    {
+        var currentVersionString = Compat.AppVersion.ToString();
+
+        if (settingsManager.Settings.LastSeenChangelogVersion is not { } lastSeen)
+        {
+            // Fresh install / first run of this feature — store silently
+            settingsManager.Transaction(s => s.LastSeenChangelogVersion = currentVersionString);
+            return;
+        }
+
+        if (lastSeen == currentVersionString)
+            return;
+
+        settingsManager.Transaction(s => s.LastSeenChangelogVersion = currentVersionString);
+
+        if (!settingsManager.Settings.ShowReleaseNotesAfterUpdate)
+            return;
+
+        notificationService.Show(
+            string.Format(Resources.TextTemplate_UpdatedToVersion, Compat.AppVersion.ToDisplayString()),
+            Resources.Label_SeeWhatsNew,
+            NotificationType.Success,
+            action: new ShowChangelogAction()
+        );
     }
 
     public override void OnLoaded()
@@ -151,6 +246,34 @@ public partial class MainWindowViewModel : ViewModelBase
     private void OpenDocumentation()
     {
         documentationNavigationService.OpenDocumentation();
+    }
+
+    /// <summary>
+    /// Opt-in privacy quick-hide for shared PCs, bound app-wide to the configurable
+    /// quick-hide gesture. Minimizes the main window or, in Exit mode, hides it and
+    /// shuts down immediately without confirmation prompts.
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(IsQuickHideHotkeyEnabled))]
+    private void QuickHide()
+    {
+        if (
+            Application.Current?.ApplicationLifetime
+            is not IClassicDesktopStyleApplicationLifetime { MainWindow: { } mainWindow }
+        )
+        {
+            return;
+        }
+
+        if (settingsManager.Settings.QuickHideMode is QuickHideMode.Exit)
+        {
+            // Hide first so the window is gone instantly while shutdown cleanup runs
+            mainWindow.Hide();
+            App.Shutdown(skipConfirmation: true);
+        }
+        else
+        {
+            mainWindow.WindowState = WindowState.Minimized;
+        }
     }
 
     protected override async Task OnInitialLoadedAsync()
@@ -174,6 +297,12 @@ public partial class MainWindowViewModel : ViewModelBase
                 Logger.Error(ex, "Error setting up shared model folders");
             });
 
+        Task.Run(() => CheckUvCacheSizeAsync())
+            .SafeFireAndForget(ex =>
+            {
+                Logger.Error(ex, "Error checking uv cache size");
+            });
+
         try
         {
             await modelDownloadLinkHandler.Value.StartListening();
@@ -192,6 +321,20 @@ public partial class MainWindowViewModel : ViewModelBase
             this,
             vm => vm.IsPaneOpen,
             settings => settings.IsMainWindowSidebarOpen,
+            true
+        );
+
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.IsQuickHideHotkeyEnabled,
+            settings => settings.IsQuickHideHotkeyEnabled,
+            true
+        );
+
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.QuickHideHotkeyGesture,
+            settings => settings.QuickHideHotkeyGesture,
             true
         );
 
@@ -309,6 +452,9 @@ public partial class MainWindowViewModel : ViewModelBase
 
             settingsManager.Transaction(s => s.UpdatingFromVersion = null);
         }
+
+        // What's New post-update notice (one-time per version)
+        ShowWhatsNewNoticeIfNeeded();
 
         // Start checking for updates
         await updateHelper.StartCheckingForUpdates();
@@ -458,6 +604,47 @@ public partial class MainWindowViewModel : ViewModelBase
                         Debug.Fail(exception.Message);
                     }
                 });
+        }
+    }
+
+    /// <summary>
+    /// Warns (or auto-purges, when opted in) when the uv cache exceeds the configured
+    /// size limit. Runs once per startup; opt-in — a limit of 0 (the default) disables
+    /// the check, since the size scan is expensive on large caches.
+    /// </summary>
+    private async Task CheckUvCacheSizeAsync()
+    {
+        var limitGb = settingsManager.Settings.UvCacheMaxSizeGb;
+        if (limitGb <= 0)
+            return;
+
+        // Let the app's own startup IO settle before scanning, so the check never
+        // competes with launch (matters most on spinning drives)
+        await Task.Delay(TimeSpan.FromSeconds(15));
+
+        var sizeBytes = await uvCacheService.GetSizeBytesAsync();
+        if (sizeBytes < limitGb * SystemInfo.Gibibyte)
+            return;
+
+        if (settingsManager.Settings.IsUvCacheAutoPurgeEnabled)
+        {
+            // Progress shows in the Activity panel; the runner toasts the freed amount
+            await uvCachePurgeRunner.RunPurgeAsync();
+        }
+        else
+        {
+            await notificationService.ShowAsync(
+                NotificationKey.UvCache_OverLimit,
+                new DesktopNotifications.Notification
+                {
+                    Title = Resources.Label_UvCacheOverLimit,
+                    Body = string.Format(
+                        Resources.TextTemplate_UvCacheOverLimit,
+                        Core.Helper.Size.FormatBase10Bytes(sizeBytes)
+                    ),
+                },
+                action: new PurgeUvCacheAction { SizeBytes = sizeBytes }
+            );
         }
     }
 

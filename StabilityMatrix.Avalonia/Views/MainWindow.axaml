@@ -34,6 +34,11 @@
         </DrawingImage>
     </controls:AppWindowBase.Resources>
 
+    <!--
+        The quick-hide KeyBinding is managed in code-behind (UpdateQuickHideKeyBinding)
+        because its gesture is user-configurable and KeyBindings can't bind to the
+        DataContext.
+    -->
     <controls:AppWindowBase.KeyBindings>
         <KeyBinding Command="{Binding OpenDocumentationCommand}" Gesture="F1" />
     </controls:AppWindowBase.KeyBindings>

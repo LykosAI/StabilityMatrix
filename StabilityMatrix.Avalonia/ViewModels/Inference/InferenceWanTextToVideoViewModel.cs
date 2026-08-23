@@ -10,6 +10,7 @@ using StabilityMatrix.Avalonia.ViewModels.Inference.Video;
 using StabilityMatrix.Avalonia.Views.Inference;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Api.Comfy;
 using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Services;
 
@@ -47,15 +48,24 @@ public class InferenceWanTextToVideoViewModel : InferenceGenerationViewModelBase
         IInferenceClientManager inferenceClientManager,
         INotificationService notificationService,
         ISettingsManager settingsManager,
-        RunningPackageService runningPackageService
+        RunningPackageService runningPackageService,
+        IPromptQueueService promptQueueService
     )
-        : base(vmFactory, inferenceClientManager, notificationService, settingsManager, runningPackageService)
+        : base(
+            vmFactory,
+            inferenceClientManager,
+            notificationService,
+            settingsManager,
+            runningPackageService,
+            promptQueueService
+        )
     {
         this.notificationService = notificationService;
         SeedCardViewModel = vmFactory.Get<SeedCardViewModel>();
         SeedCardViewModel.GenerateNewSeed();
 
         ModelCardViewModel = vmFactory.Get<WanModelCardViewModel>();
+        ModelCardViewModel.RecommendedDefaultsRequested += ApplyRecommendedDefaults;
 
         SamplerCardViewModel = vmFactory.Get<WanSamplerCardViewModel>(samplerCard =>
         {
@@ -89,6 +99,35 @@ public class InferenceWanTextToVideoViewModel : InferenceGenerationViewModelBase
         );
     }
 
+    /// <summary>
+    /// Applies the recommended Wan settings when the model card's ✨ button is clicked. The KSampler
+    /// values match the native ComfyUI templates for both variants; only the resolution, frame count and
+    /// output fps differ between the 5B TI2V model (720p / 24 fps) and the 14B / 2.1 models (480p / 16 fps).
+    /// </summary>
+    private void ApplyRecommendedDefaults(bool isWan22FiveB)
+    {
+        SamplerCardViewModel.SelectedSampler = ComfySampler.UniPC;
+        SamplerCardViewModel.SelectedScheduler = ComfyScheduler.Simple;
+        SamplerCardViewModel.Steps = 20;
+        SamplerCardViewModel.CfgScale = 5.0d;
+        ModelCardViewModel.Shift = 8.0d;
+
+        if (isWan22FiveB)
+        {
+            SamplerCardViewModel.Width = 1280;
+            SamplerCardViewModel.Height = 704;
+            SamplerCardViewModel.Length = 121;
+            VideoOutputSettingsCardViewModel.Fps = 24.0d;
+        }
+        else
+        {
+            SamplerCardViewModel.Width = 832;
+            SamplerCardViewModel.Height = 480;
+            SamplerCardViewModel.Length = 81;
+            VideoOutputSettingsCardViewModel.Fps = 16.0d;
+        }
+    }
+
     /// <inheritdoc />
     protected override void BuildPrompt(BuildPromptEventArgs args)
     {
@@ -103,16 +142,18 @@ public class InferenceWanTextToVideoViewModel : InferenceGenerationViewModelBase
             _ => Convert.ToUInt64(SeedCardViewModel.Seed),
         };
 
-        // Load models
+        // Load models (also wires the VAE used by the Wan 2.2 5B latent below)
         ModelCardViewModel.ApplyStep(applyArgs);
 
+        // The 5B TI2V model uses a different VAE (48-channel / 16x) than the 14B / Wan 2.1 models,
+        // so its empty latent must come from Wan22ImageToVideoLatent instead of EmptyHunyuanLatentVideo.
         builder.SetupEmptyLatentSource(
             SamplerCardViewModel.Width,
             SamplerCardViewModel.Height,
             BatchSizeCardViewModel.BatchSize,
             BatchSizeCardViewModel.IsBatchIndexEnabled ? BatchSizeCardViewModel.BatchIndex : null,
             SamplerCardViewModel.Length,
-            LatentType.Hunyuan
+            ModelCardViewModel.UseWan22FiveBLatent ? LatentType.Wan22 : LatentType.Hunyuan
         );
 
         BatchSizeCardViewModel.ApplyStep(applyArgs);

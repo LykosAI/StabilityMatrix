@@ -1,4 +1,5 @@
-﻿using StabilityMatrix.Avalonia.ViewModels.Inference;
+﻿using StabilityMatrix.Avalonia.Models;
+using StabilityMatrix.Avalonia.ViewModels.Inference;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Api.OpenModelsDb;
@@ -17,7 +18,11 @@ public interface IModelImportService
     /// <returns>The file path of the saved preview image</returns>
     Task<FilePath?> SavePreviewImage(CivitModelVersion modelVersion, FilePath modelFilePath);
 
-    Task DoImport(
+    /// <summary>
+    /// Imports a model file from Civitai. Returns true if a download was started,
+    /// false if the import was skipped (duplicate) or had nothing to download.
+    /// </summary>
+    Task<bool> DoImport(
         CivitModel model,
         DirectoryPath downloadFolder,
         CivitModelVersion? selectedVersion = null,
@@ -27,7 +32,8 @@ public interface IModelImportService
         IProgress<ProgressReport>? progress = null,
         Func<Task>? onImportComplete = null,
         Func<Task>? onImportCanceled = null,
-        Func<Task>? onImportFailed = null
+        Func<Task>? onImportFailed = null,
+        DuplicateDownloadHandling duplicateHandling = DuplicateDownloadHandling.Prompt
     );
 
     /// <summary>

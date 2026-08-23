@@ -193,12 +193,13 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
                 Progress = report;
             });
 
-            var cmInfo = await importService.GetMetadataForFile(
+            var fetchResult = await importService.GetMetadataForFile(
                 CheckpointFile.GetFullPath(settingsManager.ModelsDirectory),
                 progressReport,
                 forceReimport
             );
-            if (cmInfo != null)
+
+            if (fetchResult is { Status: MetadataFetchStatus.Found, Metadata: { } cmInfo })
             {
                 CheckpointFile.ConnectedModelInfo = cmInfo;
 
@@ -217,6 +218,43 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
                 }
 
                 await modelIndexService.RefreshIndex();
+
+                notificationService.Show(
+                    "Metadata Found",
+                    $"Connected to '{cmInfo.ModelName}' on CivitAI.",
+                    NotificationType.Success
+                );
+            }
+            else
+            {
+                var (title, message) = fetchResult.Status switch
+                {
+                    MetadataFetchStatus.NotFound => (
+                        "No Match Found",
+                        "This file's hash is not known to CivitAI."
+                    ),
+                    MetadataFetchStatus.RateLimited => (
+                        "CivitAI Rate Limit",
+                        "CivitAI is rate limiting requests. Try again in a few minutes."
+                    ),
+                    MetadataFetchStatus.Unavailable => (
+                        "CivitAI Unreachable",
+                        "Could not reach CivitAI. Check your connection and try again."
+                    ),
+                    MetadataFetchStatus.HashUnavailable => (
+                        "Could Not Hash File",
+                        "The model file could not be hashed."
+                    ),
+                    _ => ("Metadata Unchanged", "This file already has metadata."),
+                };
+
+                notificationService.Show(
+                    title,
+                    message,
+                    fetchResult.Status == MetadataFetchStatus.NotFound
+                        ? NotificationType.Information
+                        : NotificationType.Warning
+                );
             }
         }
         finally

@@ -71,4 +71,17 @@ public class CivitModel
                 ? ModelVersions[0].PublishedAt ?? DateTimeOffset.MinValue
                 : DateTimeOffset.MinValue
         ).ToString("d", System.Globalization.CultureInfo.CurrentCulture);
+
+    /// <summary>
+    /// Short display form of the latest version's publish date (abbreviated month + day,
+    /// current culture; the year is appended only when it differs from the current year),
+    /// or empty when no version has a publish date.
+    /// </summary>
+    public string LatestVersionCreatedAtShort =>
+        ModelVersions is { Count: > 0 } && ModelVersions[0].PublishedAt is { } publishedAt
+            ? publishedAt.ToString(
+                publishedAt.Year == DateTimeOffset.Now.Year ? "MMM d" : "MMM d yyyy",
+                System.Globalization.CultureInfo.CurrentCulture
+            )
+            : string.Empty;
 }

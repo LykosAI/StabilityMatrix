@@ -155,6 +155,14 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
     public IObservableCollection<HybridModelFile> ClipVisionModels { get; } =
         new ObservableCollectionExtended<HybridModelFile>();
 
+    private readonly SourceCache<HybridModelFile, string> ipAdapterModelsSource = new(p => p.GetId());
+    private readonly SourceCache<HybridModelFile, string> downloadableIpAdapterModelsSource = new(p =>
+        p.GetId()
+    );
+
+    public IObservableCollection<HybridModelFile> IpAdapterModels { get; } =
+        new ObservableCollectionExtended<HybridModelFile>();
+
     public InferenceClientManager(
         ILogger<InferenceClientManager> logger,
         IApiFactory apiFactory,
@@ -266,29 +274,42 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             .ObserveOn(SynchronizationContext.Current)
             .Subscribe();
 
+        // Type-first sort (matching ControlNet/SAM/etc.) groups installed files above the
+        // cloud-download entries instead of interleaving them alphabetically.
         clipModelsSource
             .Connect()
             .Or(downloadableClipModelsSource.Connect())
-            .SortBy(
-                f => f.ShortDisplayName,
-                SortDirection.Ascending,
-                SortOptimisations.ComparesImmutableValuesOnly
-            )
             .DeferUntilLoaded()
-            .Bind(ClipModels)
+            .SortAndBind(
+                ClipModels,
+                SortExpressionComparer<HybridModelFile>
+                    .Ascending(f => f.Type)
+                    .ThenByAscending(f => f.ShortDisplayName)
+            )
             .ObserveOn(SynchronizationContext.Current)
             .Subscribe();
 
         clipVisionModelsSource
             .Connect()
             .Or(downloadableClipVisionModelsSource.Connect())
-            .SortBy(
-                f => f.ShortDisplayName,
-                SortDirection.Ascending,
-                SortOptimisations.ComparesImmutableValuesOnly
-            )
             .DeferUntilLoaded()
-            .Bind(ClipVisionModels)
+            .SortAndBind(
+                ClipVisionModels,
+                SortExpressionComparer<HybridModelFile>
+                    .Ascending(f => f.Type)
+                    .ThenByAscending(f => f.ShortDisplayName)
+            )
+            .ObserveOn(SynchronizationContext.Current)
+            .Subscribe();
+
+        ipAdapterModelsSource
+            .Connect()
+            .Or(downloadableIpAdapterModelsSource.Connect())
+            .DeferUntilLoaded()
+            .SortAndBind(
+                IpAdapterModels,
+                SortExpressionComparer<HybridModelFile>.Ascending(f => f.ShortDisplayName)
+            )
             .ObserveOn(SynchronizationContext.Current)
             .Subscribe();
 
@@ -297,7 +318,13 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         vaeModelsDefaults
             .Connect()
             .Or(vaeModelsSource.Connect())
-            .Bind(VaeModels)
+            .SortAndBind(
+                VaeModels,
+                // Keep the "Default" entry pinned to the top, then sort the rest alphabetically.
+                SortExpressionComparer<HybridModelFile>
+                    .Descending(f => f.IsDefault)
+                    .ThenByAscending(f => f.ShortDisplayName)
+            )
             .ObserveOn(SynchronizationContext.Current)
             .Subscribe();
 
@@ -694,6 +721,20 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             !clipVisionModelsSource.Lookup(u.GetId()).HasValue
         );
         downloadableClipVisionModelsSource.EditDiff(downloadableClipVisionModels, HybridModelFile.Comparer);
+
+        ipAdapterModelsSource.EditDiff(
+            modelIndexService
+                .FindByModelType(
+                    SharedFolderType.IpAdapter | SharedFolderType.IpAdapters15 | SharedFolderType.IpAdaptersXl
+                )
+                .Select(HybridModelFile.FromLocal),
+            HybridModelFile.Comparer
+        );
+
+        var downloadableIpAdapterModels = RemoteModels.IpAdapterModelFiles.Where(u =>
+            !ipAdapterModelsSource.Lookup(u.GetId()).HasValue
+        );
+        downloadableIpAdapterModelsSource.EditDiff(downloadableIpAdapterModels, HybridModelFile.Comparer);
 
         // When connected, skip resetting samplers/schedulers to defaults only.
         // EditDiff would remove server-only items (e.g. custom samplers from extensions),

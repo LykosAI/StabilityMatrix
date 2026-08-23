@@ -18,7 +18,13 @@ public class MetadataImportService(
     ModelFinder modelFinder
 ) : IMetadataImportService
 {
-    public async Task ScanDirectoryForMissingInfo(
+    /// <summary>
+    /// Consecutive rate-limit/connectivity failures after which a bulk scan stops early:
+    /// once CivitAI starts refusing, hammering the remaining queue only extends the ban.
+    /// </summary>
+    private const int MaxConsecutiveLookupFailures = 3;
+
+    public async Task<MetadataScanResult> ScanDirectoryForMissingInfo(
         DirectoryPath directory,
         IProgress<ProgressReport>? progress = null
     )
@@ -32,29 +38,22 @@ public class MetadataImportService(
 
         var scanned = 0;
         var success = 0;
+        var notFound = 0;
+        var failed = 0;
+        var consecutiveLookupFailures = 0;
+        var aborted = false;
 
         foreach (var checkpointFilePath in checkpointsWithoutMetadata)
         {
-            if (scanned == 0)
-            {
-                progress?.Report(
-                    new ProgressReport(
-                        current: scanned,
-                        total: checkpointsWithoutMetadata.Count,
-                        message: "Scanning directory..."
-                    )
-                );
-            }
-            else
-            {
-                progress?.Report(
-                    new ProgressReport(
-                        current: scanned,
-                        total: checkpointsWithoutMetadata.Count,
-                        message: $"{success} files imported successfully"
-                    )
-                );
-            }
+            progress?.Report(
+                new ProgressReport(
+                    current: scanned,
+                    total: checkpointsWithoutMetadata.Count,
+                    message: scanned == 0
+                        ? "Scanning directory..."
+                        : $"{success} of {scanned} files matched so far"
+                )
+            );
 
             var fileNameWithoutExtension = checkpointFilePath.NameWithoutExtension;
             var cmInfoPath = checkpointFilePath.Directory?.JoinFile(
@@ -82,23 +81,58 @@ public class MetadataImportService(
                     .ConfigureAwait(false);
                 if (string.IsNullOrWhiteSpace(blake3))
                 {
-                    logger.LogWarning($"Blake3 hash was null for {checkpointFilePath}");
+                    logger.LogWarning("Blake3 hash was null for {Path}", checkpointFilePath);
                     scanned++;
+                    failed++;
                     continue;
                 }
 
-                var modelInfo = await modelFinder.RemoteFindModel(blake3).ConfigureAwait(false);
-                if (modelInfo == null)
+                var lookup = await modelFinder.RemoteFindModelWithStatus(blake3).ConfigureAwait(false);
+
+                if (
+                    lookup.Status
+                    is RemoteModelLookupStatus.RateLimited
+                        or RemoteModelLookupStatus.Unavailable
+                )
                 {
-                    logger.LogWarning($"Could not find model for {blake3}");
                     scanned++;
+                    failed++;
+                    consecutiveLookupFailures++;
+
+                    if (consecutiveLookupFailures >= MaxConsecutiveLookupFailures)
+                    {
+                        aborted = true;
+                        progress?.Report(
+                            new ProgressReport(
+                                current: scanned,
+                                total: checkpointsWithoutMetadata.Count,
+                                message: "CivitAI is not responding (rate limited or offline) - stopping early"
+                            )
+                        );
+                        break;
+                    }
+
+                    continue;
+                }
+
+                consecutiveLookupFailures = 0;
+
+                if (lookup.Status == RemoteModelLookupStatus.NotFound)
+                {
+                    logger.LogInformation(
+                        "No CivitAI match for {Path} (hash {Hash})",
+                        checkpointFilePath,
+                        blake3
+                    );
+                    scanned++;
+                    notFound++;
                     continue;
                 }
 
                 var updatedCmInfo = await BuildConnectedModelInfoAsync(
                         checkpointFilePath,
                         null,
-                        modelInfo.Value,
+                        lookup.Result!.Value,
                         progress
                     )
                     .ConfigureAwait(false);
@@ -114,6 +148,7 @@ public class MetadataImportService(
             {
                 logger.LogError(e, "Error while scanning {checkpointFilePath}", checkpointFilePath);
                 scanned++;
+                failed++;
             }
         }
 
@@ -124,6 +159,15 @@ public class MetadataImportService(
                 message: $"Metadata found for {success}/{checkpointsWithoutMetadata.Count} files"
             )
         );
+
+        return new MetadataScanResult
+        {
+            Total = checkpointsWithoutMetadata.Count,
+            Found = success,
+            NotFound = notFound,
+            Failed = failed,
+            Aborted = aborted,
+        };
     }
 
     private static bool FileHasNoCmInfo(FilePath file)
@@ -132,7 +176,7 @@ public class MetadataImportService(
             && !File.Exists(file.Directory?.JoinFile($"{file.NameWithoutExtension}.cm-info.json"));
     }
 
-    public async Task UpdateExistingMetadata(
+    public async Task<MetadataScanResult> UpdateExistingMetadata(
         DirectoryPath directory,
         IProgress<ProgressReport>? progress = null
     )
@@ -162,34 +206,85 @@ public class MetadataImportService(
             cmInfoList.Add(cmInfoPath, cmInfo);
         }
 
-        var success = 1;
+        var processed = 0;
+        var success = 0;
+        var notFound = 0;
+        var failed = 0;
+        var skipped = 0;
+        var consecutiveLookupFailures = 0;
+        var aborted = false;
+
         foreach (var (filePath, existingCmInfo) in cmInfoList)
         {
+            processed++;
             progress?.Report(
                 new ProgressReport(
-                    current: success,
+                    current: processed,
                     total: cmInfoList.Count,
-                    message: $"Updating metadata {success}/{cmInfoList.Count}"
+                    message: $"Updating metadata {processed}/{cmInfoList.Count}"
                 )
             );
 
             try
             {
-                var hash = existingCmInfo.Hashes.BLAKE3;
+                var hash = existingCmInfo.Hashes?.BLAKE3;
                 if (string.IsNullOrWhiteSpace(hash))
-                    continue;
-
-                var modelInfo = await modelFinder.RemoteFindModel(hash).ConfigureAwait(false);
-                if (modelInfo == null)
                 {
-                    logger.LogWarning($"Could not find model for {hash}");
+                    // Imports from sources without BLAKE3 (HuggingFace, OpenModelDb) can still be
+                    // refreshed by hashing the model file itself
+                    hash = await ComputeHashForCmInfo(filePath, progress).ConfigureAwait(false);
+                }
+
+                if (string.IsNullOrWhiteSpace(hash))
+                {
+                    logger.LogWarning(
+                        "Skipping {Path}: no BLAKE3 hash stored and no model file found to hash",
+                        filePath
+                    );
+                    skipped++;
+                    continue;
+                }
+
+                var lookup = await modelFinder.RemoteFindModelWithStatus(hash).ConfigureAwait(false);
+
+                if (
+                    lookup.Status
+                    is RemoteModelLookupStatus.RateLimited
+                        or RemoteModelLookupStatus.Unavailable
+                )
+                {
+                    failed++;
+                    consecutiveLookupFailures++;
+
+                    if (consecutiveLookupFailures >= MaxConsecutiveLookupFailures)
+                    {
+                        aborted = true;
+                        progress?.Report(
+                            new ProgressReport(
+                                current: processed,
+                                total: cmInfoList.Count,
+                                message: "CivitAI is not responding (rate limited or offline) - stopping early"
+                            )
+                        );
+                        break;
+                    }
+
+                    continue;
+                }
+
+                consecutiveLookupFailures = 0;
+
+                if (lookup.Status == RemoteModelLookupStatus.NotFound)
+                {
+                    logger.LogInformation("No CivitAI match for {Path} (hash {Hash})", filePath, hash);
+                    notFound++;
                     continue;
                 }
 
                 var updatedCmInfo = await BuildConnectedModelInfoAsync(
                         filePath,
                         existingCmInfo,
-                        modelInfo.Value,
+                        lookup.Result!.Value,
                         progress
                     )
                     .ConfigureAwait(false);
@@ -204,11 +299,63 @@ public class MetadataImportService(
             catch (Exception e)
             {
                 logger.LogError(e, "Error while updating {filePath}", filePath);
+                failed++;
             }
         }
+
+        progress?.Report(
+            new ProgressReport(
+                current: processed,
+                total: cmInfoList.Count,
+                message: $"Metadata refreshed for {success}/{cmInfoList.Count} files"
+            )
+        );
+
+        return new MetadataScanResult
+        {
+            Total = cmInfoList.Count,
+            Found = success,
+            NotFound = notFound,
+            Failed = failed,
+            Skipped = skipped,
+            Aborted = aborted,
+        };
     }
 
-    public async Task<ConnectedModelInfo?> GetMetadataForFile(
+    /// <summary>
+    /// Locates the model file belonging to a .cm-info.json and computes its BLAKE3 hash.
+    /// Returns null when no sibling model file exists (e.g. the model was deleted).
+    /// </summary>
+    private static async Task<string?> ComputeHashForCmInfo(
+        FilePath cmInfoPath,
+        IProgress<ProgressReport>? progress
+    )
+    {
+        var baseName = cmInfoPath.NameWithoutExtension.Replace(".cm-info", string.Empty);
+
+        var modelFile = LocalModelFile
+            .SupportedCheckpointExtensions.Select(ext => cmInfoPath.Directory?.JoinFile(baseName + ext))
+            .FirstOrDefault(path => path is not null && File.Exists(path));
+
+        if (modelFile is null)
+            return null;
+
+        var hashProgress = new Progress<ProgressReport>(report =>
+        {
+            progress?.Report(
+                new ProgressReport(
+                    current: report.Current ?? 0,
+                    total: report.Total ?? 0,
+                    message: $"Hashing {modelFile.Name} ... {report.Percentage}%",
+                    printToConsole: false
+                )
+            );
+        });
+
+        return await FileHash.GetBlake3Async(modelFile, hashProgress).ConfigureAwait(false);
+    }
+
+    public async Task<MetadataFetchResult> GetMetadataForFile(
         FilePath filePath,
         IProgress<ProgressReport>? progress = null,
         bool forceReimport = false
@@ -223,7 +370,7 @@ public class MetadataImportService(
                 ? await ReadConnectedModelInfo(cmInfoPath).ConfigureAwait(false)
                 : null;
         if (existingCmInfo != null && !forceReimport)
-            return null;
+            return new MetadataFetchResult(MetadataFetchStatus.AlreadyExists, null);
 
         var hashProgress = new Progress<ProgressReport>(report =>
         {
@@ -240,21 +387,31 @@ public class MetadataImportService(
 
         if (string.IsNullOrWhiteSpace(blake3))
         {
-            logger.LogWarning($"Blake3 hash was null for {filePath}");
-            return null;
+            logger.LogWarning("Blake3 hash was null for {Path}", filePath);
+            return new MetadataFetchResult(MetadataFetchStatus.HashUnavailable, null);
         }
 
-        var modelInfo = await modelFinder.RemoteFindModel(blake3).ConfigureAwait(false);
-        if (modelInfo == null)
+        var lookup = await modelFinder.RemoteFindModelWithStatus(blake3).ConfigureAwait(false);
+
+        if (lookup.Status != RemoteModelLookupStatus.Found)
         {
-            logger.LogWarning($"Could not find model for {blake3}");
-            return null;
+            logger.LogInformation("Metadata lookup for {Path} returned {Status}", filePath, lookup.Status);
+
+            return new MetadataFetchResult(
+                lookup.Status switch
+                {
+                    RemoteModelLookupStatus.NotFound => MetadataFetchStatus.NotFound,
+                    RemoteModelLookupStatus.RateLimited => MetadataFetchStatus.RateLimited,
+                    _ => MetadataFetchStatus.Unavailable,
+                },
+                null
+            );
         }
 
         var updatedCmInfo = await BuildConnectedModelInfoAsync(
                 filePath,
                 existingCmInfo,
-                modelInfo.Value,
+                lookup.Result!.Value,
                 progress
             )
             .ConfigureAwait(false);
@@ -262,7 +419,7 @@ public class MetadataImportService(
             .SaveJsonToDirectory(filePath.Directory, fileNameWithoutExtension)
             .ConfigureAwait(false);
 
-        return updatedCmInfo;
+        return new MetadataFetchResult(MetadataFetchStatus.Found, updatedCmInfo);
     }
 
     private async Task<ConnectedModelInfo> BuildConnectedModelInfoAsync(
@@ -325,13 +482,17 @@ public class MetadataImportService(
         IProgress<ProgressReport> hashProgress
     )
     {
-        if (string.IsNullOrWhiteSpace(cmInfoPath?.ToString()) || !File.Exists(cmInfoPath))
+        if (!string.IsNullOrWhiteSpace(cmInfoPath?.ToString()) && File.Exists(cmInfoPath))
         {
-            return await FileHash.GetBlake3Async(checkpointFilePath, hashProgress).ConfigureAwait(false);
+            var cmInfo = await ReadConnectedModelInfo(cmInfoPath).ConfigureAwait(false);
+            if (!string.IsNullOrWhiteSpace(cmInfo?.Hashes?.BLAKE3))
+            {
+                return cmInfo.Hashes.BLAKE3;
+            }
         }
 
-        var cmInfo = await ReadConnectedModelInfo(cmInfoPath).ConfigureAwait(false);
-        return cmInfo?.Hashes.BLAKE3;
+        // No stored hash (fresh file, or an import source that only records SHA256) - hash the file
+        return await FileHash.GetBlake3Async(checkpointFilePath, hashProgress).ConfigureAwait(false);
     }
 
     private async Task<string> DownloadImage(

@@ -62,12 +62,14 @@
         <StyleInclude Source="Styles/ToggleButtonStyles.axaml" />
         <StyleInclude Source="Styles/DockStyles.axaml" />
         <StyleInclude Source="Styles/BorderStyles.axaml" />
+        <StyleInclude Source="Styles/TagChip.axaml" />
         <StyleInclude Source="Styles/TextBoxStyles.axaml" />
         <StyleInclude Source="Styles/CommandBarButtonStyles.axaml" />
         <StyleInclude Source="Controls/AdvancedImageBox.axaml" />
         <StyleInclude Source="Controls/FrameCarousel.axaml" />
         <StyleInclude Source="Controls/CodeCompletion/CompletionWindow.axaml" />
         <StyleInclude Source="Controls/Paginator.axaml" />
+        <StyleInclude Source="Controls/SmolInfoBar.axaml" />
         <StyleInclude Source="Controls/SelectableImageCard/SelectableImageButton.axaml" />
         <StyleInclude Source="Controls/SettingsAccountLinkExpander.axaml" />
         <StyleInclude Source="Controls/StarsRating.axaml" />
@@ -80,6 +82,7 @@
         <StyleInclude Source="Controls/Inference/StackExpander.axaml" />
         <StyleInclude Source="Controls/Inference/SeedCard.axaml" />
         <StyleInclude Source="Controls/Inference/SamplerCard.axaml" />
+        <StyleInclude Source="Controls/Inference/GenerateButtonBar.axaml" />
         <StyleInclude Source="Controls/Inference/ImageGalleryCard.axaml" />
         <StyleInclude Source="Controls/Inference/PromptCard.axaml" />
         <StyleInclude Source="Controls/Inference/UpscalerCard.axaml" />
@@ -104,6 +107,7 @@
         <StyleInclude Source="Controls/Inference/PlasmaNoiseCard.axaml" />
         <StyleInclude Source="Controls/Inference/NrsCard.axaml" />
         <StyleInclude Source="Controls/Inference/CfzCudnnToggleCard.axaml" />
+        <StyleInclude Source="Controls/Inference/IPAdapterCard.axaml" />
         <labs:ControlThemes />
 
         <Style Selector="DockControl">

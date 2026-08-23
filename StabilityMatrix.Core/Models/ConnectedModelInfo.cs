@@ -83,6 +83,31 @@ public class ConnectedModelInfo : IEquatable<ConnectedModelInfo>
         Source = ConnectedModelSource.OpenModelDb;
     }
 
+    /// <summary>
+    /// Minimal metadata for a file imported from a HuggingFace repository. Carries the content
+    /// SHA256 (so the model index can match it by hash) and a link back to the source repo. Unlike
+    /// the Civit/OpenModelDb sources there is no remote model id, description, or preview.
+    /// </summary>
+    public static ConnectedModelInfo FromHuggingFace(
+        string repositoryPath,
+        string fileName,
+        string sha256,
+        DateTimeOffset importedAt
+    ) =>
+        new()
+        {
+            ModelName = repositoryPath,
+            ModelDescription = string.Empty,
+            VersionName = fileName,
+            Tags = [],
+            ModelType = CivitModelType.Unknown,
+            RemoteFileName = fileName,
+            Hashes = new CivitFileHashes { SHA256 = sha256 },
+            ImportedAt = importedAt,
+            Source = ConnectedModelSource.HuggingFace,
+            SourceUrl = $"https://huggingface.co/{repositoryPath}",
+        };
+
     private void ApplyCivitMetadata(
         CivitModel civitModel,
         CivitModelVersion civitModelVersion,

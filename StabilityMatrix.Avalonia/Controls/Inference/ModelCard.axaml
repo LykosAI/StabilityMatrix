@@ -5,6 +5,7 @@
     xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
     xmlns:fluent="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
     xmlns:inference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
+    xmlns:inferenceModels="clr-namespace:StabilityMatrix.Avalonia.Models.Inference"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
     xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
@@ -151,17 +152,14 @@
                                 HorizontalAlignment="Stretch"
                                 ItemsSource="{Binding WorkflowProfiles}"
                                 SelectedItem="{Binding SelectedWorkflowProfile}">
-                                <controls:BetterComboBox.Resources>
-                                    <converters:EnumStringConverter x:Key="EnumStringConverter" />
-                                </controls:BetterComboBox.Resources>
                                 <controls:BetterComboBox.ItemTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding ., Converter={StaticResource EnumStringConverter}}" />
+                                    <DataTemplate x:DataType="inferenceModels:InferenceWorkflowProfile">
+                                        <TextBlock Text="{Binding DisplayName}" />
                                     </DataTemplate>
                                 </controls:BetterComboBox.ItemTemplate>
                                 <controls:BetterComboBox.SelectionBoxItemTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding ., Converter={StaticResource EnumStringConverter}}" />
+                                    <DataTemplate x:DataType="inferenceModels:InferenceWorkflowProfile">
+                                        <TextBlock Text="{Binding DisplayName}" />
                                     </DataTemplate>
                                 </controls:BetterComboBox.SelectionBoxItemTemplate>
                             </controls:BetterComboBox>
@@ -182,53 +180,30 @@
                             IsVisible="{Binding ShowWorkflowProfileStatus}"
                             Text="{Binding WorkflowProfileStatusText}" />
 
-                        <!--
-                            Profile / folder mismatch warning (e.g. UNet-only model placed in the StableDiffusion folder).
-                            Custom compact strip — the stock InfoBar's padding + stacked action button eat too much
-                            vertical space in this card.
-                        -->
-                        <Border
+                        <!--  Profile / folder mismatch warning (e.g. UNet-only model placed in the StableDiffusion folder).  -->
+                        <controls:SmolInfoBar
                             Margin="0,8,0,0"
-                            Padding="8,5"
-                            Background="{DynamicResource SystemFillColorCautionBackgroundBrush}"
-                            BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
-                            BorderThickness="1"
-                            CornerRadius="4"
-                            IsVisible="{Binding ShowWorkflowProfileWarning}">
-                            <Grid ColumnDefinitions="Auto,*,Auto,Auto">
-                                <fluent:SymbolIcon
-                                    Grid.Column="0"
-                                    Margin="0,1,6,0"
-                                    VerticalAlignment="Top"
-                                    FontSize="14"
-                                    Foreground="{DynamicResource SystemFillColorCautionBrush}"
-                                    Symbol="Warning" />
-                                <TextBlock
-                                    Grid.Column="1"
-                                    VerticalAlignment="Center"
-                                    FontSize="11"
-                                    Text="{Binding WorkflowProfileWarningText}"
-                                    TextWrapping="Wrap" />
-                                <Button
-                                    Grid.Column="2"
-                                    Margin="8,0,0,0"
-                                    Padding="8,3"
-                                    VerticalAlignment="Center"
-                                    Command="{Binding MoveModelToRecommendedFolderCommand}"
-                                    Content="{x:Static lang:Resources.Action_Move}"
-                                    FontSize="11"
-                                    ToolTip.Tip="{Binding MoveModelToRecommendedFolderText}" />
-                                <Button
-                                    Grid.Column="3"
-                                    Margin="4,0,0,0"
-                                    Padding="5,3"
-                                    VerticalAlignment="Center"
-                                    Command="{Binding DismissWorkflowProfileWarningCommand}"
-                                    ToolTip.Tip="{x:Static lang:Resources.Action_Dismiss}">
-                                    <fluent:SymbolIcon FontSize="11" Symbol="Dismiss" />
-                                </Button>
-                            </Grid>
-                        </Border>
+                            ActionCommand="{Binding MoveModelToRecommendedFolderCommand}"
+                            ActionText="{x:Static lang:Resources.Action_Move}"
+                            ActionToolTip="{Binding MoveModelToRecommendedFolderText}"
+                            CloseCommand="{Binding DismissWorkflowProfileWarningCommand}"
+                            IsOpen="{Binding ShowWorkflowProfileWarning}"
+                            Message="{Binding WorkflowProfileWarningText}"
+                            Severity="Warning" />
+
+                        <!--
+                            Missing companion components (encoder / VAE) with one-click official downloads.
+                            While the batch runs, the bar stays up showing progress (Activity tab has details).
+                        -->
+                        <controls:SmolInfoBar
+                            Margin="0,8,0,0"
+                            ActionCommand="{Binding DownloadMissingCompanionsCommand}"
+                            ActionText="{Binding MissingCompanionsActionText}"
+                            CloseCommand="{Binding DismissMissingCompanionsCommand}"
+                            IsClosable="{Binding !IsDownloadingCompanions}"
+                            IsOpen="{Binding ShowMissingCompanionsBar}"
+                            Message="{Binding MissingCompanionsBarText}"
+                            Severity="Informational" />
 
                         <!--  Encoder Type (shown for non-Auto workflows on UNet, and any time Custom is selected)  -->
                         <Grid

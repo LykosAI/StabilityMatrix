@@ -566,25 +566,13 @@ public class ComfyUI(
                             new ProgressReport(-1f, "Updating SageAttention...", isIndeterminate: true)
                         );
 
-                        var step = new InstallSageAttentionStep(
-                            downloadService,
-                            prerequisiteHelper,
-                            pyInstallationManager
-                        )
-                        {
-                            InstalledPackage = installedPackage,
-                            IsBlackwellGpu =
-                                SettingsManager.Settings.PreferredGpu?.IsBlackwellGpu()
-                                ?? HardwareHelper.HasBlackwellGpu(),
-                            WorkingDirectory = installLocation,
-                            EnvironmentVariables = GetEnvVars(
-                                venvRunner.EnvironmentVariables,
-                                installLocation,
-                                installedPackage
-                            ),
-                        };
+                        var gpuInfo =
+                            SettingsManager.Settings.PreferredGpu
+                            ?? HardwareHelper.IterGpuInfo().FirstOrDefault(x => x.IsNvidia);
 
-                        await step.ExecuteAsync(progress).ConfigureAwait(false);
+                        await PipWheelService
+                            .InstallSageAttentionAsync(venvRunner, gpuInfo, progress)
+                            .ConfigureAwait(false);
                     }
                 }
             }

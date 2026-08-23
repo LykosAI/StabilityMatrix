@@ -31,7 +31,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added **Sort** options to the Inference model picker — file name, title, base model, type, size, and dates, remembered between sessions; search relevance still wins while you type
 ### Changed
 - The **Workflows** page is now your installed workflow library, front and center — no more tabs, since browsing moved to the Model Browser. Cards for CivitAI-imported workflows link back to their CivitAI page
-- Removed the **OpenArt workflow browser**: OpenArt has discontinued its ComfyUI workflow community, and the unmoderated feed had filled with spam. Workflows you already imported from OpenArt stay fully usable in your library
+- Removed the **OpenArt workflow browser**: OpenArt has discontinued its ComfyUI workflow community. Workflows you already imported stay fully usable in your library
 - Updated **AI-Toolkit** installs to PyTorch 2.13.0 on CUDA 13.0 with Python 3.12, matching current upstream requirements ([#1714](https://github.com/LykosAI/StabilityMatrix/issues/1714)) — with a console warning at launch if your NVIDIA driver predates the 580 series
 - Updated the bundled **uv** package manager to 0.12.5, adding newer Python builds to the Python picker — including the 3.10 security releases requested in [#1709](https://github.com/LykosAI/StabilityMatrix/issues/1709)
 - Refreshed the model card badges across the **Checkpoint Manager** and the **CivitAI / CivArchive browsers** — compact chips instead of chunky pills, an update badge showing the release date, a distinct style for early-access-only updates, and clearer Installed / NSFW / Deleted states
@@ -41,7 +41,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed custom node installs failing on legacy source builds that import `pkg_resources` (e.g. `cupy-wheel`) — extension install scripts now get the same `setuptools<82` constraint package installs already had
 - Fixed Qwen Image Edit's model check accepting an incompatible Krea 2 text encoder; the correct 7B download is offered instead
 - Fixed cloud-download entries in model dropdowns doing nothing until you clicked another item first, and the jumpy scrolling around them
-- Fixed switching model families after a restart keeping the previous family's encoders and slot count (e.g. Flux.2 Klein holding onto clip_l)
+- Fixed switching model families after a restart keeping the previous family's encoders and slot count
 - Fixed companion downloads sometimes not filling their slot when the batch finished
 - Fixed the Model Browser failing with "CivitAI can't be reached right now (OK: OK)" — CivitAI started returning `null` for some model statistics; missing stats now read as 0
 - Fixed [#1695](https://github.com/LykosAI/StabilityMatrix/issues/1695) - models whose CivitAI page has since been deleted showing an error dialog on every click, with no way to break the link:
@@ -58,7 +58,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed early access versions no longer being detected, breaking the early-access badge and the **Hide Early Access Models** filter
 - Fixed multi-architecture models (e.g. Illustrious | Pony | NoobAI in one listing) counting a release for a different architecture as an update — checks now compare within your installed version's base model
 - Fixed metadata scans always reporting success — the completion message now shows real counts, tells rate limiting apart from "not on CivitAI", and stops early instead of grinding your library into a rate limit
-- Fixed **Update Metadata** skipping models imported from HuggingFace or OpenModelDB (now hashed on demand), and scans freezing the app while hashing large files
+- Fixed **Update Metadata** skipping models imported from HuggingFace or OpenModelDB (now hashed on demand), and scans freezing the app on large files
 - Fixed **Organize Models** appearing to do nothing out of the box — the default pattern is now `{base_model}/{file_name}` so the first preview proposes real folders (saved patterns untouched)
 - Fixed model card text being hard to read in light theme
 - Fixed the app sometimes crashing on exit with an **Inference** tab open, most often with **Remove folder links on shutdown** enabled
@@ -66,6 +66,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed installing a package that needs a newer Python breaking an already-installed package's environment — a 3.13 package alongside an existing 3.12 one left the older one unable to launch with `error no: 2`, and hand-repairs were overwritten on every launch - thanks to @NeuralFault!
 - Fixed **Clear Finished** in the **Activity** popout also clearing failed downloads, taking their **Retry** button with them — failed items now stay until you retry or dismiss them - thanks to @NeuralFault!
 - Fixed **SwarmUI**'s **Launch Mode** option having no effect, as it used a hyphen where SwarmUI expects `--launch_mode` — the dropdown also gains a **none** option to skip the browser launch - thanks to @NeuralFault!
+- Fixed **Forge Neo** and other uv-dependent packages failing to launch on **Linux** and **macOS** with `Error: 2  uv not found` ([#1713](https://github.com/LykosAI/StabilityMatrix/issues/1713)) — the bundled uv is now on the launch PATH there too - thanks to @NeuralFault!
 ### Supporters
 #### 🌟 Visionaries
 Three new model profiles, one-click downloads for the pieces that go with them, workflows you can browse and import from CivitAI, and Inference layouts that finally stay where you put them: this build is mostly people asking for things and us getting to say yes. Our Visionaries are why that's possible at all, so thank you **Waterclouds**, **MrMxyzptlk12836**, **bluepopsicle**, **Ibixat**, **Droolguy**, **snotty**, **dispenser**, **cusalapapen1481**, **moon_milky2843**, **CC**, and **SnooSnooEternal**. Every one of these features has a bit of your backing in it. And a warm hello to **TwistedDragon**, **Eaglebane**, and **hasezou11013179**, who join the Visionaries this time around; we're really glad you're here. 💛

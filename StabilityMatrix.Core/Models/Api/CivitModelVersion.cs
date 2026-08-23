@@ -37,7 +37,17 @@ public class CivitModelVersion
     [JsonPropertyName("publishedAt")]
     public DateTimeOffset? PublishedAt { get; set; }
 
+    [JsonPropertyName("earlyAccessDeadline")]
+    public DateTimeOffset? EarlyAccessDeadline { get; set; }
+
+    /// <summary>
+    /// Whether the version is currently in early access. CivitAI signals this on current
+    /// API responses via a future <see cref="EarlyAccessDeadline"/> while reporting
+    /// <see cref="Availability"/> as "Public"; the availability check is kept for
+    /// responses that do use the explicit value.
+    /// </summary>
     [JsonIgnore]
     public bool IsEarlyAccess =>
-        Availability?.Equals("EarlyAccess", StringComparison.OrdinalIgnoreCase) ?? false;
+        (Availability?.Equals("EarlyAccess", StringComparison.OrdinalIgnoreCase) ?? false)
+        || EarlyAccessDeadline > DateTimeOffset.UtcNow;
 }

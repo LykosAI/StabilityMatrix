@@ -5,6 +5,41 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.16.3
+### Added
+#### New Feature: 🔀 CivitAI Workflow Browsing
+- The **Model Browser** now browses and imports **ComfyUI workflows** from CivitAI — pick the new **Workflows** model type (or spot them in All-type searches), open one, and import it straight into your workflow library; archives are unpacked automatically, and images with an embedded workflow (the drag-into-ComfyUI kind) are converted into regular workflows with the image kept as the preview
+- Your workflow library is now **linked into ComfyUI itself** — imported workflows appear under a "Stability Matrix" folder in ComfyUI's own workflow browser, for every installed ComfyUI-based package
+- **Custom node install assist**: after importing a workflow that needs custom nodes, Stability Matrix reads the node packs right out of the workflow file, shows which are already installed, and offers one-click installs for the rest
+#### 📖 In-App Documentation (shipped in v2.16.2)
+- Left out of the 2.16.2 release notes by mistake, so it is recorded here. Read the Stability Matrix guides without leaving the app:
+  - Press **F1** from anywhere, or open it from **Settings → About → Documentation**
+  - New **?** buttons on the Package Manager, install details, the running package console, Inference, and the Environment Variables and App Folders settings open the page for what you're looking at
+  - Browse every section from a nav tree, follow links between pages, and zoom the text in or out — your zoom level is remembered
+  - Pages are read live from [docs.lykos.ai](https://docs.lykos.ai/stability-matrix/), so new and updated writing shows up without an app update, and a copy ships inside the app so it still works offline
+### Changed
+- The **Workflows** page is now your installed workflow library, front and center — no more tabs, since browsing moved to the Model Browser. Cards for CivitAI-imported workflows link back to their CivitAI page
+- Removed the **OpenArt workflow browser**: OpenArt has discontinued its ComfyUI workflow community (the site no longer has workflow pages, nothing new has been uploaded since March, and the unmoderated feed had filled with spam). Workflows you already imported from OpenArt stay fully usable in your library
+- Updated **AI-Toolkit** installs to PyTorch 2.13.0 on CUDA 13.0 with Python 3.12, matching current upstream requirements ([#1714](https://github.com/LykosAI/StabilityMatrix/issues/1714)) — with a console warning at launch if your NVIDIA driver is older than the 580 series CUDA 13.0 needs
+- Updated the bundled **uv** package manager to 0.12.5, adding newer Python builds to the Python picker — including the 3.10 security releases requested in [#1709](https://github.com/LykosAI/StabilityMatrix/issues/1709)
+### Fixed
+- Fixed custom node installs failing on legacy source builds that import `pkg_resources` (e.g. `cupy-wheel`) — pip runs started by extension install scripts now get the same `setuptools<82` constraint that package installs already applied for uv
+- Fixed [#1703](https://github.com/LykosAI/StabilityMatrix/issues/1703) - model cover/preview images not displaying when your **File Name Pattern** contains a `#`
+- Fixed [#1705](https://github.com/LykosAI/StabilityMatrix/issues/1705) - the **Model Browser** showing results in a scrambled order after refreshing with the **Search** button
+- Fixed [#1708](https://github.com/LykosAI/StabilityMatrix/issues/1708) - OneTrainer on **Windows ROCm** crashing at the start of training with bitsandbytes 8-bit optimizers — the incompatible bitsandbytes build is no longer installed, and a launch notice explains why until OneTrainer supports the new version - thanks to @NeuralFault for the diagnosis!
+- Fixed [#1710](https://github.com/LykosAI/StabilityMatrix/issues/1710) - CivitAI downloads sometimes fetching a different file from the same model version (then failing hash verification) when several files share identical metadata — downloads now pin the exact file
+- Fixed [#1715](https://github.com/LykosAI/StabilityMatrix/issues/1715) - the app crashing on startup on Linux when the models folder contains folders or files differing only in letter case (e.g. `unet` and `Unet`, also [#1149](https://github.com/LykosAI/StabilityMatrix/issues/1149)/[#1357](https://github.com/LykosAI/StabilityMatrix/issues/1357)) — models in differently-cased folders now show up in the Checkpoint Manager instead of being silently skipped, and a model index error can no longer take down the app
+- Fixed [#1716](https://github.com/LykosAI/StabilityMatrix/issues/1716) - phantom **Update Available** badges on embeddings, VAEs, upscalers, and ControlNets — the update check didn't count those file types as evidence of being up to date, so it flagged them all forever; wrong badges clear on the next check
+- Fixed [#1707](https://github.com/LykosAI/StabilityMatrix/issues/1707) - Inference's **Layer Diffuse** addon failing at the sampler with `'NoneType' object is not subscriptable` on current ComfyUI — the Inference Core Nodes extension carries the fix, and Inference now offers the update when your copy predates it
+- Fixed [#1717](https://github.com/LykosAI/StabilityMatrix/issues/1717) - Inference and Image Lab asking you to install a ComfyUI extension you already have (most often **ComfyUI-GGUF**), with the same prompt returning after every install — extensions added from the ComfyUI registry, which ComfyUI-Manager unpacks instead of cloning, weren't being seen at all, and clones were only recognized when their remote URL matched ours character for character (a `.git` suffix or an SSH remote was enough to miss)
+- Fixed early access versions no longer being detected — CivitAI now marks them via a deadline field while reporting them as public, which broke the early-access update badge and the Model Browser's **Hide Early Access Models** filter
+- Fixed multi-architecture models (e.g. Illustrious | Pony | NoobAI in one listing) counting a release for a different architecture as an update — update checks now compare within your installed version's base model, so the update and early-access badges reflect the actual successor on your track
+### Supporters
+#### 🌟 Visionaries
+A point release that quietly grew a feature: workflows you can now browse and import straight from CivitAI, sitting alongside a long run of fixes that each began with somebody taking the time to report a problem. Our Visionaries are why both halves get proper attention instead of one crowding out the other. Thank you **Waterclouds**, **MrMxyzptlk12836**, **bluepopsicle**, **Ibixat**, **Droolguy**, **snotty**, **dispenser**, **cusalapapen1481**, **moon_milky2843**, **CC**, and **SnooSnooEternal** for making that possible. A warm welcome as well to **TwistedDragon**, **Eaglebane**, and **hasezou11013179**, the newest names on this list; it's genuinely lovely to have you with us. 💛
+#### 🚀 Pioneers
+Our Pioneers carry the other half, and there's a quiet kind of trust in a list that barely changes from one release to the next: **SinthCore**, **Jisuren**, **jweg79**, **Hurbie53**, **Tuskaruho**, **Cjloha**, **Alligator1907**, **Bitti**, **CommissarGiygas16050**, **bastardofbethlehem**, **Zombop**, **Silerae**, **joshsciascia72**, and **rad64741317**. Point releases rarely make headlines, and you back them just as readily as the big ones. Thank you for that, every one of you. 💛
+
 ## v2.16.2
 > Full technical notes for this release: [docs.lykos.ai/stability-matrix/release-notes/2.16.2](https://docs.lykos.ai/stability-matrix/release-notes/2.16.2)
 ### Added

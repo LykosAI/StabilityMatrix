@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Immutable;
 using System.Diagnostics;
+using System.Globalization;
 using System.Text;
 using AsyncAwaitBestPractices;
 using AutoCtor;
@@ -213,6 +214,68 @@ public partial class ModelIndexService : IModelIndexService
         return RefreshIndexParallelCore();
     }
 
+    /// <summary>
+    /// Resolves a top-level models folder name to its <see cref="SharedFolderType"/>.
+    /// Case-insensitive, so a folder whose casing diverges from the canonical name (possible on
+    /// case-sensitive file systems, e.g. "textencoders" next to "TextEncoders") still indexes as
+    /// its canonical type. Unmatched names resolve to <see cref="SharedFolderType.Unknown"/>.
+    /// </summary>
+    internal static SharedFolderType ParseSharedFolderType(string folderName) =>
+        Enum.TryParse<SharedFolderType>(folderName, ignoreCase: true, out var type)
+            ? type
+            : SharedFolderType.Unknown;
+
+    /// <summary>
+    /// Filters models so no two entries collide on the <see cref="LocalModelFile.RelativePath"/>
+    /// primary key under the database's collation. The main database uses Ordinal collation, where
+    /// distinct paths never collide; under a case-insensitive collation, paths differing only in
+    /// case (possible on case-sensitive file systems) would otherwise fail the bulk insert with a
+    /// duplicate key error.
+    /// </summary>
+    internal static IReadOnlyList<LocalModelFile> DeduplicateForDbCollation(
+        IReadOnlyCollection<LocalModelFile> models,
+        Collation collation,
+        ILogger logger
+    )
+    {
+        var deduplicated = new List<LocalModelFile>(models.Count);
+        var seenPaths = new HashSet<string>(models.Count, GetKeyComparer(collation));
+
+        foreach (var model in models)
+        {
+            if (seenPaths.Add(model.RelativePath))
+            {
+                deduplicated.Add(model);
+            }
+            else
+            {
+                logger.LogWarning(
+                    "Skipping model {Path}: its path collides with an already indexed model "
+                        + "under the database collation ({Collation})",
+                    model.RelativePath,
+                    collation
+                );
+            }
+        }
+
+        return deduplicated;
+    }
+
+    /// <summary>
+    /// A <see cref="StringComparer"/> with the same equality semantics as a LiteDB collation,
+    /// for detecting primary key collisions ahead of insert.
+    /// </summary>
+    internal static StringComparer GetKeyComparer(Collation collation) =>
+        collation.SortOptions switch
+        {
+            CompareOptions.Ordinal => StringComparer.Ordinal,
+            CompareOptions.OrdinalIgnoreCase => StringComparer.OrdinalIgnoreCase,
+            var options => StringComparer.Create(
+                collation.Culture,
+                options.HasFlag(CompareOptions.IgnoreCase)
+            ),
+        };
+
     private async Task RefreshIndexCore()
     {
         if (!settingsManager.IsLibraryDirSet)
@@ -255,7 +318,8 @@ public partial class ModelIndexService : IModelIndexService
                 StringSplitOptions.RemoveEmptyEntries
             )[0];
             // Try Convert to enum
-            if (!Enum.TryParse<SharedFolderType>(sharedFolderName, out var sharedFolderType))
+            var sharedFolderType = ParseSharedFolderType(sharedFolderName);
+            if (sharedFolderType is SharedFolderType.Unknown)
             {
                 continue;
             }
@@ -341,14 +405,25 @@ public partial class ModelIndexService : IModelIndexService
         // Insert to db as transaction
         stopwatch.Restart();
 
-        using var db = await liteDbContext.Database.BeginTransactionAsync().ConfigureAwait(false);
+        var dbModels = DeduplicateForDbCollation(newIndexFlat, liteDbContext.Database.Collation, logger);
 
-        var localModelFiles = db.GetCollection<LocalModelFile>("LocalModelFiles")!;
+        try
+        {
+            using var db = await liteDbContext.Database.BeginTransactionAsync().ConfigureAwait(false);
 
-        await localModelFiles.DeleteAllAsync().ConfigureAwait(false);
-        await localModelFiles.InsertBulkAsync(newIndexFlat).ConfigureAwait(false);
+            var localModelFiles = db.GetCollection<LocalModelFile>("LocalModelFiles")!;
 
-        await db.CommitAsync().ConfigureAwait(false);
+            await localModelFiles.DeleteAllAsync().ConfigureAwait(false);
+            await localModelFiles.InsertBulkAsync(dbModels).ConfigureAwait(false);
+
+            await db.CommitAsync().ConfigureAwait(false);
+        }
+        catch (Exception e) when (e is LiteException or LiteAsyncException)
+        {
+            // A failed persist must not propagate: callers await refreshes from UI contexts where
+            // an exception crashes the app, and the in-memory index above is already updated.
+            logger.LogError(e, "Failed to persist model index to database");
+        }
 
         stopwatch.Stop();
         var dbTime = stopwatch.Elapsed;
@@ -415,10 +490,7 @@ public partial class ModelIndexService : IModelIndexService
                     StringSplitOptions.RemoveEmptyEntries
                 )[0];
                 // Try Convert to enum
-                if (!Enum.TryParse<SharedFolderType>(sharedFolderName, out var sharedFolderType))
-                {
-                    sharedFolderType = SharedFolderType.Unknown;
-                }
+                var sharedFolderType = ParseSharedFolderType(sharedFolderName);
 
                 // Since RelativePath is the database key, for LiteDB this is limited to 1021 bytes
                 if (Encoding.UTF8.GetByteCount(relativePath) is var byteCount and > 1021)
@@ -554,13 +626,24 @@ public partial class ModelIndexService : IModelIndexService
         // Insert to db as transaction
         stopwatch.Restart();
 
-        using var db = await liteDbContext.Database.BeginTransactionAsync().ConfigureAwait(false);
-        var localModelFiles = db.GetCollection<LocalModelFile>("LocalModelFiles")!;
+        var dbModels = DeduplicateForDbCollation(newIndexComplete, liteDbContext.Database.Collation, logger);
 
-        await localModelFiles.DeleteAllAsync().ConfigureAwait(false);
-        await localModelFiles.InsertBulkAsync(newIndexComplete).ConfigureAwait(false);
+        try
+        {
+            using var db = await liteDbContext.Database.BeginTransactionAsync().ConfigureAwait(false);
+            var localModelFiles = db.GetCollection<LocalModelFile>("LocalModelFiles")!;
 
-        await db.CommitAsync().ConfigureAwait(false);
+            await localModelFiles.DeleteAllAsync().ConfigureAwait(false);
+            await localModelFiles.InsertBulkAsync(dbModels).ConfigureAwait(false);
+
+            await db.CommitAsync().ConfigureAwait(false);
+        }
+        catch (Exception e) when (e is LiteException or LiteAsyncException)
+        {
+            // A failed persist must not propagate: callers await refreshes from UI contexts where
+            // an exception crashes the app, and the in-memory index above is already updated.
+            logger.LogError(e, "Failed to persist model index to database");
+        }
 
         stopwatch.Stop();
         var dbTime = stopwatch.Elapsed;
@@ -638,8 +721,6 @@ public partial class ModelIndexService : IModelIndexService
             return;
         }
 
-        lastUpdateCheck = DateTimeOffset.UtcNow;
-
         var installedHashes = ModelIndexBlake3Hashes;
         var dbModels = (
             await liteDbContext.LocalModelFiles.FindAllAsync().ConfigureAwait(false) ?? []
@@ -648,9 +729,25 @@ public partial class ModelIndexService : IModelIndexService
         var ids = dbModels
             .Where(x => x.ConnectedModelInfo?.ModelId != null)
             .Select(x => x.ConnectedModelInfo!.ModelId.Value)
-            .Distinct();
+            .Distinct()
+            .ToList();
+
+        if (ids.Count == 0)
+        {
+            lastUpdateCheck = DateTimeOffset.UtcNow;
+            return;
+        }
 
         var remoteModels = (await modelFinder.FindRemoteModelsById(ids).ConfigureAwait(false)).ToList();
+
+        // An empty result for a non-empty id set means the API was unreachable; keep the
+        // existing flags and leave the throttle window unconsumed so the next visit retries.
+        if (remoteModels.Count == 0)
+        {
+            return;
+        }
+
+        lastUpdateCheck = DateTimeOffset.UtcNow;
 
         // update the civitmodels cache with this new result
         await liteDbContext.UpsertCivitModelAsync(remoteModels).ConfigureAwait(false);
@@ -663,20 +760,12 @@ public partial class ModelIndexService : IModelIndexService
 
             var remoteModel = remoteModels.FirstOrDefault(m => m.Id == dbModel.ConnectedModelInfo!.ModelId);
 
-            var latestVersion = remoteModel?.ModelVersions?.FirstOrDefault();
-
-            if (latestVersion?.Files is not { } latestVersionFiles)
-            {
+            // Absent from the response (removed from CivitAI or a partially failed batch):
+            // indeterminate, so keep the previous flags rather than inventing a change.
+            if (remoteModel == null)
                 continue;
-            }
 
-            var latestHashes = latestVersionFiles
-                .Where(f => f.Type.IsModelWeights())
-                .Select(f => f.Hashes.BLAKE3)
-                .Where(hash => hash is not null)
-                .ToList();
-
-            dbModel.HasUpdate = !latestHashes.Any(hash => installedHashes.Contains(hash!));
+            dbModel.HasUpdate = ComputeHasUpdate(dbModel, remoteModel, installedHashes);
             dbModel.HasEarlyAccessUpdateOnly = GetHasEarlyAccessUpdateOnly(dbModel, remoteModel);
             dbModel.LastUpdateCheck = DateTimeOffset.UtcNow;
             dbModel.LatestModelInfo = remoteModel;
@@ -685,6 +774,69 @@ public partial class ModelIndexService : IModelIndexService
         }
         await liteDbContext.LocalModelFiles.UpsertAsync(localModelsToUpdate).ConfigureAwait(false);
         await LoadFromDbAsync().ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Decides whether a newer installable version of a model exists on CivitAI. Prefers hash
+    /// evidence (any of the latest version's files already installed somewhere in the library);
+    /// falls back to version-id position when the latest version publishes no hashable files.
+    /// Indeterminate cases resolve to false so we never show an update badge we can't substantiate.
+    /// Multi-architecture models publish parallel version tracks in one list (v7_Illustrious,
+    /// v1_Anima, v4_Pony, ...), so comparisons stay within the installed file's base-model track —
+    /// a release for a different architecture is a cross-grade, not an update.
+    /// </summary>
+    private static bool ComputeHasUpdate(
+        LocalModelFile model,
+        CivitModel remoteModel,
+        IReadOnlySet<string> installedHashes
+    )
+    {
+        if (
+            FilterToInstalledTrack(remoteModel.ModelVersions, model.ConnectedModelInfo?.BaseModel)
+            is not { Count: > 0 } versions
+        )
+            return false;
+
+        var latestVersion = versions[0];
+        var installedVersionId = model.ConnectedModelInfo?.VersionId;
+
+        if (installedVersionId != null && installedVersionId == latestVersion.Id)
+            return false;
+
+        var latestHashes = (latestVersion.Files ?? [])
+            .Where(f => f.Type.IsDownloadableModelFile())
+            .Select(f => f.Hashes?.BLAKE3)
+            .Where(hash => !string.IsNullOrEmpty(hash))
+            .ToList();
+
+        if (latestHashes.Count > 0)
+        {
+            return !latestHashes.Any(hash => installedHashes.Contains(hash!));
+        }
+
+        // No hash evidence — flag only when the installed version verifiably sits below the
+        // latest in the published version list.
+        return installedVersionId != null && versions.FindIndex(v => v.Id == installedVersionId.Value) > 0;
+    }
+
+    /// <summary>
+    /// Narrows a model's version list to the installed file's base-model track. Falls back to
+    /// the full list when the installed base model is unknown or matches nothing (e.g. the
+    /// track was renamed or delisted) rather than reporting nothing forever.
+    /// </summary>
+    private static List<CivitModelVersion>? FilterToInstalledTrack(
+        List<CivitModelVersion>? versions,
+        string? installedBaseModel
+    )
+    {
+        if (versions is null || string.IsNullOrWhiteSpace(installedBaseModel))
+            return versions;
+
+        var track = versions
+            .Where(v => string.Equals(v.BaseModel, installedBaseModel, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
+        return track.Count > 0 ? track : versions;
     }
 
     public async Task UpsertModelAsync(LocalModelFile model)
@@ -702,7 +854,8 @@ public partial class ModelIndexService : IModelIndexService
 
     private static HashSet<string> CollectModelHashes(IEnumerable<LocalModelFile> models)
     {
-        var hashes = new HashSet<string>();
+        // CivitAI reports BLAKE3 uppercase while locally computed hashes are lowercase
+        var hashes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (var model in models)
         {
             if (model.ConnectedModelInfo?.Hashes?.BLAKE3 is { } hashBlake3)
@@ -744,7 +897,10 @@ public partial class ModelIndexService : IModelIndexService
         if (!model.HasUpdate || !model.HasCivitMetadata)
             return false;
 
-        var versions = remoteModel?.ModelVersions;
+        var versions = FilterToInstalledTrack(
+            remoteModel?.ModelVersions,
+            model.ConnectedModelInfo?.BaseModel
+        );
         if (versions == null || versions.Count == 0)
             return false;
 
@@ -753,9 +909,12 @@ public partial class ModelIndexService : IModelIndexService
             return false;
 
         var installedIndex = versions.FindIndex(version => version.Id == installedVersionId.Value);
-        if (installedIndex <= 0)
+        if (installedIndex == 0)
             return false;
 
-        return versions.Take(installedIndex).All(version => version.IsEarlyAccess);
+        // When the installed version no longer appears in the published list, every published
+        // version is a potential update; the badge is early-access-only when all of them are.
+        var newerVersions = installedIndex > 0 ? versions.Take(installedIndex) : versions;
+        return newerVersions.All(version => version.IsEarlyAccess);
     }
 }

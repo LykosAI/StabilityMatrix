@@ -29,11 +29,13 @@ using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Api.CivitTRPC;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Services;
 
@@ -51,12 +53,24 @@ public partial class CivitDetailsPageViewModel(
     INavigationService<MainWindowViewModel> navigationService,
     IModelIndexService modelIndexService,
     IServiceManager<ViewModelBase> vmFactory,
-    IModelImportService modelImportService
+    IModelImportService modelImportService,
+    IDownloadService downloadService,
+    IPackageFactory packageFactory
 ) : DisposableViewModelBase
 {
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ShowInferenceDefaultsSection), nameof(CivitUrl))]
+    [NotifyPropertyChangedFor(
+        nameof(ShowInferenceDefaultsSection),
+        nameof(CivitUrl),
+        nameof(IsWorkflowModel)
+    )]
     public required partial CivitModel CivitModel { get; set; }
+
+    /// <summary>
+    /// Workflow models import into the workflow library rather than the models directory,
+    /// and hide model-only surfaces such as bulk download.
+    /// </summary>
+    public bool IsWorkflowModel => CivitModel.Type is CivitModelType.Workflows;
 
     [ObservableProperty]
     public required partial List<int> ModelIdList { get; set; }
@@ -397,6 +411,12 @@ public partial class CivitDetailsPageViewModel(
 
     public async Task DownloadModelAsync(CivitFileViewModel viewModel, string? locationKey = null)
     {
+        if (IsWorkflowModel)
+        {
+            await DownloadWorkflowAsync(viewModel);
+            return;
+        }
+
         DirectoryPath? finalDestinationDir = null;
         var effectiveLocationKeyForPreference = string.Empty;
 
@@ -556,6 +576,65 @@ public partial class CivitDetailsPageViewModel(
             {
                 s.ModelTypeDownloadPreferences[modelTypeKey] = newPreference;
             });
+        }
+    }
+
+    /// <summary>
+    /// Imports a workflow file into the workflow library: downloads the archive, extracts the
+    /// contained workflow jsons, and embeds library metadata in each.
+    /// </summary>
+    private async Task DownloadWorkflowAsync(CivitFileViewModel viewModel)
+    {
+        if (SelectedVersion?.ModelVersion is not { } modelVersion)
+        {
+            notificationService.Show(
+                new Notification(
+                    "No version selected",
+                    "Select a version to import this workflow from",
+                    NotificationType.Warning
+                )
+            );
+            return;
+        }
+
+        var runner = new PackageModificationRunner
+        {
+            ShowDialogOnStart = true,
+            ModificationCompleteTitle = Resources.Label_WorkflowImported,
+            ModificationCompleteMessage = Resources.Label_FinishedImportingWorkflow,
+        };
+        EventManager.Instance.OnPackageInstallProgressAdded(runner);
+
+        var downloadStep = new DownloadCivitWorkflowStep(
+            CivitModel,
+            modelVersion,
+            viewModel.CivitFile,
+            downloadService,
+            settingsManager
+        );
+
+        await runner.ExecuteSteps([downloadStep]);
+
+        if (runner.Failed)
+            return;
+
+        notificationService.Show(
+            Resources.Label_WorkflowImported,
+            Resources.Label_WorkflowImportComplete,
+            NotificationType.Success
+        );
+
+        EventManager.Instance.OnWorkflowInstalled();
+
+        // Offer custom node installs when the imported workflows need any the user can act on
+        if (await WorkflowNodesDialogViewModel.HasRequiredPacksAsync(downloadStep.ImportedFiles))
+        {
+            await WorkflowNodesDialogViewModel.ShowDialogAsync(
+                settingsManager,
+                packageFactory,
+                downloadStep.ImportedFiles,
+                onlyWhenActionable: true
+            );
         }
     }
 
@@ -857,6 +936,10 @@ public partial class CivitDetailsPageViewModel(
 
     private bool ShouldIncludeCivitFile(CivitFile file)
     {
+        // Workflow models publish their payload as archive/workflow files, not model weights
+        if (IsWorkflowModel)
+            return true;
+
         if (ShowTrainingData)
             return true;
 
@@ -922,6 +1005,11 @@ public partial class CivitDetailsPageViewModel(
     {
         if (Design.IsDesignMode)
             return ["Models/StableDiffusion", "Custom..."];
+
+        if (IsWorkflowModel)
+        {
+            return [Path.GetFileName(settingsManager.WorkflowDirectory)];
+        }
 
         var installLocations = new List<string>();
 

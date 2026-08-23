@@ -401,7 +401,7 @@ public partial class CheckpointsPageViewModel(
             )
         );
 
-        Refresh().SafeFireAndForget();
+        Refresh().SafeFireAndForget(ex => logger.LogError(ex, "Error refreshing model index"));
 
         EventManager.Instance.ModelIndexChanged += (_, _) =>
         {
@@ -409,11 +409,20 @@ public partial class CheckpointsPageViewModel(
             // The ModelIndexChanged event may be raised from a background thread.
             Dispatcher.UIThread.Post(() =>
             {
-                RefreshCategories();
-                ModelsCache.EditDiff(
-                    modelIndexService.ModelIndex.Values.SelectMany(x => x),
-                    LocalModelFile.RelativePathConnectedModelInfoComparer
-                );
+                // Guarded: an exception here is otherwise unhandled on the Dispatcher and
+                // crashes the app.
+                try
+                {
+                    RefreshCategories();
+                    ModelsCache.EditDiff(
+                        modelIndexService.ModelIndex.Values.SelectMany(x => x),
+                        LocalModelFile.RelativePathConnectedModelInfoComparer
+                    );
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "Error refreshing checkpoint categories");
+                }
             });
         };
 

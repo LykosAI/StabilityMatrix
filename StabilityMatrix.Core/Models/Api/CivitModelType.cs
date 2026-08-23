@@ -47,5 +47,16 @@ public enum CivitModelType
     Wildcards,
     Workflows,
     Other,
-    All
+    All,
+}
+
+public static class CivitModelTypeExtensions
+{
+    /// <summary>
+    /// True for model types the model browser can list and import: types with a shared-folder
+    /// destination, plus <see cref="CivitModelType.Workflows"/>, which imports into the
+    /// workflow library instead of the models directory.
+    /// </summary>
+    public static bool IsBrowsable(this CivitModelType type) =>
+        type is CivitModelType.Workflows || type.ConvertTo<SharedFolderType>() > 0;
 }

@@ -149,15 +149,21 @@ public partial class UvManager : IUvManager
             return pythons.AsReadOnly();
         }
 
+        // When only installed Pythons are requested, exclude entries with no path (not installed).
+        // Also guard against null paths reaching PyInstallation constructor which throws ArgumentException.
         var filteredPythons = uvPythonListEntries
-            .Where(e => e.Path == null || e.Path.StartsWith(uvPythonInstallPath))
+            .Where(e =>
+                installedOnly
+                    ? e.Path != null && e.Path.StartsWith(uvPythonInstallPath)
+                    : e.Path == null || e.Path.StartsWith(uvPythonInstallPath)
+            )
             .Where(e =>
                 settingsManager.Settings.ShowAllAvailablePythonVersions
                 || (!e.Version.Contains("a") && !e.Version.Contains("b"))
             )
             .Select(e => new UvPythonInfo
             {
-                InstallPath = Path.GetDirectoryName(e.Path) ?? string.Empty,
+                InstallPath = e.Path != null ? (Path.GetDirectoryName(e.Path) ?? string.Empty) : string.Empty,
                 Version = e.VersionParts,
                 Architecture = e.Arch,
                 IsInstalled = e.Path != null,
@@ -289,33 +295,47 @@ public partial class UvManager : IUvManager
         {
             var subdirectories = Directory.GetDirectories(uvPythonInstallPath);
             var potentialDirs = subdirectories
-                .Select(dir => new { Path = dir, DirInfo = new DirectoryInfo(dir) })
+                .Select(dir =>
+                {
+                    var info = new DirectoryInfo(dir);
+                    return new
+                    {
+                        Path = dir,
+                        Name = info.Name,
+                        CreationTimeUtc = info.CreationTimeUtc,
+                        Version = ParseUvInstallDirVersion(info.Name),
+                    };
+                })
                 .Where(x =>
-                    x.DirInfo.Name.StartsWith("cpython-", StringComparison.OrdinalIgnoreCase)
-                    || x.DirInfo.Name.StartsWith("pypy-", StringComparison.OrdinalIgnoreCase)
+                    (
+                        x.Name.StartsWith("cpython-", StringComparison.OrdinalIgnoreCase)
+                        || x.Name.StartsWith("pypy-", StringComparison.OrdinalIgnoreCase)
+                    )
+                    && x.Version is { } parsedVersion
+                    && parsedVersion.Major == version.Major
+                    && parsedVersion.Minor == version.Minor
                 )
-                .Where(x => x.DirInfo.Name.Contains($"{version.Major}.{version.Minor}"))
-                .OrderByDescending(x => x.DirInfo.CreationTimeUtc)
+                .OrderByDescending(x => x.CreationTimeUtc)
                 .ToList();
 
             foreach (var potentialDir in potentialDirs)
             {
                 var actualInstallPath = potentialDir.Path;
-                var pyInstallCheck = new PyInstallation(version, actualInstallPath);
+                var actualVersion = potentialDir.Version!.Value;
+                var pyInstallCheck = new PyInstallation(actualVersion, actualInstallPath);
                 if (!pyInstallCheck.Exists())
                     continue;
 
                 Logger.Info($"Fallback discovery found likely installation at: {actualInstallPath}");
-                var inferredKey = Path.GetFileName(actualInstallPath);
-                var inferredSource = inferredKey.Split('-')[0];
+                var inferredSource = potentialDir.Name.Split('-')[0];
                 return new UvPythonInfo(
-                    version,
+                    actualVersion,
                     actualInstallPath,
                     true,
                     inferredSource,
                     null,
                     null,
-                    inferredKey,
+                    potentialDir.Name,
                     null,
                     null
                 );
@@ -328,6 +348,35 @@ public partial class UvManager : IUvManager
 
         Logger.Error($"Failed to verify and locate Python {version} after UV install command.");
         return null;
+    }
+
+    /// <summary>
+    /// Parses the version out of a uv Python install directory name
+    /// (e.g. "cpython-3.12.10-windows-x86_64-none"), or null if it doesn't match the expected shape.
+    /// </summary>
+    public static PyVersion? ParseUvInstallDirVersion(string dirName)
+    {
+        var parts = dirName.Split('-');
+        if (parts.Length < 2)
+        {
+            return null;
+        }
+
+        // The version is segment [1]; take its leading "major.minor[.micro]" numeric prefix
+        // so suffixes like "rc1" or "+freethreaded" are tolerated.
+        var segment = parts[1];
+        var prefixLength = 0;
+        while (
+            prefixLength < segment.Length
+            && (char.IsDigit(segment[prefixLength]) || segment[prefixLength] == '.')
+        )
+        {
+            prefixLength++;
+        }
+
+        return prefixLength > 0 && PyVersion.TryParse(segment[..prefixLength], out var parsed)
+            ? parsed
+            : null;
     }
 
     [GeneratedRegex(

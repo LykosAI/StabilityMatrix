@@ -62,7 +62,6 @@
       <PackageReference Include="Refit" />
       <PackageReference Include="Refit.HttpClientFactory" />
       <PackageReference Include="RockLib.Reflection.Optimized" />
-      <PackageReference Include="Salaros.ConfigParser" />
       <PackageReference Include="Semver" />
       <PackageReference Include="Sentry.NLog" />
       <PackageReference Include="SharpCompress" />

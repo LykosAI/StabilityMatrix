@@ -401,7 +401,7 @@ public partial class ProgressManagerViewModel : PageViewModelBase
 
     public void ClearDownloads()
     {
-        ProgressItems.RemoveAll(ProgressItems.Where(x => x.IsCompleted));
+        ProgressItems.RemoveAll(ProgressItems.Where(x => x.IsClearable));
     }
 
     private void OnProgressChanged(object? sender, ProgressItem e)

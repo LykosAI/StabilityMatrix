@@ -32,6 +32,13 @@ public abstract partial class PausableProgressItemViewModelBase : ProgressItemVi
     public override bool IsCompleted =>
         State is ProgressState.Success or ProgressState.Failed or ProgressState.Cancelled;
 
+    /// <summary>
+    /// Whether the item should be removed by a "Clear Finished" bulk operation.
+    /// Unlike <see cref="IsCompleted"/>, this excludes <see cref="ProgressState.Failed"/>
+    /// so that items with retry/dismiss buttons remain visible.
+    /// </summary>
+    public override bool IsClearable => State is ProgressState.Success or ProgressState.Cancelled;
+
     public virtual bool SupportsPauseResume => true;
     public virtual bool SupportsCancel => true;
 

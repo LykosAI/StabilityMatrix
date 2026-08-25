@@ -1136,8 +1136,8 @@ The gallery images are often inpainted, but you will get something very similar 
             vm.OutputProgress.Text = "Sampler 10/30";
         });
 
-    public static InferenceImageToVideoViewModel InferenceImageToVideoViewModel =>
-        DialogFactory.Get<InferenceImageToVideoViewModel>(vm =>
+    public static InferenceSvdImageToVideoViewModel InferenceSvdImageToVideoViewModel =>
+        DialogFactory.Get<InferenceSvdImageToVideoViewModel>(vm =>
         {
             vm.OutputProgress.Value = 10;
             vm.OutputProgress.Maximum = 30;

@@ -956,7 +956,8 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
         {
             InferenceProjectType.TextToImage => scope.ServiceManager.Get<InferenceTextToImageViewModel>(),
             InferenceProjectType.ImageToImage => scope.ServiceManager.Get<InferenceImageToImageViewModel>(),
-            InferenceProjectType.ImageToVideo => scope.ServiceManager.Get<InferenceImageToVideoViewModel>(),
+            InferenceProjectType.ImageToVideo =>
+                scope.ServiceManager.Get<InferenceSvdImageToVideoViewModel>(),
             InferenceProjectType.Upscale => scope.ServiceManager.Get<InferenceImageUpscaleViewModel>(),
             InferenceProjectType.FluxTextToImage =>
                 scope.ServiceManager.Get<InferenceFluxTextToImageViewModel>(),
@@ -975,7 +976,7 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
                 upscaleVm.IsUpscaleEnabled = true;
                 upscaleVm.SelectImageCardViewModel.ImageSource = new ImageSource(imageFile.AbsolutePath);
                 break;
-            case InferenceImageToVideoViewModel imgToVidVm:
+            case InferenceSvdImageToVideoViewModel imgToVidVm:
                 imgToVidVm.SelectImageCardViewModel.ImageSource = new ImageSource(imageFile.AbsolutePath);
                 break;
             case InferenceFluxTextToImageViewModel _:

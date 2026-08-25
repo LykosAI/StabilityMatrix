@@ -22,10 +22,10 @@ using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
-[View(typeof(InferenceImageToVideoView), persistent: true)]
+[View(typeof(InferenceSvdImageToVideoView), persistent: true)]
 [ManagedService]
-[RegisterScoped<InferenceImageToVideoViewModel>]
-public partial class InferenceImageToVideoViewModel
+[RegisterScoped<InferenceSvdImageToVideoViewModel>]
+public partial class InferenceSvdImageToVideoViewModel
     : InferenceGenerationViewModelBase,
         IParametersLoadableState
 {
@@ -58,7 +58,7 @@ public partial class InferenceImageToVideoViewModel
     [JsonPropertyName("VideoOutput")]
     public VideoOutputSettingsCardViewModel VideoOutputSettingsCardViewModel { get; }
 
-    public InferenceImageToVideoViewModel(
+    public InferenceSvdImageToVideoViewModel(
         INotificationService notificationService,
         IInferenceClientManager inferenceClientManager,
         ISettingsManager settingsManager,

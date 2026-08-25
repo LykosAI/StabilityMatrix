@@ -1,5 +1,5 @@
 ﻿<dock:DockUserControlBase
-    x:Class="StabilityMatrix.Avalonia.Views.Inference.InferenceImageToVideoView"
+    x:Class="StabilityMatrix.Avalonia.Views.Inference.InferenceSvdImageToVideoView"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
@@ -9,10 +9,10 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
     xmlns:vmInference="using:StabilityMatrix.Avalonia.ViewModels.Inference"
-    d:DataContext="{x:Static mocks:DesignData.InferenceImageToVideoViewModel}"
+    d:DataContext="{x:Static mocks:DesignData.InferenceSvdImageToVideoViewModel}"
     d:DesignHeight="800"
     d:DesignWidth="1000"
-    x:DataType="vmInference:InferenceImageToVideoViewModel"
+    x:DataType="vmInference:InferenceSvdImageToVideoViewModel"
     Focusable="True"
     mc:Ignorable="d">
 
@@ -48,7 +48,7 @@
                                 x:DataType="Tool"
                                 CanClose="False"
                                 Id="SelectImageTool">
-                                <controls:SelectImageCard DataContext="{Binding #Dock.((vmInference:InferenceImageToVideoViewModel)DataContext).SelectImageCardViewModel}" />
+                                <controls:SelectImageCard DataContext="{Binding #Dock.((vmInference:InferenceSvdImageToVideoViewModel)DataContext).SelectImageCardViewModel}" />
                             </Tool>
                         </ToolDock>
                         <ToolDock

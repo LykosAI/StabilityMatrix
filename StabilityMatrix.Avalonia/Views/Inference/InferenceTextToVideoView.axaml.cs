@@ -3,10 +3,10 @@ using StabilityMatrix.Avalonia.Controls.Dock;
 
 namespace StabilityMatrix.Avalonia.Views.Inference;
 
-[RegisterTransient<InferenceWanImageToVideoView>]
-public partial class InferenceWanImageToVideoView : DockUserControlBase
+[RegisterTransient<InferenceTextToVideoView>]
+public partial class InferenceTextToVideoView : DockUserControlBase
 {
-    public InferenceWanImageToVideoView()
+    public InferenceTextToVideoView()
     {
         InitializeComponent();
     }

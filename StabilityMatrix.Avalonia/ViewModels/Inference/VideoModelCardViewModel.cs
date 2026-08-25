@@ -18,10 +18,10 @@ using StabilityMatrix.Core.Models.Api.Comfy.NodeTypes;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
-[View(typeof(WanModelCard))]
+[View(typeof(VideoModelCard))]
 [ManagedService]
-[RegisterTransient<WanModelCardViewModel>]
-public partial class WanModelCardViewModel(
+[RegisterTransient<VideoModelCardViewModel>]
+public partial class VideoModelCardViewModel(
     IInferenceClientManager clientManager,
     IServiceManager<ViewModelBase> vmFactory
 ) : LoadableViewModelBase, IParametersLoadableState, IComfyStep
@@ -250,7 +250,7 @@ public partial class WanModelCardViewModel(
         using var pickerScope = vmFactory.CreateScope();
         var pickerVm = pickerScope.ServiceManager.Get<ModelPickerDialogViewModel>();
         pickerVm.Title = "Select Model";
-        // WanModelCard only uses UNet models
+        // VideoModelCard only uses UNet models
         pickerVm.Source = ModelPickerSource.CheckpointAndUnet;
         pickerVm.ShowUnetsOnly = true;
 
@@ -590,7 +590,7 @@ public partial class WanModelCardViewModel(
 
 /// <summary>
 /// Selects which empty-latent node the Wan text-to-video tab emits. See
-/// <see cref="WanModelCardViewModel.UseWan22FiveBLatent"/>.
+/// <see cref="VideoModelCardViewModel.UseWan22FiveBLatent"/>.
 /// </summary>
 public enum WanLatentSourceMode
 {

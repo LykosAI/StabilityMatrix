@@ -16,9 +16,13 @@ using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
-[View(typeof(InferenceWanTextToVideoView), IsPersistent = true)]
-[RegisterScoped<InferenceWanTextToVideoViewModel>, ManagedService]
-public class InferenceWanTextToVideoViewModel : InferenceGenerationViewModelBase, IParametersLoadableState
+/// <summary>
+/// The generic text-to-video tab. Persisted as <see cref="InferenceProjectType.WanTextToVideo"/>
+/// (a frozen wire name — see the enum docs).
+/// </summary>
+[View(typeof(InferenceTextToVideoView), IsPersistent = true)]
+[RegisterScoped<InferenceTextToVideoViewModel>, ManagedService]
+public class InferenceTextToVideoViewModel : InferenceGenerationViewModelBase, IParametersLoadableState
 {
     private readonly INotificationService notificationService;
 
@@ -26,7 +30,7 @@ public class InferenceWanTextToVideoViewModel : InferenceGenerationViewModelBase
     public StackCardViewModel StackCardViewModel { get; }
 
     [JsonPropertyName("Model")]
-    public WanModelCardViewModel ModelCardViewModel { get; }
+    public VideoModelCardViewModel ModelCardViewModel { get; }
 
     [JsonPropertyName("Sampler")]
     public SamplerCardViewModel SamplerCardViewModel { get; }
@@ -43,7 +47,7 @@ public class InferenceWanTextToVideoViewModel : InferenceGenerationViewModelBase
     [JsonPropertyName("VideoOutput")]
     public VideoOutputSettingsCardViewModel VideoOutputSettingsCardViewModel { get; }
 
-    public InferenceWanTextToVideoViewModel(
+    public InferenceTextToVideoViewModel(
         IServiceManager<ViewModelBase> vmFactory,
         IInferenceClientManager inferenceClientManager,
         INotificationService notificationService,
@@ -64,10 +68,10 @@ public class InferenceWanTextToVideoViewModel : InferenceGenerationViewModelBase
         SeedCardViewModel = vmFactory.Get<SeedCardViewModel>();
         SeedCardViewModel.GenerateNewSeed();
 
-        ModelCardViewModel = vmFactory.Get<WanModelCardViewModel>();
+        ModelCardViewModel = vmFactory.Get<VideoModelCardViewModel>();
         ModelCardViewModel.RecommendedDefaultsRequested += ApplyRecommendedDefaults;
 
-        SamplerCardViewModel = vmFactory.Get<WanSamplerCardViewModel>(samplerCard =>
+        SamplerCardViewModel = vmFactory.Get<VideoSamplerCardViewModel>(samplerCard =>
         {
             samplerCard.IsDimensionsEnabled = true;
             samplerCard.IsCfgScaleEnabled = true;

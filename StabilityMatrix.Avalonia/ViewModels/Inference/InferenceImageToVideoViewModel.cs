@@ -11,11 +11,16 @@ using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
-[View(typeof(InferenceWanImageToVideoView), IsPersistent = true)]
-[RegisterScoped<InferenceWanImageToVideoViewModel>, ManagedService]
-public class InferenceWanImageToVideoViewModel : InferenceWanTextToVideoViewModel
+/// <summary>
+/// The generic image-to-video tab. Persisted as <see cref="InferenceProjectType.WanImageToVideo"/>
+/// (a frozen wire name — see the enum docs). Not related to the legacy SVD tab
+/// (<see cref="InferenceSvdImageToVideoViewModel"/>).
+/// </summary>
+[View(typeof(InferenceImageToVideoView), IsPersistent = true)]
+[RegisterScoped<InferenceImageToVideoViewModel>, ManagedService]
+public class InferenceImageToVideoViewModel : InferenceTextToVideoViewModel
 {
-    public InferenceWanImageToVideoViewModel(
+    public InferenceImageToVideoViewModel(
         IServiceManager<ViewModelBase> vmFactory,
         IInferenceClientManager inferenceClientManager,
         INotificationService notificationService,

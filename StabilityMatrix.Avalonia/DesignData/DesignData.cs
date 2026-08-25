@@ -1150,10 +1150,10 @@ The gallery images are often inpainted, but you will get something very similar 
     public static InferenceImageUpscaleViewModel InferenceImageUpscaleViewModel =>
         DialogFactory.Get<InferenceImageUpscaleViewModel>();
 
-    public static InferenceWanTextToVideoViewModel InferenceWanTextToVideoViewModel =>
-        DialogFactory.Get<InferenceWanTextToVideoViewModel>();
-    public static InferenceWanImageToVideoViewModel InferenceWanImageToVideoViewModel =>
-        DialogFactory.Get<InferenceWanImageToVideoViewModel>();
+    public static InferenceTextToVideoViewModel InferenceTextToVideoViewModel =>
+        DialogFactory.Get<InferenceTextToVideoViewModel>();
+    public static InferenceImageToVideoViewModel InferenceImageToVideoViewModel =>
+        DialogFactory.Get<InferenceImageToVideoViewModel>();
 
     public static PackageImportViewModel PackageImportViewModel =>
         DialogFactory.Get<PackageImportViewModel>();
@@ -1203,7 +1203,8 @@ The gallery images are often inpainted, but you will get something very similar 
         });
 
     public static ModelCardViewModel ModelCardViewModel => DialogFactory.Get<ModelCardViewModel>();
-    public static WanModelCardViewModel WanModelCardViewModel => DialogFactory.Get<WanModelCardViewModel>();
+    public static VideoModelCardViewModel VideoModelCardViewModel =>
+        DialogFactory.Get<VideoModelCardViewModel>();
 
     public static ImgToVidModelCardViewModel ImgToVidModelCardViewModel =>
         DialogFactory.Get<ImgToVidModelCardViewModel>();

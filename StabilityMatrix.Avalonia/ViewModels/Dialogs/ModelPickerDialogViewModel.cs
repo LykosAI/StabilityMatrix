@@ -271,7 +271,7 @@ public partial class ModelPickerDialogViewModel : ContentDialogViewModelBase
         isDialogActive = true;
 
         // Save caller-specified type filters before loading persisted state
-        // (e.g., WanModelCardViewModel sets ShowUnetsOnly = true before opening)
+        // (e.g., VideoModelCardViewModel sets ShowUnetsOnly = true before opening)
         var preShowUnets = ShowUnetsOnly;
         var preShowCheckpoints = ShowCheckpointsOnly;
 

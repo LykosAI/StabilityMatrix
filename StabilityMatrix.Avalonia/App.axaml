@@ -103,7 +103,7 @@
         <StyleInclude Source="Controls/Inference/TiledVAECard.axaml" />
         <StyleInclude Source="Controls/Painting/PaintCanvas.axaml" />
         <StyleInclude Source="Controls/MarkdownViewer.axaml" />
-        <StyleInclude Source="Controls/Inference/WanModelCard.axaml" />
+        <StyleInclude Source="Controls/Inference/VideoModelCard.axaml" />
         <StyleInclude Source="Controls/Inference/PlasmaNoiseCard.axaml" />
         <StyleInclude Source="Controls/Inference/NrsCard.axaml" />
         <StyleInclude Source="Controls/Inference/CfzCudnnToggleCard.axaml" />

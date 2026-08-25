@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
@@ -30,7 +31,59 @@ public partial class VideoModelCardViewModel(
     [NotifyPropertyChangedFor(nameof(HasRecommendedDefaults))]
     [NotifyPropertyChangedFor(nameof(RecommendedDefaultsToolTip))]
     [NotifyPropertyChangedFor(nameof(ShowEnableLowNoisePrompt))]
+    [NotifyPropertyChangedFor(nameof(ResolvedWorkflowProfile))]
+    [NotifyPropertyChangedFor(nameof(ShowMoeExpertControls))]
+    [NotifyPropertyChangedFor(nameof(ShowLatentSourceMenu))]
+    [NotifyPropertyChangedFor(nameof(ShowShiftControl))]
+    [NotifyPropertyChangedFor(nameof(ShowLowNoiseSections))]
+    [NotifyPropertyChangedFor(nameof(WorkflowProfileStatusText))]
     private HybridModelFile? selectedModel;
+
+    /// <summary>
+    /// The model-family workflow this tab runs. Auto resolves from the selected UNet via
+    /// <see cref="VideoWorkflowProfile.Detect"/>; family-specific controls and graph steps key
+    /// off <see cref="ResolvedWorkflowProfile"/>.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ResolvedWorkflowProfile))]
+    [NotifyPropertyChangedFor(nameof(ShowMoeExpertControls))]
+    [NotifyPropertyChangedFor(nameof(ShowLatentSourceMenu))]
+    [NotifyPropertyChangedFor(nameof(ShowShiftControl))]
+    [NotifyPropertyChangedFor(nameof(ShowLowNoiseSections))]
+    [NotifyPropertyChangedFor(nameof(ShowEnableLowNoisePrompt))]
+    [NotifyPropertyChangedFor(nameof(ShowWorkflowProfileStatus))]
+    [NotifyPropertyChangedFor(nameof(WorkflowProfileStatusText))]
+    private VideoWorkflowProfile selectedWorkflowProfile = VideoWorkflowProfile.Auto;
+
+    [JsonIgnore]
+    public IReadOnlyList<VideoWorkflowProfile> WorkflowProfiles => VideoWorkflowProfile.All;
+
+    /// <summary>The concrete profile in effect — never <see cref="VideoWorkflowProfile.Auto"/>.</summary>
+    [JsonIgnore]
+    public VideoWorkflowProfile ResolvedWorkflowProfile =>
+        SelectedWorkflowProfile == VideoWorkflowProfile.Auto
+            ? VideoWorkflowProfile.Detect(SelectedModel)
+            : SelectedWorkflowProfile;
+
+    [JsonIgnore]
+    public bool ShowMoeExpertControls => ResolvedWorkflowProfile.SupportsMoeExperts;
+
+    [JsonIgnore]
+    public bool ShowLatentSourceMenu => ResolvedWorkflowProfile.ShowsLatentSourceMode;
+
+    [JsonIgnore]
+    public bool ShowShiftControl => ResolvedWorkflowProfile.UsesModelSamplingShift;
+
+    /// <summary>The dual-expert rows only apply when the family supports the MoE pair.</summary>
+    [JsonIgnore]
+    public bool ShowLowNoiseSections => IsLowNoiseModelEnabled && ShowMoeExpertControls;
+
+    [JsonIgnore]
+    public bool ShowWorkflowProfileStatus => SelectedWorkflowProfile == VideoWorkflowProfile.Auto;
+
+    [JsonIgnore]
+    public string WorkflowProfileStatusText =>
+        $"Auto — using the {ResolvedWorkflowProfile.DisplayName} workflow";
 
     partial void OnSelectedModelChanged(HybridModelFile? value)
     {
@@ -49,6 +102,7 @@ public partial class VideoModelCardViewModel(
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(PrimaryModelLabel))]
     [NotifyPropertyChangedFor(nameof(ShowEnableLowNoisePrompt))]
+    [NotifyPropertyChangedFor(nameof(ShowLowNoiseSections))]
     private bool isLowNoiseModelEnabled;
 
     [ObservableProperty]
@@ -74,7 +128,10 @@ public partial class VideoModelCardViewModel(
     /// low-noise expert and auto-picks its counterpart when present.
     /// </summary>
     public bool ShowEnableLowNoisePrompt =>
-        !IsLowNoiseModelEnabled && !IsLowNoisePromptDismissed && AutoDetectIsWan2214BExpert();
+        ResolvedWorkflowProfile.SupportsMoeExperts
+        && !IsLowNoiseModelEnabled
+        && !IsLowNoisePromptDismissed
+        && AutoDetectIsWan2214BExpert();
 
     partial void OnIsLowNoiseModelEnabledChanged(bool value)
     {
@@ -395,8 +452,11 @@ public partial class VideoModelCardViewModel(
 
     public void ApplyStep(ModuleApplyStepEventArgs e)
     {
-        // Loads a UNet (GGUF or safetensors) and applies the Wan ModelSamplingSD3 shift.
-        // Used for both the high-noise and (optional) low-noise expert of the Wan 2.2 14B MoE.
+        var profile = ResolvedWorkflowProfile;
+
+        // Loads a UNet (GGUF or safetensors) and, for families that use it, applies the
+        // ModelSamplingSD3 shift. Used for both the high-noise and (optional) low-noise
+        // expert of the Wan 2.2 14B MoE.
         ModelNodeConnection LoadUnetModel(HybridModelFile model)
         {
             ComfyTypedNodeBase<ModelNodeConnection> modelLoader;
@@ -422,6 +482,9 @@ public partial class VideoModelCardViewModel(
                 );
             }
 
+            if (!profile.UsesModelSamplingShift)
+                return modelLoader.Output;
+
             var modelSamplingSd3 = e.Nodes.AddTypedNode(
                 new ComfyNodeBuilder.ModelSamplingSD3
                 {
@@ -442,7 +505,11 @@ public partial class VideoModelCardViewModel(
         // the low-noise expert gets its own LoRA stack applied below. Its Clip is wired up after the
         // CLIP loader. The Wan sampler reads the final model from Connections.WanLowNoiseModel.
         ModelConnections? lowNoiseConnections = null;
-        if (IsLowNoiseModelEnabled && SelectedLowNoiseModel is { } lowNoiseModel)
+        if (
+            profile.SupportsMoeExperts
+            && IsLowNoiseModelEnabled
+            && SelectedLowNoiseModel is { } lowNoiseModel
+        )
         {
             lowNoiseConnections = new ModelConnections(LowNoiseModelKey)
             {
@@ -454,6 +521,10 @@ public partial class VideoModelCardViewModel(
         var clipName =
             SelectedClipModel?.RelativePath ?? throw new ValidationException("No Clip Model Selected");
 
+        var clipType =
+            profile.ClipType
+            ?? throw new InvalidOperationException("Resolved workflow profile has no clip type");
+
         // The GGUF loader variant can also load .safetensors encoders
         var clipOutput = SelectedClipModel is { IsGguf: true }
             ? e
@@ -462,7 +533,7 @@ public partial class VideoModelCardViewModel(
                     {
                         Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.CLIPLoaderGGUF)),
                         ClipName = clipName,
-                        Type = "wan",
+                        Type = clipType,
                     }
                 )
                 .Output
@@ -472,7 +543,7 @@ public partial class VideoModelCardViewModel(
                     {
                         Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.CLIPLoader)),
                         ClipName = clipName,
-                        Type = "wan",
+                        Type = clipType,
                     }
                 )
                 .Output;

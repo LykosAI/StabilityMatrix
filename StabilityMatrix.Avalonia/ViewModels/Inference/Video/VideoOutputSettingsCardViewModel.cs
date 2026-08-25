@@ -100,6 +100,25 @@ public partial class VideoOutputSettingsCardViewModel
         {
             case VideoOutputFormat.Mp4:
             {
+                // Families with native audio (MiniMax H3) leave an audio VAE on the builder;
+                // decode the soundtrack from the sampled packed latent and mux it in. WebP
+                // below has no audio track, so this stays mp4-only.
+                ComfyNodeBuilder.VAEDecodeAudio? audioDecode = null;
+                if (
+                    e.Builder.Connections.AudioVAE is { } audioVae
+                    && e.Builder.Connections.LastPrimaryLatent is { } sampledLatent
+                )
+                {
+                    audioDecode = e.Nodes.AddTypedNode(
+                        new ComfyNodeBuilder.VAEDecodeAudio
+                        {
+                            Name = e.Nodes.GetUniqueName("VAEDecodeAudio"),
+                            Samples = sampledLatent,
+                            Vae = audioVae,
+                        }
+                    );
+                }
+
                 // Core ComfyUI mp4 path: assemble frames into a VIDEO, then encode to a container.
                 var createVideo = e.Nodes.AddTypedNode(
                     new ComfyNodeBuilder.CreateVideo
@@ -107,6 +126,7 @@ public partial class VideoOutputSettingsCardViewModel
                         Name = e.Nodes.GetUniqueName("CreateVideo"),
                         Images = image,
                         Fps = Fps,
+                        Audio = audioDecode?.Output,
                     }
                 );
 

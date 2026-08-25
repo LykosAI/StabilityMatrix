@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 using DesktopNotifications;
 using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Extensions;
@@ -11,6 +12,8 @@ using StabilityMatrix.Avalonia.Views.Inference;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.Comfy;
+using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
+using StabilityMatrix.Core.Models.Api.Comfy.NodeTypes;
 using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Services;
 
@@ -87,6 +90,17 @@ public class InferenceTextToVideoViewModel : InferenceGenerationViewModelBase, I
 
         PromptCardViewModel = AddDisposable(vmFactory.Get<PromptCardViewModel>());
 
+        // The negative prompt only exists for families with negative conditioning (Wan).
+        ModelCardViewModel.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(VideoModelCardViewModel.ResolvedWorkflowProfile))
+            {
+                PromptCardViewModel.IsNegativePromptEnabled = ModelCardViewModel
+                    .ResolvedWorkflowProfile
+                    .SupportsNegativePrompt;
+            }
+        };
+
         BatchSizeCardViewModel = vmFactory.Get<BatchSizeCardViewModel>();
 
         VideoOutputSettingsCardViewModel = vmFactory.Get<VideoOutputSettingsCardViewModel>(vm =>
@@ -104,12 +118,55 @@ public class InferenceTextToVideoViewModel : InferenceGenerationViewModelBase, I
     }
 
     /// <summary>
-    /// Applies the recommended Wan settings when the model card's ✨ button is clicked. The KSampler
-    /// values match the native ComfyUI templates for both variants; only the resolution, frame count and
-    /// output fps differ between the 5B TI2V model (720p / 24 fps) and the 14B / 2.1 models (480p / 16 fps).
+    /// Builds the MiniMax H3 conditioning + packed audio/video latent for the resolved profile.
+    /// The node encodes the prompt itself and emits no negative conditioning, so the positive
+    /// doubles as the negative — at the recommended CFG 1 the negative is never evaluated.
+    /// </summary>
+    protected void ApplyMiniMaxH3Conditioning(ComfyNodeBuilder builder, ImageNodeConnection? firstFrame)
+    {
+        var node = builder.Nodes.AddTypedNode(
+            new ComfyNodeBuilder.MiniMaxH3ImageToVideo
+            {
+                Name = builder.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.MiniMaxH3ImageToVideo)),
+                Clip =
+                    builder.Connections.Base.Clip ?? throw new ValidationException("No text encoder loaded"),
+                Vae = builder.Connections.GetDefaultVAE(),
+                FirstFrame = firstFrame,
+                Prompt = PromptCardViewModel.PromptDocument.Text,
+                Width = SamplerCardViewModel.Width,
+                Height = SamplerCardViewModel.Height,
+                Length = VideoWorkflowProfile.MiniMaxH3.SnapFrames(SamplerCardViewModel.Length),
+            }
+        );
+
+        builder.Connections.Base.Conditioning = new ConditioningConnections(node.Output1, node.Output1);
+        builder.Connections.Primary = node.Output2;
+        builder.Connections.HasPrebuiltVideoConditioning = true;
+    }
+
+    /// <summary>
+    /// Applies the resolved profile's recommended settings when the model card's ✨ button is
+    /// clicked, matching the native ComfyUI templates. For Wan, only the resolution, frame count
+    /// and output fps differ between the 5B TI2V model (720p / 24 fps) and the 14B / 2.1 models
+    /// (480p / 16 fps).
     /// </summary>
     private void ApplyRecommendedDefaults(bool isWan22FiveB)
     {
+        if (ModelCardViewModel.ResolvedWorkflowProfile == VideoWorkflowProfile.MiniMaxH3)
+        {
+            SamplerCardViewModel.SelectedSampler = ComfySampler.ResMultistep;
+            SamplerCardViewModel.SelectedScheduler = ComfyScheduler.Simple;
+            SamplerCardViewModel.Steps = 20;
+            SamplerCardViewModel.CfgScale = 1.0d;
+            SamplerCardViewModel.Width = 1344;
+            SamplerCardViewModel.Height = 768;
+            SamplerCardViewModel.Length = 124;
+            VideoOutputSettingsCardViewModel.Fps = 24.0d;
+            // H3's native audio only fits in a real container.
+            VideoOutputSettingsCardViewModel.SelectedFormat = VideoOutputFormat.Mp4;
+            return;
+        }
+
         SamplerCardViewModel.SelectedSampler = ComfySampler.UniPC;
         SamplerCardViewModel.SelectedScheduler = ComfyScheduler.Simple;
         SamplerCardViewModel.Steps = 20;
@@ -149,20 +206,31 @@ public class InferenceTextToVideoViewModel : InferenceGenerationViewModelBase, I
         // Load models (also wires the VAE used by the Wan 2.2 5B latent below)
         ModelCardViewModel.ApplyStep(applyArgs);
 
-        // The 5B TI2V model uses a different VAE (48-channel / 16x) than the 14B / Wan 2.1 models,
-        // so its empty latent must come from Wan22ImageToVideoLatent instead of EmptyHunyuanLatentVideo.
-        builder.SetupEmptyLatentSource(
-            SamplerCardViewModel.Width,
-            SamplerCardViewModel.Height,
-            BatchSizeCardViewModel.BatchSize,
-            BatchSizeCardViewModel.IsBatchIndexEnabled ? BatchSizeCardViewModel.BatchIndex : null,
-            SamplerCardViewModel.Length,
-            ModelCardViewModel.UseWan22FiveBLatent ? LatentType.Wan22 : LatentType.Hunyuan
-        );
+        if (ModelCardViewModel.ResolvedWorkflowProfile == VideoWorkflowProfile.MiniMaxH3)
+        {
+            // The MiniMax node owns prompt encoding and emits the packed audio+video latent,
+            // replacing the empty-latent + CLIPTextEncode path.
+            ApplyMiniMaxH3Conditioning(builder, firstFrame: null);
 
-        BatchSizeCardViewModel.ApplyStep(applyArgs);
+            BatchSizeCardViewModel.ApplyStep(applyArgs);
+        }
+        else
+        {
+            // The 5B TI2V model uses a different VAE (48-channel / 16x) than the 14B / Wan 2.1 models,
+            // so its empty latent must come from Wan22ImageToVideoLatent instead of EmptyHunyuanLatentVideo.
+            builder.SetupEmptyLatentSource(
+                SamplerCardViewModel.Width,
+                SamplerCardViewModel.Height,
+                BatchSizeCardViewModel.BatchSize,
+                BatchSizeCardViewModel.IsBatchIndexEnabled ? BatchSizeCardViewModel.BatchIndex : null,
+                SamplerCardViewModel.Length,
+                ModelCardViewModel.UseWan22FiveBLatent ? LatentType.Wan22 : LatentType.Hunyuan
+            );
 
-        PromptCardViewModel.ApplyStep(applyArgs);
+            BatchSizeCardViewModel.ApplyStep(applyArgs);
+
+            PromptCardViewModel.ApplyStep(applyArgs);
+        }
 
         SamplerCardViewModel.ApplyStep(applyArgs);
 

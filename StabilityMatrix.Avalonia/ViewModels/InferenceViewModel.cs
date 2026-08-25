@@ -958,6 +958,8 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
             InferenceProjectType.ImageToImage => scope.ServiceManager.Get<InferenceImageToImageViewModel>(),
             InferenceProjectType.ImageToVideo =>
                 scope.ServiceManager.Get<InferenceSvdImageToVideoViewModel>(),
+            InferenceProjectType.WanImageToVideo =>
+                scope.ServiceManager.Get<InferenceImageToVideoViewModel>(),
             InferenceProjectType.Upscale => scope.ServiceManager.Get<InferenceImageUpscaleViewModel>(),
             InferenceProjectType.FluxTextToImage =>
                 scope.ServiceManager.Get<InferenceFluxTextToImageViewModel>(),
@@ -978,6 +980,9 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
                 break;
             case InferenceSvdImageToVideoViewModel imgToVidVm:
                 imgToVidVm.SelectImageCardViewModel.ImageSource = new ImageSource(imageFile.AbsolutePath);
+                break;
+            case InferenceImageToVideoViewModel videoVm:
+                videoVm.SelectImageCardViewModel.ImageSource = new ImageSource(imageFile.AbsolutePath);
                 break;
             case InferenceFluxTextToImageViewModel _:
                 vm.LoadImageMetadata(imageFile.AbsolutePath);

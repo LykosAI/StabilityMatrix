@@ -820,10 +820,10 @@
     <value>Increase the resolution of an image with an upscaling model.</value>
   </data>
   <data name="Label_TextToVideoDescription" xml:space="preserve">
-    <value>Generate a video from a text prompt. Works with Wan 2.1 and 2.2.</value>
+    <value>Generate a video from a text prompt. Works with Wan 2.1/2.2 and MiniMax H3.</value>
   </data>
   <data name="Label_ImageToVideoDescription" xml:space="preserve">
-    <value>Animate an input image into a video. Works with Wan 2.1 and 2.2.</value>
+    <value>Animate an input image into a video. Works with Wan 2.1/2.2 and MiniMax H3.</value>
   </data>
   <data name="Label_FluxTextToImageDescription" xml:space="preserve">
     <value>Standalone Flux text-to-image. The Text to Image tab also handles Flux automatically.</value>

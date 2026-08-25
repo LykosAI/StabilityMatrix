@@ -240,7 +240,7 @@
                                         Text="{x:Static lang:Resources.Label_VAE}"
                                         TextAlignment="Left"
                                         ToolTip.Tip="Decodes the generated latents into the final video frames. Use the VAE that matches your model family." />
-                                    <ui:FAComboBox
+                                    <controls:FADownloadableComboBox
                                         Grid.Column="1"
                                         HorizontalAlignment="Stretch"
                                         DisplayMemberBinding="{Binding ShortDisplayName}"
@@ -251,6 +251,33 @@
                                         Grid.Column="2"
                                         VerticalAlignment="Stretch"
                                         Command="{Binding OpenVaePickerCommand}"
+                                        ToolTip.Tip="Browse all VAE models">
+                                        <fluent:SymbolIcon FontSize="16" Symbol="Search" />
+                                    </Button>
+                                </Grid>
+
+                                <!--  Audio VAE (families with native audio)  -->
+                                <Grid
+                                    ColumnDefinitions="90,*,Auto"
+                                    ColumnSpacing="4"
+                                    IsVisible="{Binding ShowAudioVae}">
+                                    <TextBlock
+                                        Grid.Column="0"
+                                        VerticalAlignment="Center"
+                                        Text="Audio VAE"
+                                        TextAlignment="Left"
+                                        ToolTip.Tip="Decodes the generated soundtrack (MiniMax H3 outputs native stereo audio). Optional — leave empty for video-only output. Audio needs the MP4 output format." />
+                                    <controls:FADownloadableComboBox
+                                        Grid.Column="1"
+                                        HorizontalAlignment="Stretch"
+                                        DisplayMemberBinding="{Binding ShortDisplayName}"
+                                        IsTextSearchEnabled="True"
+                                        ItemsSource="{Binding ClientManager.VaeModels}"
+                                        SelectedItem="{Binding SelectedAudioVae}" />
+                                    <Button
+                                        Grid.Column="2"
+                                        VerticalAlignment="Stretch"
+                                        Command="{Binding OpenAudioVaePickerCommand}"
                                         ToolTip.Tip="Browse all VAE models">
                                         <fluent:SymbolIcon FontSize="16" Symbol="Search" />
                                     </Button>
@@ -280,11 +307,11 @@
                                     </Button>
                                 </Grid>
 
-                                <!--  CLIP Vision (image-to-video only)  -->
+                                <!--  CLIP Vision (image-to-video, families that condition on it)  -->
                                 <Grid
                                     ColumnDefinitions="90,*,Auto"
                                     ColumnSpacing="4"
-                                    IsVisible="{Binding IsClipVisionEnabled}">
+                                    IsVisible="{Binding ShowClipVisionRow}">
                                     <TextBlock
                                         Grid.Column="0"
                                         VerticalAlignment="Center"

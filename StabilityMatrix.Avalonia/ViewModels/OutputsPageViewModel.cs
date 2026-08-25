@@ -438,7 +438,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
     public void SendToImageToVideo(OutputImageViewModel vm)
     {
         navigationService.NavigateTo<InferenceViewModel>();
-        EventManager.Instance.OnInferenceProjectRequested(vm.ImageFile, InferenceProjectType.ImageToVideo);
+        EventManager.Instance.OnInferenceProjectRequested(vm.ImageFile, InferenceProjectType.WanImageToVideo);
     }
 
     public void ClearSelection()

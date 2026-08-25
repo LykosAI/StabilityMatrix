@@ -4337,7 +4337,7 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Generate a video from a text prompt. Works with Wan 2.1 and 2.2..
+        ///   Looks up a localized string similar to Generate a video from a text prompt. Works with Wan 2.1/2.2 and MiniMax H3..
         /// </summary>
         public static string Label_TextToVideoDescription {
             get {
@@ -4346,7 +4346,7 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Animate an input image into a video. Works with Wan 2.1 and 2.2..
+        ///   Looks up a localized string similar to Animate an input image into a video. Works with Wan 2.1/2.2 and MiniMax H3..
         /// </summary>
         public static string Label_ImageToVideoDescription {
             get {

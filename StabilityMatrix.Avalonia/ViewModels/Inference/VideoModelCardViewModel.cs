@@ -36,6 +36,8 @@ public partial class VideoModelCardViewModel(
     [NotifyPropertyChangedFor(nameof(ShowLatentSourceMenu))]
     [NotifyPropertyChangedFor(nameof(ShowShiftControl))]
     [NotifyPropertyChangedFor(nameof(ShowLowNoiseSections))]
+    [NotifyPropertyChangedFor(nameof(ShowAudioVae))]
+    [NotifyPropertyChangedFor(nameof(ShowClipVisionRow))]
     [NotifyPropertyChangedFor(nameof(WorkflowProfileStatusText))]
     private HybridModelFile? selectedModel;
 
@@ -52,6 +54,8 @@ public partial class VideoModelCardViewModel(
     [NotifyPropertyChangedFor(nameof(ShowLowNoiseSections))]
     [NotifyPropertyChangedFor(nameof(ShowEnableLowNoisePrompt))]
     [NotifyPropertyChangedFor(nameof(ShowWorkflowProfileStatus))]
+    [NotifyPropertyChangedFor(nameof(ShowAudioVae))]
+    [NotifyPropertyChangedFor(nameof(ShowClipVisionRow))]
     [NotifyPropertyChangedFor(nameof(WorkflowProfileStatusText))]
     private VideoWorkflowProfile selectedWorkflowProfile = VideoWorkflowProfile.Auto;
 
@@ -77,6 +81,13 @@ public partial class VideoModelCardViewModel(
     /// <summary>The dual-expert rows only apply when the family supports the MoE pair.</summary>
     [JsonIgnore]
     public bool ShowLowNoiseSections => IsLowNoiseModelEnabled && ShowMoeExpertControls;
+
+    [JsonIgnore]
+    public bool ShowAudioVae => ResolvedWorkflowProfile.UsesAudioVae;
+
+    /// <summary>CLIP Vision applies when the tab wants it (i2v) and the family uses it.</summary>
+    [JsonIgnore]
+    public bool ShowClipVisionRow => IsClipVisionEnabled && ResolvedWorkflowProfile.UsesClipVision;
 
     [JsonIgnore]
     public bool ShowWorkflowProfileStatus => SelectedWorkflowProfile == VideoWorkflowProfile.Auto;
@@ -215,10 +226,18 @@ public partial class VideoModelCardViewModel(
     [ObservableProperty]
     private HybridModelFile? selectedVae;
 
+    /// <summary>
+    /// Optional audio VAE for families with native audio (MiniMax H3). When unset the
+    /// generation still runs, video-only.
+    /// </summary>
+    [ObservableProperty]
+    private HybridModelFile? selectedAudioVae;
+
     [ObservableProperty]
     private string? selectedDType = "fp8_e4m3fn_fast";
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowClipVisionRow))]
     private bool isClipVisionEnabled;
 
     [ObservableProperty]
@@ -276,9 +295,11 @@ public partial class VideoModelCardViewModel(
     public bool HasRecommendedDefaults => SelectedModel is not null;
 
     public string RecommendedDefaultsToolTip =>
-        UseWan22FiveBLatent
+        ResolvedWorkflowProfile == VideoWorkflowProfile.MiniMaxH3
+            ? "Apply recommended MiniMax H3 settings: 1344×768 · 124 frames · 24 fps mp4 · res_multistep / simple / 20 steps / CFG 1"
+        : UseWan22FiveBLatent
             ? "Apply recommended Wan 2.2 5B settings: 1280×704 · 121 frames · 24 fps · uni_pc / simple / 20 steps / CFG 5"
-            : "Apply recommended Wan 14B / 2.1 settings: 832×480 · 81 frames · 16 fps · uni_pc / simple / 20 steps / CFG 5";
+        : "Apply recommended Wan 14B / 2.1 settings: 832×480 · 81 frames · 16 fps · uni_pc / simple / 20 steps / CFG 5";
 
     [RelayCommand]
     private void ApplyRecommendedDefaults()
@@ -356,6 +377,23 @@ public partial class VideoModelCardViewModel(
     }
 
     [RelayCommand]
+    private async Task OpenAudioVaePickerAsync()
+    {
+        using var pickerScope = vmFactory.CreateScope();
+        var pickerVm = pickerScope.ServiceManager.Get<ModelPickerDialogViewModel>();
+        pickerVm.Title = "Select Audio VAE";
+        pickerVm.Source = ModelPickerSource.Vae;
+
+        if (await pickerVm.GetDialog().ShowAsync() == ContentDialogResult.Primary)
+        {
+            if (pickerVm.SelectedModel is { } selected)
+            {
+                SelectedAudioVae = selected;
+            }
+        }
+    }
+
+    [RelayCommand]
     private async Task OpenClipPickerAsync()
     {
         using var pickerScope = vmFactory.CreateScope();
@@ -421,7 +459,7 @@ public partial class VideoModelCardViewModel(
             return false;
         }
 
-        if (IsClipVisionEnabled && SelectedClipVisionModel == null)
+        if (ShowClipVisionRow && SelectedClipVisionModel == null)
         {
             var dialog = DialogHelper.CreateMarkdownDialog(
                 "Please select a CLIP Vision model to continue.",
@@ -602,7 +640,19 @@ public partial class VideoModelCardViewModel(
             e.Builder.Connections.WanLowNoiseModel = lowNoiseConnections.Model;
         }
 
-        if (!IsClipVisionEnabled)
+        if (SelectedAudioVae is { } audioVae && profile.UsesAudioVae)
+        {
+            var audioVaeLoader = e.Nodes.AddTypedNode(
+                new ComfyNodeBuilder.VAELoader
+                {
+                    Name = e.Nodes.GetUniqueName("AudioVAELoader"),
+                    VaeName = audioVae.RelativePath,
+                }
+            );
+            e.Builder.Connections.AudioVAE = audioVaeLoader.Output;
+        }
+
+        if (!ShowClipVisionRow)
             return;
 
         var clipVisionLoader = e.Nodes.AddTypedNode(

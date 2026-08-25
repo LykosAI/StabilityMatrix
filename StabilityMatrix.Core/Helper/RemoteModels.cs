@@ -363,10 +363,54 @@ public static class RemoteModels
                 LicenseType = "Apache 2.0",
                 ContextType = SharedFolderType.TextEncoders,
             },
+            new()
+            {
+                Url = new Uri(
+                    "https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/text_encoders/qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors"
+                ),
+                InfoUrl = new Uri("https://huggingface.co/Comfy-Org/MiniMax-H3"),
+                HashSha256 = "35a88d51044231fe332301d7a62aa81e3f2cba62febeb446e2c1e3e0ef76f2c6",
+                Author = "MiniMax",
+                LicenseType = "Apache 2.0",
+                ContextType = SharedFolderType.TextEncoders,
+            },
         ];
 
     public static IEnumerable<HybridModelFile> ClipModelFiles =>
         ClipModels.Select(HybridModelFile.FromDownloadable);
+
+    /// <summary>
+    /// Downloadable VAEs offered in the Inference VAE dropdowns; families whose VAEs aren't
+    /// bundled in checkpoints (MiniMax H3's video + audio pair).
+    /// </summary>
+    private static IEnumerable<RemoteResource> VaeModels =>
+        [
+            new()
+            {
+                Url = new Uri(
+                    "https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_video_vae_fp16.safetensors"
+                ),
+                InfoUrl = new Uri("https://huggingface.co/Comfy-Org/MiniMax-H3"),
+                HashSha256 = "7c1f131492e7eddacaac9069a61b81bdd39de5cc96561e677c5eab1cdce5e522",
+                Author = "MiniMax",
+                LicenseType = "Apache 2.0",
+                ContextType = SharedFolderType.VAE,
+            },
+            new()
+            {
+                Url = new Uri(
+                    "https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_audio_vae_fp32.safetensors"
+                ),
+                InfoUrl = new Uri("https://huggingface.co/Comfy-Org/MiniMax-H3"),
+                HashSha256 = "8e505d95dd1561d47abd43d4238fd40d9bb1ae9e147ed0a4cba778d76ae4db48",
+                Author = "MiniMax",
+                LicenseType = "Apache 2.0",
+                ContextType = SharedFolderType.VAE,
+            },
+        ];
+
+    public static IEnumerable<HybridModelFile> VaeModelFiles =>
+        VaeModels.Select(HybridModelFile.FromDownloadable);
 
     private static IEnumerable<RemoteResource> ClipVisionModels =>
         [

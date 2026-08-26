@@ -5,7 +5,7 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
-## v2.17.0-dev.4
+## v2.17.0-pre.1
 ### Fixed
 - Fixed the **CivArchive browser** returning far fewer results than the CivArchive website — the site's redesign quietly pinned the app's search route to the past quarter, and the renamed result-count field capped infinite scroll at a single page
 - Fixed clicking some CivArchive results showing an error instead of the model — the redesign added whole-model search results whose detail pages load through a redirect the app didn't follow

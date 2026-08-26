@@ -40,6 +40,11 @@ public sealed partial class CivArchiveBrowserViewModel(
     private CancellationTokenSource? searchDebounceCts;
     private CancellationTokenSource? imageBackfillCts;
 
+    // VM-wide, not per-backfill-call — overlapping infinite-scroll pages must share one
+    // 3-request budget against CivArchive (a community-run archive we'd rather not
+    // burst-load), instead of each page opening 3 more slots.
+    private readonly SemaphoreSlim imageBackfillThrottle = new(3, 3);
+
     /// <summary>
     /// How long to wait after the most recent filter change before firing the search.
     /// Kept settable (not a const) so unit tests can collapse it to <see cref="TimeSpan.Zero"/>
@@ -586,16 +591,12 @@ public sealed partial class CivArchiveBrowserViewModel(
             return;
         }
 
-        // Modest parallelism — this fans out one detail request per placeholder card, and
-        // CivArchive is a community-run archive we'd rather not burst-load.
-        using var throttle = new SemaphoreSlim(3);
-
         await Task.WhenAll(
             targets.Select(async item =>
             {
                 try
                 {
-                    await throttle.WaitAsync(cancellationToken);
+                    await imageBackfillThrottle.WaitAsync(cancellationToken);
                     try
                     {
                         var imageUrl = await ResolveCardImageAsync(item, cancellationToken);
@@ -606,7 +607,7 @@ public sealed partial class CivArchiveBrowserViewModel(
                     }
                     finally
                     {
-                        throttle.Release();
+                        imageBackfillThrottle.Release();
                     }
                 }
                 catch

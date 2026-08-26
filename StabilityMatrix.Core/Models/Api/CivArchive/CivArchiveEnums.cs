@@ -19,6 +19,8 @@ public enum CivArchiveKindOption
     Version,
     User,
     File,
+    Model,
+    Article,
 }
 
 public enum CivArchivePeriodOption
@@ -87,6 +89,8 @@ public static class CivArchiveEnumExtensions
         [CivArchiveKindOption.Version] = "version",
         [CivArchiveKindOption.User] = "user",
         [CivArchiveKindOption.File] = "file",
+        [CivArchiveKindOption.Model] = "model",
+        [CivArchiveKindOption.Article] = "article",
     };
 
     private static readonly IReadOnlyDictionary<CivArchivePeriodOption, string> PeriodMap = new Dictionary<

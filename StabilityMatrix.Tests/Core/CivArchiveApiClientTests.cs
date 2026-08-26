@@ -12,10 +12,10 @@ public class CivArchiveApiClientTests
     [TestMethod]
     public void BuildSearchDataPath_UsesDefaultFilterValues()
     {
-        var result = CivArchiveApiClient.BuildSearchDataPath("/top-models", new CivArchiveSearchFilters());
+        var result = CivArchiveApiClient.BuildSearchDataPath("/search", new CivArchiveSearchFilters());
 
         Assert.AreEqual(
-            "/top-models.json?platform=all&sort=top&rating=safe&platform_status=all&kind=all&period=all&page=1",
+            "/search.json?platform=all&sort=top&rating=safe&platform_status=all&kind=all&period=all&page=1",
             result
         );
     }
@@ -24,7 +24,7 @@ public class CivArchiveApiClientTests
     public void BuildSearchDataPath_SerializesMultiSelectFilters()
     {
         var result = CivArchiveApiClient.BuildSearchDataPath(
-            "/top-models",
+            "/search",
             new CivArchiveSearchFilters
             {
                 Types = ["LORA", "Checkpoint"],
@@ -113,7 +113,7 @@ public class CivArchiveApiClientTests
     public async Task SearchAsync_CachesIdenticalFilterRequestsWithinTtl()
     {
         // Two SearchAsync calls with identical filters should produce exactly one
-        // /_next/data/.../top-models.json fetch — repeated requests within the TTL hit
+        // /_next/data/.../search.json fetch — repeated requests within the TTL hit
         // the in-memory cache, which is the main 429 mitigation when users toggle
         // filters back and forth.
         var dataRequestCount = 0;
@@ -132,7 +132,7 @@ public class CivArchiveApiClientTests
             new RecordingHandler(
                 (request, _) =>
                 {
-                    if (request.RequestUri!.AbsolutePath.Contains("top-models.json"))
+                    if (request.RequestUri!.AbsolutePath.Contains("search.json"))
                     {
                         dataRequestCount++;
                     }
@@ -153,8 +153,6 @@ public class CivArchiveApiClientTests
     [TestMethod]
     public async Task GetFilterOptionsAsync_UsesParameterlessRouteAndParsesLists()
     {
-        // CivArchive only echoes the populated baseModels / modelTypes lists when the URL
-        // has no query string at all — we hit /top-models.json directly, no filter params.
         var requestedUrls = new List<string>();
         const string filterOptionsJson =
             "{\"pageProps\":{\"filterOptions\":{"
@@ -186,11 +184,9 @@ public class CivArchiveApiClientTests
         );
         CollectionAssert.AreEqual(new[] { "Checkpoint", "LORA", "VAE" }, options.ModelTypes.ToArray());
 
-        // Critical: no query string. If any param leaks in, the API silently returns
-        // empty arrays and the dropdowns end up blank.
         Assert.IsTrue(
-            requestedUrls.Any(u => u.EndsWith("/_next/data/test-build/top-models.json")),
-            $"Expected parameterless top-models.json fetch, got: {string.Join(", ", requestedUrls)}"
+            requestedUrls.Any(u => u.EndsWith("/_next/data/test-build/search.json")),
+            $"Expected parameterless search.json fetch, got: {string.Join(", ", requestedUrls)}"
         );
     }
 
@@ -201,7 +197,7 @@ public class CivArchiveApiClientTests
         // pageProps.filters.platform comes back as an array (["civitai"]) rather than
         // a bare string, which used to throw a JsonException at $.pageProps.filters.platform.
         const string listJson =
-            "{\"pageProps\":{\"canonicalUrl\":\"https://civarchive.com/top-models\",\"data\":{\"results\":[],\"hits\":0,\"totalHits\":0},"
+            "{\"pageProps\":{\"canonicalUrl\":\"https://civarchive.com/search\",\"data\":{\"results\":[],\"total_hits\":0},"
             + "\"filters\":{\"q\":\"\",\"type\":\"all\",\"base_model\":\"all\",\"platform\":[\"civitai\"],"
             + "\"sort\":\"top\",\"rating\":\"safe\",\"platform_status\":\"all\",\"kind\":\"all\","
             + "\"tags\":\"\",\"username\":\"\",\"period\":\"all\",\"page\":1},"
@@ -267,7 +263,54 @@ public class CivArchiveApiClientTests
     }
 
     [TestMethod]
-    public async Task ResolveFileUrlAsync_ReturnsLinkedVersionHref()
+    public async Task GetModelDetailsAsync_FollowsNextJsRedirectPayload()
+    {
+        // A version-less /models/{id} data request returns a Next.js redirect payload
+        // instead of model data; the client must follow it to the primary version like
+        // the browser would (model-kind search results link to exactly these URLs).
+        const string redirectJson = """
+            {"pageProps":{"__N_REDIRECT":"/models/1193506?modelVersionId=2772364","__N_REDIRECT_STATUS":307},"__N_SSP":true}
+            """;
+        const string detailJson = """
+            {"pageProps":{"model":{"id":"1193506","name":"Ramlethal Valentine","type":"LORA","version":{"id":"2772364","name":"ANIMA"}}}}
+            """;
+
+        var requestedUrls = new List<string>();
+        var responses = new Queue<HttpResponseMessage>(
+            [
+                CreateJsonResponse("""<html><script>{"buildId":"test-build"}</script></html>""", "text/html"),
+                CreateJsonResponse(redirectJson),
+                CreateJsonResponse(detailJson),
+            ]
+        );
+
+        var client = CreateClient(
+            new RecordingHandler(
+                (request, _) =>
+                {
+                    requestedUrls.Add(request.RequestUri!.ToString());
+                    return responses.Dequeue();
+                }
+            )
+        );
+
+        var response = await client.GetModelDetailsAsync("/models/1193506");
+
+        Assert.AreEqual("Ramlethal Valentine", response.Model.Name);
+        Assert.AreEqual("ANIMA", response.Model.Version?.Name);
+        Assert.IsTrue(
+            requestedUrls.Any(u => u.Contains("/models/1193506.json?modelVersionId=2772364")),
+            $"Expected redirect target fetch, got: {string.Join(", ", requestedUrls)}"
+        );
+
+        // The redirect result is cached under the version-less path too, so a repeat
+        // click doesn't re-fetch either request.
+        var cached = await client.GetModelDetailsAsync("/models/1193506");
+        Assert.AreSame(response, cached);
+    }
+
+    [TestMethod]
+    public async Task ResolveFileAsync_ReturnsLinkedVersionHref()
     {
         // /sha256/{hash} returns pageProps.models[] (plural) with full model data inside,
         // including version.href — which is the canonical URL we want to navigate to.
@@ -283,16 +326,42 @@ public class CivArchiveApiClientTests
         );
 
         var client = CreateClient(new RecordingHandler((_, _) => responses.Dequeue()));
-        var resolved = await client.ResolveFileUrlAsync(
+        var resolved = await client.ResolveFileAsync(
             "/sha256/ffef7a279d9134626e6ce0d494fba84fc1c7e720b3c7df2d19a09dc3796d8f93"
         );
 
         // Prefer version.href (the version that actually contains this file) over versions[0].href.
-        Assert.AreEqual("/models/878387?modelVersionId=983309", resolved);
+        Assert.AreEqual("/models/878387?modelVersionId=983309", resolved?.ModelUrl);
     }
 
     [TestMethod]
-    public async Task ResolveFileUrlAsync_NoLinkedModel_ReturnsNull()
+    public async Task ResolveFileAsync_ReadsUrlShapedVersionLinks()
+    {
+        // The sha256 route emits the navigation link as `url` (not `href`) — the client
+        // must accept both spellings or every file-kind card fails to resolve. It also
+        // surfaces the version's first gallery image for card thumbnail backfill.
+        const string sha256Json = """
+            {"pageProps":{"id":"file-1","models":[{"id":"1271498","name":"Ramlethal Anima","type":"LORA","versions":[{"id":"3099932","name":"Ramlethal Anima","url":"/models/1271498?modelVersionId=3099932"}],"version":{"id":"3099932","name":"Ramlethal Anima","url":"/models/1271498?modelVersionId=3099932","images":[{"id":"1","url":"https://example.org/video.mp4","type":"video"},{"id":"2","url":"https://example.org/cover.webp","type":"image"}]}}]}}
+            """;
+
+        var responses = new Queue<HttpResponseMessage>(
+            [
+                CreateJsonResponse("""<html><script>{"buildId":"test-build"}</script></html>""", "text/html"),
+                CreateJsonResponse(sha256Json),
+            ]
+        );
+
+        var client = CreateClient(new RecordingHandler((_, _) => responses.Dequeue()));
+        var resolved = await client.ResolveFileAsync("/sha256/abc123");
+
+        Assert.AreEqual("/models/1271498?modelVersionId=3099932", resolved?.ModelUrl);
+
+        // First non-video gallery entry becomes the thumbnail.
+        Assert.AreEqual("https://example.org/cover.webp", resolved?.ImageUrl);
+    }
+
+    [TestMethod]
+    public async Task ResolveFileAsync_NoLinkedModel_ReturnsNull()
     {
         // Orphaned hash with no linked models → should return null so the caller can
         // fall back to opening the URL externally instead of navigating to a dead page.
@@ -306,7 +375,7 @@ public class CivArchiveApiClientTests
         );
 
         var client = CreateClient(new RecordingHandler((_, _) => responses.Dequeue()));
-        var resolved = await client.ResolveFileUrlAsync("/sha256/abc");
+        var resolved = await client.ResolveFileAsync("/sha256/abc");
 
         Assert.IsNull(resolved);
     }
@@ -337,9 +406,9 @@ public class CivArchiveApiClientTests
 
     private static string ListResponseJson(string resultsJson)
     {
-        return "{\"pageProps\":{\"canonicalUrl\":\"https://civarchive.com/top-models\",\"data\":{\"results\":["
+        return "{\"pageProps\":{\"canonicalUrl\":\"https://civarchive.com/search\",\"data\":{\"results\":["
             + resultsJson
-            + "],\"hits\":2,\"totalHits\":2},\"filters\":{\"q\":\"\",\"type\":\"all\",\"base_model\":\"all\",\"platform\":\"all\",\"sort\":\"top\",\"rating\":\"safe\",\"platform_status\":\"all\",\"kind\":\"all\",\"tags\":\"\",\"username\":\"\",\"period\":\"all\",\"page\":1},\"filterOptions\":{\"baseModels\":[\"Illustrious\",\"Pony\"],\"modelTypes\":[\"LORA\",\"Checkpoint\"]}}}";
+            + "],\"total_hits\":2},\"filters\":{\"q\":\"\",\"type\":\"all\",\"base_model\":\"all\",\"platform\":\"all\",\"sort\":\"top\",\"rating\":\"safe\",\"platform_status\":\"all\",\"kind\":\"all\",\"tags\":\"\",\"username\":\"\",\"period\":\"all\",\"page\":1},\"filterOptions\":{\"baseModels\":[\"Illustrious\",\"Pony\"],\"modelTypes\":[\"LORA\",\"Checkpoint\"]}}}";
     }
 
     private sealed class RecordingHandler(

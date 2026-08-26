@@ -34,7 +34,7 @@ public partial class CivArchiveApiClient(
 
     private readonly LRUCache<string, CacheEntry<CivArchiveSearchResponse>> searchCache = new(64);
     private readonly LRUCache<string, CacheEntry<CivArchiveModelDetailsResponse>> detailsCache = new(64);
-    private readonly LRUCache<string, CacheEntry<string?>> fileUrlCache = new(128);
+    private readonly LRUCache<string, CacheEntry<CivArchiveFileResolution?>> fileResolutionCache = new(128);
     private CacheEntry<CivArchiveFilterOptions>? cachedFilterOptions;
 
     private sealed record CacheEntry<T>(DateTimeOffset CachedAt, T Value)
@@ -73,7 +73,10 @@ public partial class CivArchiveApiClient(
     {
         ArgumentNullException.ThrowIfNull(filters);
 
-        var routePath = string.IsNullOrWhiteSpace(filters.RoutePath) ? "/top-models" : filters.RoutePath;
+        // /search is the only list route without server-side fixed filters — the curated
+        // routes (/top-models, /hot-models, …) force their own period/sort and silently
+        // override whatever the query string says (e.g. /top-models pins period=quarter).
+        var routePath = string.IsNullOrWhiteSpace(filters.RoutePath) ? "/search" : filters.RoutePath;
         var relativePath = BuildSearchDataPath(routePath, filters);
 
         if (searchCache.Get(relativePath) is { } cached && cached.IsFresh(SearchCacheTtl))
@@ -99,7 +102,6 @@ public partial class CivArchiveApiClient(
             },
             EffectiveFilters = effectiveFilters,
             CanonicalUrl = pageProps.CanonicalUrl ?? string.Empty,
-            Hits = pageProps.Data?.Hits ?? 0,
             TotalHits = pageProps.Data?.TotalHits ?? 0,
         };
 
@@ -130,10 +132,8 @@ public partial class CivArchiveApiClient(
                 return cachedRetry.Value;
             }
 
-            // Parameterless URL is intentional — CivArchive returns empty filter-option arrays
-            // the moment any query param is present, even if every value is the default.
             var response = await GetNextDataAsync<CivArchiveListPageResponse>(
-                "/top-models.json",
+                "/search.json",
                 cancellationToken
             );
 
@@ -179,6 +179,23 @@ public partial class CivArchiveApiClient(
             response.PageProps
             ?? throw new InvalidOperationException("CivArchive detail page was missing pageProps");
 
+        // A version-less /models/{id} data request returns a Next.js redirect payload pointing
+        // at the model's primary version instead of pageProps.model — follow it like the
+        // browser would. Guarded against self-redirects so a server quirk can't loop us.
+        if (
+            pageProps.Model is null
+            && !string.IsNullOrWhiteSpace(pageProps.RedirectUrl)
+            && BuildDetailDataPath(pageProps.RedirectUrl) != nextDataPath
+        )
+        {
+            var redirected = await GetModelDetailsAsync(pageProps.RedirectUrl, cancellationToken);
+            detailsCache.Add(
+                nextDataPath,
+                new CacheEntry<CivArchiveModelDetailsResponse>(DateTimeOffset.UtcNow, redirected)
+            );
+            return redirected;
+        }
+
         var model =
             pageProps.Model
             ?? throw new InvalidOperationException("CivArchive detail page was missing model data");
@@ -201,7 +218,7 @@ public partial class CivArchiveApiClient(
         return detailsResult;
     }
 
-    public async Task<string?> ResolveFileUrlAsync(
+    public async Task<CivArchiveFileResolution?> ResolveFileAsync(
         string sha256RelativeUrl,
         CancellationToken cancellationToken = default
     )
@@ -216,12 +233,12 @@ public partial class CivArchiveApiClient(
         // sha256 → model URL is essentially an immutable mapping, so no TTL check —
         // LRU eviction handles capacity. Caches null too so orphaned hashes don't
         // re-hit the API on every navigation attempt.
-        if (fileUrlCache.Get(nextDataPath) is { } cachedFile)
+        if (fileResolutionCache.Get(nextDataPath) is { } cachedFile)
         {
             return cachedFile.Value;
         }
 
-        string? resolved = null;
+        CivArchiveFileResolution? resolved = null;
         try
         {
             var response = await GetNextDataAsync<CivArchiveSha256PageResponse>(
@@ -230,14 +247,19 @@ public partial class CivArchiveApiClient(
             );
 
             // Each /sha256/{hash} response carries a `models[]` array; the first model's
-            // `version.href` is the canonical URL for the version that contains this file.
+            // `version` link is the canonical URL for the version that contains this file.
             // Fall back to the first entry in `versions[]` if `version` is missing.
             var firstModel = response.PageProps?.Models?.FirstOrDefault();
             if (firstModel is not null)
             {
-                resolved = !string.IsNullOrWhiteSpace(firstModel.Version?.Href)
+                var modelUrl = !string.IsNullOrWhiteSpace(firstModel.Version?.Href)
                     ? firstModel.Version!.Href
                     : firstModel.Versions.FirstOrDefault()?.Href;
+
+                if (!string.IsNullOrWhiteSpace(modelUrl))
+                {
+                    resolved = new CivArchiveFileResolution(modelUrl, firstModel.Version?.PrimaryImageUrl);
+                }
             }
         }
         catch
@@ -246,7 +268,10 @@ public partial class CivArchiveApiClient(
             return null;
         }
 
-        fileUrlCache.Add(nextDataPath, new CacheEntry<string?>(DateTimeOffset.UtcNow, resolved));
+        fileResolutionCache.Add(
+            nextDataPath,
+            new CacheEntry<CivArchiveFileResolution?>(DateTimeOffset.UtcNow, resolved)
+        );
         return resolved;
     }
 
@@ -423,7 +448,7 @@ public partial class CivArchiveApiClient(
     {
         if (string.IsNullOrWhiteSpace(routePath))
         {
-            return "/top-models";
+            return "/search";
         }
 
         return routePath.StartsWith('/') ? routePath : "/" + routePath;
@@ -478,10 +503,7 @@ public partial class CivArchiveApiClient(
         [JsonPropertyName("results")]
         public List<CivArchiveSearchResult> Results { get; set; } = [];
 
-        [JsonPropertyName("hits")]
-        public int Hits { get; set; }
-
-        [JsonPropertyName("totalHits")]
+        [JsonPropertyName("total_hits")]
         public int TotalHits { get; set; }
     }
 
@@ -516,6 +538,9 @@ public partial class CivArchiveApiClient(
     {
         [JsonPropertyName("model")]
         public CivArchiveModelDetails? Model { get; set; }
+
+        [JsonPropertyName("__N_REDIRECT")]
+        public string? RedirectUrl { get; set; }
 
         [JsonPropertyName("version")]
         public CivArchiveModelVersion? Version { get; set; }

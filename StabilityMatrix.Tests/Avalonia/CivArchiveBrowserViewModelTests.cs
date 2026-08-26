@@ -514,8 +514,7 @@ public class CivArchiveBrowserViewModelTests
                 ModelTypes = ["LORA", "Checkpoint"],
             },
             EffectiveFilters = new CivArchiveSearchFilters { Page = page },
-            CanonicalUrl = "https://civarchive.com/top-models",
-            Hits = 1,
+            CanonicalUrl = "https://civarchive.com/search",
             TotalHits = 4,
         };
     }

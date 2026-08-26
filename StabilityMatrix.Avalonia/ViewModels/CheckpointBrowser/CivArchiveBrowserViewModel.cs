@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Reactive.Disposables;
+using AsyncAwaitBestPractices;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -37,6 +38,7 @@ public sealed partial class CivArchiveBrowserViewModel(
     private bool searchQueued;
     private int currentPage = 1;
     private CancellationTokenSource? searchDebounceCts;
+    private CancellationTokenSource? imageBackfillCts;
 
     /// <summary>
     /// How long to wait after the most recent filter change before firing the search.
@@ -429,6 +431,10 @@ public sealed partial class CivArchiveBrowserViewModel(
             TotalHits = 0;
             rawResults.Clear();
             Results.Clear();
+
+            imageBackfillCts?.Cancel();
+            imageBackfillCts?.Dispose();
+            imageBackfillCts = null;
         }
 
         var filters = BuildFilters(isInfiniteScroll ? currentPage + 1 : currentPage);
@@ -449,6 +455,7 @@ public sealed partial class CivArchiveBrowserViewModel(
             var existingIds = isInfiniteScroll ? rawResults.Select(x => x.Id).ToHashSet() : [];
             var installedHashes = modelIndexService.ModelIndexSha256Hashes;
             var installedUrls = modelIndexService.ModelIndexCivArchiveUrls;
+            var addedItems = new List<CivArchiveSearchResult>();
             foreach (var item in response.Results)
             {
                 if (isInfiniteScroll && !existingIds.Add(item.Id))
@@ -470,11 +477,15 @@ public sealed partial class CivArchiveBrowserViewModel(
                 }
 
                 rawResults.Add(item);
+                addedItems.Add(item);
                 if (!HideInstalledModels || !item.IsInstalled)
                 {
                     Results.Add(item);
                 }
             }
+
+            imageBackfillCts ??= new CancellationTokenSource();
+            BackfillMissingCardImagesAsync(addedItems, imageBackfillCts.Token).SafeFireAndForget();
 
             HasSearched = true;
             NoResultsFound = Results.Count == 0;
@@ -520,6 +531,10 @@ public sealed partial class CivArchiveBrowserViewModel(
             case CivArchiveKindOption.File:
                 await OpenFileResult(result);
                 break;
+            case CivArchiveKindOption.Article:
+                // Articles have no in-app view — hand them to the browser.
+                ProcessRunner.OpenUrl(civArchiveApiClient.GetAbsoluteUri(result.Url).ToString());
+                break;
             default:
                 NavigateToDetails(result.Url);
                 break;
@@ -534,15 +549,87 @@ public sealed partial class CivArchiveBrowserViewModel(
     /// </summary>
     private async Task OpenFileResult(CivArchiveSearchResult result)
     {
-        var resolvedUrl = await civArchiveApiClient.ResolveFileUrlAsync(result.Url);
-        if (!string.IsNullOrWhiteSpace(resolvedUrl))
+        var resolution = await civArchiveApiClient.ResolveFileAsync(result.Url);
+        if (!string.IsNullOrWhiteSpace(resolution?.ModelUrl))
         {
-            NavigateToDetails(resolvedUrl);
+            NavigateToDetails(resolution.ModelUrl);
         }
         else
         {
             ProcessRunner.OpenUrl(civArchiveApiClient.GetAbsoluteUri(result.Url).ToString());
         }
+    }
+
+    /// <summary>
+    /// Model- and file-kind search results come back from the API without an
+    /// <c>image_url</c> even when their model page has a full gallery. Backfill card
+    /// thumbnails from the (cached) detail endpoints, a few at a time, so the grid
+    /// isn't a wall of gray placeholders.
+    /// </summary>
+    private async Task BackfillMissingCardImagesAsync(
+        IReadOnlyList<CivArchiveSearchResult> items,
+        CancellationToken cancellationToken
+    )
+    {
+        var targets = items
+            .Where(x =>
+                string.IsNullOrWhiteSpace(x.ImageUrl)
+                && x.Kind
+                    is CivArchiveKindOption.Model
+                        or CivArchiveKindOption.Version
+                        or CivArchiveKindOption.File
+            )
+            .ToList();
+
+        if (targets.Count == 0)
+        {
+            return;
+        }
+
+        // Modest parallelism — this fans out one detail request per placeholder card, and
+        // CivArchive is a community-run archive we'd rather not burst-load.
+        using var throttle = new SemaphoreSlim(3);
+
+        await Task.WhenAll(
+            targets.Select(async item =>
+            {
+                try
+                {
+                    await throttle.WaitAsync(cancellationToken);
+                    try
+                    {
+                        var imageUrl = await ResolveCardImageAsync(item, cancellationToken);
+                        if (!string.IsNullOrWhiteSpace(imageUrl))
+                        {
+                            Dispatcher.UIThread.Post(() => item.ImageUrl = imageUrl);
+                        }
+                    }
+                    finally
+                    {
+                        throttle.Release();
+                    }
+                }
+                catch
+                {
+                    // Best-effort backfill — a failed card just keeps its placeholder.
+                }
+            })
+        );
+    }
+
+    private async Task<string?> ResolveCardImageAsync(
+        CivArchiveSearchResult item,
+        CancellationToken cancellationToken
+    )
+    {
+        if (item.Kind == CivArchiveKindOption.File)
+        {
+            var resolution = await civArchiveApiClient.ResolveFileAsync(item.Url, cancellationToken);
+            return resolution?.ImageUrl;
+        }
+
+        var details = await civArchiveApiClient.GetModelDetailsAsync(item.Url, cancellationToken);
+        return details.Model.Version?.PrimaryImageUrl;
     }
 
     private void NavigateToDetails(string relativeUrl)

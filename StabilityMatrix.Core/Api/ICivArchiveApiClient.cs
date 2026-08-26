@@ -11,11 +11,8 @@ public interface ICivArchiveApiClient
     );
 
     /// <summary>
-    /// Fetch the populated lists of selectable model types and base models. CivArchive's
-    /// Next.js endpoint only returns these arrays when called with no query string at all —
-    /// any filter param (even <c>platform=all</c>) causes the server to return empty
-    /// arrays. This method makes the parameterless request so the multi-select dropdowns
-    /// can actually be populated.
+    /// Fetch the populated lists of selectable model types and base models via a
+    /// parameterless request against the search route.
     /// </summary>
     Task<CivArchiveFilterOptions> GetFilterOptionsAsync(CancellationToken cancellationToken = default);
     Task<CivArchiveModelDetailsResponse> GetModelDetailsAsync(
@@ -26,11 +23,12 @@ public interface ICivArchiveApiClient
     /// <summary>
     /// Resolve a <c>/sha256/{hash}</c> URL (a File-kind search result) to the canonical
     /// <c>/models/{id}?modelVersionId={vid}</c> URL of the version that actually contains
-    /// that file. The SHA256 endpoint returns a different shape (linked models array) so
-    /// File-kind results can't be loaded via <see cref="GetModelDetailsAsync"/> directly.
-    /// Returns null when the hash isn't linked to any model.
+    /// that file, plus a thumbnail image when the linked version has a gallery. The SHA256
+    /// endpoint returns a different shape (linked models array) so File-kind results can't
+    /// be loaded via <see cref="GetModelDetailsAsync"/> directly. Returns null when the
+    /// hash isn't linked to any model.
     /// </summary>
-    Task<string?> ResolveFileUrlAsync(
+    Task<CivArchiveFileResolution?> ResolveFileAsync(
         string sha256RelativeUrl,
         CancellationToken cancellationToken = default
     );

@@ -16,5 +16,5 @@ public class CivArchiveSearchFilters
     public string Username { get; set; } = string.Empty;
     public CivArchivePeriodOption Period { get; set; } = CivArchivePeriodOption.All;
     public int Page { get; set; } = 1;
-    public string RoutePath { get; set; } = "/top-models";
+    public string RoutePath { get; set; } = "/search";
 }

@@ -587,14 +587,17 @@
                                 </ItemsRepeater.Layout>
                                 <ItemsRepeater.ItemTemplate>
                                     <DataTemplate>
+                                        <!--  MaxWidth + wrapping because trigger entries can be whole comma-joined prompt lines, not single words  -->
                                         <Border
+                                            MaxWidth="{Binding $parent[ItemsRepeater].Bounds.Width}"
                                             Padding="8,4"
                                             Background="{DynamicResource ControlFillColorDefaultBrush}"
                                             CornerRadius="4">
                                             <TextBlock
                                                 FontFamily="Cascadia Code,Consolas,Menlo,Monospace,DejaVu Sans Mono,monospace"
                                                 FontSize="13"
-                                                Text="{Binding}" />
+                                                Text="{Binding}"
+                                                TextWrapping="Wrap" />
                                         </Border>
                                     </DataTemplate>
                                 </ItemsRepeater.ItemTemplate>

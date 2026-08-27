@@ -103,15 +103,20 @@ public class VideoWorkflowProfileSerializationTests
         Assert.IsFalse(wan22Vae("wan_2.1_vae.safetensors"));
 
         Assert.IsTrue(
-            VideoWorkflowProfile.Wan.TextEncoderAutoFill!("umt5_xxl_fp8_e4m3fn_scaled.safetensors")
+            VideoWorkflowProfile.Wan.TextEncoderAutoFill[0]("umt5_xxl_fp8_e4m3fn_scaled.safetensors")
         );
 
         var h3 = VideoWorkflowProfile.MiniMaxH3;
         Assert.IsTrue(h3.VaeAutoFill(null)!("minimax_h3_video_vae_fp16.safetensors"));
         Assert.IsFalse(h3.VaeAutoFill(null)!("minimax_h3_audio_vae_fp32.safetensors"));
         Assert.IsTrue(h3.AudioVaeAutoFill!("minimax_h3_audio_vae_fp32.safetensors"));
-        Assert.IsTrue(h3.TextEncoderAutoFill!("qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors"));
-        Assert.IsFalse(h3.TextEncoderAutoFill!("qwen_2.5_vl_7b_fp8_scaled.safetensors"));
-        Assert.IsFalse(h3.TextEncoderAutoFill!("qwen_3_4b.safetensors"));
+
+        // Encoder tiers: the minimax-tuned qwen3vl wins tier 1; a generic qwen3vl only
+        // matches the fallback tier; other qwen encoders match nothing.
+        Assert.IsTrue(h3.TextEncoderAutoFill[0]("qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors"));
+        Assert.IsFalse(h3.TextEncoderAutoFill[0]("Qwen3-VL-8B-Instruct-fp8.safetensors"));
+        Assert.IsTrue(h3.TextEncoderAutoFill[1]("Qwen3-VL-8B-Instruct-fp8.safetensors"));
+        Assert.IsFalse(h3.TextEncoderAutoFill.Any(m => m("qwen_2.5_vl_7b_fp8_scaled.safetensors")));
+        Assert.IsFalse(h3.TextEncoderAutoFill.Any(m => m("qwen_3_4b.safetensors")));
     }
 }

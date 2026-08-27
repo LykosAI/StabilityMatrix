@@ -85,4 +85,33 @@ public class VideoWorkflowProfileSerializationTests
         Assert.AreEqual(33, VideoWorkflowProfile.Wan.SnapFrames(33));
         Assert.AreEqual(34, VideoWorkflowProfile.Wan.SnapFrames(34));
     }
+
+    /// <summary>Auto-fill matchers tolerate separator/case differences in community filenames.</summary>
+    [TestMethod]
+    public void AutoFillMatchers_MatchOfficialAndRenamedFiles()
+    {
+        var wan21Unet = HybridModelFile.FromRemote("wan2.1_t2v_14B_fp8.safetensors");
+        var wan225bUnet = HybridModelFile.FromRemote("wan2.2_ti2v_5B_fp16.safetensors");
+
+        var wan21Vae = VideoWorkflowProfile.Wan.VaeAutoFill(wan21Unet)!;
+        Assert.IsTrue(wan21Vae("wan_2.1_vae.safetensors"));
+        Assert.IsTrue(wan21Vae("Wan2.1-VAE.safetensors"));
+        Assert.IsFalse(wan21Vae("wan2.2_vae.safetensors"));
+
+        var wan22Vae = VideoWorkflowProfile.Wan.VaeAutoFill(wan225bUnet)!;
+        Assert.IsTrue(wan22Vae("wan2.2_vae.safetensors"));
+        Assert.IsFalse(wan22Vae("wan_2.1_vae.safetensors"));
+
+        Assert.IsTrue(
+            VideoWorkflowProfile.Wan.TextEncoderAutoFill!("umt5_xxl_fp8_e4m3fn_scaled.safetensors")
+        );
+
+        var h3 = VideoWorkflowProfile.MiniMaxH3;
+        Assert.IsTrue(h3.VaeAutoFill(null)!("minimax_h3_video_vae_fp16.safetensors"));
+        Assert.IsFalse(h3.VaeAutoFill(null)!("minimax_h3_audio_vae_fp32.safetensors"));
+        Assert.IsTrue(h3.AudioVaeAutoFill!("minimax_h3_audio_vae_fp32.safetensors"));
+        Assert.IsTrue(h3.TextEncoderAutoFill!("qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors"));
+        Assert.IsFalse(h3.TextEncoderAutoFill!("qwen_2.5_vl_7b_fp8_scaled.safetensors"));
+        Assert.IsFalse(h3.TextEncoderAutoFill!("qwen_3_4b.safetensors"));
+    }
 }

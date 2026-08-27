@@ -37,6 +37,8 @@ public partial class VideoModelCardViewModel(
     [NotifyPropertyChangedFor(nameof(ShowShiftControl))]
     [NotifyPropertyChangedFor(nameof(ShowLowNoiseSections))]
     [NotifyPropertyChangedFor(nameof(ShowAudioVae))]
+    [NotifyPropertyChangedFor(nameof(ShowModelOptionsButton))]
+    [NotifyPropertyChangedFor(nameof(ShowLowNoiseSectionsSeparator))]
     [NotifyPropertyChangedFor(nameof(ShowClipVisionRow))]
     [NotifyPropertyChangedFor(nameof(WorkflowProfileStatusText))]
     private HybridModelFile? selectedModel;
@@ -55,6 +57,8 @@ public partial class VideoModelCardViewModel(
     [NotifyPropertyChangedFor(nameof(ShowEnableLowNoisePrompt))]
     [NotifyPropertyChangedFor(nameof(ShowWorkflowProfileStatus))]
     [NotifyPropertyChangedFor(nameof(ShowAudioVae))]
+    [NotifyPropertyChangedFor(nameof(ShowModelOptionsButton))]
+    [NotifyPropertyChangedFor(nameof(ShowLowNoiseSectionsSeparator))]
     [NotifyPropertyChangedFor(nameof(ShowClipVisionRow))]
     [NotifyPropertyChangedFor(nameof(WorkflowProfileStatusText))]
     private VideoWorkflowProfile selectedWorkflowProfile = VideoWorkflowProfile.Auto;
@@ -82,6 +86,14 @@ public partial class VideoModelCardViewModel(
     [JsonIgnore]
     public bool ShowLowNoiseSections => IsLowNoiseModelEnabled && ShowMoeExpertControls;
 
+    /// <summary>The options flyout only holds family-specific items; hide the gear when empty.</summary>
+    [JsonIgnore]
+    public bool ShowModelOptionsButton => ShowMoeExpertControls || ShowLatentSourceMenu;
+
+    /// <summary>Separator between the flyout's dual-expert and latent sections.</summary>
+    [JsonIgnore]
+    public bool ShowLowNoiseSectionsSeparator => ShowMoeExpertControls && ShowLatentSourceMenu;
+
     [JsonIgnore]
     public bool ShowAudioVae => ResolvedWorkflowProfile.UsesAudioVae;
 
@@ -100,6 +112,44 @@ public partial class VideoModelCardViewModel(
     {
         // A different model may not be a 14B expert (or may be the other half of a pair) — re-offer the nudge.
         IsLowNoisePromptDismissed = false;
+
+        AutoFillProfileCompanions();
+    }
+
+    partial void OnSelectedWorkflowProfileChanged(VideoWorkflowProfile value)
+    {
+        AutoFillProfileCompanions();
+    }
+
+    /// <summary>
+    /// Fills the VAE / audio VAE / text encoder slots from installed files matching the
+    /// resolved profile's expected filenames. Only empty slots are filled — an explicit user
+    /// (or loaded-project) selection is never replaced.
+    /// </summary>
+    private void AutoFillProfileCompanions()
+    {
+        var profile = ResolvedWorkflowProfile;
+
+        if (SelectedVae is null && profile.VaeAutoFill(SelectedModel) is { } vaeMatch)
+        {
+            SelectedVae = ClientManager.VaeModels.FirstOrDefault(m =>
+                m.Local is not null && vaeMatch(m.FileName)
+            );
+        }
+
+        if (SelectedAudioVae is null && profile.AudioVaeAutoFill is { } audioVaeMatch)
+        {
+            SelectedAudioVae = ClientManager.VaeModels.FirstOrDefault(m =>
+                m.Local is not null && audioVaeMatch(m.FileName)
+            );
+        }
+
+        if (SelectedClipModel is null && profile.TextEncoderAutoFill is { } encoderMatch)
+        {
+            SelectedClipModel = ClientManager.ClipModels.FirstOrDefault(m =>
+                m.Local is not null && encoderMatch(m.FileName)
+            );
+        }
     }
 
     /// <summary>

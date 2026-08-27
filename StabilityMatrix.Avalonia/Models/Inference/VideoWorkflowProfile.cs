@@ -57,6 +57,33 @@ public sealed class VideoWorkflowProfile
     /// </summary>
     public (int Stride, int Offset)? FrameGrid { get; init; }
 
+    /// <summary>
+    /// Filename matcher for the family's video VAE, given the selected UNet (some families
+    /// pair different VAEs with different variants). Used to auto-fill an empty VAE slot from
+    /// installed files; null = no auto-fill.
+    /// </summary>
+    public Func<HybridModelFile?, Func<string, bool>?> VaeAutoFill { get; init; } = _ => null;
+
+    /// <summary>Filename matcher for the family's audio VAE (auto-fill; null = none).</summary>
+    public Func<string, bool>? AudioVaeAutoFill { get; init; }
+
+    /// <summary>Filename matcher for the family's text encoder (auto-fill; null = none).</summary>
+    public Func<string, bool>? TextEncoderAutoFill { get; init; }
+
+    /// <summary>
+    /// Matches when the normalized filename (lowercase, separators stripped) contains every
+    /// token, so "wan_2.1_VAE", "Wan2.1-vae" and "wan21vae" all hit the same matcher.
+    /// </summary>
+    private static Func<string, bool> NameContains(params string[] tokens) =>
+        fileName =>
+        {
+            var normalized = Normalize(fileName);
+            return tokens.All(t => normalized.Contains(t, StringComparison.Ordinal));
+        };
+
+    private static string Normalize(string name) =>
+        string.Concat(name.ToLowerInvariant().Where(c => c is not ('.' or '_' or '-' or ' ')));
+
     /// <summary>Rounds a frame count up onto <see cref="FrameGrid"/> (identity when null).</summary>
     public int SnapFrames(int frames)
     {
@@ -84,6 +111,15 @@ public sealed class VideoWorkflowProfile
             SupportsMoeExperts = true,
             ShowsLatentSourceMode = true,
             UsesClipVision = true,
+            // The 5B TI2V model pairs with the 48-channel wan2.2 VAE; everything else with wan 2.1's.
+            VaeAutoFill = model =>
+            {
+                var name = Normalize(model?.FileName ?? "");
+                return name.Contains("ti2v") || name.Contains("5b")
+                    ? NameContains("wan22vae")
+                    : NameContains("wan21vae");
+            },
+            TextEncoderAutoFill = NameContains("umt5"),
         };
 
     /// <summary>
@@ -101,6 +137,10 @@ public sealed class VideoWorkflowProfile
             SupportsNegativePrompt = false,
             // 24 fps, 17 frames per block: valid lengths are 17k + 5.
             FrameGrid = (17, 5),
+            VaeAutoFill = _ => NameContains("minimax", "videovae"),
+            AudioVaeAutoFill = NameContains("minimax", "audiovae"),
+            // "qwen3vl" is unique to H3's encoder (Flux.2 = qwen_3_4b, Qwen-Image = qwen_2.5_vl)
+            TextEncoderAutoFill = NameContains("qwen3vl"),
         };
 
     /// <summary>Display order for the profile dropdown.</summary>

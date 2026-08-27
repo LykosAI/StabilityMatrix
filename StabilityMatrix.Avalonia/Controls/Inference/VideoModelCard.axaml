@@ -70,24 +70,20 @@
                                     ToolTip.Tip="Browse all models">
                                     <fluent:SymbolIcon FontSize="16" Symbol="Search" />
                                 </Button>
-                                <Button VerticalAlignment="Stretch" ToolTip.Tip="Model options">
+                                <Button
+                                    VerticalAlignment="Stretch"
+                                    IsVisible="{Binding ShowModelOptionsButton}"
+                                    ToolTip.Tip="Model options">
                                     <ui:SymbolIcon FontSize="16" Symbol="Setting" />
                                     <Button.Flyout>
                                         <ui:FAMenuFlyout Placement="BottomEdgeAlignedLeft">
-                                            <ui:MenuFlyoutItem
-                                                Command="{Binding ApplyRecommendedDefaultsCommand}"
-                                                IconSource="{StaticResource IconSparkle}"
-                                                IsEnabled="{Binding HasRecommendedDefaults}"
-                                                Text="Apply recommended settings"
-                                                ToolTip.Tip="{Binding RecommendedDefaultsToolTip}" />
-                                            <ui:MenuFlyoutSeparator IsVisible="{Binding ShowMoeExpertControls}" />
                                             <ui:ToggleMenuFlyoutItem
                                                 IconSource="{StaticResource IconCube}"
                                                 IsChecked="{Binding IsLowNoiseModelEnabled}"
                                                 IsVisible="{Binding ShowMoeExpertControls}"
                                                 Text="Dual expert (high / low noise)"
                                                 ToolTip.Tip="Wan 2.2 14B MoE: run a high-noise expert then hand off to a low-noise expert for a two-pass generation." />
-                                            <ui:MenuFlyoutSeparator IsVisible="{Binding ShowLatentSourceMenu}" />
+                                            <ui:MenuFlyoutSeparator IsVisible="{Binding ShowLowNoiseSectionsSeparator}" />
                                             <ui:MenuFlyoutSubItem
                                                 IsVisible="{Binding ShowLatentSourceMenu}"
                                                 Text="5B TI2V Latent"
@@ -114,7 +110,7 @@
                         <!--  Workflow profile (model family)  -->
                         <Grid
                             Margin="0,8,0,0"
-                            ColumnDefinitions="90,*"
+                            ColumnDefinitions="90,*,Auto"
                             ColumnSpacing="4">
                             <TextBlock
                                 Grid.Column="0"
@@ -139,6 +135,14 @@
                                     </DataTemplate>
                                 </controls:BetterComboBox.SelectionBoxItemTemplate>
                             </controls:BetterComboBox>
+                            <Button
+                                Grid.Column="2"
+                                VerticalAlignment="Stretch"
+                                Command="{Binding ApplyRecommendedDefaultsCommand}"
+                                IsEnabled="{Binding HasRecommendedDefaults}"
+                                ToolTip.Tip="{Binding RecommendedDefaultsToolTip}">
+                                <fluent:SymbolIcon FontSize="16" Symbol="Sparkle" />
+                            </Button>
                         </Grid>
                         <TextBlock
                             Margin="94,4,0,0"

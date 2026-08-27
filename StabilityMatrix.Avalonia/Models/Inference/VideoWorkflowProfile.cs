@@ -67,8 +67,20 @@ public sealed class VideoWorkflowProfile
     /// <summary>Filename matcher for the family's audio VAE (auto-fill; null = none).</summary>
     public Func<string, bool>? AudioVaeAutoFill { get; init; }
 
-    /// <summary>Filename matcher for the family's text encoder (auto-fill; null = none).</summary>
-    public Func<string, bool>? TextEncoderAutoFill { get; init; }
+    /// <summary>
+    /// Filename matchers for the family's text encoder, tried in order (auto-fill; empty =
+    /// none). Earlier entries are more specific, so the family's own encoder wins over a
+    /// same-architecture generic one (e.g. the minimax-tuned qwen3vl over a plain qwen3vl).
+    /// </summary>
+    public IReadOnlyList<Func<string, bool>> TextEncoderAutoFill { get; init; } = [];
+
+    /// <summary>
+    /// The family's output only makes sense in a real video container (mp4): native audio
+    /// and 24 fps frame counts make the animated-WebP path impractical (a 5s clip is a
+    /// lossless 100MB+ file with the soundtrack dropped). The output card then locks its
+    /// format to mp4.
+    /// </summary>
+    public bool RequiresContainerFormat { get; init; }
 
     /// <summary>
     /// Matches when the normalized filename (lowercase, separators stripped) contains every
@@ -119,7 +131,7 @@ public sealed class VideoWorkflowProfile
                     ? NameContains("wan22vae")
                     : NameContains("wan21vae");
             },
-            TextEncoderAutoFill = NameContains("umt5"),
+            TextEncoderAutoFill = [NameContains("umt5")],
         };
 
     /// <summary>
@@ -137,10 +149,12 @@ public sealed class VideoWorkflowProfile
             SupportsNegativePrompt = false,
             // 24 fps, 17 frames per block: valid lengths are 17k + 5.
             FrameGrid = (17, 5),
+            RequiresContainerFormat = true,
             VaeAutoFill = _ => NameContains("minimax", "videovae"),
             AudioVaeAutoFill = NameContains("minimax", "audiovae"),
-            // "qwen3vl" is unique to H3's encoder (Flux.2 = qwen_3_4b, Qwen-Image = qwen_2.5_vl)
-            TextEncoderAutoFill = NameContains("qwen3vl"),
+            // "qwen3vl" alone also matches generic Qwen3-VL encoders, so the minimax-tuned
+            // one is preferred when installed (Flux.2 = qwen_3_4b, Qwen-Image = qwen_2.5_vl)
+            TextEncoderAutoFill = [NameContains("qwen3vl", "minimax"), NameContains("qwen3vl")],
         };
 
     /// <summary>Display order for the profile dropdown.</summary>

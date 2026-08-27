@@ -144,11 +144,21 @@ public partial class VideoModelCardViewModel(
             );
         }
 
-        if (SelectedClipModel is null && profile.TextEncoderAutoFill is { } encoderMatch)
+        if (SelectedClipModel is null)
         {
-            SelectedClipModel = ClientManager.ClipModels.FirstOrDefault(m =>
-                m.Local is not null && encoderMatch(m.FileName)
-            );
+            foreach (var encoderMatch in profile.TextEncoderAutoFill)
+            {
+                if (
+                    ClientManager.ClipModels.FirstOrDefault(m =>
+                        m.Local is not null && encoderMatch(m.FileName)
+                    ) is
+                    { } encoder
+                )
+                {
+                    SelectedClipModel = encoder;
+                    break;
+                }
+            }
         }
     }
 

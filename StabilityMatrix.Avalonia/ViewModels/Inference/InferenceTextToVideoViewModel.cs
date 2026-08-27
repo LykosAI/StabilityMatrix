@@ -90,22 +90,24 @@ public class InferenceTextToVideoViewModel : InferenceGenerationViewModelBase, I
 
         PromptCardViewModel = AddDisposable(vmFactory.Get<PromptCardViewModel>());
 
-        // The negative prompt only exists for families with negative conditioning (Wan).
-        ModelCardViewModel.PropertyChanged += (_, e) =>
-        {
-            if (e.PropertyName == nameof(VideoModelCardViewModel.ResolvedWorkflowProfile))
-            {
-                PromptCardViewModel.IsNegativePromptEnabled = ModelCardViewModel
-                    .ResolvedWorkflowProfile
-                    .SupportsNegativePrompt;
-            }
-        };
-
         BatchSizeCardViewModel = vmFactory.Get<BatchSizeCardViewModel>();
 
         VideoOutputSettingsCardViewModel = vmFactory.Get<VideoOutputSettingsCardViewModel>(vm =>
             vm.Fps = 16.0d
         );
+
+        // Facts other cards derive from the resolved model family: the negative prompt only
+        // exists for families with negative conditioning (Wan), and container-only families
+        // (MiniMax H3) lock the output format to mp4.
+        ModelCardViewModel.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(VideoModelCardViewModel.ResolvedWorkflowProfile))
+            {
+                var profile = ModelCardViewModel.ResolvedWorkflowProfile;
+                PromptCardViewModel.IsNegativePromptEnabled = profile.SupportsNegativePrompt;
+                VideoOutputSettingsCardViewModel.IsContainerFormatRequired = profile.RequiresContainerFormat;
+            }
+        };
 
         StackCardViewModel = vmFactory.Get<StackCardViewModel>();
         StackCardViewModel.AddCards(
@@ -162,8 +164,6 @@ public class InferenceTextToVideoViewModel : InferenceGenerationViewModelBase, I
             SamplerCardViewModel.Height = 768;
             SamplerCardViewModel.Length = 124;
             VideoOutputSettingsCardViewModel.Fps = 24.0d;
-            // H3's native audio only fits in a real container.
-            VideoOutputSettingsCardViewModel.SelectedFormat = VideoOutputFormat.Mp4;
             return;
         }
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Controls;
@@ -36,6 +37,29 @@ public partial class VideoOutputSettingsCardViewModel
     [ObservableProperty]
     private List<VideoOutputMethod> availableMethods = Enum.GetValues<VideoOutputMethod>().ToList();
 
+    /// <summary>
+    /// Set by the owning tab when the model family's output only fits a real video container
+    /// (<see cref="Models.Inference.VideoWorkflowProfile.RequiresContainerFormat"/>): the
+    /// format locks to mp4, including a coercion of whatever a saved project carried.
+    /// Not persisted — it derives from the tab's resolved profile.
+    /// </summary>
+    [ObservableProperty]
+    [property: JsonIgnore]
+    private bool isContainerFormatRequired;
+
+    partial void OnIsContainerFormatRequiredChanged(bool value)
+    {
+        if (value)
+        {
+            AvailableFormats = [VideoOutputFormat.Mp4];
+            SelectedFormat = VideoOutputFormat.Mp4;
+        }
+        else
+        {
+            AvailableFormats = Enum.GetValues<VideoOutputFormat>().ToList();
+        }
+    }
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsWebPFormat))]
     private VideoOutputFormat selectedFormat = VideoOutputFormat.WebP;
@@ -45,6 +69,16 @@ public partial class VideoOutputSettingsCardViewModel
 
     /// <summary>WebP-specific controls (lossless / quality / method) only apply to the WebP format.</summary>
     public bool IsWebPFormat => SelectedFormat == VideoOutputFormat.WebP;
+
+    partial void OnSelectedFormatChanged(VideoOutputFormat value)
+    {
+        // A loaded project can carry a non-container format from before the profile resolved
+        // (or from a different family) — the lock wins.
+        if (IsContainerFormatRequired && value != VideoOutputFormat.Mp4)
+        {
+            SelectedFormat = VideoOutputFormat.Mp4;
+        }
+    }
 
     public void LoadStateFromParameters(GenerationParameters parameters)
     {

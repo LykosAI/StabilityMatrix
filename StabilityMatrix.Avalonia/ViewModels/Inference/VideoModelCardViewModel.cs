@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -22,11 +23,44 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 [View(typeof(VideoModelCard))]
 [ManagedService]
 [RegisterTransient<VideoModelCardViewModel>]
-public partial class VideoModelCardViewModel(
-    IInferenceClientManager clientManager,
-    IServiceManager<ViewModelBase> vmFactory
-) : LoadableViewModelBase, IParametersLoadableState, IComfyStep
+public partial class VideoModelCardViewModel : LoadableViewModelBase, IParametersLoadableState, IComfyStep
 {
+    private readonly IServiceManager<ViewModelBase> vmFactory;
+    private readonly TabContext tabContext;
+
+    public VideoModelCardViewModel(
+        IInferenceClientManager clientManager,
+        IServiceManager<ViewModelBase> vmFactory,
+        TabContext tabContext
+    )
+    {
+        this.vmFactory = vmFactory;
+        this.tabContext = tabContext;
+        ClientManager = clientManager;
+
+        ExtraNetworksStackCardViewModel = new StackEditableCardViewModel(vmFactory)
+        {
+            Title = Resources.Label_ExtraNetworks,
+            AvailableModules = [typeof(LoraModule)],
+        };
+        LowNoiseExtraNetworksStackCardViewModel = new StackEditableCardViewModel(vmFactory)
+        {
+            Title = "Low-Noise LoRAs",
+            AvailableModules = [typeof(LoraModule)],
+        };
+
+        HookLoraStackForLightningPrompt(ExtraNetworksStackCardViewModel);
+        HookLoraStackForLightningPrompt(LowNoiseExtraNetworksStackCardViewModel);
+
+        tabContext.StateChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(TabContext.SamplerCfgScale))
+            {
+                NotifyLightningPromptChanged();
+            }
+        };
+    }
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasRecommendedDefaults))]
     [NotifyPropertyChangedFor(nameof(RecommendedDefaultsToolTip))]
@@ -245,6 +279,106 @@ public partial class VideoModelCardViewModel(
     [RelayCommand]
     private void DismissLowNoisePrompt() => IsLowNoisePromptDismissed = true;
 
+    /// <summary>
+    /// Set when the user closes the lightning-LoRA nudge; re-armed when the LoRA stacks
+    /// change. Not persisted — the prompt is cheap to re-show next session.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowLightningCfgPrompt))]
+    [property: JsonIgnore]
+    private bool isLightningPromptDismissed;
+
+    /// <summary>
+    /// Nudge shown when an enabled LoRA looks like a few-step lightning/turbo LoRA while the
+    /// sampler still runs a normal CFG — that combination produces oversaturated noise. The
+    /// action applies CFG 1 (and the LoRA's stated step count) via
+    /// <see cref="LightningDefaultsRequested"/>.
+    /// </summary>
+    [JsonIgnore]
+    public bool ShowLightningCfgPrompt =>
+        !IsLightningPromptDismissed && tabContext.SamplerCfgScale > 1.0 && DetectEnabledLightningLora().Found;
+
+    [JsonIgnore]
+    public string LightningCfgPromptText =>
+        DetectEnabledLightningLora().Steps is { } steps
+            ? $"This looks like a {steps}-step LoRA — it wants CFG 1 and {steps} steps"
+            : "This looks like a speed LoRA — it usually wants CFG 1";
+
+    /// <summary>
+    /// Raised by the lightning nudge's action with the LoRA's stated step count (null when
+    /// the name doesn't say). The owning tab applies CFG 1 and the steps to its sampler.
+    /// </summary>
+    public event Action<int?>? LightningDefaultsRequested;
+
+    [RelayCommand]
+    private void ApplyLightningDefaults() =>
+        LightningDefaultsRequested?.Invoke(DetectEnabledLightningLora().Steps);
+
+    [RelayCommand]
+    private void DismissLightningPrompt() => IsLightningPromptDismissed = true;
+
+    /// <summary>
+    /// First enabled LoRA across both stacks whose filename looks like a few-step speed LoRA.
+    /// </summary>
+    private (bool Found, int? Steps) DetectEnabledLightningLora()
+    {
+        var loraNames = new[] { ExtraNetworksStackCardViewModel, LowNoiseExtraNetworksStackCardViewModel }
+            .SelectMany(stack => stack.Cards.OfType<LoraModule>())
+            .Where(module => module.IsEnabled)
+            .Select(module =>
+                module.Cards.OfType<ExtraNetworkCardViewModel>().FirstOrDefault()?.SelectedModel?.FileName
+            )
+            .OfType<string>();
+
+        foreach (var name in loraNames)
+        {
+            if (LightningLora.TryDetect(name, out var steps))
+            {
+                return (true, steps);
+            }
+        }
+
+        return (false, null);
+    }
+
+    /// <summary>
+    /// Re-evaluates the lightning nudge when a stack's LoRAs change: additions/removals
+    /// re-arm a dismissed prompt, and enabling or re-pointing a module changes detection
+    /// (a module's Title follows its selected model).
+    /// </summary>
+    private void HookLoraStackForLightningPrompt(StackEditableCardViewModel stack)
+    {
+        stack.Cards.CollectionChanged += (_, e) =>
+        {
+            foreach (var module in e.OldItems?.OfType<ModuleBase>() ?? [])
+            {
+                module.PropertyChanged -= OnLoraModulePropertyChanged;
+            }
+
+            foreach (var module in e.NewItems?.OfType<ModuleBase>() ?? [])
+            {
+                module.PropertyChanged += OnLoraModulePropertyChanged;
+            }
+
+            IsLightningPromptDismissed = false;
+            NotifyLightningPromptChanged();
+        };
+    }
+
+    private void OnLoraModulePropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(ModuleBase.IsEnabled) or nameof(ModuleBase.Title))
+        {
+            NotifyLightningPromptChanged();
+        }
+    }
+
+    private void NotifyLightningPromptChanged()
+    {
+        OnPropertyChanged(nameof(ShowLightningCfgPrompt));
+        OnPropertyChanged(nameof(LightningCfgPromptText));
+    }
+
     private HybridModelFile? TryFindLowNoiseCounterpart()
     {
         if (SelectedModel?.FileName is not { } fileName)
@@ -313,7 +447,7 @@ public partial class VideoModelCardViewModel(
     [NotifyPropertyChangedFor(nameof(RecommendedDefaultsToolTip))]
     private WanLatentSourceMode latentSourceMode = WanLatentSourceMode.Auto;
 
-    public IInferenceClientManager ClientManager { get; } = clientManager;
+    public IInferenceClientManager ClientManager { get; }
 
     /// <summary>
     /// True when the Wan 2.2 TI2V 5B latent (<c>Wan22ImageToVideoLatent</c>) should be used instead of the
@@ -370,15 +504,13 @@ public partial class VideoModelCardViewModel(
         }
     }
 
-    public StackEditableCardViewModel ExtraNetworksStackCardViewModel { get; } =
-        new(vmFactory) { Title = Resources.Label_ExtraNetworks, AvailableModules = [typeof(LoraModule)] };
+    public StackEditableCardViewModel ExtraNetworksStackCardViewModel { get; }
 
     /// <summary>
     /// LoRAs applied to the Wan 2.2 14B low-noise expert only. The main
     /// <see cref="ExtraNetworksStackCardViewModel"/> targets the high-noise (primary) model.
     /// </summary>
-    public StackEditableCardViewModel LowNoiseExtraNetworksStackCardViewModel { get; } =
-        new(vmFactory) { Title = "Low-Noise LoRAs", AvailableModules = [typeof(LoraModule)] };
+    public StackEditableCardViewModel LowNoiseExtraNetworksStackCardViewModel { get; }
 
     public List<string> WeightDTypes { get; set; } = ["default", "fp8_e4m3fn", "fp8_e4m3fn_fast", "fp8_e5m2"];
 

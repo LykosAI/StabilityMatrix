@@ -73,6 +73,14 @@ public class InferenceTextToVideoViewModel : InferenceGenerationViewModelBase, I
 
         ModelCardViewModel = vmFactory.Get<VideoModelCardViewModel>();
         ModelCardViewModel.RecommendedDefaultsRequested += ApplyRecommendedDefaults;
+        ModelCardViewModel.LightningDefaultsRequested += steps =>
+        {
+            SamplerCardViewModel.CfgScale = 1.0d;
+            if (steps is { } loraSteps)
+            {
+                SamplerCardViewModel.Steps = loraSteps;
+            }
+        };
 
         SamplerCardViewModel = vmFactory.Get<VideoSamplerCardViewModel>(samplerCard =>
         {

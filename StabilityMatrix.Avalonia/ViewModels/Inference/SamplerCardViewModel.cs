@@ -218,6 +218,12 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
         tabContext.SamplerHeight = value;
     }
 
+    partial void OnCfgScaleChanged(double value)
+    {
+        // Sync CFG to TabContext so other components can access it
+        tabContext.SamplerCfgScale = value;
+    }
+
     [RelayCommand]
     private void SwapDimensions()
     {

@@ -366,6 +366,16 @@
                         <Panel IsVisible="{Binding ShowLowNoiseSections}">
                             <controls:StackEditableCard Margin="0,8,0,0" DataContext="{Binding LowNoiseExtraNetworksStackCardViewModel}" />
                         </Panel>
+
+                        <!--  Nudge: an enabled LoRA looks like a few-step lightning LoRA but CFG is still > 1  -->
+                        <controls:SmolInfoBar
+                            Margin="0,8,0,0"
+                            ActionCommand="{Binding ApplyLightningDefaultsCommand}"
+                            ActionText="Apply"
+                            CloseCommand="{Binding DismissLightningPromptCommand}"
+                            IsOpen="{Binding ShowLightningCfgPrompt}"
+                            Message="{Binding LightningCfgPromptText}"
+                            Severity="Informational" />
                     </StackPanel>
                 </controls:Card>
             </ControlTemplate>

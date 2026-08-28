@@ -45,12 +45,21 @@ public class VideoModelCardLightningPromptTests
         return (vm, tabContext, vmFactory);
     }
 
-    private static LoraModule EnabledLora(IServiceManager<ViewModelBase> vmFactory, string fileName)
+    private static LoraModule EnabledLora(
+        IServiceManager<ViewModelBase> vmFactory,
+        string fileName,
+        ConnectedModelInfo? connectedModelInfo = null
+    )
     {
         var module = vmFactory.Get<LoraModule>();
         module.IsEnabled = true;
         module.GetCard<ExtraNetworkCardViewModel>().SelectedModel = HybridModelFile.FromLocal(
-            new LocalModelFile { RelativePath = fileName, SharedFolderType = SharedFolderType.Lora }
+            new LocalModelFile
+            {
+                RelativePath = fileName,
+                SharedFolderType = SharedFolderType.Lora,
+                ConnectedModelInfo = connectedModelInfo,
+            }
         );
         return module;
     }
@@ -91,6 +100,32 @@ public class VideoModelCardLightningPromptTests
         tabContext.SamplerCfgScale = 5;
         lora.IsEnabled = false;
         Assert.IsFalse(vm.ShowLightningCfgPrompt, "disabled LoRAs don't sample");
+    }
+
+    /// <summary>
+    /// Renamed local files often only carry the step count in their CivitAI metadata
+    /// ("i2v_high_noise_model.safetensors" whose connected name is the Seko 4-step LoRA).
+    /// </summary>
+    [TestMethod]
+    public void RenamedLora_DetectedViaConnectedModelName()
+    {
+        var (vm, tabContext, vmFactory) = Create();
+        tabContext.SamplerCfgScale = 5;
+
+        vm.ExtraNetworksStackCardViewModel.AddCards(
+            EnabledLora(
+                vmFactory,
+                "i2v_high_noise_model.safetensors",
+                new ConnectedModelInfo
+                {
+                    ModelName = "Wan2.2-I2V-A14B-4steps-lora-rank64-Seko-V1",
+                    VersionName = "Seko_lora_high noise",
+                }
+            )
+        );
+
+        Assert.IsTrue(vm.ShowLightningCfgPrompt);
+        StringAssert.Contains(vm.LightningCfgPromptText, "4-step");
     }
 
     [TestMethod]

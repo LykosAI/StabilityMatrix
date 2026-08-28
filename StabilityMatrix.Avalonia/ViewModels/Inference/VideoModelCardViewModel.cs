@@ -318,27 +318,46 @@ public partial class VideoModelCardViewModel : LoadableViewModelBase, IParameter
     private void DismissLightningPrompt() => IsLightningPromptDismissed = true;
 
     /// <summary>
-    /// First enabled LoRA across both stacks whose filename looks like a few-step speed LoRA.
+    /// First enabled LoRA across both stacks that looks like a few-step speed LoRA. Checks the
+    /// filename and the connected (CivitAI) model/version names — renamed local files often
+    /// only say "4steps" in their metadata. A candidate that states a step count wins over a
+    /// token-only match so Apply can also set the steps.
     /// </summary>
     private (bool Found, int? Steps) DetectEnabledLightningLora()
     {
-        var loraNames = new[] { ExtraNetworksStackCardViewModel, LowNoiseExtraNetworksStackCardViewModel }
+        var loraModels = new[] { ExtraNetworksStackCardViewModel, LowNoiseExtraNetworksStackCardViewModel }
             .SelectMany(stack => stack.Cards.OfType<LoraModule>())
             .Where(module => module.IsEnabled)
             .Select(module =>
-                module.Cards.OfType<ExtraNetworkCardViewModel>().FirstOrDefault()?.SelectedModel?.FileName
+                module.Cards.OfType<ExtraNetworkCardViewModel>().FirstOrDefault()?.SelectedModel
             )
-            .OfType<string>();
+            .OfType<HybridModelFile>();
 
-        foreach (var name in loraNames)
+        var found = false;
+        foreach (var model in loraModels)
         {
-            if (LightningLora.TryDetect(name, out var steps))
+            var candidates = new[]
             {
-                return (true, steps);
+                model.FileName,
+                model.Local?.ConnectedModelInfo?.ModelName,
+                model.Local?.ConnectedModelInfo?.VersionName,
+            };
+
+            foreach (var name in candidates.OfType<string>())
+            {
+                if (!LightningLora.TryDetect(name, out var steps))
+                    continue;
+
+                if (steps is not null)
+                {
+                    return (true, steps);
+                }
+
+                found = true;
             }
         }
 
-        return (false, null);
+        return (found, null);
     }
 
     /// <summary>

@@ -64,7 +64,7 @@
                             x:Name="ImagePane"
                             Alignment="Left"
                             Id="ImagePane"
-                            Proportion="0.25">
+                            Proportion="0.45">
                             <Tool
                                 x:Name="ImageTool"
                                 Title="Image"
@@ -92,7 +92,7 @@
                             x:Name="PromptPane"
                             Alignment="Left"
                             Id="PromptPane"
-                            Proportion="0.25">
+                            Proportion="0.45">
                             <Tool
                                 x:Name="PromptTool"
                                 Title="Prompt"
@@ -100,21 +100,39 @@
                                 CanClose="False"
                                 Id="PromptTool">
 
-                                <!--  Prompt and buttons  -->
+                                <!--  Prompt  -->
                                 <Grid
                                     x:CompileBindings="False"
                                     DataContext="{Binding ElementName=Dock, Path=DataContext}"
                                     Opacity="1"
-                                    RowDefinitions="*,Auto,Auto">
+                                    RowDefinitions="*">
                                     <!--  Prompt card  -->
                                     <controls:PromptCard DataContext="{Binding PromptCardViewModel}" />
-
-                                    <!--  Generate Buttons  -->
-                                    <StackPanel Grid.Row="2" Margin="0,6,0,0">
-                                        <controls:GenerateButtonBar ShowCurrentSeedButton="True" ShowHiresFixButton="True" />
-                                    </StackPanel>
                                 </Grid>
 
+                            </Tool>
+                        </ToolDock>
+
+                        <!--  Generate Dock  -->
+                        <ToolDock
+                            x:Name="GeneratePane"
+                            Alignment="Left"
+                            Id="GeneratePane"
+                            Proportion="0.1">
+                            <Tool
+                                x:Name="GenerateTool"
+                                Title="Generate"
+                                x:DataType="Tool"
+                                CanClose="False"
+                                Id="GenerateTool">
+                                <!--  Generate Buttons  -->
+
+                                <controls:GenerateButtonBar
+                                    Margin="0,6,0,0"
+                                    x:CompileBindings="False"
+                                    DataContext="{Binding ElementName=Dock, Path=DataContext}"
+                                    ShowCurrentSeedButton="True"
+                                    ShowHiresFixButton="True" />
                             </Tool>
                         </ToolDock>
 

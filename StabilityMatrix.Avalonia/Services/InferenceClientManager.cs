@@ -66,6 +66,8 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
 
     private readonly SourceCache<HybridModelFile, string> vaeModelsSource = new(p => p.GetId());
 
+    private readonly SourceCache<HybridModelFile, string> downloadableVaeModelsSource = new(p => p.GetId());
+
     private readonly SourceCache<HybridModelFile, string> vaeModelsDefaults = new(p => p.GetId());
 
     public IObservableCollection<HybridModelFile> VaeModels { get; } =
@@ -318,6 +320,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         vaeModelsDefaults
             .Connect()
             .Or(vaeModelsSource.Connect())
+            .Or(downloadableVaeModelsSource.Connect())
             .SortAndBind(
                 VaeModels,
                 // Keep the "Default" entry pinned to the top, then sort the rest alphabetically.
@@ -664,6 +667,11 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             modelIndexService.FindByModelType(SharedFolderType.VAE).Select(HybridModelFile.FromLocal),
             HybridModelFile.Comparer
         );
+
+        var downloadableVaeModels = RemoteModels.VaeModelFiles.Where(u =>
+            !vaeModelsSource.Lookup(u.GetId()).HasValue
+        );
+        downloadableVaeModelsSource.EditDiff(downloadableVaeModels, HybridModelFile.Comparer);
 
         // Load Ultralytics models
         IEnumerable<HybridModelFile> ultralyticsModels =

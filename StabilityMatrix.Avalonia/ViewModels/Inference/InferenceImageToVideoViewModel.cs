@@ -2,6 +2,7 @@
 using System.Text.Json.Serialization;
 using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Models;
+using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.Views.Inference;
@@ -81,7 +82,16 @@ public class InferenceImageToVideoViewModel : InferenceTextToVideoViewModel
 
         SelectImageCardViewModel.ApplyStep(applyArgs);
 
-        PromptCardViewModel.ApplyStep(applyArgs);
+        if (ModelCardViewModel.ResolvedWorkflowProfile == VideoWorkflowProfile.MiniMaxH3)
+        {
+            // The input image becomes the MiniMax node's first frame; the node replaces the
+            // CLIPTextEncode + CLIP Vision conditioning path and repoints Primary at its latent.
+            ApplyMiniMaxH3Conditioning(builder, firstFrame: imageLoad.Output1);
+        }
+        else
+        {
+            PromptCardViewModel.ApplyStep(applyArgs);
+        }
 
         SamplerCardViewModel.ApplyStep(applyArgs);
 

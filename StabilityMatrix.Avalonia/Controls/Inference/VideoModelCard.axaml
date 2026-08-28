@@ -70,24 +70,20 @@
                                     ToolTip.Tip="Browse all models">
                                     <fluent:SymbolIcon FontSize="16" Symbol="Search" />
                                 </Button>
-                                <Button VerticalAlignment="Stretch" ToolTip.Tip="Model options">
+                                <Button
+                                    VerticalAlignment="Stretch"
+                                    IsVisible="{Binding ShowModelOptionsButton}"
+                                    ToolTip.Tip="Model options">
                                     <ui:SymbolIcon FontSize="16" Symbol="Setting" />
                                     <Button.Flyout>
                                         <ui:FAMenuFlyout Placement="BottomEdgeAlignedLeft">
-                                            <ui:MenuFlyoutItem
-                                                Command="{Binding ApplyRecommendedDefaultsCommand}"
-                                                IconSource="{StaticResource IconSparkle}"
-                                                IsEnabled="{Binding HasRecommendedDefaults}"
-                                                Text="Apply recommended settings"
-                                                ToolTip.Tip="{Binding RecommendedDefaultsToolTip}" />
-                                            <ui:MenuFlyoutSeparator IsVisible="{Binding ShowMoeExpertControls}" />
                                             <ui:ToggleMenuFlyoutItem
                                                 IconSource="{StaticResource IconCube}"
                                                 IsChecked="{Binding IsLowNoiseModelEnabled}"
                                                 IsVisible="{Binding ShowMoeExpertControls}"
                                                 Text="Dual expert (high / low noise)"
                                                 ToolTip.Tip="Wan 2.2 14B MoE: run a high-noise expert then hand off to a low-noise expert for a two-pass generation." />
-                                            <ui:MenuFlyoutSeparator IsVisible="{Binding ShowLatentSourceMenu}" />
+                                            <ui:MenuFlyoutSeparator IsVisible="{Binding ShowLowNoiseSectionsSeparator}" />
                                             <ui:MenuFlyoutSubItem
                                                 IsVisible="{Binding ShowLatentSourceMenu}"
                                                 Text="5B TI2V Latent"
@@ -114,7 +110,7 @@
                         <!--  Workflow profile (model family)  -->
                         <Grid
                             Margin="0,8,0,0"
-                            ColumnDefinitions="90,*"
+                            ColumnDefinitions="90,*,Auto"
                             ColumnSpacing="4">
                             <TextBlock
                                 Grid.Column="0"
@@ -139,6 +135,14 @@
                                     </DataTemplate>
                                 </controls:BetterComboBox.SelectionBoxItemTemplate>
                             </controls:BetterComboBox>
+                            <Button
+                                Grid.Column="2"
+                                VerticalAlignment="Stretch"
+                                Command="{Binding ApplyRecommendedDefaultsCommand}"
+                                IsEnabled="{Binding HasRecommendedDefaults}"
+                                ToolTip.Tip="{Binding RecommendedDefaultsToolTip}">
+                                <fluent:SymbolIcon FontSize="16" Symbol="Sparkle" />
+                            </Button>
                         </Grid>
                         <TextBlock
                             Margin="94,4,0,0"
@@ -240,7 +244,7 @@
                                         Text="{x:Static lang:Resources.Label_VAE}"
                                         TextAlignment="Left"
                                         ToolTip.Tip="Decodes the generated latents into the final video frames. Use the VAE that matches your model family." />
-                                    <ui:FAComboBox
+                                    <controls:FADownloadableComboBox
                                         Grid.Column="1"
                                         HorizontalAlignment="Stretch"
                                         DisplayMemberBinding="{Binding ShortDisplayName}"
@@ -251,6 +255,33 @@
                                         Grid.Column="2"
                                         VerticalAlignment="Stretch"
                                         Command="{Binding OpenVaePickerCommand}"
+                                        ToolTip.Tip="Browse all VAE models">
+                                        <fluent:SymbolIcon FontSize="16" Symbol="Search" />
+                                    </Button>
+                                </Grid>
+
+                                <!--  Audio VAE (families with native audio)  -->
+                                <Grid
+                                    ColumnDefinitions="90,*,Auto"
+                                    ColumnSpacing="4"
+                                    IsVisible="{Binding ShowAudioVae}">
+                                    <TextBlock
+                                        Grid.Column="0"
+                                        VerticalAlignment="Center"
+                                        Text="Audio VAE"
+                                        TextAlignment="Left"
+                                        ToolTip.Tip="Decodes the generated soundtrack (MiniMax H3 outputs native stereo audio). Optional — leave empty for video-only output. Audio needs the MP4 output format." />
+                                    <controls:FADownloadableComboBox
+                                        Grid.Column="1"
+                                        HorizontalAlignment="Stretch"
+                                        DisplayMemberBinding="{Binding ShortDisplayName}"
+                                        IsTextSearchEnabled="True"
+                                        ItemsSource="{Binding ClientManager.VaeModels}"
+                                        SelectedItem="{Binding SelectedAudioVae}" />
+                                    <Button
+                                        Grid.Column="2"
+                                        VerticalAlignment="Stretch"
+                                        Command="{Binding OpenAudioVaePickerCommand}"
                                         ToolTip.Tip="Browse all VAE models">
                                         <fluent:SymbolIcon FontSize="16" Symbol="Search" />
                                     </Button>
@@ -280,11 +311,11 @@
                                     </Button>
                                 </Grid>
 
-                                <!--  CLIP Vision (image-to-video only)  -->
+                                <!--  CLIP Vision (image-to-video, families that condition on it)  -->
                                 <Grid
                                     ColumnDefinitions="90,*,Auto"
                                     ColumnSpacing="4"
-                                    IsVisible="{Binding IsClipVisionEnabled}">
+                                    IsVisible="{Binding ShowClipVisionRow}">
                                     <TextBlock
                                         Grid.Column="0"
                                         VerticalAlignment="Center"
@@ -335,6 +366,16 @@
                         <Panel IsVisible="{Binding ShowLowNoiseSections}">
                             <controls:StackEditableCard Margin="0,8,0,0" DataContext="{Binding LowNoiseExtraNetworksStackCardViewModel}" />
                         </Panel>
+
+                        <!--  Nudge: an enabled LoRA looks like a few-step lightning LoRA but CFG is still > 1  -->
+                        <controls:SmolInfoBar
+                            Margin="0,8,0,0"
+                            ActionCommand="{Binding ApplyLightningDefaultsCommand}"
+                            ActionText="Apply"
+                            CloseCommand="{Binding DismissLightningPromptCommand}"
+                            IsOpen="{Binding ShowLightningCfgPrompt}"
+                            Message="{Binding LightningCfgPromptText}"
+                            Severity="Informational" />
                     </StackPanel>
                 </controls:Card>
             </ControlTemplate>

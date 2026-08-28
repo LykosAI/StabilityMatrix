@@ -41,3 +41,5 @@ public class IpAdapterNodeConnection : NodeConnectionBase;
 public class NoiseNodeConnection : NodeConnectionBase;
 
 public class VideoNodeConnection : NodeConnectionBase;
+
+public class AudioNodeConnection : NodeConnectionBase;

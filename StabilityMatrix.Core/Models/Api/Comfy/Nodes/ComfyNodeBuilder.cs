@@ -466,6 +466,20 @@ public class ComfyNodeBuilder
     {
         public required ImageNodeConnection Images { get; init; }
         public required double Fps { get; init; }
+
+        /// <summary>Optional soundtrack, muxed into the container (models with native audio).</summary>
+        public AudioNodeConnection? Audio { get; init; }
+    }
+
+    /// <summary>
+    /// Decodes the audio half of a packed audio+video latent (e.g. MiniMax H3) with the
+    /// family's audio VAE. The node pulls its own half out of the latent, so it can share a
+    /// sampler output with the video <see cref="VAEDecode"/>.
+    /// </summary>
+    public record VAEDecodeAudio : ComfyTypedNodeBase<AudioNodeConnection>
+    {
+        public required LatentNodeConnection Samples { get; init; }
+        public required VAENodeConnection Vae { get; init; }
     }
 
     /// <summary>
@@ -495,7 +509,8 @@ public class ComfyNodeBuilder
         public required string ClipName { get; init; }
 
         /// <summary>
-        /// possible values: "stable_diffusion", "stable_cascade", "sd3", "stable_audio", "mochi"
+        /// possible values: "stable_diffusion", "stable_cascade", "sd3", "stable_audio",
+        /// "mochi", "wan", "minimax", ... (passed through to ComfyUI's CLIPLoader)
         /// </summary>
         public required string Type { get; init; }
     }
@@ -778,6 +793,25 @@ public class ComfyNodeBuilder
         public required int Height { get; init; }
         public required int Length { get; init; }
         public required int BatchSize { get; init; }
+    }
+
+    /// <summary>
+    /// MiniMax H3 conditioning + packed audio/video empty latent (comfy-core, ComfyUI >= 0.33).
+    /// Covers text-to-video (no frames connected) and first/last-frame image-to-video. The
+    /// prompt is encoded by the node itself, and there is no negative conditioning — sample
+    /// with CFG 1. <c>Length</c> must sit on the model's 17k+5 frame grid at 24 fps.
+    /// outputs: positive, latent
+    /// </summary>
+    public record MiniMaxH3ImageToVideo : ComfyTypedNodeBase<ConditioningNodeConnection, LatentNodeConnection>
+    {
+        public required ClipNodeConnection Clip { get; init; }
+        public required VAENodeConnection Vae { get; init; }
+        public ImageNodeConnection? FirstFrame { get; init; }
+        public ImageNodeConnection? LastFrame { get; init; }
+        public required string Prompt { get; init; }
+        public required int Width { get; init; }
+        public required int Height { get; init; }
+        public required int Length { get; init; }
     }
 
     [TypedNodeOptions(
@@ -1921,6 +1955,20 @@ public class ComfyNodeBuilder
         /// low-noise expert (Wan 2.2 14B MoE). Range 0-1; defaults to 0.5 when unset.
         /// </summary>
         public double? WanMoeBoundary { get; set; }
+
+        /// <summary>
+        /// Audio VAE for families whose sampler output is a packed audio+video latent
+        /// (MiniMax H3). When set, the video output step decodes the soundtrack with
+        /// <c>VAEDecodeAudio</c> and muxes it into containers that support audio.
+        /// </summary>
+        public VAENodeConnection? AudioVAE { get; set; }
+
+        /// <summary>
+        /// Set when the tab already built the family's conditioning + initial latent (e.g. the
+        /// MiniMax H3 node emits both). The video sampler then samples what's present instead
+        /// of running its own conditioning path.
+        /// </summary>
+        public bool HasPrebuiltVideoConditioning { get; set; }
 
         public GuiderNodeConnection PrimaryGuider { get; set; }
         public NoiseNodeConnection PrimaryNoise { get; set; }

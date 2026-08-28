@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -22,11 +23,44 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 [View(typeof(VideoModelCard))]
 [ManagedService]
 [RegisterTransient<VideoModelCardViewModel>]
-public partial class VideoModelCardViewModel(
-    IInferenceClientManager clientManager,
-    IServiceManager<ViewModelBase> vmFactory
-) : LoadableViewModelBase, IParametersLoadableState, IComfyStep
+public partial class VideoModelCardViewModel : LoadableViewModelBase, IParametersLoadableState, IComfyStep
 {
+    private readonly IServiceManager<ViewModelBase> vmFactory;
+    private readonly TabContext tabContext;
+
+    public VideoModelCardViewModel(
+        IInferenceClientManager clientManager,
+        IServiceManager<ViewModelBase> vmFactory,
+        TabContext tabContext
+    )
+    {
+        this.vmFactory = vmFactory;
+        this.tabContext = tabContext;
+        ClientManager = clientManager;
+
+        ExtraNetworksStackCardViewModel = new StackEditableCardViewModel(vmFactory)
+        {
+            Title = Resources.Label_ExtraNetworks,
+            AvailableModules = [typeof(LoraModule)],
+        };
+        LowNoiseExtraNetworksStackCardViewModel = new StackEditableCardViewModel(vmFactory)
+        {
+            Title = "Low-Noise LoRAs",
+            AvailableModules = [typeof(LoraModule)],
+        };
+
+        HookLoraStackForLightningPrompt(ExtraNetworksStackCardViewModel);
+        HookLoraStackForLightningPrompt(LowNoiseExtraNetworksStackCardViewModel);
+
+        tabContext.StateChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(TabContext.SamplerCfgScale))
+            {
+                NotifyLightningPromptChanged();
+            }
+        };
+    }
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasRecommendedDefaults))]
     [NotifyPropertyChangedFor(nameof(RecommendedDefaultsToolTip))]
@@ -36,6 +70,10 @@ public partial class VideoModelCardViewModel(
     [NotifyPropertyChangedFor(nameof(ShowLatentSourceMenu))]
     [NotifyPropertyChangedFor(nameof(ShowShiftControl))]
     [NotifyPropertyChangedFor(nameof(ShowLowNoiseSections))]
+    [NotifyPropertyChangedFor(nameof(ShowAudioVae))]
+    [NotifyPropertyChangedFor(nameof(ShowModelOptionsButton))]
+    [NotifyPropertyChangedFor(nameof(ShowLowNoiseSectionsSeparator))]
+    [NotifyPropertyChangedFor(nameof(ShowClipVisionRow))]
     [NotifyPropertyChangedFor(nameof(WorkflowProfileStatusText))]
     private HybridModelFile? selectedModel;
 
@@ -52,6 +90,10 @@ public partial class VideoModelCardViewModel(
     [NotifyPropertyChangedFor(nameof(ShowLowNoiseSections))]
     [NotifyPropertyChangedFor(nameof(ShowEnableLowNoisePrompt))]
     [NotifyPropertyChangedFor(nameof(ShowWorkflowProfileStatus))]
+    [NotifyPropertyChangedFor(nameof(ShowAudioVae))]
+    [NotifyPropertyChangedFor(nameof(ShowModelOptionsButton))]
+    [NotifyPropertyChangedFor(nameof(ShowLowNoiseSectionsSeparator))]
+    [NotifyPropertyChangedFor(nameof(ShowClipVisionRow))]
     [NotifyPropertyChangedFor(nameof(WorkflowProfileStatusText))]
     private VideoWorkflowProfile selectedWorkflowProfile = VideoWorkflowProfile.Auto;
 
@@ -78,6 +120,21 @@ public partial class VideoModelCardViewModel(
     [JsonIgnore]
     public bool ShowLowNoiseSections => IsLowNoiseModelEnabled && ShowMoeExpertControls;
 
+    /// <summary>The options flyout only holds family-specific items; hide the gear when empty.</summary>
+    [JsonIgnore]
+    public bool ShowModelOptionsButton => ShowMoeExpertControls || ShowLatentSourceMenu;
+
+    /// <summary>Separator between the flyout's dual-expert and latent sections.</summary>
+    [JsonIgnore]
+    public bool ShowLowNoiseSectionsSeparator => ShowMoeExpertControls && ShowLatentSourceMenu;
+
+    [JsonIgnore]
+    public bool ShowAudioVae => ResolvedWorkflowProfile.UsesAudioVae;
+
+    /// <summary>CLIP Vision applies when the tab wants it (i2v) and the family uses it.</summary>
+    [JsonIgnore]
+    public bool ShowClipVisionRow => IsClipVisionEnabled && ResolvedWorkflowProfile.UsesClipVision;
+
     [JsonIgnore]
     public bool ShowWorkflowProfileStatus => SelectedWorkflowProfile == VideoWorkflowProfile.Auto;
 
@@ -89,6 +146,54 @@ public partial class VideoModelCardViewModel(
     {
         // A different model may not be a 14B expert (or may be the other half of a pair) — re-offer the nudge.
         IsLowNoisePromptDismissed = false;
+
+        AutoFillProfileCompanions();
+    }
+
+    partial void OnSelectedWorkflowProfileChanged(VideoWorkflowProfile value)
+    {
+        AutoFillProfileCompanions();
+    }
+
+    /// <summary>
+    /// Fills the VAE / audio VAE / text encoder slots from installed files matching the
+    /// resolved profile's expected filenames. Only empty slots are filled — an explicit user
+    /// (or loaded-project) selection is never replaced.
+    /// </summary>
+    private void AutoFillProfileCompanions()
+    {
+        var profile = ResolvedWorkflowProfile;
+
+        if (SelectedVae is null && profile.VaeAutoFill(SelectedModel) is { } vaeMatch)
+        {
+            SelectedVae = ClientManager.VaeModels.FirstOrDefault(m =>
+                m.Local is not null && vaeMatch(m.FileName)
+            );
+        }
+
+        if (SelectedAudioVae is null && profile.AudioVaeAutoFill is { } audioVaeMatch)
+        {
+            SelectedAudioVae = ClientManager.VaeModels.FirstOrDefault(m =>
+                m.Local is not null && audioVaeMatch(m.FileName)
+            );
+        }
+
+        if (SelectedClipModel is null)
+        {
+            foreach (var encoderMatch in profile.TextEncoderAutoFill)
+            {
+                if (
+                    ClientManager.ClipModels.FirstOrDefault(m =>
+                        m.Local is not null && encoderMatch(m.FileName)
+                    ) is
+                    { } encoder
+                )
+                {
+                    SelectedClipModel = encoder;
+                    break;
+                }
+            }
+        }
     }
 
     /// <summary>
@@ -174,6 +279,125 @@ public partial class VideoModelCardViewModel(
     [RelayCommand]
     private void DismissLowNoisePrompt() => IsLowNoisePromptDismissed = true;
 
+    /// <summary>
+    /// Set when the user closes the lightning-LoRA nudge; re-armed when the LoRA stacks
+    /// change. Not persisted — the prompt is cheap to re-show next session.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowLightningCfgPrompt))]
+    [property: JsonIgnore]
+    private bool isLightningPromptDismissed;
+
+    /// <summary>
+    /// Nudge shown when an enabled LoRA looks like a few-step lightning/turbo LoRA while the
+    /// sampler still runs a normal CFG — that combination produces oversaturated noise. The
+    /// action applies CFG 1 (and the LoRA's stated step count) via
+    /// <see cref="LightningDefaultsRequested"/>.
+    /// </summary>
+    [JsonIgnore]
+    public bool ShowLightningCfgPrompt =>
+        !IsLightningPromptDismissed && tabContext.SamplerCfgScale > 1.0 && DetectEnabledLightningLora().Found;
+
+    [JsonIgnore]
+    public string LightningCfgPromptText =>
+        DetectEnabledLightningLora().Steps is { } steps
+            ? $"This looks like a {steps}-step LoRA — it wants CFG 1 and {steps} steps"
+            : "This looks like a speed LoRA — it usually wants CFG 1";
+
+    /// <summary>
+    /// Raised by the lightning nudge's action with the LoRA's stated step count (null when
+    /// the name doesn't say). The owning tab applies CFG 1 and the steps to its sampler.
+    /// </summary>
+    public event Action<int?>? LightningDefaultsRequested;
+
+    [RelayCommand]
+    private void ApplyLightningDefaults() =>
+        LightningDefaultsRequested?.Invoke(DetectEnabledLightningLora().Steps);
+
+    [RelayCommand]
+    private void DismissLightningPrompt() => IsLightningPromptDismissed = true;
+
+    /// <summary>
+    /// First enabled LoRA across both stacks that looks like a few-step speed LoRA. Checks the
+    /// filename and the connected (CivitAI) model/version names — renamed local files often
+    /// only say "4steps" in their metadata. A candidate that states a step count wins over a
+    /// token-only match so Apply can also set the steps.
+    /// </summary>
+    private (bool Found, int? Steps) DetectEnabledLightningLora()
+    {
+        var loraModels = new[] { ExtraNetworksStackCardViewModel, LowNoiseExtraNetworksStackCardViewModel }
+            .SelectMany(stack => stack.Cards.OfType<LoraModule>())
+            .Where(module => module.IsEnabled)
+            .Select(module =>
+                module.Cards.OfType<ExtraNetworkCardViewModel>().FirstOrDefault()?.SelectedModel
+            )
+            .OfType<HybridModelFile>();
+
+        var found = false;
+        foreach (var model in loraModels)
+        {
+            var candidates = new[]
+            {
+                model.FileName,
+                model.Local?.ConnectedModelInfo?.ModelName,
+                model.Local?.ConnectedModelInfo?.VersionName,
+            };
+
+            foreach (var name in candidates.OfType<string>())
+            {
+                if (!LightningLora.TryDetect(name, out var steps))
+                    continue;
+
+                if (steps is not null)
+                {
+                    return (true, steps);
+                }
+
+                found = true;
+            }
+        }
+
+        return (found, null);
+    }
+
+    /// <summary>
+    /// Re-evaluates the lightning nudge when a stack's LoRAs change: additions/removals
+    /// re-arm a dismissed prompt, and enabling or re-pointing a module changes detection
+    /// (a module's Title follows its selected model).
+    /// </summary>
+    private void HookLoraStackForLightningPrompt(StackEditableCardViewModel stack)
+    {
+        stack.Cards.CollectionChanged += (_, e) =>
+        {
+            foreach (var module in e.OldItems?.OfType<ModuleBase>() ?? [])
+            {
+                module.PropertyChanged -= OnLoraModulePropertyChanged;
+            }
+
+            foreach (var module in e.NewItems?.OfType<ModuleBase>() ?? [])
+            {
+                module.PropertyChanged += OnLoraModulePropertyChanged;
+            }
+
+            IsLightningPromptDismissed = false;
+            NotifyLightningPromptChanged();
+        };
+    }
+
+    private void OnLoraModulePropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(ModuleBase.IsEnabled) or nameof(ModuleBase.Title))
+        {
+            NotifyLightningPromptChanged();
+        }
+    }
+
+    private void NotifyLightningPromptChanged()
+    {
+        OnPropertyChanged(nameof(ShowLightningCfgPrompt));
+        OnPropertyChanged(nameof(LightningCfgPromptText));
+    }
+
     private HybridModelFile? TryFindLowNoiseCounterpart()
     {
         if (SelectedModel?.FileName is not { } fileName)
@@ -215,10 +439,18 @@ public partial class VideoModelCardViewModel(
     [ObservableProperty]
     private HybridModelFile? selectedVae;
 
+    /// <summary>
+    /// Optional audio VAE for families with native audio (MiniMax H3). When unset the
+    /// generation still runs, video-only.
+    /// </summary>
+    [ObservableProperty]
+    private HybridModelFile? selectedAudioVae;
+
     [ObservableProperty]
     private string? selectedDType = "fp8_e4m3fn_fast";
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowClipVisionRow))]
     private bool isClipVisionEnabled;
 
     [ObservableProperty]
@@ -234,7 +466,7 @@ public partial class VideoModelCardViewModel(
     [NotifyPropertyChangedFor(nameof(RecommendedDefaultsToolTip))]
     private WanLatentSourceMode latentSourceMode = WanLatentSourceMode.Auto;
 
-    public IInferenceClientManager ClientManager { get; } = clientManager;
+    public IInferenceClientManager ClientManager { get; }
 
     /// <summary>
     /// True when the Wan 2.2 TI2V 5B latent (<c>Wan22ImageToVideoLatent</c>) should be used instead of the
@@ -276,9 +508,11 @@ public partial class VideoModelCardViewModel(
     public bool HasRecommendedDefaults => SelectedModel is not null;
 
     public string RecommendedDefaultsToolTip =>
-        UseWan22FiveBLatent
+        ResolvedWorkflowProfile == VideoWorkflowProfile.MiniMaxH3
+            ? "Apply recommended MiniMax H3 settings: 1344×768 · 124 frames · 24 fps mp4 · res_multistep / simple / 20 steps / CFG 1"
+        : UseWan22FiveBLatent
             ? "Apply recommended Wan 2.2 5B settings: 1280×704 · 121 frames · 24 fps · uni_pc / simple / 20 steps / CFG 5"
-            : "Apply recommended Wan 14B / 2.1 settings: 832×480 · 81 frames · 16 fps · uni_pc / simple / 20 steps / CFG 5";
+        : "Apply recommended Wan 14B / 2.1 settings: 832×480 · 81 frames · 16 fps · uni_pc / simple / 20 steps / CFG 5";
 
     [RelayCommand]
     private void ApplyRecommendedDefaults()
@@ -289,15 +523,13 @@ public partial class VideoModelCardViewModel(
         }
     }
 
-    public StackEditableCardViewModel ExtraNetworksStackCardViewModel { get; } =
-        new(vmFactory) { Title = Resources.Label_ExtraNetworks, AvailableModules = [typeof(LoraModule)] };
+    public StackEditableCardViewModel ExtraNetworksStackCardViewModel { get; }
 
     /// <summary>
     /// LoRAs applied to the Wan 2.2 14B low-noise expert only. The main
     /// <see cref="ExtraNetworksStackCardViewModel"/> targets the high-noise (primary) model.
     /// </summary>
-    public StackEditableCardViewModel LowNoiseExtraNetworksStackCardViewModel { get; } =
-        new(vmFactory) { Title = "Low-Noise LoRAs", AvailableModules = [typeof(LoraModule)] };
+    public StackEditableCardViewModel LowNoiseExtraNetworksStackCardViewModel { get; }
 
     public List<string> WeightDTypes { get; set; } = ["default", "fp8_e4m3fn", "fp8_e4m3fn_fast", "fp8_e5m2"];
 
@@ -351,6 +583,23 @@ public partial class VideoModelCardViewModel(
             if (pickerVm.SelectedModel is { } selected)
             {
                 SelectedVae = selected;
+            }
+        }
+    }
+
+    [RelayCommand]
+    private async Task OpenAudioVaePickerAsync()
+    {
+        using var pickerScope = vmFactory.CreateScope();
+        var pickerVm = pickerScope.ServiceManager.Get<ModelPickerDialogViewModel>();
+        pickerVm.Title = "Select Audio VAE";
+        pickerVm.Source = ModelPickerSource.Vae;
+
+        if (await pickerVm.GetDialog().ShowAsync() == ContentDialogResult.Primary)
+        {
+            if (pickerVm.SelectedModel is { } selected)
+            {
+                SelectedAudioVae = selected;
             }
         }
     }
@@ -421,7 +670,7 @@ public partial class VideoModelCardViewModel(
             return false;
         }
 
-        if (IsClipVisionEnabled && SelectedClipVisionModel == null)
+        if (ShowClipVisionRow && SelectedClipVisionModel == null)
         {
             var dialog = DialogHelper.CreateMarkdownDialog(
                 "Please select a CLIP Vision model to continue.",
@@ -602,7 +851,19 @@ public partial class VideoModelCardViewModel(
             e.Builder.Connections.WanLowNoiseModel = lowNoiseConnections.Model;
         }
 
-        if (!IsClipVisionEnabled)
+        if (SelectedAudioVae is { } audioVae && profile.UsesAudioVae)
+        {
+            var audioVaeLoader = e.Nodes.AddTypedNode(
+                new ComfyNodeBuilder.VAELoader
+                {
+                    Name = e.Nodes.GetUniqueName("AudioVAELoader"),
+                    VaeName = audioVae.RelativePath,
+                }
+            );
+            e.Builder.Connections.AudioVAE = audioVaeLoader.Output;
+        }
+
+        if (!ShowClipVisionRow)
             return;
 
         var clipVisionLoader = e.Nodes.AddTypedNode(

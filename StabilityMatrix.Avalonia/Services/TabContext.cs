@@ -28,6 +28,12 @@ public partial class TabContext : ObservableObject
     private int _samplerHeight = 1024;
 
     /// <summary>
+    /// Current sampler CFG scale. Matches the sampler card's default until it first syncs.
+    /// </summary>
+    [ObservableProperty]
+    private double _samplerCfgScale = 5;
+
+    /// <summary>
     /// Width of the primary source image for the current inference tab.
     /// </summary>
     [ObservableProperty]
@@ -58,6 +64,11 @@ public partial class TabContext : ObservableObject
     partial void OnSamplerHeightChanged(int value)
     {
         OnStateChanged(nameof(SamplerHeight));
+    }
+
+    partial void OnSamplerCfgScaleChanged(double value)
+    {
+        OnStateChanged(nameof(SamplerCfgScale));
     }
 
     partial void OnSourceImageWidthChanged(int value)

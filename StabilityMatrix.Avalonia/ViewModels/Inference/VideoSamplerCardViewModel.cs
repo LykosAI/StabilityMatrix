@@ -140,7 +140,9 @@ public class VideoSamplerCardViewModel : SamplerCardViewModel
             return lowNoisePass.Output;
         }
 
-        var isImgToVid = IsDenoiseStrengthEnabled;
+        // When the tab already built the family's conditioning + latent (MiniMax H3), the image
+        // input was consumed there — sample what's present instead of the Wan i2v conditioning.
+        var isImgToVid = IsDenoiseStrengthEnabled && !e.Builder.Connections.HasPrebuiltVideoConditioning;
 
         if (isImgToVid)
         {

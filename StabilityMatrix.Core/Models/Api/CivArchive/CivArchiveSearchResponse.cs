@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -11,7 +12,6 @@ public class CivArchiveSearchResponse
     public required CivArchiveFilterOptions FilterOptions { get; init; }
     public required CivArchiveSearchFilters EffectiveFilters { get; init; }
     public required string CanonicalUrl { get; init; }
-    public required int Hits { get; init; }
     public required int TotalHits { get; init; }
 }
 
@@ -21,7 +21,7 @@ public class CivArchiveFilterOptions
     public IReadOnlyList<string> ModelTypes { get; init; } = [];
 }
 
-public class CivArchiveSearchResult
+public class CivArchiveSearchResult : INotifyPropertyChanged
 {
     [JsonPropertyName("id")]
     public string Id { get; set; } = string.Empty;
@@ -59,8 +59,30 @@ public class CivArchiveSearchResult
     [JsonPropertyName("base_model")]
     public string? BaseModel { get; set; }
 
+    private string? imageUrl;
+
+    /// <summary>
+    /// Change-notifying because model- and file-kind results arrive without an image and
+    /// get one backfilled asynchronously from the detail endpoints after the card is
+    /// already on screen.
+    /// </summary>
     [JsonPropertyName("image_url")]
-    public string? ImageUrl { get; set; }
+    public string? ImageUrl
+    {
+        get => imageUrl;
+        set
+        {
+            if (imageUrl == value)
+            {
+                return;
+            }
+
+            imageUrl = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ImageUrl)));
+        }
+    }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
 
     [JsonPropertyName("video_url")]
     public string? VideoUrl { get; set; }

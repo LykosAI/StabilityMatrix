@@ -97,7 +97,17 @@ public class CivArchiveVersionReference
     public string Name { get; set; } = string.Empty;
 
     [JsonPropertyName("href")]
-    public string Href { get; set; } = string.Empty;
+    public string? HrefValue { get; set; }
+
+    [JsonPropertyName("url")]
+    public string? UrlValue { get; set; }
+
+    /// <summary>
+    /// Relative navigation URL for this version. The API emits this under either
+    /// <c>url</c> or <c>href</c> depending on the route, so accept both.
+    /// </summary>
+    [JsonIgnore]
+    public string Href => UrlValue ?? HrefValue ?? string.Empty;
 }
 
 public class CivArchiveModelVersion
@@ -156,6 +166,20 @@ public class CivArchiveModelVersion
     [JsonPropertyName("images")]
     public IReadOnlyList<CivArchiveModelImage> Images { get; set; } = [];
 
+    /// <summary>
+    /// URL of the first still image in the version's gallery, or null when the gallery is
+    /// empty or all-video. Used to backfill card thumbnails for search results the API
+    /// returns without an <c>image_url</c>.
+    /// </summary>
+    [JsonIgnore]
+    public string? PrimaryImageUrl =>
+        Images
+            .FirstOrDefault(i =>
+                !string.IsNullOrWhiteSpace(i.Url)
+                && !string.Equals(i.Type, "video", StringComparison.OrdinalIgnoreCase)
+            )
+            ?.Url;
+
     [JsonPropertyName("trigger")]
     public IReadOnlyList<string> Trigger { get; set; } = [];
 
@@ -169,7 +193,17 @@ public class CivArchiveModelVersion
     public string? PlatformUrl { get; set; }
 
     [JsonPropertyName("href")]
-    public string? Href { get; set; }
+    public string? HrefValue { get; set; }
+
+    [JsonPropertyName("url")]
+    public string? UrlValue { get; set; }
+
+    /// <summary>
+    /// Relative navigation URL for this version. The API emits this under either
+    /// <c>url</c> or <c>href</c> depending on the route, so accept both.
+    /// </summary>
+    [JsonIgnore]
+    public string? Href => UrlValue ?? HrefValue;
 
     [JsonPropertyName("mirrors")]
     public IReadOnlyList<CivArchiveVersionMirror> Mirrors { get; set; } = [];

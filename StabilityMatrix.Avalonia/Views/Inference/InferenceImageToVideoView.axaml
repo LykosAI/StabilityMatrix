@@ -64,7 +64,7 @@
                             x:Name="ImagePane"
                             Alignment="Left"
                             Id="ImagePane"
-                            Proportion="0.25">
+                            Proportion="0.45">
                             <Tool
                                 x:Name="ImageTool"
                                 Title="Image"
@@ -92,7 +92,7 @@
                             x:Name="PromptPane"
                             Alignment="Left"
                             Id="PromptPane"
-                            Proportion="0.25">
+                            Proportion="0.45">
                             <Tool
                                 x:Name="PromptTool"
                                 Title="Prompt"

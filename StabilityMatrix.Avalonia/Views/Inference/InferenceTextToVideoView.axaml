@@ -60,7 +60,7 @@
                             x:Name="PromptPane"
                             Alignment="Left"
                             Id="PromptPane"
-                            Proportion="0.25">
+                            Proportion="0.9">
                             <Tool
                                 x:Name="PromptTool"
                                 Title="Prompt"

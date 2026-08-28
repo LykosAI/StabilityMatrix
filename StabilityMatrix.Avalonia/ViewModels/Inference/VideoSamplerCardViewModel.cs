@@ -18,10 +18,10 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(SamplerCard))]
 [ManagedService]
-[RegisterTransient<WanSamplerCardViewModel>]
-public class WanSamplerCardViewModel : SamplerCardViewModel
+[RegisterTransient<VideoSamplerCardViewModel>]
+public class VideoSamplerCardViewModel : SamplerCardViewModel
 {
-    public WanSamplerCardViewModel(
+    public VideoSamplerCardViewModel(
         IInferenceClientManager clientManager,
         IServiceManager<ViewModelBase> vmFactory,
         ISettingsManager settingsManager,

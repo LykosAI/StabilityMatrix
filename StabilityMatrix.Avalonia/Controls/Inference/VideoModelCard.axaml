@@ -5,13 +5,14 @@
     xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
     xmlns:fluent="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
     xmlns:inference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
+    xmlns:inferenceModels="clr-namespace:StabilityMatrix.Avalonia.Models.Inference"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
     xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
-    x:DataType="inference:WanModelCardViewModel">
+    x:DataType="inference:VideoModelCardViewModel">
     <Design.PreviewWith>
         <Panel Width="400" Height="400">
-            <controls:WanModelCard DataContext="{x:Static mocks:DesignData.WanModelCardViewModel}" />
+            <controls:VideoModelCard DataContext="{x:Static mocks:DesignData.VideoModelCardViewModel}" />
         </Panel>
     </Design.PreviewWith>
 
@@ -35,7 +36,7 @@
             Symbol="TableCellEdit" />
     </Styles.Resources>
 
-    <Style Selector="controls|WanModelCard">
+    <Style Selector="controls|VideoModelCard">
         <Setter Property="HorizontalAlignment" Value="Stretch" />
         <Setter Property="Template">
             <ControlTemplate>
@@ -79,14 +80,18 @@
                                                 IsEnabled="{Binding HasRecommendedDefaults}"
                                                 Text="Apply recommended settings"
                                                 ToolTip.Tip="{Binding RecommendedDefaultsToolTip}" />
-                                            <ui:MenuFlyoutSeparator />
+                                            <ui:MenuFlyoutSeparator IsVisible="{Binding ShowMoeExpertControls}" />
                                             <ui:ToggleMenuFlyoutItem
                                                 IconSource="{StaticResource IconCube}"
                                                 IsChecked="{Binding IsLowNoiseModelEnabled}"
+                                                IsVisible="{Binding ShowMoeExpertControls}"
                                                 Text="Dual expert (high / low noise)"
                                                 ToolTip.Tip="Wan 2.2 14B MoE: run a high-noise expert then hand off to a low-noise expert for a two-pass generation." />
-                                            <ui:MenuFlyoutSeparator />
-                                            <ui:MenuFlyoutSubItem Text="5B TI2V Latent" ToolTip.Tip="The Wan 2.2 5B model needs a different empty latent than the 14B / 2.1 models. Auto picks it from the selected model name; override if a renamed file is guessed wrong.">
+                                            <ui:MenuFlyoutSeparator IsVisible="{Binding ShowLatentSourceMenu}" />
+                                            <ui:MenuFlyoutSubItem
+                                                IsVisible="{Binding ShowLatentSourceMenu}"
+                                                Text="5B TI2V Latent"
+                                                ToolTip.Tip="The Wan 2.2 5B model needs a different empty latent than the 14B / 2.1 models. Auto picks it from the selected model name; override if a renamed file is guessed wrong.">
                                                 <ui:RadioMenuFlyoutItem
                                                     GroupName="WanLatentSource"
                                                     IsChecked="{Binding LatentSourceMode, Converter={StaticResource EnumBoolConverter}, ConverterParameter={x:Static inference:WanLatentSourceMode.Auto}}"
@@ -106,6 +111,42 @@
                             </StackPanel>
                         </Grid>
 
+                        <!--  Workflow profile (model family)  -->
+                        <Grid
+                            Margin="0,8,0,0"
+                            ColumnDefinitions="90,*"
+                            ColumnSpacing="4">
+                            <TextBlock
+                                Grid.Column="0"
+                                VerticalAlignment="Center"
+                                Text="Workflow"
+                                TextAlignment="Left"
+                                ToolTip.Tip="The model family this tab generates with. Auto detects it from the selected model." />
+                            <controls:BetterComboBox
+                                Grid.Column="1"
+                                Padding="8,6,4,6"
+                                HorizontalAlignment="Stretch"
+                                ItemsSource="{Binding WorkflowProfiles}"
+                                SelectedItem="{Binding SelectedWorkflowProfile}">
+                                <controls:BetterComboBox.ItemTemplate>
+                                    <DataTemplate x:DataType="inferenceModels:VideoWorkflowProfile">
+                                        <TextBlock Text="{Binding DisplayName}" />
+                                    </DataTemplate>
+                                </controls:BetterComboBox.ItemTemplate>
+                                <controls:BetterComboBox.SelectionBoxItemTemplate>
+                                    <DataTemplate x:DataType="inferenceModels:VideoWorkflowProfile">
+                                        <TextBlock Text="{Binding DisplayName}" />
+                                    </DataTemplate>
+                                </controls:BetterComboBox.SelectionBoxItemTemplate>
+                            </controls:BetterComboBox>
+                        </Grid>
+                        <TextBlock
+                            Margin="94,4,0,0"
+                            FontSize="11"
+                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                            IsVisible="{Binding ShowWorkflowProfileStatus}"
+                            Text="{Binding WorkflowProfileStatusText}" />
+
                         <!--  Nudge: selected model looks like a 14B MoE expert, offer to enable the pair  -->
                         <controls:SmolInfoBar
                             Margin="0,8,0,0"
@@ -121,7 +162,7 @@
                             Margin="0,8,0,0"
                             ColumnDefinitions="90,*,Auto"
                             ColumnSpacing="4"
-                            IsVisible="{Binding IsLowNoiseModelEnabled}">
+                            IsVisible="{Binding ShowLowNoiseSections}">
                             <TextBlock
                                 Grid.Column="0"
                                 VerticalAlignment="Center"
@@ -149,7 +190,7 @@
                             Margin="0,8,0,0"
                             ColumnDefinitions="90,*"
                             ColumnSpacing="4"
-                            IsVisible="{Binding IsLowNoiseModelEnabled}">
+                            IsVisible="{Binding ShowLowNoiseSections}">
                             <TextBlock
                                 Grid.Column="0"
                                 VerticalAlignment="Center"
@@ -198,7 +239,7 @@
                                         VerticalAlignment="Center"
                                         Text="{x:Static lang:Resources.Label_VAE}"
                                         TextAlignment="Left"
-                                        ToolTip.Tip="Decodes the generated latents into the final video frames. Use the VAE that matches your model (e.g. the Wan VAE)." />
+                                        ToolTip.Tip="Decodes the generated latents into the final video frames. Use the VAE that matches your model family." />
                                     <ui:FAComboBox
                                         Grid.Column="1"
                                         HorizontalAlignment="Stretch"
@@ -222,7 +263,7 @@
                                         VerticalAlignment="Center"
                                         Text="Text Encoder"
                                         TextAlignment="Left"
-                                        ToolTip.Tip="Turns your prompt text into conditioning the model understands (the Wan UMT5 text encoder)." />
+                                        ToolTip.Tip="Turns your prompt text into conditioning the model understands. Use the text encoder that matches your model family." />
                                     <controls:BetterDownloadableComboBox
                                         Grid.Column="1"
                                         Padding="8,6,4,6"
@@ -265,8 +306,11 @@
                                     </Button>
                                 </Grid>
 
-                                <!--  Shift  -->
-                                <Grid ColumnDefinitions="90,*" ColumnSpacing="4">
+                                <!--  Shift (families that sample via ModelSamplingSD3)  -->
+                                <Grid
+                                    ColumnDefinitions="90,*"
+                                    ColumnSpacing="4"
+                                    IsVisible="{Binding ShowShiftControl}">
                                     <TextBlock
                                         Grid.Column="0"
                                         VerticalAlignment="Center"
@@ -288,7 +332,7 @@
                         <controls:StackEditableCard Margin="0,8,0,0" DataContext="{Binding ExtraNetworksStackCardViewModel}" />
 
                         <!--  Low-Noise LoRAs (low-noise expert, Wan 2.2 14B)  -->
-                        <Panel IsVisible="{Binding IsLowNoiseModelEnabled}">
+                        <Panel IsVisible="{Binding ShowLowNoiseSections}">
                             <controls:StackEditableCard Margin="0,8,0,0" DataContext="{Binding LowNoiseExtraNetworksStackCardViewModel}" />
                         </Panel>
                     </StackPanel>

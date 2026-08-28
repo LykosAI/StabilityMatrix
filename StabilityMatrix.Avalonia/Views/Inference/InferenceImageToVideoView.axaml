@@ -1,21 +1,19 @@
-﻿<dock:DockUserControlBase
+﻿<controls:UserControlBase
     x:Class="StabilityMatrix.Avalonia.Views.Inference.InferenceImageToVideoView"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:dock="clr-namespace:StabilityMatrix.Avalonia.Controls.Dock"
-    xmlns:gif="clr-namespace:Avalonia.Gif;assembly=Avalonia.Gif"
+    xmlns:inference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
-    xmlns:vmInference="using:StabilityMatrix.Avalonia.ViewModels.Inference"
+    xmlns:system="clr-namespace:System;assembly=System.Runtime"
+    xmlns:ui="using:FluentAvalonia.UI.Controls"
     d:DataContext="{x:Static mocks:DesignData.InferenceImageToVideoViewModel}"
-    d:DesignHeight="800"
-    d:DesignWidth="1000"
-    x:DataType="vmInference:InferenceImageToVideoViewModel"
-    Focusable="True"
+    d:DesignHeight="750"
+    d:DesignWidth="1100"
+    x:DataType="inference:InferenceImageToVideoViewModel"
     mc:Ignorable="d">
-
     <Grid Margin="2,0,2,8">
         <DockControl
             x:Name="Dock"
@@ -35,97 +33,132 @@
                     x:Name="MainLayout"
                     Id="MainLayout"
                     Orientation="Horizontal">
+
                     <!--  Left Pane  -->
-                    <ProportionalDock Orientation="Vertical" Proportion="0.3">
-                        <ToolDock
-                            x:Name="SelectImagePane"
-                            Alignment="Left"
-                            Id="SelectImagePane"
-                            Proportion="0.3">
-                            <Tool
-                                x:Name="SelectImageTool"
-                                Title="Image Input"
-                                x:DataType="Tool"
-                                CanClose="False"
-                                Id="SelectImageTool">
-                                <controls:SelectImageCard DataContext="{Binding #Dock.((vmInference:InferenceImageToVideoViewModel)DataContext).SelectImageCardViewModel}" />
-                            </Tool>
-                        </ToolDock>
-                        <ToolDock
-                            x:Name="ConfigPane"
-                            Alignment="Left"
-                            Id="ConfigPane"
-                            Proportion="0.6">
-                            <Tool
-                                x:Name="ConfigTool"
-                                Title="Config"
-                                x:DataType="Tool"
-                                CanClose="False"
-                                Id="ConfigTool">
-                                <controls:StackCard DataContext="{ReflectionBinding ElementName=Dock, Path=DataContext.StackCardViewModel}" Opacity="1" />
-                            </Tool>
-                        </ToolDock>
-                    </ProportionalDock>
+                    <ToolDock
+                        x:Name="ConfigPane"
+                        Alignment="Left"
+                        Id="ConfigPane"
+                        Proportion="0.2">
+                        <Tool
+                            x:Name="ConfigTool"
+                            Title="Config"
+                            x:DataType="Tool"
+                            CanClose="False"
+                            Id="ConfigTool">
+                            <controls:StackCard DataContext="{ReflectionBinding ElementName=Dock, Path=DataContext.StackCardViewModel}" Opacity="1" />
+                        </Tool>
+                    </ToolDock>
+
                     <ProportionalDockSplitter x:Name="Splitter1" Id="Splitter1" />
 
-                    <!--  Middle Pane  -->
-                    <ProportionalDock Orientation="Vertical" Proportion="0.5">
+                    <!--  Prompt Pane  -->
+                    <ProportionalDock
+                        x:Name="CenterProportionalDock"
+                        Id="CenterProportionalDock"
+                        Orientation="Vertical">
+
+                        <!--  Center Top (Image)  -->
+
                         <ToolDock
-                            x:Name="ImageGalleryPane"
-                            Alignment="Right"
-                            Id="ImageGalleryPane"
-                            Proportion="0.9">
+                            x:Name="ImagePane"
+                            Alignment="Left"
+                            Id="ImagePane"
+                            Proportion="0.25">
                             <Tool
-                                x:Name="ImageGalleryTool"
-                                Title="Image Output"
+                                x:Name="ImageTool"
+                                Title="Image"
                                 x:DataType="Tool"
                                 CanClose="False"
-                                Id="ImageGalleryTool">
+                                Id="ImageTool">
 
-                                <Grid x:CompileBindings="False" DataContext="{Binding ElementName=Dock, Path=DataContext}">
-                                    <controls:ImageGalleryCard Grid.Row="0" DataContext="{Binding ImageGalleryCardViewModel}" />
+                                <!--  Prompt and buttons  -->
+                                <Grid
+                                    x:CompileBindings="False"
+                                    DataContext="{Binding ElementName=Dock, Path=DataContext}"
+                                    Opacity="1"
+                                    RowDefinitions="*">
+                                    <!--  Prompt card  -->
+                                    <controls:SelectImageCard x:CompileBindings="False" DataContext="{Binding SelectImageCardViewModel}" />
+                                </Grid>
 
-                                    <StackPanel
-                                        Margin="2,1,2,4"
-                                        VerticalAlignment="Top"
-                                        DataContext="{Binding OutputProgress}"
-                                        Spacing="4">
-                                        <ProgressBar
-                                            IsIndeterminate="{Binding IsIndeterminate}"
-                                            IsVisible="{Binding IsProgressVisible}"
-                                            Maximum="{Binding Maximum}"
-                                            Value="{Binding Value}" />
+                            </Tool>
+                        </ToolDock>
 
-                                        <TextBlock
-                                            Margin="0,10,0,0"
-                                            IsVisible="{Binding IsTextVisible}"
-                                            Text="{Binding Text}"
-                                            TextAlignment="Center" />
+                        <ProportionalDockSplitter />
+
+                        <!--  Center Bottom (Prompt)  -->
+                        <ToolDock
+                            x:Name="PromptPane"
+                            Alignment="Left"
+                            Id="PromptPane"
+                            Proportion="0.25">
+                            <Tool
+                                x:Name="PromptTool"
+                                Title="Prompt"
+                                x:DataType="Tool"
+                                CanClose="False"
+                                Id="PromptTool">
+
+                                <!--  Prompt and buttons  -->
+                                <Grid
+                                    x:CompileBindings="False"
+                                    DataContext="{Binding ElementName=Dock, Path=DataContext}"
+                                    Opacity="1"
+                                    RowDefinitions="*,Auto,Auto">
+                                    <!--  Prompt card  -->
+                                    <controls:PromptCard DataContext="{Binding PromptCardViewModel}" />
+
+                                    <!--  Generate Buttons  -->
+                                    <StackPanel Grid.Row="2" Margin="0,6,0,0">
+                                        <controls:GenerateButtonBar ShowCurrentSeedButton="True" ShowHiresFixButton="True" />
                                     </StackPanel>
                                 </Grid>
+
                             </Tool>
                         </ToolDock>
-                        <ToolDock
-                            x:Name="GeneratePane"
-                            Alignment="Top"
-                            Id="GeneratePane"
-                            Proportion="0.1">
-                            <Tool
-                                x:Name="GenerateTool"
-                                Title="Generate"
-                                x:DataType="Tool"
-                                CanClose="False"
-                                Id="GenerateTool">
-                                <!--  Generate Buttons  -->
-                                <StackPanel
-                                    Margin="0,6,0,0"
-                                    x:CompileBindings="False"
-                                    DataContext="{Binding ElementName=Dock, Path=DataContext}">
-                                    <controls:GenerateButtonBar PillMaxWidth="360" ShowCurrentSeedButton="True" />
-                                </StackPanel>
-                            </Tool>
-                        </ToolDock>
+
                     </ProportionalDock>
+
+
+                    <ProportionalDockSplitter x:Name="Splitter2" Id="Splitter2" />
+
+                    <!--  Middle Right Pane  -->
+                    <ToolDock
+                        x:Name="ImageGalleryPane"
+                        Alignment="Right"
+                        Id="ImageGalleryPane"
+                        Proportion="0.35">
+                        <Tool
+                            x:Name="ImageGalleryTool"
+                            Title="Image Output"
+                            x:DataType="Tool"
+                            CanClose="False"
+                            Id="ImageGalleryTool">
+
+                            <Grid x:CompileBindings="False" DataContext="{Binding ElementName=Dock, Path=DataContext}">
+                                <controls:ImageGalleryCard Grid.Row="0" DataContext="{Binding ImageGalleryCardViewModel}" />
+
+                                <StackPanel
+                                    Margin="2,1,2,4"
+                                    VerticalAlignment="Top"
+                                    DataContext="{Binding OutputProgress}"
+                                    Spacing="4">
+                                    <ProgressBar
+                                        IsIndeterminate="{Binding IsIndeterminate}"
+                                        IsVisible="{Binding IsProgressVisible}"
+                                        Maximum="{Binding Maximum}"
+                                        Value="{Binding Value}" />
+
+                                    <TextBlock
+                                        Margin="0,10,0,0"
+                                        IsVisible="{Binding IsTextVisible}"
+                                        Text="{Binding Text}"
+                                        TextAlignment="Center" />
+                                </StackPanel>
+                            </Grid>
+                        </Tool>
+                    </ToolDock>
 
                     <ProportionalDockSplitter x:Name="Splitter3" Id="Splitter3" />
 
@@ -134,7 +167,7 @@
                         x:Name="ImageFolderPane"
                         Alignment="Right"
                         Id="ImageFolderPane"
-                        Proportion="0.2">
+                        Proportion="0.1">
                         <Tool
                             x:Name="ImageFolderTool"
                             Title="Gallery"
@@ -153,4 +186,4 @@
 
         </DockControl>
     </Grid>
-</dock:DockUserControlBase>
+</controls:UserControlBase>

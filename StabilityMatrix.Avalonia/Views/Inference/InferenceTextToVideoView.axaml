@@ -1,5 +1,5 @@
 ﻿<controls:UserControlBase
-    x:Class="StabilityMatrix.Avalonia.Views.Inference.InferenceWanTextToVideoView"
+    x:Class="StabilityMatrix.Avalonia.Views.Inference.InferenceTextToVideoView"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
@@ -7,10 +7,10 @@
     xmlns:inference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
-    d:DataContext="{x:Static mocks:DesignData.InferenceWanTextToVideoViewModel}"
+    d:DataContext="{x:Static mocks:DesignData.InferenceTextToVideoViewModel}"
     d:DesignHeight="750"
     d:DesignWidth="1100"
-    x:DataType="inference:InferenceWanTextToVideoViewModel"
+    x:DataType="inference:InferenceTextToVideoViewModel"
     mc:Ignorable="d">
     <Grid Margin="2,0,2,8">
         <DockControl

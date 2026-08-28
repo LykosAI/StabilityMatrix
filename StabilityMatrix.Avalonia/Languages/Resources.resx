@@ -801,11 +801,8 @@
   <data name="Label_Legacy" xml:space="preserve">
     <value>Legacy</value>
   </data>
-  <data name="Label_WanTextToVideo" xml:space="preserve">
-    <value>Wan Text to Video</value>
-  </data>
-  <data name="Label_WanImageToVideo" xml:space="preserve">
-    <value>Wan Image to Video</value>
+  <data name="Label_TextToVideo" xml:space="preserve">
+    <value>Text to Video</value>
   </data>
   <data name="Label_FluxTextToImage" xml:space="preserve">
     <value>Flux Text to Image</value>
@@ -822,11 +819,11 @@
   <data name="Label_UpscaleDescription" xml:space="preserve">
     <value>Increase the resolution of an image with an upscaling model.</value>
   </data>
-  <data name="Label_WanTextToVideoDescription" xml:space="preserve">
-    <value>Generate a video from a text prompt using Wan.</value>
+  <data name="Label_TextToVideoDescription" xml:space="preserve">
+    <value>Generate a video from a text prompt. Works with Wan 2.1 and 2.2.</value>
   </data>
-  <data name="Label_WanImageToVideoDescription" xml:space="preserve">
-    <value>Animate an input image into a video using Wan.</value>
+  <data name="Label_ImageToVideoDescription" xml:space="preserve">
+    <value>Animate an input image into a video. Works with Wan 2.1 and 2.2.</value>
   </data>
   <data name="Label_FluxTextToImageDescription" xml:space="preserve">
     <value>Standalone Flux text-to-image. The Text to Image tab also handles Flux automatically.</value>

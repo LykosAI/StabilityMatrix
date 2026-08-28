@@ -1,7 +1,13 @@
-﻿using System.Text.Json.Serialization;
-using DesktopNotifications;
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
+using System.Threading;
+using System.Threading.Tasks;
 using Injectio.Attributes;
-using StabilityMatrix.Avalonia.Extensions;
+using NLog;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
@@ -11,22 +17,28 @@ using StabilityMatrix.Avalonia.Views.Inference;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.Comfy;
-using StabilityMatrix.Core.Models.Settings;
+using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
-[View(typeof(InferenceWanTextToVideoView), IsPersistent = true)]
-[RegisterScoped<InferenceWanTextToVideoViewModel>, ManagedService]
-public class InferenceWanTextToVideoViewModel : InferenceGenerationViewModelBase, IParametersLoadableState
+[View(typeof(InferenceSvdImageToVideoView), persistent: true)]
+[ManagedService]
+[RegisterScoped<InferenceSvdImageToVideoViewModel>]
+public partial class InferenceSvdImageToVideoViewModel
+    : InferenceGenerationViewModelBase,
+        IParametersLoadableState
 {
+    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
     private readonly INotificationService notificationService;
+    private readonly IModelIndexService modelIndexService;
 
     [JsonIgnore]
     public StackCardViewModel StackCardViewModel { get; }
 
     [JsonPropertyName("Model")]
-    public WanModelCardViewModel ModelCardViewModel { get; }
+    public ImgToVidModelCardViewModel ModelCardViewModel { get; }
 
     [JsonPropertyName("Sampler")]
     public SamplerCardViewModel SamplerCardViewModel { get; }
@@ -37,17 +49,21 @@ public class InferenceWanTextToVideoViewModel : InferenceGenerationViewModelBase
     [JsonPropertyName("Seed")]
     public SeedCardViewModel SeedCardViewModel { get; }
 
-    [JsonPropertyName("Prompt")]
-    public PromptCardViewModel PromptCardViewModel { get; }
+    [JsonPropertyName("ImageLoader")]
+    public SelectImageCardViewModel SelectImageCardViewModel { get; }
+
+    [JsonPropertyName("Conditioning")]
+    public SvdImgToVidConditioningViewModel SvdImgToVidConditioningViewModel { get; }
 
     [JsonPropertyName("VideoOutput")]
     public VideoOutputSettingsCardViewModel VideoOutputSettingsCardViewModel { get; }
 
-    public InferenceWanTextToVideoViewModel(
-        IServiceManager<ViewModelBase> vmFactory,
-        IInferenceClientManager inferenceClientManager,
+    public InferenceSvdImageToVideoViewModel(
         INotificationService notificationService,
+        IInferenceClientManager inferenceClientManager,
         ISettingsManager settingsManager,
+        IServiceManager<ViewModelBase> vmFactory,
+        IModelIndexService modelIndexService,
         RunningPackageService runningPackageService,
         IPromptQueueService promptQueueService
     )
@@ -61,71 +77,45 @@ public class InferenceWanTextToVideoViewModel : InferenceGenerationViewModelBase
         )
     {
         this.notificationService = notificationService;
+        this.modelIndexService = modelIndexService;
+
+        // Get sub view models from service manager
+
         SeedCardViewModel = vmFactory.Get<SeedCardViewModel>();
         SeedCardViewModel.GenerateNewSeed();
 
-        ModelCardViewModel = vmFactory.Get<WanModelCardViewModel>();
-        ModelCardViewModel.RecommendedDefaultsRequested += ApplyRecommendedDefaults;
+        ModelCardViewModel = vmFactory.Get<ImgToVidModelCardViewModel>(vm =>
+            vm.EnableModelLoaderSelection = false
+        );
 
-        SamplerCardViewModel = vmFactory.Get<WanSamplerCardViewModel>(samplerCard =>
+        SamplerCardViewModel = vmFactory.Get<SamplerCardViewModel>(samplerCard =>
         {
             samplerCard.IsDimensionsEnabled = true;
             samplerCard.IsCfgScaleEnabled = true;
             samplerCard.IsSamplerSelectionEnabled = true;
             samplerCard.IsSchedulerSelectionEnabled = true;
-            samplerCard.DenoiseStrength = 1.0d;
-            samplerCard.EnableAddons = true;
-            samplerCard.IsLengthEnabled = true;
-            samplerCard.Width = 832;
-            samplerCard.Height = 480;
-            samplerCard.Length = 33;
+            samplerCard.CfgScale = 2.5d;
+            samplerCard.SelectedSampler = ComfySampler.Euler;
+            samplerCard.SelectedScheduler = ComfyScheduler.Karras;
+            samplerCard.IsDenoiseStrengthEnabled = true;
+            samplerCard.DenoiseStrength = 1.0f;
         });
-
-        PromptCardViewModel = AddDisposable(vmFactory.Get<PromptCardViewModel>());
 
         BatchSizeCardViewModel = vmFactory.Get<BatchSizeCardViewModel>();
 
-        VideoOutputSettingsCardViewModel = vmFactory.Get<VideoOutputSettingsCardViewModel>(vm =>
-            vm.Fps = 16.0d
-        );
+        SelectImageCardViewModel = vmFactory.Get<SelectImageCardViewModel>();
+        SvdImgToVidConditioningViewModel = vmFactory.Get<SvdImgToVidConditioningViewModel>();
+        VideoOutputSettingsCardViewModel = vmFactory.Get<VideoOutputSettingsCardViewModel>();
 
         StackCardViewModel = vmFactory.Get<StackCardViewModel>();
         StackCardViewModel.AddCards(
             ModelCardViewModel,
+            SvdImgToVidConditioningViewModel,
             SamplerCardViewModel,
             SeedCardViewModel,
-            BatchSizeCardViewModel,
-            VideoOutputSettingsCardViewModel
+            VideoOutputSettingsCardViewModel,
+            BatchSizeCardViewModel
         );
-    }
-
-    /// <summary>
-    /// Applies the recommended Wan settings when the model card's ✨ button is clicked. The KSampler
-    /// values match the native ComfyUI templates for both variants; only the resolution, frame count and
-    /// output fps differ between the 5B TI2V model (720p / 24 fps) and the 14B / 2.1 models (480p / 16 fps).
-    /// </summary>
-    private void ApplyRecommendedDefaults(bool isWan22FiveB)
-    {
-        SamplerCardViewModel.SelectedSampler = ComfySampler.UniPC;
-        SamplerCardViewModel.SelectedScheduler = ComfyScheduler.Simple;
-        SamplerCardViewModel.Steps = 20;
-        SamplerCardViewModel.CfgScale = 5.0d;
-        ModelCardViewModel.Shift = 8.0d;
-
-        if (isWan22FiveB)
-        {
-            SamplerCardViewModel.Width = 1280;
-            SamplerCardViewModel.Height = 704;
-            SamplerCardViewModel.Length = 121;
-            VideoOutputSettingsCardViewModel.Fps = 24.0d;
-        }
-        else
-        {
-            SamplerCardViewModel.Width = 832;
-            SamplerCardViewModel.Height = 480;
-            SamplerCardViewModel.Length = 81;
-            VideoOutputSettingsCardViewModel.Fps = 16.0d;
-        }
     }
 
     /// <inheritdoc />
@@ -133,7 +123,6 @@ public class InferenceWanTextToVideoViewModel : InferenceGenerationViewModelBase
     {
         base.BuildPrompt(args);
 
-        var applyArgs = args.ToModuleApplyStepEventArgs();
         var builder = args.Builder;
 
         builder.Connections.Seed = args.SeedOverride switch
@@ -142,30 +131,42 @@ public class InferenceWanTextToVideoViewModel : InferenceGenerationViewModelBase
             _ => Convert.ToUInt64(SeedCardViewModel.Seed),
         };
 
-        // Load models (also wires the VAE used by the Wan 2.2 5B latent below)
-        ModelCardViewModel.ApplyStep(applyArgs);
+        // Load models
+        ModelCardViewModel.ApplyStep(args);
 
-        // The 5B TI2V model uses a different VAE (48-channel / 16x) than the 14B / Wan 2.1 models,
-        // so its empty latent must come from Wan22ImageToVideoLatent instead of EmptyHunyuanLatentVideo.
-        builder.SetupEmptyLatentSource(
-            SamplerCardViewModel.Width,
-            SamplerCardViewModel.Height,
-            BatchSizeCardViewModel.BatchSize,
-            BatchSizeCardViewModel.IsBatchIndexEnabled ? BatchSizeCardViewModel.BatchIndex : null,
-            SamplerCardViewModel.Length,
-            ModelCardViewModel.UseWan22FiveBLatent ? LatentType.Wan22 : LatentType.Hunyuan
+        // Setup latent from image
+        var imageLoad = builder.Nodes.AddTypedNode(
+            new ComfyNodeBuilder.LoadImage
+            {
+                Name = builder.Nodes.GetUniqueName("ControlNet_LoadImage"),
+                Image =
+                    SelectImageCardViewModel.ImageSource?.GetHashGuidFileNameCached("Inference")
+                    ?? throw new ValidationException(),
+            }
         );
+        builder.Connections.Primary = imageLoad.Output1;
+        builder.Connections.PrimarySize = SelectImageCardViewModel.CurrentBitmapSize;
 
-        BatchSizeCardViewModel.ApplyStep(applyArgs);
+        // Setup img2vid stuff
+        // Set width & height from SamplerCard
+        SvdImgToVidConditioningViewModel.Width = SamplerCardViewModel.Width;
+        SvdImgToVidConditioningViewModel.Height = SamplerCardViewModel.Height;
+        SvdImgToVidConditioningViewModel.ApplyStep(args);
 
-        PromptCardViewModel.ApplyStep(applyArgs);
-
-        SamplerCardViewModel.ApplyStep(applyArgs);
-
-        applyArgs.InvokeAllPreOutputActions();
+        // Setup Sampler and Refiner if enabled
+        SamplerCardViewModel.ApplyStep(args);
 
         // Animated webp output
-        VideoOutputSettingsCardViewModel.ApplyStep(applyArgs);
+        VideoOutputSettingsCardViewModel.ApplyStep(args);
+    }
+
+    /// <inheritdoc />
+    protected override IEnumerable<ImageSource> GetInputImages()
+    {
+        if (SelectImageCardViewModel.ImageSource is { } image)
+        {
+            yield return image;
+        }
     }
 
     /// <inheritdoc />
@@ -231,24 +232,6 @@ public class InferenceWanTextToVideoViewModel : InferenceGenerationViewModelBase
         {
             await RunGeneration(args, cancellationToken);
         }
-
-        // Only show batch notification when there's more than one item
-        // (single items already get a "Prompt Completed" notification)
-        if (batches > 1)
-        {
-            await notificationService.ShowAsync(
-                NotificationKey.Inference_BatchCompleted,
-                new Notification
-                {
-                    Title = "Batch Completed",
-                    Body =
-                        $"Batch of {batches} items [{Guid.NewGuid().ToString()[..7].ToLower()}] completed successfully",
-                    BodyImagePath = ImageGalleryCardViewModel
-                        .ImageSources.LastOrDefault()
-                        ?.LocalFile?.FullPath,
-                }
-            );
-        }
     }
 
     /// <inheritdoc />
@@ -256,8 +239,9 @@ public class InferenceWanTextToVideoViewModel : InferenceGenerationViewModelBase
     {
         SamplerCardViewModel.LoadStateFromParameters(parameters);
         ModelCardViewModel.LoadStateFromParameters(parameters);
-        PromptCardViewModel.LoadStateFromParameters(parameters);
+        SvdImgToVidConditioningViewModel.LoadStateFromParameters(parameters);
         VideoOutputSettingsCardViewModel.LoadStateFromParameters(parameters);
+
         SeedCardViewModel.Seed = Convert.ToInt64(parameters.Seed);
     }
 
@@ -266,11 +250,20 @@ public class InferenceWanTextToVideoViewModel : InferenceGenerationViewModelBase
     {
         parameters = SamplerCardViewModel.SaveStateToParameters(parameters);
         parameters = ModelCardViewModel.SaveStateToParameters(parameters);
-        parameters = PromptCardViewModel.SaveStateToParameters(parameters);
+        parameters = SvdImgToVidConditioningViewModel.SaveStateToParameters(parameters);
         parameters = VideoOutputSettingsCardViewModel.SaveStateToParameters(parameters);
 
         parameters.Seed = (ulong)SeedCardViewModel.Seed;
 
         return parameters;
+    }
+
+    // Migration for v2 deserialization
+    public override void LoadStateFromJsonObject(JsonObject state, int version)
+    {
+        if (version > 2)
+        {
+            LoadStateFromJsonObject(state);
+        }
     }
 }

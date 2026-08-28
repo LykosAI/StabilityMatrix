@@ -20,10 +20,10 @@ public static class InferenceProjectTypeExtensions
             InferenceProjectType.ImageToImage => typeof(InferenceImageToImageViewModel),
             InferenceProjectType.Inpainting => null,
             InferenceProjectType.Upscale => typeof(InferenceImageUpscaleViewModel),
-            InferenceProjectType.ImageToVideo => typeof(InferenceImageToVideoViewModel),
+            InferenceProjectType.ImageToVideo => typeof(InferenceSvdImageToVideoViewModel),
             InferenceProjectType.FluxTextToImage => typeof(InferenceFluxTextToImageViewModel),
-            InferenceProjectType.WanTextToVideo => typeof(InferenceWanTextToVideoViewModel),
-            InferenceProjectType.WanImageToVideo => typeof(InferenceWanImageToVideoViewModel),
+            InferenceProjectType.WanTextToVideo => typeof(InferenceTextToVideoViewModel),
+            InferenceProjectType.WanImageToVideo => typeof(InferenceImageToVideoViewModel),
             InferenceProjectType.Unknown => null,
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, null),
         };
@@ -41,9 +41,9 @@ public static class InferenceProjectTypeExtensions
             InferenceFluxTextToImageViewModel => InferenceProjectType.FluxTextToImage,
             InferenceTextToImageViewModel => InferenceProjectType.TextToImage,
             InferenceImageUpscaleViewModel => InferenceProjectType.Upscale,
-            InferenceImageToVideoViewModel => InferenceProjectType.ImageToVideo,
-            InferenceWanImageToVideoViewModel => InferenceProjectType.WanImageToVideo,
-            InferenceWanTextToVideoViewModel => InferenceProjectType.WanTextToVideo,
+            InferenceSvdImageToVideoViewModel => InferenceProjectType.ImageToVideo,
+            InferenceImageToVideoViewModel => InferenceProjectType.WanImageToVideo,
+            InferenceTextToVideoViewModel => InferenceProjectType.WanTextToVideo,
             _ => InferenceProjectType.Unknown,
         };
     }
@@ -82,17 +82,17 @@ public static class InferenceProjectTypeExtensions
             new()
             {
                 Type = InferenceProjectType.WanTextToVideo,
-                DisplayName = Resources.Label_WanTextToVideo,
+                DisplayName = Resources.Label_TextToVideo,
                 Icon = Symbol.Video,
-                Description = Resources.Label_WanTextToVideoDescription,
+                Description = Resources.Label_TextToVideoDescription,
                 Category = InferenceProjectCategory.Video,
             },
             new()
             {
                 Type = InferenceProjectType.WanImageToVideo,
-                DisplayName = Resources.Label_WanImageToVideo,
+                DisplayName = Resources.Label_ImageToVideo,
                 Icon = Symbol.VideoAdd,
-                Description = Resources.Label_WanImageToVideoDescription,
+                Description = Resources.Label_ImageToVideoDescription,
                 Category = InferenceProjectCategory.Video,
             },
             new()

@@ -4283,20 +4283,11 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Wan Text to Video.
+        ///   Looks up a localized string similar to Text to Video.
         /// </summary>
-        public static string Label_WanTextToVideo {
+        public static string Label_TextToVideo {
             get {
-                return ResourceManager.GetString("Label_WanTextToVideo", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to Wan Image to Video.
-        /// </summary>
-        public static string Label_WanImageToVideo {
-            get {
-                return ResourceManager.GetString("Label_WanImageToVideo", resourceCulture);
+                return ResourceManager.GetString("Label_TextToVideo", resourceCulture);
             }
         }
 
@@ -4346,20 +4337,20 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Generate a video from a text prompt using Wan.
+        ///   Looks up a localized string similar to Generate a video from a text prompt. Works with Wan 2.1 and 2.2..
         /// </summary>
-        public static string Label_WanTextToVideoDescription {
+        public static string Label_TextToVideoDescription {
             get {
-                return ResourceManager.GetString("Label_WanTextToVideoDescription", resourceCulture);
+                return ResourceManager.GetString("Label_TextToVideoDescription", resourceCulture);
             }
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Animate an input image into a video using Wan.
+        ///   Looks up a localized string similar to Animate an input image into a video. Works with Wan 2.1 and 2.2..
         /// </summary>
-        public static string Label_WanImageToVideoDescription {
+        public static string Label_ImageToVideoDescription {
             get {
-                return ResourceManager.GetString("Label_WanImageToVideoDescription", resourceCulture);
+                return ResourceManager.GetString("Label_ImageToVideoDescription", resourceCulture);
             }
         }
 

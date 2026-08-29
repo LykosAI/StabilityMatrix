@@ -1295,7 +1295,7 @@ The gallery images are often inpainted, but you will get something very similar 
         get
         {
             var vm = Services.GetRequiredService<InstalledWorkflowsViewModel>();
-            vm.DisplayedWorkflows = new ObservableCollectionExtended<OpenArtMetadata>
+            vm.DisplayedWorkflows = new ObservableCollectionExtended<InstalledWorkflow>
             {
                 new()
                 {
@@ -1601,60 +1601,6 @@ The gallery images are often inpainted, but you will get something very similar 
 
     public static SponsorshipPromptViewModel SponsorshipPromptViewModel =>
         DialogFactory.Get<SponsorshipPromptViewModel>(vm => { });
-
-    public static OpenArtWorkflowViewModel OpenArtWorkflowViewModel =>
-        new(Services.GetRequiredService<ISettingsManager>(), Services.GetRequiredService<IPackageFactory>())
-        {
-            Workflow = new OpenArtSearchResult
-            {
-                Name = "Test Workflow",
-                Creator = new OpenArtCreator
-                {
-                    Name = "Test Creator Name",
-                    Username = "Test Creator Username",
-                },
-                Thumbnails =
-                [
-                    new OpenArtThumbnail
-                    {
-                        Url = new Uri(
-                            "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/a318ac1f-3ad0-48ac-98cc-79126febcc17/width=1500"
-                        ),
-                    },
-                ],
-                NodesIndex =
-                [
-                    "Anything Everywhere",
-                    "Reroute",
-                    "Note",
-                    ".",
-                    "ComfyUI's ControlNet Auxiliary Preprocessors",
-                    "DWPreprocessor",
-                    "PixelPerfectResolution",
-                    "AIO_Preprocessor",
-                    ",",
-                    "ComfyUI",
-                    "PreviewImage",
-                    "CLIPTextEncode",
-                    "EmptyLatentImage",
-                    "SplitImageWithAlpha",
-                    "ControlNetApplyAdvanced",
-                    "JoinImageWithAlpha",
-                    "LatentUpscaleBy",
-                    "VAEEncode",
-                    "LoadImage",
-                    "ControlNetLoader",
-                    "CLIPVisionLoader",
-                    "SaveImage",
-                    ",",
-                    "ComfyUI Impact Pack",
-                    "SAMLoader",
-                    "UltralyticsDetectorProvider",
-                    "FaceDetailer",
-                    ",",
-                ],
-            },
-        };
 
     public static SafetensorMetadataViewModel SafetensorMetadataViewModel =>
         DialogFactory.Get<SafetensorMetadataViewModel>(vm =>

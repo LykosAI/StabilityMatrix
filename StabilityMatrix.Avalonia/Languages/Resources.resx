@@ -1038,6 +1038,24 @@
   <data name="Label_NodeDetails" xml:space="preserve">
     <value>Node Details</value>
   </data>
+  <data name="Label_RequiredCustomNodes" xml:space="preserve">
+    <value>Required Custom Nodes</value>
+  </data>
+  <data name="Label_NotInExtensionIndex" xml:space="preserve">
+    <value>Not found in extension index</value>
+  </data>
+  <data name="Action_InstallSelected" xml:space="preserve">
+    <value>Install Selected</value>
+  </data>
+  <data name="Label_NoCustomNodesRequired" xml:space="preserve">
+    <value>This workflow only uses built-in nodes</value>
+  </data>
+  <data name="Text_WorkflowNodesExplanation" xml:space="preserve">
+    <value>This workflow uses the node packs below. Missing packs can be installed from the extension index, like extensions from the package's Extensions tab.</value>
+  </data>
+  <data name="Label_WorkflowNodesTargetPackage" xml:space="preserve">
+    <value>ComfyUI installation to check against and install into</value>
+  </data>
   <data name="Label_WorkflowDescription" xml:space="preserve">
     <value>Workflow Description</value>
   </data>

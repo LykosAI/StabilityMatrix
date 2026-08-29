@@ -862,7 +862,7 @@ public class ComfyNodeBuilder
 
     [TypedNodeOptions(
         Name = "Inference_Core_LayeredDiffusionApply",
-        RequiredExtensions = ["https://github.com/LykosAI/ComfyUI-Inference-Core-Nodes >= 0.4.0"]
+        RequiredExtensions = ["https://github.com/LykosAI/ComfyUI-Inference-Core-Nodes >= 0.5.2"]
     )]
     public record LayeredDiffusionApply : ComfyTypedNodeBase<ModelNodeConnection>
     {
@@ -882,7 +882,7 @@ public class ComfyNodeBuilder
 
     [TypedNodeOptions(
         Name = "Inference_Core_LayeredDiffusionDecodeRGBA",
-        RequiredExtensions = ["https://github.com/LykosAI/ComfyUI-Inference-Core-Nodes >= 0.4.0"]
+        RequiredExtensions = ["https://github.com/LykosAI/ComfyUI-Inference-Core-Nodes >= 0.5.2"]
     )]
     public record LayeredDiffusionDecodeRgba : ComfyTypedNodeBase<ImageNodeConnection>
     {

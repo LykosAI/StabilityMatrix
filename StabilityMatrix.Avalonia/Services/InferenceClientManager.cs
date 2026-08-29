@@ -349,14 +349,23 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             // when the selection model tries to enumerate selected items.
             Dispatcher.UIThread.Post(() =>
             {
-                ResetSharedProperties();
-
-                if (IsConnected)
+                // Guarded: an exception here is otherwise unhandled on the Dispatcher and
+                // crashes the app.
+                try
                 {
-                    LoadSharedPropertiesAsync()
-                        .SafeFireAndForget(onException: ex =>
-                            logger.LogError(ex, "Error loading shared properties")
-                        );
+                    ResetSharedProperties();
+
+                    if (IsConnected)
+                    {
+                        LoadSharedPropertiesAsync()
+                            .SafeFireAndForget(onException: ex =>
+                                logger.LogError(ex, "Error loading shared properties")
+                            );
+                    }
+                }
+                catch (Exception e)
+                {
+                    logger.LogError(e, "Error resetting shared properties for Inference");
                 }
             });
         };

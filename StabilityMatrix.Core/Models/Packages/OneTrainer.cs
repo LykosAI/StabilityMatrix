@@ -84,7 +84,6 @@ public class OneTrainer(
             .ConfigureAwait(false);
 
         var torchVersion = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
-        var pyVersion = options.PythonOptions.PythonVersion ?? RecommendedPythonVersion;
 
         // Windows ROCm path
         var isWindowsRocm =
@@ -120,7 +119,9 @@ public class OneTrainer(
                 .InstallWindowsNativeTorchAsync(
                     venvRunner,
                     installedPackage,
-                    OneTrainerWindowsRocmProfile.CreateInstallProfile(pyVersion),
+                    OneTrainerWindowsRocmProfile.CreateInstallProfile(
+                        options.PythonOptions.PythonVersion ?? RecommendedPythonVersion
+                    ),
                     progress,
                     onConsoleOutput,
                     cancellationToken
@@ -195,7 +196,13 @@ public class OneTrainer(
     private IReadOnlyList<string> GetLaunchNoticeLines(InstalledPackage installedPackage)
     {
         var selectedTorchIndex = installedPackage.PreferredTorchIndex ?? GetRecommendedTorchVersion();
-        return rocmPackageHelper.GetWindowsLaunchNoticeLines(selectedTorchIndex);
+
+        if (!rocmPackageHelper.ShouldApplyWindowsLaunchEnvironment(selectedTorchIndex))
+        {
+            return [];
+        }
+
+        return [.. rocmPackageHelper.GetWindowsLaunchNoticeLines(selectedTorchIndex)];
     }
 
     public override List<LaunchOptionDefinition> LaunchOptions => [LaunchOptionDefinition.Extras];

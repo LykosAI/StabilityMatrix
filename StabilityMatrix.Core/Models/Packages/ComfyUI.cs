@@ -226,6 +226,46 @@ public class ComfyUI(
     public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>
         new() { [SharedOutputType.Text2Img] = ["output"] };
 
+    public override async Task SetupModelFolders(
+        DirectoryPath installDirectory,
+        SharedFolderMethod sharedFolderMethod
+    )
+    {
+        await base.SetupModelFolders(installDirectory, sharedFolderMethod).ConfigureAwait(false);
+
+        if (sharedFolderMethod is SharedFolderMethod.None)
+            return;
+
+        // Link the shared workflow library into ComfyUI's own workflow browser
+        var linkDir = GetSharedWorkflowsLinkDir(installDirectory);
+        linkDir.Parent?.Create();
+
+        await Helper
+            .SharedFolders.CreateOrUpdateLink(settingsManager.WorkflowDirectory, linkDir)
+            .ConfigureAwait(false);
+    }
+
+    public override async Task RemoveModelFolderLinks(
+        DirectoryPath installDirectory,
+        SharedFolderMethod sharedFolderMethod
+    )
+    {
+        await base.RemoveModelFolderLinks(installDirectory, sharedFolderMethod).ConfigureAwait(false);
+
+        var linkDir = GetSharedWorkflowsLinkDir(installDirectory);
+        if (linkDir.IsSymbolicLink)
+        {
+            await linkDir.DeleteAsync(false).ConfigureAwait(false);
+        }
+    }
+
+    /// <summary>
+    /// The "Stability Matrix" folder inside ComfyUI's default user workflows directory,
+    /// linked to the shared workflow library.
+    /// </summary>
+    private static DirectoryPath GetSharedWorkflowsLinkDir(DirectoryPath installDirectory) =>
+        installDirectory.JoinDir("user", "default", "workflows", "Stability Matrix");
+
     public override List<LaunchOptionDefinition> LaunchOptions =>
         [
             new()
@@ -604,56 +644,9 @@ public class ComfyUI(
         VenvRunner.UpdateEnvironmentVariables(env => env.Remove("UV_BUILD_CONSTRAINT"));
 
         // Check for old NVIDIA driver version with cu130 installations
-        var isNvidia = SettingsManager.Settings.PreferredGpu?.IsNvidia ?? HardwareHelper.HasNvidiaGpu();
-        var isLegacyNvidia =
-            SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu() ?? HardwareHelper.HasLegacyNvidiaGpu();
-
-        if (isNvidia && !isLegacyNvidia)
+        if (await WarnIfNvidiaDriverBelowCu130MinimumAsync(VenvRunner, onConsoleOutput).ConfigureAwait(false))
         {
-            var driverVersion = HardwareHelper.GetNvidiaDriverVersion();
-            if (driverVersion is not null && driverVersion.Major < 580)
-            {
-                // Check if torch is installed with cu130 index
-                var torchInfo = await VenvRunner.PipShow("torch").ConfigureAwait(false);
-                if (torchInfo is not null)
-                {
-                    var version = torchInfo.Version;
-                    var plusPos = version.IndexOf('+');
-                    var torchIndex = plusPos >= 0 ? version[(plusPos + 1)..] : string.Empty;
-
-                    // Only warn if using cu130 (which requires driver 580+)
-                    if (torchIndex.Equals("cu130", StringComparison.OrdinalIgnoreCase))
-                    {
-                        var warningMessage = $"""
-
-                            ============================================================
-                                            NVIDIA DRIVER WARNING
-                            ============================================================
-
-                            Your NVIDIA driver version ({driverVersion}) is older than
-                            the minimum required version (580.x) for CUDA 13.0 (cu130).
-
-                            This may cause ComfyUI to fail to start or experience issues.
-
-                            Recommended actions:
-                              1. Update your NVIDIA driver to version 580 or newer
-                              2. Or manually downgrade your torch version to use an
-                                 older torch index (e.g. cu128)
-
-                            ============================================================
-
-                            """;
-
-                        Logger.Warn(
-                            "NVIDIA driver version {DriverVersion} is below 580.x minimum for cu130 (torch index: {TorchIndex})",
-                            driverVersion,
-                            torchIndex
-                        );
-                        onConsoleOutput?.Invoke(ProcessOutput.FromStdErrLine(warningMessage));
-                        return;
-                    }
-                }
-            }
+            return;
         }
 
         var handledFirstConsoleOutput = false;
@@ -978,6 +971,10 @@ public class ComfyUI(
                             constraintsAbsPath
                         );
                         env = env.SetItem("UV_BUILD_CONSTRAINT", constraintsRelPath);
+                        // install.py scripts commonly shell out to plain pip themselves
+                        // (e.g. "pip install cupy-wheel"), which ignores UV_BUILD_CONSTRAINT -
+                        // PIP_CONSTRAINT applies the same setuptools pin to those installs
+                        env = env.SetItem("PIP_CONSTRAINT", constraintsRelPath);
 
                         // set env vars for Impact Pack for Face Detailer
                         env = env.SetItem("COMFYUI_PATH", installedPackage.FullPath!);

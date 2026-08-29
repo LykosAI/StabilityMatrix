@@ -131,7 +131,7 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
     public IEnumerable<CivitModelType> AllModelTypes =>
         Enum.GetValues(typeof(CivitModelType))
             .Cast<CivitModelType>()
-            .Where(t => t == CivitModelType.All || t.ConvertTo<SharedFolderType>() > 0)
+            .Where(t => t == CivitModelType.All || t.IsBrowsable())
             .OrderBy(t => t.ToString());
 
     public string ClearButtonText =>
@@ -519,9 +519,7 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
                     }
 
                     // Check how many items survive local filtering
-                    var filteredCount = models
-                        .Where(m => m.Type.ConvertTo<SharedFolderType>() > 0)
-                        .Count(m => m.Mode == null);
+                    var filteredCount = models.Where(m => m.Type.IsBrowsable()).Count(m => m.Mode == null);
 
                     var next = resp.Metadata?.NextCursor;
                     if (filteredCount >= targetCount || string.IsNullOrEmpty(next))
@@ -564,10 +562,7 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
             }
 
             // Filter out unknown model types and archived/taken-down models
-            models = models
-                .Where(m => m.Type.ConvertTo<SharedFolderType>() > 0)
-                .Where(m => m.Mode == null)
-                .ToList();
+            models = models.Where(m => m.Type.IsBrowsable()).Where(m => m.Mode == null).ToList();
 
             var cacheNew = true;
             if (UseLocalCache)
@@ -697,7 +692,13 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
             return;
         }
 
-        var startIndex = modelCache.Count;
+        // A replacement page restarts ordering at zero; an appended page continues after the
+        // highest existing order. Count is not a valid order base — it lags the max order
+        // whenever a fresh search replaces an uncleared cache (Search button re-click) or an
+        // append is de-duplicated, handing out colliding orders that scramble the sorted view.
+        var startIndex = addCards
+            ? modelCache.Items.Select(static ov => ov.Order).DefaultIfEmpty(-1).Max() + 1
+            : 0;
 
         var modelsToAdd = models.Select((m, i) => new OrderedValue<CivitModel>(startIndex + i, m));
 

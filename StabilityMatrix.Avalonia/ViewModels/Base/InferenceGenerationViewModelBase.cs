@@ -768,15 +768,6 @@ public abstract partial class InferenceGenerationViewModelBase
             )
         ).ToList();
 
-        var localExtensionsByGitUrl = localExtensions
-            .Where(ext => ext.GitRepositoryUrl is not null)
-            .DistinctBy(ext => ext.GitRepositoryUrl!, StringComparer.OrdinalIgnoreCase)
-            .ToDictionary(ext => ext.GitRepositoryUrl!, ext => ext, StringComparer.OrdinalIgnoreCase);
-
-        var requiredExtensionReferences = requiredExtensionSpecifiers
-            .Select(specifier => specifier.Name)
-            .ToHashSet();
-
         var missingExtensions = new List<ExtensionSpecifier>();
         var outOfDateExtensions =
             new List<(ExtensionSpecifier Specifier, InstalledPackageExtension Installed)>();
@@ -784,7 +775,7 @@ public abstract partial class InferenceGenerationViewModelBase
         // Check missing extensions and out of date extensions
         foreach (var specifier in requiredExtensionSpecifiers)
         {
-            if (!localExtensionsByGitUrl.TryGetValue(specifier.Name, out var localExtension))
+            if (ExtensionMatcher.FindInstalled(specifier, localExtensions) is not { } localExtension)
             {
                 missingExtensions.Add(specifier);
                 continue;

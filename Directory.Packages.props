@@ -117,6 +117,7 @@
     <PackageVersion Include="Projektanker.Icons.Avalonia.FontAwesome" Version="9.4.0" />
     <PackageVersion Include="SpacedGrid-Avalonia" Version="11.0.0" />
     <PackageVersion Include="SkiaSharp.NativeAssets.Linux" Version="3.0.0-preview.4.1" />
+    <PackageVersion Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.0.0-preview.4.1" />
   </ItemGroup>
   <ItemGroup Label="Tests">
     <PackageVersion Include="coverlet.collector" Version="6.0.2" />

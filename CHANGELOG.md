@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - CivArchive cards without a preview (whole-model and file results) now backfill an image from the model's gallery in the background instead of staying gray placeholders
 - Fixed trigger words being cut off on the CivArchive details page — entries that are whole prompt lines now wrap
 - CivArchive article results, which have no in-app page, now open in the web browser instead of erroring
+- Fixed OneTrainer's **Windows ROCm** bitsandbytes 8-bit optimizers, disabled in the last release ([#1708](https://github.com/LykosAI/StabilityMatrix/issues/1708)) — a wheel pinned to match OneTrainer's own bitsandbytes 0.49.1 requirement replaces the incompatible 0.50 build, so 8-bit optimizers work again - thanks to @0xDELUXA!
 
 ## v2.17.0-dev.3
 ### Added

@@ -199,13 +199,18 @@ public class AiToolkit(
         npmProcess = null;
     }
 
-    private ImmutableDictionary<string, string> GetEnvVars(ImmutableDictionary<string, string> env)
+    private ImmutableDictionary<string, string> GetEnvVars(ImmutableDictionary<string, string> env, PyVersion pythonVersion)
     {
         // Keep distutils importable for setuptools-based builds and training jobs. Must be
         // "local" (setuptools' bundled copy): any other value falls back to stdlib distutils,
         // which no longer exists on Python 3.12+ and breaks source builds (e.g. the pinned
         // diffusers git commit in ai-toolkit's requirements).
-        env = env.SetItem("SETUPTOOLS_USE_DISTUTILS", "local");
+        // An older pre-2.16.3 pre-existing install may still run 3.11, where stdlib distutils
+        // is present and "local" re-arms the _distutils_hack shim, which crashes
+        // when pip loads before setuptools (pypa/setuptools#3621). See StabilityMatrix #1725.
+        // Use "stdlib" on Python < 3.12 and "local" on 3.12+, based on the venv's real version.
+        var useLocalDistutils = pythonVersion >= new PyVersion(3, 12, 0);
+        env = env.SetItem("SETUPTOOLS_USE_DISTUTILS", useLocalDistutils ? "local" : "stdlib");
 
         var pathBuilder = new EnvPathBuilder();
 

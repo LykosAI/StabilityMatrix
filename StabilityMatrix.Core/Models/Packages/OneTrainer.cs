@@ -119,7 +119,9 @@ public class OneTrainer(
                 .InstallWindowsNativeTorchAsync(
                     venvRunner,
                     installedPackage,
-                    OneTrainerWindowsRocmProfile.CreateInstallProfile(),
+                    OneTrainerWindowsRocmProfile.CreateInstallProfile(
+                        options.PythonOptions.PythonVersion ?? RecommendedPythonVersion
+                    ),
                     progress,
                     onConsoleOutput,
                     cancellationToken
@@ -200,12 +202,7 @@ public class OneTrainer(
             return [];
         }
 
-        return
-        [
-            .. rocmPackageHelper.GetWindowsLaunchNoticeLines(selectedTorchIndex),
-            "Note: bitsandbytes 8-bit optimizers are temporarily unavailable on Windows ROCm "
-                + "until OneTrainer supports bitsandbytes 0.50.",
-        ];
+        return [.. rocmPackageHelper.GetWindowsLaunchNoticeLines(selectedTorchIndex)];
     }
 
     public override List<LaunchOptionDefinition> LaunchOptions => [LaunchOptionDefinition.Extras];

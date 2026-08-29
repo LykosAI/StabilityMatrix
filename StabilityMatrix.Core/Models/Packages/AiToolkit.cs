@@ -80,7 +80,7 @@ public class AiToolkit(
                 pythonVersion: options.PythonOptions.PythonVersion
             )
             .ConfigureAwait(false);
-        venvRunner.UpdateEnvironmentVariables(GetEnvVars);
+        venvRunner.UpdateEnvironmentVariables(env => GetEnvVars(env, venvRunner.Version));
 
         var isLegacyNvidia =
             SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu() ?? HardwareHelper.HasLegacyNvidiaGpu();
@@ -117,7 +117,7 @@ public class AiToolkit(
         progress?.Report(new ProgressReport(-1f, "Installing AI Toolkit UI...", isIndeterminate: true));
 
         var uiDirectory = new DirectoryPath(installLocation, "ui");
-        var envVars = GetEnvVars(venvRunner.EnvironmentVariables);
+        var envVars = GetEnvVars(venvRunner.EnvironmentVariables, venvRunner.Version);
         await PrerequisiteHelper
             .RunNpm("install", uiDirectory, progress?.AsProcessOutputHandler(), envVars)
             .ConfigureAwait(false);
@@ -139,7 +139,7 @@ public class AiToolkit(
     {
         await SetupVenv(installLocation, pythonVersion: PyVersion.Parse(installedPackage.PythonVersion))
             .ConfigureAwait(false);
-        VenvRunner.UpdateEnvironmentVariables(GetEnvVars);
+        VenvRunner.UpdateEnvironmentVariables(env => GetEnvVars(env, VenvRunner.Version));
 
         if (await WarnIfNvidiaDriverBelowCu130MinimumAsync(VenvRunner, onConsoleOutput).ConfigureAwait(false))
         {
@@ -147,7 +147,7 @@ public class AiToolkit(
         }
 
         var uiDirectory = new DirectoryPath(installLocation, "ui");
-        var envVars = GetEnvVars(VenvRunner.EnvironmentVariables);
+        var envVars = GetEnvVars(VenvRunner.EnvironmentVariables, VenvRunner.Version);
         npmProcess = PrerequisiteHelper.RunNpmDetached(
             "run start",
             uiDirectory,

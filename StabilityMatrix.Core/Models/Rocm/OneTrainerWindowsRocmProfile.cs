@@ -1,9 +1,11 @@
 using StabilityMatrix.Core.Models.Packages;
+using StabilityMatrix.Core.Python;
 
 namespace StabilityMatrix.Core.Models.Rocm;
 
 /// <summary>
 /// Shared Windows ROCm profile for OneTrainer.
+/// Python 3.12 only - required by compatible bitsandbytes wheel.
 /// </summary>
 public class OneTrainerWindowsRocmProfile : RocmPackageProfile
 {
@@ -12,12 +14,23 @@ public class OneTrainerWindowsRocmProfile : RocmPackageProfile
     // Restores flop counter functionality requiring triton module
     private const string TritonWindowsPackage = "triton-windows";
 
-    // bitsandbytes is deliberately not installed here: OneTrainer pins bnb 0.49.x, but the only
-    // Windows ROCm wheels for current ROCm (>= 7.13) are 0.50-based, which removed optimizer
-    // arguments OneTrainer still passes (block_wise / percentile_clipping), so 8-bit optimizers
-    // crash at startup. Re-enable once upstream OneTrainer supports bnb 0.50.
-    public static RocmPackageProfile CreateInstallProfile()
+    // Replace upstream bitsandbytes with ROCm-aware bitsandbytes for ROCm Technical Preview on Windows
+    private const string BitsAndBytesWheelUrl =
+        "https://github.com/0xDELUXA/bitsandbytes_win_rocm/releases/download/0.49.1-py3.12-rocm7.16-win_amd64_all/bitsandbytes-0.49.1-cp312-cp312-win_amd64.whl";
+
+    public static RocmPackageProfile CreateInstallProfile(PyVersion pyVersion)
     {
+        if (pyVersion.Major == 3 && pyVersion.Minor == 12)
+        {
+            return new RocmPackageProfile
+            {
+                InstallConfig = new PipInstallConfig
+                {
+                    PostTorchInstallPipArgs = [TritonWindowsPackage, BitsAndBytesWheelUrl],
+                },
+            };
+        }
+
         return new RocmPackageProfile
         {
             InstallConfig = new PipInstallConfig { PostTorchInstallPipArgs = [TritonWindowsPackage] },

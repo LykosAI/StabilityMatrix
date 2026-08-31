@@ -696,17 +696,24 @@ public abstract class BaseGitPackage : BasePackage
 
         // Move all items in infinity folder to root
         Logger.Info("Moving infinity folders content to root: {Path}", currentDir.ToString());
-        await FileTransfers.MoveAllFilesAndDirectories(currentDir, rootDirectory).ConfigureAwait(false);
+        await FileTransfers
+            .MoveAllFilesAndDirectories(currentDir, rootDirectory, overwriteIfHashMatches: true)
+            .ConfigureAwait(false);
 
-        // Move any files from first infinity by enumeration just in case
-        foreach (var file in firstInfinity.EnumerateFiles())
+        // Move any leftover files from intermediate levels of the chain
+        var leftoverFiles = firstInfinity.EnumerateFiles(searchOption: SearchOption.AllDirectories);
+        foreach (var file in leftoverFiles)
         {
-            await file.MoveToDirectoryAsync(rootDirectory).ConfigureAwait(false);
+            await file.MoveToWithIncrementAsync(rootDirectory.JoinFile(file.Name)).ConfigureAwait(false);
         }
 
-        // Delete infinity folders chain from first
-        Logger.Info("Deleting infinity folders: {Path}", currentDir.ToString());
-        await firstInfinity.DeleteAsync(true).ConfigureAwait(false);
+        // Only delete the chain once nothing is left inside it
+        if (!firstInfinity.EnumerateFiles(searchOption: SearchOption.AllDirectories).Any())
+        {
+            // Delete infinity folders chain from first
+            Logger.Info("Deleting infinity folders: {Path}", currentDir.ToString());
+            await firstInfinity.DeleteAsync(true).ConfigureAwait(false);
+        }
     }
 
     private async Task FixForgeInfinity()

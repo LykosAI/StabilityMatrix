@@ -17,6 +17,14 @@
     x:DataType="vmDialogs:PackageImportViewModel"
     mc:Ignorable="d">
     <StackPanel Margin="8" Spacing="8">
+        <ui:InfoBar
+            Title="Existing models will be moved"
+            MaxWidth="450"
+            IsClosable="False"
+            IsOpen="{Binding ShowSharedFolderMoveWarning}"
+            Message="{Binding SharedFolderMoveWarningText}"
+            Severity="Warning" />
+
         <ui:SettingsExpander Header="{x:Static lang:Resources.Label_PackageType}">
             <ui:SettingsExpander.Footer>
                 <ui:FAComboBox

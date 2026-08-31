@@ -11,13 +11,12 @@ public class SharedFoldersTests
     private string TempModelsFolder => Path.Combine(tempFolder, "models");
     private string TempPackageFolder => Path.Combine(tempFolder, "package");
 
-    private readonly Dictionary<SharedFolderType, string> sampleDefinitions =
-        new()
-        {
-            [SharedFolderType.StableDiffusion] = "models/Stable-diffusion",
-            [SharedFolderType.ESRGAN] = "models/ESRGAN",
-            [SharedFolderType.Embeddings] = "embeddings",
-        };
+    private readonly Dictionary<SharedFolderType, string> sampleDefinitions = new()
+    {
+        [SharedFolderType.StableDiffusion] = "models/Stable-diffusion",
+        [SharedFolderType.ESRGAN] = "models/ESRGAN",
+        [SharedFolderType.Embeddings] = "embeddings",
+    };
 
     [TestInitialize]
     public void Initialize()
@@ -35,16 +34,17 @@ public class SharedFoldersTests
         TempFiles.DeleteDirectory(tempFolder);
     }
 
+    private static readonly Dictionary<SharedFolderType, IReadOnlyList<string>> sampleLinkDefinitions = new()
+    {
+        [SharedFolderType.StableDiffusion] = new[] { "models/Stable-diffusion" },
+        [SharedFolderType.ESRGAN] = new[] { "models/ESRGAN" },
+        [SharedFolderType.Embeddings] = new[] { "embeddings" },
+    };
+
     private void CreateSampleJunctions()
     {
-        var definitions = new Dictionary<SharedFolderType, IReadOnlyList<string>>
-        {
-            [SharedFolderType.StableDiffusion] = new[] { "models/Stable-diffusion" },
-            [SharedFolderType.ESRGAN] = new[] { "models/ESRGAN" },
-            [SharedFolderType.Embeddings] = new[] { "embeddings" },
-        };
         SharedFolders
-            .UpdateLinksForPackage(definitions, TempModelsFolder, TempPackageFolder)
+            .UpdateLinksForPackage(sampleLinkDefinitions, TempModelsFolder, TempPackageFolder)
             .GetAwaiter()
             .GetResult();
     }
@@ -111,6 +111,67 @@ public class SharedFoldersTests
         Assert.IsTrue(
             File.Exists(Path.Combine(modelFolder, "AFile")),
             $"File should exist in {modelFolder}."
+        );
+    }
+
+    [TestMethod]
+    public void SetupLinks_MovesExistingFilesToSharedFolder()
+    {
+        // Package has an existing non-empty model folder before links are set up
+        var packageModelsPath = Path.Combine(
+            TempPackageFolder,
+            sampleDefinitions[SharedFolderType.StableDiffusion]
+        );
+        Directory.CreateDirectory(packageModelsPath);
+        File.Create(Path.Combine(packageModelsPath, "ExistingModel.safetensors")).Close();
+
+        CreateSampleJunctions();
+
+        // File should have been moved to the shared model folder, not deleted
+        var modelFolder = Path.Combine(TempModelsFolder, SharedFolderType.StableDiffusion.GetStringValue());
+        Assert.IsTrue(
+            File.Exists(Path.Combine(modelFolder, "ExistingModel.safetensors")),
+            $"File should have been moved to {modelFolder}."
+        );
+
+        // And should still be visible through the junction
+        Assert.IsTrue(
+            File.Exists(Path.Combine(packageModelsPath, "ExistingModel.safetensors")),
+            $"File should be visible through the junction at {packageModelsPath}."
+        );
+    }
+
+    [TestMethod]
+    public void WouldMoveExistingFiles_EmptyPackage_ReturnsFalse()
+    {
+        Assert.IsFalse(
+            SharedFolders.WouldMoveExistingFiles(sampleLinkDefinitions, TempModelsFolder, TempPackageFolder)
+        );
+    }
+
+    [TestMethod]
+    public void WouldMoveExistingFiles_NonEmptyModelFolder_ReturnsTrue()
+    {
+        var packageModelsPath = Path.Combine(
+            TempPackageFolder,
+            sampleDefinitions[SharedFolderType.StableDiffusion]
+        );
+        Directory.CreateDirectory(packageModelsPath);
+        File.Create(Path.Combine(packageModelsPath, "ExistingModel.safetensors")).Close();
+
+        Assert.IsTrue(
+            SharedFolders.WouldMoveExistingFiles(sampleLinkDefinitions, TempModelsFolder, TempPackageFolder)
+        );
+    }
+
+    [TestMethod]
+    public void WouldMoveExistingFiles_ExistingMatchingLinks_ReturnsFalse()
+    {
+        CreateSampleJunctions();
+
+        // Links already point at the shared folders, so setup would be a no-op
+        Assert.IsFalse(
+            SharedFolders.WouldMoveExistingFiles(sampleLinkDefinitions, TempModelsFolder, TempPackageFolder)
         );
     }
 }

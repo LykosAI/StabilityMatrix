@@ -1089,7 +1089,50 @@ public partial class PackageCardViewModel(
         return await dialog.ShowAsync() == ContentDialogResult.Primary;
     }
 
-    public void ToggleSharedModelSymlink() => IsSharedModelSymlink = !IsSharedModelSymlink;
+    public async Task ToggleSharedModelSymlink()
+    {
+        if (!IsSharedModelSymlink && !await ConfirmSharedModelSymlinkMoveIfNeeded())
+            return;
+
+        IsSharedModelSymlink = !IsSharedModelSymlink;
+    }
+
+    /// <summary>
+    /// Warns before enabling symlink shared folders when the package has existing files in its
+    /// model folders (or user-made links there) that would be relocated by the link setup.
+    /// </summary>
+    private async Task<bool> ConfirmSharedModelSymlinkMoveIfNeeded()
+    {
+        if (
+            Package?.FullPath is not { } installPath
+            || packageFactory[Package.PackageName!] is not { SharedFolders: { } sharedFolders }
+        )
+        {
+            return true;
+        }
+
+        var modelsDirectory = new DirectoryPath(settingsManager.ModelsDirectory);
+        if (!SharedFolders.WouldMoveExistingFiles(sharedFolders, modelsDirectory, installPath))
+            return true;
+
+        var dialog = new BetterContentDialog
+        {
+            Title = "Move existing models to the shared folder?",
+            Content =
+                "This package has existing files in its model folders. When the package next launches, "
+                + $"they will be moved into the shared models folder at \"{modelsDirectory}\" and the "
+                + "package's model folders will be replaced with links to it, so the package (and any "
+                + "others sharing models) can still use them.\n\n"
+                + "No files are deleted — they are moved and stay accessible through the links. "
+                + "Any custom links you created inside the package's model folders will be replaced.\n\n"
+                + "Continue?",
+            PrimaryButtonText = "Continue",
+            CloseButtonText = Resources.Action_Cancel,
+            DefaultButton = ContentDialogButton.Primary,
+        };
+
+        return await dialog.ShowAsync() == ContentDialogResult.Primary;
+    }
 
     public void ToggleSharedModelConfig() => IsSharedModelConfig = !IsSharedModelConfig;
 

@@ -70,6 +70,14 @@ public partial class PackageImportViewModel(
     [ObservableProperty]
     public partial bool ShowPythonVersionSelection { get; set; } = true;
 
+    [ObservableProperty]
+    public partial bool ShowSharedFolderMoveWarning { get; set; }
+
+    public string SharedFolderMoveWarningText =>
+        "This package has existing files in its model folders. Importing will move them into the shared "
+        + $"models folder at \"{settingsManager.ModelsDirectory}\" and link the package's model folders "
+        + "to it, so they stay usable by this package and any others sharing models. No files are deleted.";
+
     // Version types (release or commit)
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ReleaseLabelText), nameof(IsReleaseMode), nameof(SelectedVersion))]
@@ -101,6 +109,8 @@ public partial class PackageImportViewModel(
 
         if (Design.IsDesignMode)
             return;
+
+        UpdateSharedFolderMoveWarning();
         // Populate available versions
         try
         {
@@ -196,6 +206,8 @@ public partial class PackageImportViewModel(
 
     partial void OnSelectedBasePackageChanged(BasePackage? value)
     {
+        UpdateSharedFolderMoveWarning();
+
         if (value is null || SelectedBasePackage is null)
         {
             AvailableVersions?.Clear();
@@ -332,6 +344,37 @@ public partial class PackageImportViewModel(
         await SelectedBasePackage.UpdateModelFolders(PackagePath, recommendedSharedFolderMethod);
 
         settingsManager.Transaction(s => s.InstalledPackages.Add(package));
+    }
+
+    /// <summary>
+    /// Shows the shared-folder move warning when importing would relocate existing files from the
+    /// package's model folders into the shared models directory (symlink shared folder method).
+    /// </summary>
+    private void UpdateSharedFolderMoveWarning()
+    {
+        if (Design.IsDesignMode)
+            return;
+
+        try
+        {
+            ShowSharedFolderMoveWarning =
+                PackagePath is not null
+                && SelectedBasePackage
+                    is {
+                        RecommendedSharedFolderMethod: SharedFolderMethod.Symlink,
+                        SharedFolders: { } sharedFolders
+                    }
+                && SharedFolders.WouldMoveExistingFiles(
+                    sharedFolders,
+                    new DirectoryPath(settingsManager.ModelsDirectory),
+                    PackagePath
+                );
+        }
+        catch (Exception e)
+        {
+            Logger.Warn(e, "Failed to check for existing model files in package folder");
+            ShowSharedFolderMoveWarning = false;
+        }
     }
 
     private UvPythonInfo? GetRecommendedPyVersion() =>

@@ -83,7 +83,11 @@ public class SharedFolders(ISettingsManager settingsManager, IPackageFactory pac
             if (destinationDir.IsSymbolicLink)
             {
                 // If link is already the same, just skip
-                if (destinationDir.Info.LinkTarget == sourceDir)
+                // (Compare as DirectoryPath since comparing string to DirectoryPath is always false)
+                if (
+                    destinationDir.Info.LinkTarget is { } linkTarget
+                    && new DirectoryPath(linkTarget) == sourceDir
+                )
                 {
                     Logger.Info($"Skipped updating matching folder link ({destinationDir} -> ({sourceDir})");
                     return;
@@ -164,6 +168,55 @@ public class SharedFolders(ISettingsManager settingsManager, IPackageFactory pac
                     .ConfigureAwait(false);
             }
         }
+    }
+
+    /// <summary>
+    /// Checks whether <see cref="UpdateLinksForPackage{T}"/> would relocate any existing user files
+    /// for the given shared folders — i.e. whether any link destination is a non-empty folder whose
+    /// contents would be moved into the shared models directory, or a user-created link
+    /// (at the destination or its parent) that would be replaced.
+    /// </summary>
+    public static bool WouldMoveExistingFiles<T>(
+        Dictionary<T, IReadOnlyList<string>> sharedFolders,
+        DirectoryPath modelsDirectory,
+        DirectoryPath installDirectory
+    )
+        where T : Enum
+    {
+        foreach (var (folderType, relativePaths) in sharedFolders)
+        {
+            foreach (var relativePath in relativePaths)
+            {
+                var sourceDir = new DirectoryPath(modelsDirectory, folderType.GetStringValue());
+                var destinationDir = installDirectory.JoinDir(relativePath);
+
+                // A user-made link at the parent (e.g. "models" pointing at another drive)
+                // would be replaced with an empty folder
+                if (destinationDir.Parent is { IsSymbolicLink: true })
+                    return true;
+
+                if (!destinationDir.Exists)
+                    continue;
+
+                if (destinationDir.IsSymbolicLink)
+                {
+                    // A link already matching the shared folder is skipped; any other link is replaced
+                    if (
+                        destinationDir.Info.LinkTarget is not { } linkTarget
+                        || new DirectoryPath(linkTarget) != sourceDir
+                    )
+                    {
+                        return true;
+                    }
+                }
+                else if (destinationDir.Info.EnumerateFileSystemInfos().Any())
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     public static void RemoveLinksForPackage<T>(

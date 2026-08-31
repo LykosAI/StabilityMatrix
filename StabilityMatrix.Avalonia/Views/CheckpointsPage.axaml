@@ -520,6 +520,12 @@
                                     </ui:MenuFlyoutItem>
 
                                     <ui:MenuFlyoutItem
+                                        Command="{Binding DisconnectConnectedModelCommand}"
+                                        IconSource="Remove"
+                                        IsVisible="{Binding CanDisconnect}"
+                                        Text="Disconnect from Source" />
+
+                                    <ui:MenuFlyoutItem
                                         Command="{Binding OpenSafetensorMetadataViewerCommand}"
                                         IconSource="Tag"
                                         IsVisible="{Binding CheckpointFile.IsSafetensorFile}"
@@ -577,6 +583,7 @@
                                             <vendorLabs:BetterAsyncImage
                                                 ClipToBounds="True"
                                                 CornerRadius="8"
+                                                DecodeWidth="600"
                                                 IsVisible="{Binding !HideImage}"
                                                 Source="{Binding ThumbnailUri, Converter={StaticResource FileUriConverter}}"
                                                 Stretch="UniformToFill" />

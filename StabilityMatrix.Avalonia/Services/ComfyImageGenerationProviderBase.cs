@@ -1,4 +1,5 @@
 using AsyncAwaitBestPractices;
+using Avalonia.Threading;
 using Microsoft.Extensions.Logging;
 using Refit;
 using StabilityMatrix.Avalonia.Helpers;
@@ -8,6 +9,7 @@ using StabilityMatrix.Core.Inference;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.Comfy;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
+using StabilityMatrix.Core.Models.Packages.Extensions;
 using StabilityMatrix.Core.Services.ImageGeneration;
 
 namespace StabilityMatrix.Avalonia.Services;
@@ -19,11 +21,17 @@ namespace StabilityMatrix.Avalonia.Services;
 /// interrupt, output download, and error handling — so subclasses supply only the
 /// provider-specific model requirements and workflow node graph.
 /// </summary>
-public abstract class ComfyImageGenerationProviderBase(ILogger logger, IInferenceClientManager clientManager)
-    : IImageGenerationProvider
+public abstract class ComfyImageGenerationProviderBase(
+    ILogger logger,
+    IInferenceClientManager clientManager,
+    RunningPackageService runningPackageService,
+    INotificationService notificationService
+) : IImageGenerationProvider
 {
     protected ILogger Logger { get; } = logger;
     protected IInferenceClientManager ClientManager { get; } = clientManager;
+    protected RunningPackageService RunningPackageService { get; } = runningPackageService;
+    protected INotificationService NotificationService { get; } = notificationService;
 
     public abstract string ProviderId { get; }
     public abstract string ProviderName { get; }
@@ -94,6 +102,15 @@ public abstract class ComfyImageGenerationProviderBase(ILogger logger, IInferenc
 
             Logger.LogInformation("Building {Provider} workflow", LogName);
             var nodes = BuildWorkflow(request);
+
+            if (
+                nodes is NodeDictionary nodeDictionary
+                && await GetMissingExtensionsAsync(nodeDictionary, cancellationToken)
+                    is { Count: > 0 } missing
+            )
+            {
+                return await HandleMissingExtensionsAsync(missing);
+            }
 
             Logger.LogInformation("Queuing prompt to ComfyUI");
             var task = await ClientManager.Client.QueuePromptAsync(nodes, cancellationToken);
@@ -169,6 +186,96 @@ public abstract class ComfyImageGenerationProviderBase(ILogger logger, IInferenc
                 ErrorMessage = $"Generation failed: {ex.Message}",
             };
         }
+    }
+
+    /// <summary>
+    /// Returns the required extensions declared by the workflow's typed nodes (e.g.
+    /// ComfyUI-GGUF for UnetLoaderGGUF) that are not installed in the locally-managed ComfyUI,
+    /// so we can offer an install instead of a generic queue-time 400 rejection.
+    /// Returns an empty list when nothing is missing or the installed extensions cannot be
+    /// determined (e.g. a remote / unmanaged server).
+    /// </summary>
+    private async Task<IReadOnlyList<ExtensionSpecifier>> GetMissingExtensionsAsync(
+        NodeDictionary nodes,
+        CancellationToken cancellationToken
+    )
+    {
+        var requiredExtensions = nodes.RequiredExtensions.DistinctBy(ext => ext.Name).ToList();
+        if (requiredExtensions.Count == 0)
+            return [];
+
+        try
+        {
+            if (
+                ClientManager.Client?.LocalServerPackage is not { } localPackagePair
+                || localPackagePair.BasePackage.ExtensionManager
+                    is not GitPackageExtensionManager extensionManager
+            )
+            {
+                return [];
+            }
+
+            var installedExtensions = await extensionManager.GetInstalledExtensionsLiteAsync(
+                localPackagePair.InstalledPackage,
+                cancellationToken
+            );
+
+            return ExtensionMatcher.GetMissing(requiredExtensions, installedExtensions);
+        }
+        catch (Exception e)
+        {
+            Logger.LogWarning(e, "Failed to check required extensions, proceeding with generation");
+            return [];
+        }
+    }
+
+    /// <summary>
+    /// Offers the same install-and-restart flow Inference uses for missing extensions, and
+    /// returns the error response for the chat: either "installing, retry once reconnected"
+    /// or manual install instructions if the prompt was declined / unavailable.
+    /// </summary>
+    private async Task<ImageGenerationResponse> HandleMissingExtensionsAsync(
+        IReadOnlyList<ExtensionSpecifier> missingExtensions
+    )
+    {
+        var extensionList = string.Join(", ", missingExtensions.Select(ext => ext.Name));
+        Logger.LogWarning("Required ComfyUI extensions not installed: {Extensions}", extensionList);
+
+        if (
+            ClientManager.Client?.LocalServerPackage is { } localPackagePair
+            && localPackagePair.BasePackage.ExtensionManager is { } extensionManager
+        )
+        {
+            var installStarted = await Dispatcher.UIThread.InvokeAsync(() =>
+                ComfyExtensionInstallHelper.PromptInstallAndRestartAsync(
+                    extensionManager,
+                    localPackagePair,
+                    missingExtensions,
+                    [],
+                    RunningPackageService,
+                    NotificationService
+                )
+            );
+
+            if (installStarted)
+            {
+                return new ImageGenerationResponse
+                {
+                    IsSuccess = false,
+                    ErrorMessage =
+                        $"Installing required ComfyUI extensions: {extensionList}. "
+                        + "ComfyUI will restart - please try again once it has reconnected.",
+                };
+            }
+        }
+
+        return new ImageGenerationResponse
+        {
+            IsSuccess = false,
+            ErrorMessage =
+                $"This workflow requires ComfyUI extensions that are not installed: {extensionList}. "
+                + "Install them from the ComfyUI package's Extensions section, then restart ComfyUI.",
+        };
     }
 
     /// <summary>

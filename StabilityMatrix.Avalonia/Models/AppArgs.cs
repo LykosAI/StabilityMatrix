@@ -75,6 +75,14 @@ public class AppArgs
     public bool UseVulkanRendering { get; set; }
 
     /// <summary>
+    /// Flag to render popups (flyouts, dropdowns, menus) inside the window instead of as
+    /// separate OS windows, so window captures and UI automation can see them.
+    /// Popups are clipped to the window bounds in this mode.
+    /// </summary>
+    [Option("overlay-popups", HelpText = "Render popups inside the window (for UI automation / capture)")]
+    public bool UseOverlayPopups { get; set; }
+
+    /// <summary>
     /// Override global app home directory
     /// Defaults to (%APPDATA%|~/.config)/StabilityMatrix
     /// </summary>

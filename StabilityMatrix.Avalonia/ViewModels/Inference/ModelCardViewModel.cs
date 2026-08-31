@@ -236,6 +236,8 @@ public partial class ModelCardViewModel(
             "sdxl",
             "sd3",
             "flux",
+            "flux2",
+            "chroma",
             "hunyuan_video",
             "hidream",
             "hunyuan_image",
@@ -245,8 +247,15 @@ public partial class ModelCardViewModel(
             "ltxv",
             "newbie",
             "ace",
-            "flux2",
             "lumina2",
+            "qwen_image",
+            "wan",
+            "omnigen2",
+            "mochi",
+            "pixart",
+            "cosmos",
+            "stable_cascade",
+            "stable_audio",
             "stable_diffusion",
         ];
     public List<InferenceWorkflowProfile> WorkflowProfiles { get; set; } =
@@ -1006,14 +1015,7 @@ public partial class ModelCardViewModel(
             var encoderCount = legacyNames.TakeWhile(n => n is not null).Count();
 
             // Use at least the default count for the encoder type
-            var defaultCount = SelectedClipType switch
-            {
-                "flux" => 2,
-                "flux2" or "lumina2" or "stable_diffusion" => 1,
-                "sd3" => 3,
-                "hidream" => 4,
-                _ => 2,
-            };
+            var defaultCount = DefaultEncoderCountForClipType(SelectedClipType);
             encoderCount = Math.Max(encoderCount, defaultCount);
 
             for (var i = 0; i < encoderCount; i++)
@@ -1553,14 +1555,7 @@ public partial class ModelCardViewModel(
             return;
         }
 
-        var targetCount = SelectedClipType switch
-        {
-            "flux" => 2,
-            "flux2" or "lumina2" or "stable_diffusion" => 1,
-            "sd3" => 3,
-            "hidream" => 4,
-            _ => 2, // Default to 2 for unknown types
-        };
+        var targetCount = DefaultEncoderCountForClipType(SelectedClipType);
 
         // Add or remove encoders to match target count
         while (TextEncoders.Count < targetCount)
@@ -1576,6 +1571,31 @@ public partial class ModelCardViewModel(
         OnPropertyChanged(nameof(CanRemoveEncoder));
         OnPropertyChanged(nameof(TextEncodersHeader));
     }
+
+    /// <summary>
+    /// Default number of encoder slots for a clip type. Types accepted by ComfyUI's
+    /// DualCLIPLoader load an encoder pair (e.g. clip_l + t5xxl for flux); sd3 / hidream use
+    /// the triple / quadruple loaders; everything else is a single-encoder CLIPLoader type
+    /// (flux2, lumina2, chroma, wan, qwen_image, ...).
+    /// </summary>
+    private static int DefaultEncoderCountForClipType(string? clipType) =>
+        clipType switch
+        {
+            "sd3" => 3,
+            "hidream" => 4,
+            "sdxl"
+            or "flux"
+            or "hunyuan_video"
+            or "hunyuan_image"
+            or "hunyuan_video_15"
+            or "kandinsky5"
+            or "kandinsky5_image"
+            or "ltxv"
+            or "newbie"
+            or "ace"
+            or null => 2,
+            _ => 1,
+        };
 
     /// <summary>
     /// Adds a new text encoder slot.
@@ -1666,19 +1686,34 @@ public partial class ModelCardViewModel(
 
         if (SelectedClipType == "flux")
         {
-            // DualCLIPLoader
-            var clipLoader = e.Nodes.AddTypedNode(
-                new ComfyNodeBuilder.DualCLIPLoader
-                {
-                    Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.DualCLIPLoader)),
-                    ClipName1 =
-                        SelectedClip1?.RelativePath ?? throw new ValidationException("No Clip1 Selected"),
-                    ClipName2 =
-                        SelectedClip2?.RelativePath ?? throw new ValidationException("No Clip2 Selected"),
-                    Type = SelectedClipType ?? throw new ValidationException("No Clip Type Selected"),
-                }
-            );
-            e.Builder.Connections.Base.Clip = clipLoader.Output;
+            // DualCLIPLoader (GGUF variant can also load .safetensors, so any gguf pick routes there)
+            var clipName1 = SelectedClip1?.RelativePath ?? throw new ValidationException("No Clip1 Selected");
+            var clipName2 = SelectedClip2?.RelativePath ?? throw new ValidationException("No Clip2 Selected");
+            var clipType = SelectedClipType ?? throw new ValidationException("No Clip Type Selected");
+
+            e.Builder.Connections.Base.Clip = AnyClipIsGguf(SelectedClip1, SelectedClip2)
+                ? e
+                    .Nodes.AddTypedNode(
+                        new ComfyNodeBuilder.DualCLIPLoaderGGUF
+                        {
+                            Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.DualCLIPLoaderGGUF)),
+                            ClipName1 = clipName1,
+                            ClipName2 = clipName2,
+                            Type = clipType,
+                        }
+                    )
+                    .Output
+                : e
+                    .Nodes.AddTypedNode(
+                        new ComfyNodeBuilder.DualCLIPLoader
+                        {
+                            Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.DualCLIPLoader)),
+                            ClipName1 = clipName1,
+                            ClipName2 = clipName2,
+                            Type = clipType,
+                        }
+                    )
+                    .Output;
         }
         else
         {
@@ -1756,6 +1791,8 @@ public partial class ModelCardViewModel(
 
     private void SetupClipLoaders(ModuleApplyStepEventArgs e)
     {
+        // The GGUF loader variants can also load .safetensors encoders, so any gguf pick
+        // routes the whole (possibly mixed) selection through the GGUF loader
         if (
             SelectedClip4 is { IsNone: false }
             && SelectedClip3 is { IsNone: false }
@@ -1763,21 +1800,41 @@ public partial class ModelCardViewModel(
             && SelectedClip1 is { IsNone: false }
         )
         {
-            var clipLoader = e.Nodes.AddTypedNode(
-                new ComfyNodeBuilder.QuadrupleCLIPLoader
-                {
-                    Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.QuadrupleCLIPLoader)),
-                    ClipName1 =
-                        SelectedClip1?.RelativePath ?? throw new ValidationException("No Clip1 Selected"),
-                    ClipName2 =
-                        SelectedClip2?.RelativePath ?? throw new ValidationException("No Clip2 Selected"),
-                    ClipName3 =
-                        SelectedClip3?.RelativePath ?? throw new ValidationException("No Clip3 Selected"),
-                    ClipName4 =
-                        SelectedClip4?.RelativePath ?? throw new ValidationException("No Clip4 Selected"),
-                }
-            );
-            e.Builder.Connections.Base.Clip = clipLoader.Output;
+            var clipName1 = SelectedClip1?.RelativePath ?? throw new ValidationException("No Clip1 Selected");
+            var clipName2 = SelectedClip2?.RelativePath ?? throw new ValidationException("No Clip2 Selected");
+            var clipName3 = SelectedClip3?.RelativePath ?? throw new ValidationException("No Clip3 Selected");
+            var clipName4 = SelectedClip4?.RelativePath ?? throw new ValidationException("No Clip4 Selected");
+
+            e.Builder.Connections.Base.Clip = AnyClipIsGguf(
+                SelectedClip1,
+                SelectedClip2,
+                SelectedClip3,
+                SelectedClip4
+            )
+                ? e
+                    .Nodes.AddTypedNode(
+                        new ComfyNodeBuilder.QuadrupleCLIPLoaderGGUF
+                        {
+                            Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.QuadrupleCLIPLoaderGGUF)),
+                            ClipName1 = clipName1,
+                            ClipName2 = clipName2,
+                            ClipName3 = clipName3,
+                            ClipName4 = clipName4,
+                        }
+                    )
+                    .Output
+                : e
+                    .Nodes.AddTypedNode(
+                        new ComfyNodeBuilder.QuadrupleCLIPLoader
+                        {
+                            Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.QuadrupleCLIPLoader)),
+                            ClipName1 = clipName1,
+                            ClipName2 = clipName2,
+                            ClipName3 = clipName3,
+                            ClipName4 = clipName4,
+                        }
+                    )
+                    .Output;
         }
         else if (
             SelectedClip3 is { IsNone: false }
@@ -1785,47 +1842,90 @@ public partial class ModelCardViewModel(
             && SelectedClip1 is { IsNone: false }
         )
         {
-            var clipLoader = e.Nodes.AddTypedNode(
-                new ComfyNodeBuilder.TripleCLIPLoader
-                {
-                    Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.TripleCLIPLoader)),
-                    ClipName1 =
-                        SelectedClip1?.RelativePath ?? throw new ValidationException("No Clip1 Selected"),
-                    ClipName2 =
-                        SelectedClip2?.RelativePath ?? throw new ValidationException("No Clip2 Selected"),
-                    ClipName3 =
-                        SelectedClip3?.RelativePath ?? throw new ValidationException("No Clip3 Selected"),
-                }
-            );
-            e.Builder.Connections.Base.Clip = clipLoader.Output;
+            var clipName1 = SelectedClip1?.RelativePath ?? throw new ValidationException("No Clip1 Selected");
+            var clipName2 = SelectedClip2?.RelativePath ?? throw new ValidationException("No Clip2 Selected");
+            var clipName3 = SelectedClip3?.RelativePath ?? throw new ValidationException("No Clip3 Selected");
+
+            e.Builder.Connections.Base.Clip = AnyClipIsGguf(SelectedClip1, SelectedClip2, SelectedClip3)
+                ? e
+                    .Nodes.AddTypedNode(
+                        new ComfyNodeBuilder.TripleCLIPLoaderGGUF
+                        {
+                            Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.TripleCLIPLoaderGGUF)),
+                            ClipName1 = clipName1,
+                            ClipName2 = clipName2,
+                            ClipName3 = clipName3,
+                        }
+                    )
+                    .Output
+                : e
+                    .Nodes.AddTypedNode(
+                        new ComfyNodeBuilder.TripleCLIPLoader
+                        {
+                            Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.TripleCLIPLoader)),
+                            ClipName1 = clipName1,
+                            ClipName2 = clipName2,
+                            ClipName3 = clipName3,
+                        }
+                    )
+                    .Output;
         }
         else if (SelectedClip2 is { IsNone: false } && SelectedClip1 is { IsNone: false })
         {
-            var clipLoader = e.Nodes.AddTypedNode(
-                new ComfyNodeBuilder.DualCLIPLoader
-                {
-                    Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.DualCLIPLoader)),
-                    ClipName1 =
-                        SelectedClip1?.RelativePath ?? throw new ValidationException("No Clip1 Selected"),
-                    ClipName2 =
-                        SelectedClip2?.RelativePath ?? throw new ValidationException("No Clip2 Selected"),
-                    Type = SelectedClipType ?? throw new ValidationException("No Clip Type Selected"),
-                }
-            );
-            e.Builder.Connections.Base.Clip = clipLoader.Output;
+            var clipName1 = SelectedClip1?.RelativePath ?? throw new ValidationException("No Clip1 Selected");
+            var clipName2 = SelectedClip2?.RelativePath ?? throw new ValidationException("No Clip2 Selected");
+            var clipType = SelectedClipType ?? throw new ValidationException("No Clip Type Selected");
+
+            e.Builder.Connections.Base.Clip = AnyClipIsGguf(SelectedClip1, SelectedClip2)
+                ? e
+                    .Nodes.AddTypedNode(
+                        new ComfyNodeBuilder.DualCLIPLoaderGGUF
+                        {
+                            Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.DualCLIPLoaderGGUF)),
+                            ClipName1 = clipName1,
+                            ClipName2 = clipName2,
+                            Type = clipType,
+                        }
+                    )
+                    .Output
+                : e
+                    .Nodes.AddTypedNode(
+                        new ComfyNodeBuilder.DualCLIPLoader
+                        {
+                            Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.DualCLIPLoader)),
+                            ClipName1 = clipName1,
+                            ClipName2 = clipName2,
+                            Type = clipType,
+                        }
+                    )
+                    .Output;
         }
         else if (SelectedClip1 is { IsNone: false })
         {
-            var clipLoader = e.Nodes.AddTypedNode(
-                new ComfyNodeBuilder.CLIPLoader()
-                {
-                    Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.CLIPLoader)),
-                    ClipName =
-                        SelectedClip1?.RelativePath ?? throw new ValidationException("No Clip1 Selected"),
-                    Type = SelectedClipType ?? throw new ValidationException("No Clip Type Selected"),
-                }
-            );
-            e.Builder.Connections.Base.Clip = clipLoader.Output;
+            var clipName1 = SelectedClip1?.RelativePath ?? throw new ValidationException("No Clip1 Selected");
+            var clipType = SelectedClipType ?? throw new ValidationException("No Clip Type Selected");
+
+            e.Builder.Connections.Base.Clip = AnyClipIsGguf(SelectedClip1)
+                ? e
+                    .Nodes.AddTypedNode(
+                        new ComfyNodeBuilder.CLIPLoaderGGUF
+                        {
+                            Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.CLIPLoaderGGUF)),
+                            ClipName = clipName1,
+                            Type = clipType,
+                        }
+                    )
+                    .Output
+                : e
+                    .Nodes.AddTypedNode(
+                        new ComfyNodeBuilder.CLIPLoader
+                        {
+                            Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.CLIPLoader)),
+                            ClipName = clipName1,
+                            Type = clipType,
+                        }
+                    )
+                    .Output;
         }
         else
         {
@@ -1835,6 +1935,9 @@ public partial class ModelCardViewModel(
             );
         }
     }
+
+    private static bool AnyClipIsGguf(params HybridModelFile?[] clips) =>
+        clips.Any(clip => clip is { IsGguf: true });
 
     internal class ModelCardModel
     {

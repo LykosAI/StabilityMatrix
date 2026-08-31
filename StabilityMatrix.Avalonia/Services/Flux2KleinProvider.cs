@@ -10,8 +10,12 @@ namespace StabilityMatrix.Avalonia.Services;
 /// Klein 4B is Apache 2.0 licensed; the distilled variant runs at 4 steps with CFG=1
 /// making it well-suited to conversational, iterative editing.
 /// </summary>
-public class Flux2KleinProvider(ILogger<Flux2KleinProvider> logger, IInferenceClientManager clientManager)
-    : ComfyImageGenerationProviderBase(logger, clientManager)
+public class Flux2KleinProvider(
+    ILogger<Flux2KleinProvider> logger,
+    IInferenceClientManager clientManager,
+    RunningPackageService runningPackageService,
+    INotificationService notificationService
+) : ComfyImageGenerationProviderBase(logger, clientManager, runningPackageService, notificationService)
 {
     public override string ProviderId => BananaVisionProviderIds.Flux2Klein;
     public override string ProviderName => "Flux.2 Klein (Local)";

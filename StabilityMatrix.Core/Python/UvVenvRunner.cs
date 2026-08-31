@@ -3,7 +3,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using System.Text.Json;
 using NLog;
-using Salaros.Configuration;
 using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
@@ -208,25 +207,17 @@ public class UvVenvRunner : IPyVenvRunner
 
         Logger.Info("Updating pyvenv.cfg with embedded Python directory {PyDir}", pythonDirectory);
 
-        // Insert a top section
-        var topSection = "[top]" + Environment.NewLine;
-        var cfg = new ConfigParser(topSection + File.ReadAllText(cfgPath));
-
-        // Need to set all path keys - home, base-prefix, base-exec-prefix, base-executable
-        cfg.SetValue("top", "home", pythonDirectory);
-        cfg.SetValue("top", "base-prefix", pythonDirectory);
-
-        cfg.SetValue("top", "base-exec-prefix", pythonDirectory);
-
-        cfg.SetValue(
-            "top",
-            "base-executable",
-            Path.Combine(pythonDirectory, Compat.IsWindows ? "python.exe" : RelativePythonPath)
+        var baseExecutable = Path.Combine(
+            pythonDirectory,
+            Compat.IsWindows ? "python.exe" : RelativePythonPath
         );
 
-        // Convert to string for writing, strip the top section
-        var cfgString = cfg.ToString()!.Replace(topSection, "");
-        File.WriteAllText(cfgPath, cfgString);
+        var cfg = PyVenvCfg.Load(cfgPath);
+        cfg["home"] = pythonDirectory;
+        cfg["base-prefix"] = pythonDirectory;
+        cfg["base-exec-prefix"] = pythonDirectory;
+        cfg["base-executable"] = baseExecutable;
+        cfg.Save(cfgPath);
 
         // Update last set path
         lastSetPyvenvCfgPath = pythonDirectory;
@@ -586,12 +577,14 @@ public class UvVenvRunner : IPyVenvRunner
         // Disable pip caching - uses significant memory for large packages like torch
         // env["PIP_NO_CACHE_DIR"] = "true";
 
+        // Add bundled uv to PATH so package launch scripts can invoke `uv`
+        var uvFolder = GlobalConfig.LibraryDir.JoinDir("Assets", "uv");
+
         // On windows, add portable git to PATH and binary as GIT
         if (Compat.IsWindows)
         {
             var portableGitBin = GlobalConfig.LibraryDir.JoinDir("PortableGit", "bin");
             var venvBin = RootPath.JoinDir(RelativeBinPath);
-            var uvFolder = GlobalConfig.LibraryDir.JoinDir("Assets", "uv");
             if (env.TryGetValue("PATH", out var pathValue))
             {
                 env = env.SetItem(
@@ -609,11 +602,11 @@ public class UvVenvRunner : IPyVenvRunner
         {
             if (env.TryGetValue("PATH", out var pathValue))
             {
-                env = env.SetItem("PATH", Compat.GetEnvPathWithExtensions(pathValue));
+                env = env.SetItem("PATH", Compat.GetEnvPathWithExtensions(uvFolder, pathValue));
             }
             else
             {
-                env = env.SetItem("PATH", Compat.GetEnvPathWithExtensions());
+                env = env.SetItem("PATH", Compat.GetEnvPathWithExtensions(uvFolder));
             }
         }
 

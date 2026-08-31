@@ -1038,6 +1038,24 @@
   <data name="Label_NodeDetails" xml:space="preserve">
     <value>Node Details</value>
   </data>
+  <data name="Label_RequiredCustomNodes" xml:space="preserve">
+    <value>Required Custom Nodes</value>
+  </data>
+  <data name="Label_NotInExtensionIndex" xml:space="preserve">
+    <value>Not found in extension index</value>
+  </data>
+  <data name="Action_InstallSelected" xml:space="preserve">
+    <value>Install Selected</value>
+  </data>
+  <data name="Label_NoCustomNodesRequired" xml:space="preserve">
+    <value>This workflow only uses built-in nodes</value>
+  </data>
+  <data name="Text_WorkflowNodesExplanation" xml:space="preserve">
+    <value>This workflow uses the node packs below. Missing packs can be installed from the extension index, like extensions from the package's Extensions tab.</value>
+  </data>
+  <data name="Label_WorkflowNodesTargetPackage" xml:space="preserve">
+    <value>ComfyUI installation to check against and install into</value>
+  </data>
   <data name="Label_WorkflowDescription" xml:space="preserve">
     <value>Workflow Description</value>
   </data>
@@ -1831,5 +1849,32 @@ Account tokens will not be viewable after saving, please make a note of them if 
   </data>
   <data name="Action_CustomFolderEllipsis" xml:space="preserve">
     <value>Custom...</value>
+  </data>
+  <data name="Label_Documentation" xml:space="preserve">
+    <value>Documentation</value>
+  </data>
+  <data name="Label_ViewDocumentation" xml:space="preserve">
+    <value>View documentation</value>
+  </data>
+  <data name="Label_DocumentationNotAvailable" xml:space="preserve">
+    <value>Documentation is not available yet</value>
+  </data>
+  <data name="Label_ZoomIn" xml:space="preserve">
+    <value>Zoom in</value>
+  </data>
+  <data name="Label_ZoomOut" xml:space="preserve">
+    <value>Zoom out</value>
+  </data>
+  <data name="Label_ResetZoom" xml:space="preserve">
+    <value>Reset zoom</value>
+  </data>
+  <data name="Text_DocumentationNotAvailable" xml:space="preserve">
+    <value>The documentation is coming soon. Please check back in a future release.</value>
+  </data>
+  <data name="Error_DocumentationListingLoadFailed" xml:space="preserve">
+    <value>Could not load the documentation listing. Check your connection and try again.</value>
+  </data>
+  <data name="Error_DocumentationPageLoadFailed" xml:space="preserve">
+    <value>Could not load this page. Check your connection and try again.</value>
   </data>
 </root>

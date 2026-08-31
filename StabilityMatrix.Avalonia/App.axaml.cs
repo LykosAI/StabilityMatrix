@@ -366,6 +366,12 @@ public sealed class App : Application
         // Setup uri handler for `stabilitymatrix://` protocol
         Program.UriHandler.RegisterUriScheme();
 
+        // Write a correct .desktop entry for AppImage runs so the app appears in the launcher
+        if (Compat.IsLinux)
+        {
+            LinuxDesktopIntegration.CreateDesktopFile();
+        }
+
         // Setup activation protocol handlers (uri handler on macOS)
         if (Compat.IsMacOS && this.TryGetFeature<IActivatableLifetime>() is { } activatableLifetime)
         {
@@ -451,6 +457,7 @@ public sealed class App : Application
             provider.GetRequiredService<ISecretsManager>(),
             provider.GetRequiredService<INavigationService<MainWindowViewModel>>(),
             provider.GetRequiredService<INavigationService<SettingsViewModel>>(),
+            provider.GetRequiredService<IDocumentationNavigationService>(),
             provider.GetRequiredService<IDistributedSubscriber<string, Uri>>()
         )
         {
@@ -462,7 +469,7 @@ public sealed class App : Application
                 provider.GetRequiredService<CheckpointsPageViewModel>(),
                 provider.GetRequiredService<CheckpointBrowserViewModel>(),
                 provider.GetRequiredService<OutputsPageViewModel>(),
-                provider.GetRequiredService<WorkflowsPageViewModel>(),
+                provider.GetRequiredService<InstalledWorkflowsViewModel>(),
             },
             FooterPages = { provider.GetRequiredService<SettingsViewModel>() },
         });
@@ -827,15 +834,6 @@ public sealed class App : Application
                 }
             )
             .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false })
-            .AddPolicyHandler(retryPolicy);
-
-        services
-            .AddRefitClient<IOpenArtApi>(defaultRefitSettings)
-            .ConfigureHttpClient(c =>
-            {
-                c.BaseAddress = new Uri("https://openart.ai/api/public/workflows");
-                c.Timeout = TimeSpan.FromHours(1);
-            })
             .AddPolicyHandler(retryPolicy);
 
         services

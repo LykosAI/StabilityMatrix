@@ -133,7 +133,7 @@ public class InferenceWanTextToVideoViewModel : InferenceGenerationViewModelBase
         CancellationToken cancellationToken
     )
     {
-        if (!await CheckClientConnectedWithPrompt() || !ClientManager.IsConnected)
+        if (!await CheckClientConnectedWithPrompt(cancellationToken) || !ClientManager.IsConnected)
         {
             return;
         }

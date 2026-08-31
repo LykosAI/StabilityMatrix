@@ -94,8 +94,16 @@ public static class Program
         }
 
         // Launched for custom URI scheme, handle and
-        // on macOS we use activation events so ignore this
-        if (!Compat.IsMacOS && Args.Uri is { } uriArg)
+        // on macOS we use activation events so ignore this.
+        // Windows registers the scheme handler with --uri, but on Linux the .desktop handler
+        // invokes us with the URI as a bare positional argument (%u), so accept that form too.
+        var uriArg =
+            Args.Uri
+            ?? args.FirstOrDefault(a =>
+                a.StartsWith($"{UriHandler.Scheme}://", StringComparison.OrdinalIgnoreCase)
+            );
+
+        if (!Compat.IsMacOS && uriArg is not null)
         {
             if (Uri.TryCreate(uriArg, UriKind.Absolute, out var uri))
             {
@@ -228,44 +236,31 @@ public static class Program
 
         var app = AppBuilder.Configure<App>().UsePlatformDetect().WithInterFont().LogToTrace();
 
-        if (Compat.IsLinux)
-        {
-            app = app.With(new X11PlatformOptions { OverlayPopups = true });
-        }
-        else if (Compat.IsMacOS)
-        {
-            app = app.With(new AvaloniaNativePlatformOptions { OverlayPopups = true });
-        }
+        // .With<T>() replaces the registered options instance wholesale, so each platform's
+        // options must be composed into a single object before applying.
+        var win32Options = new Win32PlatformOptions { OverlayPopups = Args.UseOverlayPopups };
+        var x11Options = new X11PlatformOptions { OverlayPopups = true, WmClass = "stabilitymatrix" };
+        var macOptions = new AvaloniaNativePlatformOptions { OverlayPopups = true };
 
         if (Args.UseOpenGlRendering)
         {
-            app = app.With(
-                new Win32PlatformOptions
-                {
-                    RenderingMode = [Win32RenderingMode.Wgl, Win32RenderingMode.Software],
-                }
-            );
+            win32Options.RenderingMode = [Win32RenderingMode.Wgl, Win32RenderingMode.Software];
         }
 
         if (Args.UseVulkanRendering)
         {
-            app = app.With(new X11PlatformOptions { RenderingMode = [X11RenderingMode.Vulkan] })
-                .With(new Win32PlatformOptions { RenderingMode = [Win32RenderingMode.Vulkan] });
+            win32Options.RenderingMode = [Win32RenderingMode.Vulkan];
+            x11Options.RenderingMode = [X11RenderingMode.Vulkan];
         }
 
         if (Args.DisableGpuRendering)
         {
-            app = app.With(new Win32PlatformOptions { RenderingMode = new[] { Win32RenderingMode.Software } })
-                .With(new X11PlatformOptions { RenderingMode = new[] { X11RenderingMode.Software } })
-                .With(
-                    new AvaloniaNativePlatformOptions
-                    {
-                        RenderingMode = new[] { AvaloniaNativeRenderingMode.Software },
-                    }
-                );
+            win32Options.RenderingMode = [Win32RenderingMode.Software];
+            x11Options.RenderingMode = [X11RenderingMode.Software];
+            macOptions.RenderingMode = [AvaloniaNativeRenderingMode.Software];
         }
 
-        return app;
+        return app.With(win32Options).With(x11Options).With(macOptions);
     }
 
     private static void HandleUpdateReplacement()

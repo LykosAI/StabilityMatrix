@@ -20,6 +20,10 @@
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
         <PackageReference Include="NSubstitute" />
+        <!-- Test agents may lack fontconfig, which the regular Linux libSkiaSharp links against.
+             Use the self-contained native build for tests and suppress the transitive regular one. -->
+        <PackageReference Include="SkiaSharp.NativeAssets.Linux" ExcludeAssets="all" />
+        <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" />
         <PackageReference Include="Polly" />
         <PackageReference Include="Polly.Contrib.WaitAndRetry" />
     </ItemGroup>

@@ -98,6 +98,60 @@ public static class SkiaExtensions
         return default;
     }
 
+    /// <summary>
+    /// Converts the <see cref="SKBitmap"/> to an Avalonia image, downscaling it to <paramref name="decodeWidth"/>
+    /// (preserving aspect ratio) if it is wider. Use for thumbnails so full-resolution bitmaps aren't kept in
+    /// memory or uploaded to the GPU. When <paramref name="decodeWidth"/> is <c>0</c> or the source is already
+    /// smaller, the bitmap is returned unscaled. Ownership of the bitmap (or its scaled replacement) is
+    /// transferred to the returned image.
+    /// </summary>
+    public static IImage? ToAvaloniaImageScaled(this SKBitmap? bitmap, int decodeWidth)
+    {
+        if (bitmap is null)
+        {
+            return null;
+        }
+
+        if (decodeWidth <= 0 || bitmap.Width <= decodeWidth)
+        {
+            return bitmap.ToAvaloniaImage();
+        }
+
+        var targetHeight = Math.Max(1, (int)Math.Round(bitmap.Height * ((double)decodeWidth / bitmap.Width)));
+
+        var resized = bitmap.Resize(
+            new SKImageInfo(decodeWidth, targetHeight),
+            new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.Linear)
+        );
+
+        // If the resize failed, fall back to handing off the original bitmap unscaled.
+        if (resized is null)
+        {
+            return bitmap.ToAvaloniaImage();
+        }
+
+        bitmap.Dispose();
+        return resized.ToAvaloniaImage();
+    }
+
+    /// <summary>
+    /// Decodes an image stream into an Avalonia image, downscaling to <paramref name="decodeWidth"/> if wider.
+    /// Does not dispose the supplied stream.
+    /// </summary>
+    public static IImage? DecodeToAvaloniaImageScaled(System.IO.Stream? stream, int decodeWidth)
+    {
+        return stream.ToSKBitmap().ToAvaloniaImageScaled(decodeWidth);
+    }
+
+    /// <summary>
+    /// Decodes an image file into an Avalonia image, downscaling to <paramref name="decodeWidth"/> if wider.
+    /// </summary>
+    public static IImage? DecodeFileToAvaloniaImageScaled(string path, int decodeWidth)
+    {
+        using var stream = new SKFileStream(path);
+        return SKBitmap.Decode(stream).ToAvaloniaImageScaled(decodeWidth);
+    }
+
     public static Bitmap ToAvaloniaBitmap(this SKBitmap bitmap)
     {
         return ToAvaloniaBitmap(bitmap, new Vector(96, 96));

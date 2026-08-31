@@ -89,8 +89,7 @@ public class TestCivArchiveApiClient : ICivArchiveApiClient
                     Tags = filters.Tags,
                     Username = filters.Username,
                 },
-                CanonicalUrl = "https://civarchive.com/top-models",
-                Hits = results.Count,
+                CanonicalUrl = "https://civarchive.com/search",
                 TotalHits = 4,
             }
         );
@@ -146,15 +145,17 @@ public class TestCivArchiveApiClient : ICivArchiveApiClient
         );
     }
 
-    public Task<string?> ResolveFileUrlAsync(
+    public Task<CivArchiveFileResolution?> ResolveFileAsync(
         string sha256RelativeUrl,
         CancellationToken cancellationToken = default
     )
     {
         // Map our seeded test file to the matching test version. Anything else returns null
         // so the caller falls back to opening the URL externally.
-        return Task.FromResult<string?>(
-            sha256RelativeUrl == "/sha256/abc123" ? "/models/1?modelVersionId=11" : null
+        return Task.FromResult<CivArchiveFileResolution?>(
+            sha256RelativeUrl == "/sha256/abc123"
+                ? new CivArchiveFileResolution("/models/1?modelVersionId=11", null)
+                : null
         );
     }
 

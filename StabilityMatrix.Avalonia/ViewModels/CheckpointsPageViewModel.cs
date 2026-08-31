@@ -401,7 +401,7 @@ public partial class CheckpointsPageViewModel(
             )
         );
 
-        Refresh().SafeFireAndForget();
+        Refresh().SafeFireAndForget(ex => logger.LogError(ex, "Error refreshing model index"));
 
         EventManager.Instance.ModelIndexChanged += (_, _) =>
         {
@@ -409,11 +409,20 @@ public partial class CheckpointsPageViewModel(
             // The ModelIndexChanged event may be raised from a background thread.
             Dispatcher.UIThread.Post(() =>
             {
-                RefreshCategories();
-                ModelsCache.EditDiff(
-                    modelIndexService.ModelIndex.Values.SelectMany(x => x),
-                    LocalModelFile.RelativePathConnectedModelInfoComparer
-                );
+                // Guarded: an exception here is otherwise unhandled on the Dispatcher and
+                // crashes the app.
+                try
+                {
+                    RefreshCategories();
+                    ModelsCache.EditDiff(
+                        modelIndexService.ModelIndex.Values.SelectMany(x => x),
+                        LocalModelFile.RelativePathConnectedModelInfoComparer
+                    );
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "Error refreshing checkpoint categories");
+                }
             });
         };
 
@@ -685,7 +694,12 @@ public partial class CheckpointsPageViewModel(
         // Select item if we're in "select mode"
         if (NumItemsSelected > 0)
             item.IsSelected = !item.IsSelected;
-        else if (item.CheckpointFile.HasConnectedModel)
+        else if (
+            item.CheckpointFile
+            is { HasCivitMetadata: true }
+                or { HasOpenModelDbMetadata: true }
+                or { HasCivArchiveMetadata: true }
+        )
             return ShowVersionDialog(item);
         else
             item.IsSelected = !item.IsSelected;

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Collections.Specialized;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -41,6 +43,7 @@ using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Inference;
 using StabilityMatrix.Core.Models.Notifications;
 using StabilityMatrix.Core.Models.PackageModification;
+using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Models.Packages.Extensions;
 using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Services;
@@ -640,15 +643,102 @@ public abstract partial class InferenceGenerationViewModelBase
     /// <summary>
     /// Shows a prompt and return false if client not connected
     /// </summary>
-    protected async Task<bool> CheckClientConnectedWithPrompt()
+    protected async Task<bool> CheckClientConnectedWithPrompt(CancellationToken cancellationToken = default)
     {
         if (ClientManager.IsConnected)
             return true;
 
         var vm = vmFactory.Get<InferenceConnectionHelpViewModel>();
-        await vm.CreateDialog().ShowAsync();
+        var result = await vm.CreateDialog().ShowAsync();
+
+        if (ClientManager.IsConnected)
+            return true;
+
+        // If the user chose to launch ComfyUI, the package is now starting up. The connection
+        // is established automatically by InferenceViewModel once startup completes, so wait for
+        // it here and let the generation resume instead of forcing the user to press Generate again.
+        if (result == ContentDialogResult.Primary && vm.IsLaunchMode)
+        {
+            return await WaitForConnectedAsync(cancellationToken);
+        }
 
         return ClientManager.IsConnected;
+    }
+
+    /// <summary>
+    /// Waits for the ClientManager to become connected, showing indeterminate progress.
+    /// Used after launching ComfyUI from the connection prompt so a queued generation can
+    /// resume automatically once the backend is ready. Stops waiting early if ComfyUI is
+    /// shut down or crashes before connecting (it is removed from RunningPackages either way).
+    /// </summary>
+    private async Task<bool> WaitForConnectedAsync(CancellationToken cancellationToken)
+    {
+        if (ClientManager.IsConnected)
+            return true;
+
+        // RunContinuationsAsynchronously so the await resumption (and UI updates in finally)
+        // don't run synchronously on the thread that raised the completing event.
+        var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        bool IsAnyComfyRunning() =>
+            runningPackageService.RunningPackages.Values.Any(vm => vm.RunningPackage.BasePackage is ComfyUI);
+
+        void OnPropertyChanged(object? sender, PropertyChangedEventArgs args)
+        {
+            // null/empty PropertyName means "all properties changed" per INotifyPropertyChanged
+            if (
+                args.PropertyName is nameof(ClientManager.IsConnected) or null or ""
+                && ClientManager.IsConnected
+            )
+            {
+                tcs.TrySetResult();
+            }
+        }
+
+        void OnRunningPackagesChanged(object? sender, NotifyCollectionChangedEventArgs args)
+        {
+            // ComfyUI was shut down or crashed before connecting - stop waiting
+            if (!IsAnyComfyRunning())
+            {
+                tcs.TrySetResult();
+            }
+        }
+
+        ClientManager.PropertyChanged += OnPropertyChanged;
+        runningPackageService.RunningPackages.CollectionChanged += OnRunningPackagesChanged;
+        try
+        {
+            // Re-check in case it connected, or the package already stopped, between the
+            // initial checks and subscribing
+            if (ClientManager.IsConnected)
+                return true;
+            if (!IsAnyComfyRunning())
+                return false;
+
+            // Give up waiting after a generous timeout in case startup never completes
+            using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            timeoutCts.CancelAfter(TimeSpan.FromMinutes(5));
+
+            OutputProgress.IsIndeterminate = true;
+            OutputProgress.Text = "Waiting for ComfyUI to start...";
+
+            await using (timeoutCts.Token.Register(() => tcs.TrySetCanceled(timeoutCts.Token)))
+            {
+                await tcs.Task;
+            }
+
+            return ClientManager.IsConnected;
+        }
+        catch (OperationCanceledException)
+        {
+            return ClientManager.IsConnected;
+        }
+        finally
+        {
+            ClientManager.PropertyChanged -= OnPropertyChanged;
+            runningPackageService.RunningPackages.CollectionChanged -= OnRunningPackagesChanged;
+            OutputProgress.ClearProgress();
+        }
     }
 
     /// <summary>
@@ -678,14 +768,6 @@ public abstract partial class InferenceGenerationViewModelBase
             )
         ).ToList();
 
-        var localExtensionsByGitUrl = localExtensions
-            .Where(ext => ext.GitRepositoryUrl is not null)
-            .ToDictionary(ext => ext.GitRepositoryUrl!, ext => ext);
-
-        var requiredExtensionReferences = requiredExtensionSpecifiers
-            .Select(specifier => specifier.Name)
-            .ToHashSet();
-
         var missingExtensions = new List<ExtensionSpecifier>();
         var outOfDateExtensions =
             new List<(ExtensionSpecifier Specifier, InstalledPackageExtension Installed)>();
@@ -693,7 +775,7 @@ public abstract partial class InferenceGenerationViewModelBase
         // Check missing extensions and out of date extensions
         foreach (var specifier in requiredExtensionSpecifiers)
         {
-            if (!localExtensionsByGitUrl.TryGetValue(specifier.Name, out var localExtension))
+            if (ExtensionMatcher.FindInstalled(specifier, localExtensions) is not { } localExtension)
             {
                 missingExtensions.Add(specifier);
                 continue;
@@ -729,92 +811,14 @@ public abstract partial class InferenceGenerationViewModelBase
             return true;
         }
 
-        var dialog = DialogHelper.CreateMarkdownDialog(
-            $"#### The following extensions are required for this workflow:\n"
-                + $"{string.Join("\n- ", missingExtensions.Select(ext => ext.Name))}"
-                + $"{string.Join("\n- ", outOfDateExtensions.Select(pair => $"{pair.Item1.Name} {pair.Specifier.Constraint} {pair.Specifier.Version} (Current Version: {pair.Installed.Version?.Tag})"))}",
-            "Install Required Extensions?"
+        await ComfyExtensionInstallHelper.PromptInstallAndRestartAsync(
+            manager,
+            localPackagePair,
+            missingExtensions,
+            outOfDateExtensions,
+            runningPackageService,
+            notificationService
         );
-
-        dialog.IsPrimaryButtonEnabled = true;
-        dialog.DefaultButton = ContentDialogButton.Primary;
-        dialog.PrimaryButtonText =
-            $"{Resources.Action_Install} ({localPackagePair.InstalledPackage.DisplayName.ToRepr()} will restart)";
-        dialog.CloseButtonText = Resources.Action_Cancel;
-
-        if (await dialog.ShowAsync() == ContentDialogResult.Primary)
-        {
-            var manifestExtensionsMap = await manager.GetManifestExtensionsMapAsync(
-                manager.GetManifests(localPackagePair.InstalledPackage)
-            );
-
-            var steps = new List<IPackageStep>();
-
-            // Add install for missing extensions
-            foreach (var missingExtension in missingExtensions)
-            {
-                if (!manifestExtensionsMap.TryGetValue(missingExtension.Name, out var extension))
-                {
-                    Logger.Warn(
-                        "Extension {MissingExtensionUrl} not found in manifests",
-                        missingExtension.Name
-                    );
-                    continue;
-                }
-
-                steps.Add(new InstallExtensionStep(manager, localPackagePair.InstalledPackage, extension));
-            }
-
-            // Add update for out of date extensions
-            foreach (var (specifier, installed) in outOfDateExtensions)
-            {
-                if (!manifestExtensionsMap.TryGetValue(specifier.Name, out var extension))
-                {
-                    Logger.Warn("Extension {MissingExtensionUrl} not found in manifests", specifier.Name);
-                    continue;
-                }
-
-                steps.Add(new UpdateExtensionStep(manager, localPackagePair.InstalledPackage, installed));
-            }
-
-            var runner = new PackageModificationRunner
-            {
-                ShowDialogOnStart = true,
-                ModificationCompleteTitle = "Extensions Installed",
-                ModificationCompleteMessage = "Finished installing required extensions",
-            };
-            EventManager.Instance.OnPackageInstallProgressAdded(runner);
-
-            runner
-                .ExecuteSteps(steps)
-                .ContinueWith(async _ =>
-                {
-                    if (runner.Failed)
-                        return;
-
-                    // Restart Package
-                    try
-                    {
-                        await Dispatcher.UIThread.InvokeAsync(async () =>
-                        {
-                            await runningPackageService.StopPackage(localPackagePair.InstalledPackage.Id);
-                            await runningPackageService.StartPackage(localPackagePair.InstalledPackage);
-                        });
-                    }
-                    catch (Exception e)
-                    {
-                        Logger.Error(e, "Error while restarting package");
-
-                        notificationService.ShowPersistent(
-                            new AppException(
-                                "Could not restart package",
-                                "Please manually restart the package for extension changes to take effect"
-                            )
-                        );
-                    }
-                })
-                .SafeFireAndForget();
-        }
 
         return false;
     }

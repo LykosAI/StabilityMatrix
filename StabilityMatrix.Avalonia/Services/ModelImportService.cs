@@ -119,8 +119,7 @@ public class ModelImportService(
         }
 
         // Get latest version file
-        var modelFile =
-            selectedFile ?? modelVersion.Files?.FirstOrDefault(x => x.Type == CivitFileType.Model);
+        var modelFile = selectedFile ?? modelVersion.Files?.FirstOrDefault(x => x.Type.IsModelWeights());
         if (modelFile is null)
         {
             notificationService.Show(
@@ -189,7 +188,10 @@ public class ModelImportService(
         var previewImagePath = await SavePreviewImage(modelVersion, downloadPath);
 
         // Create tracked download
-        var download = trackedDownloadService.NewDownload(modelFile.DownloadUrl, downloadPath);
+        var download = trackedDownloadService.NewDownload(
+            modelFile.GetFileSpecificDownloadUrl(),
+            downloadPath
+        );
 
         // Add hash info
         download.ExpectedHashSha256 = modelFile.Hashes.SHA256;

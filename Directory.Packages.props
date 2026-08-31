@@ -67,7 +67,6 @@
     <PackageVersion Include="Refit.HttpClientFactory" Version="8.0.0" />
     <PackageVersion Include="RockLib.Reflection.Optimized" Version="3.0.0" />
     <PackageVersion Include="Nito.AsyncEx" Version="5.1.2" />
-    <PackageVersion Include="Salaros.ConfigParser" Version="0.3.8" />
     <PackageVersion Include="Semi.Avalonia" Version="11.2.0" />
     <PackageVersion Include="Semver" Version="3.0.0-beta.1" />
     <PackageVersion Include="Sentry" Version="5.5.1" />
@@ -118,6 +117,7 @@
     <PackageVersion Include="Projektanker.Icons.Avalonia.FontAwesome" Version="9.4.0" />
     <PackageVersion Include="SpacedGrid-Avalonia" Version="11.0.0" />
     <PackageVersion Include="SkiaSharp.NativeAssets.Linux" Version="3.0.0-preview.4.1" />
+    <PackageVersion Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.0.0-preview.4.1" />
   </ItemGroup>
   <ItemGroup Label="Tests">
     <PackageVersion Include="coverlet.collector" Version="6.0.2" />

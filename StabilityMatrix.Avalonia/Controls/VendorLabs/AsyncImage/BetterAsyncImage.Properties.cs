@@ -27,6 +27,14 @@ public partial class BetterAsyncImage
     >(nameof(Source));
 
     /// <summary>
+    /// Defines the <see cref="DecodeWidth"/> property.
+    /// </summary>
+    public static readonly StyledProperty<int> DecodeWidthProperty = AvaloniaProperty.Register<
+        BetterAsyncImage,
+        int
+    >(nameof(DecodeWidth));
+
+    /// <summary>
     /// Defines the <see cref="Stretch"/> property.
     /// </summary>
     public static readonly StyledProperty<Stretch> StretchProperty = AvaloniaProperty.Register<
@@ -88,6 +96,17 @@ public partial class BetterAsyncImage
     {
         get => GetValue(SourceProperty);
         set => SetValue(SourceProperty, value);
+    }
+
+    /// <summary>
+    /// Gets or sets the width (in pixels) to decode the image at. When greater than 0, images wider than this
+    /// are downscaled at decode time, which avoids keeping full-resolution bitmaps in memory for thumbnail-sized
+    /// displays. A value of 0 (the default) decodes at the source resolution.
+    /// </summary>
+    public int DecodeWidth
+    {
+        get => GetValue(DecodeWidthProperty);
+        set => SetValue(DecodeWidthProperty, value);
     }
 
     /// <summary>

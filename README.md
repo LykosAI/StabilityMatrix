@@ -27,7 +27,7 @@
 [kohya-ss]: https://github.com/bmaltais/kohya_ss
 [onetrainer]: https://github.com/Nerogar/OneTrainer
 [forge]: https://github.com/lllyasviel/stable-diffusion-webui-forge
-[stable-swarm]: https://github.com/Stability-AI/StableSwarmUI
+[swarmui]: https://github.com/mcmonkeyprojects/SwarmUI
 [sdfx]: https://github.com/sdfxai/sdfx
 [fooocus-mashb1t]: https://github.com/mashb1t/Fooocus
 [reforge]: https://github.com/Panchovix/stable-diffusion-webui-reForge
@@ -54,7 +54,7 @@ Multi-Platform Package Manager and Inference UI for Stable Diffusion
   - [Stable Diffusion WebUI reForge][reforge], [Stable Diffusion WebUI Forge][forge], [Stable Diffusion WebUI AMDGPU Forge][amdforge] [Automatic 1111][auto1111], [Automatic 1111 DirectML][auto1111-directml], [SD Web UI-UX][webui-ux], [SD.Next][sdnext]
   - [Fooocus][fooocus], [Fooocus MRE][fooocus-mre], [Fooocus ControlNet SDXL][fooocus-controlnet], [Ruined Fooocus][ruined-fooocus], [Fooocus - mashb1t's 1-Up Edition][fooocus-mashb1t], [SimpleSDXL][simplesdxl]
   - [ComfyUI][comfy]
-  - [StableSwarmUI][stable-swarm]
+  - [SwarmUI][swarmui]
   - [VoltaML][voltaml]
   - [InvokeAI][invokeai]
   - [SDFX][sdfx]

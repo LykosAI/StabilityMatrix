@@ -21,6 +21,18 @@ public partial class ConfirmDeleteDialogViewModel(ILogger<ConfirmDeleteDialogVie
     [ObservableProperty]
     private string title = "Confirm Delete";
 
+    /// <summary>
+    /// Optional description shown below the title, for extra context on what is being deleted and why.
+    /// </summary>
+    [ObservableProperty]
+    private string? description;
+
+    /// <summary>
+    /// Optional total size / file count line shown below the paths list.
+    /// </summary>
+    [ObservableProperty]
+    private string? totalSizeText;
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ConfirmDeleteButtonText))]
     [NotifyPropertyChangedFor(nameof(IsPermanentDelete))]

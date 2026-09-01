@@ -39,12 +39,18 @@
             Text="{Binding ExpectedPackageName, StringFormat={}Delete {0}?}"
             TextAlignment="Center" />
 
-        <TextBlock
-            Grid.Row="2"
-            Margin="0,4,0,0"
-            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-            Text="{Binding Package.FullPath}"
-            TextAlignment="Center" />
+        <StackPanel Grid.Row="2" Margin="0,4,0,0">
+            <TextBlock
+                Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                Text="{Binding Package.FullPath}"
+                TextAlignment="Center" />
+            <TextBlock
+                Margin="0,4,0,0"
+                Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                IsVisible="{Binding FolderSizeText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                Text="{Binding FolderSizeText}"
+                TextAlignment="Center" />
+        </StackPanel>
 
         <controls1:InfoBar
             Title="{x:Static lang:Resources.Label_ActionCannotBeUndone}"

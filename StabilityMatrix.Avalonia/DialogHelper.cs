@@ -2,11 +2,13 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using AsyncAwaitBestPractices;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Documents;
@@ -20,19 +22,25 @@ using AvaloniaEdit;
 using AvaloniaEdit.TextMate;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
+using Microsoft.Extensions.DependencyInjection;
 using NLog;
 using Refit;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
+using StabilityMatrix.Avalonia.Services;
+using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Services;
 using TextMateSharp.Grammars;
 using Process = FuzzySharp.Process;
+using Size = StabilityMatrix.Core.Helper.Size;
 
 namespace StabilityMatrix.Avalonia;
 
@@ -637,6 +645,77 @@ public static class DialogHelper
             Content = content,
             XamlRoot = App.VisualRoot,
         };
+    }
+
+    /// <summary>
+    /// Shows a confirmation dialog before deleting existing files at a package install location,
+    /// e.g. a folder the user placed there manually to import an existing installation.
+    /// Returns true if the location does not exist, is empty, or the user explicitly confirmed
+    /// the deletion; false if the user cancelled.
+    /// </summary>
+    public static async Task<bool> ConfirmDeleteExistingInstallDataAsync(DirectoryPath installLocation)
+    {
+        if (!installLocation.Exists || !installLocation.Info.EnumerateFileSystemInfos().Any())
+            return true;
+
+        var vmFactory = App.Services.GetRequiredService<IServiceManager<ViewModelBase>>();
+
+        var vm = vmFactory.Get<ConfirmDeleteDialogViewModel>();
+        vm.Title = "Existing files found";
+        vm.Description =
+            "This folder already exists and contains files that were not installed by Stability Matrix. "
+            + "Installing here will permanently delete the folder shown below and everything inside it.\n\n"
+            + "If this is an existing installation you want to keep, choose Cancel and use Import "
+            + "from the Packages page instead, or move your data elsewhere first.";
+        vm.PathsToDelete = [installLocation.FullPath];
+        vm.IsRecycleBinAvailable = false;
+        vm.TotalSizeText = "Calculating size…";
+
+        Task.Run(() =>
+            {
+                var (fileCount, totalBytes) = GetFileStats(installLocation.Info);
+                Dispatcher.UIThread.Post(() =>
+                    vm.TotalSizeText =
+                        $"Total: {Size.FormatBytes(Convert.ToUInt64(totalBytes))} in {fileCount:N0} files"
+                );
+            })
+            .SafeFireAndForget(ex =>
+            {
+                Logger.Warn(ex, "Failed to calculate size of {Path}", installLocation.FullPath);
+                Dispatcher.UIThread.Post(() => vm.TotalSizeText = null);
+            });
+
+        return await vm.GetDialog().ShowAsync() == ContentDialogResult.Primary;
+    }
+
+    /// <summary>
+    /// Gets the total file count and size of a directory, without following symbolic links / junctions.
+    /// </summary>
+    private static (int FileCount, long TotalBytes) GetFileStats(DirectoryInfo directory)
+    {
+        var fileCount = 0;
+        var totalBytes = 0L;
+
+        foreach (var file in directory.EnumerateFiles())
+        {
+            if (file.Attributes.HasFlag(FileAttributes.ReparsePoint))
+                continue;
+
+            fileCount++;
+            totalBytes += file.Length;
+        }
+
+        foreach (var subDir in directory.EnumerateDirectories())
+        {
+            if (subDir.Attributes.HasFlag(FileAttributes.ReparsePoint))
+                continue;
+
+            var (subCount, subBytes) = GetFileStats(subDir);
+            fileCount += subCount;
+            totalBytes += subBytes;
+        }
+
+        return (fileCount, totalBytes);
     }
 }
 

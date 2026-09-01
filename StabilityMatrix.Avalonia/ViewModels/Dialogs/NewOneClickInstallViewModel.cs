@@ -6,6 +6,7 @@ using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
+using Avalonia.Controls.Notifications;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -121,9 +122,39 @@ public partial class NewOneClickInstallViewModel : ContentDialogViewModelBase
     [RelayCommand]
     private async Task InstallPackage(BasePackage selectedPackage)
     {
-        OnPrimaryButtonClick();
-
         var installLocation = Path.Combine(settingsManager.LibraryDir, "Packages", selectedPackage.Name);
+        var installPath = new DirectoryPath(installLocation);
+
+        if (installPath.Exists && installPath.Info.EnumerateFileSystemInfos().Any())
+        {
+            // The install location already holds data we didn't put there — likely an existing
+            // installation the user placed for Import. Close this dialog first so the
+            // confirmation is the only dialog on screen, then require explicit confirmation
+            // before deleting anything.
+            OnCloseButtonClick();
+
+            if (!await DialogHelper.ConfirmDeleteExistingInstallDataAsync(installPath))
+            {
+                notificationService.Show(
+                    "Installation cancelled",
+                    $"Existing files at {installLocation} were left untouched.",
+                    NotificationType.Information
+                );
+                return;
+            }
+
+            await installPath.DeleteVerboseAsync(logger);
+        }
+        else
+        {
+            OnPrimaryButtonClick();
+
+            if (installPath.Exists)
+            {
+                await installPath.DeleteVerboseAsync(logger);
+            }
+        }
+
         var recommendedPython = selectedPackage.RecommendedPythonVersion;
 
         var steps = new List<IPackageStep>
@@ -131,13 +162,6 @@ public partial class NewOneClickInstallViewModel : ContentDialogViewModelBase
             new SetPackageInstallingStep(settingsManager, selectedPackage.Name),
             new SetupPrerequisitesStep(prerequisiteHelper, selectedPackage, recommendedPython),
         };
-
-        // get latest version & download & install
-        if (Directory.Exists(installLocation))
-        {
-            var installPath = new DirectoryPath(installLocation);
-            await installPath.DeleteVerboseAsync(logger);
-        }
 
         var downloadVersion = await selectedPackage.GetLatestVersion();
         var installedVersion = new InstalledPackageVersion { IsPrerelease = false };

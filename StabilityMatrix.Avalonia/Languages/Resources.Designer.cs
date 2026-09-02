@@ -6188,5 +6188,203 @@ namespace StabilityMatrix.Avalonia.Languages {
                 return ResourceManager.GetString("Label_ImageFileNotFound", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Example telemetry.
+        /// </summary>
+        public static string Label_ExampleTelemetry {
+            get {
+                return ResourceManager.GetString("Label_ExampleTelemetry", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Installation ID.
+        /// </summary>
+        public static string Label_InstallationId {
+            get {
+                return ResourceManager.GetString("Label_InstallationId", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to A random identifier that lets us count installations without knowing who you are.
+        /// </summary>
+        public static string Text_AnalyticsInstallationIdDescription {
+            get {
+                return ResourceManager.GetString("Text_AnalyticsInstallationIdDescription", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to A daily ping with the Stability Matrix version and operating system. Everything .
+        /// </summary>
+        public static string Text_AnalyticsLaunchDataDescription {
+            get {
+                return ResourceManager.GetString("Text_AnalyticsLaunchDataDescription", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Reset.
+        /// </summary>
+        public static string Action_Reset {
+            get {
+                return ResourceManager.GetString("Action_Reset", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Hardware.
+        /// </summary>
+        public static string Label_AnalyticsHardware {
+            get {
+                return ResourceManager.GetString("Label_AnalyticsHardware", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Your GPU model and video memory, total system memory, CPU architecture and NVIDI.
+        /// </summary>
+        public static string Text_AnalyticsHardwareDescription {
+            get {
+                return ResourceManager.GetString("Text_AnalyticsHardwareDescription", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Package usage.
+        /// </summary>
+        public static string Label_AnalyticsPackageUsage {
+            get {
+                return ResourceManager.GetString("Label_AnalyticsPackageUsage", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Which packages you launch and roughly how long they run, as daily totals..
+        /// </summary>
+        public static string Text_AnalyticsPackageUsageDescription {
+            get {
+                return ResourceManager.GetString("Text_AnalyticsPackageUsageDescription", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Inference usage.
+        /// </summary>
+        public static string Label_AnalyticsInferenceUsage {
+            get {
+                return ResourceManager.GetString("Label_AnalyticsInferenceUsage", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to How many generations you run in Inference, by tab type and model family, as dail.
+        /// </summary>
+        public static string Text_AnalyticsInferenceUsageDescription {
+            get {
+                return ResourceManager.GetString("Text_AnalyticsInferenceUsageDescription", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Feature usage.
+        /// </summary>
+        public static string Label_AnalyticsFeatureUsage {
+            get {
+                return ResourceManager.GetString("Label_AnalyticsFeatureUsage", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Which pages of Stability Matrix you visit, as daily totals..
+        /// </summary>
+        public static string Text_AnalyticsFeatureUsageDescription {
+            get {
+                return ResourceManager.GetString("Text_AnalyticsFeatureUsageDescription", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Package installs.
+        /// </summary>
+        public static string Label_AnalyticsPackageInstalls {
+            get {
+                return ResourceManager.GetString("Label_AnalyticsPackageInstalls", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Which packages you install and whether the install succeeded, plus the package a.
+        /// </summary>
+        public static string Text_AnalyticsPackageInstallsDescription {
+            get {
+                return ResourceManager.GetString("Text_AnalyticsPackageInstallsDescription", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Stability Matrix can now share a few more kinds of anonymous usage data. Pick wh.
+        /// </summary>
+        public static string Text_AnalyticsConsentUpdated {
+            get {
+                return ResourceManager.GetString("Text_AnalyticsConsentUpdated", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Select a category to preview exactly what it sends..
+        /// </summary>
+        public static string Text_AnalyticsSelectCategoryHint {
+            get {
+                return ResourceManager.GetString("Text_AnalyticsSelectCategoryHint", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to "version": "2.17.0",.
+        /// </summary>
+        public static string AnalyticsExample_Launch {
+            get {
+                return ResourceManager.GetString("AnalyticsExample_Launch", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to "gpus": [.
+        /// </summary>
+        public static string AnalyticsExample_Hardware {
+            get {
+                return ResourceManager.GetString("AnalyticsExample_Hardware", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to "periodStart": "2026-08-31T14:02:11+00:00",.
+        /// </summary>
+        public static string AnalyticsExample_PackageUsage {
+            get {
+                return ResourceManager.GetString("AnalyticsExample_PackageUsage", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to "periodStart": "2026-08-31T14:02:11+00:00",.
+        /// </summary>
+        public static string AnalyticsExample_InferenceUsage {
+            get {
+                return ResourceManager.GetString("AnalyticsExample_InferenceUsage", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to "periodStart": "2026-08-31T14:02:11+00:00",.
+        /// </summary>
+        public static string AnalyticsExample_FeatureUsage {
+            get {
+                return ResourceManager.GetString("AnalyticsExample_FeatureUsage", resourceCulture);
+            }
+        }
     }
 }

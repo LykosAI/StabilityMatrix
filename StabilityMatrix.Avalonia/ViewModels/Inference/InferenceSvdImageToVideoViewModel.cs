@@ -15,6 +15,7 @@ using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Inference.Video;
 using StabilityMatrix.Avalonia.Views.Inference;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Helper.Analytics;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.Comfy;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
@@ -39,6 +40,9 @@ public partial class InferenceSvdImageToVideoViewModel
 
     [JsonPropertyName("Model")]
     public ImgToVidModelCardViewModel ModelCardViewModel { get; }
+
+    /// <inheritdoc />
+    protected override string? AnalyticsModelFamilyKey => "Svd";
 
     [JsonPropertyName("Sampler")]
     public SamplerCardViewModel SamplerCardViewModel { get; }
@@ -65,7 +69,8 @@ public partial class InferenceSvdImageToVideoViewModel
         IServiceManager<ViewModelBase> vmFactory,
         IModelIndexService modelIndexService,
         RunningPackageService runningPackageService,
-        IPromptQueueService promptQueueService
+        IPromptQueueService promptQueueService,
+        IAnalyticsUsageTracker usageTracker
     )
         : base(
             vmFactory,
@@ -73,7 +78,8 @@ public partial class InferenceSvdImageToVideoViewModel
             notificationService,
             settingsManager,
             runningPackageService,
-            promptQueueService
+            promptQueueService,
+            usageTracker
         )
     {
         this.notificationService = notificationService;

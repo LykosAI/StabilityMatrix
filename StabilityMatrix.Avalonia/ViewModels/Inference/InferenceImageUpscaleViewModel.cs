@@ -14,6 +14,7 @@ using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.Views.Inference;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
+using StabilityMatrix.Core.Helper.Analytics;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 using StabilityMatrix.Core.Services;
@@ -62,7 +63,8 @@ public class InferenceImageUpscaleViewModel : InferenceGenerationViewModelBase
         ISettingsManager settingsManager,
         IServiceManager<ViewModelBase> vmFactory,
         RunningPackageService runningPackageService,
-        IPromptQueueService promptQueueService
+        IPromptQueueService promptQueueService,
+        IAnalyticsUsageTracker usageTracker
     )
         : base(
             vmFactory,
@@ -70,7 +72,8 @@ public class InferenceImageUpscaleViewModel : InferenceGenerationViewModelBase
             notificationService,
             settingsManager,
             runningPackageService,
-            promptQueueService
+            promptQueueService,
+            usageTracker
         )
     {
         this.notificationService = notificationService;

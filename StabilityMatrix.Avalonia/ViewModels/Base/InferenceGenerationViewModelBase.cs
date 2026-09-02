@@ -35,6 +35,7 @@ using StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Helper.Analytics;
 using StabilityMatrix.Core.Inference;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.Comfy;
@@ -68,6 +69,7 @@ public abstract partial class InferenceGenerationViewModelBase
     private readonly IServiceManager<ViewModelBase> vmFactory;
     private readonly INotificationService notificationService;
     private readonly IPromptQueueService promptQueueService;
+    private readonly IAnalyticsUsageTracker usageTracker;
 
     [JsonPropertyName("ImageGallery")]
     public ImageGalleryCardViewModel ImageGalleryCardViewModel { get; }
@@ -88,7 +90,8 @@ public abstract partial class InferenceGenerationViewModelBase
         INotificationService notificationService,
         ISettingsManager settingsManager,
         RunningPackageService runningPackageService,
-        IPromptQueueService promptQueueService
+        IPromptQueueService promptQueueService,
+        IAnalyticsUsageTracker usageTracker
     )
         : base(notificationService)
     {
@@ -97,6 +100,7 @@ public abstract partial class InferenceGenerationViewModelBase
         this.runningPackageService = runningPackageService;
         this.vmFactory = vmFactory;
         this.promptQueueService = promptQueueService;
+        this.usageTracker = usageTracker;
 
         ClientManager = inferenceClientManager;
 
@@ -621,6 +625,25 @@ public abstract partial class InferenceGenerationViewModelBase
     }
 
     /// <summary>
+    /// Workflow profile key of the model family a generation uses, for the opt-in Inference
+    /// usage counters. Null when the tab has no notion of a model family.
+    /// </summary>
+    [JsonIgnore]
+    protected virtual string? AnalyticsModelFamilyKey => null;
+
+    private void RecordGenerationForAnalytics()
+    {
+        try
+        {
+            usageTracker.RecordInferenceGeneration(this.ToProjectType().ToString(), AnalyticsModelFamilyKey);
+        }
+        catch (Exception e)
+        {
+            Logger.Debug(e, "Failed to record generation for analytics");
+        }
+    }
+
+    /// <summary>
     /// Snapshots the current tab state and adds it to the prompt queue. Separate from the Generate
     /// button; does not require a connected client (queueing while ComfyUI is off is allowed).
     /// </summary>
@@ -761,6 +784,8 @@ public abstract partial class InferenceGenerationViewModelBase
             await EnsureInputImagesHashedAsync();
 
             await GenerateImageImpl(GenerateOverrides.FromFlags(default), cancellationToken);
+
+            RecordGenerationForAnalytics();
         }
         finally
         {
@@ -784,6 +809,8 @@ public abstract partial class InferenceGenerationViewModelBase
         try
         {
             await GenerateImageImpl(overrides, cancellationToken);
+
+            RecordGenerationForAnalytics();
         }
         catch (OperationCanceledException)
         {

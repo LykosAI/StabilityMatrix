@@ -15,18 +15,38 @@ public class AnalyticsRequestConverter : JsonConverter<AnalyticsRequest>
         using var jsonDocument = JsonDocument.ParseValue(ref reader);
         var root = jsonDocument.RootElement;
 
-        if (!root.TryGetProperty("Type", out var typeProperty))
-            throw new JsonException("Missing Type property");
+        if (
+            !root.TryGetProperty("type", out var typeProperty)
+            && !root.TryGetProperty("Type", out typeProperty)
+        )
+            throw new JsonException("Missing type property");
 
         var type = typeProperty.GetString();
         return type switch
         {
-            "package-install"
-                => JsonSerializer.Deserialize<PackageInstallAnalyticsRequest>(root.GetRawText(), options),
-            "first-time-install"
-                => JsonSerializer.Deserialize<FirstTimeInstallAnalytics>(root.GetRawText(), options),
+            "package-install" => JsonSerializer.Deserialize<PackageInstallAnalyticsRequest>(
+                root.GetRawText(),
+                options
+            ),
+            "first-time-install" => JsonSerializer.Deserialize<FirstTimeInstallAnalytics>(
+                root.GetRawText(),
+                options
+            ),
             "launch" => JsonSerializer.Deserialize<LaunchAnalyticsRequest>(root.GetRawText(), options),
-            _ => throw new JsonException($"Unknown Type: {type}")
+            "hardware" => JsonSerializer.Deserialize<HardwareAnalyticsRequest>(root.GetRawText(), options),
+            "package-usage" => JsonSerializer.Deserialize<PackageUsageAnalyticsRequest>(
+                root.GetRawText(),
+                options
+            ),
+            "inference-usage" => JsonSerializer.Deserialize<InferenceUsageAnalyticsRequest>(
+                root.GetRawText(),
+                options
+            ),
+            "feature-usage" => JsonSerializer.Deserialize<FeatureUsageAnalyticsRequest>(
+                root.GetRawText(),
+                options
+            ),
+            _ => throw new JsonException($"Unknown Type: {type}"),
         };
     }
 

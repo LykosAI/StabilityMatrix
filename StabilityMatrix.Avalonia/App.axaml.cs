@@ -460,6 +460,7 @@ public sealed class App : Application
             provider.GetRequiredService<INotificationService>(),
             provider.GetRequiredService<IAppNotificationService>(),
             provider.GetRequiredService<IAnalyticsHelper>(),
+            provider.GetRequiredService<IAnalyticsUsageTracker>(),
             provider.GetRequiredService<IUpdateHelper>(),
             provider.GetRequiredService<ISecretsManager>(),
             provider.GetRequiredService<INavigationService<MainWindowViewModel>>(),

@@ -4,7 +4,9 @@ using Injectio.Attributes;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.FileInterfaces;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
@@ -21,6 +23,9 @@ public partial class ConfirmPackageDeleteDialogViewModel : ContentDialogViewMode
     [NotifyPropertyChangedFor(nameof(IsValid))]
     public partial string PackageName { get; set; } = string.Empty;
 
+    [ObservableProperty]
+    public partial string? FolderSizeText { get; set; }
+
     public string? ExpectedPackageName => Package.DisplayName;
     public bool IsValid => ExpectedPackageName?.Equals(PackageName, StringComparison.Ordinal) ?? false;
     public string DeleteWarningText
@@ -36,7 +41,9 @@ public partial class ConfirmPackageDeleteDialogViewModel : ContentDialogViewMode
             if (!Package.UseSharedOutputFolder)
                 items.Add("• Images/outputs");
 
-            if (Package.PreferredSharedFolderMethod is SharedFolderMethod.None)
+            // Symlink mode is the only one that relocates models out of the package folder;
+            // in Configuration (yaml) and None modes they are real files that will be deleted
+            if (Package.PreferredSharedFolderMethod is not SharedFolderMethod.Symlink)
                 items.Add("• Models/checkpoints placed in the package's model folders");
 
             items.Add("• Any custom files in the package folder");
@@ -49,5 +56,24 @@ public partial class ConfirmPackageDeleteDialogViewModel : ContentDialogViewMode
     private async Task CopyExpectedPackageName()
     {
         await App.Clipboard?.SetTextAsync(ExpectedPackageName);
+    }
+
+    /// <inheritdoc />
+    public override async Task OnLoadedAsync()
+    {
+        await base.OnLoadedAsync();
+
+        if (Package.FullPath is not { } fullPath)
+            return;
+
+        try
+        {
+            var sizeBytes = await new DirectoryPath(fullPath).GetSizeAsync(includeSymbolicLinks: false);
+            FolderSizeText = $"Total size: {Size.FormatBytes(Convert.ToUInt64(sizeBytes))}";
+        }
+        catch (Exception)
+        {
+            // Size display is informational only
+        }
     }
 }

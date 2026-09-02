@@ -17,10 +17,8 @@
     d:DesignWidth="500"
     x:DataType="dialogs:ConfirmDeleteDialogViewModel"
     mc:Ignorable="d">
-    
-    <sg:SpacedGrid
-        RowDefinitions="Auto,Auto,*,Auto,Auto,Auto,Auto"
-        RowSpacing="12">
+
+    <sg:SpacedGrid RowDefinitions="Auto,Auto,Auto,*,Auto,Auto,Auto,Auto,Auto" RowSpacing="12">
         <TextBlock
             Margin="0,0,0,8"
             Text="{Binding Title}"
@@ -30,17 +28,32 @@
         <TextBlock
             Grid.Row="1"
             Margin="4,0"
+            IsVisible="{Binding Description, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+            Text="{Binding Description}"
+            TextWrapping="Wrap" />
+
+        <TextBlock
+            Grid.Row="2"
+            Margin="4,0"
             Text="{Binding DeleteFollowingFilesText}"
             Theme="{DynamicResource BodyStrongTextBlockStyle}" />
 
         <controls:Card
-            Grid.Row="2"
+            Grid.Row="3"
             Margin="2"
             Padding="4,6"
             VerticalAlignment="Top"
             ScrollViewer.VerticalScrollBarVisibility="Visible">
             <ListBox ItemsSource="{Binding PathsToDelete}" />
         </controls:Card>
+
+        <TextBlock
+            Grid.Row="4"
+            Margin="4,0"
+            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+            IsVisible="{Binding TotalSizeText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+            Text="{Binding TotalSizeText}"
+            TextWrapping="Wrap" />
 
         <!--<ui:InfoBar Grid.Row="3"
                     Margin="4,0"
@@ -52,7 +65,7 @@
 
         <ui:InfoBar
             Title="{x:Static lang:Resources.Label_ActionCannotBeUndone}"
-            Grid.Row="3"
+            Grid.Row="5"
             Margin="4,0"
             VerticalAlignment="Bottom"
             IsClosable="False"
@@ -60,21 +73,21 @@
             Severity="Warning" />
 
         <CheckBox
-            Grid.Row="5"
+            Grid.Row="7"
             Margin="12,0"
-            IsVisible="{Binding IsRecycleBinAvailable}"
+            Content="{x:Static lang:Resources.Label_DeletePermanently}"
             IsChecked="{Binding IsRecycleBinOptOutChecked}"
-            Content="{x:Static lang:Resources.Label_DeletePermanently}" />
+            IsVisible="{Binding IsRecycleBinAvailable}" />
 
         <TextBlock
-            Grid.Row="4"
+            Grid.Row="6"
             Margin="4,0"
             VerticalAlignment="Bottom"
             Text="{x:Static lang:Resources.Label_AreYouSure}"
             Theme="{DynamicResource BodyStrongTextBlockStyle}" />
-        
+
         <UniformGrid
-            Grid.Row="6"
+            Grid.Row="8"
             Margin="0,4,0,-24"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Bottom">
@@ -82,13 +95,13 @@
                 Margin="0,0,8,0"
                 HorizontalAlignment="Stretch"
                 Command="{Binding OnCloseButtonClick}"
-                Content="{x:Static lang:Resources.Action_Cancel}"/>
+                Content="{x:Static lang:Resources.Action_Cancel}" />
             <Button
                 Margin="0,0,8,0"
                 HorizontalAlignment="Stretch"
                 Classes="danger"
                 Command="{Binding ConfirmDeleteClickCommand}"
-                Content="{Binding ConfirmDeleteButtonText}"/>
+                Content="{Binding ConfirmDeleteButtonText}" />
         </UniformGrid>
     </sg:SpacedGrid>
 </controls:UserControlBase>

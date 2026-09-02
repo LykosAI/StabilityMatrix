@@ -17,6 +17,9 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed trigger words being cut off on the CivArchive details page — entries that are whole prompt lines now wrap
 - CivArchive article results, which have no in-app page, now open in the web browser instead of erroring
 - Fixed OneTrainer's **Windows ROCm** bitsandbytes 8-bit optimizers, disabled in the last release ([#1708](https://github.com/LykosAI/StabilityMatrix/issues/1708)) — a wheel pinned to match OneTrainer's own bitsandbytes 0.49.1 requirement replaces the incompatible 0.50 build, so 8-bit optimizers work again - thanks to @0xDELUXA!
+- Installing a package into a folder that already contains files — like an existing ComfyUI installation placed in `Data\Packages` to be imported — now shows the folder's total size and file count and requires explicit confirmation, instead of silently deleting everything in it; this includes the first-run one-click installer ([#1733](https://github.com/LykosAI/StabilityMatrix/issues/1733))
+- Turning off shared model folders no longer tries to delete real directories at the link locations — only links created by Stability Matrix are removed, so the model folders of an imported package are never touched ([#1733](https://github.com/LykosAI/StabilityMatrix/issues/1733))
+- The package uninstall confirmation now correctly lists models/checkpoints among the items that will be deleted for packages using config-based model sharing (ComfyUI's default) — previously it implied they were safe — and shows the package folder's total size
 
 ## v2.17.0-dev.3
 ### Added

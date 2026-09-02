@@ -231,9 +231,15 @@ public partial class PackageInstallDetailViewModel(
         InstallName = InstallName.Trim();
 
         var installLocation = Path.Combine(settingsManager.LibraryDir, "Packages", InstallName);
-        if (Directory.Exists(installLocation))
+        var installPath = new DirectoryPath(installLocation);
+
+        // Require explicit confirmation before deleting an existing non-empty folder at the
+        // install location — it may be a manually placed installation the user meant to Import
+        if (!await DialogHelper.ConfirmDeleteExistingInstallDataAsync(installPath))
+            return;
+
+        if (installPath.Exists)
         {
-            var installPath = new DirectoryPath(installLocation);
             await installPath.DeleteVerboseAsync(logger);
         }
 

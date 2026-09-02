@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using Injectio.Attributes;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Core.Helper;
-using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.Services;
@@ -31,11 +30,5 @@ public class VideoPlaybackService(
         }
 
         return prerequisiteHelper.IsFfmpegInstalled;
-    }
-
-    /// <inheritdoc />
-    public void OpenExternally(string videoPath)
-    {
-        ProcessRunner.OpenUrl(videoPath);
     }
 }

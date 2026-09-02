@@ -231,7 +231,7 @@ public partial class ImageFolderCardViewModel : DisposableViewModelBase
         // In-app playback needs ffmpeg; without it the system player is the next best thing.
         if (item.IsVideo && !await videoPlaybackService.EnsureAvailableAsync())
         {
-            videoPlaybackService.OpenExternally(imageFile.FullPath);
+            ProcessRunner.OpenUrl(imageFile.FullPath);
             return;
         }
 

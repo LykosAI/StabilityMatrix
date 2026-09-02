@@ -304,7 +304,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
         // In-app playback needs ffmpeg; without it the system player is the next best thing.
         if (item.ImageFile.IsVideo && !await videoPlaybackService.EnsureAvailableAsync())
         {
-            videoPlaybackService.OpenExternally(item.ImageFile.AbsolutePath);
+            ProcessRunner.OpenUrl(item.ImageFile.AbsolutePath);
             return;
         }
 

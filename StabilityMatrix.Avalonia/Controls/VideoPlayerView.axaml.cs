@@ -1,10 +1,9 @@
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.Input;
-using Microsoft.Extensions.DependencyInjection;
 using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Models;
-using StabilityMatrix.Avalonia.Services;
+using StabilityMatrix.Core.Processes;
 
 namespace StabilityMatrix.Avalonia.Controls;
 
@@ -28,7 +27,7 @@ public partial class VideoPlayerView : UserControl
         if (imageSource?.LocalFile is not { } videoPath)
             return;
 
-        App.Services.GetRequiredService<IVideoPlaybackService>().OpenExternally(videoPath.FullPath);
+        ProcessRunner.OpenUrl(videoPath.FullPath);
     }
 
     private static async Task CopyFile(ImageSource? imageSource)

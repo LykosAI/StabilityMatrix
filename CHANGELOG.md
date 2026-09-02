@@ -6,7 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
 ## v2.17.0-pre.1
+### Changed
+- The **Prompt Amplifier** now runs on **Spark v2.0**, the more creative model already behind the amplifier on lykos.ai — the model picker in the wand flyout switches back to Spark Classic, and the Think toggle works with either
 ### Fixed
+- Fixed the Prompt Amplifier showing **0 amplifications remaining** after every amplify — the app now reads the balance under the name the server actually returns
 - Fixed the **CivArchive browser** returning far fewer results than the CivArchive website — the site's redesign quietly pinned the app's search route to the past quarter, and the renamed result-count field capped infinite scroll at a single page
 - Fixed clicking some CivArchive results showing an error instead of the model — the redesign added whole-model search results whose detail pages load through a redirect the app didn't follow
 - Fixed CivArchive file results opening in the web browser instead of the in-app details page, and the details page's version dropdown doing nothing — both casualties of a renamed field in the redesigned API

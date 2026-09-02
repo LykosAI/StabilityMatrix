@@ -90,6 +90,12 @@ public partial class PromptCardViewModel
     private bool isThinkingEnabled;
 
     [ObservableProperty]
+    public partial PromptAmplifierModel SelectedAmplifierModel { get; set; } = PromptAmplifierModel.SparkV2;
+
+    public IReadOnlyList<PromptAmplifierModel> AmplifierModels { get; } =
+        Enum.GetValues<PromptAmplifierModel>();
+
+    [ObservableProperty]
     private bool isFocused;
 
     [ObservableProperty]
@@ -640,7 +646,7 @@ public partial class PromptCardViewModel
                         NegativePrompt = negativePrompt.ProcessedText ?? negativePrompt.RawText,
                         Model = selectedModel?.Local?.DisplayModelName,
                     },
-                    Model = IsThinkingEnabled ? "PromptV1ThinkingDev" : "PromptV1Dev",
+                    Model = SelectedAmplifierModel.ToPromptGenModelName(IsThinkingEnabled),
                     Mode = mode,
                     ModelTags = modelTags,
                 }
@@ -649,7 +655,8 @@ public partial class PromptCardViewModel
             PromptDocument.Text = expandedPrompt.Response.PositivePrompt;
             NegativePromptDocument.Text = expandedPrompt.Response.NegativePrompt;
 
-            TokensRemaining = expandedPrompt.AvailableTokens;
+            // Truncate toward zero: a partial credit cannot buy an amplification.
+            TokensRemaining = (int)Math.Truncate(expandedPrompt.RemainingBalance);
         }
         catch (ApiException e)
         {

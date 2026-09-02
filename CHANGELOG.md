@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
 ## v2.17.0-pre.1
+### Added
+- Videos generated in Inference (MiniMax H3 and Wan mp4s) now **play inside the app** — in the Inference gallery, the Outputs page, and the image viewer — instead of launching the system player. The in-app preview is muted; an *Open in external player* button on the video gets you the audio
+- The Inference outputs strip now lists videos too, with a poster frame and a play badge
 ### Changed
 - The **Prompt Amplifier** now runs on **Spark v2.0**, the more creative model already behind the amplifier on lykos.ai — the model picker in the wand flyout switches back to Spark Classic, and the Think toggle works with either
 ### Fixed

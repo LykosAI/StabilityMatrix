@@ -6188,5 +6188,32 @@ namespace StabilityMatrix.Avalonia.Languages {
                 return ResourceManager.GetString("Label_ImageFileNotFound", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Open in external player.
+        /// </summary>
+        public static string Action_OpenInExternalPlayer {
+            get {
+                return ResourceManager.GetString("Action_OpenInExternalPlayer", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The in-app preview is muted. Open the video in an external player to hear its audio..
+        /// </summary>
+        public static string Label_VideoPreviewMuted {
+            get {
+                return ResourceManager.GetString("Label_VideoPreviewMuted", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to This video couldn&apos;t be played in the app.
+        /// </summary>
+        public static string Label_VideoDecodeFailed {
+            get {
+                return ResourceManager.GetString("Label_VideoDecodeFailed", resourceCulture);
+            }
+        }
     }
 }

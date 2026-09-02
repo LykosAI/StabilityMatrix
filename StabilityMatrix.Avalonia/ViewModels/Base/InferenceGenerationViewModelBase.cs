@@ -414,7 +414,10 @@ public abstract partial class InferenceGenerationViewModelBase
 
             var outputImages = await ProcessAllOutputImages(imageOutputs, args);
 
-            var notificationImage = outputImages.FirstOrDefault()?.LocalFile;
+            // Videos have no bitmap of their own, so the notification shows their poster frame instead
+            var notificationImage = outputImages.FirstOrDefault() is { } firstOutput
+                ? await firstOutput.GetPreviewUriAsync()
+                : null;
 
             await notificationService.ShowAsync(
                 NotificationKey.Inference_PromptCompleted,
@@ -422,7 +425,7 @@ public abstract partial class InferenceGenerationViewModelBase
                 {
                     Title = "Prompt Completed",
                     Body = $"Prompt [{promptTask.Id[..7].ToLower()}] completed successfully",
-                    BodyImagePath = notificationImage?.FullPath,
+                    BodyImagePath = notificationImage?.LocalPath,
                 },
                 action: new NavigateToPageAction(typeof(InferenceViewModel).AssemblyQualifiedName!)
             );
@@ -569,13 +572,21 @@ public abstract partial class InferenceGenerationViewModelBase
                     fileExtension: Path.GetExtension(comfyImage.FileName).Replace(".", "")
                 );
 
-                outputImages.Add(new ImageSource(filePath) { Label = imageLabel });
+                var outputSource = new ImageSource(filePath) { Label = imageLabel };
+
+                if (outputSource.IsVideo)
+                {
+                    // Generate the poster frame before announcing the file, so the index lists it with one
+                    await outputSource.GetPreviewUriAsync();
+                }
+
+                outputImages.Add(outputSource);
                 EventManager.Instance.OnImageFileAdded(filePath);
             }
         }
 
-        // Download all images to make grid, if multiple
-        if (outputImages.Count > 1)
+        // Make a grid of the outputs when there are several (still images only; videos have no frame to tile)
+        if (outputImages.Count > 1 && outputImages.All(image => !image.IsVideo))
         {
             var loadedImages = outputImagesBytes.Select(SKImage.FromEncodedData).ToImmutableArray();
 

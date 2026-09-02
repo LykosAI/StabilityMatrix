@@ -13,6 +13,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Core.Plugins;
+using Avalonia.Gif;
 using Avalonia.Input;
 using Avalonia.Input.Platform;
 using Avalonia.Markup.Xaml;
@@ -192,6 +193,10 @@ public sealed class App : Application
         else
         {
             ConfigureServiceProvider();
+
+            // Templated VideoImage controls (image viewer, Inference gallery) can't bind an ffmpeg path
+            // per item, so they resolve the bundled binary through this hook.
+            VideoImage.FfmpegPathResolver = () => Services.GetService<IPrerequisiteHelper>()?.FfmpegPath;
         }
 
         // Remove DataAnnotations validation plugin since we're using INotifyDataErrorInfo from MvvmToolkit

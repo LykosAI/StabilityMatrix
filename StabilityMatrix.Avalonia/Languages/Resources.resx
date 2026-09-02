@@ -1458,10 +1458,10 @@ Large caches can take a few minutes to clear. You can keep using Stability Matri
   </data>
   <data name="AnalyticsExample_InstallData" xml:space="preserve">
     <value>{
+  "type": "package-install",
   "packageName": "stable-diffusion-webui",
   "packageVersion": "v1.10.0",
   "isSuccess": true,
-  "type": "package-install",
   "installationId": "3f1c9b2e-7a44-4d8b-9c1e-5e2f8a6b0d21",
   "timestamp": "2026-09-01T14:02:11.4311870+00:00"
 }</value>
@@ -2322,16 +2322,17 @@ Account tokens will not be viewable after saving, please make a note of them if 
   </data>
   <data name="AnalyticsExample_Launch" xml:space="preserve">
     <value>{
+  "type": "launch",
   "version": "2.17.0",
   "runtimeIdentifier": "win-x64",
   "osDescription": "Microsoft Windows 10.0.26200",
-  "type": "launch",
   "installationId": "3f1c9b2e-7a44-4d8b-9c1e-5e2f8a6b0d21",
   "timestamp": "2026-09-01T14:02:11.4311870+00:00"
 }</value>
   </data>
   <data name="AnalyticsExample_Hardware" xml:space="preserve">
     <value>{
+  "type": "hardware",
   "detailLevel": "detailed",
   "gpus": [
     {
@@ -2343,13 +2344,13 @@ Account tokens will not be viewable after saving, please make a note of them if 
   "nvidiaDriverVersion": "591.59",
   "totalMemoryGb": 64,
   "processArchitecture": "X64",
-  "type": "hardware",
   "installationId": "3f1c9b2e-7a44-4d8b-9c1e-5e2f8a6b0d21",
   "timestamp": "2026-09-01T14:02:11.4311870+00:00"
 }</value>
   </data>
   <data name="AnalyticsExample_PackageUsage" xml:space="preserve">
     <value>{
+  "type": "package-usage",
   "periodStart": "2026-08-31T14:02:11+00:00",
   "periodEnd": "2026-09-01T14:02:11+00:00",
   "launches": {
@@ -2360,13 +2361,13 @@ Account tokens will not be viewable after saving, please make a note of them if 
     "ComfyUI": 245,
     "Forge": 40
   },
-  "type": "package-usage",
   "installationId": "3f1c9b2e-7a44-4d8b-9c1e-5e2f8a6b0d21",
   "timestamp": "2026-09-01T14:02:11.4311870+00:00"
 }</value>
   </data>
   <data name="AnalyticsExample_InferenceUsage" xml:space="preserve">
     <value>{
+  "type": "inference-usage",
   "periodStart": "2026-08-31T14:02:11+00:00",
   "periodEnd": "2026-09-01T14:02:11+00:00",
   "generations": {
@@ -2377,13 +2378,13 @@ Account tokens will not be viewable after saving, please make a note of them if 
     "TextToImage": 3,
     "Upscale": 1
   },
-  "type": "inference-usage",
   "installationId": "3f1c9b2e-7a44-4d8b-9c1e-5e2f8a6b0d21",
   "timestamp": "2026-09-01T14:02:11.4311870+00:00"
 }</value>
   </data>
   <data name="AnalyticsExample_FeatureUsage" xml:space="preserve">
     <value>{
+  "type": "feature-usage",
   "periodStart": "2026-08-31T14:02:11+00:00",
   "periodEnd": "2026-09-01T14:02:11+00:00",
   "pageVisits": {
@@ -2391,7 +2392,6 @@ Account tokens will not be viewable after saving, please make a note of them if 
     "Inference": 3,
     "CheckpointBrowser": 2
   },
-  "type": "feature-usage",
   "installationId": "3f1c9b2e-7a44-4d8b-9c1e-5e2f8a6b0d21",
   "timestamp": "2026-09-01T14:02:11.4311870+00:00"
 }</value>
@@ -2410,6 +2410,7 @@ Account tokens will not be viewable after saving, please make a note of them if 
   </data>
   <data name="AnalyticsExample_HardwareMinimal" xml:space="preserve">
     <value>{
+  "type": "hardware",
   "detailLevel": "minimal",
   "gpus": [
     {
@@ -2421,7 +2422,6 @@ Account tokens will not be viewable after saving, please make a note of them if 
   "nvidiaDriverVersion": "591",
   "totalMemoryGb": 64,
   "processArchitecture": "X64",
-  "type": "hardware",
   "installationId": "3f1c9b2e-7a44-4d8b-9c1e-5e2f8a6b0d21",
   "timestamp": "2026-09-01T14:02:11.4311870+00:00"
 }</value>

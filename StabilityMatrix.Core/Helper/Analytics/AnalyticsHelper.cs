@@ -32,7 +32,7 @@ public class AnalyticsHelper(
 
             foreach (var category in Enum.GetValues<AnalyticsCategory>())
             {
-                analytics.SetCategoryFlag(category, choice.Accepted && choice.Categories.Contains(category));
+                analytics.Categories[category] = choice.Accepted && choice.Categories.Contains(category);
             }
 
             analytics.InstallationId = choice.Accepted ? analytics.InstallationId ?? Guid.NewGuid() : null;
@@ -50,7 +50,7 @@ public class AnalyticsHelper(
 
     public void SetCategoryEnabled(AnalyticsCategory category, bool enabled)
     {
-        settingsManager.Transaction(s => s.Analytics.SetCategoryFlag(category, enabled));
+        settingsManager.Transaction(s => s.Analytics.Categories[category] = enabled);
     }
 
     public void SetHardwareDetailLevel(HardwareDetailLevel detailLevel)
@@ -175,7 +175,7 @@ public class AnalyticsHelper(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error sending analytics data of type {Type}", data.Type);
+            logger.LogError(ex, "Error sending analytics data {Type}", data.GetType().Name);
             return false;
         }
     }

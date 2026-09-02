@@ -47,7 +47,7 @@ public class AnalyticsHelperTests
         settings.Analytics.InstallationId = Guid.NewGuid();
         foreach (var category in categories)
         {
-            settings.Analytics.SetCategoryFlag(category, true);
+            settings.Analytics.Categories[category] = true;
         }
     }
 
@@ -69,11 +69,11 @@ public class AnalyticsHelperTests
         Assert.AreEqual(AnalyticsSettings.CurrentConsentRevision, analytics.LastSeenConsentRevision);
         Assert.IsNotNull(analytics.LastSeenConsentVersion);
         Assert.IsNotNull(analytics.InstallationId);
-        Assert.IsTrue(analytics.IsHardwareDataEnabled);
-        Assert.IsTrue(analytics.IsPackageInstallDataEnabled);
-        Assert.IsFalse(analytics.IsPackageUsageDataEnabled);
-        Assert.IsFalse(analytics.IsInferenceUsageDataEnabled);
-        Assert.IsFalse(analytics.IsFeatureUsageDataEnabled);
+        Assert.IsTrue(analytics.Categories[AnalyticsCategory.Hardware]);
+        Assert.IsTrue(analytics.Categories[AnalyticsCategory.PackageInstalls]);
+        Assert.IsFalse(analytics.Categories[AnalyticsCategory.PackageUsage]);
+        Assert.IsFalse(analytics.Categories[AnalyticsCategory.InferenceUsage]);
+        Assert.IsFalse(analytics.Categories[AnalyticsCategory.FeatureUsage]);
         Assert.IsFalse(analytics.IsConsentUnanswered);
         Assert.IsFalse(analytics.IsConsentOutdated);
     }
@@ -106,8 +106,8 @@ public class AnalyticsHelperTests
         Assert.IsFalse(analytics.IsUsageDataEnabled);
         Assert.IsFalse(analytics.LastSeenConsentAccepted);
         Assert.IsNull(analytics.InstallationId);
-        Assert.IsFalse(analytics.IsHardwareDataEnabled);
-        Assert.IsFalse(analytics.IsFeatureUsageDataEnabled);
+        Assert.IsFalse(analytics.Categories[AnalyticsCategory.Hardware]);
+        Assert.IsFalse(analytics.Categories[AnalyticsCategory.FeatureUsage]);
         Assert.IsFalse(analytics.IsConsentOutdated);
     }
 
@@ -145,11 +145,11 @@ public class AnalyticsHelperTests
         await helper.TrackPackageInstallAsync("ComfyUI", "1.0", true);
         Assert.AreEqual(0, sent.Count);
 
-        settings.Analytics.IsPackageInstallDataEnabled = true;
+        settings.Analytics.Categories[AnalyticsCategory.PackageInstalls] = true;
         await helper.TrackPackageInstallAsync("ComfyUI", "1.0", true);
 
         Assert.AreEqual(1, sent.Count);
-        Assert.AreEqual("package-install", sent[0].Type);
+        Assert.IsInstanceOfType<PackageInstallAnalyticsRequest>(sent[0]);
         Assert.AreEqual(settings.Analytics.InstallationId, sent[0].InstallationId);
     }
 
@@ -175,7 +175,10 @@ public class AnalyticsHelperTests
 
         await CreateHelper().SendPeriodicReportsIfDueAsync();
 
-        CollectionAssert.AreEqual(new[] { "launch", "package-usage" }, sent.Select(r => r.Type).ToArray());
+        CollectionAssert.AreEqual(
+            new[] { typeof(LaunchAnalyticsRequest), typeof(PackageUsageAnalyticsRequest) },
+            sent.Select(r => r.GetType()).ToArray()
+        );
         Assert.IsTrue(sent.All(r => r.InstallationId == settings.Analytics.InstallationId));
         Assert.IsNotNull(settings.Analytics.LaunchDataLastSentAt);
         usageTracker.Received(1).ResetCategory(AnalyticsCategory.PackageUsage);

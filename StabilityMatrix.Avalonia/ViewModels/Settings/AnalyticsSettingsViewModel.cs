@@ -109,7 +109,7 @@ public partial class AnalyticsSettingsViewModel : PageViewModelBase
 
             foreach (var category in Categories)
             {
-                category.IsEnabled = analytics.GetCategoryFlag(category.Category);
+                category.IsEnabled = analytics.Categories.GetValueOrDefault(category.Category);
                 category.IsDetailed = analytics.HardwareDetailLevel == HardwareDetailLevel.Detailed;
             }
         }

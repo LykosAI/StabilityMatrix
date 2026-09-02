@@ -17,8 +17,6 @@ public class HardwareAnalyticsRequest : AnalyticsRequest
     /// <summary>System memory is rounded down to this step in minimal mode.</summary>
     public const int MinimalSystemMemoryStepGb = 8;
 
-    public override string Type { get; set; } = "hardware";
-
     /// <summary>"detailed" or "minimal", lower-cased <see cref="HardwareDetailLevel"/>.</summary>
     public string DetailLevel { get; set; } = "detailed";
 

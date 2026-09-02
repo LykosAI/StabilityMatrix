@@ -64,9 +64,9 @@ public class AnalyticsSettingsTests
     public void CategoryEnabled_RequiresMasterSwitch()
     {
         var settings = new AnalyticsSettings();
-        settings.SetCategoryFlag(AnalyticsCategory.Hardware, true);
+        settings.Categories[AnalyticsCategory.Hardware] = true;
 
-        Assert.IsTrue(settings.GetCategoryFlag(AnalyticsCategory.Hardware));
+        Assert.IsTrue(settings.Categories[AnalyticsCategory.Hardware]);
         Assert.IsFalse(settings.IsCategoryEnabled(AnalyticsCategory.Hardware));
 
         settings.IsUsageDataEnabled = true;
@@ -101,7 +101,6 @@ public class AnalyticsSettingsTests
             HardwareDetailLevel.Detailed
         );
 
-        Assert.AreEqual("hardware", request.Type);
         Assert.AreEqual("detailed", request.DetailLevel);
         Assert.AreEqual(2, request.Gpus.Count);
         Assert.AreEqual(23, request.Gpus[0].MemoryGb);

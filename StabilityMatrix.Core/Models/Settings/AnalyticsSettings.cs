@@ -37,17 +37,12 @@ public class AnalyticsSettings
     /// </summary>
     public Guid? InstallationId { get; set; }
 
-    public bool IsHardwareDataEnabled { get; set; }
+    /// <summary>
+    /// Per-category opt-in flags. A category missing from the dictionary is off.
+    /// </summary>
+    public Dictionary<AnalyticsCategory, bool> Categories { get; set; } = new();
 
     public HardwareDetailLevel HardwareDetailLevel { get; set; } = HardwareDetailLevel.Detailed;
-
-    public bool IsPackageUsageDataEnabled { get; set; }
-
-    public bool IsInferenceUsageDataEnabled { get; set; }
-
-    public bool IsFeatureUsageDataEnabled { get; set; }
-
-    public bool IsPackageInstallDataEnabled { get; set; }
 
     public DateTimeOffset? LaunchDataLastSentAt { get; set; }
 
@@ -70,43 +65,5 @@ public class AnalyticsSettings
     /// category's own flag.
     /// </summary>
     public bool IsCategoryEnabled(AnalyticsCategory category) =>
-        IsUsageDataEnabled && GetCategoryFlag(category);
-
-    /// <summary>
-    /// The category's own flag, regardless of the master switch.
-    /// </summary>
-    public bool GetCategoryFlag(AnalyticsCategory category) =>
-        category switch
-        {
-            AnalyticsCategory.Hardware => IsHardwareDataEnabled,
-            AnalyticsCategory.PackageUsage => IsPackageUsageDataEnabled,
-            AnalyticsCategory.InferenceUsage => IsInferenceUsageDataEnabled,
-            AnalyticsCategory.FeatureUsage => IsFeatureUsageDataEnabled,
-            AnalyticsCategory.PackageInstalls => IsPackageInstallDataEnabled,
-            _ => throw new ArgumentOutOfRangeException(nameof(category), category, null),
-        };
-
-    public void SetCategoryFlag(AnalyticsCategory category, bool enabled)
-    {
-        switch (category)
-        {
-            case AnalyticsCategory.Hardware:
-                IsHardwareDataEnabled = enabled;
-                break;
-            case AnalyticsCategory.PackageUsage:
-                IsPackageUsageDataEnabled = enabled;
-                break;
-            case AnalyticsCategory.InferenceUsage:
-                IsInferenceUsageDataEnabled = enabled;
-                break;
-            case AnalyticsCategory.FeatureUsage:
-                IsFeatureUsageDataEnabled = enabled;
-                break;
-            case AnalyticsCategory.PackageInstalls:
-                IsPackageInstallDataEnabled = enabled;
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(category), category, null);
-        }
-    }
+        IsUsageDataEnabled && Categories.GetValueOrDefault(category);
 }

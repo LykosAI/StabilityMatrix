@@ -2,11 +2,21 @@
 
 namespace StabilityMatrix.Core.Models.Api.Lykos.Analytics;
 
-public class AnalyticsRequest
+/// <summary>
+/// Envelope shared by every analytics document. The concrete type is written as the
+/// <c>type</c> discriminator; registering a new document means adding one
+/// <see cref="JsonDerivedTypeAttribute"/> here.
+/// </summary>
+[JsonPolymorphic(TypeDiscriminatorPropertyName = "type")]
+[JsonDerivedType(typeof(LaunchAnalyticsRequest), "launch")]
+[JsonDerivedType(typeof(PackageInstallAnalyticsRequest), "package-install")]
+[JsonDerivedType(typeof(FirstTimeInstallAnalytics), "first-time-install")]
+[JsonDerivedType(typeof(HardwareAnalyticsRequest), "hardware")]
+[JsonDerivedType(typeof(PackageUsageAnalyticsRequest), "package-usage")]
+[JsonDerivedType(typeof(InferenceUsageAnalyticsRequest), "inference-usage")]
+[JsonDerivedType(typeof(FeatureUsageAnalyticsRequest), "feature-usage")]
+public abstract class AnalyticsRequest
 {
-    [JsonPropertyName("type")]
-    public virtual string Type { get; set; } = "unknown";
-
     /// <summary>
     /// Random per-installation identifier, stamped on every request while usage data is enabled.
     /// </summary>

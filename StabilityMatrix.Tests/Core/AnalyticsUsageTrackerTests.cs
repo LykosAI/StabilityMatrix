@@ -26,9 +26,12 @@ public class AnalyticsUsageTrackerTests
             Analytics = new AnalyticsSettings
             {
                 IsUsageDataEnabled = true,
-                IsPackageUsageDataEnabled = true,
-                IsInferenceUsageDataEnabled = true,
-                IsFeatureUsageDataEnabled = true,
+                Categories = new()
+                {
+                    [AnalyticsCategory.PackageUsage] = true,
+                    [AnalyticsCategory.InferenceUsage] = true,
+                    [AnalyticsCategory.FeatureUsage] = true,
+                },
             },
         };
 
@@ -88,7 +91,7 @@ public class AnalyticsUsageTrackerTests
     [TestMethod]
     public void Record_IsIgnoredWhenCategoryDisabled()
     {
-        settings.Analytics.IsInferenceUsageDataEnabled = false;
+        settings.Analytics.Categories[AnalyticsCategory.InferenceUsage] = false;
 
         using var tracker = CreateTracker();
 
@@ -121,7 +124,7 @@ public class AnalyticsUsageTrackerTests
         using var tracker = CreateTracker();
 
         tracker.RecordPackageLaunch("ComfyUI");
-        settings.Analytics.IsPackageUsageDataEnabled = false;
+        settings.Analytics.Categories[AnalyticsCategory.PackageUsage] = false;
 
         Assert.AreEqual(0, tracker.BuildReports(DateTimeOffset.UtcNow).Count);
     }

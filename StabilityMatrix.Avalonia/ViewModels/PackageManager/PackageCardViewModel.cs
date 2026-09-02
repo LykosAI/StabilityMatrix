@@ -1143,8 +1143,7 @@ public partial class PackageCardViewModel(
         }
         else
         {
-            var basePackage = packageFactory[Package!.PackageName!];
-            basePackage!.RemoveModelFolderLinks(Package.FullPath!, SharedFolderMethod.Symlink);
+            RemoveModelFolderLinks(SharedFolderMethod.Symlink);
         }
     }
 
@@ -1166,9 +1165,29 @@ public partial class PackageCardViewModel(
         }
         else
         {
-            var basePackage = packageFactory[Package!.PackageName!];
-            basePackage!.RemoveModelFolderLinks(Package.FullPath!, SharedFolderMethod.Configuration);
+            RemoveModelFolderLinks(SharedFolderMethod.Configuration);
         }
+    }
+
+    private void RemoveModelFolderLinks(SharedFolderMethod sharedFolderMethod)
+    {
+        var basePackage = packageFactory[Package!.PackageName!];
+        basePackage!
+            .RemoveModelFolderLinks(Package.FullPath!, sharedFolderMethod)
+            .SafeFireAndForget(ex =>
+            {
+                logger.LogError(
+                    ex,
+                    "Failed to remove {Method} model folder links for {Package}",
+                    sharedFolderMethod,
+                    Package.DisplayName
+                );
+                notificationService.Show(
+                    "Failed to remove shared model links",
+                    ex.Message,
+                    NotificationType.Error
+                );
+            });
     }
 
     partial void OnIsSharedModelDisabledChanged(bool value)

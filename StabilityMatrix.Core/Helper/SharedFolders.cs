@@ -181,13 +181,25 @@ public class SharedFolders(ISettingsManager settingsManager, IPackageFactory pac
         {
             foreach (var relativePath in relativePaths)
             {
-                var destination = Path.GetFullPath(Path.Combine(installPath, relativePath));
-                // Delete the destination folder if it exists
-                if (!Directory.Exists(destination))
+                var destination = new DirectoryPath(
+                    Path.GetFullPath(Path.Combine(installPath, relativePath))
+                );
+                if (!destination.Exists)
                     continue;
 
-                Logger.Info($"Deleting junction target {destination}");
-                Directory.Delete(destination, false);
+                // Only remove links we created — never delete a real directory here,
+                // it may be user data (e.g. the models folder of an imported package)
+                if (!destination.IsSymbolicLink)
+                {
+                    Logger.Warn(
+                        "Skipped removing shared folder link at {Path}: not a symbolic link / junction",
+                        destination.FullPath
+                    );
+                    continue;
+                }
+
+                Logger.Info("Removing shared folder link at {Path}", destination.FullPath);
+                destination.Delete(false);
             }
         }
     }

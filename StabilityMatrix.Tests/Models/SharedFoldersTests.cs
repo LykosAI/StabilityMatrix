@@ -11,13 +11,12 @@ public class SharedFoldersTests
     private string TempModelsFolder => Path.Combine(tempFolder, "models");
     private string TempPackageFolder => Path.Combine(tempFolder, "package");
 
-    private readonly Dictionary<SharedFolderType, string> sampleDefinitions =
-        new()
-        {
-            [SharedFolderType.StableDiffusion] = "models/Stable-diffusion",
-            [SharedFolderType.ESRGAN] = "models/ESRGAN",
-            [SharedFolderType.Embeddings] = "embeddings",
-        };
+    private readonly Dictionary<SharedFolderType, string> sampleDefinitions = new()
+    {
+        [SharedFolderType.StableDiffusion] = "models/Stable-diffusion",
+        [SharedFolderType.ESRGAN] = "models/ESRGAN",
+        [SharedFolderType.Embeddings] = "embeddings",
+    };
 
     [TestInitialize]
     public void Initialize()
@@ -111,6 +110,77 @@ public class SharedFoldersTests
         Assert.IsTrue(
             File.Exists(Path.Combine(modelFolder, "AFile")),
             $"File should exist in {modelFolder}."
+        );
+    }
+
+    [TestMethod]
+    public void RemoveLinksForPackage_RemovesJunctions_KeepsTargetFiles()
+    {
+        CreateSampleJunctions();
+
+        var modelFolder = Path.Combine(TempModelsFolder, SharedFolderType.StableDiffusion.GetStringValue());
+        var packagePath = Path.Combine(
+            TempPackageFolder,
+            sampleDefinitions[SharedFolderType.StableDiffusion]
+        );
+
+        File.Create(Path.Combine(modelFolder, "AFile")).Close();
+
+        var definitions = new Dictionary<SharedFolderType, IReadOnlyList<string>>
+        {
+            [SharedFolderType.StableDiffusion] = new[] { "models/Stable-diffusion" },
+        };
+        SharedFolders.RemoveLinksForPackage(definitions, TempPackageFolder);
+
+        Assert.IsFalse(Directory.Exists(packagePath), $"Junction {packagePath} should have been removed.");
+        Assert.IsTrue(
+            File.Exists(Path.Combine(modelFolder, "AFile")),
+            $"File should still exist in {modelFolder}."
+        );
+    }
+
+    [TestMethod]
+    public void RemoveLinksForPackage_DoesNotDeleteRealDirectories()
+    {
+        // A real (non-junction) folder with user data at a shared folder path,
+        // e.g. the models folder of a manually placed / imported package
+        var packagePath = Path.Combine(
+            TempPackageFolder,
+            sampleDefinitions[SharedFolderType.StableDiffusion]
+        );
+        Directory.CreateDirectory(packagePath);
+        File.Create(Path.Combine(packagePath, "model.safetensors")).Close();
+
+        var definitions = new Dictionary<SharedFolderType, IReadOnlyList<string>>
+        {
+            [SharedFolderType.StableDiffusion] = new[] { "models/Stable-diffusion" },
+        };
+        SharedFolders.RemoveLinksForPackage(definitions, TempPackageFolder);
+
+        Assert.IsTrue(
+            File.Exists(Path.Combine(packagePath, "model.safetensors")),
+            $"User data in real directory {packagePath} must not be deleted."
+        );
+    }
+
+    [TestMethod]
+    public void RemoveLinksForPackage_DoesNotDeleteEmptyRealDirectories()
+    {
+        var packagePath = Path.Combine(
+            TempPackageFolder,
+            sampleDefinitions[SharedFolderType.StableDiffusion]
+        );
+        Directory.CreateDirectory(packagePath);
+
+        var definitions = new Dictionary<SharedFolderType, IReadOnlyList<string>>
+        {
+            [SharedFolderType.StableDiffusion] = new[] { "models/Stable-diffusion" },
+        };
+        SharedFolders.RemoveLinksForPackage(definitions, TempPackageFolder);
+
+        Assert.IsTrue(
+            Directory.Exists(packagePath),
+            $"Real directory {packagePath} must not be deleted, even when empty."
         );
     }
 }

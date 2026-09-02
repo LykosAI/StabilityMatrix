@@ -6280,7 +6280,7 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to How many generations you run in Inference, by tab type and model family, as dail.
+        ///   Looks up a localized string similar to How many Inference tabs you open and how many generations you run, by tab type, as daily t.
         /// </summary>
         public static string Text_AnalyticsInferenceUsageDescription {
             get {

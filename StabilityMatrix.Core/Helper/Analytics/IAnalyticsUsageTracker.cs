@@ -15,8 +15,10 @@ public interface IAnalyticsUsageTracker
     void RecordPackageRun(string packageName, TimeSpan duration);
 
     /// <param name="projectType">Inference tab type name, e.g. "TextToImage".</param>
-    /// <param name="modelFamily">Workflow profile key of the model used, if known.</param>
-    void RecordInferenceGeneration(string projectType, string? modelFamily);
+    void RecordInferenceTabOpened(string projectType);
+
+    /// <param name="projectType">Inference tab type name, e.g. "TextToImage".</param>
+    void RecordInferenceGeneration(string projectType);
 
     void RecordPageVisit(string pageName);
 

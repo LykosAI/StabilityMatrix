@@ -13,7 +13,6 @@ using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
-using StabilityMatrix.Core.Helper.Analytics;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.Comfy;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
@@ -46,9 +45,6 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
     [JsonPropertyName("Model")]
     public ModelCardViewModel ModelCardViewModel { get; }
 
-    /// <inheritdoc />
-    protected override string? AnalyticsModelFamilyKey => ModelCardViewModel.ResolvedWorkflowProfile.Key;
-
     [JsonPropertyName("Sampler")]
     public SamplerCardViewModel SamplerCardViewModel { get; }
 
@@ -69,8 +65,7 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
         IModelIndexService modelIndexService,
         RunningPackageService runningPackageService,
         TabContext tabContext,
-        IPromptQueueService promptQueueService,
-        IAnalyticsUsageTracker usageTracker
+        IPromptQueueService promptQueueService
     )
         : base(
             vmFactory,
@@ -78,8 +73,7 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
             notificationService,
             settingsManager,
             runningPackageService,
-            promptQueueService,
-            usageTracker
+            promptQueueService
         )
     {
         this.notificationService = notificationService;

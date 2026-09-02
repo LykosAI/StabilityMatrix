@@ -2,6 +2,7 @@ using System.Text.Json;
 using Injectio.Attributes;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Core.Models.Api.Lykos.Analytics;
+using StabilityMatrix.Core.Models.Inference;
 using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Services;
 
@@ -35,7 +36,16 @@ public class AnalyticsUsageTracker : IAnalyticsUsageTracker, IDisposable
 
         saveTimer = new Timer(_ => Save(), null, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
         settingsManager.RegisterOnLibraryDirSet(_ => Load());
+
+        EventManager.Instance.InferenceTabOpened += OnInferenceTabOpened;
+        EventManager.Instance.InferenceGenerationCompleted += OnInferenceGenerationCompleted;
     }
+
+    private void OnInferenceTabOpened(object? sender, InferenceProjectType type) =>
+        RecordInferenceTabOpened(type.ToString());
+
+    private void OnInferenceGenerationCompleted(object? sender, InferenceProjectType type) =>
+        RecordInferenceGeneration(type.ToString());
 
     private AnalyticsSettings Settings => settingsManager.Settings.Analytics;
 
@@ -50,10 +60,16 @@ public class AnalyticsUsageTracker : IAnalyticsUsageTracker, IDisposable
             now => counters.PackageUsage.RecordRun(packageName, duration, now)
         );
 
-    public void RecordInferenceGeneration(string projectType, string? modelFamily) =>
+    public void RecordInferenceTabOpened(string projectType) =>
         Record(
             AnalyticsCategory.InferenceUsage,
-            now => counters.InferenceUsage.RecordGeneration(projectType, modelFamily, now)
+            now => counters.InferenceUsage.RecordTabOpened(projectType, now)
+        );
+
+    public void RecordInferenceGeneration(string projectType) =>
+        Record(
+            AnalyticsCategory.InferenceUsage,
+            now => counters.InferenceUsage.RecordGeneration(projectType, now)
         );
 
     public void RecordPageVisit(string pageName) =>
@@ -101,7 +117,7 @@ public class AnalyticsUsageTracker : IAnalyticsUsageTracker, IDisposable
                             PeriodStart = inference.PeriodStart ?? periodEnd,
                             PeriodEnd = periodEnd,
                             Generations = new Dictionary<string, int>(inference.Generations),
-                            ModelFamilies = new Dictionary<string, int>(inference.ModelFamilies),
+                            TabsOpened = new Dictionary<string, int>(inference.TabsOpened),
                         }
                     )
                 );
@@ -230,6 +246,8 @@ public class AnalyticsUsageTracker : IAnalyticsUsageTracker, IDisposable
 
     public void Dispose()
     {
+        EventManager.Instance.InferenceTabOpened -= OnInferenceTabOpened;
+        EventManager.Instance.InferenceGenerationCompleted -= OnInferenceGenerationCompleted;
         saveTimer.Dispose();
         Save();
         GC.SuppressFinalize(this);

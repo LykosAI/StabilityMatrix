@@ -7,7 +7,6 @@ using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.Views.Inference;
 using StabilityMatrix.Core.Attributes;
-using StabilityMatrix.Core.Helper.Analytics;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 using StabilityMatrix.Core.Services;
 
@@ -28,8 +27,7 @@ public class InferenceImageToVideoViewModel : InferenceTextToVideoViewModel
         INotificationService notificationService,
         ISettingsManager settingsManager,
         RunningPackageService runningPackageService,
-        IPromptQueueService promptQueueService,
-        IAnalyticsUsageTracker usageTracker
+        IPromptQueueService promptQueueService
     )
         : base(
             vmFactory,
@@ -37,8 +35,7 @@ public class InferenceImageToVideoViewModel : InferenceTextToVideoViewModel
             notificationService,
             settingsManager,
             runningPackageService,
-            promptQueueService,
-            usageTracker
+            promptQueueService
         )
     {
         SelectImageCardViewModel = vmFactory.Get<SelectImageCardViewModel>();

@@ -62,19 +62,20 @@ public class InferenceUsageCounters : UsageCountersBase
 {
     public Dictionary<string, int> Generations { get; set; } = new();
 
-    public Dictionary<string, int> ModelFamilies { get; set; } = new();
+    public Dictionary<string, int> TabsOpened { get; set; } = new();
 
-    public override bool IsEmpty => Generations.Count == 0 && ModelFamilies.Count == 0;
+    public override bool IsEmpty => Generations.Count == 0 && TabsOpened.Count == 0;
 
-    public void RecordGeneration(string projectType, string? modelFamily, DateTimeOffset now)
+    public void RecordGeneration(string projectType, DateTimeOffset now)
     {
         Touch(now);
         Increment(Generations, projectType, 1, (a, b) => a + b);
+    }
 
-        if (!string.IsNullOrEmpty(modelFamily))
-        {
-            Increment(ModelFamilies, modelFamily, 1, (a, b) => a + b);
-        }
+    public void RecordTabOpened(string projectType, DateTimeOffset now)
+    {
+        Touch(now);
+        Increment(TabsOpened, projectType, 1, (a, b) => a + b);
     }
 }
 

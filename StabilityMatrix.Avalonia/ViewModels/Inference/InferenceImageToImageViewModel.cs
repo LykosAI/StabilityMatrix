@@ -11,7 +11,6 @@ using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 using StabilityMatrix.Avalonia.Views.Inference;
 using StabilityMatrix.Core.Attributes;
-using StabilityMatrix.Core.Helper.Analytics;
 using StabilityMatrix.Core.Models.Inference;
 using StabilityMatrix.Core.Services;
 
@@ -33,8 +32,7 @@ public class InferenceImageToImageViewModel : InferenceTextToImageViewModel
         IModelIndexService modelIndexService,
         RunningPackageService runningPackageService,
         TabContext tabContext,
-        IPromptQueueService promptQueueService,
-        IAnalyticsUsageTracker usageTracker
+        IPromptQueueService promptQueueService
     )
         : base(
             notificationService,
@@ -44,8 +42,7 @@ public class InferenceImageToImageViewModel : InferenceTextToImageViewModel
             modelIndexService,
             runningPackageService,
             tabContext,
-            promptQueueService,
-            usageTracker
+            promptQueueService
         )
     {
         SelectImageCardViewModel = vmFactory.Get<SelectImageCardViewModel>(vm =>

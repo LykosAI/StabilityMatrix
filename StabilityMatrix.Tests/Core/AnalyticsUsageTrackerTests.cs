@@ -57,9 +57,10 @@ public class AnalyticsUsageTrackerTests
         tracker.RecordPackageLaunch("Forge");
         tracker.RecordPackageRun("ComfyUI", TimeSpan.FromMinutes(90));
         tracker.RecordPackageRun("ComfyUI", TimeSpan.FromSeconds(100));
-        tracker.RecordInferenceGeneration("TextToImage", "Flux");
-        tracker.RecordInferenceGeneration("TextToImage", null);
-        tracker.RecordInferenceGeneration("Upscale", null);
+        tracker.RecordInferenceTabOpened("TextToImage");
+        tracker.RecordInferenceGeneration("TextToImage");
+        tracker.RecordInferenceGeneration("TextToImage");
+        tracker.RecordInferenceGeneration("Upscale");
         tracker.RecordPageVisit("Inference");
 
         var now = DateTimeOffset.UtcNow;
@@ -77,8 +78,8 @@ public class AnalyticsUsageTrackerTests
         var inference = (InferenceUsageAnalyticsRequest)reports[AnalyticsCategory.InferenceUsage];
         Assert.AreEqual(2, inference.Generations["TextToImage"]);
         Assert.AreEqual(1, inference.Generations["Upscale"]);
-        Assert.AreEqual(1, inference.ModelFamilies["Flux"]);
-        Assert.AreEqual(1, inference.ModelFamilies.Count);
+        Assert.AreEqual(1, inference.TabsOpened["TextToImage"]);
+        Assert.AreEqual(1, inference.TabsOpened.Count);
 
         var features = (FeatureUsageAnalyticsRequest)reports[AnalyticsCategory.FeatureUsage];
         Assert.AreEqual(1, features.PageVisits["Inference"]);
@@ -91,7 +92,7 @@ public class AnalyticsUsageTrackerTests
 
         using var tracker = CreateTracker();
 
-        tracker.RecordInferenceGeneration("TextToImage", "Flux");
+        tracker.RecordInferenceGeneration("TextToImage");
         tracker.RecordPageVisit("Inference");
 
         var reports = tracker.BuildReports(DateTimeOffset.UtcNow);
@@ -108,7 +109,7 @@ public class AnalyticsUsageTrackerTests
         using var tracker = CreateTracker();
 
         tracker.RecordPackageLaunch("ComfyUI");
-        tracker.RecordInferenceGeneration("TextToImage", null);
+        tracker.RecordInferenceGeneration("TextToImage");
         tracker.RecordPageVisit("Inference");
 
         Assert.AreEqual(0, tracker.BuildReports(DateTimeOffset.UtcNow).Count);
@@ -148,7 +149,7 @@ public class AnalyticsUsageTrackerTests
         {
             tracker.RecordPackageLaunch("ComfyUI");
             tracker.RecordPackageRun("ComfyUI", TimeSpan.FromMinutes(10));
-            tracker.RecordInferenceGeneration("TextToImage", "Flux");
+            tracker.RecordInferenceTabOpened("TextToImage");
         }
 
         Assert.IsTrue(File.Exists(Path.Combine(tempDir, "analytics-usage.json")));
@@ -165,6 +166,6 @@ public class AnalyticsUsageTrackerTests
         Assert.AreEqual(10, packages.RunMinutes["ComfyUI"]);
 
         var inference = (InferenceUsageAnalyticsRequest)reports[AnalyticsCategory.InferenceUsage];
-        Assert.AreEqual(1, inference.ModelFamilies["Flux"]);
+        Assert.AreEqual(1, inference.TabsOpened["TextToImage"]);
     }
 }

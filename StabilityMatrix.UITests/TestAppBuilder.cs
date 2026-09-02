@@ -8,6 +8,7 @@ using StabilityMatrix.Avalonia;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Models.Update;
 using StabilityMatrix.Core.Services;
 using StabilityMatrix.Core.Updater;
@@ -48,6 +49,7 @@ public static class TestAppBuilder
         var settingsManager = Substitute.ForPartsOf<SettingsManager>(NullLogger<SettingsManager>.Instance);
         settingsManager.Settings.Analytics.LastSeenConsentVersion = Compat.AppVersion;
         settingsManager.Settings.Analytics.LastSeenConsentAccepted = true;
+        settingsManager.Settings.Analytics.LastSeenConsentRevision = AnalyticsSettings.CurrentConsentRevision;
         serviceCollection.AddSingleton<ISettingsManager>(settingsManager);
 
         // IUpdateHelper

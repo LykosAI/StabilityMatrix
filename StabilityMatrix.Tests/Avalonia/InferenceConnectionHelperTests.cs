@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using NSubstitute;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Services;
+using StabilityMatrix.Core.Helper.Analytics;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
@@ -18,7 +19,8 @@ public class InferenceConnectionHelperTests
             Substitute.For<IPackageFactory>(),
             Substitute.For<INotificationService>(),
             Substitute.For<ISettingsManager>(),
-            Substitute.For<IPyRunner>()
+            Substitute.For<IPyRunner>(),
+            Substitute.For<IAnalyticsUsageTracker>()
         );
 
     private static IInferenceClientManager CreateClientManager(Func<bool> isConnected)

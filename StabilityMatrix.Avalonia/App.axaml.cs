@@ -460,6 +460,7 @@ public sealed class App : Application
             provider.GetRequiredService<INotificationService>(),
             provider.GetRequiredService<IAppNotificationService>(),
             provider.GetRequiredService<IAnalyticsHelper>(),
+            provider.GetRequiredService<IAnalyticsUsageTracker>(),
             provider.GetRequiredService<IUpdateHelper>(),
             provider.GetRequiredService<ISecretsManager>(),
             provider.GetRequiredService<INavigationService<MainWindowViewModel>>(),
@@ -628,7 +629,6 @@ public sealed class App : Application
         jsonSerializerOptions.Converters.Add(new DefaultUnknownEnumConverter<CivitModelType>());
         jsonSerializerOptions.Converters.Add(new DefaultUnknownEnumConverter<CivitModelFormat>());
         jsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
-        jsonSerializerOptions.Converters.Add(new AnalyticsRequestConverter());
         jsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
 
         var defaultRefitSettings = new RefitSettings

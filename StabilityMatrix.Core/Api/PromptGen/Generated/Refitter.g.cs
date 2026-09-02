@@ -15,8 +15,8 @@ namespace StabilityMatrix.Core.Api.PromptGenApi
     [System.CodeDom.Compiler.GeneratedCode("Refitter", "1.4.1.0")]
     public partial interface IPromptGenApi
     {
-        /// <summary>Get current user's token balance</summary>
-        /// <remarks>Retrieves the token balance for the currently authenticated user.</remarks>
+        /// <summary>Get token balance</summary>
+        /// <remarks>Get the current token balance for the user.</remarks>
         /// <returns>Payload of TokenBalance</returns>
         /// <exception cref="ApiException">Thrown when the request returns a non-success status code.</exception>
         [Headers("Accept: application/json")]
@@ -62,6 +62,28 @@ namespace StabilityMatrix.Core.Api.PromptGenApi
     using System = global::System;
 
     
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.2.0.0 (NJsonSchema v11.1.0.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class ModalityTokenCount
+    {
+
+        [JsonPropertyName("modality")]
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public ModalityTokenCountModality Modality { get; set; } = StabilityMatrix.Core.Api.PromptGenApi.ModalityTokenCountModality.Unspecified;
+
+        [JsonPropertyName("tokenCount")]
+        public int TokenCount { get; set; }
+
+        private IDictionary<string, object> _additionalProperties;
+
+        [JsonExtensionData]
+        public IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.2.0.0 (NJsonSchema v11.1.0.0 (Newtonsoft.Json v13.0.0.0))")]
     public partial class PromptEnhanceResponse
@@ -124,14 +146,38 @@ namespace StabilityMatrix.Core.Api.PromptGenApi
     public partial class PromptExpansionResponse
     {
 
-        [JsonPropertyName("availableTokens")]
-        public int AvailableTokens { get; set; }
+        [JsonPropertyName("remainingBalance")]
+        public double RemainingBalance { get; set; }
 
         [JsonPropertyName("operationId")]
         public string OperationId { get; set; }
 
         [JsonPropertyName("response")]
         public PromptEnhanceResponse Response { get; set; }
+
+        [JsonPropertyName("inputTokens")]
+        public int? InputTokens { get; set; }
+
+        [JsonPropertyName("outputTokens")]
+        public int? OutputTokens { get; set; }
+
+        [JsonPropertyName("calculatedCost")]
+        public double? CalculatedCost { get; set; }
+
+        [JsonPropertyName("chargedAmount")]
+        public double? ChargedAmount { get; set; }
+
+        [JsonPropertyName("currency")]
+        public string Currency { get; set; }
+
+        [JsonPropertyName("inputTokensDetails")]
+        public ICollection<ModalityTokenCount> InputTokensDetails { get; set; }
+
+        [JsonPropertyName("outputTokensDetails")]
+        public ICollection<ModalityTokenCount> OutputTokensDetails { get; set; }
+
+        [JsonPropertyName("availableTokens")]
+        public int AvailableTokens { get; set; }
 
         private IDictionary<string, object> _additionalProperties;
 
@@ -189,6 +235,30 @@ namespace StabilityMatrix.Core.Api.PromptGenApi
             get { return _additionalProperties ?? (_additionalProperties = new Dictionary<string, object>()); }
             set { _additionalProperties = value; }
         }
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.2.0.0 (NJsonSchema v11.1.0.0 (Newtonsoft.Json v13.0.0.0))")]
+    public enum ModalityTokenCountModality
+    {
+
+        [System.Runtime.Serialization.EnumMember(Value = @"Unspecified")]
+        Unspecified = 0,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"Text")]
+        Text = 1,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"Image")]
+        Image = 2,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"Video")]
+        Video = 3,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"Audio")]
+        Audio = 4,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"Document")]
+        Document = 5,
 
     }
 

@@ -125,6 +125,10 @@ public partial class NewOneClickInstallViewModel : ContentDialogViewModelBase
         var installLocation = Path.Combine(settingsManager.LibraryDir, "Packages", selectedPackage.Name);
         var installPath = new DirectoryPath(installLocation);
 
+        // In the first-run flow the progress dialog is opened when the recommended-models dialog
+        // closes; the existing-data path skips that dialog, so it opens the progress dialog itself
+        var showProgressDialogOnStart = false;
+
         if (installPath.Exists && installPath.Info.EnumerateFileSystemInfos().Any())
         {
             // The install location already holds data we didn't put there — likely an existing
@@ -144,6 +148,12 @@ public partial class NewOneClickInstallViewModel : ContentDialogViewModelBase
             }
 
             await installPath.DeleteVerboseAsync(logger);
+
+            // The Packages page indexed the staged folder as an unknown package; re-index now
+            // that it's gone so the stale card doesn't linger during the install
+            EventManager.Instance.OnInstalledPackagesChanged();
+
+            showProgressDialogOnStart = true;
         }
         else
         {
@@ -232,7 +242,7 @@ public partial class NewOneClickInstallViewModel : ContentDialogViewModelBase
 
         var runner = new PackageModificationRunner
         {
-            ShowDialogOnStart = false,
+            ShowDialogOnStart = showProgressDialogOnStart,
             HideCloseButton = false,
             ModificationCompleteMessage = $"{selectedPackage.DisplayName} installed successfully",
         };

@@ -18,23 +18,24 @@ public class AnalyticsHelper(
 {
     public AnalyticsSettings Settings => settingsManager.Settings.Analytics;
 
-    public void ApplyConsent(bool accepted, IReadOnlyCollection<AnalyticsCategory> enabledCategories)
+    public void ApplyConsent(AnalyticsConsentChoice choice)
     {
         settingsManager.Transaction(s =>
         {
             var analytics = s.Analytics;
 
             analytics.LastSeenConsentVersion = Compat.AppVersion;
-            analytics.LastSeenConsentAccepted = accepted;
+            analytics.LastSeenConsentAccepted = choice.Accepted;
             analytics.LastSeenConsentRevision = AnalyticsSettings.CurrentConsentRevision;
-            analytics.IsUsageDataEnabled = accepted;
+            analytics.IsUsageDataEnabled = choice.Accepted;
+            analytics.HardwareDetailLevel = choice.HardwareDetail;
 
             foreach (var category in Enum.GetValues<AnalyticsCategory>())
             {
-                analytics.SetCategoryFlag(category, accepted && enabledCategories.Contains(category));
+                analytics.SetCategoryFlag(category, choice.Accepted && choice.Categories.Contains(category));
             }
 
-            analytics.InstallationId = accepted ? analytics.InstallationId ?? Guid.NewGuid() : null;
+            analytics.InstallationId = choice.Accepted ? analytics.InstallationId ?? Guid.NewGuid() : null;
         });
     }
 
@@ -50,6 +51,11 @@ public class AnalyticsHelper(
     public void SetCategoryEnabled(AnalyticsCategory category, bool enabled)
     {
         settingsManager.Transaction(s => s.Analytics.SetCategoryFlag(category, enabled));
+    }
+
+    public void SetHardwareDetailLevel(HardwareDetailLevel detailLevel)
+    {
+        settingsManager.Transaction(s => s.Analytics.HardwareDetailLevel = detailLevel);
     }
 
     public void ResetInstallationId()
@@ -135,7 +141,10 @@ public class AnalyticsHelper(
 
         if (Settings.IsCategoryEnabled(AnalyticsCategory.Hardware))
         {
-            var hardware = await Task.Run(HardwareAnalyticsRequest.FromCurrentSystem).ConfigureAwait(false);
+            var hardware = await Task.Run(() =>
+                    HardwareAnalyticsRequest.FromCurrentSystem(Settings.HardwareDetailLevel)
+                )
+                .ConfigureAwait(false);
             await TrySendAsync(hardware).ConfigureAwait(false);
         }
 

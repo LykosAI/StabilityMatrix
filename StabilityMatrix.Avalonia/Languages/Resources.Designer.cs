@@ -6386,5 +6386,50 @@ namespace StabilityMatrix.Avalonia.Languages {
                 return ResourceManager.GetString("AnalyticsExample_FeatureUsage", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Detail level.
+        /// </summary>
+        public static string Label_AnalyticsHardwareDetail {
+            get {
+                return ResourceManager.GetString("Label_AnalyticsHardwareDetail", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Detailed sends the GPU model name and exact sizes. Minimal sends only the GPU ve.
+        /// </summary>
+        public static string Text_AnalyticsHardwareDetailDescription {
+            get {
+                return ResourceManager.GetString("Text_AnalyticsHardwareDetailDescription", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Detailed.
+        /// </summary>
+        public static string Label_Detailed {
+            get {
+                return ResourceManager.GetString("Label_Detailed", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Minimal.
+        /// </summary>
+        public static string Label_Minimal {
+            get {
+                return ResourceManager.GetString("Label_Minimal", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to "detailLevel": "minimal",.
+        /// </summary>
+        public static string AnalyticsExample_HardwareMinimal {
+            get {
+                return ResourceManager.GetString("AnalyticsExample_HardwareMinimal", resourceCulture);
+            }
+        }
     }
 }

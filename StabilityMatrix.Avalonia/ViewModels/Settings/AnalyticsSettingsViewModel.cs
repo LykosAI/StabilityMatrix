@@ -13,6 +13,7 @@ using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.Views.Settings;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper.Analytics;
+using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Settings;
@@ -75,14 +76,18 @@ public partial class AnalyticsSettingsViewModel : PageViewModelBase
 
     private void OnCategoryPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (
-            isRefreshing
-            || e.PropertyName != nameof(AnalyticsCategoryViewModel.IsEnabled)
-            || sender is not AnalyticsCategoryViewModel category
-        )
+        if (isRefreshing || sender is not AnalyticsCategoryViewModel category)
             return;
 
-        analyticsHelper.SetCategoryEnabled(category.Category, category.IsEnabled);
+        switch (e.PropertyName)
+        {
+            case nameof(AnalyticsCategoryViewModel.IsEnabled):
+                analyticsHelper.SetCategoryEnabled(category.Category, category.IsEnabled);
+                break;
+            case nameof(AnalyticsCategoryViewModel.IsDetailed) when category.SupportsDetailLevel:
+                analyticsHelper.SetHardwareDetailLevel(category.DetailLevel);
+                break;
+        }
     }
 
     [RelayCommand]
@@ -105,6 +110,7 @@ public partial class AnalyticsSettingsViewModel : PageViewModelBase
             foreach (var category in Categories)
             {
                 category.IsEnabled = analytics.GetCategoryFlag(category.Category);
+                category.IsDetailed = analytics.HardwareDetailLevel == HardwareDetailLevel.Detailed;
             }
         }
         finally

@@ -395,7 +395,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
             var result = await vm.GetDialog().ShowAsync();
 
-            analyticsHelper.ApplyConsent(result == ContentDialogResult.Secondary, vm.GetEnabledCategories());
+            analyticsHelper.ApplyConsent(vm.GetConsentChoice(result == ContentDialogResult.Secondary));
         }
 
         if (Program.Args.DebugOneClickInstall || settingsManager.Settings.InstalledPackages.Count == 0)

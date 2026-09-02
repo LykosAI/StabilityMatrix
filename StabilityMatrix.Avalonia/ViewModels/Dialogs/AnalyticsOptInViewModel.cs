@@ -9,6 +9,7 @@ using StabilityMatrix.Avalonia.Models.Analytics;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Helper.Analytics;
 using StabilityMatrix.Core.Models.Settings;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
@@ -44,8 +45,18 @@ public partial class AnalyticsOptInViewModel : ContentDialogViewModelBase
         SelectedCategory = Categories.FirstOrDefault();
     }
 
-    public IReadOnlyCollection<AnalyticsCategory> GetEnabledCategories() =>
-        Categories.Where(category => category.IsEnabled).Select(category => category.Category).ToList();
+    /// <summary>Snapshot of the dialog's choices to hand to the analytics helper.</summary>
+    public AnalyticsConsentChoice GetConsentChoice(bool accepted)
+    {
+        var categories = Categories.Where(c => c.IsEnabled).Select(c => c.Category).ToList();
+        var hardware = Categories.FirstOrDefault(c => c.Category == AnalyticsCategory.Hardware);
+
+        return new AnalyticsConsentChoice(
+            accepted,
+            categories,
+            hardware?.DetailLevel ?? HardwareDetailLevel.Detailed
+        );
+    }
 
     public override BetterContentDialog GetDialog()
     {

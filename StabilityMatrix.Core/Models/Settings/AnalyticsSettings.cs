@@ -39,6 +39,8 @@ public class AnalyticsSettings
 
     public bool IsHardwareDataEnabled { get; set; }
 
+    public HardwareDetailLevel HardwareDetailLevel { get; set; } = HardwareDetailLevel.Detailed;
+
     public bool IsPackageUsageDataEnabled { get; set; }
 
     public bool IsInferenceUsageDataEnabled { get; set; }

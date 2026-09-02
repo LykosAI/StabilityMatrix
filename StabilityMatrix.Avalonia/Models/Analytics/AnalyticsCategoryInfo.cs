@@ -15,7 +15,14 @@ public record AnalyticsCategoryInfo(
     string Description,
     string ExampleJson,
     Symbol Icon
-);
+)
+{
+    /// <summary>
+    /// Example of the coarsened document for categories that offer a minimal detail level; null
+    /// for categories without one.
+    /// </summary>
+    public string? MinimalExampleJson { get; init; }
+}
 
 public static class AnalyticsCategories
 {
@@ -28,7 +35,10 @@ public static class AnalyticsCategories
                 Resources.Text_AnalyticsHardwareDescription,
                 Resources.AnalyticsExample_Hardware,
                 Symbol.DeveloperBoard
-            ),
+            )
+            {
+                MinimalExampleJson = Resources.AnalyticsExample_HardwareMinimal,
+            },
             new(
                 AnalyticsCategory.PackageUsage,
                 Resources.Label_AnalyticsPackageUsage,

@@ -6,6 +6,7 @@
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:fluent="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
+    xmlns:helpers="clr-namespace:StabilityMatrix.Avalonia.Helpers"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:settings="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Settings"
@@ -26,7 +27,7 @@
             <Setter Property="FontFamily" Value="Cascadia Code,Consolas,Menlo,Monospace,DejaVu Sans Mono,monospace" />
             <Setter Property="FontSize" Value="14" />
             <Setter Property="IsReadOnly" Value="True" />
-            <Setter Property="SyntaxHighlighting" Value="JavaScript" />
+            <Setter Property="SyntaxHighlighting" Value="{x:Static helpers:JsonHighlighting.Dark}" />
         </Style>
     </controls:UserControlBase.Styles>
     <ScrollViewer VerticalScrollBarVisibility="Auto">
@@ -77,6 +78,17 @@
                             <ui:SettingsExpander.Footer>
                                 <ToggleSwitch IsChecked="{Binding IsEnabled, Mode=TwoWay}" />
                             </ui:SettingsExpander.Footer>
+                            <ui:SettingsExpanderItem
+                                Content="{x:Static lang:Resources.Label_AnalyticsHardwareDetail}"
+                                Description="{x:Static lang:Resources.Text_AnalyticsHardwareDetailDescription}"
+                                IsVisible="{Binding SupportsDetailLevel}">
+                                <ui:SettingsExpanderItem.Footer>
+                                    <ToggleSwitch
+                                        IsChecked="{Binding IsDetailed, Mode=TwoWay}"
+                                        OffContent="{x:Static lang:Resources.Label_Minimal}"
+                                        OnContent="{x:Static lang:Resources.Label_Detailed}" />
+                                </ui:SettingsExpanderItem.Footer>
+                            </ui:SettingsExpanderItem>
                             <ui:SettingsExpanderItem Padding="8">
                                 <StackPanel>
                                     <TextBlock Margin="8" Text="{x:Static lang:Resources.Label_ExampleTelemetry}" />

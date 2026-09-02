@@ -8,6 +8,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:dialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
     xmlns:fluent="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
+    xmlns:helpers="clr-namespace:StabilityMatrix.Avalonia.Helpers"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
@@ -51,7 +52,7 @@
             SelectedItem="{Binding SelectedCategory}">
             <ListBox.ItemTemplate>
                 <DataTemplate x:DataType="vm:AnalyticsCategoryViewModel">
-                    <Grid ColumnDefinitions="Auto,Auto,*" ColumnSpacing="12">
+                    <Grid ColumnDefinitions="Auto,Auto,*,Auto" ColumnSpacing="12">
                         <CheckBox
                             Grid.Column="0"
                             MinWidth="0"
@@ -71,6 +72,13 @@
                                 Text="{Binding Description}"
                                 TextWrapping="Wrap" />
                         </StackPanel>
+                        <ToggleSwitch
+                            Grid.Column="3"
+                            VerticalAlignment="Center"
+                            IsChecked="{Binding IsDetailed, Mode=TwoWay}"
+                            IsVisible="{Binding SupportsDetailLevel}"
+                            OffContent="{x:Static lang:Resources.Label_Minimal}"
+                            OnContent="{x:Static lang:Resources.Label_Detailed}" />
                     </Grid>
                 </DataTemplate>
             </ListBox.ItemTemplate>
@@ -98,7 +106,7 @@
             FontFamily="Cascadia Code,Consolas,Menlo,Monospace,DejaVu Sans Mono,monospace"
             FontSize="13"
             IsReadOnly="True"
-            SyntaxHighlighting="JavaScript" />
+            SyntaxHighlighting="{x:Static helpers:JsonHighlighting.Dark}" />
 
         <controls:HyperlinkIconButton
             Margin="0,4"

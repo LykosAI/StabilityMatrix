@@ -10,10 +10,10 @@ namespace StabilityMatrix.Core.Helper.Analytics;
 public interface IAnalyticsHelper
 {
     /// <summary>
-    /// Records the user's answer to the consent dialog, enabling exactly the given categories
+    /// Records the user's answer to the consent dialog, enabling exactly the chosen categories
     /// when accepted and clearing everything (including the installation id) when declined.
     /// </summary>
-    void ApplyConsent(bool accepted, IReadOnlyCollection<AnalyticsCategory> enabledCategories);
+    void ApplyConsent(AnalyticsConsentChoice choice);
 
     /// <summary>
     /// Flips the master switch. Turning it off removes the installation id; turning it on creates
@@ -22,6 +22,8 @@ public interface IAnalyticsHelper
     void SetUsageDataEnabled(bool enabled);
 
     void SetCategoryEnabled(AnalyticsCategory category, bool enabled);
+
+    void SetHardwareDetailLevel(HardwareDetailLevel detailLevel);
 
     /// <summary>Replaces the installation id with a new random one (no-op while disabled).</summary>
     void ResetInstallationId();

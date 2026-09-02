@@ -54,7 +54,14 @@ public class AnalyticsHelperTests
     [TestMethod]
     public void ApplyConsent_Accepted_EnablesChosenCategoriesAndCreatesId()
     {
-        CreateHelper().ApplyConsent(true, [AnalyticsCategory.Hardware, AnalyticsCategory.PackageInstalls]);
+        CreateHelper()
+            .ApplyConsent(
+                new AnalyticsConsentChoice(
+                    true,
+                    [AnalyticsCategory.Hardware, AnalyticsCategory.PackageInstalls],
+                    HardwareDetailLevel.Detailed
+                )
+            );
 
         var analytics = settings.Analytics;
         Assert.IsTrue(analytics.IsUsageDataEnabled);
@@ -77,7 +84,10 @@ public class AnalyticsHelperTests
         var existing = Guid.NewGuid();
         settings.Analytics.InstallationId = existing;
 
-        CreateHelper().ApplyConsent(true, [AnalyticsCategory.Hardware]);
+        CreateHelper()
+            .ApplyConsent(
+                new AnalyticsConsentChoice(true, [AnalyticsCategory.Hardware], HardwareDetailLevel.Detailed)
+            );
 
         Assert.AreEqual(existing, settings.Analytics.InstallationId);
     }
@@ -87,7 +97,10 @@ public class AnalyticsHelperTests
     {
         OptIn(AnalyticsCategory.Hardware, AnalyticsCategory.FeatureUsage);
 
-        CreateHelper().ApplyConsent(false, [AnalyticsCategory.Hardware]);
+        CreateHelper()
+            .ApplyConsent(
+                new AnalyticsConsentChoice(false, [AnalyticsCategory.Hardware], HardwareDetailLevel.Detailed)
+            );
 
         var analytics = settings.Analytics;
         Assert.IsFalse(analytics.IsUsageDataEnabled);
@@ -217,5 +230,24 @@ public class AnalyticsHelperTests
 
         Assert.IsNotNull(settings.Analytics.LaunchDataLastSentAt);
         usageTracker.DidNotReceive().ResetCategory(Arg.Any<AnalyticsCategory>());
+    }
+
+    [TestMethod]
+    public void ApplyConsent_StoresHardwareDetailLevel()
+    {
+        CreateHelper()
+            .ApplyConsent(
+                new AnalyticsConsentChoice(true, [AnalyticsCategory.Hardware], HardwareDetailLevel.Minimal)
+            );
+
+        Assert.AreEqual(HardwareDetailLevel.Minimal, settings.Analytics.HardwareDetailLevel);
+    }
+
+    [TestMethod]
+    public void SetHardwareDetailLevel_Persists()
+    {
+        CreateHelper().SetHardwareDetailLevel(HardwareDetailLevel.Minimal);
+
+        Assert.AreEqual(HardwareDetailLevel.Minimal, settings.Analytics.HardwareDetailLevel);
     }
 }

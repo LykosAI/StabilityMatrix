@@ -68,7 +68,8 @@ namespace StabilityMatrix.Core.Api.PromptGenApi
     {
 
         [JsonPropertyName("modality")]
-        public ModalityTokenCountModality Modality { get; set; } = StabilityMatrix.Core.Api.PromptGenApi.ModalityTokenCountModality._0;
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public ModalityTokenCountModality Modality { get; set; } = StabilityMatrix.Core.Api.PromptGenApi.ModalityTokenCountModality.Unspecified;
 
         [JsonPropertyName("tokenCount")]
         public int TokenCount { get; set; }
@@ -241,17 +242,23 @@ namespace StabilityMatrix.Core.Api.PromptGenApi
     public enum ModalityTokenCountModality
     {
 
-        _0 = 0,
+        [System.Runtime.Serialization.EnumMember(Value = @"Unspecified")]
+        Unspecified = 0,
 
-        _1 = 1,
+        [System.Runtime.Serialization.EnumMember(Value = @"Text")]
+        Text = 1,
 
-        _2 = 2,
+        [System.Runtime.Serialization.EnumMember(Value = @"Image")]
+        Image = 2,
 
-        _3 = 3,
+        [System.Runtime.Serialization.EnumMember(Value = @"Video")]
+        Video = 3,
 
-        _4 = 4,
+        [System.Runtime.Serialization.EnumMember(Value = @"Audio")]
+        Audio = 4,
 
-        _5 = 5,
+        [System.Runtime.Serialization.EnumMember(Value = @"Document")]
+        Document = 5,
 
     }
 

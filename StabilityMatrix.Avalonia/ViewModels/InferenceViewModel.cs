@@ -435,6 +435,8 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
             return;
         }
 
+        EventManager.Instance.OnInferenceTabOpened(type);
+
         // Create a new scope for this tab
         var scope = vmFactory.CreateScope();
         scopes.Add(scope);

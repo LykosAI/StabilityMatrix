@@ -1,4 +1,5 @@
-﻿using Injectio.Attributes;
+﻿using System.Runtime.InteropServices;
+using Injectio.Attributes;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Models.Api.Lykos.Analytics;
@@ -11,79 +12,191 @@ namespace StabilityMatrix.Core.Helper.Analytics;
 public class AnalyticsHelper(
     ILogger<AnalyticsHelper> logger,
     ILykosAnalyticsApi analyticsApi,
-    ISettingsManager settingsManager
+    ISettingsManager settingsManager,
+    IAnalyticsUsageTracker usageTracker
 ) : IAnalyticsHelper
 {
     public AnalyticsSettings Settings => settingsManager.Settings.Analytics;
 
-    public async Task TrackPackageInstallAsync(string packageName, string packageVersion, bool isSuccess)
+    public void ApplyConsent(AnalyticsConsentChoice choice)
+    {
+        settingsManager.Transaction(s =>
+        {
+            var analytics = s.Analytics;
+
+            analytics.LastSeenConsentVersion = Compat.AppVersion;
+            analytics.LastSeenConsentAccepted = choice.Accepted;
+            analytics.LastSeenConsentRevision = AnalyticsSettings.CurrentConsentRevision;
+            analytics.IsUsageDataEnabled = choice.Accepted;
+            analytics.HardwareDetailLevel = choice.HardwareDetail;
+
+            foreach (var category in Enum.GetValues<AnalyticsCategory>())
+            {
+                analytics.Categories[category] = choice.Accepted && choice.Categories.Contains(category);
+            }
+
+            analytics.InstallationId = choice.Accepted ? analytics.InstallationId ?? Guid.NewGuid() : null;
+        });
+    }
+
+    public void SetUsageDataEnabled(bool enabled)
+    {
+        settingsManager.Transaction(s =>
+        {
+            s.Analytics.IsUsageDataEnabled = enabled;
+            s.Analytics.InstallationId = enabled ? Guid.NewGuid() : null;
+        });
+    }
+
+    public void SetCategoryEnabled(AnalyticsCategory category, bool enabled)
+    {
+        settingsManager.Transaction(s => s.Analytics.Categories[category] = enabled);
+    }
+
+    public void SetHardwareDetailLevel(HardwareDetailLevel detailLevel)
+    {
+        settingsManager.Transaction(s => s.Analytics.HardwareDetailLevel = detailLevel);
+    }
+
+    public void ResetInstallationId()
     {
         if (!Settings.IsUsageDataEnabled)
         {
             return;
         }
 
-        var data = new PackageInstallAnalyticsRequest
-        {
-            PackageName = packageName,
-            PackageVersion = packageVersion,
-            IsSuccess = isSuccess,
-            Timestamp = DateTimeOffset.UtcNow
-        };
-
-        try
-        {
-            await analyticsApi.PostInstallData(data).ConfigureAwait(false);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error sending install data");
-        }
+        settingsManager.Transaction(s => s.Analytics.InstallationId = Guid.NewGuid());
     }
 
-    public async Task TrackFirstTimeInstallAsync(
+    public Task TrackPackageInstallAsync(string packageName, string packageVersion, bool isSuccess)
+    {
+        if (!Settings.IsCategoryEnabled(AnalyticsCategory.PackageInstalls))
+        {
+            return Task.CompletedTask;
+        }
+
+        return TrySendAsync(
+            new PackageInstallAnalyticsRequest
+            {
+                PackageName = packageName,
+                PackageVersion = packageVersion,
+                IsSuccess = isSuccess,
+                Timestamp = DateTimeOffset.UtcNow,
+            }
+        );
+    }
+
+    public Task TrackFirstTimeInstallAsync(
         string? selectedPackageName,
         IEnumerable<string>? selectedRecommendedModels,
         bool firstTimeSetupSkipped
     )
     {
-        if (!Settings.IsUsageDataEnabled)
+        if (!Settings.IsCategoryEnabled(AnalyticsCategory.PackageInstalls))
+        {
+            return Task.CompletedTask;
+        }
+
+        return TrySendAsync(
+            new FirstTimeInstallAnalytics
+            {
+                SelectedPackageName = selectedPackageName,
+                SelectedRecommendedModels = selectedRecommendedModels,
+                FirstTimeSetupSkipped = firstTimeSetupSkipped,
+                Timestamp = DateTimeOffset.UtcNow,
+            }
+        );
+    }
+
+    public Task TrackAsync(AnalyticsRequest data)
+    {
+        return Settings.IsUsageDataEnabled ? TrySendAsync(data) : Task.CompletedTask;
+    }
+
+    public async Task SendPeriodicReportsIfDueAsync()
+    {
+        if (!Settings.IsUsageDataEnabled || !IsPeriodicReportDue())
         {
             return;
         }
 
-        var data = new FirstTimeInstallAnalytics
+        var now = DateTimeOffset.UtcNow;
+
+        var launch = new LaunchAnalyticsRequest
         {
-            SelectedPackageName = selectedPackageName,
-            SelectedRecommendedModels = selectedRecommendedModels,
-            FirstTimeSetupSkipped = firstTimeSetupSkipped,
-            Timestamp = DateTimeOffset.UtcNow
+            Version = Compat.AppVersion.ToString(),
+            RuntimeIdentifier = RuntimeInformation.RuntimeIdentifier,
+            OsDescription = RuntimeInformation.OSDescription,
+            Timestamp = now,
         };
 
-        try
+        // The launch ping doubles as the connectivity probe: if it fails, everything waits for
+        // the next launch instead of producing a half-delivered day.
+        if (!await TrySendAsync(launch).ConfigureAwait(false))
         {
-            await analyticsApi.PostInstallData(data).ConfigureAwait(false);
+            return;
         }
-        catch (Exception ex)
+
+        settingsManager.Transaction(s => s.Analytics.LaunchDataLastSentAt = now);
+
+        if (Settings.IsCategoryEnabled(AnalyticsCategory.Hardware))
         {
-            logger.LogError(ex, "Error sending first time install data");
+            var hardware = await Task.Run(() =>
+                    HardwareAnalyticsRequest.FromCurrentSystem(Settings.HardwareDetailLevel)
+                )
+                .ConfigureAwait(false);
+            await TrySendAsync(hardware).ConfigureAwait(false);
+        }
+
+        foreach (var (category, report) in usageTracker.BuildReports(now))
+        {
+            if (await TrySendAsync(report).ConfigureAwait(false))
+            {
+                usageTracker.ResetCategory(category);
+            }
         }
     }
 
-    public async Task TrackAsync(AnalyticsRequest data)
+    private bool IsPeriodicReportDue() =>
+        Settings.LaunchDataLastSentAt is not { } lastSentAt
+        || DateTimeOffset.UtcNow - lastSentAt > AnalyticsSettings.DefaultLaunchDataSendInterval;
+
+    /// <summary>
+    /// Stamps the installation id and posts the request, returning false instead of throwing.
+    /// </summary>
+    private async Task<bool> TrySendAsync(AnalyticsRequest data)
     {
-        if (!Settings.IsUsageDataEnabled)
-        {
-            return;
-        }
+        data.InstallationId ??= GetOrCreateInstallationId();
 
         try
         {
             await analyticsApi.PostInstallData(data).ConfigureAwait(false);
+            return true;
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error sending analytics data");
+            logger.LogError(ex, "Error sending analytics data {Type}", data.GetType().Name);
+            return false;
         }
+    }
+
+    /// <summary>
+    /// Installations that opted in before ids existed get one on their first send.
+    /// </summary>
+    private Guid? GetOrCreateInstallationId()
+    {
+        if (!Settings.IsUsageDataEnabled)
+        {
+            return null;
+        }
+
+        if (Settings.InstallationId is { } existing)
+        {
+            return existing;
+        }
+
+        var id = Guid.NewGuid();
+        settingsManager.Transaction(s => s.Analytics.InstallationId = id);
+        return id;
     }
 }

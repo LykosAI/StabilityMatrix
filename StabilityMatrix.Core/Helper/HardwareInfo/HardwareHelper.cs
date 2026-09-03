@@ -184,6 +184,7 @@ public static partial class HardwareHelper
                                     Name = gpu.Name,
                                     Index = index,
                                     MemoryBytes = gpu.MemoryBytes,
+                                    ComputeCapability = gpu.ComputeCapability,
                                 }
                         );
 

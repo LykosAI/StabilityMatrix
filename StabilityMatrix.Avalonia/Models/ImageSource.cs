@@ -12,7 +12,9 @@ using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Webp;
+using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.Models;
 
@@ -64,6 +66,15 @@ public record ImageSource : IDisposable, ITemplateKey<ImageSourceTemplateType>
     [JsonIgnore]
     public Uri? Uri => LocalFile?.FullPath != null ? new Uri(LocalFile.FullPath) : RemoteUrl;
 
+    /// <summary>
+    /// Whether the source is a video file (by extension). Videos render through the Video template and
+    /// expose a poster frame wherever a bitmap is expected.
+    /// </summary>
+    [JsonIgnore]
+    public bool IsVideo =>
+        (LocalFile?.Extension ?? Path.GetExtension(RemoteUrl?.ToString())) is { } extension
+        && LocalImageFile.SupportedVideoExtensions.Contains(extension);
+
     /// <inheritdoc />
     public ImageSourceTemplateType TemplateKey { get; private set; }
 
@@ -72,6 +83,12 @@ public record ImageSource : IDisposable, ITemplateKey<ImageSourceTemplateType>
         if ((LocalFile?.Extension ?? Path.GetExtension(RemoteUrl?.ToString())) is not { } extension)
         {
             return false;
+        }
+
+        if (LocalImageFile.SupportedVideoExtensions.Contains(extension))
+        {
+            TemplateKey = ImageSourceTemplateType.Video;
+            return true;
         }
 
         if (extension.Equals(".webp", StringComparison.OrdinalIgnoreCase))
@@ -147,8 +164,29 @@ public record ImageSource : IDisposable, ITemplateKey<ImageSourceTemplateType>
     [JsonIgnore]
     public Task<Bitmap?> BitmapAsync => GetBitmapAsync();
 
+    [JsonIgnore]
+    public Task<Uri?> PreviewUriAsync => GetPreviewUriAsync();
+
     /// <summary>
-    /// Get the bitmap
+    /// Uri of a still image for this source: the file itself for images, a generated poster frame for
+    /// local videos. Null when no poster can be produced (remote video, or ffmpeg unavailable).
+    /// </summary>
+    public async Task<Uri?> GetPreviewUriAsync()
+    {
+        if (!IsVideo)
+            return Uri;
+
+        if (LocalFile?.FullPath is not { } videoPath)
+            return null;
+
+        var thumbnails = App.Services.GetRequiredService<IVideoThumbnailService>();
+        var posterPath = await thumbnails.GetOrCreateThumbnailAsync(videoPath).ConfigureAwait(false);
+
+        return posterPath is null ? null : new Uri(posterPath);
+    }
+
+    /// <summary>
+    /// Get the bitmap (the poster frame for videos)
     /// </summary>
     public async Task<Bitmap?> GetBitmapAsync()
     {
@@ -158,7 +196,9 @@ public record ImageSource : IDisposable, ITemplateKey<ImageSourceTemplateType>
         var loader = ImageLoader.AsyncImageLoader;
 
         // Use local file path if available, otherwise remote URL
-        var path = LocalFile?.FullPath ?? RemoteUrl?.ToString();
+        var path = IsVideo
+            ? (await GetPreviewUriAsync().ConfigureAwait(false))?.LocalPath
+            : LocalFile?.FullPath ?? RemoteUrl?.ToString();
 
         if (path is null)
             return null;

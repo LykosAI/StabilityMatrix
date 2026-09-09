@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using System.Collections.Specialized;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -37,6 +38,8 @@ public partial class VideoModelCardViewModel : LoadableViewModelBase, IParameter
         this.vmFactory = vmFactory;
         this.tabContext = tabContext;
         ClientManager = clientManager;
+        ObserveCompanionLibrary(clientManager.VaeModels);
+        ObserveCompanionLibrary(clientManager.ClipModels);
 
         ExtraNetworksStackCardViewModel = new StackEditableCardViewModel(vmFactory)
         {
@@ -157,29 +160,34 @@ public partial class VideoModelCardViewModel : LoadableViewModelBase, IParameter
 
     /// <summary>
     /// Fills the VAE / audio VAE / text encoder slots from installed files matching the
-    /// resolved profile's expected filenames. Only empty slots are filled — an explicit user
+    /// resolved profile's expected filenames. Empty and automatically selected slots are filled — an explicit user
     /// (or loaded-project) selection is never replaced.
     /// </summary>
     private void AutoFillProfileCompanions()
     {
+        if (SelectedModel is null)
+            return;
         var profile = ResolvedWorkflowProfile;
-
-        if (SelectedVae is null && profile.VaeAutoFill(SelectedModel) is { } vaeMatch)
+        if (SelectedVae is null || SelectedVae.RelativePath == autoVaePath)
         {
+            var vaeMatch = profile.VaeAutoFill(SelectedModel);
             SelectedVae = ClientManager.VaeModels.FirstOrDefault(m =>
-                m.Local is not null && vaeMatch(m.FileName)
+                m.Local is not null && vaeMatch?.Invoke(m.FileName) is true
             );
+            autoVaePath = SelectedVae?.RelativePath;
         }
 
-        if (SelectedAudioVae is null && profile.AudioVaeAutoFill is { } audioVaeMatch)
+        if (SelectedAudioVae is null || SelectedAudioVae.RelativePath == autoAudioVaePath)
         {
             SelectedAudioVae = ClientManager.VaeModels.FirstOrDefault(m =>
-                m.Local is not null && audioVaeMatch(m.FileName)
+                m.Local is not null && profile.AudioVaeAutoFill?.Invoke(m.FileName) is true
             );
+            autoAudioVaePath = SelectedAudioVae?.RelativePath;
         }
 
-        if (SelectedClipModel is null)
+        if (SelectedClipModel is null || SelectedClipModel.RelativePath == autoClipPath)
         {
+            SelectedClipModel = null;
             foreach (var encoderMatch in profile.TextEncoderAutoFill)
             {
                 if (
@@ -190,11 +198,48 @@ public partial class VideoModelCardViewModel : LoadableViewModelBase, IParameter
                 )
                 {
                     SelectedClipModel = encoder;
+                    autoClipPath = encoder.RelativePath;
                     break;
                 }
             }
         }
     }
+
+    private string? autoVaePath;
+    private string? autoAudioVaePath;
+    private string? autoClipPath;
+
+    private void ObserveCompanionLibrary(INotifyCollectionChanged library)
+    {
+        // The library outlives individual tabs; do not retain closed tabs through it.
+        var weakTarget = new WeakReference<VideoModelCardViewModel>(this);
+        var context = SynchronizationContext.Current;
+        void Refresh()
+        {
+            if (weakTarget.TryGetTarget(out var target))
+                target.AutoFillProfileCompanions();
+        }
+        NotifyCollectionChangedEventHandler? handler = null;
+        handler = (_, _) =>
+        {
+            if (weakTarget.TryGetTarget(out _))
+            {
+                if (context is not null && context != SynchronizationContext.Current)
+                    context.Post(_ => Refresh(), null);
+                else
+                    Refresh();
+            }
+            else
+                library.CollectionChanged -= handler;
+        };
+        library.CollectionChanged += handler;
+    }
+
+    partial void OnSelectedVaeChanged(HybridModelFile? value) => autoVaePath = null;
+
+    partial void OnSelectedAudioVaeChanged(HybridModelFile? value) => autoAudioVaePath = null;
+
+    partial void OnSelectedClipModelChanged(HybridModelFile? value) => autoClipPath = null;
 
     /// <summary>
     /// Optional low-noise expert model for the Wan 2.2 14B MoE. When <see cref="IsLowNoiseModelEnabled"/>
@@ -583,6 +628,7 @@ public partial class VideoModelCardViewModel : LoadableViewModelBase, IParameter
             if (pickerVm.SelectedModel is { } selected)
             {
                 SelectedVae = selected;
+                autoVaePath = null;
             }
         }
     }
@@ -600,6 +646,7 @@ public partial class VideoModelCardViewModel : LoadableViewModelBase, IParameter
             if (pickerVm.SelectedModel is { } selected)
             {
                 SelectedAudioVae = selected;
+                autoAudioVaePath = null;
             }
         }
     }
@@ -617,6 +664,7 @@ public partial class VideoModelCardViewModel : LoadableViewModelBase, IParameter
             if (pickerVm.SelectedModel is { } selected)
             {
                 SelectedClipModel = selected;
+                autoClipPath = null;
             }
         }
     }
@@ -680,7 +728,11 @@ public partial class VideoModelCardViewModel : LoadableViewModelBase, IParameter
             return false;
         }
 
-        if (IsLowNoiseModelEnabled && SelectedLowNoiseModel == null)
+        if (
+            ResolvedWorkflowProfile.SupportsMoeExperts
+            && IsLowNoiseModelEnabled
+            && SelectedLowNoiseModel == null
+        )
         {
             var dialog = DialogHelper.CreateMarkdownDialog(
                 "Please select a low-noise model to continue, or disable the low-noise expert.",

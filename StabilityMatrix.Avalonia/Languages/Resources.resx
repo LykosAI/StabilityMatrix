@@ -2269,6 +2269,15 @@ Account tokens will not be viewable after saving, please make a note of them if 
   <data name="Label_ImageFileNotFound" xml:space="preserve">
     <value>Image file not found</value>
   </data>
+  <data name="Action_OpenInExternalPlayer" xml:space="preserve">
+    <value>Open in external player</value>
+  </data>
+  <data name="Label_VideoPreviewMuted" xml:space="preserve">
+    <value>The in-app preview is muted. Open the video in an external player to hear its audio.</value>
+  </data>
+  <data name="Label_VideoDecodeFailed" xml:space="preserve">
+    <value>This video couldn't be played in the app</value>
+  </data>
   <data name="Label_ExampleTelemetry" xml:space="preserve">
     <value>Example telemetry</value>
   </data>

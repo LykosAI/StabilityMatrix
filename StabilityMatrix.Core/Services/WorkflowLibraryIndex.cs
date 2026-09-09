@@ -85,11 +85,7 @@ public class WorkflowLibraryIndex : IWorkflowLibraryIndex
             return result;
 
         foreach (
-            var workflowPath in Directory.EnumerateFiles(
-                settingsManager.WorkflowDirectory,
-                "*.json",
-                SearchOption.AllDirectories
-            )
+            var workflowPath in LinkSafeFileSystem.EnumerateFiles(settingsManager.WorkflowDirectory, "*.json")
         )
         {
             try

@@ -77,6 +77,26 @@ public class SharedFolders(ISettingsManager settingsManager, IPackageFactory pac
             await destAsFile.DeleteAsync().ConfigureAwait(false);
         }
 
+        // A link placed inside its own target (e.g. the user already linked the destination's
+        // parent to the source) would loop forever for anything that walks the tree
+        if (LinkSafeFileSystem.WouldLinkCycle(sourceDir, destinationDir))
+        {
+            Logger.Warn(
+                "Skipped folder link {Destination} -> {Source}: the link would sit inside its own target",
+                destinationDir,
+                sourceDir
+            );
+
+            if (destinationDir.IsSymbolicLink)
+            {
+                Logger.Info("Removing existing looping link at {Destination}", destinationDir);
+                destinationDir.Info.Attributes = FileAttributes.Normal;
+                await destinationDir.DeleteAsync(false).ConfigureAwait(false);
+            }
+
+            return;
+        }
+
         if (destinationDir.Exists)
         {
             // Existing dest is a link

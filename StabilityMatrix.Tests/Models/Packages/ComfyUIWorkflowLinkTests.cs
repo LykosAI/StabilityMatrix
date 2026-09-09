@@ -44,23 +44,7 @@ public class ComfyUIWorkflowLinkTests
     [TestCleanup]
     public void Cleanup()
     {
-        if (!Directory.Exists(tempDir))
-            return;
-
-        // Junction links must be unlinked (non-recursively) before the recursive delete,
-        // which would otherwise fail or follow into the link target
-        var links = new DirectoryInfo(tempDir)
-            .EnumerateDirectories("*", SearchOption.AllDirectories)
-            .Where(d => d.Attributes.HasFlag(FileAttributes.ReparsePoint))
-            .ToList();
-
-        foreach (var link in links)
-        {
-            link.Attributes = FileAttributes.Normal;
-            link.Delete(false);
-        }
-
-        Directory.Delete(tempDir, true);
+        TempFiles.DeleteDirectory(tempDir);
     }
 
     [TestMethod]
@@ -83,6 +67,42 @@ public class ComfyUIWorkflowLinkTests
         await comfy.SetupModelFolders(installDir, SharedFolderMethod.None);
 
         Assert.IsFalse(installDir.JoinDir("user", "default", "workflows", "Stability Matrix").Exists);
+    }
+
+    [TestMethod]
+    public async Task SetupModelFolders_LibraryLinkedToComfyWorkflowsDir_SkipsLink()
+    {
+        // The user pointed the library at ComfyUI's own workflows folder; linking it back
+        // into that folder would create "Stability Matrix\Stability Matrix\..." forever
+        var comfyWorkflows = installDir.JoinDir("user", "default", "workflows");
+        comfyWorkflows.Create();
+        await File.WriteAllTextAsync(comfyWorkflows.JoinFile("mine.json"), "{}");
+        TempFiles.CreateDirectoryLink(workflowsDir, comfyWorkflows);
+
+        await comfy.SetupModelFolders(installDir, SharedFolderMethod.Configuration);
+
+        Assert.IsFalse(
+            comfyWorkflows.JoinDir("Stability Matrix").Exists,
+            "Looping link should not be created"
+        );
+        Assert.IsTrue(File.Exists(comfyWorkflows.JoinFile("mine.json")), "User workflows must be untouched");
+    }
+
+    [TestMethod]
+    public async Task SetupModelFolders_ExistingLoopingLink_IsRemoved()
+    {
+        // State left behind by an older version that created the link before the library was redirected
+        var comfyWorkflows = installDir.JoinDir("user", "default", "workflows");
+        comfyWorkflows.Create();
+        await File.WriteAllTextAsync(comfyWorkflows.JoinFile("mine.json"), "{}");
+        TempFiles.CreateDirectoryLink(workflowsDir, comfyWorkflows);
+        var linkDir = comfyWorkflows.JoinDir("Stability Matrix");
+        TempFiles.CreateDirectoryLink(linkDir, workflowsDir);
+
+        await comfy.SetupModelFolders(installDir, SharedFolderMethod.Configuration);
+
+        Assert.IsFalse(linkDir.Exists, "Looping link should be removed");
+        Assert.IsTrue(File.Exists(comfyWorkflows.JoinFile("mine.json")), "User workflows must be untouched");
     }
 
     [TestMethod]

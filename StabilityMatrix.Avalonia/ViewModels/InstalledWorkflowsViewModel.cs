@@ -119,11 +119,7 @@ public partial class InstalledWorkflowsViewModel(
         var count = 0;
 
         foreach (
-            var workflowPath in Directory.EnumerateFiles(
-                settingsManager.WorkflowDirectory,
-                "*.json",
-                EnumerationOptionConstants.AllDirectories
-            )
+            var workflowPath in LinkSafeFileSystem.EnumerateFiles(settingsManager.WorkflowDirectory, "*.json")
         )
         {
             try

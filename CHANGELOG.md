@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Installing a package into a folder that already contains files — like an existing ComfyUI installation placed in `Data\Packages` to be imported — now shows the folder's total size and file count and requires explicit confirmation, instead of silently deleting everything in it; this includes the first-run one-click installer ([#1733](https://github.com/LykosAI/StabilityMatrix/issues/1733))
 - Turning off shared model folders no longer tries to delete real directories at the link locations — only links created by Stability Matrix are removed, so the model folders of an imported package are never touched ([#1733](https://github.com/LykosAI/StabilityMatrix/issues/1733))
 - The package uninstall confirmation now correctly lists models/checkpoints among the items that will be deleted for packages using config-based model sharing (ComfyUI's default) — previously it implied they were safe — and shows the package folder's total size
+- Fixed the **Workflows** page loading forever (and eventually freezing the app) when the workflow library folder is itself a link to ComfyUI's `user\default\workflows` folder — the `Stability Matrix` link ComfyUI gets at launch pointed back into the same folder, nesting `Stability Matrix\Stability Matrix\...` thousands of levels deep. That link is no longer created (and an existing one is removed) when it would loop, and the workflow scan now follows linked folders at most once
 
 ## v2.17.0-dev.3
 ### Added

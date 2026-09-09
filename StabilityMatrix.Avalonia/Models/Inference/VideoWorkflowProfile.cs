@@ -152,9 +152,18 @@ public sealed class VideoWorkflowProfile
             RequiresContainerFormat = true,
             VaeAutoFill = _ => NameContains("minimax", "videovae"),
             AudioVaeAutoFill = NameContains("minimax", "audiovae"),
-            // "qwen3vl" alone also matches generic Qwen3-VL encoders, so the minimax-tuned
-            // one is preferred when installed (Flux.2 = qwen_3_4b, Qwen-Image = qwen_2.5_vl)
-            TextEncoderAutoFill = [NameContains("qwen3vl", "minimax"), NameContains("qwen3vl")],
+            // Only the MiniMax-specific 32B encoder is compatible; generic Qwen3-VL
+            // files (including Krea's 4B encoder) must leave the slot unfilled.
+            TextEncoderAutoFill =
+            [
+                name =>
+                    NameContains("minimax")(name)
+                    && System.Text.RegularExpressions.Regex.IsMatch(
+                        name,
+                        @"qwen[_ .-]*3[_ .-]*vl[_ .-]*32b(?:[_ .-]|$)",
+                        System.Text.RegularExpressions.RegexOptions.IgnoreCase
+                    ),
+            ],
         };
 
     /// <summary>Display order for the profile dropdown.</summary>

@@ -49,9 +49,11 @@ public sealed partial class InferenceWorkflowProfile
         new(
             "Qwen3-VL 4B text encoder",
             name =>
-                name.Contains("qwen3vl", StringComparison.OrdinalIgnoreCase)
-                || name.Contains("qwen3-vl", StringComparison.OrdinalIgnoreCase)
-                || name.Contains("qwen3_vl", StringComparison.OrdinalIgnoreCase),
+                System.Text.RegularExpressions.Regex.IsMatch(
+                    name,
+                    @"qwen[_ .-]*3[_ .-]*vl[_ .-]*4b(?:[_ .-]|$)",
+                    System.Text.RegularExpressions.RegexOptions.IgnoreCase
+                ) && !name.Contains("minimax", StringComparison.OrdinalIgnoreCase),
             RemoteModels.Qwen3Vl4bTextEncoder
         );
 

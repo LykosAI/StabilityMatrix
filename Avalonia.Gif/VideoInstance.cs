@@ -42,6 +42,7 @@ public sealed class VideoInstance : IGifInstance
 
     private readonly Thread readerThread;
     private Process? process;
+    private bool readerFinished;
 
     public IterationCount IterationCount { get; set; }
     public bool AutoStart => true;
@@ -144,10 +145,10 @@ public sealed class VideoInstance : IGifInstance
 
     private void ReaderLoop()
     {
-        var token = CurrentCts.Token;
-
         try
         {
+            var token = CurrentCts.Token;
+            token.ThrowIfCancellationRequested();
             var startInfo = new ProcessStartInfo
             {
                 FileName = ffmpegPath,
@@ -159,7 +160,7 @@ public sealed class VideoInstance : IGifInstance
             foreach (var arg in BuildStreamArgs())
                 startInfo.ArgumentList.Add(arg);
 
-            using var proc = new Process { StartInfo = startInfo };
+            var proc = new Process { StartInfo = startInfo };
             process = proc;
             proc.Start();
 
@@ -206,6 +207,13 @@ public sealed class VideoInstance : IGifInstance
         finally
         {
             KillProcess();
+            process?.Dispose();
+            lock (gate)
+            {
+                readerFinished = true;
+                if (IsDisposed)
+                    CurrentCts.Dispose();
+            }
         }
     }
 
@@ -339,21 +347,19 @@ public sealed class VideoInstance : IGifInstance
 
     public void Dispose()
     {
-        if (IsDisposed)
-            return;
-
-        IsDisposed = true;
-        CurrentCts.Cancel();
-
-        // Killing ffmpeg closes the pipe, which unblocks the reader thread's Read; the reader never touches
-        // the target bitmap, so there is nothing to wait for before releasing it.
-        KillProcess();
-
         lock (gate)
         {
-            targetBitmap.Dispose();
-        }
+            if (IsDisposed)
+                return;
 
-        CurrentCts.Dispose();
+            IsDisposed = true;
+            CurrentCts.Cancel();
+            // Unblock Read without waiting on the UI thread. The worker owns its process
+            // and keeps the cancellation wait handle alive until it has stopped using it.
+            KillProcess();
+            targetBitmap.Dispose();
+            if (readerFinished)
+                CurrentCts.Dispose();
+        }
     }
 }

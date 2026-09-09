@@ -111,11 +111,10 @@ public class VideoWorkflowProfileSerializationTests
         Assert.IsFalse(h3.VaeAutoFill(null)!("minimax_h3_audio_vae_fp32.safetensors"));
         Assert.IsTrue(h3.AudioVaeAutoFill!("minimax_h3_audio_vae_fp32.safetensors"));
 
-        // Encoder tiers: the minimax-tuned qwen3vl wins tier 1; a generic qwen3vl only
-        // matches the fallback tier; other qwen encoders match nothing.
+        // Only the MiniMax-specific 32B encoder is eligible for automatic selection.
         Assert.IsTrue(h3.TextEncoderAutoFill[0]("qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors"));
         Assert.IsFalse(h3.TextEncoderAutoFill[0]("Qwen3-VL-8B-Instruct-fp8.safetensors"));
-        Assert.IsTrue(h3.TextEncoderAutoFill[1]("Qwen3-VL-8B-Instruct-fp8.safetensors"));
+        Assert.IsFalse(h3.TextEncoderAutoFill.Any(m => m("Qwen3-VL-8B-Instruct-fp8.safetensors")));
         Assert.IsFalse(h3.TextEncoderAutoFill.Any(m => m("qwen_2.5_vl_7b_fp8_scaled.safetensors")));
         Assert.IsFalse(h3.TextEncoderAutoFill.Any(m => m("qwen_3_4b.safetensors")));
     }

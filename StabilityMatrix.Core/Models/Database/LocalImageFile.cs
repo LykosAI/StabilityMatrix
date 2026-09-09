@@ -61,6 +61,12 @@ public record LocalImageFile
     /// </summary>
     public string? ThumbnailPath { get; init; }
 
+    /// <summary>
+    /// Path of the still image to show for this file: the poster frame for videos that have one,
+    /// otherwise the file itself.
+    /// </summary>
+    public string DisplayPath => ThumbnailPath ?? AbsolutePath;
+
     public (
         string? Parameters,
         string? ParametersJson,

@@ -56,8 +56,6 @@ public class EventManager
     );
     public event InferenceProjectRequestedEventHandler? InferenceProjectRequested;
     public event EventHandler<InferenceQueueCustomPromptEventArgs>? InferenceQueueCustomPrompt;
-    public event EventHandler<InferenceProjectType>? InferenceTabOpened;
-    public event EventHandler<InferenceProjectType>? InferenceGenerationCompleted;
     public event EventHandler<int>? NavigateAndFindCivitModelRequested;
     public event EventHandler<string?>? NavigateAndFindCivitAuthorRequested;
     public event EventHandler? RecommendedModelsDialogClosed;
@@ -105,11 +103,6 @@ public class EventManager
 
     public void OnInferenceQueueCustomPrompt(InferenceQueueCustomPromptEventArgs e) =>
         InferenceQueueCustomPrompt?.Invoke(this, e);
-
-    public void OnInferenceTabOpened(InferenceProjectType type) => InferenceTabOpened?.Invoke(this, type);
-
-    public void OnInferenceGenerationCompleted(InferenceProjectType type) =>
-        InferenceGenerationCompleted?.Invoke(this, type);
 
     public void OnNavigateAndFindCivitModelRequested(int modelId) =>
         NavigateAndFindCivitModelRequested?.Invoke(this, modelId);

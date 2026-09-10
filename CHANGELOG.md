@@ -9,7 +9,6 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Added
 - Videos generated in Inference (MiniMax H3 and Wan mp4s) now **play inside the app** — in the Inference gallery, the Outputs page, and the image viewer — instead of launching the system player. The in-app preview is muted; an *Open in external player* button on the video gets you the audio
 - The Inference outputs strip now lists videos too, with a poster frame and a play badge
-- **Anonymous usage data** got more useful and more transparent. It is still strictly opt-in, and each kind of data now has its own toggle in Settings > Analytics with an example of exactly what it sends: hardware (GPU, VRAM, RAM, NVIDIA driver, with a Minimal option that sends only the vendor and rounded sizes), package usage, Inference usage (tabs opened and generations run, counted per tab type; nothing about what was generated), feature usage and package installs. Usage data is counted locally and sent as daily totals, never as individual actions, and never includes prompts, model names or images. A random installation ID lets us count installs; it is created when you opt in, removed when you opt out, and can be reset at any time. Users who already opted in will see the updated choices once
 ### Changed
 - The **Prompt Amplifier** now runs on **Spark v2.0**, the more creative model already behind the amplifier on lykos.ai — the model picker in the wand flyout switches back to Spark Classic, and the Think toggle works with either
 ### Fixed

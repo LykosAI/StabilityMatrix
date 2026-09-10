@@ -12,245 +12,55 @@ namespace StabilityMatrix.Tests.Core;
 [TestClass]
 public class AnalyticsHelperTests
 {
-    private Settings settings = null!;
-    private ISettingsManager settingsManager = null!;
-    private ILykosAnalyticsApi api = null!;
-    private IAnalyticsUsageTracker usageTracker = null!;
-    private List<AnalyticsRequest> sent = null!;
-
-    [TestInitialize]
-    public void Setup()
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task Tracking_RespectsUsageDataToggle(bool enabled)
     {
-        settings = new Settings();
-
-        settingsManager = Substitute.For<ISettingsManager>();
+        var settingsManager = Substitute.For<ISettingsManager>();
+        var settings = new Settings();
+        settings.Analytics.IsUsageDataEnabled = enabled;
         settingsManager.Settings.Returns(settings);
-        settingsManager
-            .When(x => x.Transaction(Arg.Any<Action<Settings>>(), Arg.Any<bool>()))
-            .Do(call => call.Arg<Action<Settings>>()(settings));
-
-        sent = [];
-        api = Substitute.For<ILykosAnalyticsApi>();
+        var api = Substitute.For<ILykosAnalyticsApi>();
+        var sent = new List<AnalyticsRequest>();
         api.PostInstallData(Arg.Do<AnalyticsRequest>(sent.Add), Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
+        var helper = new AnalyticsHelper(Substitute.For<ILogger<AnalyticsHelper>>(), api, settingsManager);
 
-        usageTracker = Substitute.For<IAnalyticsUsageTracker>();
-        usageTracker.BuildReports(Arg.Any<DateTimeOffset>()).Returns([]);
-    }
-
-    private AnalyticsHelper CreateHelper() =>
-        new(Substitute.For<ILogger<AnalyticsHelper>>(), api, settingsManager, usageTracker);
-
-    private void OptIn(params AnalyticsCategory[] categories)
-    {
-        settings.Analytics.IsUsageDataEnabled = true;
-        settings.Analytics.InstallationId = Guid.NewGuid();
-        foreach (var category in categories)
-        {
-            settings.Analytics.Categories[category] = true;
-        }
-    }
-
-    [TestMethod]
-    public void ApplyConsent_Accepted_EnablesChosenCategoriesAndCreatesId()
-    {
-        CreateHelper()
-            .ApplyConsent(
-                new AnalyticsConsentChoice(
-                    true,
-                    [AnalyticsCategory.Hardware, AnalyticsCategory.PackageInstalls],
-                    HardwareDetailLevel.Detailed
-                )
-            );
-
-        var analytics = settings.Analytics;
-        Assert.IsTrue(analytics.IsUsageDataEnabled);
-        Assert.IsTrue(analytics.LastSeenConsentAccepted);
-        Assert.AreEqual(AnalyticsSettings.CurrentConsentRevision, analytics.LastSeenConsentRevision);
-        Assert.IsNotNull(analytics.LastSeenConsentVersion);
-        Assert.IsNotNull(analytics.InstallationId);
-        Assert.IsTrue(analytics.Categories[AnalyticsCategory.Hardware]);
-        Assert.IsTrue(analytics.Categories[AnalyticsCategory.PackageInstalls]);
-        Assert.IsFalse(analytics.Categories[AnalyticsCategory.PackageUsage]);
-        Assert.IsFalse(analytics.Categories[AnalyticsCategory.InferenceUsage]);
-        Assert.IsFalse(analytics.Categories[AnalyticsCategory.FeatureUsage]);
-        Assert.IsFalse(analytics.IsConsentUnanswered);
-        Assert.IsFalse(analytics.IsConsentOutdated);
-    }
-
-    [TestMethod]
-    public void ApplyConsent_Accepted_KeepsExistingId()
-    {
-        var existing = Guid.NewGuid();
-        settings.Analytics.InstallationId = existing;
-
-        CreateHelper()
-            .ApplyConsent(
-                new AnalyticsConsentChoice(true, [AnalyticsCategory.Hardware], HardwareDetailLevel.Detailed)
-            );
-
-        Assert.AreEqual(existing, settings.Analytics.InstallationId);
-    }
-
-    [TestMethod]
-    public void ApplyConsent_Declined_ClearsEverything()
-    {
-        OptIn(AnalyticsCategory.Hardware, AnalyticsCategory.FeatureUsage);
-
-        CreateHelper()
-            .ApplyConsent(
-                new AnalyticsConsentChoice(false, [AnalyticsCategory.Hardware], HardwareDetailLevel.Detailed)
-            );
-
-        var analytics = settings.Analytics;
-        Assert.IsFalse(analytics.IsUsageDataEnabled);
-        Assert.IsFalse(analytics.LastSeenConsentAccepted);
-        Assert.IsNull(analytics.InstallationId);
-        Assert.IsFalse(analytics.Categories[AnalyticsCategory.Hardware]);
-        Assert.IsFalse(analytics.Categories[AnalyticsCategory.FeatureUsage]);
-        Assert.IsFalse(analytics.IsConsentOutdated);
-    }
-
-    [TestMethod]
-    public void SetUsageDataEnabled_RotatesInstallationId()
-    {
-        OptIn();
-        var original = settings.Analytics.InstallationId;
-        var helper = CreateHelper();
-
-        helper.SetUsageDataEnabled(false);
-        Assert.IsFalse(settings.Analytics.IsUsageDataEnabled);
-        Assert.IsNull(settings.Analytics.InstallationId);
-
-        helper.SetUsageDataEnabled(true);
-        Assert.IsTrue(settings.Analytics.IsUsageDataEnabled);
-        Assert.IsNotNull(settings.Analytics.InstallationId);
-        Assert.AreNotEqual(original, settings.Analytics.InstallationId);
-    }
-
-    [TestMethod]
-    public void ResetInstallationId_IsNoOpWhileDisabled()
-    {
-        CreateHelper().ResetInstallationId();
-
-        Assert.IsNull(settings.Analytics.InstallationId);
-    }
-
-    [TestMethod]
-    public async Task TrackPackageInstall_RequiresPackageInstallsCategory()
-    {
-        OptIn();
-        var helper = CreateHelper();
-
+        await helper.TrackAsync(new LaunchAnalyticsRequest());
         await helper.TrackPackageInstallAsync("ComfyUI", "1.0", true);
-        Assert.AreEqual(0, sent.Count);
-
-        settings.Analytics.Categories[AnalyticsCategory.PackageInstalls] = true;
-        await helper.TrackPackageInstallAsync("ComfyUI", "1.0", true);
-
-        Assert.AreEqual(1, sent.Count);
-        Assert.IsInstanceOfType<PackageInstallAnalyticsRequest>(sent[0]);
-        Assert.AreEqual(settings.Analytics.InstallationId, sent[0].InstallationId);
-    }
-
-    [TestMethod]
-    public async Task Track_CreatesInstallationIdForLegacyOptIns()
-    {
-        settings.Analytics.IsUsageDataEnabled = true;
-
-        await CreateHelper().TrackAsync(new LaunchAnalyticsRequest());
-
-        Assert.IsNotNull(settings.Analytics.InstallationId);
-        Assert.AreEqual(settings.Analytics.InstallationId, sent.Single().InstallationId);
-    }
-
-    [TestMethod]
-    public async Task SendPeriodicReports_SendsLaunchAndUsageWhenDue()
-    {
-        OptIn(AnalyticsCategory.PackageUsage);
-        var usageReport = new PackageUsageAnalyticsRequest();
-        usageTracker
-            .BuildReports(Arg.Any<DateTimeOffset>())
-            .Returns([(AnalyticsCategory.PackageUsage, usageReport)]);
-
-        await CreateHelper().SendPeriodicReportsIfDueAsync();
+        await helper.TrackFirstTimeInstallAsync("ComfyUI", ["recommended-model"], false);
 
         CollectionAssert.AreEqual(
-            new[] { typeof(LaunchAnalyticsRequest), typeof(PackageUsageAnalyticsRequest) },
-            sent.Select(r => r.GetType()).ToArray()
+            enabled
+                ? new[]
+                {
+                    typeof(LaunchAnalyticsRequest),
+                    typeof(PackageInstallAnalyticsRequest),
+                    typeof(FirstTimeInstallAnalytics),
+                }
+                : Array.Empty<Type>(),
+            sent.Select(request => request.GetType()).ToArray()
         );
-        Assert.IsTrue(sent.All(r => r.InstallationId == settings.Analytics.InstallationId));
-        Assert.IsNotNull(settings.Analytics.LaunchDataLastSentAt);
-        usageTracker.Received(1).ResetCategory(AnalyticsCategory.PackageUsage);
+        settingsManager.DidNotReceive().Transaction(Arg.Any<Action<Settings>>(), Arg.Any<bool>());
     }
 
     [TestMethod]
-    public async Task SendPeriodicReports_SkipsWhenSentRecently()
+    public async Task Tracking_ApiFailureDoesNotInterruptApp()
     {
-        OptIn(AnalyticsCategory.PackageUsage);
-        settings.Analytics.LaunchDataLastSentAt = DateTimeOffset.UtcNow.AddHours(-1);
-
-        await CreateHelper().SendPeriodicReportsIfDueAsync();
-
-        Assert.AreEqual(0, sent.Count);
-        usageTracker.DidNotReceive().BuildReports(Arg.Any<DateTimeOffset>());
-    }
-
-    [TestMethod]
-    public async Task SendPeriodicReports_SkipsWhenDisabled()
-    {
-        await CreateHelper().SendPeriodicReportsIfDueAsync();
-
-        Assert.AreEqual(0, sent.Count);
-    }
-
-    [TestMethod]
-    public async Task SendPeriodicReports_KeepsCountersWhenLaunchPingFails()
-    {
-        OptIn(AnalyticsCategory.PackageUsage);
+        var settingsManager = Substitute.For<ISettingsManager>();
+        var settings = new Settings();
+        settings.Analytics.IsUsageDataEnabled = true;
+        settingsManager.Settings.Returns(settings);
+        var api = Substitute.For<ILykosAnalyticsApi>();
         api.PostInstallData(Arg.Any<AnalyticsRequest>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new HttpRequestException("offline"));
+        var helper = new AnalyticsHelper(Substitute.For<ILogger<AnalyticsHelper>>(), api, settingsManager);
 
-        await CreateHelper().SendPeriodicReportsIfDueAsync();
+        await helper.TrackAsync(new LaunchAnalyticsRequest());
+        await helper.TrackPackageInstallAsync("ComfyUI", "1.0", false);
+        await helper.TrackFirstTimeInstallAsync(null, null, true);
 
-        Assert.IsNull(settings.Analytics.LaunchDataLastSentAt);
-        usageTracker.DidNotReceive().BuildReports(Arg.Any<DateTimeOffset>());
-        usageTracker.DidNotReceive().ResetCategory(Arg.Any<AnalyticsCategory>());
-    }
-
-    [TestMethod]
-    public async Task SendPeriodicReports_KeepsCountersOfFailedUsageReport()
-    {
-        OptIn(AnalyticsCategory.PackageUsage);
-        var usageReport = new PackageUsageAnalyticsRequest();
-        usageTracker
-            .BuildReports(Arg.Any<DateTimeOffset>())
-            .Returns([(AnalyticsCategory.PackageUsage, usageReport)]);
-        api.PostInstallData(usageReport, Arg.Any<CancellationToken>())
-            .ThrowsAsync(new HttpRequestException("flaky"));
-
-        await CreateHelper().SendPeriodicReportsIfDueAsync();
-
-        Assert.IsNotNull(settings.Analytics.LaunchDataLastSentAt);
-        usageTracker.DidNotReceive().ResetCategory(Arg.Any<AnalyticsCategory>());
-    }
-
-    [TestMethod]
-    public void ApplyConsent_StoresHardwareDetailLevel()
-    {
-        CreateHelper()
-            .ApplyConsent(
-                new AnalyticsConsentChoice(true, [AnalyticsCategory.Hardware], HardwareDetailLevel.Minimal)
-            );
-
-        Assert.AreEqual(HardwareDetailLevel.Minimal, settings.Analytics.HardwareDetailLevel);
-    }
-
-    [TestMethod]
-    public void SetHardwareDetailLevel_Persists()
-    {
-        CreateHelper().SetHardwareDetailLevel(HardwareDetailLevel.Minimal);
-
-        Assert.AreEqual(HardwareDetailLevel.Minimal, settings.Analytics.HardwareDetailLevel);
+        await api.Received(3).PostInstallData(Arg.Any<AnalyticsRequest>(), Arg.Any<CancellationToken>());
     }
 }

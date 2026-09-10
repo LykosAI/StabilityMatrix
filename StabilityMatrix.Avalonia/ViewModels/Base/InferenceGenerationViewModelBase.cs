@@ -772,8 +772,6 @@ public abstract partial class InferenceGenerationViewModelBase
             await EnsureInputImagesHashedAsync();
 
             await GenerateImageImpl(GenerateOverrides.FromFlags(default), cancellationToken);
-
-            EventManager.Instance.OnInferenceGenerationCompleted(this.ToProjectType());
         }
         finally
         {
@@ -797,8 +795,6 @@ public abstract partial class InferenceGenerationViewModelBase
         try
         {
             await GenerateImageImpl(overrides, cancellationToken);
-
-            EventManager.Instance.OnInferenceGenerationCompleted(this.ToProjectType());
         }
         catch (OperationCanceledException)
         {

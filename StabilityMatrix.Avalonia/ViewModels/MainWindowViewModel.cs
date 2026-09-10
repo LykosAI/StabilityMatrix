@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.InteropServices;
 using AsyncAwaitBestPractices;
 using Avalonia;
 using Avalonia.Controls;
@@ -18,7 +19,6 @@ using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.MarkupExtensions;
-using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
@@ -32,6 +32,7 @@ using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Analytics;
 using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Api.Lykos.Analytics;
 using StabilityMatrix.Core.Models.Notifications;
 using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Models.Update;
@@ -55,7 +56,6 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly INotificationService notificationService;
     private readonly IAppNotificationService appNotificationService;
     private readonly IAnalyticsHelper analyticsHelper;
-    private readonly IAnalyticsUsageTracker analyticsUsageTracker;
     private readonly IUpdateHelper updateHelper;
     private readonly ISecretsManager secretsManager;
     private readonly INavigationService<MainWindowViewModel> navigationService;
@@ -139,7 +139,6 @@ public partial class MainWindowViewModel : ViewModelBase
         INotificationService notificationService,
         IAppNotificationService appNotificationService,
         IAnalyticsHelper analyticsHelper,
-        IAnalyticsUsageTracker analyticsUsageTracker,
         IUpdateHelper updateHelper,
         ISecretsManager secretsManager,
         INavigationService<MainWindowViewModel> navigationService,
@@ -159,7 +158,6 @@ public partial class MainWindowViewModel : ViewModelBase
         this.notificationService = notificationService;
         this.appNotificationService = appNotificationService;
         this.analyticsHelper = analyticsHelper;
-        this.analyticsUsageTracker = analyticsUsageTracker;
         this.updateHelper = updateHelper;
         this.secretsManager = secretsManager;
         this.navigationService = navigationService;
@@ -173,27 +171,6 @@ public partial class MainWindowViewModel : ViewModelBase
         NotificationBannerViewModel = new NotificationBannerViewModel(appNotificationService);
 
         EventManager.Instance.ShowChangelogRequested += OnShowChangelogRequested;
-        navigationService.TypedNavigation += OnTypedNavigationForAnalytics;
-    }
-
-    /// <summary>
-    /// Counts top-level page visits for the opt-in feature usage report, keyed by the page view
-    /// model's name without its ViewModel suffix (e.g. "Inference", "CheckpointBrowser").
-    /// </summary>
-    private void OnTypedNavigationForAnalytics(object? sender, TypedNavigationEventArgs e)
-    {
-        var pageName = e.ViewModelType.Name;
-
-        foreach (var suffix in new[] { "PageViewModel", "ViewModel" })
-        {
-            if (pageName.EndsWith(suffix, StringComparison.Ordinal))
-            {
-                pageName = pageName[..^suffix.Length];
-                break;
-            }
-        }
-
-        analyticsUsageTracker.RecordPageVisit(pageName);
     }
 
     private void OnShowChangelogRequested(object? sender, EventArgs e)
@@ -384,18 +361,29 @@ public partial class MainWindowViewModel : ViewModelBase
         var startupTime = CodeTimer.FormatTime(Program.StartupTimer.Elapsed);
         Logger.Info($"App started ({startupTime})");
 
-        // Show analytics notice if never answered, or once more when the categories changed
+        // Show analytics notice if not seen
         if (
-            settingsManager.Settings.Analytics.IsConsentUnanswered
-            || settingsManager.Settings.Analytics.IsConsentOutdated
+            settingsManager.Settings.Analytics.LastSeenConsentVersion is null
+            || settingsManager.Settings.Analytics.LastSeenConsentAccepted is null
         )
         {
             var vm = dialogFactory.Get<AnalyticsOptInViewModel>();
-            vm.IsConsentUpdate = settingsManager.Settings.Analytics.IsConsentOutdated;
-
             var result = await vm.GetDialog().ShowAsync();
 
-            analyticsHelper.ApplyConsent(vm.GetConsentChoice(result == ContentDialogResult.Secondary));
+            settingsManager.Transaction(s =>
+            {
+                s.Analytics.LastSeenConsentVersion = Compat.AppVersion;
+                s.Analytics.LastSeenConsentAccepted = result == ContentDialogResult.Secondary;
+            });
+
+            if (result == ContentDialogResult.Secondary)
+            {
+                settingsManager.Transaction(s => s.Analytics.IsUsageDataEnabled, true);
+            }
+            else if (result is ContentDialogResult.Primary)
+            {
+                settingsManager.Transaction(s => s.Analytics.IsUsageDataEnabled, false);
+            }
         }
 
         if (Program.Args.DebugOneClickInstall || settingsManager.Settings.InstalledPackages.Count == 0)
@@ -499,8 +487,36 @@ public partial class MainWindowViewModel : ViewModelBase
             settingsManager.Transaction(s => s.FirstLaunchSetupComplete = true);
         }
 
-        // Periodic launch stats, hardware and aggregated usage reports (at most once a day)
-        analyticsHelper.SendPeriodicReportsIfDueAsync().SafeFireAndForget();
+        // Periodic launch stats
+        if (
+            settingsManager.Settings.Analytics.IsUsageDataEnabled
+            && (
+                settingsManager.Settings.Analytics.LaunchDataLastSentAt is null
+                || (DateTimeOffset.UtcNow - settingsManager.Settings.Analytics.LaunchDataLastSentAt)
+                    > AnalyticsSettings.DefaultLaunchDataSendInterval
+            )
+        )
+        {
+            analyticsHelper
+                .TrackAsync(
+                    new LaunchAnalyticsRequest
+                    {
+                        Version = Compat.AppVersion.ToString(),
+                        RuntimeIdentifier = RuntimeInformation.RuntimeIdentifier,
+                        OsDescription = RuntimeInformation.OSDescription,
+                    }
+                )
+                .ContinueWith(task =>
+                {
+                    if (!task.IsFaulted)
+                    {
+                        settingsManager.Transaction(s =>
+                            s.Analytics.LaunchDataLastSentAt = DateTimeOffset.UtcNow
+                        );
+                    }
+                })
+                .SafeFireAndForget();
+        }
 
         // Account migration notice
         Task.Run(async () =>

@@ -12,7 +12,6 @@ using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.PackageSteps;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Core.Extensions;
-using StabilityMatrix.Core.Helper.Analytics;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
@@ -29,8 +28,7 @@ public partial class RunningPackageService(
     IPackageFactory packageFactory,
     INotificationService notificationService,
     ISettingsManager settingsManager,
-    IPyRunner pyRunner,
-    IAnalyticsUsageTracker usageTracker
+    IPyRunner pyRunner
 ) : ObservableObject, IDisposable
 {
     /// <summary>
@@ -253,8 +251,6 @@ public partial class RunningPackageService(
 
         var runningPackage = new PackagePair(installedPackage, basePackage);
 
-        TrackPackageRunForAnalytics(basePackage);
-
         var viewModel = new RunningPackageViewModel(
             settingsManager,
             notificationService,
@@ -290,25 +286,6 @@ public partial class RunningPackageService(
 
     public RunningPackageViewModel? GetRunningPackageViewModel(Guid id) =>
         RunningPackages.TryGetValue(id, out var vm) ? vm : null;
-
-    /// <summary>
-    /// Counts the launch now and the run time once the package exits. A package still running
-    /// when the app closes is simply not timed.
-    /// </summary>
-    private void TrackPackageRunForAnalytics(BasePackage basePackage)
-    {
-        var startedAt = DateTimeOffset.UtcNow;
-
-        usageTracker.RecordPackageLaunch(basePackage.Name);
-
-        basePackage.Exited += OnExited;
-
-        void OnExited(object? sender, int exitCode)
-        {
-            basePackage.Exited -= OnExited;
-            usageTracker.RecordPackageRun(basePackage.Name, DateTimeOffset.UtcNow - startedAt);
-        }
-    }
 
     private static Task UnpackSiteCustomize(DirectoryPath venvPath) =>
         new UnpackSiteCustomizeStep(venvPath).ExecuteAsync();

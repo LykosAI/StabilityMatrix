@@ -9,8 +9,10 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Added
 - Videos generated in Inference (MiniMax H3 and Wan mp4s) now **play inside the app** — in the Inference gallery, the Outputs page, and the image viewer — instead of launching the system player. The in-app preview is muted; an *Open in external player* button on the video gets you the audio
 - The Inference outputs strip now lists videos too, with a poster frame and a play badge
+- Added **Comfy Kitchen Attention** (`--use-ck-attention`) as a **Cross Attention Method** launch option for ComfyUI and ComfyUI-Zluda - thanks to @e-nord!
 ### Changed
 - The **Prompt Amplifier** now runs on **Spark v2.0**, the more creative model already behind the amplifier on lykos.ai — the model picker in the wand flyout switches back to Spark Classic, and the Think toggle works with either
+- **Windows ROCm** PyTorch installs now come from AMD's new permanent ROCm 10 package repositories, avoiding the `CUDA error: invalid argument` / `hipErrorInvalidValue` failures reported with the ROCm 7.14.1 builds — packages already on 7.14.1 need a reinstall, or an update that also upgrades PyTorch (like ComfyUI's) - thanks to @NeuralFault!
 ### Fixed
 - Fixed the Prompt Amplifier showing **0 amplifications remaining** after every amplify — the app now reads the balance under the name the server actually returns
 - Fixed the **CivArchive browser** returning far fewer results than the CivArchive website — the site's redesign quietly pinned the app's search route to the past quarter, and the renamed result-count field capped infinite scroll at a single page
@@ -24,6 +26,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Turning off shared model folders no longer tries to delete real directories at the link locations — only links created by Stability Matrix are removed, so the model folders of an imported package are never touched ([#1733](https://github.com/LykosAI/StabilityMatrix/issues/1733))
 - The package uninstall confirmation now correctly lists models/checkpoints among the items that will be deleted for packages using config-based model sharing (ComfyUI's default) — previously it implied they were safe — and shows the package folder's total size
 - Fixed the **Workflows** page loading forever (and eventually freezing the app) when the workflow library folder is itself a link to ComfyUI's `user\default\workflows` folder — the `Stability Matrix` link ComfyUI gets at launch pointed back into the same folder, nesting `Stability Matrix\Stability Matrix\...` thousands of levels deep. That link is no longer created (and an existing one is removed the next time ComfyUI is launched) when it would loop, and the workflow and model folder scans now follow linked folders at most once
+- Fixed the **Cross Attention Method** launch options for ComfyUI and ComfyUI-Zluda letting you enable several at once — they're mutually exclusive, so they're now radio buttons - thanks to @e-nord!
+- Fixed [#1725](https://github.com/LykosAI/StabilityMatrix/issues/1725) - **AI-Toolkit** jobs crashing with a `distutils` error on installs from before v2.16.3 that still run Python 3.11, no reinstall needed - thanks to @NeuralFault!
 
 ## v2.17.0-dev.3
 ### Added

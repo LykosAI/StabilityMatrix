@@ -1,4 +1,16 @@
+import { readdirSync } from 'node:fs'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vitepress'
+
+// Release-notes nav derives from the files in docs/release-notes/ so adding a
+// page is enough — no second place to update (newest first).
+const releaseNotes = readdirSync(
+  join(dirname(fileURLToPath(import.meta.url)), '..', 'release-notes')
+)
+  .filter((f) => /^\d+\.\d+\.\d+\.md$/.test(f))
+  .map((f) => f.replace(/\.md$/, ''))
+  .sort((a, b) => b.localeCompare(a, undefined, { numeric: true }))
 
 export default defineConfig({
   title: 'Stability Matrix Docs',
@@ -86,7 +98,7 @@ export default defineConfig({
       { text: 'Advanced', link: '/stability-matrix/advanced/overview' },
       { text: 'Tips and Tricks', link: '/stability-matrix/tips/overview' },
       { text: 'Troubleshooting', link: '/stability-matrix/troubleshooting/common-issues' },
-      { text: 'Release Notes', link: '/stability-matrix/release-notes/2.16.2' }
+      { text: 'Release Notes', link: `/stability-matrix/release-notes/${releaseNotes[0]}` }
     ],
 
     sidebar: {
@@ -150,9 +162,10 @@ export default defineConfig({
       '/stability-matrix/release-notes/': [
         {
           text: 'Release Notes',
-          items: [
-            { text: 'v2.16.2', link: '/stability-matrix/release-notes/2.16.2' }
-          ]
+          items: releaseNotes.map((v) => ({
+            text: `v${v}`,
+            link: `/stability-matrix/release-notes/${v}`
+          }))
         }
       ]
     },

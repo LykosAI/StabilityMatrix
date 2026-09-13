@@ -8,9 +8,8 @@ namespace StabilityMatrix.Core.Models.Rocm;
 /// </summary>
 public static class WindowsRocmSupport
 {
-    public const string StableMultiArchPythonPackageIndexUrl = "https://repo.amd.com/rocm/whl-multi-arch/";
-    public const string NightlyMultiArchPythonPackageIndexUrl =
-        "https://rocm.nightlies.amd.com/whl-multi-arch/";
+    public const string StableMultiArchPythonPackageIndexUrl = "https://stable.repo.amd.com/rocm/whl-next/";
+    public const string NightlyMultiArchPythonPackageIndexUrl = "https://nightly.repo.amd.com/rocm/whl-next/";
 
     // Used to exclude modern gfxarches from AOTriton activation EnVar as AOTriton does not currently support them.
     // This is a temporary measure until AOTriton adds support for these architectures.

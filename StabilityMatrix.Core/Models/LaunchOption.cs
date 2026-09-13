@@ -9,12 +9,19 @@ public class LaunchOption
     public required string Name { get; init; }
 
     public LaunchOptionType Type { get; init; } = LaunchOptionType.Bool;
-    
+
     [JsonIgnore]
     public object? DefaultValue { get; init; }
-    
+
     [JsonIgnore]
     public bool HasDefaultValue => DefaultValue != null;
+
+    /// <summary>
+    /// When set, this option is exclusive with other options sharing the same GroupName
+    /// (rendered as radio buttons instead of checkboxes).
+    /// </summary>
+    [JsonIgnore]
+    public string? GroupName { get; init; }
 
     [JsonConverter(typeof(LaunchOptionValueJsonConverter))]
     public object? OptionValue { get; set; }
@@ -29,11 +36,9 @@ public class LaunchOption
         return Type switch
         {
             LaunchOptionType.Bool => OptionValue == null,
-            LaunchOptionType.Int => OptionValue == null ||
-                                    (int?) OptionValue == (int?) DefaultValue,
-            LaunchOptionType.String => OptionValue == null ||
-                                       (string?) OptionValue == (string?) DefaultValue,
-            _ => throw new ArgumentOutOfRangeException()
+            LaunchOptionType.Int => OptionValue == null || (int?)OptionValue == (int?)DefaultValue,
+            LaunchOptionType.String => OptionValue == null || (string?)OptionValue == (string?)DefaultValue,
+            _ => throw new ArgumentOutOfRangeException(),
         };
     }
 
@@ -48,7 +53,7 @@ public class LaunchOption
             LaunchOptionType.Bool => bool.TryParse(value, out var boolValue) ? boolValue : null,
             LaunchOptionType.Int => int.TryParse(value, out var intValue) ? intValue : null,
             LaunchOptionType.String => value,
-            _ => throw new ArgumentException($"Unknown option type {type}")
+            _ => throw new ArgumentException($"Unknown option type {type}"),
         };
     }
 
@@ -63,17 +68,19 @@ public class LaunchOption
         switch (Type)
         {
             case LaunchOptionType.Bool:
-                return (bool?) OptionValue == true ? Name : null;
+                return (bool?)OptionValue == true ? Name : null;
             case LaunchOptionType.Int:
-                return (int?) OptionValue != null ? $"{Name} {OptionValue}" : null;
+                return (int?)OptionValue != null ? $"{Name} {OptionValue}" : null;
             case LaunchOptionType.String:
-                var valueString = (string?) OptionValue;
+                var valueString = (string?)OptionValue;
                 // Special case empty string name to not do quoting (for custom launch args)
                 if (Name == "")
                 {
                     return valueString;
                 }
-                return string.IsNullOrWhiteSpace(valueString) ? null : $"{Name} {ProcessRunner.Quote(valueString)}";
+                return string.IsNullOrWhiteSpace(valueString)
+                    ? null
+                    : $"{Name} {ProcessRunner.Quote(valueString)}";
             default:
                 throw new ArgumentOutOfRangeException();
         }

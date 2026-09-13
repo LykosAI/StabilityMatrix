@@ -7,10 +7,15 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 
 ## v2.17.0-pre.1
 ### Added
+#### New Feature: 🎬 MiniMax H3 Video in Inference
+- Generate video **with native stereo audio** using **MiniMax H3** in the **Text to Video** and **Image to Video** tabs — up to ~15 seconds at 24 fps, from a prompt or a starting frame (needs ComfyUI 0.33 or newer)
+- Pick an H3 model and the tab sets itself up: ✨ recommended settings, one-click downloads for the official text encoder and video/audio VAEs, and GGUF models work too. Set an **Audio VAE** on the model card to get the soundtrack in your mp4, or leave it empty for video only
 - Videos generated in Inference (MiniMax H3 and Wan mp4s) now **play inside the app** — in the Inference gallery, the Outputs page, and the image viewer — instead of launching the system player. The in-app preview is muted; an *Open in external player* button on the video gets you the audio
 - The Inference outputs strip now lists videos too, with a poster frame and a play badge
+- The video model card now spots a few-step **Lightning / turbo LoRA** running at a CFG above 1 and offers a one-click switch to matching settings
 - Added **Comfy Kitchen Attention** (`--use-ck-attention`) as a **Cross Attention Method** launch option for ComfyUI and ComfyUI-Zluda - thanks to @e-nord!
 ### Changed
+- The Wan video tabs are now generic **Text to Video** and **Image to Video** tabs that detect the model family you pick (Wan or MiniMax H3) and show only the controls it uses — existing projects still open in them, and the Outputs page's **Image to Video** now sends to the new tab instead of the legacy SVD one
 - The **Prompt Amplifier** now runs on **Spark v2.0**, the more creative model already behind the amplifier on lykos.ai — the model picker in the wand flyout switches back to Spark Classic, and the Think toggle works with either
 - **Windows ROCm** PyTorch installs now come from AMD's new permanent ROCm 10 package repositories, avoiding the `CUDA error: invalid argument` / `hipErrorInvalidValue` failures reported with the ROCm 7.14.1 builds — packages already on 7.14.1 need a reinstall, or an update that also upgrades PyTorch (like ComfyUI's) - thanks to @NeuralFault!
 ### Fixed

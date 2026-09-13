@@ -33,6 +33,9 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed the **Workflows** page loading forever (and eventually freezing the app) when the workflow library folder is itself a link to ComfyUI's `user\default\workflows` folder — the `Stability Matrix` link ComfyUI gets at launch pointed back into the same folder, nesting `Stability Matrix\Stability Matrix\...` thousands of levels deep. That link is no longer created (and an existing one is removed the next time ComfyUI is launched) when it would loop, and the workflow and model folder scans now follow linked folders at most once
 - Fixed the **Cross Attention Method** launch options for ComfyUI and ComfyUI-Zluda letting you enable several at once — they're mutually exclusive, so they're now radio buttons - thanks to @e-nord!
 - Fixed [#1725](https://github.com/LykosAI/StabilityMatrix/issues/1725) - **AI-Toolkit** jobs crashing with a `distutils` error on installs from before v2.16.3 that still run Python 3.11, no reinstall needed - thanks to @NeuralFault!
+### Supporters
+#### 🌟 Visionaries
+Inference finally has a soundtrack: MiniMax H3 brings video with native stereo audio, and your generated clips now play right inside the app instead of sending you off to another player. Tucked underneath are fixes that matter even more, like never again wiping a folder someone was only trying to import. Our Visionaries give us the time to do both properly, so thank you **Waterclouds**, **MrMxyzptlk12836**, **bluepopsicle**, **Ibixat**, **Droolguy**, **snotty**, **dispenser**, **cusalapapen1481**, **moon_milky2843**, **sn3232323233350**, **CC**, **TwistedDragon**, **hasezou11013179**, and **Akros**. This build comes with sound, and a little of that is you. 💛
 
 ## v2.17.0-dev.3
 ### Added

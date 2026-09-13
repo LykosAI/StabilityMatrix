@@ -9,7 +9,13 @@ public readonly record struct LaunchOptionCard
     public required LaunchOptionType Type { get; init; }
     public required IReadOnlyList<LaunchOption> Options { get; init; }
     public string? Description { get; init; }
-    
+    public int? MaxSelectedOptions { get; init; }
+
+    /// <summary>
+    /// True if this card's options are mutually exclusive and should be rendered as radio buttons.
+    /// </summary>
+    public bool IsSingleSelect => MaxSelectedOptions == 1;
+
     public static LaunchOptionCard FromDefinition(LaunchOptionDefinition definition)
     {
         return new LaunchOptionCard
@@ -17,20 +23,24 @@ public readonly record struct LaunchOptionCard
             Title = definition.Name,
             Description = definition.Description,
             Type = definition.Type,
-    
-            Options = definition.Options.Select(s =>
-            {
-                var option = new LaunchOption
+            MaxSelectedOptions = definition.MaxSelectedOptions,
+
+            Options = definition
+                .Options.Select(s =>
                 {
-                    Name = s,
-                    Type = definition.Type,
-                    DefaultValue = definition.DefaultValue
-                };
-                return option;
-            }).ToImmutableArray()
+                    var option = new LaunchOption
+                    {
+                        Name = s,
+                        Type = definition.Type,
+                        DefaultValue = definition.DefaultValue,
+                        GroupName = definition.MaxSelectedOptions == 1 ? definition.Name : null,
+                    };
+                    return option;
+                })
+                .ToImmutableArray(),
         };
     }
-    
+
     /// <summary>
     /// Yield LaunchOptionCards given definitions and launch args to load
     /// </summary>
@@ -39,20 +49,18 @@ public readonly record struct LaunchOptionCard
     /// <returns></returns>
     /// <exception cref="InvalidOperationException"></exception>
     public static IEnumerable<LaunchOptionCard> FromDefinitions(
-        IEnumerable<LaunchOptionDefinition> definitions, 
-        IEnumerable<LaunchOption> launchArgs)
+        IEnumerable<LaunchOptionDefinition> definitions,
+        IEnumerable<LaunchOption> launchArgs
+    )
     {
         // During card creation, store dict of options with initial values
         var initialOptions = new Dictionary<string, object>();
-        
+
         // To dictionary ignoring duplicates
         var launchArgsDict = launchArgs
             .ToLookup(launchArg => launchArg.Name)
-            .ToDictionary(
-                group => group.Key, 
-                group => group.First()
-            );
-        
+            .ToDictionary(group => group.Key, group => group.First());
+
         // Create cards
         foreach (var definition in definitions)
         {
@@ -60,8 +68,9 @@ public readonly record struct LaunchOptionCard
             if (definition.Type != LaunchOptionType.Bool && definition.Options.Count != 1)
             {
                 throw new InvalidOperationException(
-                    $"Definition: '{definition.Name}' has {definition.Options.Count} options," +
-                    $" it must have exactly 1 option for non-bool types");
+                    $"Definition: '{definition.Name}' has {definition.Options.Count} options,"
+                        + $" it must have exactly 1 option for non-bool types"
+                );
             }
             // Store initial values
             if (definition.InitialValue != null)
@@ -77,12 +86,15 @@ public readonly record struct LaunchOptionCard
                     else
                     {
                         // For single/multiple options (string only)
-                        var option = definition.Options.FirstOrDefault(opt => opt.Equals(definition.InitialValue));
+                        var option = definition.Options.FirstOrDefault(opt =>
+                            opt.Equals(definition.InitialValue)
+                        );
                         if (option == null)
                         {
                             throw new InvalidOperationException(
-                                $"Definition '{definition.Name}' has InitialValue of '{definition.InitialValue}', but it was not found in options:" +
-                                $" '{string.Join(",", definition.Options)}'");
+                                $"Definition '{definition.Name}' has InitialValue of '{definition.InitialValue}', but it was not found in options:"
+                                    + $" '{string.Join(",", definition.Options)}'"
+                            );
                         }
                         initialOptions[option] = true;
                     }
@@ -99,31 +111,37 @@ public readonly record struct LaunchOptionCard
                 Title = definition.Name,
                 Description = definition.Description,
                 Type = definition.Type,
-                Options = definition.Options.Select(s =>
-                {
-                    // Parse defaults and user loaded values here
-                    var userOption = launchArgsDict.GetValueOrDefault(s);
-                    var userValue = userOption?.OptionValue;
-                    // If no user value, check set initial value
-                    if (userValue is null)
+                MaxSelectedOptions = definition.MaxSelectedOptions,
+                Options = definition
+                    .Options.Select(s =>
                     {
-                        var initialValue = initialOptions.GetValueOrDefault(s);
-                        userValue ??= initialValue;
-                        Debug.WriteLineIf(initialValue != null, 
-                            $"Using initial value {initialValue} for option {s}");
-                    }
-                    
-                    var option = new LaunchOption
-                    {
-                        Name = s,
-                        Type = definition.Type,
-                        DefaultValue = definition.DefaultValue,
-                        OptionValue = userValue
-                    };
-                    return option;
-                }).ToImmutableArray()
+                        // Parse defaults and user loaded values here
+                        var userOption = launchArgsDict.GetValueOrDefault(s);
+                        var userValue = userOption?.OptionValue;
+                        // If no user value, check set initial value
+                        if (userValue is null)
+                        {
+                            var initialValue = initialOptions.GetValueOrDefault(s);
+                            userValue ??= initialValue;
+                            Debug.WriteLineIf(
+                                initialValue != null,
+                                $"Using initial value {initialValue} for option {s}"
+                            );
+                        }
+
+                        var option = new LaunchOption
+                        {
+                            Name = s,
+                            Type = definition.Type,
+                            DefaultValue = definition.DefaultValue,
+                            OptionValue = userValue,
+                            GroupName = definition.MaxSelectedOptions == 1 ? definition.Name : null,
+                        };
+                        return option;
+                    })
+                    .ToImmutableArray(),
             };
-            
+
             yield return card;
         }
     }

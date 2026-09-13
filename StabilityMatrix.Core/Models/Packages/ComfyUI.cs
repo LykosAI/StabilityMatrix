@@ -334,12 +334,14 @@ public class ComfyUI(
                 InitialValue = DefaultToQuadCrossAttention()
                     ? "--use-quad-cross-attention" // For Legacy AMD GPUs.
                     : "--use-pytorch-cross-attention",
+                MaxSelectedOptions = 1,
                 Options =
                 [
                     "--use-split-cross-attention",
                     "--use-quad-cross-attention",
                     "--use-pytorch-cross-attention",
                     "--use-sage-attention",
+                    "--use-ck-attention",
                 ],
             },
             new()

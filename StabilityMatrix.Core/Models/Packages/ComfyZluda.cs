@@ -67,12 +67,14 @@ public class ComfyZluda(
                     Name = "Cross Attention Method",
                     Type = LaunchOptionType.Bool,
                     InitialValue = "--use-quad-cross-attention",
+                    MaxSelectedOptions = 1,
                     Options =
                     [
                         "--use-split-cross-attention",
                         "--use-quad-cross-attention",
                         "--use-pytorch-cross-attention",
                         "--use-sage-attention",
+                        "--use-ck-attention",
                     ],
                 },
                 new()

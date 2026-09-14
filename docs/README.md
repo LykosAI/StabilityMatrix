@@ -8,6 +8,14 @@ While not all encompassing on every minute detail, it is intended to be updated 
 
 Current Status: In-progress - Structure is in-place and planned docs are currently being progressively created and added.
 
+## Common Tasks
+
+- [Generate your first image](inference/text-to-image.md)
+- [Import models already on your computer](checkpoint-manager/overview.md#import-local-models)
+- [Launch, update, or uninstall a package](package-manager/managing-packages.md)
+- [Change a package's launch arguments](package-manager/launch-arguments.md)
+- [Understand shared model and output folders](advanced/shared-folders.md)
+
 ## Table of Contents
 
 ### Getting Started
@@ -20,20 +28,20 @@ Current Status: In-progress - Structure is in-place and planned docs are current
 - [Overview](package-manager/overview.md) — Managing AI packages in Stability Matrix
 - [Supported Packages](package-manager/supported-packages.md) — Full list of supported inference and training packages
 - [Installing Packages](package-manager/installing-packages.md) — One-click install, hardware selection, GPU backends
-- Managing Packages *(planned)* — Launching, monitoring, updating, and deleting installed packages
-- Launch Arguments *(planned)* — Configuring launch arguments per package
+- [Managing Packages](package-manager/managing-packages.md) — Launching, monitoring, updating, and deleting installed packages
+- [Launch Arguments](package-manager/launch-arguments.md) — Configuring launch arguments per package
 - Extensions *(planned)* — Browsing and managing package plugins and extensions
 
 ### Inference
 - [Overview](inference/overview.md) — The Inference UI, panel layout, and project files
-- Text to Image *(planned)* — Generating images from text prompts
+- [Text to Image](inference/text-to-image.md) — Generating your first image, seeds, batches, and saving projects
 - Image to Image *(planned)* — Using an image as a generation starting point
 - Image Upscale *(planned)* — Upscaling images with AI upscaler models
 - Video Generation *(planned)* — Generating video with WAN and SVD models
 - Advanced Controls *(planned)* — ControlNet, FaceDetailer, FreeU, LayerDiffuse, and more
 
 ### Checkpoint Manager
-- Overview *(planned)* — Centralized model storage shared across all packages
+- [Overview](checkpoint-manager/overview.md) — Importing, finding, organizing, and deleting local models
 - Model Categories *(planned)* — All supported model folder types explained
 - Metadata Editing *(planned)* — Importing CivitAI metadata and editing model info
 
@@ -57,7 +65,7 @@ Current Status: In-progress - Structure is in-place and planned docs are current
 ### Advanced
 - [Overview](advanced/overview.md) — Advanced configuration and technical reference
 - Building from Source and Contributing *(planned)* — Local builds, runtime targets, and where to start for code or docs contributions
-- Shared Folders *(planned)* — Folder structure, symlinks, and cross-package model sharing
+- [Shared Folders](advanced/shared-folders.md) — Folder structure, symlinks, and cross-package model sharing
 - [Hardware Support](advanced/hardware-support.md) — CUDA, ROCm, DirectML, MPS, ZLUDA, IPEX, and CPU backends
 - Python Environment *(planned)* — Virtual environments, uv, pip, and Python version management
 - [ComfyUI Integration](advanced/comfyui-integration.md) — ComfyUI node API, WebSocket protocol, and custom nodes

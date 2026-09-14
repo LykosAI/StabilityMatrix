@@ -12,8 +12,8 @@ From the **Packages** screen you can install new packages through a guided flow,
 
 - [Supported Packages](supported-packages.md) — Full list of supported inference and training packages
 - [Installing Packages](installing-packages.md) — One-click install, hardware selection, and GPU backends
-- Managing Packages *(planned)* — Launching, monitoring, updating, and deleting installed packages
-- Launch Arguments *(planned)* — Configuring launch arguments per package
+- [Managing Packages](managing-packages.md) — Launching, monitoring, updating, and deleting installed packages
+- [Launch Arguments](launch-arguments.md) — Configuring launch arguments per package
 - Extensions *(planned)* — Browsing and managing package plugins and extensions
 
 ## What's Next

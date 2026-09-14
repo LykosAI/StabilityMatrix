@@ -72,4 +72,4 @@ Prefer a drive with plenty of free space, and ideally a fast one. FAT32 and exFA
 
 - [First Launch](first-launch.md) — Where the data directory is first chosen
 - [Installing Packages](../package-manager/installing-packages.md) — What gets written into `Packages/`
-- Shared Folders *(planned)* — How the `Models/` library is shared across packages
+- [Shared Folders](../advanced/shared-folders.md) — How the `Models/` library is shared across packages

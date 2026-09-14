@@ -38,7 +38,7 @@ The Inference UI can reopen a previously saved project tab on startup, provided 
 
 ## Generation Modes
 
-- **Text to Image** *(planned page)*: Creates images from prompts without a required source image. This is the default mode and the main entry point for most image-generation workflows.
+- [**Text to Image**](text-to-image.md): Creates images from prompts without a required source image. This is the default mode and the main entry point for most image-generation workflows.
 - **Image to Image** *(planned page)*: Uses an input image together with prompt and sampler settings to guide edits, restyling, or controlled variation.
 - **Image Upscale** *(planned page)*: Starts from an existing image and applies upscale methods exposed by the connected backend, including latent and model-based upscalers when available.
 - **Wan Text to Video** *(planned page)*: Generates video from a text prompt using Wan video models.
@@ -87,7 +87,7 @@ Generated images can also carry Stability Matrix project metadata. When a saved 
 
 ## Related Pages
 
-- Text to Image *(planned)*
+- [Text to Image](text-to-image.md)
 - Image to Image *(planned)*
 - Image Upscale *(planned)*
 - Video Generation *(planned)*

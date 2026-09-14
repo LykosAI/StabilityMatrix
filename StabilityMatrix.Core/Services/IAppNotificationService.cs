@@ -14,7 +14,12 @@ public interface IAppNotificationService
     /// Fetch the notification manifest from CDN and resolve the active notification.
     /// Returns null if no notification is active or fetch fails with no valid cache.
     /// </summary>
-    Task<AppNotification?> CheckForNotificationsAsync();
+    /// <param name="firstLaunchSetupComplete">
+    /// Whether first-launch setup had already completed in an earlier session. Pass the value
+    /// as it was at launch, not the live setting, so notifications that require setup are held
+    /// until the next session even though the flag flips during this one.
+    /// </param>
+    Task<AppNotification?> CheckForNotificationsAsync(bool firstLaunchSetupComplete);
 
     /// <summary>
     /// Mark a notification as dismissed. Persists the ID to settings.

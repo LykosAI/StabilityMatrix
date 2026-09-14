@@ -69,4 +69,5 @@ From there, the usual next steps are:
 
 - [Install your first package](../package-manager/installing-packages.md)
 - Browse or import models with the Model Browser *(planned)*
-- If the user installed ComfyUI and downloaded a starter model during setup, they can [go straight to generating with the built-in Inference UI](../inference/overview.md)
+- [Import models already on your computer](../checkpoint-manager/overview.md#import-local-models)
+- If the user installed ComfyUI and downloaded a starter model during setup, they can [generate their first image with the built-in Inference UI](../inference/text-to-image.md)

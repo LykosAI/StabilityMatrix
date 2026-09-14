@@ -119,7 +119,9 @@ export default defineConfig({
           items: [
             { text: 'Overview', link: '/stability-matrix/package-manager/overview' },
             { text: 'Supported Packages', link: '/stability-matrix/package-manager/supported-packages' },
-            { text: 'Installing Packages', link: '/stability-matrix/package-manager/installing-packages' }
+            { text: 'Installing Packages', link: '/stability-matrix/package-manager/installing-packages' },
+            { text: 'Managing Packages', link: '/stability-matrix/package-manager/managing-packages' },
+            { text: 'Launch Arguments', link: '/stability-matrix/package-manager/launch-arguments' }
           ]
         }
       ],
@@ -127,7 +129,16 @@ export default defineConfig({
         {
           text: 'Inference',
           items: [
-            { text: 'Overview', link: '/stability-matrix/inference/overview' }
+            { text: 'Overview', link: '/stability-matrix/inference/overview' },
+            { text: 'Text to Image', link: '/stability-matrix/inference/text-to-image' }
+          ]
+        }
+      ],
+      '/stability-matrix/checkpoint-manager/': [
+        {
+          text: 'Checkpoint Manager',
+          items: [
+            { text: 'Overview', link: '/stability-matrix/checkpoint-manager/overview' }
           ]
         }
       ],
@@ -136,6 +147,7 @@ export default defineConfig({
           text: 'Advanced',
           items: [
             { text: 'Overview', link: '/stability-matrix/advanced/overview' },
+            { text: 'Shared Folders', link: '/stability-matrix/advanced/shared-folders' },
             { text: 'Hardware Support', link: '/stability-matrix/advanced/hardware-support' },
             { text: 'ComfyUI Integration', link: '/stability-matrix/advanced/comfyui-integration' },
             { text: 'Environment Variables', link: '/stability-matrix/advanced/environment-variables' }

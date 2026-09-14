@@ -49,6 +49,8 @@
 
 Multi-Platform Package Manager and Inference UI for Stable Diffusion
 
+See the [documentation index](docs/README.md) for installation, package management, models, and Inference guides. Start with [your first image](docs/inference/text-to-image.md), [importing local models](docs/checkpoint-manager/overview.md#import-local-models), or [managing installed packages](docs/package-manager/managing-packages.md).
+
 ### 🖱️ One click install and update for Stable Diffusion Web UI Packages
 - Supports:
   - [Stable Diffusion WebUI reForge][reforge], [Stable Diffusion WebUI Forge][forge], [Stable Diffusion WebUI AMDGPU Forge][amdforge] [Automatic 1111][auto1111], [Automatic 1111 DirectML][auto1111-directml], [SD Web UI-UX][webui-ux], [SD.Next][sdnext]

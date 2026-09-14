@@ -113,6 +113,7 @@ public class Wan2GP(
         # StabilityMatrix: Patch logging to print to console for capture.
         import sys
         import logging
+        from functools import wraps
 
         def _apply_logging_patch():
             # Configure Python's root logger to output to stderr at INFO level.
@@ -156,10 +157,14 @@ public class Wan2GP(
                         return _orig_warning(message, *args, **kwargs)
                     gr.Warning = patched_warning
                 if _orig_error is not None:
-                    def patched_error(message, *args, **kwargs):
-                        print(f"[Gradio] ERROR: {message}", file=sys.stderr, flush=True)
-                        return _orig_error(message, *args, **kwargs)
-                    gr.Error = patched_error
+                    # Keep the original exception class: Deepy registers gr.Error
+                    # with FastAPI, and Gradio also imports it from gradio.exceptions.
+                    _orig_error_init = _orig_error.__init__
+                    @wraps(_orig_error_init)
+                    def patched_error_init(self, *args, **kwargs):
+                        _orig_error_init(self, *args, **kwargs)
+                        print(f"[Gradio] ERROR: {self.message}", file=sys.stderr, flush=True)
+                    _orig_error.__init__ = patched_error_init
             except Exception as e:
                 print(f"[StabilityMatrix] Failed to patch Gradio logging: {e}", file=sys.stderr, flush=True)
 

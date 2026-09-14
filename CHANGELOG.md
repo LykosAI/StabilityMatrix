@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - The **Prompt Amplifier** now runs on **Spark v2.0**, the more creative model already behind the amplifier on lykos.ai — the model picker in the wand flyout switches back to Spark Classic, and the Think toggle works with either
 - **Windows ROCm** PyTorch installs now come from AMD's new permanent ROCm 10 package repositories, avoiding the `CUDA error: invalid argument` / `hipErrorInvalidValue` failures reported with the ROCm 7.14.1 builds — packages already on 7.14.1 need a reinstall, or an update that also upgrades PyTorch (like ComfyUI's) - thanks to @NeuralFault!
 ### Fixed
+- Fixed the Model Browser's **Base Model** filter being lost when using **Next Model** / **Previous Model** or refreshing a model's details ([#1436](https://github.com/LykosAI/StabilityMatrix/issues/1436))
+- Fixed **Hide Early Access Models** still showing models whose early access is indicated by a future deadline rather than the availability field
 - Fixed the Prompt Amplifier showing **0 amplifications remaining** after every amplify — the app now reads the balance under the name the server actually returns
 - Fixed the **CivArchive browser** returning far fewer results than the CivArchive website — the site's redesign quietly pinned the app's search route to the past quarter, and the renamed result-count field capped infinite scroll at a single page
 - Fixed clicking some CivArchive results showing an error instead of the model — the redesign added whole-model search results whose detail pages load through a redirect the app didn't follow

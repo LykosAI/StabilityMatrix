@@ -37,7 +37,7 @@ public class AppNotificationService(
     public AppNotification? CurrentNotification { get; private set; }
 
     /// <inheritdoc />
-    public async Task<AppNotification?> CheckForNotificationsAsync()
+    public async Task<AppNotification?> CheckForNotificationsAsync(bool firstLaunchSetupComplete)
     {
         var manifest = await FetchManifestAsync().ConfigureAwait(false);
 
@@ -47,7 +47,7 @@ public class AppNotificationService(
             return null;
         }
 
-        CurrentNotification = GetActiveNotification(manifest);
+        CurrentNotification = GetActiveNotification(manifest, firstLaunchSetupComplete);
         return CurrentNotification;
     }
 
@@ -182,7 +182,10 @@ public class AppNotificationService(
     /// <summary>
     /// Filter and sort notifications to find the single active one.
     /// </summary>
-    private AppNotification? GetActiveNotification(AppNotificationManifest manifest)
+    private AppNotification? GetActiveNotification(
+        AppNotificationManifest manifest,
+        bool firstLaunchSetupComplete
+    )
     {
         var now = DateTimeOffset.UtcNow;
         var dismissedIds = settingsManager.Settings.DismissedNotificationIds;
@@ -214,7 +217,7 @@ public class AppNotificationService(
                 }
 
                 // First-launch setup check, delay notification until a subsequent session
-                if (n.RequireSetupComplete && !(settingsManager.Settings.FirstLaunchSetupComplete))
+                if (n.RequireSetupComplete && !firstLaunchSetupComplete)
                     return false;
 
                 // Locale check — must have a resolvable message

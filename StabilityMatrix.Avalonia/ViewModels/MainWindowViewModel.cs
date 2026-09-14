@@ -459,12 +459,17 @@ public partial class MainWindowViewModel : ViewModelBase
         // Start checking for updates
         await updateHelper.StartCheckingForUpdates();
 
-        // Check for server-pushed notifications (non-blocking)
+        // Check for server-pushed notifications (non-blocking). The setup flag is captured now
+        // because it flips below before the fetch finishes, and notifications that require setup
+        // are meant to wait for the next session
+        var setupCompletedInEarlierSession = settingsManager.Settings.FirstLaunchSetupComplete;
         Task.Run(async () =>
             {
                 try
                 {
-                    var notification = await appNotificationService.CheckForNotificationsAsync();
+                    var notification = await appNotificationService.CheckForNotificationsAsync(
+                        setupCompletedInEarlierSession
+                    );
                     if (notification is not null)
                     {
                         await Dispatcher.UIThread.InvokeAsync(() =>
@@ -480,8 +485,6 @@ public partial class MainWindowViewModel : ViewModelBase
             })
             .SafeFireAndForget();
 
-        // Mark first-launch setup as complete (after notification check so that notifications
-        // with requireSetupComplete are deferred until the next session)
         if (!settingsManager.Settings.FirstLaunchSetupComplete)
         {
             settingsManager.Transaction(s => s.FirstLaunchSetupComplete = true);

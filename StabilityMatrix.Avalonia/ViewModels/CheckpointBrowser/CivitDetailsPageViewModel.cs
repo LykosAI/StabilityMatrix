@@ -76,6 +76,11 @@ public partial class CivitDetailsPageViewModel(
     [ObservableProperty]
     public required partial List<int> ModelIdList { get; set; }
 
+    /// <summary>
+    /// Base models from the originating search. Empty for unfiltered or direct model navigation.
+    /// </summary>
+    public IReadOnlyList<string> BaseModelFilter { get; set; } = [];
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanGoNext), nameof(CanGoPrevious))]
     public required partial int CurrentIndex { get; set; }
@@ -1114,6 +1119,12 @@ public partial class CivitDetailsPageViewModel(
             return false;
 
         var version = versionVm.ModelVersion;
+
+        if (
+            BaseModelFilter.Count > 0
+            && !BaseModelFilter.Contains(version.BaseModel, StringComparer.OrdinalIgnoreCase)
+        )
+            return false;
 
         if (HideInstalledModels && versionVm.IsInstalled)
             return false;

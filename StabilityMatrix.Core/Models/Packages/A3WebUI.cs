@@ -334,11 +334,7 @@ public class A3WebUI(
         // Set the Stable Diffusion repository URL to a working fork
         // This is required because the original Stability-AI/stablediffusion repo was removed
         // See: https://github.com/AUTOMATIC1111/stable-diffusion-webui/discussions/17212
-        env = env.SetPackageDefault(
-            SettingsManager,
-            "STABLE_DIFFUSION_REPO",
-            "https://github.com/w-e-w/stablediffusion.git"
-        );
+        env = env.SetItem("STABLE_DIFFUSION_REPO", "https://github.com/w-e-w/stablediffusion.git");
 
         return env;
     }

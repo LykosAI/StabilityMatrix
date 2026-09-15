@@ -99,16 +99,16 @@ public class EnvironmentVariablesExtensionsTests
     [TestMethod]
     public void SetPackageDefault_LaterCallCanStillOverride_WhenKeyNotUserSet()
     {
-        // Simulates a derived package (e.g. Reforge) overriding a base package's own default
-        // (e.g. A3WebUI's STABLE_DIFFUSION_REPO) - internal chain precedence must keep working
-        // when the user hasn't configured the key themselves.
+        // Simulates a base class default followed by a derived class's own computed default for
+        // the same key - internal chain precedence (last write wins) must keep working when the
+        // user hasn't configured the key themselves; only an actual user override should block it.
         var settingsManager = CreateSettingsManager();
         var env = ImmutableDictionary<string, string>.Empty;
 
-        env = env.SetPackageDefault(settingsManager, "STABLE_DIFFUSION_REPO", "https://base/default.git");
-        env = env.SetPackageDefault(settingsManager, "STABLE_DIFFUSION_REPO", "https://derived/override.git");
+        env = env.SetPackageDefault(settingsManager, "SETUPTOOLS_USE_DISTUTILS", "stdlib");
+        env = env.SetPackageDefault(settingsManager, "SETUPTOOLS_USE_DISTUTILS", "local");
 
-        Assert.AreEqual("https://derived/override.git", env["STABLE_DIFFUSION_REPO"]);
+        Assert.AreEqual("local", env["SETUPTOOLS_USE_DISTUTILS"]);
     }
 
     [TestMethod]

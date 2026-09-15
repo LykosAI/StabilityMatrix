@@ -366,9 +366,14 @@ public class PipWheelService(
         progress?.Report(new ProgressReport(-1f, "Installing Triton", isIndeterminate: true));
         await venv.PipInstall("triton-windows", progress.AsProcessOutputHandler()).ConfigureAwait(false);
 
-        venv.UpdateEnvironmentVariables(env =>
-            env.SetPackageDefault(settingsManager, "SETUPTOOLS_USE_DISTUTILS", "setuptools")
-        );
+        // Only Python < 3.12 has a stdlib distutils to fall back to - see VladAutomatic/AiToolkit
+        // for the same guard against Python 3.12+, where forcing this unconditionally breaks setup.
+        if (venv.Version is { Minor: < 12 })
+        {
+            venv.UpdateEnvironmentVariables(env =>
+                env.SetPackageDefault(settingsManager, "SETUPTOOLS_USE_DISTUTILS", "setuptools")
+            );
+        }
 
         // Download python libs for building
         await AddMissingLibsToVenvAsync(venv, progress).ConfigureAwait(false);

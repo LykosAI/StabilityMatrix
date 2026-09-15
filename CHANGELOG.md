@@ -5,6 +5,11 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.17.0-pre.2
+### Fixed
+- Fixed Wan2GP (and AI Toolkit's SageAttention source build) crashing with `ModuleNotFoundError: No module named 'distutils'` on Python 3.12+ — forcing `SETUPTOOLS_USE_DISTUTILS=stdlib` unconditionally broke on versions where distutils was removed from the standard library entirely, it's now version-gated the same way AI Toolkit's own fix already was
+- Environment Variables configured in **Settings** now correctly override the workaround variables (like `SETUPTOOLS_USE_DISTUTILS`) that some packages set internally, instead of being silently overwritten every launch
+
 ## v2.17.0-pre.1
 ### Added
 #### New Feature: 🎬 MiniMax H3 Video in Inference

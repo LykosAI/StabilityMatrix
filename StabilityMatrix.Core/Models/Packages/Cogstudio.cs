@@ -125,30 +125,17 @@ public class Cogstudio(
             // This prebuilt deepspeed wheel reports an internal metadata version of "0.11.2+unknown",
             // which doesn't match its filename's "0.11.2+cuda121". uv treats that mismatch as a
             // malformed wheel and refuses to install it; opt out of the filename/version consistency
-            // check just for this wheel, then restore strict checking for the rest of the install.
-            var hadUserSkipWheelCheck = venvRunner.EnvironmentVariables.ContainsKey(
-                "UV_SKIP_WHEEL_FILENAME_CHECK"
-            );
-            venvRunner.UpdateEnvironmentVariables(env =>
-                env.SetPackageDefault(SettingsManager, "UV_SKIP_WHEEL_FILENAME_CHECK", "1")
-            );
-            try
-            {
-                await venvRunner
-                    .PipInstall(
+            // check just for this wheel, then restore whatever was there before for the rest of the
+            // install (the user's own value if they'd set one, otherwise unset).
+            await venvRunner.RunWithTemporaryEnvironmentVariableAsync(
+                "UV_SKIP_WHEEL_FILENAME_CHECK",
+                "1",
+                () =>
+                    venvRunner.PipInstall(
                         " https://github.com/daswer123/deepspeed-windows/releases/download/11.2/deepspeed-0.11.2+cuda121-cp310-cp310-win_amd64.whl",
                         onConsoleOutput
                     )
-                    .ConfigureAwait(false);
-            }
-            finally
-            {
-                // Only clean up the value we set ourselves - never strip one the user configured.
-                if (!hadUserSkipWheelCheck)
-                {
-                    venvRunner.UpdateEnvironmentVariables(env => env.Remove("UV_SKIP_WHEEL_FILENAME_CHECK"));
-                }
-            }
+            );
 
             await venvRunner
                 .PipInstall("spandrel opencv-python scikit-video", onConsoleOutput)

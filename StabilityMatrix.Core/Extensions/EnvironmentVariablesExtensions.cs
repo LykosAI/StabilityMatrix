@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Extensions;
@@ -21,4 +22,36 @@ public static class EnvironmentVariablesExtensions
         string key,
         string value
     ) => settingsManager.Settings.IsEnvironmentVariableUserOverridden(key) ? env : env.SetItem(key, value);
+
+    /// <summary>
+    /// Forces an environment variable to <paramref name="value"/> for the duration of
+    /// <paramref name="action"/>, then restores whatever was there before - the user's own value
+    /// if they'd set one, or removes it entirely if it wasn't present.
+    /// </summary>
+    /// <remarks>
+    /// Use for a narrow, one-shot need (e.g. bypassing a wheel filename check for one specific
+    /// pinned download) where the override must never outlive the single operation it exists for,
+    /// so it can't be left stuck on for the rest of the venv's life by an early return or exception.
+    /// </remarks>
+    public static async Task RunWithTemporaryEnvironmentVariableAsync(
+        this IPyVenvRunner venvRunner,
+        string key,
+        string value,
+        Func<Task> action
+    )
+    {
+        var hadPrevious = venvRunner.EnvironmentVariables.TryGetValue(key, out var previous);
+
+        venvRunner.UpdateEnvironmentVariables(env => env.SetItem(key, value));
+        try
+        {
+            await action().ConfigureAwait(false);
+        }
+        finally
+        {
+            venvRunner.UpdateEnvironmentVariables(env =>
+                hadPrevious ? env.SetItem(key, previous!) : env.Remove(key)
+            );
+        }
+    }
 }

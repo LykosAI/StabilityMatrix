@@ -1,6 +1,7 @@
 ﻿using System.Collections.Immutable;
 using System.Text.RegularExpressions;
 using Injectio.Attributes;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.HardwareInfo;
@@ -459,7 +460,7 @@ public class Wan2GP(
         VenvRunner.UpdateEnvironmentVariables(env =>
         {
             // Fix for distutils compatibility issue with Python 3.10 and setuptools
-            env = env.SetItem("SETUPTOOLS_USE_DISTUTILS", "stdlib");
+            env = env.SetPackageDefault(SettingsManager, "SETUPTOOLS_USE_DISTUTILS", "stdlib");
 
             // Add FFmpeg to PATH if it's installed (optional - for video processing)
             if (!PrerequisiteHelper.IsFfmpegInstalled)

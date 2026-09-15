@@ -1,5 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 using Injectio.Attributes;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Models.FileInterfaces;
@@ -125,7 +126,12 @@ public class Cogstudio(
             // which doesn't match its filename's "0.11.2+cuda121". uv treats that mismatch as a
             // malformed wheel and refuses to install it; opt out of the filename/version consistency
             // check just for this wheel, then restore strict checking for the rest of the install.
-            venvRunner.UpdateEnvironmentVariables(env => env.SetItem("UV_SKIP_WHEEL_FILENAME_CHECK", "1"));
+            var hadUserSkipWheelCheck = venvRunner.EnvironmentVariables.ContainsKey(
+                "UV_SKIP_WHEEL_FILENAME_CHECK"
+            );
+            venvRunner.UpdateEnvironmentVariables(env =>
+                env.SetPackageDefault(SettingsManager, "UV_SKIP_WHEEL_FILENAME_CHECK", "1")
+            );
             try
             {
                 await venvRunner
@@ -137,7 +143,11 @@ public class Cogstudio(
             }
             finally
             {
-                venvRunner.UpdateEnvironmentVariables(env => env.Remove("UV_SKIP_WHEEL_FILENAME_CHECK"));
+                // Only clean up the value we set ourselves - never strip one the user configured.
+                if (!hadUserSkipWheelCheck)
+                {
+                    venvRunner.UpdateEnvironmentVariables(env => env.Remove("UV_SKIP_WHEEL_FILENAME_CHECK"));
+                }
             }
 
             await venvRunner

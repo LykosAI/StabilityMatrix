@@ -1,5 +1,6 @@
 ﻿using System.Collections.Immutable;
 using Injectio.Attributes;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.HardwareInfo;
@@ -171,7 +172,7 @@ public class Reforge(
         var selectedTorchIndex = installedPackage.PreferredTorchIndex ?? GetRecommendedTorchVersion();
 
         env = base.GetEnvVars(env, installedPackage);
-        env = env.SetItem("STABLE_DIFFUSION_REPO", StableDiffusionRepoOverride);
+        env = env.SetPackageDefault(SettingsManager, "STABLE_DIFFUSION_REPO", StableDiffusionRepoOverride);
 
         if (!rocmPackageHelper.ShouldApplyWindowsLaunchEnvironment(selectedTorchIndex))
         {

@@ -20,7 +20,8 @@ namespace StabilityMatrix.Core.Services;
 public class PipWheelService(
     IGithubApiCache githubApi,
     IDownloadService downloadService,
-    IPrerequisiteHelper prerequisiteHelper
+    IPrerequisiteHelper prerequisiteHelper,
+    ISettingsManager settingsManager
 ) : IPipWheelService
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -365,7 +366,9 @@ public class PipWheelService(
         progress?.Report(new ProgressReport(-1f, "Installing Triton", isIndeterminate: true));
         await venv.PipInstall("triton-windows", progress.AsProcessOutputHandler()).ConfigureAwait(false);
 
-        venv.UpdateEnvironmentVariables(env => env.SetItem("SETUPTOOLS_USE_DISTUTILS", "setuptools"));
+        venv.UpdateEnvironmentVariables(env =>
+            env.SetPackageDefault(settingsManager, "SETUPTOOLS_USE_DISTUTILS", "setuptools")
+        );
 
         // Download python libs for building
         await AddMissingLibsToVenvAsync(venv, progress).ConfigureAwait(false);

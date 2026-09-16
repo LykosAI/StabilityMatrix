@@ -52,6 +52,7 @@ public class MetadataImportServiceTests
                 UserTitle = "Pinned Name",
                 ThumbnailImageUrl = Path.Combine(tempRoot, "existing.preview.png"),
                 InferenceDefaults = new InferenceDefaults { Steps = 30, CfgScale = 7 },
+                Tags = ["user-tag", "TAG-A"],
                 Source = ConnectedModelSource.Civitai,
             };
             await existingInfo.SaveJsonToDirectory(tempRoot, "model");
@@ -75,6 +76,7 @@ public class MetadataImportServiceTests
             Assert.AreEqual(existingInfo.ImportedAt, updated.ImportedAt);
             Assert.IsNotNull(updated.InferenceDefaults);
             Assert.AreEqual(30, updated.InferenceDefaults.Steps);
+            CollectionAssert.AreEquivalent(new[] { "tag-a", "user-tag" }, updated.Tags);
             Assert.AreEqual("creator-name", updated.AuthorUsername);
             Assert.AreEqual("remote-file.safetensors", updated.RemoteFileName);
             Assert.AreEqual(321, updated.RemoteFileId);

@@ -26,6 +26,12 @@ public interface IModelIndexService
     IReadOnlySet<string> ModelIndexCivArchiveUrls { get; }
 
     /// <summary>
+    /// Set of user category names (case-insensitive) carried by any file in <see cref="ModelIndex"/>.
+    /// Synchronized with internal changes to <see cref="ModelIndex"/>.
+    /// </summary>
+    IReadOnlySet<string> ModelIndexCategories { get; }
+
+    /// <summary>
     /// Refreshes the local model file index.
     /// </summary>
     Task RefreshIndex();
@@ -66,6 +72,11 @@ public interface IModelIndexService
     Task<bool> RemoveModelAsync(LocalModelFile model);
 
     Task<bool> RemoveModelsAsync(IEnumerable<LocalModelFile> models);
+
+    /// <summary>
+    /// Inserts or replaces the given models in the index and database, then reloads the in-memory index once.
+    /// </summary>
+    Task UpsertModelsAsync(IEnumerable<LocalModelFile> models);
 
     Task CheckModelsForUpdateAsync();
 }

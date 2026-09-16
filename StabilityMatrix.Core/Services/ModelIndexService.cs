@@ -37,6 +37,7 @@ public partial class ModelIndexService : IModelIndexService
     private HashSet<string>? _modelIndexBlake3Hashes;
     private HashSet<string>? _modelIndexSha256Hashes;
     private HashSet<string>? _modelIndexCivArchiveUrls;
+    private HashSet<string>? _modelIndexCategories;
 
     /// <summary>
     /// Whether the database has been initially loaded.
@@ -61,6 +62,9 @@ public partial class ModelIndexService : IModelIndexService
 
     public IReadOnlySet<string> ModelIndexCivArchiveUrls =>
         _modelIndexCivArchiveUrls ??= CollectCivArchiveUrls(ModelIndex.Values.SelectMany(x => x));
+
+    public IReadOnlySet<string> ModelIndexCategories =>
+        _modelIndexCategories ??= CollectCategories(ModelIndex.Values.SelectMany(x => x));
 
     [AutoPostConstruct]
     private void Initialize()
@@ -550,6 +554,34 @@ public partial class ModelIndexService : IModelIndexService
                     }
                 }
 
+                // Try to find user metadata (categories)
+                var userMetadataPath = fileDirectory.JoinFile(
+                    fileNameWithoutExtension + UserModelMetadata.FileExtension
+                );
+
+                if (paths.Contains(userMetadataPath))
+                {
+                    try
+                    {
+                        using var stream = userMetadataPath.Info.OpenRead();
+
+                        var userMetadata = JsonSerializer.Deserialize(
+                            stream,
+                            UserModelMetadataSerializerContext.Default.UserModelMetadata
+                        );
+
+                        localModel.UserMetadata = userMetadata is { IsEmpty: false } ? userMetadata : null;
+                    }
+                    catch (Exception e)
+                    {
+                        logger.LogWarning(
+                            e,
+                            "Failed to deserialize user metadata for {Path}, skipping",
+                            userMetadataPath
+                        );
+                    }
+                }
+
                 // Try to find a preview image
                 var previewImagePath = LocalModelFile
                     .SupportedImageExtensions.Select(ext =>
@@ -841,11 +873,35 @@ public partial class ModelIndexService : IModelIndexService
         await LoadFromDbAsync().ConfigureAwait(false);
     }
 
+    /// <inheritdoc />
+    public async Task UpsertModelsAsync(IEnumerable<LocalModelFile> models)
+    {
+        var list = models as IReadOnlyCollection<LocalModelFile> ?? models.ToList();
+        if (list.Count == 0)
+        {
+            return;
+        }
+
+        await liteDbContext.LocalModelFiles.UpsertAsync(list).ConfigureAwait(false);
+        await LoadFromDbAsync().ConfigureAwait(false);
+    }
+
     private void OnModelIndexReset()
     {
         _modelIndexBlake3Hashes = null;
         _modelIndexSha256Hashes = null;
         _modelIndexCivArchiveUrls = null;
+        _modelIndexCategories = null;
+    }
+
+    private static HashSet<string> CollectCategories(IEnumerable<LocalModelFile> models)
+    {
+        var categories = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var model in models)
+        {
+            categories.UnionWith(model.Categories);
+        }
+        return categories;
     }
 
     private static HashSet<string> CollectModelHashes(IEnumerable<LocalModelFile> models)

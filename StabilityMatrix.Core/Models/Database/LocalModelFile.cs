@@ -24,6 +24,7 @@ public record LocalModelFile
                 return false;
             return x.RelativePath == y.RelativePath
                 && Equals(x.ConnectedModelInfo, y.ConnectedModelInfo)
+                && Equals(x.UserMetadata, y.UserMetadata)
                 && x.HasUpdate == y.HasUpdate
                 && x.HasEarlyAccessUpdateOnly == y.HasEarlyAccessUpdateOnly;
         }
@@ -33,6 +34,7 @@ public record LocalModelFile
             return HashCode.Combine(
                 obj.RelativePath,
                 obj.ConnectedModelInfo,
+                obj.UserMetadata,
                 obj.HasUpdate,
                 obj.HasEarlyAccessUpdateOnly
             );
@@ -50,13 +52,20 @@ public record LocalModelFile
             return true;
         return RelativePath == other.RelativePath
             && ConnectedModelInfo == other.ConnectedModelInfo
+            && Equals(UserMetadata, other.UserMetadata)
             && HasUpdate == other.HasUpdate
             && HasEarlyAccessUpdateOnly == other.HasEarlyAccessUpdateOnly;
     }
 
     public override int GetHashCode()
     {
-        return HashCode.Combine(RelativePath, ConnectedModelInfo, HasUpdate, HasEarlyAccessUpdateOnly);
+        return HashCode.Combine(
+            RelativePath,
+            ConnectedModelInfo,
+            UserMetadata,
+            HasUpdate,
+            HasEarlyAccessUpdateOnly
+        );
     }
 
     /// <summary>
@@ -74,6 +83,17 @@ public record LocalModelFile
     /// Optional connected model information.
     /// </summary>
     public ConnectedModelInfo? ConnectedModelInfo { get; set; }
+
+    /// <summary>
+    /// Optional user-owned metadata (categories), read from the <c>.cm-user.json</c> sidecar.
+    /// </summary>
+    public UserModelMetadata? UserMetadata { get; set; }
+
+    /// <summary>
+    /// User-defined categories this model belongs to. Empty when none are set.
+    /// </summary>
+    [BsonIgnore]
+    public IReadOnlyList<string> Categories => UserMetadata?.Categories ?? [];
 
     /// <summary>
     /// Optional preview image relative path.
@@ -203,11 +223,24 @@ public record LocalModelFile
         return Path.Combine(modelParentDir, $"{modelNameNoExt}.cm-info.json");
     }
 
+    public string GetUserMetadataFullPath(string rootModelDirectory)
+    {
+        return UserModelMetadata.GetSidecarPath(GetFullPath(rootModelDirectory));
+    }
+
     public IEnumerable<string> GetDeleteFullPaths(string rootModelDirectory)
     {
         if (GetFullPath(rootModelDirectory) is { } filePath && File.Exists(filePath))
         {
             yield return filePath;
+        }
+
+        if (
+            GetUserMetadataFullPath(rootModelDirectory) is { } userMetadataPath
+            && File.Exists(userMetadataPath)
+        )
+        {
+            yield return userMetadataPath;
         }
 
         if (

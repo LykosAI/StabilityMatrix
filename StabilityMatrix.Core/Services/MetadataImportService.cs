@@ -466,6 +466,15 @@ public class MetadataImportService(
         refreshedCmInfo.ThumbnailImageUrl = existingCmInfo.ThumbnailImageUrl;
         refreshedCmInfo.InferenceDefaults = existingCmInfo.InferenceDefaults;
 
+        // Tags can be edited by the user and are indistinguishable from remote ones, so keep
+        // every existing tag rather than replacing the list wholesale.
+        if (existingCmInfo.Tags is { Length: > 0 } existingTags)
+        {
+            refreshedCmInfo.Tags = (refreshedCmInfo.Tags ?? [])
+                .Union(existingTags, StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+        }
+
         return refreshedCmInfo;
     }
 

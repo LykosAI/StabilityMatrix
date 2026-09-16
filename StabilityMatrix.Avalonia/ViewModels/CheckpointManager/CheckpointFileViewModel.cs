@@ -418,13 +418,16 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
                     File.Move(previewPath, newPreviewImagePath);
                 }
 
-                // If connected model info exists, rename it too (<name>.cm-info.json)
-                if (CheckpointFile.HasConnectedModel)
+                // Rename metadata sidecars too (<name>.cm-info.json, <name>.cm-user.json)
+                foreach (
+                    var sidecarExtension in (string[])
+                        [ConnectedModelInfo.FileExtension, UserModelMetadata.FileExtension]
+                )
                 {
-                    var cmInfoPath = Path.Combine(parentPath, $"{originalNameNoExt}.cm-info.json");
-                    if (File.Exists(cmInfoPath))
+                    var sidecarPath = Path.Combine(parentPath, originalNameNoExt + sidecarExtension);
+                    if (File.Exists(sidecarPath))
                     {
-                        File.Move(cmInfoPath, Path.Combine(parentPath, $"{nameNoExt}.cm-info.json"));
+                        File.Move(sidecarPath, Path.Combine(parentPath, nameNoExt + sidecarExtension));
                     }
                 }
 

@@ -265,6 +265,9 @@ public record HybridModelFile : ISearchText, IDownloadableResource
                 terms.Add(localModel.DisplayModelFileName);
                 terms.Add(localModel.DisplayConfigFileName);
 
+                if (localModel.Categories.Count > 0)
+                    terms.Add(string.Join(' ', localModel.Categories));
+
                 if (localModel.ConnectedModelInfo is { } connectedModel)
                 {
                     terms.Add(connectedModel.BaseModel ?? string.Empty);

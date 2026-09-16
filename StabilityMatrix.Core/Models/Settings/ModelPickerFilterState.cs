@@ -6,4 +6,5 @@ public class ModelPickerFilterState
     public bool ShowCheckpointsOnly { get; set; }
     public bool ShowUnetsOnly { get; set; }
     public List<string> SelectedBaseModels { get; set; } = [];
+    public List<string> SelectedCategories { get; set; } = [];
 }

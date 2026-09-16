@@ -9,6 +9,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:dialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
     xmlns:fluentIcons="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
+    xmlns:helpers="clr-namespace:StabilityMatrix.Avalonia.Helpers"
     xmlns:labs="clr-namespace:Avalonia.Labs.Controls;assembly=Avalonia.Labs.Controls"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -26,6 +27,7 @@
 
     <controls:UserControlBase.Resources>
         <converters:FileUriConverter x:Key="FileUriConverter" />
+        <converters:CategoryChipsConverter x:Key="CategoryChipsConverter" />
         <converters:FileExistsConverter x:Key="FileExistsConverter" />
         <converters:FileNotExistsConverter x:Key="FileNotExistsConverter" />
         <converters:EnumToBooleanConverter x:Key="EnumToBooleanConverter" />
@@ -101,7 +103,7 @@
             x:Name="SearchBox"
             Grid.Row="1"
             Text="{Binding SearchText, Mode=TwoWay}"
-            Watermark="Search name, base model, tags...">
+            Watermark="Search name, base model, tags, categories...">
             <TextBox.InnerLeftContent>
                 <fluentIcons:SymbolIcon
                     Margin="8,0,4,0"
@@ -174,6 +176,52 @@
                                         </DataTemplate>
                                     </ui:ItemsRepeater.ItemTemplate>
                                 </ui:ItemsRepeater>
+
+                                <!--  User categories (any-of), only when the source has any  -->
+                                <StackPanel IsVisible="{Binding HasCategoryOptions}" Spacing="8">
+                                    <Grid Margin="0,4,0,0" ColumnDefinitions="*,Auto">
+                                        <TextBlock
+                                            VerticalAlignment="Center"
+                                            FontSize="12"
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                            Text="{x:Static lang:Resources.Label_Categories}" />
+                                        <Button
+                                            Grid.Column="1"
+                                            Padding="6,2"
+                                            Classes="transparent"
+                                            Command="{Binding ClearCategoriesCommand}"
+                                            Content="{x:Static lang:Resources.Action_ClearSelection}"
+                                            FontSize="12" />
+                                    </Grid>
+                                    <ui:ItemsRepeater ItemsSource="{Binding CategoryOptions}">
+                                        <ui:ItemsRepeater.Layout>
+                                            <ui:FlowLayout
+                                                LineAlignment="Center"
+                                                MinColumnSpacing="4"
+                                                MinRowSpacing="4"
+                                                Orientation="Horizontal" />
+                                        </ui:ItemsRepeater.Layout>
+                                        <ui:ItemsRepeater.ItemTemplate>
+                                            <DataTemplate DataType="{x:Type checkpointManager:CategoryOptionViewModel}">
+                                                <ToggleButton IsChecked="{Binding IsSelected}">
+                                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                                        <Ellipse
+                                                            Width="8"
+                                                            Height="8"
+                                                            VerticalAlignment="Center"
+                                                            Fill="{Binding ColorBrush}" />
+                                                        <TextBlock VerticalAlignment="Center" Text="{Binding Name}" />
+                                                        <TextBlock
+                                                            VerticalAlignment="Center"
+                                                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                            Text="{Binding Count}" />
+                                                    </StackPanel>
+                                                </ToggleButton>
+                                            </DataTemplate>
+                                        </ui:ItemsRepeater.ItemTemplate>
+                                    </ui:ItemsRepeater>
+                                </StackPanel>
                             </StackPanel>
                         </Flyout>
                     </Button.Flyout>
@@ -376,7 +424,7 @@
                                         MinWidth="0"
                                         MaxWidth="460"
                                         VerticalAlignment="Center"
-                                        RowDefinitions="Auto,Auto,Auto"
+                                        RowDefinitions="Auto,Auto,Auto,Auto"
                                         RowSpacing="2">
                                         <TextBlock
                                             FontWeight="SemiBold"
@@ -397,6 +445,35 @@
                                             Text="{Binding FileName}"
                                             TextTrimming="CharacterEllipsis"
                                             TextWrapping="NoWrap" />
+                                        <ItemsControl Grid.Row="3" Margin="0,2,0,0">
+                                            <ItemsControl.ItemsSource>
+                                                <MultiBinding Converter="{StaticResource CategoryChipsConverter}">
+                                                    <Binding FallbackValue="{x:Null}" Path="Local.Categories" />
+                                                    <Binding ElementName="Root" Path="DataContext.CategoryPalette" />
+                                                </MultiBinding>
+                                            </ItemsControl.ItemsSource>
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <WrapPanel Orientation="Horizontal" />
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate DataType="{x:Type helpers:CategoryChip}">
+                                                    <Border
+                                                        Height="18"
+                                                        Margin="0,0,4,2"
+                                                        Padding="6,0,6,1"
+                                                        Background="{Binding Background}"
+                                                        BorderBrush="{Binding Background}"
+                                                        Classes="tag-chip">
+                                                        <TextBlock
+                                                            FontSize="10"
+                                                            Foreground="{Binding Foreground}"
+                                                            Text="{Binding Name}" />
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
                                     </Grid>
 
                                     <!--  Badges  -->
@@ -549,6 +626,35 @@
                                                     FontWeight="SemiBold"
                                                     IsVisible="{Binding Local.ConnectedModelInfo.BaseModel, Converter={x:Static StringConverters.IsNotNullOrEmpty}, FallbackValue=False}"
                                                     Theme="{StaticResource TagLabel}" />
+                                                <ItemsControl Margin="0,2,0,0">
+                                                    <ItemsControl.ItemsSource>
+                                                        <MultiBinding Converter="{StaticResource CategoryChipsConverter}">
+                                                            <Binding FallbackValue="{x:Null}" Path="Local.Categories" />
+                                                            <Binding ElementName="Root" Path="DataContext.CategoryPalette" />
+                                                        </MultiBinding>
+                                                    </ItemsControl.ItemsSource>
+                                                    <ItemsControl.ItemsPanel>
+                                                        <ItemsPanelTemplate>
+                                                            <WrapPanel Orientation="Horizontal" />
+                                                        </ItemsPanelTemplate>
+                                                    </ItemsControl.ItemsPanel>
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate DataType="{x:Type helpers:CategoryChip}">
+                                                            <Border
+                                                                Height="18"
+                                                                Margin="0,0,4,2"
+                                                                Padding="6,0,6,1"
+                                                                Background="{Binding Background}"
+                                                                BorderBrush="{Binding Background}"
+                                                                Classes="tag-chip">
+                                                                <TextBlock
+                                                                    FontSize="10"
+                                                                    Foreground="{Binding Foreground}"
+                                                                    Text="{Binding Name}" />
+                                                            </Border>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
                                             </StackPanel>
 
                                         </Grid>

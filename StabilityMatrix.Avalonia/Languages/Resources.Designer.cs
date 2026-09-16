@@ -6224,5 +6224,122 @@ namespace StabilityMatrix.Avalonia.Languages {
                 return ResourceManager.GetString("Label_ExampleTelemetry", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add.
+        /// </summary>
+        public static string Action_Add {
+            get {
+                return ResourceManager.GetString("Action_Add", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Color.
+        /// </summary>
+        public static string Label_Color {
+            get {
+                return ResourceManager.GetString("Label_Color", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Uncategorized.
+        /// </summary>
+        public static string Label_Uncategorized {
+            get {
+                return ResourceManager.GetString("Label_Uncategorized", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Manage Categories.
+        /// </summary>
+        public static string Label_ManageCategories {
+            get {
+                return ResourceManager.GetString("Label_ManageCategories", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Set Categories.
+        /// </summary>
+        public static string Label_SetCategories {
+            get {
+                return ResourceManager.GetString("Label_SetCategories", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to New category.
+        /// </summary>
+        public static string Label_NewCategory {
+            get {
+                return ResourceManager.GetString("Label_NewCategory", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No categories yet. Add one below to start organizing your models..
+        /// </summary>
+        public static string Label_NoCategoriesHint {
+            get {
+                return ResourceManager.GetString("Label_NoCategoriesHint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Applies to {0}.
+        /// </summary>
+        public static string Label_AppliesToModel {
+            get {
+                return ResourceManager.GetString("Label_AppliesToModel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Applies to {0} selected models.
+        /// </summary>
+        public static string Label_AppliesToModels {
+            get {
+                return ResourceManager.GetString("Label_AppliesToModels", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Rename Category.
+        /// </summary>
+        public static string Label_RenameCategory {
+            get {
+                return ResourceManager.GetString("Label_RenameCategory", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Category name.
+        /// </summary>
+        public static string Label_CategoryName {
+            get {
+                return ResourceManager.GetString("Label_CategoryName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remove the category '{0}'? It will be removed from {1} models..
+        /// </summary>
+        public static string Label_DeleteCategoryConfirm {
+            get {
+                return ResourceManager.GetString("Label_DeleteCategoryConfirm", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Click a category to filter. Drop models here to assign..
+        /// </summary>
+        public static string Label_CategoriesFilterHint {
+            get {
+                return ResourceManager.GetString("Label_CategoriesFilterHint", resourceCulture);
+            }
+        }
     }
 }

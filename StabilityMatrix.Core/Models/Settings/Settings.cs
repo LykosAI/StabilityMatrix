@@ -370,6 +370,16 @@ public class Settings
     /// </summary>
     public List<ModelCategory> ModelCategories { get; set; } = [];
 
+    /// <summary>
+    /// Category names selected in the Checkpoint Manager filter (any-of match).
+    /// </summary>
+    public List<string> CheckpointsSelectedCategories { get; set; } = [];
+
+    /// <summary>
+    /// Whether the Checkpoint Manager filter includes models with no categories.
+    /// </summary>
+    public bool CheckpointsIncludeUncategorized { get; set; }
+
     public int InferenceDimensionStepChange { get; set; } = 128;
 
     /// <summary>

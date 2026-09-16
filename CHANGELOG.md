@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
 ## v2.17.0-pre.2
+### Added
+- **Model categories** in the Checkpoint Manager — tag any model (LoRAs, checkpoints, anything) with as many custom categories as you like, e.g. *Character*, *Style*, *Concept*. Categories show as coloured chips on the cards, filter from the new **Categories** section in the sidebar (or with `@name` in the search box), and can be assigned in bulk: select models and use **Categories** in the selection bar, right-click → **Set Categories**, or drop cards onto a category. Stored next to each model as a small `.cm-user.json` file, so they survive moves, renames and folder copies — the most requested item on the feature tracker
 ### Fixed
 - Fixed Wan2GP (and AI Toolkit's SageAttention source build) crashing with `ModuleNotFoundError: No module named 'distutils'` on Python 3.12+ — forcing `SETUPTOOLS_USE_DISTUTILS=stdlib` unconditionally broke on versions where distutils was removed from the standard library entirely, it's now version-gated the same way AI Toolkit's own fix already was
 - Environment Variables configured in **Settings** now correctly override the workaround variables (like `SETUPTOOLS_USE_DISTUTILS`) that some packages set internally, instead of being silently overwritten every launch

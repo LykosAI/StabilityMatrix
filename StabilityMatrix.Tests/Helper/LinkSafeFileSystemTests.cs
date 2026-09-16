@@ -100,6 +100,62 @@ public class LinkSafeFileSystemTests
         Assert.AreEqual(1, files.Count);
     }
 
+    [DataTestMethod]
+    [DataRow("diffusion_models")]
+    [DataRow("sub", "alias")]
+    public void EnumerateFiles_RealFolderShadowedByLink_KeepsRealFolderPaths(params string[] linkSegments)
+    {
+        var root = CreateDir("root");
+        CreateFile("root", "DiffusionModels", "a.json");
+        CreateFile("root", "DiffusionModels", "b.json");
+
+        var linkPath = Path.Combine([root, .. linkSegments]);
+        Directory.CreateDirectory(Path.GetDirectoryName(linkPath)!);
+        TempFiles.CreateDirectoryLink(linkPath, Path.Combine(root, "DiffusionModels"));
+
+        var files = LinkSafeFileSystem.EnumerateFiles(root, "*.json").ToList();
+
+        CollectionAssert.AreEquivalent(
+            new[]
+            {
+                Path.Combine(root, "DiffusionModels", "a.json"),
+                Path.Combine(root, "DiffusionModels", "b.json"),
+            },
+            files
+        );
+    }
+
+    [TestMethod]
+    public void EnumerateFiles_JunctionTargetCaseMismatch_KeepsRealFolderPaths()
+    {
+        if (!Compat.IsWindows)
+        {
+            Assert.Inconclusive("Junctions with a differently-cased stored target are Windows-only.");
+            return;
+        }
+
+        var root = CreateDir("root");
+        CreateFile("root", "DiffusionModels", "a.json");
+        CreateFile("root", "DiffusionModels", "b.json");
+
+        // Store the junction target with different casing than the real folder on disk.
+        TempFiles.CreateDirectoryLink(
+            Path.Combine(root, "diffusion_models"),
+            Path.Combine(root.ToUpperInvariant(), "DIFFUSIONMODELS")
+        );
+
+        var files = LinkSafeFileSystem.EnumerateFiles(root, "*.json").ToList();
+
+        CollectionAssert.AreEquivalent(
+            new[]
+            {
+                Path.Combine(root, "DiffusionModels", "a.json"),
+                Path.Combine(root, "DiffusionModels", "b.json"),
+            },
+            files
+        );
+    }
+
     [TestMethod]
     public void EnumerateFiles_DeeperThanMaxDepth_IsSkipped()
     {

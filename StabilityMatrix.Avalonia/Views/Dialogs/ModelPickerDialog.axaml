@@ -1,4 +1,4 @@
-﻿<controls:UserControlBase
+<controls:UserControlBase
     x:Class="StabilityMatrix.Avalonia.Views.Dialogs.ModelPickerDialog"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -176,52 +176,72 @@
                                         </DataTemplate>
                                     </ui:ItemsRepeater.ItemTemplate>
                                 </ui:ItemsRepeater>
+                            </StackPanel>
+                        </Flyout>
+                    </Button.Flyout>
+                </Button>
 
-                                <!--  User categories (any-of), only when the source has any  -->
-                                <StackPanel IsVisible="{Binding HasCategoryOptions}" Spacing="8">
-                                    <Grid Margin="0,4,0,0" ColumnDefinitions="*,Auto">
-                                        <TextBlock
-                                            VerticalAlignment="Center"
-                                            FontSize="12"
-                                            FontWeight="SemiBold"
-                                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                                            Text="{x:Static lang:Resources.Label_Categories}" />
-                                        <Button
-                                            Grid.Column="1"
-                                            Padding="6,2"
-                                            Classes="transparent"
-                                            Command="{Binding ClearCategoriesCommand}"
-                                            Content="{x:Static lang:Resources.Action_ClearSelection}"
-                                            FontSize="12" />
-                                    </Grid>
-                                    <ui:ItemsRepeater ItemsSource="{Binding CategoryOptions}">
-                                        <ui:ItemsRepeater.Layout>
-                                            <ui:FlowLayout
-                                                LineAlignment="Center"
-                                                MinColumnSpacing="4"
-                                                MinRowSpacing="4"
-                                                Orientation="Horizontal" />
-                                        </ui:ItemsRepeater.Layout>
-                                        <ui:ItemsRepeater.ItemTemplate>
-                                            <DataTemplate DataType="{x:Type checkpointManager:CategoryOptionViewModel}">
-                                                <ToggleButton IsChecked="{Binding IsSelected}">
-                                                    <StackPanel Orientation="Horizontal" Spacing="6">
-                                                        <Ellipse
-                                                            Width="8"
-                                                            Height="8"
-                                                            VerticalAlignment="Center"
-                                                            Fill="{Binding ColorBrush}" />
-                                                        <TextBlock VerticalAlignment="Center" Text="{Binding Name}" />
-                                                        <TextBlock
-                                                            VerticalAlignment="Center"
-                                                            Opacity="0.7"
-                                                            Text="{Binding Count}" />
-                                                    </StackPanel>
-                                                </ToggleButton>
-                                            </DataTemplate>
-                                        </ui:ItemsRepeater.ItemTemplate>
-                                    </ui:ItemsRepeater>
-                                </StackPanel>
+                <!--  Categories Button (only when the source has any)  -->
+                <Button
+                    Height="32"
+                    VerticalAlignment="Stretch"
+                    VerticalContentAlignment="Center"
+                    BorderBrush="{DynamicResource ComboBoxBorderBrush}"
+                    BorderThickness="1"
+                    IsVisible="{Binding HasCategoryOptions}">
+                    <Button.Content>
+                        <Grid HorizontalAlignment="Stretch" ColumnDefinitions="Auto,6,Auto,8,Auto">
+                            <fluentIcons:SymbolIcon
+                                VerticalAlignment="Center"
+                                FontSize="14"
+                                Symbol="Tag" />
+                            <TextBlock Grid.Column="2" Text="{Binding CategoriesButtonText}" />
+                            <ui:SymbolIcon
+                                Grid.Column="4"
+                                VerticalAlignment="Center"
+                                FontSize="12"
+                                Foreground="{DynamicResource TextFillColorSecondary}"
+                                Symbol="ChevronDown" />
+                        </Grid>
+                    </Button.Content>
+                    <Button.Flyout>
+                        <Flyout Placement="BottomEdgeAlignedLeft">
+                            <StackPanel
+                                MaxWidth="400"
+                                Orientation="Vertical"
+                                Spacing="8">
+                                <Button
+                                    HorizontalAlignment="Stretch"
+                                    Classes="transparent"
+                                    Command="{Binding ClearCategoriesCommand}"
+                                    Content="{x:Static lang:Resources.Action_ClearSelection}" />
+                                <ui:ItemsRepeater ItemsSource="{Binding CategoryOptions}">
+                                    <ui:ItemsRepeater.Layout>
+                                        <ui:FlowLayout
+                                            LineAlignment="Center"
+                                            MinColumnSpacing="4"
+                                            MinRowSpacing="4"
+                                            Orientation="Horizontal" />
+                                    </ui:ItemsRepeater.Layout>
+                                    <ui:ItemsRepeater.ItemTemplate>
+                                        <DataTemplate DataType="{x:Type checkpointManager:CategoryOptionViewModel}">
+                                            <ToggleButton IsChecked="{Binding IsSelected}">
+                                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                                    <Ellipse
+                                                        Width="8"
+                                                        Height="8"
+                                                        VerticalAlignment="Center"
+                                                        Fill="{Binding ColorBrush}" />
+                                                    <TextBlock VerticalAlignment="Center" Text="{Binding Name}" />
+                                                    <TextBlock
+                                                        VerticalAlignment="Center"
+                                                        Opacity="0.7"
+                                                        Text="{Binding Count}" />
+                                                </StackPanel>
+                                            </ToggleButton>
+                                        </DataTemplate>
+                                    </ui:ItemsRepeater.ItemTemplate>
+                                </ui:ItemsRepeater>
                             </StackPanel>
                         </Flyout>
                     </Button.Flyout>

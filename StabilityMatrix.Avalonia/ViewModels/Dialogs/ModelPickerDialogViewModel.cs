@@ -12,6 +12,7 @@ using DynamicData.Binding;
 using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Helpers;
+using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -143,16 +144,23 @@ public partial class ModelPickerDialogViewModel : ContentDialogViewModelBase
     /// </summary>
     public IReadOnlyList<ModelCategory> CategoryPalette => settingsManager.Settings.ModelCategories;
 
-    public int ActiveFilterCount =>
-        SelectedBaseModelOptions.Count()
-        + SelectedCategoryOptions.Count()
-        + (ShowCheckpointsOnly ? 1 : 0)
-        + (ShowUnetsOnly ? 1 : 0);
+    public int SelectedCategoryCount => SelectedCategoryOptions.Count();
 
-    public bool HasActiveFilters => ActiveFilterCount > 0;
+    public string CategoriesButtonText =>
+        SelectedCategoryCount > 0
+            ? $"{Resources.Label_Categories} ({SelectedCategoryCount})"
+            : Resources.Label_Categories;
+
+    /// <summary>
+    /// Filters under the Filter button. Categories have their own button and count.
+    /// </summary>
+    public int ActiveFilterCount =>
+        SelectedBaseModelOptions.Count() + (ShowCheckpointsOnly ? 1 : 0) + (ShowUnetsOnly ? 1 : 0);
+
+    public bool HasActiveFilters => ActiveFilterCount > 0 || SelectedCategoryCount > 0;
     public bool HasFilteredModels => FilteredModels.Count > 0;
 
-    public string FilterButtonText => HasActiveFilters ? $"Filter ({ActiveFilterCount})" : "Filter";
+    public string FilterButtonText => ActiveFilterCount > 0 ? $"Filter ({ActiveFilterCount})" : "Filter";
 
     /// <summary>
     /// Whether to show the folder type filter buttons (Checkpoints/Diffusion Models).
@@ -238,9 +246,9 @@ public partial class ModelPickerDialogViewModel : ContentDialogViewModelBase
 
                     UpdateFilteredModels();
                     OnPropertyChanged(nameof(SelectedCategoryOptions));
-                    OnPropertyChanged(nameof(ActiveFilterCount));
+                    OnPropertyChanged(nameof(SelectedCategoryCount));
+                    OnPropertyChanged(nameof(CategoriesButtonText));
                     OnPropertyChanged(nameof(HasActiveFilters));
-                    OnPropertyChanged(nameof(FilterButtonText));
                     SaveFilterStateForCurrentSource();
                 })
         );
@@ -599,6 +607,9 @@ public partial class ModelPickerDialogViewModel : ContentDialogViewModelBase
 
         OnPropertyChanged(nameof(HasCategoryOptions));
         OnPropertyChanged(nameof(CategoryPalette));
+        OnPropertyChanged(nameof(SelectedCategoryCount));
+        OnPropertyChanged(nameof(CategoriesButtonText));
+        OnPropertyChanged(nameof(HasActiveFilters));
     }
 
     private string GetSourceKey() => Source.ToString();

@@ -144,7 +144,7 @@ public record LocalModelFile
     [BsonIgnore]
     public bool IsSafetensorFile => Path.GetExtension(RelativePath) == ".safetensors";
 
-    public string? HashSha256 => ConnectedModelInfo?.Hashes.SHA256;
+    public string? HashSha256 => ConnectedModelInfo?.Hashes?.SHA256;
 
     [BsonIgnore]
     public string? PreviewImageFullPathGlobal =>

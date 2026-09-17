@@ -169,6 +169,8 @@ public class UserModelMetadataTests
         };
         Assert.IsTrue(custom.HasMetadata);
         Assert.IsFalse(custom.HasConnectedModel);
+        Assert.IsNull(custom.HashSha256, "custom sidecars have no hashes; the index must not crash on them");
+        Assert.IsNull(custom.HashBlake3);
         Assert.IsFalse(custom.HasCivitMetadata);
         Assert.AreEqual("Custom", custom.DisplayModelName);
 

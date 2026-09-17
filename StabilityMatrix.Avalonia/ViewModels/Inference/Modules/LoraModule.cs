@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Input;
@@ -53,7 +53,7 @@ public partial class LoraModule : ModuleBase
                         return;
                     }
 
-                    if (model.Local?.HasConnectedModel ?? false)
+                    if (model.Local?.HasMetadata ?? false)
                     {
                         Title = model.Local.ConnectedModelInfo.ModelName;
                     }

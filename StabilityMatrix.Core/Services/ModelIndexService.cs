@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Globalization;
@@ -550,34 +550,6 @@ public partial class ModelIndexService : IModelIndexService
                             e,
                             "Failed to deserialize connected model info for {Path}, skipping",
                             jsonPath
-                        );
-                    }
-                }
-
-                // Try to find user metadata (categories)
-                var userMetadataPath = fileDirectory.JoinFile(
-                    fileNameWithoutExtension + UserModelMetadata.FileExtension
-                );
-
-                if (paths.Contains(userMetadataPath))
-                {
-                    try
-                    {
-                        using var stream = userMetadataPath.Info.OpenRead();
-
-                        var userMetadata = JsonSerializer.Deserialize(
-                            stream,
-                            UserModelMetadataSerializerContext.Default.UserModelMetadata
-                        );
-
-                        localModel.UserMetadata = userMetadata is { IsEmpty: false } ? userMetadata : null;
-                    }
-                    catch (Exception e)
-                    {
-                        logger.LogWarning(
-                            e,
-                            "Failed to deserialize user metadata for {Path}, skipping",
-                            userMetadataPath
                         );
                     }
                 }

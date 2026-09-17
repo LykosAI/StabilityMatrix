@@ -53,35 +53,91 @@ public class ModelCategoryServiceTests
     }
 
     [TestMethod]
-    public async Task SetCategories_WritesSidecarAndUpserts()
+    public async Task SetCategories_BareModel_WritesCategoryOnlySidecar()
     {
         var model = CreateModel("foo");
 
         await service.SetCategoriesAsync(model, [" Character ", "Anime", "character"]);
 
-        var sidecar = Path.Combine(root, "Lora", "foo.cm-user.json");
-        Assert.IsTrue(File.Exists(sidecar));
-
-        var written = UserModelMetadata.FromJson(await File.ReadAllTextAsync(sidecar));
-        CollectionAssert.AreEqual(new[] { "Character", "Anime" }, written!.Categories);
+        var onDisk = await ReadSidecar("foo");
+        CollectionAssert.AreEqual(new[] { "Character", "Anime" }, onDisk.User!.Categories);
+        Assert.IsFalse(onDisk.IsConnected, "a category-only sidecar must not look connected");
+        Assert.IsNull(onDisk.Source);
 
         Assert.AreEqual(1, upserted.Count);
         CollectionAssert.AreEqual(new[] { "Character", "Anime" }, upserted[0].Categories.ToList());
-        Assert.AreSame(model.RelativePath, upserted[0].RelativePath);
+        Assert.IsFalse(upserted[0].HasConnectedModel);
     }
 
     [TestMethod]
-    public async Task SetCategories_Empty_DeletesSidecar()
+    public async Task SetCategories_ConnectedModel_KeepsRemoteFields()
+    {
+        var model = CreateModel(
+            "foo",
+            remote: new ConnectedModelInfo
+            {
+                ModelId = 42,
+                ModelName = "Remote",
+                BaseModel = "Pony",
+            }
+        );
+        await model.ConnectedModelInfo!.SaveJsonToDirectory(Path.Combine(root, "Lora"), "foo");
+
+        await service.SetCategoriesAsync(model, ["Style"]);
+
+        var onDisk = await ReadSidecar("foo");
+        Assert.AreEqual(42, onDisk.ModelId);
+        Assert.AreEqual("Remote", onDisk.ModelName);
+        Assert.AreEqual("Pony", onDisk.BaseModel);
+        CollectionAssert.AreEqual(new[] { "Style" }, onDisk.User!.Categories);
+
+        Assert.IsTrue(upserted[0].HasConnectedModel);
+        Assert.AreNotSame(
+            model.ConnectedModelInfo,
+            upserted[0].ConnectedModelInfo,
+            "index instance must not be mutated"
+        );
+        Assert.AreEqual(0, model.Categories.Count, "index instance must not be mutated");
+    }
+
+    [TestMethod]
+    public async Task SetCategories_Empty_DeletesCategoryOnlySidecar()
     {
         var model = CreateModel("foo", "Character");
-        var sidecar = Path.Combine(root, "Lora", "foo.cm-user.json");
-        await File.WriteAllTextAsync(sidecar, model.UserMetadata!.ToJson());
+        await model.ConnectedModelInfo!.SaveJsonToDirectory(Path.Combine(root, "Lora"), "foo");
 
         await service.SetCategoriesAsync(model, []);
 
-        Assert.IsFalse(File.Exists(sidecar));
-        Assert.AreEqual(1, upserted.Count);
-        Assert.IsNull(upserted[0].UserMetadata);
+        Assert.IsFalse(File.Exists(SidecarPath("foo")));
+        Assert.IsNull(upserted[0].ConnectedModelInfo);
+    }
+
+    [TestMethod]
+    public async Task SetCategories_Empty_KeepsSidecarWithCustomMetadataOrOptOut()
+    {
+        var custom = CreateModel(
+            "a",
+            remote: new ConnectedModelInfo
+            {
+                ModelName = "My name",
+                User = new UserModelMetadata { Categories = ["X"] },
+            }
+        );
+        var optedOut = CreateModel(
+            "b",
+            remote: new ConnectedModelInfo
+            {
+                Source = null,
+                User = new UserModelMetadata { Categories = ["X"], ExcludeFromMetadataSearch = true },
+            }
+        );
+
+        await service.SetCategoriesAsync(custom, []);
+        await service.SetCategoriesAsync(optedOut, []);
+
+        Assert.AreEqual("My name", (await ReadSidecar("a")).ModelName);
+        Assert.IsTrue((await ReadSidecar("b")).User!.ExcludeFromMetadataSearch);
+        Assert.AreEqual(0, (await ReadSidecar("b")).User!.Categories.Count);
     }
 
     [TestMethod]
@@ -174,8 +230,7 @@ public class ModelCategoryServiceTests
         service.AddCategory("Style");
         var only = CreateModel("a", "Style");
         var mixed = CreateModel("b", "Style", "Anime");
-        var sidecar = Path.Combine(root, "Lora", "a.cm-user.json");
-        await File.WriteAllTextAsync(sidecar, only.UserMetadata!.ToJson());
+        await only.ConnectedModelInfo!.SaveJsonToDirectory(Path.Combine(root, "Lora"), "a");
         modelIndexService.ModelIndex.Returns(
             new Dictionary<SharedFolderType, List<LocalModelFile>> { [SharedFolderType.Lora] = [only, mixed] }
         );
@@ -184,22 +239,41 @@ public class ModelCategoryServiceTests
 
         Assert.AreEqual(0, settings.ModelCategories.Count);
         Assert.AreEqual(2, upserted.Count);
-        Assert.IsFalse(File.Exists(sidecar), "sidecar with no categories left should be deleted");
-        Assert.IsNull(upserted.Single(m => m.RelativePath == only.RelativePath).UserMetadata);
+        Assert.IsFalse(File.Exists(SidecarPath("a")), "sidecar with nothing left should be deleted");
+        Assert.IsNull(upserted.Single(m => m.RelativePath == only.RelativePath).ConnectedModelInfo);
         CollectionAssert.AreEqual(
             new[] { "Anime" },
             upserted.Single(m => m.RelativePath == mixed.RelativePath).Categories.ToList()
         );
     }
 
-    private static LocalModelFile CreateModel(string name, params string[] categories)
+    private string SidecarPath(string name) => Path.Combine(root, "Lora", name + ".cm-info.json");
+
+    private async Task<ConnectedModelInfo> ReadSidecar(string name)
+    {
+        Assert.IsTrue(File.Exists(SidecarPath(name)), $"{name} sidecar missing");
+        return ConnectedModelInfo.FromJson(await File.ReadAllTextAsync(SidecarPath(name)))!;
+    }
+
+    private static LocalModelFile CreateModel(string name, params string[] categories) =>
+        CreateModel(
+            name,
+            categories.Length == 0
+                ? null
+                : new ConnectedModelInfo
+                {
+                    Source = null,
+                    User = new UserModelMetadata { Categories = [.. categories] },
+                }
+        );
+
+    private static LocalModelFile CreateModel(string name, ConnectedModelInfo? remote)
     {
         return new LocalModelFile
         {
             RelativePath = Path.Combine("Lora", $"{name}.safetensors"),
             SharedFolderType = SharedFolderType.Lora,
-            UserMetadata =
-                categories.Length == 0 ? null : new UserModelMetadata { Categories = [.. categories] },
+            ConnectedModelInfo = remote,
         };
     }
 }

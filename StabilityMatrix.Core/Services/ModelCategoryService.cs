@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Injectio.Attributes;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Core.Models;
@@ -166,8 +167,9 @@ public class ModelCategoryService(
     }
 
     /// <summary>
-    /// Writes each model's sidecar (deleting it when nothing is left) and upserts the updated
-    /// models into the index in one batch.
+    /// Load-update-save on each model's cm-info: the User block is replaced, everything else is
+    /// carried across untouched. A sidecar left with nothing worth keeping is deleted. The
+    /// updated models are then upserted into the index in one batch.
     /// </summary>
     private async Task WriteMembershipsAsync(
         IReadOnlyList<(LocalModelFile Model, List<string> Categories)> changes
@@ -183,12 +185,18 @@ public class ModelCategoryService(
 
         foreach (var (model, categories) in changes)
         {
-            var metadata = new UserModelMetadata { Categories = categories };
-            var sidecarPath = model.GetUserMetadataFullPath(modelsRoot);
+            // Work on a copy: the index's own instance must stay untouched so the change is
+            // visible to consumers diffing old against new.
+            var cmInfo = CopyOrCreate(model.ConnectedModelInfo);
+            var user = cmInfo.User?.Clone() ?? new UserModelMetadata();
+            user.Categories = categories;
+            cmInfo.User = user;
+
+            var sidecarPath = model.GetConnectedModelInfoFullPath(modelsRoot);
 
             try
             {
-                if (metadata.IsEmpty)
+                if (cmInfo.IsEmpty)
                 {
                     if (File.Exists(sidecarPath))
                     {
@@ -197,19 +205,33 @@ public class ModelCategoryService(
                 }
                 else
                 {
-                    await File.WriteAllTextAsync(sidecarPath, metadata.ToJson()).ConfigureAwait(false);
+                    var directory = Path.GetDirectoryName(sidecarPath) ?? modelsRoot;
+                    await cmInfo
+                        .SaveJsonToDirectory(directory, model.FileNameWithoutExtension)
+                        .ConfigureAwait(false);
                 }
             }
             catch (Exception e) when (e is IOException or UnauthorizedAccessException)
             {
-                logger.LogWarning(e, "Failed to write user metadata for {Path}", model.RelativePath);
+                logger.LogWarning(e, "Failed to write categories for {Path}", model.RelativePath);
                 continue;
             }
 
-            updated.Add(model with { UserMetadata = metadata.IsEmpty ? null : metadata });
+            updated.Add(model with { ConnectedModelInfo = cmInfo.IsEmpty ? null : cmInfo });
         }
 
         await modelIndexService.UpsertModelsAsync(updated).ConfigureAwait(false);
+    }
+
+    private static ConnectedModelInfo CopyOrCreate(ConnectedModelInfo? existing)
+    {
+        if (existing is null)
+        {
+            // Source defaults to CivitAI; a category-only sidecar has no source at all
+            return new ConnectedModelInfo { Source = null };
+        }
+
+        return ConnectedModelInfo.FromJson(JsonSerializer.Serialize(existing)) ?? new ConnectedModelInfo();
     }
 
     private static List<string> ReplaceName(IReadOnlyList<string> categories, string oldName, string newName)

@@ -15,16 +15,6 @@ namespace StabilityMatrix.Avalonia.Services;
 [RegisterSingleton<ModelOrganizationService>]
 public class ModelOrganizationService
 {
-    /// <summary>
-    /// Metadata sidecars that share the model's base name and travel with it on every move.
-    /// Preview images and .yaml configs are matched separately by pattern.
-    /// </summary>
-    private static readonly string[] SidecarExtensions =
-    [
-        ConnectedModelInfo.FileExtension,
-        UserModelMetadata.FileExtension,
-    ];
-
     private static readonly char[] DirectorySeparators =
     [
         Path.DirectorySeparatorChar,
@@ -80,7 +70,7 @@ public class ModelOrganizationService
 
     /// <summary>
     /// Moves a single model file into <paramref name="destinationDirectory"/>, keeping its file
-    /// name and bringing the .cm-info.json / .cm-user.json / preview / .yaml sidecars along. Rolls back any
+    /// name and bringing the .cm-info.json / preview / .yaml sidecars along. Rolls back any
     /// already-moved sidecars on failure. Throws <see cref="FileTransferExistsException"/> when
     /// a destination file already exists.
     /// </summary>
@@ -283,7 +273,7 @@ public class ModelOrganizationService
             );
         }
 
-        if (!model.HasConnectedModel)
+        if (!model.HasMetadata)
         {
             return CreateSkippedItem(
                 model,
@@ -530,19 +520,19 @@ public class ModelOrganizationService
         var sourceBaseName = Path.GetFileNameWithoutExtension(sourcePath);
         var targetBaseName = Path.GetFileNameWithoutExtension(targetPath);
 
-        foreach (var sidecarExtension in SidecarExtensions)
+        var cmInfoPath = Path.Combine(sourceDirectory, sourceBaseName + ConnectedModelInfo.FileExtension);
+        if (File.Exists(cmInfoPath))
         {
-            var sidecarPath = Path.Combine(sourceDirectory, sourceBaseName + sidecarExtension);
-            if (File.Exists(sidecarPath))
-            {
-                moves.Add(
-                    new ModelOrganizationFileMove
-                    {
-                        SourcePath = sidecarPath,
-                        TargetPath = Path.Combine(targetDirectory, targetBaseName + sidecarExtension),
-                    }
-                );
-            }
+            moves.Add(
+                new ModelOrganizationFileMove
+                {
+                    SourcePath = cmInfoPath,
+                    TargetPath = Path.Combine(
+                        targetDirectory,
+                        targetBaseName + ConnectedModelInfo.FileExtension
+                    ),
+                }
+            );
         }
 
         foreach (var previewPath in Directory.EnumerateFiles(sourceDirectory, $"{sourceBaseName}.preview.*"))

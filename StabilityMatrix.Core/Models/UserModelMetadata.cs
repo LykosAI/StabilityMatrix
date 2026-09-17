@@ -1,48 +1,39 @@
-using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace StabilityMatrix.Core.Models;
 
 /// <summary>
-/// User-owned metadata for a local model, stored next to the model file as
-/// <c>{name}.cm-user.json</c>. Kept separate from <see cref="ConnectedModelInfo"/> so that a
-/// remote metadata refresh can never overwrite what the user wrote, and so that a model with
-/// no remote metadata can still carry user data without being treated as "connected".
+/// The user-owned part of a model's <c>.cm-info.json</c> (<see cref="ConnectedModelInfo.User"/>).
+/// Remote metadata writers never populate this block, and the save path carries it across from
+/// disk when the object being written has none, so a metadata refresh cannot drop it.
 /// </summary>
 public sealed class UserModelMetadata : IEquatable<UserModelMetadata>
 {
-    [JsonIgnore]
-    public const string FileExtension = ".cm-user.json";
-
     /// <summary>
-    /// User-defined category names this model belongs to. Names are matched case-insensitively
-    /// against <see cref="Settings.ModelCategory"/> entries in settings.
+    /// User-defined category names this model belongs to. Matched case-insensitively against
+    /// <see cref="Settings.ModelCategory"/> entries in settings.
     /// </summary>
     public List<string> Categories { get; set; } = [];
 
     /// <summary>
-    /// True when nothing is set, in which case the sidecar file should not exist.
+    /// Set when the user disconnected the model from its source: bulk metadata scans leave it
+    /// alone. An explicit per-model "Find Connected Metadata" still runs and clears this.
     /// </summary>
-    [JsonIgnore]
-    public bool IsEmpty => Categories.Count == 0;
-
-    public static UserModelMetadata? FromJson(string json)
-    {
-        return JsonSerializer.Deserialize(json, UserModelMetadataSerializerContext.Default.UserModelMetadata);
-    }
-
-    public string ToJson()
-    {
-        return JsonSerializer.Serialize(this, UserModelMetadataSerializerContext.Default.UserModelMetadata);
-    }
+    public bool ExcludeFromMetadataSearch { get; set; }
 
     /// <summary>
-    /// Path of the sidecar file for the model at <paramref name="modelFilePath"/>.
+    /// True when nothing is set, in which case the block carries no information worth keeping.
     /// </summary>
-    public static string GetSidecarPath(string modelFilePath)
+    [JsonIgnore]
+    public bool IsEmpty => Categories.Count == 0 && !ExcludeFromMetadataSearch;
+
+    public UserModelMetadata Clone()
     {
-        var directory = Path.GetDirectoryName(modelFilePath) ?? string.Empty;
-        return Path.Combine(directory, Path.GetFileNameWithoutExtension(modelFilePath) + FileExtension);
+        return new UserModelMetadata
+        {
+            Categories = [.. Categories],
+            ExcludeFromMetadataSearch = ExcludeFromMetadataSearch,
+        };
     }
 
     public bool Equals(UserModelMetadata? other)
@@ -51,7 +42,8 @@ public sealed class UserModelMetadata : IEquatable<UserModelMetadata>
             return false;
         if (ReferenceEquals(this, other))
             return true;
-        return Categories.SequenceEqual(other.Categories, StringComparer.Ordinal);
+        return ExcludeFromMetadataSearch == other.ExcludeFromMetadataSearch
+            && Categories.SequenceEqual(other.Categories, StringComparer.Ordinal);
     }
 
     public override bool Equals(object? obj) => obj is UserModelMetadata other && Equals(other);
@@ -59,6 +51,7 @@ public sealed class UserModelMetadata : IEquatable<UserModelMetadata>
     public override int GetHashCode()
     {
         var hashCode = new HashCode();
+        hashCode.Add(ExcludeFromMetadataSearch);
         foreach (var category in Categories)
         {
             hashCode.Add(category, StringComparer.Ordinal);
@@ -66,11 +59,3 @@ public sealed class UserModelMetadata : IEquatable<UserModelMetadata>
         return hashCode.ToHashCode();
     }
 }
-
-[JsonSourceGenerationOptions(
-    GenerationMode = JsonSourceGenerationMode.Default,
-    WriteIndented = true,
-    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
-)]
-[JsonSerializable(typeof(UserModelMetadata))]
-internal partial class UserModelMetadataSerializerContext : JsonSerializerContext;

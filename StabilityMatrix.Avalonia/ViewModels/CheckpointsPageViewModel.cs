@@ -1,4 +1,4 @@
-﻿using System.Collections.Immutable;
+using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Reactive.Linq;
@@ -1311,10 +1311,7 @@ public partial class CheckpointsPageViewModel(
             return false;
 
         if (SelectedCategory?.Path is null || SelectedCategory?.Path == settingsManager.ModelsDirectory)
-            return file.HasConnectedModel
-                ? SelectedBaseModels.Count == 0
-                    || SelectedBaseModels.Contains(file.ConnectedModelInfo.BaseModel ?? "Other")
-                : SelectedBaseModels.Count == 0 || SelectedBaseModels.Contains("Other");
+            return MatchesBaseModelFilter(file);
 
         var categoryRelativePath = SelectedCategory
             ?.Path.Replace(settingsManager.ModelsDirectory, string.Empty)
@@ -1323,15 +1320,7 @@ public partial class CheckpointsPageViewModel(
         if (categoryRelativePath == null || folderPath == null)
             return false;
 
-        if (
-            (
-                file.HasConnectedModel
-                    ? SelectedBaseModels.Count == 0
-                        || SelectedBaseModels.Contains(file.ConnectedModelInfo?.BaseModel ?? "Other")
-                    : SelectedBaseModels.Count == 0 || SelectedBaseModels.Contains("Other")
-            )
-            is false
-        )
+        if (!MatchesBaseModelFilter(file))
             return false;
 
         // If not showing nested models, just check if the file is directly in this folder
@@ -1350,6 +1339,12 @@ public partial class CheckpointsPageViewModel(
         return !categorySegments
             .Where((t, i) => !t.Equals(folderSegments[i], StringComparison.OrdinalIgnoreCase))
             .Any();
+    }
+
+    private bool MatchesBaseModelFilter(LocalModelFile file)
+    {
+        return SelectedBaseModels.Count == 0
+            || SelectedBaseModels.Contains(file.ConnectedModelInfo?.BaseModel ?? "Other");
     }
 
     private bool FilterCategories(CheckpointCategory category)

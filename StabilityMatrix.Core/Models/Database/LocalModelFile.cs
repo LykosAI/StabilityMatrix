@@ -1,4 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.CodeAnalysis;
 using LiteDB;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models.Api;
@@ -24,7 +24,6 @@ public record LocalModelFile
                 return false;
             return x.RelativePath == y.RelativePath
                 && Equals(x.ConnectedModelInfo, y.ConnectedModelInfo)
-                && Equals(x.UserMetadata, y.UserMetadata)
                 && x.HasUpdate == y.HasUpdate
                 && x.HasEarlyAccessUpdateOnly == y.HasEarlyAccessUpdateOnly;
         }
@@ -34,7 +33,6 @@ public record LocalModelFile
             return HashCode.Combine(
                 obj.RelativePath,
                 obj.ConnectedModelInfo,
-                obj.UserMetadata,
                 obj.HasUpdate,
                 obj.HasEarlyAccessUpdateOnly
             );
@@ -52,20 +50,13 @@ public record LocalModelFile
             return true;
         return RelativePath == other.RelativePath
             && ConnectedModelInfo == other.ConnectedModelInfo
-            && Equals(UserMetadata, other.UserMetadata)
             && HasUpdate == other.HasUpdate
             && HasEarlyAccessUpdateOnly == other.HasEarlyAccessUpdateOnly;
     }
 
     public override int GetHashCode()
     {
-        return HashCode.Combine(
-            RelativePath,
-            ConnectedModelInfo,
-            UserMetadata,
-            HasUpdate,
-            HasEarlyAccessUpdateOnly
-        );
+        return HashCode.Combine(RelativePath, ConnectedModelInfo, HasUpdate, HasEarlyAccessUpdateOnly);
     }
 
     /// <summary>
@@ -85,15 +76,10 @@ public record LocalModelFile
     public ConnectedModelInfo? ConnectedModelInfo { get; set; }
 
     /// <summary>
-    /// Optional user-owned metadata (categories), read from the <c>.cm-user.json</c> sidecar.
-    /// </summary>
-    public UserModelMetadata? UserMetadata { get; set; }
-
-    /// <summary>
     /// User-defined categories this model belongs to. Empty when none are set.
     /// </summary>
     [BsonIgnore]
-    public IReadOnlyList<string> Categories => UserMetadata?.Categories ?? [];
+    public IReadOnlyList<string> Categories => ConnectedModelInfo?.User?.Categories ?? [];
 
     /// <summary>
     /// Optional preview image relative path.
@@ -180,9 +166,20 @@ public record LocalModelFile
     [BsonIgnore]
     public string DisplayConfigFileName => Path.GetFileName(ConfigFullPath) ?? string.Empty;
 
+    /// <summary>
+    /// Whether any metadata sidecar exists, remote or user-authored. Drives what is displayed.
+    /// </summary>
     [BsonIgnore]
     [MemberNotNullWhen(true, nameof(ConnectedModelInfo))]
-    public bool HasConnectedModel => ConnectedModelInfo != null;
+    public bool HasMetadata => ConnectedModelInfo != null;
+
+    /// <summary>
+    /// Whether the model is linked to a remote source (see <see cref="ConnectedModelInfo.IsConnected"/>).
+    /// Drives update checks, source navigation and metadata scans.
+    /// </summary>
+    [BsonIgnore]
+    [MemberNotNullWhen(true, nameof(ConnectedModelInfo))]
+    public bool HasConnectedModel => ConnectedModelInfo is { IsConnected: true };
 
     [BsonIgnore]
     [MemberNotNullWhen(true, nameof(ConnectedModelInfo))]
@@ -223,11 +220,6 @@ public record LocalModelFile
         return Path.Combine(modelParentDir, $"{modelNameNoExt}.cm-info.json");
     }
 
-    public string GetUserMetadataFullPath(string rootModelDirectory)
-    {
-        return UserModelMetadata.GetSidecarPath(GetFullPath(rootModelDirectory));
-    }
-
     public IEnumerable<string> GetDeleteFullPaths(string rootModelDirectory)
     {
         if (GetFullPath(rootModelDirectory) is { } filePath && File.Exists(filePath))
@@ -235,19 +227,7 @@ public record LocalModelFile
             yield return filePath;
         }
 
-        if (
-            GetUserMetadataFullPath(rootModelDirectory) is { } userMetadataPath
-            && File.Exists(userMetadataPath)
-        )
-        {
-            yield return userMetadataPath;
-        }
-
-        if (
-            HasConnectedModel
-            && GetConnectedModelInfoFullPath(rootModelDirectory) is { } cmInfoPath
-            && File.Exists(cmInfoPath)
-        )
+        if (GetConnectedModelInfoFullPath(rootModelDirectory) is { } cmInfoPath && File.Exists(cmInfoPath))
         {
             yield return cmInfoPath;
         }

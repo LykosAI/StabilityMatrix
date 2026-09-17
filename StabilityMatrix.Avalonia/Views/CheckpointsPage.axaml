@@ -512,10 +512,11 @@
                                                 VerticalAlignment="Center"
                                                 Text="{Binding Name}"
                                                 TextTrimming="CharacterEllipsis" />
+                                            <!--  Inherits the toggle's foreground so it stays legible on the checked (accent) state  -->
                                             <TextBlock
                                                 Grid.Column="2"
                                                 VerticalAlignment="Center"
-                                                Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                Opacity="0.7"
                                                 Text="{Binding Count}" />
                                         </Grid>
                                     </ToggleButton>

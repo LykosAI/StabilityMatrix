@@ -214,7 +214,7 @@
                                                         <TextBlock VerticalAlignment="Center" Text="{Binding Name}" />
                                                         <TextBlock
                                                             VerticalAlignment="Center"
-                                                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                            Opacity="0.7"
                                                             Text="{Binding Count}" />
                                                     </StackPanel>
                                                 </ToggleButton>

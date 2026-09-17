@@ -2280,4 +2280,43 @@ Account tokens will not be viewable after saving, please make a note of them if 
   <data name="Label_ExampleTelemetry" xml:space="preserve">
     <value>Example telemetry</value>
   </data>
+  <data name="Action_Add" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="Label_Color" xml:space="preserve">
+    <value>Color</value>
+  </data>
+  <data name="Label_Uncategorized" xml:space="preserve">
+    <value>Uncategorized</value>
+  </data>
+  <data name="Label_ManageCategories" xml:space="preserve">
+    <value>Manage Categories</value>
+  </data>
+  <data name="Label_SetCategories" xml:space="preserve">
+    <value>Set Categories</value>
+  </data>
+  <data name="Label_NewCategory" xml:space="preserve">
+    <value>New category</value>
+  </data>
+  <data name="Label_NoCategoriesHint" xml:space="preserve">
+    <value>No categories yet. Add one below to start organizing your models.</value>
+  </data>
+  <data name="Label_AppliesToModel" xml:space="preserve">
+    <value>Applies to {0}</value>
+  </data>
+  <data name="Label_AppliesToModels" xml:space="preserve">
+    <value>Applies to {0} selected models</value>
+  </data>
+  <data name="Label_RenameCategory" xml:space="preserve">
+    <value>Rename Category</value>
+  </data>
+  <data name="Label_CategoryName" xml:space="preserve">
+    <value>Category name</value>
+  </data>
+  <data name="Label_DeleteCategoryConfirm" xml:space="preserve">
+    <value>Remove the category '{0}'? It will be removed from {1} models.</value>
+  </data>
+  <data name="Label_CategoriesFilterHint" xml:space="preserve">
+    <value>Click a category to filter. Drop models here to assign.</value>
+  </data>
 </root>

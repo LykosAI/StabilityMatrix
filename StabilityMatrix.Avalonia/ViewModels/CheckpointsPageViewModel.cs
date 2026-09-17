@@ -17,6 +17,7 @@ using Fusillade;
 using Injectio.Attributes;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Animations;
+using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
@@ -58,6 +59,7 @@ public partial class CheckpointsPageViewModel(
     IMetadataImportService metadataImportService,
     IModelImportService modelImportService,
     ModelOrganizationService modelOrganizationService,
+    IModelCategoryService categoryService,
     OpenModelDbManager openModelDbManager,
     IServiceManager<ViewModelBase> dialogFactory,
     ICivitBaseModelTypeService baseModelTypeService,
@@ -155,6 +157,25 @@ public partial class CheckpointsPageViewModel(
     public IObservableCollection<BaseModelOptionViewModel> BaseModelOptions { get; set; } =
         new ObservableCollectionExtended<BaseModelOptionViewModel>();
 
+    /// <summary>
+    /// Sidebar category filter entries, rebuilt whenever the index or the registry changes.
+    /// </summary>
+    public ObservableCollection<CategoryOptionViewModel> CategoryOptions { get; } = [];
+
+    /// <summary>
+    /// Selected category names (any-of match). Empty means no category filtering.
+    /// </summary>
+    [ObservableProperty]
+    private ObservableCollection<string> selectedCategories = [];
+
+    /// <summary>
+    /// Whether models with no categories pass the category filter.
+    /// </summary>
+    [ObservableProperty]
+    private bool includeUncategorized;
+
+    public bool HasCategoryFilter => SelectedCategories.Count > 0 || IncludeUncategorized;
+
     protected override async Task OnInitialLoadedAsync()
     {
         if (Design.IsDesignMode)
@@ -207,6 +228,31 @@ public partial class CheckpointsPageViewModel(
 
         AddDisposable(settingsTransactionObservable);
 
+        SelectedCategories = new ObservableCollection<string>(
+            settingsManager.Settings.CheckpointsSelectedCategories
+        );
+        IncludeUncategorized = settingsManager.Settings.CheckpointsIncludeUncategorized;
+
+        AddDisposable(
+            this.WhenPropertyChanged(x => x.SelectedCategories)
+                .Throttle(TimeSpan.FromMilliseconds(50))
+                .Skip(1)
+                .ObserveOn(SynchronizationContext.Current)
+                .Subscribe(_ =>
+                    settingsManager.Transaction(settings =>
+                        settings.CheckpointsSelectedCategories = SelectedCategories.ToList()
+                    )
+                )
+        );
+
+        AddDisposable(
+            settingsManager.RelayPropertyFor(
+                this,
+                vm => vm.IncludeUncategorized,
+                settings => settings.CheckpointsIncludeUncategorized
+            )
+        );
+
         // Observable predicate from SearchQuery changes
         var searchPredicate = this.WhenPropertyChanged(vm => vm.SearchQuery)
             .Throttle(TimeSpan.FromMilliseconds(100))
@@ -222,6 +268,10 @@ public partial class CheckpointsPageViewModel(
                                     StringComparer.OrdinalIgnoreCase
                                 ) ?? false
                             )
+                        )
+                        || (
+                            SearchQuery.StartsWith("@")
+                            && file.Categories.Contains(SearchQuery[1..], StringComparer.OrdinalIgnoreCase)
                         )
                         || FuzzySearchHelper.IsMatch(
                             SearchQuery,
@@ -245,6 +295,8 @@ public partial class CheckpointsPageViewModel(
                     is nameof(SelectedCategory)
                         or nameof(ShowModelsInSubfolders)
                         or nameof(SelectedBaseModels)
+                        or nameof(SelectedCategories)
+                        or nameof(IncludeUncategorized)
             )
             .Throttle(TimeSpan.FromMilliseconds(50))
             .Select(_ => (Func<LocalModelFile, bool>)FilterModels)
@@ -1199,6 +1251,8 @@ public partial class CheckpointsPageViewModel(
             updater.Load([rootCategory, .. modelCategories]);
         });
 
+        RefreshCategoryOptions();
+
         SelectedCategory =
             previouslySelectedCategory
             ?? Categories.FirstOrDefault(x => x.Path == previouslySelectedCategory?.Path)
@@ -1310,6 +1364,9 @@ public partial class CheckpointsPageViewModel(
         if (folderPath?.Contains("diffusion_models", StringComparison.OrdinalIgnoreCase) ?? false)
             return false;
 
+        if (!MatchesCategoryFilter(file))
+            return false;
+
         if (SelectedCategory?.Path is null || SelectedCategory?.Path == settingsManager.ModelsDirectory)
             return MatchesBaseModelFilter(file);
 
@@ -1350,6 +1407,232 @@ public partial class CheckpointsPageViewModel(
     private bool FilterCategories(CheckpointCategory category)
     {
         return !HideEmptyRootCategories || category is { Count: > 0 };
+    }
+
+    private bool MatchesCategoryFilter(LocalModelFile file)
+    {
+        if (!HasCategoryFilter)
+            return true;
+
+        if (file.Categories.Count == 0)
+            return IncludeUncategorized;
+
+        return file.Categories.Any(c => SelectedCategories.Contains(c, StringComparer.OrdinalIgnoreCase));
+    }
+
+    /// <summary>
+    /// Rebuilds the sidebar category list from the registry and the index, keeping the current selection.
+    /// </summary>
+    private void RefreshCategoryOptions()
+    {
+        foreach (var option in CategoryOptions)
+        {
+            option.PropertyChanged -= OnCategoryOptionPropertyChanged;
+        }
+        CategoryOptions.Clear();
+
+        var allModels = modelIndexService.ModelIndex.Values.SelectMany(x => x).ToList();
+
+        foreach (var category in categoryService.GetCategories())
+        {
+            CategoryOptions.Add(
+                new CategoryOptionViewModel
+                {
+                    Name = category.Name,
+                    ColorHex = category.Color,
+                    ColorBrush = ModelCategoryStyle.SwatchBrush(category.Color),
+                    Count = allModels.Count(m =>
+                        m.Categories.Contains(category.Name, StringComparer.OrdinalIgnoreCase)
+                    ),
+                    IsSelected = SelectedCategories.Contains(category.Name, StringComparer.OrdinalIgnoreCase),
+                }
+            );
+        }
+
+        CategoryOptions.Add(
+            new CategoryOptionViewModel
+            {
+                Name = Resources.Label_Uncategorized,
+                IsUncategorized = true,
+                Count = allModels.Count(m => m.Categories.Count == 0),
+                IsSelected = IncludeUncategorized,
+            }
+        );
+
+        foreach (var option in CategoryOptions)
+        {
+            option.PropertyChanged += OnCategoryOptionPropertyChanged;
+        }
+
+        foreach (var model in Models)
+        {
+            model.RefreshCategoryChips();
+        }
+    }
+
+    private void OnCategoryOptionPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (
+            e.PropertyName != nameof(CategoryOptionViewModel.IsSelected)
+            || sender is not CategoryOptionViewModel option
+        )
+            return;
+
+        if (option.IsUncategorized)
+        {
+            IncludeUncategorized = option.IsSelected;
+        }
+        else
+        {
+            var existing = SelectedCategories.FirstOrDefault(c =>
+                string.Equals(c, option.Name, StringComparison.OrdinalIgnoreCase)
+            );
+
+            switch (option.IsSelected)
+            {
+                case true when existing is null:
+                    SelectedCategories.Add(option.Name);
+                    break;
+                case false when existing is not null:
+                    SelectedCategories.Remove(existing);
+                    break;
+                default:
+                    return;
+            }
+        }
+
+        OnPropertyChanged(nameof(SelectedCategories));
+        OnPropertyChanged(nameof(HasCategoryFilter));
+    }
+
+    [RelayCommand]
+    private void ClearCategoryFilter()
+    {
+        foreach (var option in CategoryOptions)
+        {
+            option.IsSelected = false;
+        }
+    }
+
+    /// <summary>
+    /// Opens the Set Categories dialog for the right-clicked card, or for the whole selection
+    /// when that card is part of it. With no card, acts on the selection.
+    /// </summary>
+    [RelayCommand]
+    private async Task EditCategories(CheckpointFileViewModel? card)
+    {
+        var selected = Models.Where(m => m.IsSelected).ToList();
+        var targets =
+            card is null ? selected
+            : card.IsSelected && selected.Count > 1 ? selected
+            : [card];
+
+        if (targets.Count == 0)
+            return;
+
+        await ShowCategoriesDialogAsync(targets.Select(t => t.CheckpointFile).ToList());
+    }
+
+    [RelayCommand]
+    private async Task ManageCategories()
+    {
+        await ShowCategoriesDialogAsync([]);
+    }
+
+    private async Task ShowCategoriesDialogAsync(IReadOnlyList<LocalModelFile> targets)
+    {
+        var vm = dialogFactory.Get<ModelCategoriesDialogViewModel>(vm => vm.Targets = targets);
+        await vm.GetDialog().ShowAsync();
+
+        // Colours and registry entries may have changed without an index refresh
+        RefreshCategoryOptions();
+    }
+
+    /// <summary>
+    /// Assigns a sidebar category to dropped models. Never moves files.
+    /// </summary>
+    public async Task AssignCategoryAsync(CategoryOptionViewModel option, IEnumerable<LocalModelFile> models)
+    {
+        if (option.IsUncategorized)
+            return;
+
+        try
+        {
+            await categoryService.AddToCategoryAsync(models, option.Name);
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "Failed to assign category {Category}", option.Name);
+            notificationService.Show(Resources.Label_Categories, e.Message, NotificationType.Error);
+        }
+    }
+
+    [RelayCommand]
+    private async Task RenameCategory(CategoryOptionViewModel? option)
+    {
+        if (option is null || option.IsUncategorized)
+            return;
+
+        var field = new TextBoxField { Label = Resources.Label_CategoryName, Text = option.Name };
+        var dialog = DialogHelper.CreateTextEntryDialog(Resources.Label_RenameCategory, "", [field]);
+
+        if (await dialog.ShowAsync() != ContentDialogResult.Primary || string.IsNullOrWhiteSpace(field.Text))
+            return;
+
+        try
+        {
+            await categoryService.RenameCategoryAsync(option.Name, field.Text);
+
+            if (SelectedCategories.Remove(option.Name))
+            {
+                SelectedCategories.Add(field.Text.Trim());
+                OnPropertyChanged(nameof(SelectedCategories));
+            }
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "Failed to rename category {Category}", option.Name);
+            notificationService.Show(Resources.Label_Categories, e.Message, NotificationType.Error);
+        }
+
+        RefreshCategoryOptions();
+    }
+
+    [RelayCommand]
+    private async Task DeleteCategory(CategoryOptionViewModel? option)
+    {
+        if (option is null || option.IsUncategorized)
+            return;
+
+        var confirm = new BetterContentDialog
+        {
+            Title = Resources.Action_Delete,
+            Content = string.Format(Resources.Label_DeleteCategoryConfirm, option.Name, option.Count),
+            PrimaryButtonText = Resources.Action_Delete,
+            CloseButtonText = Resources.Action_Cancel,
+            DefaultButton = ContentDialogButton.Close,
+            IsPrimaryButtonEnabled = true,
+        };
+
+        if (await confirm.ShowAsync() != ContentDialogResult.Primary)
+            return;
+
+        try
+        {
+            await categoryService.DeleteCategoryAsync(option.Name);
+
+            if (SelectedCategories.Remove(option.Name))
+            {
+                OnPropertyChanged(nameof(SelectedCategories));
+            }
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "Failed to delete category {Category}", option.Name);
+            notificationService.Show(Resources.Label_Categories, e.Message, NotificationType.Error);
+        }
+
+        RefreshCategoryOptions();
     }
 
     private async Task ShowFolderMapTipIfNecessaryAsync()

@@ -12,6 +12,7 @@ using DynamicData.Binding;
 using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Helpers;
+using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -60,6 +61,7 @@ public partial class ModelPickerDialogViewModel : ContentDialogViewModelBase
     private ImmutableList<HybridModelFile> allModels = [];
     private int refreshRequestId;
     private HashSet<string> pendingSelectedBaseModels = [];
+    private HashSet<string> pendingSelectedCategories = [];
     private bool isApplyingSavedFilterState;
     private bool isDialogActive;
     private IReadOnlyDictionary<string, LocalFileSortData> fileSortDataById = ImmutableDictionary<
@@ -127,13 +129,38 @@ public partial class ModelPickerDialogViewModel : ContentDialogViewModelBase
     public IEnumerable<BaseModelOptionViewModel> SelectedBaseModelOptions =>
         BaseModelOptions.Where(x => x.IsSelected);
 
+    /// <summary>
+    /// User categories present on the models of the current source. Empty hides the section.
+    /// </summary>
+    public ObservableCollection<CategoryOptionViewModel> CategoryOptions { get; } = [];
+
+    public IEnumerable<CategoryOptionViewModel> SelectedCategoryOptions =>
+        CategoryOptions.Where(x => x.IsSelected);
+
+    public bool HasCategoryOptions => CategoryOptions.Count > 0;
+
+    /// <summary>
+    /// Category registry (name + colour) for chip rendering in the list templates.
+    /// </summary>
+    public IReadOnlyList<ModelCategory> CategoryPalette => settingsManager.Settings.ModelCategories;
+
+    public int SelectedCategoryCount => SelectedCategoryOptions.Count();
+
+    public string CategoriesButtonText =>
+        SelectedCategoryCount > 0
+            ? $"{Resources.Label_Categories} ({SelectedCategoryCount})"
+            : Resources.Label_Categories;
+
+    /// <summary>
+    /// Filters under the Filter button. Categories have their own button and count.
+    /// </summary>
     public int ActiveFilterCount =>
         SelectedBaseModelOptions.Count() + (ShowCheckpointsOnly ? 1 : 0) + (ShowUnetsOnly ? 1 : 0);
 
-    public bool HasActiveFilters => ActiveFilterCount > 0;
+    public bool HasActiveFilters => ActiveFilterCount > 0 || SelectedCategoryCount > 0;
     public bool HasFilteredModels => FilteredModels.Count > 0;
 
-    public string FilterButtonText => HasActiveFilters ? $"Filter ({ActiveFilterCount})" : "Filter";
+    public string FilterButtonText => ActiveFilterCount > 0 ? $"Filter ({ActiveFilterCount})" : "Filter";
 
     /// <summary>
     /// Whether to show the folder type filter buttons (Checkpoints/Diffusion Models).
@@ -201,6 +228,27 @@ public partial class ModelPickerDialogViewModel : ContentDialogViewModelBase
                     OnPropertyChanged(nameof(ActiveFilterCount));
                     OnPropertyChanged(nameof(HasActiveFilters));
                     OnPropertyChanged(nameof(FilterButtonText));
+                    SaveFilterStateForCurrentSource();
+                })
+        );
+
+        // Subscribe to category option changes
+        propertySubscriptions.Add(
+            CategoryOptions
+                .ToObservableChangeSet()
+                .AutoRefresh(x => x.IsSelected)
+                .Throttle(TimeSpan.FromMilliseconds(100))
+                .ObserveOn(SynchronizationContext.Current!)
+                .Subscribe(_ =>
+                {
+                    if (!isDialogActive)
+                        return;
+
+                    UpdateFilteredModels();
+                    OnPropertyChanged(nameof(SelectedCategoryOptions));
+                    OnPropertyChanged(nameof(SelectedCategoryCount));
+                    OnPropertyChanged(nameof(CategoriesButtonText));
+                    OnPropertyChanged(nameof(HasActiveFilters));
                     SaveFilterStateForCurrentSource();
                 })
         );
@@ -420,6 +468,7 @@ public partial class ModelPickerDialogViewModel : ContentDialogViewModelBase
         allModels = sortedModels;
         fileSortDataById = sortData;
         UpdateAvailableBaseModels();
+        UpdateAvailableCategories();
         UpdateFilteredModels();
     }
 
@@ -514,6 +563,55 @@ public partial class ModelPickerDialogViewModel : ContentDialogViewModelBase
         }
     }
 
+    private void UpdateAvailableCategories()
+    {
+        var comparer = StringComparer.OrdinalIgnoreCase;
+        var counts = new Dictionary<string, int>(comparer);
+        foreach (var category in allModels.SelectMany(m => m.Local?.Categories ?? []))
+        {
+            counts[category] = counts.GetValueOrDefault(category) + 1;
+        }
+
+        var existingSelections = SelectedCategoryOptions.Select(x => x.Name).ToHashSet(comparer);
+        if (existingSelections.Count == 0 && pendingSelectedCategories.Count > 0)
+        {
+            existingSelections = new HashSet<string>(pendingSelectedCategories, comparer);
+        }
+
+        // Registry order first (that's the user's order), then unregistered names alphabetically
+        var registry = CategoryPalette;
+        var ordered = registry
+            .Where(c => counts.ContainsKey(c.Name))
+            .Select(c => (c.Name, c.Color))
+            .Concat(
+                counts
+                    .Keys.Where(name => !registry.Any(c => comparer.Equals(c.Name, name)))
+                    .OrderBy(name => name, comparer)
+                    .Select(name => (Name: name, Color: (string?)null))
+            );
+
+        CategoryOptions.Clear();
+        foreach (var (name, color) in ordered)
+        {
+            CategoryOptions.Add(
+                new CategoryOptionViewModel
+                {
+                    Name = name,
+                    ColorHex = color,
+                    ColorBrush = ModelCategoryStyle.SwatchBrush(color),
+                    Count = counts[name],
+                    IsSelected = existingSelections.Contains(name),
+                }
+            );
+        }
+
+        OnPropertyChanged(nameof(HasCategoryOptions));
+        OnPropertyChanged(nameof(CategoryPalette));
+        OnPropertyChanged(nameof(SelectedCategoryCount));
+        OnPropertyChanged(nameof(CategoriesButtonText));
+        OnPropertyChanged(nameof(HasActiveFilters));
+    }
+
     private string GetSourceKey() => Source.ToString();
 
     private void LoadFilterStateForCurrentSource()
@@ -522,6 +620,7 @@ public partial class ModelPickerDialogViewModel : ContentDialogViewModelBase
         if (states is null || !states.TryGetValue(GetSourceKey(), out var state) || state is null)
         {
             pendingSelectedBaseModels = [];
+            pendingSelectedCategories = [];
             return;
         }
 
@@ -532,6 +631,9 @@ public partial class ModelPickerDialogViewModel : ContentDialogViewModelBase
             ShowCheckpointsOnly = state.ShowCheckpointsOnly;
             ShowUnetsOnly = state.ShowUnetsOnly;
             pendingSelectedBaseModels = (state.SelectedBaseModels ?? []).ToHashSet(
+                StringComparer.OrdinalIgnoreCase
+            );
+            pendingSelectedCategories = (state.SelectedCategories ?? []).ToHashSet(
                 StringComparer.OrdinalIgnoreCase
             );
         }
@@ -551,12 +653,18 @@ public partial class ModelPickerDialogViewModel : ContentDialogViewModelBase
                 ? SelectedBaseModelOptions.Select(x => x.ModelType).ToList()
                 : pendingSelectedBaseModels.ToList();
 
+        var selectedCategories =
+            CategoryOptions.Count > 0
+                ? SelectedCategoryOptions.Select(x => x.Name).ToList()
+                : pendingSelectedCategories.ToList();
+
         var state = new ModelPickerFilterState
         {
             SearchText = SearchText.Trim(),
             ShowCheckpointsOnly = ShowCheckpointsOnly,
             ShowUnetsOnly = ShowUnetsOnly,
             SelectedBaseModels = selectedBaseModels,
+            SelectedCategories = selectedCategories,
         };
 
         settingsManager.Transaction(s =>
@@ -608,6 +716,16 @@ public partial class ModelPickerDialogViewModel : ContentDialogViewModelBase
             });
         }
 
+        // Apply category filter (any-of)
+        var selectedCategories = SelectedCategoryOptions.Select(x => x.Name).ToList();
+        if (selectedCategories.Count > 0)
+        {
+            models = models.Where(m =>
+                m.Local?.Categories.Any(c => selectedCategories.Contains(c, StringComparer.OrdinalIgnoreCase))
+                ?? false
+            );
+        }
+
         // Apply folder type filter
         if (ShowCheckpointsOnly)
         {
@@ -629,8 +747,12 @@ public partial class ModelPickerDialogViewModel : ContentDialogViewModelBase
                 ",",
                 selectedBaseModels.OrderBy(x => x, StringComparer.Ordinal)
             );
+            var selectedCategoriesKey = string.Join(
+                ",",
+                selectedCategories.OrderBy(x => x, StringComparer.Ordinal)
+            );
             var cacheKey =
-                $"{refreshRequestId}|{query}|{selectedBaseModelsKey}|{ShowCheckpointsOnly}|{ShowUnetsOnly}";
+                $"{refreshRequestId}|{query}|{selectedBaseModelsKey}|{selectedCategoriesKey}|{ShowCheckpointsOnly}|{ShowUnetsOnly}";
             if (searchCache.Get(cacheKey, out var cachedResults))
             {
                 FilteredModels = cachedResults!;
@@ -702,9 +824,22 @@ public partial class ModelPickerDialogViewModel : ContentDialogViewModelBase
     }
 
     [RelayCommand]
+    private void ClearCategories()
+    {
+        foreach (var option in CategoryOptions)
+        {
+            option.IsSelected = false;
+        }
+    }
+
+    [RelayCommand]
     private void ClearFilters()
     {
         foreach (var option in BaseModelOptions)
+        {
+            option.IsSelected = false;
+        }
+        foreach (var option in CategoryOptions)
         {
             option.IsSelected = false;
         }

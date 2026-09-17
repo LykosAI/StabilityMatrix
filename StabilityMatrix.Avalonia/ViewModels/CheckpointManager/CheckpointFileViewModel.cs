@@ -7,6 +7,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using Microsoft.Extensions.Logging;
+using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -27,7 +28,20 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasEarlyAccessUpdateOnly))]
     [NotifyPropertyChangedFor(nameof(HasStandardUpdate))]
+    [NotifyPropertyChangedFor(nameof(CategoryChips))]
+    [NotifyPropertyChangedFor(nameof(HasKnownModelType))]
     private LocalModelFile checkpointFile;
+
+    /// <summary>
+    /// Category chips for the card, coloured from the settings registry.
+    /// </summary>
+    public IReadOnlyList<CategoryChip> CategoryChips =>
+        ModelCategoryStyle.ChipsFor(CheckpointFile.Categories, settingsManager.Settings.ModelCategories);
+
+    /// <summary>
+    /// Re-reads chip colours after the category registry changed.
+    /// </summary>
+    public void RefreshCategoryChips() => OnPropertyChanged(nameof(CategoryChips));
 
     [ObservableProperty]
     private string thumbnailUri;
@@ -66,6 +80,7 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
     public bool CanShowTriggerWords => CheckpointFile.ConnectedModelInfo?.TrainedWords?.Length > 0;
     public string BaseModelName => CheckpointFile.ConnectedModelInfo?.BaseModel ?? string.Empty;
     public CivitModelType ModelType => CheckpointFile.ConnectedModelInfo?.ModelType ?? CivitModelType.Unknown;
+    public bool HasKnownModelType => ModelType != CivitModelType.Unknown;
     public bool HasEarlyAccessUpdateOnly => CheckpointFile.HasEarlyAccessUpdateOnly;
     public bool HasStandardUpdate => CheckpointFile.HasUpdate && !CheckpointFile.HasEarlyAccessUpdateOnly;
 

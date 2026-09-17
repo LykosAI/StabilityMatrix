@@ -708,7 +708,7 @@
                                         <ScaleTransform ScaleX="{Binding $parent[scroll:BetterScrollViewer].((viewModels:CheckpointsPageViewModel)DataContext).ModelCardBottomResizeFactor, FallbackValue=1, TargetNullValue=1}" ScaleY="{Binding $parent[scroll:BetterScrollViewer].((viewModels:CheckpointsPageViewModel)DataContext).ModelCardBottomResizeFactor, FallbackValue=1, TargetNullValue=1}" />
                                     </LayoutTransformControl.LayoutTransform>
                                     <WrapPanel Margin="8,8,44,0" Orientation="Horizontal">
-                                        <Border Classes="tag-chip" IsVisible="{Binding CheckpointFile.HasMetadata}">
+                                        <Border Classes="tag-chip" IsVisible="{Binding HasKnownModelType}">
                                             <TextBlock Text="{Binding ModelType}" />
                                         </Border>
                                         <Border Classes="tag-chip" IsVisible="{Binding BaseModelName, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
@@ -803,7 +803,7 @@
                                                 HorizontalAlignment="Left"
                                                 FontSize="13"
                                                 Foreground="#A6FFFFFF"
-                                                IsVisible="{Binding CheckpointFile.HasMetadata}"
+                                                IsVisible="{Binding CheckpointFile.DisplayModelVersion, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
                                                 Text="{Binding CheckpointFile.DisplayModelVersion, FallbackValue=''}"
                                                 TextWrapping="NoWrap" />
 

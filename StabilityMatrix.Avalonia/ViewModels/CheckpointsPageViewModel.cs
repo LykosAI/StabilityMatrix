@@ -1,4 +1,4 @@
-﻿using System.Collections.Immutable;
+using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Reactive.Linq;
@@ -1057,53 +1057,7 @@ public partial class CheckpointsPageViewModel(
                     return;
                 }
 
-                try
-                {
-                    var sourcePath = new FilePath(
-                        sourceFile.CheckpointFile.GetFullPath(settingsManager.ModelsDirectory)
-                    );
-                    var fileNameWithoutExt = Path.GetFileNameWithoutExtension(sourcePath);
-                    var sourceCmInfoPath = Path.Combine(
-                        sourcePath.Directory!,
-                        $"{fileNameWithoutExt}.cm-info.json"
-                    );
-                    var sourcePreviewPath = Path.Combine(
-                        sourcePath.Directory!,
-                        $"{fileNameWithoutExt}.preview.jpeg"
-                    );
-                    var destinationFilePath = Path.Combine(destinationFolder, sourcePath.Name);
-                    var destinationCmInfoPath = Path.Combine(
-                        destinationFolder,
-                        $"{fileNameWithoutExt}.cm-info.json"
-                    );
-                    var destinationPreviewPath = Path.Combine(
-                        destinationFolder,
-                        $"{fileNameWithoutExt}.preview.jpeg"
-                    );
-
-                    // Move files
-                    if (File.Exists(sourcePath))
-                        await FileTransfers.MoveFileAsync(sourcePath, destinationFilePath);
-
-                    if (File.Exists(sourceCmInfoPath))
-                        await FileTransfers.MoveFileAsync(sourceCmInfoPath, destinationCmInfoPath);
-
-                    if (File.Exists(sourcePreviewPath))
-                        await FileTransfers.MoveFileAsync(sourcePreviewPath, destinationPreviewPath);
-
-                    notificationService.Show(
-                        "Model moved successfully",
-                        $"Moved '{sourcePath.Name}' to '{Path.GetFileName(destinationFolder)}'"
-                    );
-                }
-                catch (FileTransferExistsException)
-                {
-                    notificationService.Show(
-                        "Failed to move file",
-                        "Destination file exists",
-                        NotificationType.Error
-                    );
-                }
+                await MoveModelFileAsync(sourceFile.CheckpointFile, destinationFolder);
             }
 
             SelectedCategory = Categories
@@ -1112,6 +1066,39 @@ public partial class CheckpointsPageViewModel(
 
             await modelIndexService.RefreshIndex();
             DelayedClearProgress(TimeSpan.FromSeconds(1.5));
+        }
+    }
+
+    /// <summary>
+    /// Moves one model and all of its sidecars, reporting the outcome as a notification.
+    /// </summary>
+    private async Task MoveModelFileAsync(LocalModelFile sourceFile, DirectoryPath destinationFolder)
+    {
+        try
+        {
+            await modelOrganizationService.MoveModelFileAsync(
+                sourceFile,
+                settingsManager.ModelsDirectory,
+                destinationFolder
+            );
+
+            notificationService.Show(
+                "Model moved successfully",
+                $"Moved '{sourceFile.FileName}' to '{Path.GetFileName(destinationFolder)}'"
+            );
+        }
+        catch (FileTransferExistsException)
+        {
+            notificationService.Show(
+                "Failed to move file",
+                "Destination file exists",
+                NotificationType.Error
+            );
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            logger.LogError(e, "Failed to move model {File}", sourceFile.RelativePath);
+            notificationService.Show("Failed to move file", e.Message, NotificationType.Error);
         }
     }
 
@@ -1133,39 +1120,7 @@ public partial class CheckpointsPageViewModel(
 
         try
         {
-            var sourcePath = new FilePath(sourceFile.GetFullPath(settingsManager.ModelsDirectory));
-            var fileNameWithoutExt = Path.GetFileNameWithoutExtension(sourcePath);
-            var sourceCmInfoPath = Path.Combine(sourcePath.Directory!, $"{fileNameWithoutExt}.cm-info.json");
-            var sourcePreviewPath = Path.Combine(sourcePath.Directory!, $"{fileNameWithoutExt}.preview.jpeg");
-            var destinationFilePath = Path.Combine(destinationFolder, sourcePath.Name);
-            var destinationCmInfoPath = Path.Combine(destinationFolder, $"{fileNameWithoutExt}.cm-info.json");
-            var destinationPreviewPath = Path.Combine(
-                destinationFolder,
-                $"{fileNameWithoutExt}.preview.jpeg"
-            );
-
-            // Move files
-            if (File.Exists(sourcePath))
-                await FileTransfers.MoveFileAsync(sourcePath, destinationFilePath);
-
-            if (File.Exists(sourceCmInfoPath))
-                await FileTransfers.MoveFileAsync(sourceCmInfoPath, destinationCmInfoPath);
-
-            if (File.Exists(sourcePreviewPath))
-                await FileTransfers.MoveFileAsync(sourcePreviewPath, destinationPreviewPath);
-
-            notificationService.Show(
-                "Model moved successfully",
-                $"Moved '{sourcePath.Name}' to '{Path.GetFileName(destinationFolder)}'"
-            );
-        }
-        catch (FileTransferExistsException)
-        {
-            notificationService.Show(
-                "Failed to move file",
-                "Destination file exists",
-                NotificationType.Error
-            );
+            await MoveModelFileAsync(sourceFile, destinationFolder);
         }
         finally
         {
@@ -1356,10 +1311,7 @@ public partial class CheckpointsPageViewModel(
             return false;
 
         if (SelectedCategory?.Path is null || SelectedCategory?.Path == settingsManager.ModelsDirectory)
-            return file.HasConnectedModel
-                ? SelectedBaseModels.Count == 0
-                    || SelectedBaseModels.Contains(file.ConnectedModelInfo.BaseModel ?? "Other")
-                : SelectedBaseModels.Count == 0 || SelectedBaseModels.Contains("Other");
+            return MatchesBaseModelFilter(file);
 
         var categoryRelativePath = SelectedCategory
             ?.Path.Replace(settingsManager.ModelsDirectory, string.Empty)
@@ -1368,15 +1320,7 @@ public partial class CheckpointsPageViewModel(
         if (categoryRelativePath == null || folderPath == null)
             return false;
 
-        if (
-            (
-                file.HasConnectedModel
-                    ? SelectedBaseModels.Count == 0
-                        || SelectedBaseModels.Contains(file.ConnectedModelInfo?.BaseModel ?? "Other")
-                    : SelectedBaseModels.Count == 0 || SelectedBaseModels.Contains("Other")
-            )
-            is false
-        )
+        if (!MatchesBaseModelFilter(file))
             return false;
 
         // If not showing nested models, just check if the file is directly in this folder
@@ -1395,6 +1339,12 @@ public partial class CheckpointsPageViewModel(
         return !categorySegments
             .Where((t, i) => !t.Equals(folderSegments[i], StringComparison.OrdinalIgnoreCase))
             .Any();
+    }
+
+    private bool MatchesBaseModelFilter(LocalModelFile file)
+    {
+        return SelectedBaseModels.Count == 0
+            || SelectedBaseModels.Contains(file.ConnectedModelInfo?.BaseModel ?? "Other");
     }
 
     private bool FilterCategories(CheckpointCategory category)

@@ -364,6 +364,12 @@ public class Settings
     public CheckpointSortMode ModelPickerSortMode { get; set; } = CheckpointSortMode.Title;
     public ListSortDirection ModelPickerSortDirection { get; set; } = ListSortDirection.Ascending;
 
+    /// <summary>
+    /// User-defined model categories (name + colour). Membership is stored per model, see
+    /// <see cref="UserModelMetadata"/>.
+    /// </summary>
+    public List<ModelCategory> ModelCategories { get; set; } = [];
+
     public int InferenceDimensionStepChange { get; set; } = 128;
 
     /// <summary>
@@ -452,5 +458,7 @@ public class Settings
 [JsonSerializable(typeof(Dictionary<string, LastDownloadLocationInfo>))]
 [JsonSerializable(typeof(ModelPickerFilterState))]
 [JsonSerializable(typeof(Dictionary<string, ModelPickerFilterState>))]
+[JsonSerializable(typeof(ModelCategory))]
+[JsonSerializable(typeof(List<ModelCategory>))]
 [JsonSerializable(typeof(CivArchiveBrowserOptions))]
 internal partial class SettingsSerializerContext : JsonSerializerContext;

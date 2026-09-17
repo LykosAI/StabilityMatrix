@@ -273,7 +273,7 @@ public class ModelOrganizationService
             );
         }
 
-        if (!model.HasConnectedModel)
+        if (!model.HasMetadata)
         {
             return CreateSkippedItem(
                 model,

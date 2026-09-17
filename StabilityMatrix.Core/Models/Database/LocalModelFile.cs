@@ -1,4 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.CodeAnalysis;
 using LiteDB;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models.Api;
@@ -76,6 +76,12 @@ public record LocalModelFile
     public ConnectedModelInfo? ConnectedModelInfo { get; set; }
 
     /// <summary>
+    /// User-defined categories this model belongs to. Empty when none are set.
+    /// </summary>
+    [BsonIgnore]
+    public IReadOnlyList<string> Categories => ConnectedModelInfo?.User?.Categories ?? [];
+
+    /// <summary>
     /// Optional preview image relative path.
     /// </summary>
     public string? PreviewImageRelativePath { get; set; }
@@ -138,7 +144,7 @@ public record LocalModelFile
     [BsonIgnore]
     public bool IsSafetensorFile => Path.GetExtension(RelativePath) == ".safetensors";
 
-    public string? HashSha256 => ConnectedModelInfo?.Hashes.SHA256;
+    public string? HashSha256 => ConnectedModelInfo?.Hashes?.SHA256;
 
     [BsonIgnore]
     public string? PreviewImageFullPathGlobal =>
@@ -160,9 +166,20 @@ public record LocalModelFile
     [BsonIgnore]
     public string DisplayConfigFileName => Path.GetFileName(ConfigFullPath) ?? string.Empty;
 
+    /// <summary>
+    /// Whether any metadata sidecar exists, remote or user-authored. Drives what is displayed.
+    /// </summary>
     [BsonIgnore]
     [MemberNotNullWhen(true, nameof(ConnectedModelInfo))]
-    public bool HasConnectedModel => ConnectedModelInfo != null;
+    public bool HasMetadata => ConnectedModelInfo != null;
+
+    /// <summary>
+    /// Whether the model is linked to a remote source (see <see cref="ConnectedModelInfo.IsConnected"/>).
+    /// Drives update checks, source navigation and metadata scans.
+    /// </summary>
+    [BsonIgnore]
+    [MemberNotNullWhen(true, nameof(ConnectedModelInfo))]
+    public bool HasConnectedModel => ConnectedModelInfo is { IsConnected: true };
 
     [BsonIgnore]
     [MemberNotNullWhen(true, nameof(ConnectedModelInfo))]
@@ -210,11 +227,7 @@ public record LocalModelFile
             yield return filePath;
         }
 
-        if (
-            HasConnectedModel
-            && GetConnectedModelInfoFullPath(rootModelDirectory) is { } cmInfoPath
-            && File.Exists(cmInfoPath)
-        )
+        if (GetConnectedModelInfoFullPath(rootModelDirectory) is { } cmInfoPath && File.Exists(cmInfoPath))
         {
             yield return cmInfoPath;
         }

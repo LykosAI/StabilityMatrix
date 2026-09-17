@@ -1,4 +1,4 @@
-﻿<controls:UserControlBase
+<controls:UserControlBase
     x:Class="StabilityMatrix.Avalonia.Views.CheckpointsPage"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -605,7 +605,7 @@
                                     </LayoutTransformControl.LayoutTransform>
                                     <WrapPanel
                                         Margin="8,8,44,0"
-                                        IsVisible="{Binding CheckpointFile.HasConnectedModel}"
+                                        IsVisible="{Binding CheckpointFile.HasMetadata}"
                                         Orientation="Horizontal">
                                         <Border Classes="tag-chip">
                                             <TextBlock Text="{Binding ModelType}" />
@@ -685,7 +685,7 @@
                                                 HorizontalAlignment="Left"
                                                 FontSize="13"
                                                 Foreground="#A6FFFFFF"
-                                                IsVisible="{Binding CheckpointFile.HasConnectedModel}"
+                                                IsVisible="{Binding CheckpointFile.HasMetadata}"
                                                 Text="{Binding CheckpointFile.DisplayModelVersion, FallbackValue=''}"
                                                 TextWrapping="NoWrap" />
 

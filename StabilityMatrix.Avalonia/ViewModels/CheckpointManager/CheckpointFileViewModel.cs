@@ -1,4 +1,4 @@
-﻿using System.Collections.Immutable;
+using System.Collections.Immutable;
 using System.ComponentModel;
 using Avalonia.Controls.Notifications;
 using Avalonia.Data;
@@ -300,6 +300,10 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
             // integer ids), so clearing the ids alone wouldn't sever those — null means "custom".
             cmInfo.Source = null;
 
+            // Bulk metadata scans would otherwise re-attach the model on their next run
+            cmInfo.User ??= new UserModelMetadata();
+            cmInfo.User.ExcludeFromMetadataSearch = true;
+
             var modelFilePath = new FilePath(
                 Path.Combine(settingsManager.ModelsDirectory, CheckpointFile.RelativePath)
             );
@@ -418,14 +422,17 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
                     File.Move(previewPath, newPreviewImagePath);
                 }
 
-                // If connected model info exists, rename it too (<name>.cm-info.json)
-                if (CheckpointFile.HasConnectedModel)
+                // Rename the metadata sidecar too (<name>.cm-info.json)
+                var cmInfoPath = Path.Combine(
+                    parentPath,
+                    originalNameNoExt + ConnectedModelInfo.FileExtension
+                );
+                if (File.Exists(cmInfoPath))
                 {
-                    var cmInfoPath = Path.Combine(parentPath, $"{originalNameNoExt}.cm-info.json");
-                    if (File.Exists(cmInfoPath))
-                    {
-                        File.Move(cmInfoPath, Path.Combine(parentPath, $"{nameNoExt}.cm-info.json"));
-                    }
+                    File.Move(
+                        cmInfoPath,
+                        Path.Combine(parentPath, nameNoExt + ConnectedModelInfo.FileExtension)
+                    );
                 }
 
                 await modelIndexService.RefreshIndex();
@@ -508,7 +515,7 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
 
         try
         {
-            var hasCmInfoAlready = CheckpointFile.HasConnectedModel;
+            var hasCmInfoAlready = CheckpointFile.HasMetadata;
             var cmInfo = CheckpointFile.ConnectedModelInfo ?? new ConnectedModelInfo();
             var hasThumbnailChanged =
                 vm.ThumbnailFilePath

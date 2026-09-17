@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Globalization;
@@ -37,6 +37,7 @@ public partial class ModelIndexService : IModelIndexService
     private HashSet<string>? _modelIndexBlake3Hashes;
     private HashSet<string>? _modelIndexSha256Hashes;
     private HashSet<string>? _modelIndexCivArchiveUrls;
+    private HashSet<string>? _modelIndexCategories;
 
     /// <summary>
     /// Whether the database has been initially loaded.
@@ -61,6 +62,9 @@ public partial class ModelIndexService : IModelIndexService
 
     public IReadOnlySet<string> ModelIndexCivArchiveUrls =>
         _modelIndexCivArchiveUrls ??= CollectCivArchiveUrls(ModelIndex.Values.SelectMany(x => x));
+
+    public IReadOnlySet<string> ModelIndexCategories =>
+        _modelIndexCategories ??= CollectCategories(ModelIndex.Values.SelectMany(x => x));
 
     [AutoPostConstruct]
     private void Initialize()
@@ -841,11 +845,35 @@ public partial class ModelIndexService : IModelIndexService
         await LoadFromDbAsync().ConfigureAwait(false);
     }
 
+    /// <inheritdoc />
+    public async Task UpsertModelsAsync(IEnumerable<LocalModelFile> models)
+    {
+        var list = models as IReadOnlyCollection<LocalModelFile> ?? models.ToList();
+        if (list.Count == 0)
+        {
+            return;
+        }
+
+        await liteDbContext.LocalModelFiles.UpsertAsync(list).ConfigureAwait(false);
+        await LoadFromDbAsync().ConfigureAwait(false);
+    }
+
     private void OnModelIndexReset()
     {
         _modelIndexBlake3Hashes = null;
         _modelIndexSha256Hashes = null;
         _modelIndexCivArchiveUrls = null;
+        _modelIndexCategories = null;
+    }
+
+    private static HashSet<string> CollectCategories(IEnumerable<LocalModelFile> models)
+    {
+        var categories = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var model in models)
+        {
+            categories.UnionWith(model.Categories);
+        }
+        return categories;
     }
 
     private static HashSet<string> CollectModelHashes(IEnumerable<LocalModelFile> models)

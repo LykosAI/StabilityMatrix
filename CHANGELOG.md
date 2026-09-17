@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Fixed
 - Fixed Wan2GP (and AI Toolkit's SageAttention source build) crashing with `ModuleNotFoundError: No module named 'distutils'` on Python 3.12+ — forcing `SETUPTOOLS_USE_DISTUTILS=stdlib` unconditionally broke on versions where distutils was removed from the standard library entirely, it's now version-gated the same way AI Toolkit's own fix already was
 - Environment Variables configured in **Settings** now correctly override the workaround variables (like `SETUPTOOLS_USE_DISTUTILS`) that some packages set internally, instead of being silently overwritten every launch
+- Fixed moving a model between folders in the **Checkpoint Manager** leaving its preview image behind unless it was a `.jpeg` — png and webp previews (and every other sidecar) now travel with the model, same as the Organize feature
+- Fixed **Find Connected Metadata → Update Existing** wiping tags you had added yourself in the metadata editor — existing tags are now kept and merged with the refreshed ones
+- Models whose metadata you edited by hand (or disconnected) no longer disappear from **Find Connected Metadata** forever — a bulk scan now matches any model that isn't linked to a source, keeps the name and description you typed, and skips only models you explicitly disconnected. Right-click → Find Connected Metadata on a disconnected model re-links it on request
 
 ## v2.17.0-pre.1
 ### Added

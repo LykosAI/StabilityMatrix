@@ -98,13 +98,11 @@ public static class LinkSafeFileSystem
 
     /// <summary>
     /// Recursively enumerates files matching <paramref name="searchPattern"/> under
-    /// <paramref name="rootDir"/>. Linked directories are followed once; a link whose target has
-    /// already been scanned is skipped and logged at Info naming the earlier path. Real directories
-    /// are scanned before links so a link cannot shadow a real folder; a real directory that would
-    /// be scanned twice is skipped and logged at Warn. Directories deeper than
-    /// <paramref name="maxDepth"/> are skipped, as are inaccessible directories, which are skipped
-    /// rather than aborting the enumeration. Yielded paths are rooted at <paramref name="rootDir"/>
-    /// as given, not at its resolved target.
+    /// <paramref name="rootDir"/>. Symbolic links are followed, but every physical directory is
+    /// visited at most once, so no file is yielded twice. Directories nested deeper than
+    /// <paramref name="maxDepth"/> and directories that cannot be read are skipped without aborting
+    /// the enumeration. Yielded paths are rooted at <paramref name="rootDir"/> as given, not at its
+    /// resolved target.
     /// </summary>
     public static IEnumerable<string> EnumerateFiles(
         string rootDir,
@@ -113,28 +111,31 @@ public static class LinkSafeFileSystem
     )
     {
         // A real directory is keyed by its literal path, compared ordinally, so two folders whose
-        // names differ only in case are both scanned. A link is keyed by its resolved target,
-        // compared with the platform's case sensitivity (PathComparer), because a target is stored
-        // however the link was created.
+        // names differ only in case are both scanned; it is also matched against link targets, so a
+        // real folder reached through a link is not rescanned. A link is keyed by its resolved
+        // target, compared with the platform's case sensitivity (PathComparer), because a target is
+        // stored however the link was created.
         var visitedRealDirsExact = new Dictionary<string, string>(StringComparer.Ordinal);
         var visitedRealDirsForLinkTargets = new Dictionary<string, string>(PathComparer);
         var visitedLinkTargets = new Dictionary<string, string>(PathComparer);
 
         // Real directories are drained to completion before any link is considered, so a link can
         // never take the identity of a real folder and shadow it out of the scan.
-        var realDirs = new Stack<(string Path, string RealPath, int Depth, bool IsLink)>();
-        var linkedDirs = new Stack<(string Path, string RealPath, int Depth, bool IsLink)>();
+        var realDirs = new Stack<(string Path, string RealPath, int Depth)>();
+        var linkedDirs = new Stack<(string Path, string RealPath, int Depth)>();
 
         var rootReal = GetRealPath(rootDir);
-        realDirs.Push((rootDir, rootReal, 0, false));
+        realDirs.Push((rootDir, rootReal, 0));
 
         while (realDirs.Count > 0 || linkedDirs.Count > 0)
         {
-            var dir = realDirs.Count > 0 ? realDirs.Pop() : linkedDirs.Pop();
+            // Which stack the entry came from is how the walk knows whether it is a link.
+            var fromRealDirs = realDirs.Count > 0;
+            var dir = fromRealDirs ? realDirs.Pop() : linkedDirs.Pop();
 
             // Claimed on pop, not on push, so the walk order decides which spelling owns the
             // identity instead of the reversed push order.
-            if (dir.IsLink)
+            if (!fromRealDirs)
             {
                 if (
                     visitedLinkTargets.TryGetValue(dir.RealPath, out var linkClaimer)
@@ -153,7 +154,10 @@ public static class LinkSafeFileSystem
             }
             else
             {
-                if (visitedRealDirsExact.TryGetValue(dir.RealPath, out var realClaimer))
+                if (
+                    visitedRealDirsExact.TryGetValue(dir.RealPath, out var realClaimer)
+                    || visitedLinkTargets.TryGetValue(dir.RealPath, out realClaimer)
+                )
                 {
                     Logger.Warn(
                         "Skipping {Path}: the same directory was already scanned as {ClaimedBy}",
@@ -208,11 +212,11 @@ public static class LinkSafeFileSystem
 
                 if (isLinkDir)
                 {
-                    linkedDirs.Push((subDir.FullName, subReal, dir.Depth + 1, true));
+                    linkedDirs.Push((subDir.FullName, subReal, dir.Depth + 1));
                 }
                 else
                 {
-                    realDirs.Push((subDir.FullName, subReal, dir.Depth + 1, false));
+                    realDirs.Push((subDir.FullName, subReal, dir.Depth + 1));
                 }
             }
         }

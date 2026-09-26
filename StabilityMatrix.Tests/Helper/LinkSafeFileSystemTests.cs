@@ -101,6 +101,71 @@ public class LinkSafeFileSystemTests
     }
 
     [DataTestMethod]
+    [DataRow(true)]
+    [DataRow(false)]
+    public void EnumerateFiles_RealDirAlreadyClaimedAsLinkTarget_IsVisitedOnce(bool xyLinkIsDeeper)
+    {
+        // ext/X/Y/y.json is reachable two ways: through a link to ext/X/Y, and as a real subfolder
+        // of a link to ext/X. Sibling enumeration order is file-system dependent, so nesting the
+        // links at different depths pins the walk order instead of relying on names: the deeper
+        // link is always popped first (draining real dirs first pushes it last, and the link stack
+        // pops last-in first-out).
+        var root = CreateDir("root");
+        var sub = CreateDir("root", "sub");
+        CreateFile("ext", "X", "Y", "y.json");
+
+        var x = Path.Combine(tempDir, "ext", "X");
+        var xy = Path.Combine(x, "Y");
+
+        // Deep link -> ext/X/Y, shallow link -> ext/X. When the deep link is the one targeting
+        // ext/X/Y, it is walked first and the shallower ext/X link then reaches that same real
+        // folder again through its "Y" child.
+        var xyLink = Path.Combine(xyLinkIsDeeper ? sub : root, "inner");
+        var xLink = Path.Combine(xyLinkIsDeeper ? root : sub, "outer");
+        TempFiles.CreateDirectoryLink(xyLink, xy);
+        TempFiles.CreateDirectoryLink(xLink, x);
+
+        var files = LinkSafeFileSystem.EnumerateFiles(root, "*.json").ToList();
+
+        Assert.AreEqual(1, files.Count, $"Expected one file, got: {string.Join(", ", files)}");
+    }
+
+    [DataTestMethod]
+    [DataRow("a_inner", "b_outer")]
+    [DataRow("b_inner", "a_outer")]
+    public void EnumerateFiles_NestedLinkTarget_SiblingLinkOrder_IsVisitedOnce(
+        string innerName,
+        string outerName
+    )
+    {
+        if (!Compat.IsWindows)
+        {
+            Assert.Inconclusive(
+                "Needs NTFS, which enumerates sibling directories in stored name order; "
+                    + "EnumerateFiles_RealDirAlreadyClaimedAsLinkTarget_IsVisitedOnce covers the same "
+                    + "bug portably by varying depth instead."
+            );
+            return;
+        }
+
+        // The maintainer's original repro: innerName -> ext/X/Y, outerName -> ext/X, so the inner
+        // link's target is also reached as a real subfolder of the outer link. NTFS yields siblings
+        // in name order, so the two rows walk the links in opposite orders.
+        var root = CreateDir("root");
+        CreateFile("ext", "X", "Y", "y.json");
+
+        var x = Path.Combine(tempDir, "ext", "X");
+        var xy = Path.Combine(x, "Y");
+
+        TempFiles.CreateDirectoryLink(Path.Combine(root, innerName), xy);
+        TempFiles.CreateDirectoryLink(Path.Combine(root, outerName), x);
+
+        var files = LinkSafeFileSystem.EnumerateFiles(root, "*.json").ToList();
+
+        Assert.AreEqual(1, files.Count, $"Expected one file, got: {string.Join(", ", files)}");
+    }
+
+    [DataTestMethod]
     [DataRow("diffusion_models")]
     [DataRow("sub", "alias")]
     public void EnumerateFiles_RealFolderShadowedByLink_KeepsRealFolderPaths(params string[] linkSegments)

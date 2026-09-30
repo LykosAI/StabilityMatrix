@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 
 ## v2.16.4
 ### Added
+<<<<<<< HEAD
+=======
+- **Model categories** in the Checkpoint Manager — tag any model (LoRAs, checkpoints, anything) with as many custom categories as you like, e.g. *Character*, *Style*, *Concept*. Categories show as coloured chips on the cards, filter from the new **Categories** section in the sidebar (or with `@name` in the search box), and can be assigned in bulk: select models and use **Categories** in the selection bar, right-click → **Set Categories**, or drop cards onto a category. Stored in the model's existing `.cm-info.json`, so they survive moves, renames, folder copies and metadata refreshes — the most requested item on the feature tracker
+- Categories reach **Inference** too: the model picker dialog gets a **Categories** filter row and shows each model's category chips, and typing a category name filters any model dropdown as well as the `<lora:` prompt autocomplete
+### Fixed
+- Fixed ComfyUI installation and updates failing on Python 3.13+ because the NumPy 1.x constraint has no compatible wheel ([#1754](https://github.com/LykosAI/StabilityMatrix/issues/1754))
+- Fixed Wan2GP (and AI Toolkit's SageAttention source build) crashing with `ModuleNotFoundError: No module named 'distutils'` on Python 3.12+ — forcing `SETUPTOOLS_USE_DISTUTILS=stdlib` unconditionally broke on versions where distutils was removed from the standard library entirely, it's now version-gated the same way AI Toolkit's own fix already was
+- Environment Variables configured in **Settings** now correctly override the workaround variables (like `SETUPTOOLS_USE_DISTUTILS`) that some packages set internally, instead of being silently overwritten every launch
+- Fixed moving a model between folders in the **Checkpoint Manager** leaving its preview image behind unless it was a `.jpeg` — png and webp previews (and every other sidecar) now travel with the model, same as the Organize feature
+- Fixed **Find Connected Metadata → Update Existing** wiping tags you had added yourself in the metadata editor — existing tags are now kept and merged with the refreshed ones
+- Models whose metadata you edited by hand (or disconnected) no longer disappear from **Find Connected Metadata** forever — a bulk scan now matches any model that isn't linked to a source, keeps the name and description you typed, and skips only models you explicitly disconnected. Right-click → Find Connected Metadata on a disconnected model re-links it on request
+
+## v2.17.0-pre.1
+### Added
+#### New Feature: 🎬 MiniMax H3 Video in Inference
+- Generate video **with native stereo audio** using **MiniMax H3** in the **Text to Video** and **Image to Video** tabs — up to ~15 seconds at 24 fps, from a prompt or a starting frame (needs ComfyUI 0.33 or newer)
+- Pick an H3 model and the tab sets itself up: ✨ recommended settings, one-click downloads for the official text encoder and video/audio VAEs, and GGUF models work too. Set an **Audio VAE** on the model card to get the soundtrack in your mp4, or leave it empty for video only
+- Videos generated in Inference (MiniMax H3 and Wan mp4s) now **play inside the app** — in the Inference gallery, the Outputs page, and the image viewer — instead of launching the system player. The in-app preview is muted; an *Open in external player* button on the video gets you the audio
+- The Inference outputs strip now lists videos too, with a poster frame and a play badge
+- The video model card now spots a few-step **Lightning / turbo LoRA** running at a CFG above 1 and offers a one-click switch to matching settings
+>>>>>>> fb5128ed (Merge pull request #1407 from ionite34/fix/comfy-python313-numpy)
 - Added **Comfy Kitchen Attention** (`--use-ck-attention`) as a **Cross Attention Method** launch option for ComfyUI and ComfyUI-Zluda - thanks to @e-nord!
 ### Changed
 - **Windows ROCm** PyTorch installs now come from AMD's new permanent ROCm 10 package repositories, avoiding the `CUDA error: invalid argument` / `hipErrorInvalidValue` failures reported with the ROCm 7.14.1 builds — packages already on 7.14.1 need a reinstall, or an update that also upgrades PyTorch (like ComfyUI's) - thanks to @NeuralFault!

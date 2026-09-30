@@ -1,10 +1,13 @@
 using DynamicData.Binding;
 using NSubstitute;
+using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
 using StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
+using StabilityMatrix.Core.Models.Api.Comfy.NodeTypes;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Services;
@@ -62,6 +65,29 @@ public class VideoModelCardLightningPromptTests
             }
         );
         return module;
+    }
+
+    [TestMethod]
+    public void LoraModules_OnlyEnabledAndSelectedModelsReachOutputFilename()
+    {
+        var (_, _, factory) = Create();
+        var builder = new ComfyNodeBuilder();
+        builder.Connections.Base.Model = new ModelNodeConnection { Data = ["Checkpoint", 0] };
+        builder.Connections.Base.Clip = new ClipNodeConnection { Data = ["Checkpoint", 1] };
+        var enabled = EnabledLora(factory, "Lora/sub/style.safetensors");
+        var disabled = EnabledLora(factory, "Lora/disabled.safetensors");
+        disabled.IsEnabled = false;
+        var unselected = factory.Get<LoraModule>();
+        unselected.IsEnabled = true;
+        var args = new ModuleApplyStepEventArgs { Builder = builder };
+        enabled.ApplyStep(args);
+        disabled.ApplyStep(args);
+        unselected.ApplyStep(args);
+        var provider = new FileNameFormatProvider
+        {
+            GenerationLoras = GenerationLoraSnapshot.FromNodes(builder.Nodes.Values),
+        };
+        Assert.AreEqual("style", FileNameFormat.Parse("{lora_name}", provider).GetFileName());
     }
 
     /// <summary>JT's psychedelic-wolf setup: 4-step Seko LoRA enabled while CFG is 5.</summary>

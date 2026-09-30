@@ -174,13 +174,13 @@ public partial class InferenceSettingsViewModel : PageViewModelBase
                 )
                 {
                     var format = FileNameFormat.Parse(template, provider);
-                    OutputImageFileNameFormatSample = format.GetFileName() + ".png";
+                    OutputImageFileNameFormatSample = format.GetOutputFileName("png");
                 }
                 else
                 {
                     // Use default format if empty
                     var defaultFormat = FileNameFormat.Parse(FileNameFormat.DefaultTemplate, provider);
-                    OutputImageFileNameFormatSample = defaultFormat.GetFileName() + ".png";
+                    OutputImageFileNameFormatSample = defaultFormat.GetOutputFileName("png");
                 }
             });
 

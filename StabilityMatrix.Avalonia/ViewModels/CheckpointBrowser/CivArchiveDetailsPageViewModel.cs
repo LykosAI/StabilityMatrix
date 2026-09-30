@@ -54,6 +54,7 @@ public partial class CivArchiveDetailsPageViewModel(
         "seed",
         "prompt",
         "negative_prompt",
+        "lora_name",
         "model_hash",
         "sampler",
         "cfgscale",

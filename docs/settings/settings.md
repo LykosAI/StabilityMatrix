@@ -45,8 +45,12 @@ Inference settings control the behavior of Stability Matrix's built-in image gen
 | **Filter Extra Networks by Base Model** | When enabled, LoRA and extra network model lists are filtered to only show models compatible with the currently selected base model (e.g., SDXL LoRAs when SDXL is selected). |
 | **Image Viewer — Show pixel grid at high zoom** | When enabled, a pixel grid overlay appears when zooming into generated images. |
 | **Image Viewer — Move files to Recycle Bin** | When enabled, deleted images go to the system Recycle Bin / Trash instead of being permanently erased. Only shown on platforms where Recycle Bin is available. |
-| **Output Image Files — File name pattern** | A format string for naming saved output images, using variables like `{model_name}` and `{seed}`. Clicking the text field shows all available variables. Default: `{model_name}_{seed}_{width}x{height}`. |
+| **Output Image Files — File name pattern** | A format string for naming saved output images, using variables like `{model_name}`, `{lora_name}`, and `{seed}`. Clicking the text field shows all available variables and examples. Default: `{date}_{time}-{model_name}-{seed}`. |
 | **Floating Search** | When enabled, all combo boxes use floating search mode where typed text appears as an overlay and auto-selects the first match. |
+
+`{lora_name}` uses the LoRA filenames without folders or extensions, from both prompt syntax and enabled LoRA modules in the submitted generation. Names are sorted in ordinal order, duplicates are removed, and multiple names are joined with underscores, for example `character_style`. Invalid filename characters become underscores. Generations without LoRAs use `no_lora`. Queued generations use their captured LoRAs, even if you later change the tab. For example, `{model_name}-{lora_name}-{seed}` produces `checkpoint-character_style-123.png`.
+
+Long output filenames are shortened automatically with a hash of the complete stem so different LoRA combinations remain distinguishable. The final filename fits within 255 UTF-8 bytes, including the extension and batch or collision suffixes. Short filenames keep their existing spelling.
 
 #### Dimensions
 

@@ -9,6 +9,7 @@ using Avalonia.Data;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
+using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.Inference;
 
@@ -17,6 +18,8 @@ namespace StabilityMatrix.Avalonia.Models.Inference;
 public partial class FileNameFormatProvider
 {
     public GenerationParameters? GenerationParameters { get; init; }
+
+    public GenerationLoraSnapshot GenerationLoras { get; init; } = GenerationLoraSnapshot.Empty;
 
     public InferenceProjectType? ProjectType { get; init; }
 
@@ -53,6 +56,7 @@ public partial class FileNameFormatProvider
             { "seed", () => GenerationParameters?.Seed.ToString() },
             { "prompt", () => GenerationParameters?.PositivePrompt },
             { "negative_prompt", () => GenerationParameters?.NegativePrompt },
+            { "lora_name", () => GenerationLoras.FileNameValue },
             {
                 "model_name",
                 () =>
@@ -231,6 +235,18 @@ public partial class FileNameFormatProvider
         return new FileNameFormatProvider
         {
             GenerationParameters = GenerationParameters.GetSample(),
+            GenerationLoras = GenerationLoraSnapshot.FromNodes(
+                [
+                    new ComfyNode
+                    {
+                        ClassType = "LoraLoader",
+                        Inputs = new Dictionary<string, object?>
+                        {
+                            ["lora_name"] = "sample_lora.safetensors",
+                        },
+                    },
+                ]
+            ),
             ProjectType = InferenceProjectType.TextToImage,
             ProjectName = "Sample Project",
         };

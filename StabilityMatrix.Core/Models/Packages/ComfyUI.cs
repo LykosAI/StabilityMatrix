@@ -225,6 +225,16 @@ public class ComfyUI(
                     TargetRelativePaths = ["models/background_removal"],
                     ConfigDocumentPaths = ["background_removal"],
                 },
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.FrameInterpolation],
+                    ConfigDocumentPaths = ["frame_interpolation"],
+                },
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.GeometryEstimation],
+                    ConfigDocumentPaths = ["geometry_estimation"],
+                },
             ],
         };
 
@@ -238,10 +248,16 @@ public class ComfyUI(
     {
         if (sharedFolderMethod is SharedFolderMethod.Configuration)
         {
-            new DirectoryPath(
-                settingsManager.ModelsDirectory,
-                SharedFolderType.LatentUpscaleModels.GetStringValue()
-            ).Create();
+            SharedFolderType[] folderTypes =
+            [
+                SharedFolderType.LatentUpscaleModels,
+                SharedFolderType.FrameInterpolation,
+                SharedFolderType.GeometryEstimation,
+            ];
+            foreach (var folderType in folderTypes)
+            {
+                new DirectoryPath(settingsManager.ModelsDirectory, folderType.GetStringValue()).Create();
+            }
         }
 
         await base.SetupModelFolders(installDirectory, sharedFolderMethod).ConfigureAwait(false);

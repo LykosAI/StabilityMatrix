@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 
 ## v2.16.5
 ### Fixed
+- Fixed release-note text being cut off beside the scrollbar in the update dialog ([#1757](https://github.com/LykosAI/StabilityMatrix/issues/1757))
 - Fixed ComfyUI installation and updates failing on Python 3.13+ because the NumPy 1.x constraint has no compatible wheel ([#1754](https://github.com/LykosAI/StabilityMatrix/issues/1754))
 
 ## v2.16.4

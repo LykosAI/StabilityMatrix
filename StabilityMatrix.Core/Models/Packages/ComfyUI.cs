@@ -148,6 +148,11 @@ public class ComfyUI(
                     TargetRelativePaths = ["models/hypernetworks"],
                     ConfigDocumentPaths = ["hypernetworks"],
                 },
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.LatentUpscaleModels],
+                    ConfigDocumentPaths = ["latent_upscale_models"],
+                },
                 new SharedFolderLayoutRule // IP-Adapter Base, SD1.5, SDXL
                 {
                     SourceTypes =
@@ -245,6 +250,7 @@ public class ComfyUI(
         {
             SharedFolderType[] folderTypes =
             [
+                SharedFolderType.LatentUpscaleModels,
                 SharedFolderType.FrameInterpolation,
                 SharedFolderType.GeometryEstimation,
             ];

@@ -23,38 +23,18 @@ public class YamlConfigSharingStrategy : IConfigSharingStrategy
 
         if (!isEmpty)
         {
-            try
+            using var reader = new StreamReader(configStream, leaveOpen: true);
+            yamlStream.Load(reader); // Load existing YAML
+            if (yamlStream.Documents.Count > 0 && yamlStream.Documents[0].RootNode is YamlMappingNode mapping)
             {
-                using var reader = new StreamReader(configStream, leaveOpen: true);
-                yamlStream.Load(reader); // Load existing YAML
-                if (
-                    yamlStream.Documents.Count > 0
-                    && yamlStream.Documents[0].RootNode is YamlMappingNode mapping
-                )
-                {
-                    rootNode = mapping;
-                }
-                else
-                {
-                    // File exists but isn't a valid mapping node at the root, start fresh
-                    System.Diagnostics.Debug.WriteLine(
-                        $"YAML config exists but is not a mapping node. Treating as new."
-                    );
-                    rootNode = [];
-                    yamlStream = new YamlStream(new YamlDocument(rootNode)); // Reset stream content
-                    isEmpty = true;
-                }
+                rootNode = mapping;
             }
-            catch (YamlException ex)
+            else
             {
-                // Handle cases where the file might exist but be invalid YAML
-                System.Diagnostics.Debug.WriteLine(
-                    $"Error deserializing YAML config: {ex.Message}. Treating as new."
-                );
-                rootNode = [];
-                yamlStream = new YamlStream(new YamlDocument(rootNode)); // Reset stream content
-                isEmpty = true;
+                throw new YamlException("The model paths configuration must contain a YAML mapping.");
             }
+            if (yamlStream.Documents.Count != 1)
+                throw new YamlException("The model paths configuration must contain one YAML document.");
         }
         else
         {
@@ -107,7 +87,7 @@ public class YamlConfigSharingStrategy : IConfigSharingStrategy
             )
             {
                 if (subNode != null)
-                    rootNode.Children.Remove(rootKeyNode); // Remove if exists but wrong type
+                    throw new YamlException("The shared model paths section must contain a YAML mapping.");
                 subMapping = [];
                 rootNode.Add(rootKeyNode, subMapping);
             }

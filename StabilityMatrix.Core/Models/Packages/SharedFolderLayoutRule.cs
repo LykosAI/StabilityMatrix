@@ -26,7 +26,7 @@ public readonly record struct SharedFolderLayoutRule()
             TargetRelativePaths = TargetRelativePaths.Union(other.TargetRelativePaths).ToArray(),
             ConfigDocumentPaths = ConfigDocumentPaths.Union(other.ConfigDocumentPaths).ToArray(),
             IsRoot = IsRoot || other.IsRoot,
-            SourceSubPath = SourceSubPath ?? other.SourceSubPath
+            SourceSubPath = SourceSubPath ?? other.SourceSubPath,
         };
     }
 }

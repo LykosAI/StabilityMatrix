@@ -50,6 +50,8 @@ Inference settings control the behavior of Stability Matrix's built-in image gen
 
 `{lora_name}` uses the LoRA filenames without folders or extensions, from both prompt syntax and enabled LoRA modules in the submitted generation. Names are sorted in ordinal order, duplicates are removed, and multiple names are joined with underscores, for example `character_style`. Invalid filename characters become underscores. Generations without LoRAs use `no_lora`. Queued generations use their captured LoRAs, even if you later change the tab. For example, `{model_name}-{lora_name}-{seed}` produces `checkpoint-character_style-123.png`.
 
+Long output filenames are shortened automatically with a hash of the complete stem so different LoRA combinations remain distinguishable. The final filename fits within 255 UTF-8 bytes, including the extension and batch or collision suffixes. Short filenames keep their existing spelling.
+
 #### Dimensions
 
 | Setting | Description |

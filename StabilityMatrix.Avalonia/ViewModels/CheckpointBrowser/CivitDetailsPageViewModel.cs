@@ -98,6 +98,7 @@ public partial class CivitDetailsPageViewModel(
         "seed",
         "prompt",
         "negative_prompt",
+        "lora_name",
         "model_hash",
         "sampler",
         "cfgscale",

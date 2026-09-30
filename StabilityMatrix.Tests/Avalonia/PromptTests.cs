@@ -4,7 +4,12 @@ using NSubstitute;
 using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Models.TagCompletion;
+using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
+using StabilityMatrix.Core.Models.Api.Comfy.NodeTypes;
+using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.Tokens;
+using StabilityMatrix.Core.Services;
 using TextMateSharp.Grammars;
 using TextMateSharp.Registry;
 
@@ -78,6 +83,45 @@ public class PromptTests
         Assert.AreEqual(1.5f, network.ModelWeight);
     }
 
+    [TestMethod]
+    public void PromptLoras_ReachOutputFilename_UsingResolvedLocalFiles()
+    {
+        var prompt = Prompt.FromRawText("cat <lora:style:0.8> <lora:character:1>", tokenizerProvider);
+        prompt.Process();
+        var index = Substitute.For<IModelIndexService>();
+        index.ModelIndex.Returns(
+            new Dictionary<SharedFolderType, List<LocalModelFile>>
+            {
+                [SharedFolderType.Lora] =
+                [
+                    new LocalModelFile
+                    {
+                        RelativePath = "Lora/sub/style.safetensors",
+                        SharedFolderType = SharedFolderType.Lora,
+                    },
+                    new LocalModelFile
+                    {
+                        RelativePath = "Lora/character.safetensors",
+                        SharedFolderType = SharedFolderType.Lora,
+                    },
+                ],
+            }
+        );
+        var builder = new ComfyNodeBuilder();
+        builder.Group_LoraLoadMany(
+            "Prompt",
+            new ModelNodeConnection { Data = ["Checkpoint", 0] },
+            new ClipNodeConnection { Data = ["Checkpoint", 1] },
+            prompt.GetExtraNetworksAsLocalModels(index)
+        );
+        var provider = new FileNameFormatProvider
+        {
+            GenerationLoras = GenerationLoraSnapshot.FromNodes(builder.Nodes.Values),
+        };
+        Assert.AreEqual("cat  ", prompt.ProcessedText);
+        Assert.AreEqual("character_style", FileNameFormat.Parse("{lora_name}", provider).GetFileName());
+    }
+
     private static T? ExecuteWithCulture<T>(Func<T> func, CultureInfo culture)
     {
         var result = default(T);
@@ -87,7 +131,7 @@ public class PromptTests
             result = func();
         })
         {
-            CurrentCulture = culture
+            CurrentCulture = culture,
         };
 
         thread.Start();
@@ -103,7 +147,7 @@ public class PromptTests
             func();
         })
         {
-            CurrentCulture = culture
+            CurrentCulture = culture,
         };
 
         thread.Start();

@@ -150,6 +150,7 @@ public abstract partial class InferenceGenerationViewModelBase
         var formatProvider = new FileNameFormatProvider
         {
             GenerationParameters = args.Parameters,
+            GenerationLoras = args.GenerationLoras,
             ProjectType = args.Project?.ProjectType,
             ProjectName = ProjectFile?.NameWithoutExtension,
         };
@@ -991,8 +992,20 @@ public abstract partial class InferenceGenerationViewModelBase
 
     public class ImageGenerationEventArgs : EventArgs
     {
+        private NodeDictionary nodes = null!;
+
         public required ComfyClient Client { get; init; }
-        public required NodeDictionary Nodes { get; init; }
+        public required NodeDictionary Nodes
+        {
+            get => nodes;
+            init
+            {
+                nodes = value;
+                GenerationLoras = GenerationLoraSnapshot.FromNodes(value.Values);
+            }
+        }
+
+        public GenerationLoraSnapshot GenerationLoras { get; private set; } = GenerationLoraSnapshot.Empty;
         public required IReadOnlyList<string> OutputNodeNames { get; init; }
         public int BatchIndex { get; init; }
         public GenerationParameters? Parameters { get; init; }

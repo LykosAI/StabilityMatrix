@@ -150,6 +150,7 @@ public abstract partial class InferenceGenerationViewModelBase
         var formatProvider = new FileNameFormatProvider
         {
             GenerationParameters = args.Parameters,
+            GenerationLoras = args.GenerationLoras,
             ProjectType = args.Project?.ProjectType,
             ProjectName = ProjectFile?.NameWithoutExtension,
         };
@@ -179,8 +180,8 @@ public abstract partial class InferenceGenerationViewModelBase
             format = format.WithBatchPostFix(batchNum, batchTotal);
         }
 
-        var fileName = format.GetFileName();
-        var file = outputDir.JoinFile($"{fileName}.{fileExtension}");
+        format = format.WithResolvedVariables();
+        var file = outputDir.JoinFile(format.GetOutputFileName(fileExtension));
 
         // Until the file is free, keep adding _{i} to the end
         for (var i = 0; i < 100; i++)
@@ -188,14 +189,14 @@ public abstract partial class InferenceGenerationViewModelBase
             if (!file.Exists)
                 break;
 
-            file = outputDir.JoinFile($"{fileName}_{i + 1}.{fileExtension}");
+            file = outputDir.JoinFile(format.GetOutputFileName(fileExtension, $"_{i + 1}"));
         }
 
         // If that fails, append an 7-char uuid
         if (file.Exists)
         {
             var uuid = Guid.NewGuid().ToString("N")[..7];
-            file = outputDir.JoinFile($"{fileName}_{uuid}.{fileExtension}");
+            file = outputDir.JoinFile(format.GetOutputFileName(fileExtension, $"_{uuid}"));
         }
 
         if (file.Info.DirectoryName != null)
@@ -991,8 +992,20 @@ public abstract partial class InferenceGenerationViewModelBase
 
     public class ImageGenerationEventArgs : EventArgs
     {
+        private NodeDictionary nodes = null!;
+
         public required ComfyClient Client { get; init; }
-        public required NodeDictionary Nodes { get; init; }
+        public required NodeDictionary Nodes
+        {
+            get => nodes;
+            init
+            {
+                nodes = value;
+                GenerationLoras = GenerationLoraSnapshot.FromNodes(value.Values);
+            }
+        }
+
+        public GenerationLoraSnapshot GenerationLoras { get; private set; } = GenerationLoraSnapshot.Empty;
         public required IReadOnlyList<string> OutputNodeNames { get; init; }
         public int BatchIndex { get; init; }
         public GenerationParameters? Parameters { get; init; }

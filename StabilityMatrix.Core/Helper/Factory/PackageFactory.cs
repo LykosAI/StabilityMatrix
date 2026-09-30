@@ -278,6 +278,14 @@ public class PackageFactory : IPackageFactory
                 pyInstallationManager,
                 pipWheelService
             ),
+            "Fizgig" => new Fizgig(
+                githubApiCache,
+                settingsManager,
+                downloadService,
+                prerequisiteHelper,
+                pyInstallationManager,
+                pipWheelService
+            ),
             "ai-toolkit" => new AiToolkit(
                 githubApiCache,
                 settingsManager,

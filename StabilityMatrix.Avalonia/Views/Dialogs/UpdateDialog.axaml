@@ -84,7 +84,7 @@
                 Margin="32,16"
                 Background="{DynamicResource ButtonBackgroundPressed}"
                 CornerRadius="8">
-                <controls:BetterMarkdownScrollViewer Margin="16" Markdown="{Binding ReleaseNotes, Mode=OneWay}" />
+                <controls:ReleaseNotesMarkdownViewer Margin="16" Markdown="{Binding ReleaseNotes, Mode=OneWay}" />
             </Border>
         </Grid>
 

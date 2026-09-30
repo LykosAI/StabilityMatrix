@@ -148,6 +148,12 @@ public class ComfyUI(
                     TargetRelativePaths = ["models/hypernetworks"],
                     ConfigDocumentPaths = ["hypernetworks"],
                 },
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.LatentUpscaleModels],
+                    ConfigDocumentPaths = ["latent_upscale_models"],
+                    PreserveExistingConfigPaths = true,
+                },
                 new SharedFolderLayoutRule // IP-Adapter Base, SD1.5, SDXL
                 {
                     SourceTypes =
@@ -231,6 +237,14 @@ public class ComfyUI(
         SharedFolderMethod sharedFolderMethod
     )
     {
+        if (sharedFolderMethod is SharedFolderMethod.Configuration)
+        {
+            new DirectoryPath(
+                settingsManager.ModelsDirectory,
+                SharedFolderType.LatentUpscaleModels.GetStringValue()
+            ).Create();
+        }
+
         await base.SetupModelFolders(installDirectory, sharedFolderMethod).ConfigureAwait(false);
 
         if (sharedFolderMethod is SharedFolderMethod.None)

@@ -521,17 +521,7 @@ public class ComfyUI(
         }
         else
         {
-            var config = new PipInstallConfig
-            {
-                RequirementsFilePaths = ["requirements.txt"],
-                ExtraPipArgs = ["numpy<2"],
-                TorchaudioVersion = " ", // Request torchaudio without a specific version
-                CudaIndex = isLegacyNvidia ? "cu126" : "cu130",
-                RocmIndex = "rocm7.2",
-                XpuIndex = "xpu",
-                UpgradePackages = true,
-                PostInstallPipArgs = ["typing-extensions>=4.15.0"],
-            };
+            var config = GetStandardInstallConfig(venvRunner.Version, isLegacyNvidia);
 
             await StandardPipInstallProcessAsync(
                     venvRunner,
@@ -620,6 +610,22 @@ public class ComfyUI(
         }
 
         progress?.Report(new ProgressReport(1, "Install complete", isIndeterminate: false));
+    }
+
+    internal PipInstallConfig GetStandardInstallConfig(PyVersion pythonVersion, bool isLegacyNvidia)
+    {
+        return new PipInstallConfig
+        {
+            RequirementsFilePaths = ["requirements.txt"],
+            // NumPy 1.x supports Python through 3.12; older torch builds need its ABI.
+            ExtraPipArgs = pythonVersion < new PyVersion(3, 13, 0) ? ["numpy<2"] : [],
+            TorchaudioVersion = " ", // Request torchaudio without a specific version
+            CudaIndex = isLegacyNvidia ? "cu126" : "cu130",
+            RocmIndex = "rocm7.2",
+            XpuIndex = "xpu",
+            UpgradePackages = true,
+            PostInstallPipArgs = ["typing-extensions>=4.15.0"],
+        };
     }
 
     public override async Task RunPackage(

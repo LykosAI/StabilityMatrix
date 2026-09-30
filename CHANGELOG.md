@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Categories reach **Inference** too: the model picker dialog gets a **Categories** filter row and shows each model's category chips, and typing a category name filters any model dropdown as well as the `<lora:` prompt autocomplete
 ### Fixed
 - Fixed release-note text being cut off beside the scrollbar in the update dialog ([#1757](https://github.com/LykosAI/StabilityMatrix/issues/1757))
+- Fixed ComfyUI installation and updates failing on Python 3.13+ because the NumPy 1.x constraint has no compatible wheel ([#1754](https://github.com/LykosAI/StabilityMatrix/issues/1754))
 - Fixed Wan2GP (and AI Toolkit's SageAttention source build) crashing with `ModuleNotFoundError: No module named 'distutils'` on Python 3.12+ — forcing `SETUPTOOLS_USE_DISTUTILS=stdlib` unconditionally broke on versions where distutils was removed from the standard library entirely, it's now version-gated the same way AI Toolkit's own fix already was
 - Environment Variables configured in **Settings** now correctly override the workaround variables (like `SETUPTOOLS_USE_DISTUTILS`) that some packages set internally, instead of being silently overwritten every launch
 - Fixed moving a model between folders in the **Checkpoint Manager** leaving its preview image behind unless it was a `.jpeg` — png and webp previews (and every other sidecar) now travel with the model, same as the Organize feature

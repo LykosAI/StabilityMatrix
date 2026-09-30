@@ -18,11 +18,6 @@ public readonly record struct SharedFolderLayoutRule()
     /// </summary>
     public string? SourceSubPath { get; init; }
 
-    /// <summary>
-    /// Retains existing YAML search paths when adding shared paths to this rule.
-    /// </summary>
-    public bool PreserveExistingConfigPaths { get; init; }
-
     public SharedFolderLayoutRule Union(SharedFolderLayoutRule other)
     {
         return this with
@@ -32,7 +27,6 @@ public readonly record struct SharedFolderLayoutRule()
             ConfigDocumentPaths = ConfigDocumentPaths.Union(other.ConfigDocumentPaths).ToArray(),
             IsRoot = IsRoot || other.IsRoot,
             SourceSubPath = SourceSubPath ?? other.SourceSubPath,
-            PreserveExistingConfigPaths = PreserveExistingConfigPaths || other.PreserveExistingConfigPaths,
         };
     }
 }

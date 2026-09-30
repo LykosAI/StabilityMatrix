@@ -20,6 +20,7 @@ public class ComfyUISharedModelPathsTests
     private string modelsDir = null!;
     private DirectoryPath installDir = null!;
     private ComfyUI comfy = null!;
+    private ISettingsManager settings = null!;
     private string ConfigPath => installDir.JoinFile("extra_model_paths.yaml").FullPath;
     private string LatentDir => Path.Combine(modelsDir, "LatentUpscaleModels");
 
@@ -30,7 +31,7 @@ public class ComfyUISharedModelPathsTests
         modelsDir = Path.Combine(tempDir, "Models with spaces 日本語");
         installDir = new DirectoryPath(tempDir, "Packages", "ComfyUI");
         installDir.Create();
-        var settings = Substitute.For<ISettingsManager>();
+        settings = Substitute.For<ISettingsManager>();
         settings.ModelsDirectory.Returns(modelsDir);
         settings.WorkflowDirectory.Returns(new DirectoryPath(tempDir, "Workflows"));
         comfy = new ComfyUI(
@@ -108,7 +109,7 @@ public class ComfyUISharedModelPathsTests
         Assert.AreEqual("custom/latent", Scalar(ReadSection("personal"), "latent_upscale_models"));
         Assert.AreEqual("custom/diffusion", Scalar(ReadSection("personal"), "unet"));
         var paths = ReadSection("stability_matrix");
-        Assert.AreEqual($"/manual/latent\n{Normalize(LatentDir)}", Scalar(paths, "latent_upscale_models"));
+        Assert.AreEqual(Normalize(LatentDir), Scalar(paths, "latent_upscale_models"));
         Assert.AreEqual("/manual/custom", Scalar(paths, "private_category"));
         Assert.AreEqual("/manual/encoders", Scalar(paths, "text_encoders"));
     }
@@ -128,6 +129,47 @@ public class ComfyUISharedModelPathsTests
         );
         Assert.IsFalse(Directory.Exists(Path.Combine(modelsDir, "depthanything")));
         Assert.IsFalse(Directory.Exists(Path.Combine(modelsDir, "clip")));
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task ChangingLibraryRoot_ReplacesManagedPathsAndRetainsCustomSection(bool useMergeKey)
+    {
+        await File.WriteAllTextAsync(
+            ConfigPath,
+            "personal: &custom\n  latent_upscale_models: /manual/latent\n  checkpoints: /manual/checkpoints\n"
+                + (
+                    useMergeKey
+                        ? "stability_matrix:\n  <<: *custom\n"
+                        : "stability_matrix:\n  latent_upscale_models: /manual/latent\n"
+                )
+        );
+        await comfy.SetupModelFolders(installDir, SharedFolderMethod.Configuration);
+        var originalModel = Path.Combine(LatentDir, "same.safetensors");
+        await File.WriteAllTextAsync(originalModel, "old library model");
+
+        foreach (var rootName in new[] { "NewModels", "NewestModels" })
+        {
+            modelsDir = Path.Combine(tempDir, rootName);
+            settings.ModelsDirectory.Returns(modelsDir);
+            Directory.CreateDirectory(LatentDir);
+            var currentModel = Path.Combine(LatentDir, "same.safetensors");
+            await File.WriteAllTextAsync(currentModel, rootName);
+
+            await comfy.UpdateModelFolders(installDir, SharedFolderMethod.Configuration);
+
+            var managed = ReadSection("stability_matrix");
+            Assert.AreEqual(Normalize(LatentDir), Scalar(managed, "latent_upscale_models"));
+            Assert.AreEqual(
+                Normalize(Path.Combine(modelsDir, "StableDiffusion")),
+                Scalar(managed, "checkpoints")
+            );
+            Assert.AreEqual("/manual/latent", Scalar(ReadSection("personal"), "latent_upscale_models"));
+            Assert.AreEqual("/manual/checkpoints", Scalar(ReadSection("personal"), "checkpoints"));
+            Assert.AreEqual("old library model", await File.ReadAllTextAsync(originalModel));
+            Assert.AreEqual(rootName, await File.ReadAllTextAsync(currentModel));
+        }
     }
 
     [TestMethod]
@@ -176,8 +218,6 @@ public class ComfyUISharedModelPathsTests
         Assert.IsFalse(comfy.SharedFolders!.ContainsKey(SharedFolderType.LatentUpscaleModels));
         Assert.AreEqual("LatentUpscaleModels", SharedFolderType.LatentUpscaleModels.GetStringValue());
         Assert.AreEqual(1ul << 36, (ulong)SharedFolderType.LatentUpscaleModels);
-        var rule = comfy.SharedFolderLayout.GetRulesByConfigPath()["latent_upscale_models"];
-        Assert.IsTrue(rule.PreserveExistingConfigPaths);
     }
 
     [TestMethod]
@@ -197,7 +237,6 @@ public class ComfyUISharedModelPathsTests
     [DataRow("stability_matrix: [broken")]
     [DataRow("- a sequence")]
     [DataRow("stability_matrix: /manual")]
-    [DataRow("stability_matrix:\n  latent_upscale_models: [/manual]")]
     [DataRow("personal: {}\n---\nother: {}")]
     public async Task InvalidExistingYaml_IsNotOverwritten(string yaml)
     {

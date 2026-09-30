@@ -106,21 +106,6 @@ public class YamlConfigSharingStrategy : IConfigSharingStrategy
             var paths = pathsSelector(rule).ToArray();
             var normalizedPaths = paths.Select(p => p.Replace('\\', '/')).ToArray();
 
-            if (
-                rule.PreserveExistingConfigPaths
-                && writableNode.Children.TryGetValue(configPath, out var existing)
-            )
-            {
-                if (existing is not YamlScalarNode { Value: { } existingPaths })
-                    throw new YamlException("Model search paths must be a newline-separated YAML scalar.");
-
-                normalizedPaths = existingPaths
-                    .Split('\n', StringSplitOptions.RemoveEmptyEntries)
-                    .Concat(normalizedPaths)
-                    .Distinct(StringComparer.Ordinal)
-                    .ToArray();
-            }
-
             YamlNode? valueNode = null;
             if (normalizedPaths.Length > 0)
             {

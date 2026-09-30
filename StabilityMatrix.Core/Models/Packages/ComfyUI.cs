@@ -152,7 +152,6 @@ public class ComfyUI(
                 {
                     SourceTypes = [SharedFolderType.LatentUpscaleModels],
                     ConfigDocumentPaths = ["latent_upscale_models"],
-                    PreserveExistingConfigPaths = true,
                 },
                 new SharedFolderLayoutRule // IP-Adapter Base, SD1.5, SDXL
                 {

@@ -5,6 +5,10 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.17.0-dev.4
+### Added
+- ComfyUI configuration sharing now includes `Models/FrameInterpolation` for core FILM/RIFE models and `Models/GeometryEstimation` for core MoGe/Depth Anything 3 models. Existing package-local models stay in place; custom paths in other top-level YAML sections are retained.
+
 ## v2.17.0-pre.2
 ### Added
 - Inference output filename patterns now support `{lora_name}` for the LoRAs used in a generation ([#1759](https://github.com/LykosAI/StabilityMatrix/issues/1759)). Multiple LoRA names are sorted and joined with underscores; generations without LoRAs use `no_lora`. Long output names are shortened automatically with a hash while keeping their extension and batch or collision suffixes.

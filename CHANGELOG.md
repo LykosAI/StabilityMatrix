@@ -5,6 +5,11 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.16.5
+### Fixed
+- Fixed release-note text being cut off beside the scrollbar in the update dialog ([#1757](https://github.com/LykosAI/StabilityMatrix/issues/1757))
+- Fixed ComfyUI installation and updates failing on Python 3.13+ because the NumPy 1.x constraint has no compatible wheel ([#1754](https://github.com/LykosAI/StabilityMatrix/issues/1754))
+
 ## v2.16.4
 ### Added
 - Added **Comfy Kitchen Attention** (`--use-ck-attention`) as a **Cross Attention Method** launch option for ComfyUI and ComfyUI-Zluda - thanks to @e-nord!
@@ -18,6 +23,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed the **Cross Attention Method** launch options for ComfyUI and ComfyUI-Zluda letting you enable several at once — they're mutually exclusive, so they're now radio buttons - thanks to @e-nord!
 - Fixed [#1725](https://github.com/LykosAI/StabilityMatrix/issues/1725) - **AI-Toolkit** jobs crashing with a `distutils` error on installs from before v2.16.3 that still run Python 3.11, no reinstall needed - thanks to @NeuralFault!
 - Fixed Wan2GP v13's **Deepy** panel repeatedly showing **Connection to server lost** and logging `issubclass() arg 1 must be a class` — Stability Matrix's console logging wrapper now preserves Gradio's exception class ([Wan2GP #2298](https://github.com/deepbeepmeep/Wan2GP/issues/2298))
+- Fixed Wan2GP (and AI Toolkit's SageAttention source build) crashing with `ModuleNotFoundError: No module named 'distutils'` on Python 3.12+ — forcing `SETUPTOOLS_USE_DISTUTILS=stdlib` unconditionally broke on versions where distutils was removed from the standard library entirely, it's now version-gated the same way AI Toolkit's own fix already was
+- Environment Variables configured in **Settings** now correctly override the workaround variables (like `SETUPTOOLS_USE_DISTUTILS`) that some packages set internally
 ### Supporters
 #### 🌟 Visionaries
 Small release, big priority: 2.16.4 is mostly about keeping your files exactly where you left them. Imported ComfyUI folders can't be wiped by surprise anymore, and a looping workflow link can't freeze the app. That kind of careful, unflashy work only gets our full attention because of our Visionaries, so thank you **Waterclouds**, **MrMxyzptlk12836**, **bluepopsicle**, **Ibixat**, **Droolguy**, **snotty**, **dispenser**, **cusalapapen1481**, **moon_milky2843**, **sn3232323233350**, **CC**, **TwistedDragon**, **hasezou11013179**, and **Akros**. Every folder that stays put has a bit of you in it. 💛

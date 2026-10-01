@@ -213,7 +213,11 @@ public class AiToolkit(
         // when pip loads before setuptools (pypa/setuptools#3621). See StabilityMatrix #1725.
         // Use "stdlib" on Python < 3.12 and "local" on 3.12+, based on the venv's real version.
         var useLocalDistutils = pythonVersion >= new PyVersion(3, 12, 0);
-        env = env.SetItem("SETUPTOOLS_USE_DISTUTILS", useLocalDistutils ? "local" : "stdlib");
+        env = env.SetPackageDefault(
+            SettingsManager,
+            "SETUPTOOLS_USE_DISTUTILS",
+            useLocalDistutils ? "local" : "stdlib"
+        );
 
         var pathBuilder = new EnvPathBuilder();
 

@@ -197,6 +197,22 @@ public class Settings
         }
     }
 
+    /// <summary>
+    /// True if the user has explicitly configured this key under Settings > Environment
+    /// Variables (and it's enabled, when using the list format). Packages should check this
+    /// before setting a computed default/workaround env var, so a value the user configured
+    /// themselves (e.g. to work around an issue on their machine) is never silently overwritten.
+    /// </summary>
+    public bool IsEnvironmentVariableUserOverridden(string key)
+    {
+        if (UserEnvironmentVariablesList is { Count: > 0 } list)
+        {
+            return list.Any(kvp => kvp.IsEnabled && string.Equals(kvp.Key, key, StringComparison.Ordinal));
+        }
+
+        return UserEnvironmentVariables?.ContainsKey(key) == true;
+    }
+
     public float AnimationScale { get; set; } = 1.0f;
 
     public bool AutoScrollLaunchConsoleToEnd { get; set; } = true;

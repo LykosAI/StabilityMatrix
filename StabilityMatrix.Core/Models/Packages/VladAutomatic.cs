@@ -316,7 +316,7 @@ public class VladAutomatic(
         if (options.PythonOptions.PythonVersion is { Minor: < 12 })
         {
             venvRunner.UpdateEnvironmentVariables(env =>
-                env.SetItem("SETUPTOOLS_USE_DISTUTILS", "setuptools")
+                env.SetPackageDefault(SettingsManager, "SETUPTOOLS_USE_DISTUTILS", "setuptools")
             );
         }
 
@@ -380,7 +380,7 @@ public class VladAutomatic(
         if (PyVersion.Parse(installedPackage.PythonVersion) is { Minor: < 12 })
         {
             VenvRunner.UpdateEnvironmentVariables(env =>
-                env.SetItem("SETUPTOOLS_USE_DISTUTILS", "setuptools")
+                env.SetPackageDefault(SettingsManager, "SETUPTOOLS_USE_DISTUTILS", "setuptools")
             );
         }
 

@@ -5,6 +5,7 @@ using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
+using StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Database;
@@ -58,6 +59,28 @@ public class CivitBrowserFilterTests
         Assert.AreEqual(0, vm.CurrentIndex);
         Assert.AreEqual(12, vm.SelectedVersion?.ModelVersion.Id);
         Assert.AreEqual(1, vm.ModelVersions.Count);
+        await vm.NextModel();
+        await vm.PreviousModel();
+        Assert.AreEqual(12, vm.SelectedVersion?.ModelVersion.Id);
+    }
+
+    [TestMethod]
+    public async Task Multiselect_KeepsBothSelectedArchitecturesAcrossNavigation()
+    {
+        var first = Model(1, Version(11, "SD 1.5"), Version(12, "Pony"), Version(13, "Illustrious"));
+        api.GetModelById(1).Returns(first);
+        api.GetModelById(2)
+            .Returns(Model(2, Version(21, "SD 1.5"), Version(22, "Illustrious"), Version(23, "Pony")));
+        using var vm = Details(first);
+        vm.BaseModelFilter = ["Pony", "Illustrious"];
+        await LoadDetails(vm);
+        Assert.AreEqual(12, vm.SelectedVersion?.ModelVersion.Id);
+        await vm.NextModel();
+        Assert.AreEqual(22, vm.SelectedVersion?.ModelVersion.Id);
+        Assert.AreEqual(2, vm.ModelVersions.Count);
+        await vm.PreviousModel();
+        Assert.AreEqual(12, vm.SelectedVersion?.ModelVersion.Id);
+        Assert.AreEqual(2, vm.ModelVersions.Count);
     }
 
     [TestMethod]
@@ -75,10 +98,17 @@ public class CivitBrowserFilterTests
     [TestMethod]
     public async Task UnfilteredDetails_KeepAllArchitectures()
     {
+        api.GetModelById(1).Returns(Model(1, Version(11, "Illustrious"), Version(12, "Pony")));
+        api.GetModelById(2).Returns(Model(2, Version(21, "SD 1.5"), Version(22, "Pony")));
         using var vm = Details(Model(1, Version(11, "Illustrious"), Version(12, "Pony")));
         await LoadDetails(vm);
 
         Assert.AreEqual(2, vm.ModelVersions.Count);
+        Assert.AreEqual(11, vm.SelectedVersion?.ModelVersion.Id);
+        await vm.NextModel();
+        Assert.AreEqual(21, vm.SelectedVersion?.ModelVersion.Id);
+        Assert.AreEqual(2, vm.ModelVersions.Count);
+        await vm.PreviousModel();
         Assert.AreEqual(11, vm.SelectedVersion?.ModelVersion.Id);
     }
 
@@ -105,6 +135,7 @@ public class CivitBrowserFilterTests
     [TestMethod]
     public async Task NextModel_WithoutMatchingVersions_DoesNotSelectAnotherArchitecture()
     {
+        api.GetModelById(1).Returns(Model(1, Version(11, "Pony")));
         api.GetModelById(2).Returns(Model(2, Version(21, "Illustrious")));
         using var vm = Details(Model(1, Version(11, "Pony")));
         vm.BaseModelFilter = ["Pony"];
@@ -114,6 +145,8 @@ public class CivitBrowserFilterTests
         Assert.IsNull(vm.SelectedVersion);
         Assert.AreEqual(0, vm.ModelVersions.Count);
         Assert.AreEqual(0, vm.CivitFiles.Count);
+        await vm.PreviousModel();
+        Assert.AreEqual(11, vm.SelectedVersion?.ModelVersion.Id);
     }
 
     [TestMethod]
@@ -148,27 +181,43 @@ public class CivitBrowserFilterTests
     }
 
     [TestMethod]
-    [DataRow(true)]
-    [DataRow(false)]
-    public async Task OpenDetails_UsesResultFilterSnapshot(bool filteredSearch)
+    [DataRow("filtered")]
+    [DataRow("multiselect")]
+    [DataRow("none")]
+    [DataRow("all")]
+    [DataRow("direct-id")]
+    public async Task OpenDetails_UsesResultFilterSnapshot(string searchMode)
     {
         using var browser = Browser();
+        browser.AllBaseModels.Add(new BaseModelOptionViewModel { ModelType = "Pony" });
+        browser.AllBaseModels.Add(new BaseModelOptionViewModel { ModelType = "Illustrious" });
         var model = Model(1, Version(11, "Pony"), Version(12, "Illustrious"));
         using var details = Details(model);
         factory
             .Get(Arg.Any<Func<CivitDetailsPageViewModel, CivitDetailsPageViewModel>>())
             .Returns(call => call.Arg<Func<CivitDetailsPageViewModel, CivitDetailsPageViewModel>>()(details));
 
-        string[]? requestBaseModels = filteredSearch ? ["Pony"] : null;
+        string[] expected = searchMode switch
+        {
+            "filtered" => ["Pony"],
+            "multiselect" => ["Pony", "Illustrious"],
+            _ => [],
+        };
+        string[]? requestBaseModels = expected.Length > 0 ? expected.ToArray() : null;
         Invoke(browser, "UpdateModelCards", new List<CivitModel>(), requestBaseModels, false);
         if (requestBaseModels is not null)
             requestBaseModels[0] = "Illustrious";
 
         // A direct-ID search has no base-model restriction even when the dropdown has one.
-        browser.SelectedBaseModels.Add("Illustrious");
+        if (searchMode != "none")
+            browser.SelectedBaseModels.Add("Illustrious");
+        if (searchMode == "all")
+            browser.SelectedBaseModels.Add("Pony");
         await browser.ShowVersionDialogCommand.ExecuteAsync(model);
 
-        CollectionAssert.AreEqual(filteredSearch ? new[] { "Pony" } : [], details.BaseModelFilter.ToArray());
+        CollectionAssert.AreEqual(expected, details.BaseModelFilter.ToArray());
+        await LoadDetails(details);
+        Assert.AreEqual(searchMode == "filtered" ? 1 : 2, details.ModelVersions.Count);
     }
 
     private CivitCompatApiManager CompatApi() =>

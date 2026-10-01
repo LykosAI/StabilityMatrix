@@ -34,6 +34,13 @@ public class Fizgig(
     public override string Blurb =>
         "LoRA training studio for Flux 2 Klein 9B, Krea 2, MiniMax H3 and Qwen Image 2.1 — train, profile, repair and extract";
 
+    // Shown in the install browser before the user commits to installing.
+    public override string Disclaimer =>
+        Compat.IsWindows
+            ? "Visual Studio Build Tools for C++ Desktop Development will be installed system-wide if not already present (may require admin privileges). "
+                + "They are shared with other software and remain installed after Fizgig is uninstalled."
+            : string.Empty;
+
     public override string LicenseType => "Apache-2.0";
     public override string LicenseUrl => "https://github.com/shootthesound/Fizgig/blob/master/LICENSE";
 
@@ -120,19 +127,35 @@ public class Fizgig(
         // requirements.txt warns never to install that line without this.
         venvRunner.UpdateEnvironmentVariables(env => env.SetItem("DISABLE_CUDA", "1"));
 
+        const string torchVersion = "==2.10.0";
+        const string torchvisionVersion = "==0.25.0";
+
         var config = new PipInstallConfig
         {
             RequirementsFilePaths = ["requirements.txt"],
-            // Drop the torch pins and the cu128 index line from the file so the torch install
+            // Drop the torch pins and the cu128 index line from the file so the pre-install step
             // below is the single source of truth for which build lands in the venv. The pattern
             // is anchored against the whole entry by the caller, so the version specifier has to
             // be matched too - the default pattern only catches bare, unpinned names.
             RequirementsExcludePattern =
                 @"(--extra-index-url.*|(torch|torchvision|torchaudio|xformers)([=<>!~].*)?)",
-            TorchVersion = "==2.10.0",
-            TorchvisionVersion = "==0.25.0",
+            // Install the cu128 build before the requirements. accelerate (and friends) depend on
+            // torch transitively, so installing it afterwards would let the requirements step
+            // pull a default PyPI build that then has to be force-reinstalled over.
             // torch 2.10 pairs with cu128 here; SM's default cu130 has no matching wheels.
-            CudaIndex = "cu128",
+            PrePipInstallArgs =
+            [
+                $"torch{torchVersion}",
+                $"torchvision{torchvisionVersion}",
+                "--extra-index-url",
+                "https://download.pytorch.org/whl/cu128",
+                "--force-reinstall",
+            ],
+            // Re-state the pins alongside the requirements: pip then treats the installed
+            // 2.10.0+cu128 as satisfying them instead of resolving its own torch from PyPI, and
+            // fails loudly rather than swapping it if anything conflicts.
+            ExtraPipArgs = [$"torch{torchVersion}", $"torchvision{torchvisionVersion}"],
+            SkipTorchInstall = true,
         };
 
         await StandardPipInstallProcessAsync(

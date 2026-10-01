@@ -100,6 +100,127 @@ public class LinkSafeFileSystemTests
         Assert.AreEqual(1, files.Count);
     }
 
+    [DataTestMethod]
+    [DataRow(true)]
+    [DataRow(false)]
+    public void EnumerateFiles_RealDirAlreadyClaimedAsLinkTarget_IsVisitedOnce(bool xyLinkIsDeeper)
+    {
+        // ext/X/Y/y.json is reachable two ways: through a link to ext/X/Y, and as a real subfolder
+        // of a link to ext/X. Sibling enumeration order is file-system dependent, so the two rows
+        // nest the links at different depths to swap which one is walked first; whichever it is,
+        // the other must find the folder already scanned.
+        var root = CreateDir("root");
+        var sub = CreateDir("root", "sub");
+        CreateFile("ext", "X", "Y", "y.json");
+
+        var x = Path.Combine(tempDir, "ext", "X");
+        var xy = Path.Combine(x, "Y");
+
+        // One row puts the ext/X/Y link under sub, the other puts the ext/X link there
+        var xyLink = Path.Combine(xyLinkIsDeeper ? sub : root, "inner");
+        var xLink = Path.Combine(xyLinkIsDeeper ? root : sub, "outer");
+        TempFiles.CreateDirectoryLink(xyLink, xy);
+        TempFiles.CreateDirectoryLink(xLink, x);
+
+        var files = LinkSafeFileSystem.EnumerateFiles(root, "*.json").ToList();
+
+        Assert.AreEqual(1, files.Count, $"Expected one file, got: {string.Join(", ", files)}");
+    }
+
+    [DataTestMethod]
+    [DataRow("a_inner", "b_outer")]
+    [DataRow("b_inner", "a_outer")]
+    public void EnumerateFiles_NestedLinkTarget_SiblingLinkOrder_IsVisitedOnce(
+        string innerName,
+        string outerName
+    )
+    {
+        if (!Compat.IsWindows)
+        {
+            Assert.Inconclusive(
+                "Needs NTFS, which enumerates sibling directories in stored name order; "
+                    + "EnumerateFiles_RealDirAlreadyClaimedAsLinkTarget_IsVisitedOnce covers the same "
+                    + "bug portably by varying depth instead."
+            );
+            return;
+        }
+
+        // The maintainer's original repro: innerName -> ext/X/Y, outerName -> ext/X, so the inner
+        // link's target is also reached as a real subfolder of the outer link. NTFS yields siblings
+        // in name order, so the two rows walk the links in opposite orders.
+        var root = CreateDir("root");
+        CreateFile("ext", "X", "Y", "y.json");
+
+        var x = Path.Combine(tempDir, "ext", "X");
+        var xy = Path.Combine(x, "Y");
+
+        TempFiles.CreateDirectoryLink(Path.Combine(root, innerName), xy);
+        TempFiles.CreateDirectoryLink(Path.Combine(root, outerName), x);
+
+        var files = LinkSafeFileSystem.EnumerateFiles(root, "*.json").ToList();
+
+        Assert.AreEqual(1, files.Count, $"Expected one file, got: {string.Join(", ", files)}");
+    }
+
+    [DataTestMethod]
+    [DataRow("diffusion_models")]
+    [DataRow("Diffusion_Models")]
+    [DataRow("z_alias")]
+    [DataRow("a_alias")]
+    [DataRow("sub", "alias")]
+    public void EnumerateFiles_RealFolderShadowedByLink_KeepsRealFolderPaths(params string[] linkSegments)
+    {
+        var root = CreateDir("root");
+        CreateFile("root", "DiffusionModels", "a.json");
+        CreateFile("root", "DiffusionModels", "b.json");
+
+        var linkPath = Path.Combine([root, .. linkSegments]);
+        Directory.CreateDirectory(Path.GetDirectoryName(linkPath)!);
+        TempFiles.CreateDirectoryLink(linkPath, Path.Combine(root, "DiffusionModels"));
+
+        var files = LinkSafeFileSystem.EnumerateFiles(root, "*.json").ToList();
+
+        CollectionAssert.AreEquivalent(
+            new[]
+            {
+                Path.Combine(root, "DiffusionModels", "a.json"),
+                Path.Combine(root, "DiffusionModels", "b.json"),
+            },
+            files
+        );
+    }
+
+    [TestMethod]
+    public void EnumerateFiles_JunctionTargetCaseMismatch_KeepsRealFolderPaths()
+    {
+        if (!Compat.IsWindows)
+        {
+            Assert.Inconclusive("Junctions with a differently-cased stored target are Windows-only.");
+            return;
+        }
+
+        var root = CreateDir("root");
+        CreateFile("root", "DiffusionModels", "a.json");
+        CreateFile("root", "DiffusionModels", "b.json");
+
+        // Store the junction target with different casing than the real folder on disk.
+        TempFiles.CreateDirectoryLink(
+            Path.Combine(root, "diffusion_models"),
+            Path.Combine(root.ToUpperInvariant(), "DIFFUSIONMODELS")
+        );
+
+        var files = LinkSafeFileSystem.EnumerateFiles(root, "*.json").ToList();
+
+        CollectionAssert.AreEquivalent(
+            new[]
+            {
+                Path.Combine(root, "DiffusionModels", "a.json"),
+                Path.Combine(root, "DiffusionModels", "b.json"),
+            },
+            files
+        );
+    }
+
     [TestMethod]
     public void EnumerateFiles_DeeperThanMaxDepth_IsSkipped()
     {
@@ -114,6 +235,116 @@ public class LinkSafeFileSystemTests
             new[] { Path.Combine(root, "d0.json"), Path.Combine(root, "l1", "d1.json") },
             files
         );
+    }
+
+    [DataTestMethod]
+    [DataRow("a_alias")]
+    [DataRow("z_alias")]
+    public void EnumerateFiles_LinkedFolderShadowedByAliasOfLink_KeepsLinkFolderPaths(string aliasName)
+    {
+        // DiffusionModels is itself a link (user moved it to an external drive), and Swarm's
+        // alias points at that link. The folder must still be listed under DiffusionModels.
+        var root = CreateDir("root");
+        CreateFile("ext", "diff", "a.json");
+        CreateFile("ext", "diff", "b.json");
+        var diffusion = Path.Combine(root, "DiffusionModels");
+        TempFiles.CreateDirectoryLink(diffusion, Path.Combine(tempDir, "ext", "diff"));
+        TempFiles.CreateDirectoryLink(Path.Combine(root, aliasName), diffusion);
+
+        var files = LinkSafeFileSystem.EnumerateFiles(root, "*.json").ToList();
+
+        CollectionAssert.AreEquivalent(
+            new[] { Path.Combine(diffusion, "a.json"), Path.Combine(diffusion, "b.json") },
+            files
+        );
+    }
+
+    [TestMethod]
+    public void EnumerateFiles_DanglingLink_IsSkipped()
+    {
+        var root = CreateDir("root");
+        CreateFile("root", "a.json");
+        var gone = CreateDir("gone");
+        TempFiles.CreateDirectoryLink(Path.Combine(root, "dangling"), gone);
+        Directory.Delete(gone);
+
+        var files = LinkSafeFileSystem.EnumerateFiles(root, "*.json").ToList();
+
+        CollectionAssert.AreEquivalent(new[] { Path.Combine(root, "a.json") }, files);
+    }
+
+    [TestMethod]
+    public void EnumerateFiles_RootGivenInDifferentCase_LinkToRealChild_IsVisitedOnce()
+    {
+        if (!Compat.IsWindows)
+        {
+            Assert.Inconclusive("Case-insensitive root spelling is Windows-only.");
+            return;
+        }
+
+        var root = CreateDir("root");
+        CreateFile("root", "DiffusionModels", "a.json");
+        TempFiles.CreateDirectoryLink(Path.Combine(root, "z_alias"), Path.Combine(root, "DiffusionModels"));
+
+        // Caller spells the root differently from how it is stored on disk
+        var spelledRoot = root.ToUpperInvariant();
+        var files = LinkSafeFileSystem.EnumerateFiles(spelledRoot, "*.json").ToList();
+
+        CollectionAssert.AreEquivalent(
+            new[] { Path.Combine(spelledRoot, "DiffusionModels", "a.json") },
+            files
+        );
+    }
+
+    [TestMethod]
+    public void EnumerateFiles_LinkToAncestorOfRoot_YieldsEachFileOnce()
+    {
+        var root = CreateDir("root");
+        CreateFile("root", "a.json");
+        CreateFile("other", "o.json");
+        TempFiles.CreateDirectoryLink(Path.Combine(root, "up"), tempDir);
+
+        var files = LinkSafeFileSystem.EnumerateFiles(root, "*.json").ToList();
+
+        CollectionAssert.AreEquivalent(
+            new[] { Path.Combine(root, "a.json"), Path.Combine(root, "up", "other", "o.json") },
+            files
+        );
+    }
+
+    [TestMethod]
+    public void EnumerateFiles_LinkInsideLinkTarget_IsFollowed()
+    {
+        var root = CreateDir("root");
+        CreateDir("ext", "A");
+        CreateFile("ext", "B", "b.json");
+        TempFiles.CreateDirectoryLink(Path.Combine(root, "L1"), Path.Combine(tempDir, "ext", "A"));
+        TempFiles.CreateDirectoryLink(
+            Path.Combine(tempDir, "ext", "A", "toB"),
+            Path.Combine(tempDir, "ext", "B")
+        );
+
+        var files = LinkSafeFileSystem.EnumerateFiles(root, "*.json").ToList();
+
+        CollectionAssert.AreEquivalent(new[] { Path.Combine(root, "L1", "toB", "b.json") }, files);
+    }
+
+    [TestMethod]
+    public void EnumerateFiles_TwoLinksLoopingIntoEachOther_AreSkipped()
+    {
+        var root = CreateDir("root");
+        CreateFile("root", "a.json");
+        // A link needs an existing target when created: make b real, link a -> b, then replace b
+        // with a link back to a
+        var a = Path.Combine(root, "a");
+        var b = CreateDir("root", "b");
+        TempFiles.CreateDirectoryLink(a, b);
+        Directory.Delete(b);
+        TempFiles.CreateDirectoryLink(b, a);
+
+        var files = LinkSafeFileSystem.EnumerateFiles(root, "*.json").ToList();
+
+        CollectionAssert.AreEquivalent(new[] { Path.Combine(root, "a.json") }, files);
     }
 
     [TestMethod]

@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - **Model categories** in the Checkpoint Manager — tag any model (LoRAs, checkpoints, anything) with as many custom categories as you like, e.g. *Character*, *Style*, *Concept*. Categories show as coloured chips on the cards, filter from the new **Categories** section in the sidebar (or with `@name` in the search box), and can be assigned in bulk: select models and use **Categories** in the selection bar, right-click → **Set Categories**, or drop cards onto a category. Stored in the model's existing `.cm-info.json`, so they survive moves, renames, folder copies and metadata refreshes — the most requested item on the feature tracker
 - Categories reach **Inference** too: the model picker dialog gets a **Categories** filter row and shows each model's category chips, and typing a category name filters any model dropdown as well as the `<lora:` prompt autocomplete
 ### Fixed
+- Fixed shared model folder aliases hiding DiffusionModels in Checkpoint Manager, Image Lab, and Inference, including when DiffusionModels is itself linked to another location ([#1743](https://github.com/LykosAI/StabilityMatrix/pull/1743), [#1763](https://github.com/LykosAI/StabilityMatrix/pull/1763)) - Thanks to @NeuralFault and @ionite34!
 - ComfyUI Configuration sharing now includes `Models/LatentUpscaleModels` for the Load Latent Upscale Model node. Existing model files stay in place, and custom top-level YAML sections are retained ([#1762](https://github.com/LykosAI/StabilityMatrix/issues/1762)).
 - Fixed release-note text being cut off beside the scrollbar in the update dialog ([#1757](https://github.com/LykosAI/StabilityMatrix/issues/1757))
 - Fixed ComfyUI installation and updates failing on Python 3.13+ because the NumPy 1.x constraint has no compatible wheel ([#1754](https://github.com/LykosAI/StabilityMatrix/issues/1754))
@@ -212,6 +213,34 @@ The prompt queue has been one of our most requested features ever, and builds li
 ### Supporters
 #### 🌟 Visionaries
 This build leans hard into what's next: a live HuggingFace browser and Wan 2.2 video generation. None of that exploration happens without our Visionaries giving us the room to chase it. So a huge thank you to **Waterclouds**, **MrMxyzptlk12836**, **Psilocyfer18731**, **bluepopsicle**, **Ibixat**, **Droolguy**, **KalAbaddon**, **LG**, **snotty**, **whudunit**, **cusalapapen1481**, and **moon_milky2843**. You make the experiments possible. And a big hello to **SkynetFuture** and **sn3232323233350**, who join the Visionary crew this time around. We're genuinely glad you're here. 💛
+
+## v2.16.5
+### Fixed
+- Fixed shared model folder aliases hiding DiffusionModels in Checkpoint Manager, Image Lab, and Inference, including when DiffusionModels is itself linked to another location ([#1743](https://github.com/LykosAI/StabilityMatrix/pull/1743), [#1763](https://github.com/LykosAI/StabilityMatrix/pull/1763)) - Thanks to @NeuralFault and @ionite34!
+- Fixed the Model Browser's **Base Model** filter being lost when using **Next Model** / **Previous Model** or refreshing a model's details ([#1436](https://github.com/LykosAI/StabilityMatrix/issues/1436))
+- Fixed release-note text being cut off beside the scrollbar in the update dialog ([#1757](https://github.com/LykosAI/StabilityMatrix/issues/1757))
+- Fixed ComfyUI installation and updates failing on Python 3.13+ because the NumPy 1.x constraint has no compatible wheel ([#1754](https://github.com/LykosAI/StabilityMatrix/issues/1754))
+
+## v2.16.4
+### Added
+- Added **Comfy Kitchen Attention** (`--use-ck-attention`) as a **Cross Attention Method** launch option for ComfyUI and ComfyUI-Zluda - thanks to @e-nord!
+### Changed
+- **Windows ROCm** PyTorch installs now come from AMD's new permanent ROCm 10 package repositories, avoiding the `CUDA error: invalid argument` / `hipErrorInvalidValue` failures reported with the ROCm 7.14.1 builds — packages already on 7.14.1 need a reinstall, or an update that also upgrades PyTorch (like ComfyUI's) - thanks to @NeuralFault!
+### Fixed
+- Installing a package into a folder that already contains files — like an existing ComfyUI installation placed in `Data\Packages` to be imported — now shows the folder's total size and file count and requires explicit confirmation, instead of silently deleting everything in it; this includes the first-run one-click installer ([#1733](https://github.com/LykosAI/StabilityMatrix/issues/1733))
+- Turning off shared model folders no longer tries to delete real directories at the link locations — only links created by Stability Matrix are removed, so the model folders of an imported package are never touched ([#1733](https://github.com/LykosAI/StabilityMatrix/issues/1733))
+- The package uninstall confirmation now correctly lists models/checkpoints among the items that will be deleted for packages using config-based model sharing (ComfyUI's default) — previously it implied they were safe — and shows the package folder's total size
+- Fixed the **Workflows** page loading forever (and eventually freezing the app) when the workflow library folder is itself a link to ComfyUI's `user\default\workflows` folder — the `Stability Matrix` link ComfyUI gets at launch pointed back into the same folder, nesting `Stability Matrix\Stability Matrix\...` thousands of levels deep. That link is no longer created (and an existing one is removed the next time ComfyUI is launched) when it would loop, and the workflow and model folder scans now follow linked folders at most once
+- Fixed the **Cross Attention Method** launch options for ComfyUI and ComfyUI-Zluda letting you enable several at once — they're mutually exclusive, so they're now radio buttons - thanks to @e-nord!
+- Fixed [#1725](https://github.com/LykosAI/StabilityMatrix/issues/1725) - **AI-Toolkit** jobs crashing with a `distutils` error on installs from before v2.16.3 that still run Python 3.11, no reinstall needed - thanks to @NeuralFault!
+- Fixed Wan2GP v13's **Deepy** panel repeatedly showing **Connection to server lost** and logging `issubclass() arg 1 must be a class` — Stability Matrix's console logging wrapper now preserves Gradio's exception class ([Wan2GP #2298](https://github.com/deepbeepmeep/Wan2GP/issues/2298))
+- Fixed Wan2GP (and AI Toolkit's SageAttention source build) crashing with `ModuleNotFoundError: No module named 'distutils'` on Python 3.12+ — forcing `SETUPTOOLS_USE_DISTUTILS=stdlib` unconditionally broke on versions where distutils was removed from the standard library entirely, it's now version-gated the same way AI Toolkit's own fix already was
+- Environment Variables configured in **Settings** now correctly override the workaround variables (like `SETUPTOOLS_USE_DISTUTILS`) that some packages set internally
+### Supporters
+#### 🌟 Visionaries
+Small release, big priority: 2.16.4 is mostly about keeping your files exactly where you left them. Imported ComfyUI folders can't be wiped by surprise anymore, and a looping workflow link can't freeze the app. That kind of careful, unflashy work only gets our full attention because of our Visionaries, so thank you **Waterclouds**, **MrMxyzptlk12836**, **bluepopsicle**, **Ibixat**, **Droolguy**, **snotty**, **dispenser**, **cusalapapen1481**, **moon_milky2843**, **sn3232323233350**, **CC**, **TwistedDragon**, **hasezou11013179**, and **Akros**. Every folder that stays put has a bit of you in it. 💛
+#### 🚀 Pioneers
+To our Pioneers **SinthCore**, **Jisuren**, **jweg79**, **Hurbie53**, **Cjloha**, **Alligator1907**, **CommissarGiygas16050**, **bastardofbethlehem**, **Zombop**, **Silerae**, **joshsciascia72**, and **cy_hart691842**: patch releases like this one land quietly, and you back them anyway. We never take that for granted. And hello to **okachako**, our newest Pioneer; it's so nice to see your name here! 💛
 
 ## v2.16.3
 ### Added

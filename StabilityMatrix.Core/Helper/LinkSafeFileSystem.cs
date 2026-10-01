@@ -30,9 +30,19 @@ public static class LinkSafeFileSystem
     /// ancestors, returning the physical directory path. Segments that cannot be resolved
     /// (missing, or a reparse point that is not a link) are kept as written.
     /// </summary>
-    public static string GetRealPath(string path) => GetRealPath(path, 0);
+    public static string GetRealPath(string path) => GetRealPath(path, out _);
 
-    private static string GetRealPath(string path, int hop)
+    /// <summary>
+    /// <inheritdoc cref="GetRealPath(string)"/> <paramref name="hops"/> receives how many links
+    /// the path goes through.
+    /// </summary>
+    private static string GetRealPath(string path, out int hops)
+    {
+        hops = 0;
+        return Resolve(path, ref hops);
+    }
+
+    private static string Resolve(string path, ref int hops)
     {
         var fullPath = Path.TrimEndingDirectorySeparator(Path.GetFullPath(path));
         var root = Path.GetPathRoot(fullPath) ?? string.Empty;
@@ -52,7 +62,7 @@ public static class LinkSafeFileSystem
             if (!info.Exists || !info.Attributes.HasFlag(FileAttributes.ReparsePoint))
                 continue;
 
-            if (hop >= MaxLinkHops)
+            if (hops >= MaxLinkHops)
             {
                 Logger.Warn("Gave up resolving links at {Path}: too many nested links", current);
                 continue;
@@ -61,7 +71,9 @@ public static class LinkSafeFileSystem
             FileSystemInfo? target;
             try
             {
-                target = info.ResolveLinkTarget(returnFinalTarget: true);
+                // The immediate target, as stored, so it is spelled the way the link's own
+                // neighbourhood is (subst and mapped drives would otherwise resolve to the volume)
+                target = info.ResolveLinkTarget(returnFinalTarget: false);
             }
             catch (IOException e)
             {
@@ -72,8 +84,10 @@ public static class LinkSafeFileSystem
             if (target is null)
                 continue;
 
-            // The target may itself sit below other links, so canonicalize it as a whole
-            current = GetRealPath(target.FullName, hop + 1);
+            hops++;
+
+            // The target may itself be a link, or sit below other links, so canonicalize it as a whole
+            current = Resolve(target.FullName, ref hops);
         }
 
         return current;
@@ -99,10 +113,11 @@ public static class LinkSafeFileSystem
     /// <summary>
     /// Recursively enumerates files matching <paramref name="searchPattern"/> under
     /// <paramref name="rootDir"/>. Symbolic links are followed, but every physical directory is
-    /// visited at most once, so no file is yielded twice. Directories nested deeper than
-    /// <paramref name="maxDepth"/> and directories that cannot be read are skipped without aborting
-    /// the enumeration. Yielded paths are rooted at <paramref name="rootDir"/> as given, not at its
-    /// resolved target.
+    /// visited at most once, so no file is yielded twice; a directory reachable along several
+    /// paths is yielded under the one that goes through the fewest links. Directories nested
+    /// deeper than <paramref name="maxDepth"/> and directories that cannot be read are skipped
+    /// without aborting the enumeration. Yielded paths are rooted at <paramref name="rootDir"/>
+    /// as given, not at its resolved target.
     /// </summary>
     public static IEnumerable<string> EnumerateFiles(
         string rootDir,
@@ -110,65 +125,28 @@ public static class LinkSafeFileSystem
         int maxDepth = DefaultMaxDepth
     )
     {
-        // A real directory is keyed by its literal path, compared ordinally, so two folders whose
-        // names differ only in case are both scanned; it is also matched against link targets, so a
-        // real folder reached through a link is not rescanned. A link is keyed by its resolved
-        // target, compared with the platform's case sensitivity (PathComparer), because a target is
-        // stored however the link was created.
-        var visitedRealDirsExact = new Dictionary<string, string>(StringComparer.Ordinal);
-        var visitedRealDirsForLinkTargets = new Dictionary<string, string>(PathComparer);
-        var visitedLinkTargets = new Dictionary<string, string>(PathComparer);
+        // Physical directories already scanned. Links are what turn the tree into a graph.
+        var seen = new HashSet<string>(PathComparer);
+        // Links wait until the real tree is done, then go in order of how many links they pass
+        // through, so a folder is listed under its own name rather than through an alias of it,
+        // and a linked folder under its link rather than through an alias of the link
+        var links = new PriorityQueue<(string Path, string RealPath, int Depth), int>();
 
-        // Real directories are drained to completion before any link is considered, so a link can
-        // never take the identity of a real folder and shadow it out of the scan.
-        var realDirs = new Stack<(string Path, string RealPath, int Depth)>();
-        var linkedDirs = new Stack<(string Path, string RealPath, int Depth)>();
+        foreach (var file in Walk(rootDir, GetRealPath(rootDir), 0))
+            yield return file;
 
-        var rootReal = GetRealPath(rootDir);
-        realDirs.Push((rootDir, rootReal, 0));
-
-        while (realDirs.Count > 0 || linkedDirs.Count > 0)
+        while (links.TryDequeue(out var link, out _))
         {
-            // Which stack the entry came from is how the walk knows whether it is a link.
-            var fromRealDirs = realDirs.Count > 0;
-            var dir = fromRealDirs ? realDirs.Pop() : linkedDirs.Pop();
+            foreach (var file in Walk(link.Path, link.RealPath, link.Depth))
+                yield return file;
+        }
 
-            // Claimed on pop, not on push, so the walk order decides which spelling owns the
-            // identity instead of the reversed push order.
-            if (!fromRealDirs)
+        IEnumerable<string> Walk(string dir, string realDir, int depth)
+        {
+            if (!seen.Add(realDir))
             {
-                if (
-                    visitedLinkTargets.TryGetValue(dir.RealPath, out var linkClaimer)
-                    || visitedRealDirsForLinkTargets.TryGetValue(dir.RealPath, out linkClaimer)
-                )
-                {
-                    Logger.Info(
-                        "Skipping {Path}: the same directory was already scanned as {ClaimedBy}",
-                        dir.Path,
-                        linkClaimer
-                    );
-                    continue;
-                }
-
-                visitedLinkTargets[dir.RealPath] = dir.Path;
-            }
-            else
-            {
-                if (
-                    visitedRealDirsExact.TryGetValue(dir.RealPath, out var realClaimer)
-                    || visitedLinkTargets.TryGetValue(dir.RealPath, out realClaimer)
-                )
-                {
-                    Logger.Warn(
-                        "Skipping {Path}: the same directory was already scanned as {ClaimedBy}",
-                        dir.Path,
-                        realClaimer
-                    );
-                    continue;
-                }
-
-                visitedRealDirsExact[dir.RealPath] = dir.Path;
-                visitedRealDirsForLinkTargets[dir.RealPath] = dir.Path;
+                Logger.Debug("Skipping {Path}: already scanned", dir);
+                yield break;
             }
 
             List<string> files;
@@ -176,48 +154,42 @@ public static class LinkSafeFileSystem
             try
             {
                 files = Directory
-                    .EnumerateFiles(dir.Path, searchPattern, EnumerationOptionConstants.TopLevelOnly)
+                    .EnumerateFiles(dir, searchPattern, EnumerationOptionConstants.TopLevelOnly)
                     .ToList();
-                subDirs = new DirectoryInfo(dir.Path)
+                subDirs = new DirectoryInfo(dir)
                     .EnumerateDirectories("*", EnumerationOptionConstants.TopLevelOnly)
                     .ToList();
             }
             catch (Exception e) when (e is IOException or UnauthorizedAccessException)
             {
-                Logger.Debug(e, "Skipping unreadable directory {Path}", dir.Path);
-                continue;
+                Logger.Debug(e, "Skipping missing or unreadable directory {Path}", dir);
+                yield break;
             }
 
             foreach (var file in files)
-            {
                 yield return file;
-            }
 
-            if (dir.Depth >= maxDepth)
+            if (depth >= maxDepth)
             {
                 Logger.Warn(
                     "Skipping directories below {Path}: nesting deeper than {MaxDepth}",
-                    dir.Path,
+                    dir,
                     maxDepth
                 );
-                continue;
+                yield break;
             }
 
-            // Pushed in reverse so each stack pops its entries in enumeration order
-            for (var i = subDirs.Count - 1; i >= 0; i--)
+            foreach (var subDir in subDirs)
             {
-                var subDir = subDirs[i];
-                var isLinkDir = subDir.Attributes.HasFlag(FileAttributes.ReparsePoint);
-                var subReal = isLinkDir ? GetRealPath(subDir.FullName) : Path.Join(dir.RealPath, subDir.Name);
+                if (subDir.Attributes.HasFlag(FileAttributes.ReparsePoint))
+                {
+                    var realPath = GetRealPath(subDir.FullName, out var hops);
+                    links.Enqueue((subDir.FullName, realPath, depth + 1), hops);
+                    continue;
+                }
 
-                if (isLinkDir)
-                {
-                    linkedDirs.Push((subDir.FullName, subReal, dir.Depth + 1));
-                }
-                else
-                {
-                    realDirs.Push((subDir.FullName, subReal, dir.Depth + 1));
-                }
+                foreach (var file in Walk(subDir.FullName, Path.Join(realDir, subDir.Name), depth + 1))
+                    yield return file;
             }
         }
     }

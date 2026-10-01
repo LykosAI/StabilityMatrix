@@ -30,9 +30,19 @@ public static class LinkSafeFileSystem
     /// ancestors, returning the physical directory path. Segments that cannot be resolved
     /// (missing, or a reparse point that is not a link) are kept as written.
     /// </summary>
-    public static string GetRealPath(string path) => GetRealPath(path, 0);
+    public static string GetRealPath(string path) => GetRealPath(path, out _);
 
-    private static string GetRealPath(string path, int hop)
+    /// <summary>
+    /// <inheritdoc cref="GetRealPath(string)"/> <paramref name="hops"/> receives how many links
+    /// the path goes through.
+    /// </summary>
+    private static string GetRealPath(string path, out int hops)
+    {
+        hops = 0;
+        return Resolve(path, ref hops);
+    }
+
+    private static string Resolve(string path, ref int hops)
     {
         var fullPath = Path.TrimEndingDirectorySeparator(Path.GetFullPath(path));
         var root = Path.GetPathRoot(fullPath) ?? string.Empty;
@@ -52,7 +62,7 @@ public static class LinkSafeFileSystem
             if (!info.Exists || !info.Attributes.HasFlag(FileAttributes.ReparsePoint))
                 continue;
 
-            if (hop >= MaxLinkHops)
+            if (hops >= MaxLinkHops)
             {
                 Logger.Warn("Gave up resolving links at {Path}: too many nested links", current);
                 continue;
@@ -61,7 +71,9 @@ public static class LinkSafeFileSystem
             FileSystemInfo? target;
             try
             {
-                target = info.ResolveLinkTarget(returnFinalTarget: true);
+                // The immediate target, as stored, so it is spelled the way the link's own
+                // neighbourhood is (subst and mapped drives would otherwise resolve to the volume)
+                target = info.ResolveLinkTarget(returnFinalTarget: false);
             }
             catch (IOException e)
             {
@@ -72,8 +84,10 @@ public static class LinkSafeFileSystem
             if (target is null)
                 continue;
 
-            // The target may itself sit below other links, so canonicalize it as a whole
-            current = GetRealPath(target.FullName, hop + 1);
+            hops++;
+
+            // The target may itself be a link, or sit below other links, so canonicalize it as a whole
+            current = Resolve(target.FullName, ref hops);
         }
 
         return current;
@@ -98,10 +112,12 @@ public static class LinkSafeFileSystem
 
     /// <summary>
     /// Recursively enumerates files matching <paramref name="searchPattern"/> under
-    /// <paramref name="rootDir"/>. Linked directories are followed once; a link back to a directory
-    /// already visited is skipped, as are directories deeper than <paramref name="maxDepth"/>.
-    /// Inaccessible directories are skipped rather than aborting the enumeration.
-    /// Yielded paths are rooted at <paramref name="rootDir"/> as given, not at its resolved target.
+    /// <paramref name="rootDir"/>. Symbolic links are followed, but every physical directory is
+    /// visited at most once, so no file is yielded twice; a directory reachable along several
+    /// paths is yielded under the one that goes through the fewest links. Directories nested
+    /// deeper than <paramref name="maxDepth"/> and directories that cannot be read are skipped
+    /// without aborting the enumeration. Yielded paths are rooted at <paramref name="rootDir"/>
+    /// as given, not at its resolved target.
     /// </summary>
     public static IEnumerable<string> EnumerateFiles(
         string rootDir,
@@ -109,62 +125,71 @@ public static class LinkSafeFileSystem
         int maxDepth = DefaultMaxDepth
     )
     {
-        var visited = new HashSet<string>(PathComparer);
-        var pending = new Stack<(string Path, string RealPath, int Depth)>();
+        // Physical directories already scanned. Links are what turn the tree into a graph.
+        var seen = new HashSet<string>(PathComparer);
+        // Links wait until the real tree is done, then go in order of how many links they pass
+        // through, so a folder is listed under its own name rather than through an alias of it,
+        // and a linked folder under its link rather than through an alias of the link
+        var links = new PriorityQueue<(string Path, string RealPath, int Depth), int>();
 
-        var rootReal = GetRealPath(rootDir);
-        visited.Add(rootReal);
-        pending.Push((rootDir, rootReal, 0));
+        foreach (var file in Walk(rootDir, GetRealPath(rootDir), 0))
+            yield return file;
 
-        while (pending.TryPop(out var dir))
+        while (links.TryDequeue(out var link, out _))
         {
+            foreach (var file in Walk(link.Path, link.RealPath, link.Depth))
+                yield return file;
+        }
+
+        IEnumerable<string> Walk(string dir, string realDir, int depth)
+        {
+            if (!seen.Add(realDir))
+            {
+                Logger.Debug("Skipping {Path}: already scanned", dir);
+                yield break;
+            }
+
             List<string> files;
             List<DirectoryInfo> subDirs;
             try
             {
                 files = Directory
-                    .EnumerateFiles(dir.Path, searchPattern, EnumerationOptionConstants.TopLevelOnly)
+                    .EnumerateFiles(dir, searchPattern, EnumerationOptionConstants.TopLevelOnly)
                     .ToList();
-                subDirs = new DirectoryInfo(dir.Path)
+                subDirs = new DirectoryInfo(dir)
                     .EnumerateDirectories("*", EnumerationOptionConstants.TopLevelOnly)
                     .ToList();
             }
             catch (Exception e) when (e is IOException or UnauthorizedAccessException)
             {
-                Logger.Debug(e, "Skipping unreadable directory {Path}", dir.Path);
-                continue;
+                Logger.Debug(e, "Skipping missing or unreadable directory {Path}", dir);
+                yield break;
             }
 
             foreach (var file in files)
-            {
                 yield return file;
-            }
 
-            if (dir.Depth >= maxDepth)
+            if (depth >= maxDepth)
             {
                 Logger.Warn(
                     "Skipping directories below {Path}: nesting deeper than {MaxDepth}",
-                    dir.Path,
+                    dir,
                     maxDepth
                 );
-                continue;
+                yield break;
             }
 
-            // Pushed in reverse so the stack pops them in enumeration order
-            for (var i = subDirs.Count - 1; i >= 0; i--)
+            foreach (var subDir in subDirs)
             {
-                var subDir = subDirs[i];
-                var subReal = subDir.Attributes.HasFlag(FileAttributes.ReparsePoint)
-                    ? GetRealPath(subDir.FullName)
-                    : Path.Join(dir.RealPath, subDir.Name);
-
-                if (!visited.Add(subReal))
+                if (subDir.Attributes.HasFlag(FileAttributes.ReparsePoint))
                 {
-                    Logger.Debug("Skipping {Path}: already visited as {RealPath}", subDir.FullName, subReal);
+                    var realPath = GetRealPath(subDir.FullName, out var hops);
+                    links.Enqueue((subDir.FullName, realPath, depth + 1), hops);
                     continue;
                 }
 
-                pending.Push((subDir.FullName, subReal, dir.Depth + 1));
+                foreach (var file in Walk(subDir.FullName, Path.Join(realDir, subDir.Name), depth + 1))
+                    yield return file;
             }
         }
     }

@@ -10,10 +10,6 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed shared model folder aliases hiding DiffusionModels in Checkpoint Manager, Image Lab, and Inference, including when DiffusionModels is itself linked to another location - thanks to @NeuralFault and @ionite34 ([#1743](https://github.com/LykosAI/StabilityMatrix/pull/1743), [#1763](https://github.com/LykosAI/StabilityMatrix/pull/1763))!
 - Fixed release-note text being cut off beside the scrollbar in the update dialog ([#1757](https://github.com/LykosAI/StabilityMatrix/issues/1757))
 - Fixed ComfyUI installation and updates failing on Python 3.13+ because the NumPy 1.x constraint has no compatible wheel ([#1754](https://github.com/LykosAI/StabilityMatrix/issues/1754))
-### Shoutouts
-- Thanks to @NeuralFault for diagnosing and fixing shared model folder alias shadowing.
-- Thanks to @ionite34 for simplifying link traversal and fixing aliases of linked model folders.
-- Thanks to @mohnjiles for the Python 3.13 ComfyUI installation fix and update-dialog release-note layout fix.
 
 ## v2.16.4
 ### Added

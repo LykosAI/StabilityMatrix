@@ -1,3 +1,8 @@
+using NSubstitute;
+using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Helper.Cache;
+using StabilityMatrix.Core.Helper.HardwareInfo;
+using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 
@@ -102,6 +107,101 @@ public class PipWheelServiceTests
     {
         Assert.IsNotNull(PipWheelService.FindFallbackWheelUrl(TorchInfo("2.10.0+cu130"), Py312, "2.2.0"));
         Assert.IsNull(PipWheelService.FindFallbackWheelUrl(TorchInfo("2.10.0+cu130"), Py312, "9.9.9"));
+    }
+
+    [TestMethod]
+    [DataRow("2.9.0", true)]
+    [DataRow("2.10.0", true)]
+    [DataRow("2.11.0", true)]
+    [DataRow("2.8.1", false)]
+    [DataRow("invalid", false)]
+    public void Torch29AndHigherWheel_UsesSharedCompatibilityRules(string torch, bool expected)
+    {
+        const string version = "2.2.0+cu130torch2.9.0andhigher.post4";
+        Assert.AreEqual(expected, PipWheelService.IsCompatibleSageAttention(version, $"{torch}+cu130"));
+        Assert.AreEqual(
+            expected,
+            PipWheelService.IsMatchingSageWheel(
+                $"sageattention-{version}-cp39-abi3-win_amd64.whl",
+                torch,
+                "cu130",
+                Py312
+            )
+        );
+    }
+
+    [TestMethod]
+    [DataRow("2.2.0+cu128torch2.9.1.post6", "2.9.1+cu1280")]
+    [DataRow("2.2.0+cu128torch2.9.1.post6", "2.9.1")]
+    [DataRow("2.2.0+cu128torch2.9.1.post6", "2.9.1+cpu")]
+    [DataRow("2.2.0+cu128torch2.9.1.post6", "2.9.1+rocm7.2")]
+    [DataRow("2.2.0+cu128torch2.9.1.post6", "2.9.1.dev20260101+cu128")]
+    public void UnsupportedTorchMetadata_IsNotDeclaredCompatible(string sage, string torch)
+    {
+        Assert.IsFalse(PipWheelService.IsCompatibleSageAttention(sage, torch));
+    }
+
+    [TestMethod]
+    public async Task WindowsRepair_EmptyReleaseListUsesPost6WithoutTorchDependencies()
+    {
+        if (!Compat.IsWindows)
+            Assert.Inconclusive("Windows wheel installation");
+        var github = Substitute.For<IGithubApiCache>();
+        github.GetAllReleases("woct0rdho", "SageAttention").Returns([]);
+        var venv = Substitute.For<IPyVenvRunner>();
+        venv.Version.Returns(Py312);
+        venv.PipShow("torch").Returns(TorchInfo("2.10.0+cu130"));
+        var service = new PipWheelService(
+            github,
+            Substitute.For<IDownloadService>(),
+            Substitute.For<IPrerequisiteHelper>(),
+            Substitute.For<ISettingsManager>()
+        );
+
+        await service.InstallSageAttentionAsync(venv, new GpuInfo { Name = "NVIDIA RTX 4090" });
+
+        await venv.Received(1)
+            .PipInstall(
+                Arg.Is<ProcessArgs>(args =>
+                    args.ToString().Contains("--no-deps")
+                    && args.ToString().Contains("cu130torch2.10.0andhigher.post6")
+                ),
+                Arg.Any<Action<ProcessOutput>?>()
+            );
+    }
+
+    [TestMethod]
+    public async Task NonNvidiaGpu_DoesNotInspectOrInstallCudaWheels()
+    {
+        var github = Substitute.For<IGithubApiCache>();
+        var venv = Substitute.For<IPyVenvRunner>();
+        var service = new PipWheelService(
+            github,
+            Substitute.For<IDownloadService>(),
+            Substitute.For<IPrerequisiteHelper>(),
+            Substitute.For<ISettingsManager>()
+        );
+        await service.InstallSageAttentionAsync(venv, new GpuInfo { Name = "AMD Radeon RX 9070" });
+        Assert.AreEqual(0, venv.ReceivedCalls().Count());
+        Assert.AreEqual(0, github.ReceivedCalls().Count());
+    }
+
+    [TestMethod]
+    public async Task WindowsMissingTorch_DoesNotLookUpOrInstallWheels()
+    {
+        if (!Compat.IsWindows)
+            Assert.Inconclusive("Windows wheel installation");
+        var github = Substitute.For<IGithubApiCache>();
+        var venv = Substitute.For<IPyVenvRunner>();
+        var service = new PipWheelService(
+            github,
+            Substitute.For<IDownloadService>(),
+            Substitute.For<IPrerequisiteHelper>(),
+            Substitute.For<ISettingsManager>()
+        );
+        await service.InstallSageAttentionAsync(venv, new GpuInfo { Name = "NVIDIA RTX 4090" });
+        await venv.DidNotReceive().PipInstall(Arg.Any<ProcessArgs>(), Arg.Any<Action<ProcessOutput>?>());
+        Assert.AreEqual(0, github.ReceivedCalls().Count());
     }
 
     private static PipShowResult TorchInfo(string version) => new() { Name = "torch", Version = version };

@@ -1,4 +1,4 @@
-﻿using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;
 using Injectio.Attributes;
 using NLog;
 using Octokit;
@@ -205,11 +205,19 @@ public class PipWheelService(
         if (!matchesPython)
             return false;
 
-        if (!MatchesTorchVersion(assetName, baseTorchVersion))
-            return false;
+        return IsCompatibleSageAttention(assetName, $"{baseTorchVersion}+{cudaIndex}");
+    }
 
-        // Check CUDA index match
-        return !string.IsNullOrEmpty(cudaIndex) && assetName.Contains(cudaIndex);
+    internal static bool IsCompatibleSageAttention(string sageVersion, string torchVersion)
+    {
+        var plusIndex = torchVersion.IndexOf('+');
+        var baseTorchVersion = plusIndex >= 0 ? torchVersion[..plusIndex] : torchVersion;
+        var cudaIndex = plusIndex >= 0 ? torchVersion[(plusIndex + 1)..] : "";
+        var sageCuda = Regex.Match(sageVersion, @"\+cu(\d+)torch");
+
+        return sageCuda.Success
+            && cudaIndex == $"cu{sageCuda.Groups[1].Value}"
+            && MatchesTorchVersion(sageVersion, baseTorchVersion);
     }
 
     private static bool MatchesTorchVersion(string assetName, string installedTorch)

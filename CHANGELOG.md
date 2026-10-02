@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 
 ## v2.16.5
 ### Fixed
+- Fixed **Open on CivArchive** opening a file URL instead of the model page on Linux ([#1765](https://github.com/LykosAI/StabilityMatrix/issues/1765)).
 - Fixed ComfyUI updates downgrading SageAttention post6 to post4 and reinstalling compatible wheels ([#1764](https://github.com/LykosAI/StabilityMatrix/issues/1764)).
 - ControlNet preprocessing in Inference now offers to update older tagged Inference Core Nodes installations to a version with the ControlNet import fixes and Python 3.12/3.13 installation support.
 - Fixed shared model folder aliases hiding DiffusionModels in Checkpoint Manager, Image Lab, and Inference, including when DiffusionModels is itself linked to another location ([#1743](https://github.com/LykosAI/StabilityMatrix/pull/1743), [#1763](https://github.com/LykosAI/StabilityMatrix/pull/1763)) - Thanks to @NeuralFault and @ionite34!

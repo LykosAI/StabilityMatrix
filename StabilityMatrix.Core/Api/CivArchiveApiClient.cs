@@ -282,9 +282,7 @@ public partial class CivArchiveApiClient(
             return BaseUri;
         }
 
-        return Uri.TryCreate(relativeUrl, UriKind.Absolute, out var absolute)
-            ? absolute
-            : new Uri(BaseUri, relativeUrl);
+        return new Uri(BaseUri, relativeUrl);
     }
 
     public static string BuildSearchDataPath(string routePath, CivArchiveSearchFilters filters)

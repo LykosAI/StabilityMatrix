@@ -1327,12 +1327,15 @@ public sealed class App : Application
             builder.ForLogger().FilterMinLevel(NLog.LogLevel.Trace).WriteTo(consoleTarget).WithAsync();
 
             // File logging
+            // Use Compat.AppDataHome so logs follow --home-dir overrides
+            // (forward slashes to avoid NLog layout escape parsing of backslashes)
+            var logDir = Compat.AppDataHome.JoinDir("Logs").FullPath.Replace('\\', '/');
             var fileTarget = new FileTarget("logfile")
             {
                 Layout = "${longdate}|${level:uppercase=true}|${logger}|${message:withexception=true}",
-                FileName = "${specialfolder:folder=ApplicationData}/StabilityMatrix/Logs/app.log",
+                FileName = $"{logDir}/app.log",
                 ArchiveOldFileOnStartup = true,
-                ArchiveFileName = "${specialfolder:folder=ApplicationData}/StabilityMatrix/Logs/app.{#}.log",
+                ArchiveFileName = $"{logDir}/app.{{#}}.log",
                 ArchiveDateFormat = "yyyy-MM-dd HH_mm_ss",
                 ArchiveNumbering = ArchiveNumberingMode.Date,
                 MaxArchiveFiles = 9,

@@ -42,7 +42,7 @@ Training packages are used to fine-tune or train AI models such as LoRAs, checkp
 | **OneTrainer** | A comprehensive one-stop solution for Stable Diffusion model training with a graphical interface. |
 | **kohya_ss** | A Windows-focused Gradio GUI wrapping Kohya's popular Stable Diffusion trainer scripts. Windows only. |
 | **FluxGym** | A simple, low-VRAM Flux LoRA training UI designed for quick fine-tuning workflows. |
-| **Fizgig** | A LoRA training studio for Flux 2 Klein 9B, Krea 2, MiniMax H3 and Qwen Image 2.1, with block profiling, repair and extraction tools. NVIDIA only. |
+| **Fizgig** | A LoRA training studio for Flux 2 Klein 9B, Krea 2, MiniMax H3 and Qwen Image 2.1, with block profiling, repair and extraction tools. NVIDIA only, on Windows and Linux. |
 
 ---
 

@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - **Model categories** in the Checkpoint Manager — tag any model (LoRAs, checkpoints, anything) with as many custom categories as you like, e.g. *Character*, *Style*, *Concept*. Categories show as coloured chips on the cards, filter from the new **Categories** section in the sidebar (or with `@name` in the search box), and can be assigned in bulk: select models and use **Categories** in the selection bar, right-click → **Set Categories**, or drop cards onto a category. Stored in the model's existing `.cm-info.json`, so they survive moves, renames, folder copies and metadata refreshes — the most requested item on the feature tracker
 - Categories reach **Inference** too: the model picker dialog gets a **Categories** filter row and shows each model's category chips, and typing a category name filters any model dropdown as well as the `<lora:` prompt autocomplete
 ### Fixed
+- Fixed [#1767](https://github.com/LykosAI/StabilityMatrix/issues/1767) - **AI-Toolkit** installation failing on Linux while unpacking Node.js with a "Dangerous link path" error.
 - Fixed ComfyUI updates reinstalling compatible SageAttention wheels, including post6 and wheels supporting newer PyTorch versions ([#1764](https://github.com/LykosAI/StabilityMatrix/issues/1764)).
 - Fixed **Open on CivArchive** opening a file URL instead of the model page on Linux ([#1765](https://github.com/LykosAI/StabilityMatrix/issues/1765)).
 - ControlNet preprocessing in Inference now offers to update older tagged Inference Core Nodes installations to a version with the ControlNet import fixes and Python 3.12/3.13 installation support.
@@ -219,6 +220,7 @@ This build leans hard into what's next: a live HuggingFace browser and Wan 2.2 v
 
 ## v2.16.5
 ### Fixed
+- Fixed [#1767](https://github.com/LykosAI/StabilityMatrix/issues/1767) - **AI-Toolkit** installation failing on Linux while unpacking Node.js with a "Dangerous link path" error.
 - ControlNet preprocessing in Inference now offers to update older tagged Inference Core Nodes installations to a version with the ControlNet import fixes and Python 3.12/3.13 installation support.
 - Fixed shared model folder aliases hiding DiffusionModels in Checkpoint Manager, Image Lab, and Inference, including when DiffusionModels is itself linked to another location ([#1743](https://github.com/LykosAI/StabilityMatrix/pull/1743), [#1763](https://github.com/LykosAI/StabilityMatrix/pull/1763)) - Thanks to @NeuralFault and @ionite34!
 - Fixed the Model Browser's **Base Model** filter being lost when using **Next Model** / **Previous Model** or refreshing a model's details ([#1436](https://github.com/LykosAI/StabilityMatrix/issues/1436))

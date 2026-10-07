@@ -1328,18 +1328,7 @@ public sealed class App : Application
 
             // File logging
             // Use Compat.AppDataHome so logs follow --home-dir overrides
-            // (forward slashes to avoid NLog layout escape parsing of backslashes)
-            var logDir = Compat.AppDataHome.JoinDir("Logs").FullPath.Replace('\\', '/');
-            var fileTarget = new FileTarget("logfile")
-            {
-                Layout = "${longdate}|${level:uppercase=true}|${logger}|${message:withexception=true}",
-                FileName = $"{logDir}/app.log",
-                ArchiveOldFileOnStartup = true,
-                ArchiveFileName = $"{logDir}/app.{{#}}.log",
-                ArchiveDateFormat = "yyyy-MM-dd HH_mm_ss",
-                ArchiveNumbering = ArchiveNumberingMode.Date,
-                MaxArchiveFiles = 9,
-            };
+            var fileTarget = LogFileTarget.Create(Compat.AppDataHome.JoinDir("Logs"));
             builder.ForLogger().FilterMinLevel(NLog.LogLevel.Debug).WriteTo(fileTarget).WithAsync();
 
 #if SM_LOG_WINDOW

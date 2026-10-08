@@ -1328,7 +1328,7 @@ public sealed class App : Application
 
             // File logging
             // Use Compat.AppDataHome so logs follow --home-dir overrides
-            var fileTarget = LogFileTarget.Create(Compat.AppDataHome.JoinDir("Logs"));
+            var fileTarget = LogFileTarget.Create(Compat.LogsDir);
             builder.ForLogger().FilterMinLevel(NLog.LogLevel.Debug).WriteTo(fileTarget).WithAsync();
 
 #if SM_LOG_WINDOW

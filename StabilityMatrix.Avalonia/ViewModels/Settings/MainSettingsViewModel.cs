@@ -818,9 +818,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
                 Resources.Label_AppData
             ),
             new CommandItem(
-                new AsyncRelayCommand(() =>
-                    ProcessRunner.OpenFolderBrowser(Compat.AppDataHome.JoinDir("Logs"))
-                ),
+                new AsyncRelayCommand(() => ProcessRunner.OpenFolderBrowser(Compat.LogsDir)),
                 Resources.Label_Logs
             ),
             new CommandItem(
@@ -832,8 +830,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
                 Resources.Label_Checkpoints
             ),
             new CommandItem(
-                new AsyncRelayCommand(() =>
-                    ProcessRunner.OpenFolderBrowser(settingsManager.LibraryDir.JoinDir("Packages"))
+                new AsyncRelayCommand(() => ProcessRunner.OpenFolderBrowser(settingsManager.PackagesDirectory)
                 ),
                 Resources.Label_Packages
             ),

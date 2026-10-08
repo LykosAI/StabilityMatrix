@@ -71,6 +71,7 @@ public class SettingsManager(ILogger<SettingsManager> logger) : ISettingsManager
     public DirectoryPath ImagesInferenceDirectory => ImagesDirectory.JoinDir("Inference");
     public DirectoryPath ConsolidatedImagesDirectory => ImagesDirectory.JoinDir("Consolidated");
     public DirectoryPath ExtensionPackDirectory => LibraryDir.JoinDir("ExtensionPacks");
+    public DirectoryPath PackagesDirectory => LibraryDir.JoinDir("Packages");
 
     public Settings Settings { get; private set; } = new();
 

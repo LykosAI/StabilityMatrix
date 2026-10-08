@@ -66,7 +66,7 @@ public partial class ExceptionViewModel : ViewModelBase
 
         using var suspend = LogManager.SuspendLogging();
 
-        var logDir = Compat.AppDataHome.JoinDir("Logs");
+        var logDir = Compat.LogsDir;
 
         // Copy logs to temp directory
         using var tempDir = new TempDirectoryPath();

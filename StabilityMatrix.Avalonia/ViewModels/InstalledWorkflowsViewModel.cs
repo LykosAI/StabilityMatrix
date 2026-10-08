@@ -76,10 +76,7 @@ public partial class InstalledWorkflowsViewModel(
     {
         workflowsCache.Clear();
 
-        if (!Directory.Exists(settingsManager.WorkflowDirectory))
-        {
-            Directory.CreateDirectory(settingsManager.WorkflowDirectory);
-        }
+        settingsManager.EnsureAppDirectories();
 
         var count = 0;
 

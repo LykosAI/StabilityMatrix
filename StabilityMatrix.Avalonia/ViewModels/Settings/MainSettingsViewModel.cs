@@ -814,27 +814,34 @@ public partial class MainSettingsViewModel : PageViewModelBase
     public CommandItem[] DirectoryShortcutCommands =>
         [
             new CommandItem(
-                new AsyncRelayCommand(() => ProcessRunner.OpenFolderBrowser(Compat.AppDataHome)),
+                new AsyncRelayCommand(() => OpenDirectoryShortcut(Compat.AppDataHome)),
                 Resources.Label_AppData
             ),
             new CommandItem(
-                new AsyncRelayCommand(() => ProcessRunner.OpenFolderBrowser(Compat.LogsDir)),
+                new AsyncRelayCommand(() => OpenDirectoryShortcut(Compat.LogsDir)),
                 Resources.Label_Logs
             ),
             new CommandItem(
-                new AsyncRelayCommand(() => ProcessRunner.OpenFolderBrowser(settingsManager.LibraryDir)),
+                new AsyncRelayCommand(() => OpenDirectoryShortcut(settingsManager.LibraryDir)),
                 Resources.Label_DataDirectory
             ),
             new CommandItem(
-                new AsyncRelayCommand(() => ProcessRunner.OpenFolderBrowser(settingsManager.ModelsDirectory)),
+                new AsyncRelayCommand(() => OpenDirectoryShortcut(settingsManager.ModelsDirectory)),
                 Resources.Label_Checkpoints
             ),
             new CommandItem(
-                new AsyncRelayCommand(() => ProcessRunner.OpenFolderBrowser(settingsManager.PackagesDirectory)
-                ),
+                new AsyncRelayCommand(() => OpenDirectoryShortcut(settingsManager.PackagesDirectory)),
                 Resources.Label_Packages
             ),
         ];
+
+    private Task OpenDirectoryShortcut(string directoryPath)
+    {
+        // Recreate app folders in case they were deleted since startup
+        settingsManager.EnsureAppDirectories();
+
+        return IOCommands.OpenFolderBrowserAsync(directoryPath);
+    }
 
     #endregion
 

@@ -72,7 +72,9 @@ public partial class ExceptionViewModel : ViewModelBase
         using var tempDir = new TempDirectoryPath();
         var tempLogDir = tempDir.JoinDir("Logs");
         tempLogDir.Create();
-        foreach (var logFile in logDir.EnumerateFiles("*.log"))
+        // Logs may have been deleted since NLog last wrote, zip whatever exists
+        var logFiles = logDir.Exists ? logDir.EnumerateFiles("*.log") : [];
+        foreach (var logFile in logFiles)
         {
             // Need FileShare.ReadWrite since NLog keeps the file open
             await logFile.CopyToAsync(

@@ -655,8 +655,8 @@ public partial class PromptCardViewModel
             PromptDocument.Text = expandedPrompt.Response.PositivePrompt;
             NegativePromptDocument.Text = expandedPrompt.Response.NegativePrompt;
 
-            // Truncate toward zero: a partial credit cannot buy an amplification.
-            TokensRemaining = (int)Math.Truncate(expandedPrompt.RemainingBalance);
+            // The server counts whole amplifications at the current price; RemainingBalance is credits.
+            TokensRemaining = expandedPrompt.AvailableTokens;
         }
         catch (ApiException e)
         {

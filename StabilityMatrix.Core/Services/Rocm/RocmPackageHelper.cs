@@ -249,33 +249,43 @@ public class RocmPackageHelper : IRocmPackageHelper
             );
         }
 
-        progress?.Report(new ProgressReport(-1f, "Installing ROCm torch...", isIndeterminate: true));
-
         var installConfig = profile.InstallConfig;
         var multiArchPythonPackageIndexUrl = WindowsRocmSupport.GetMultiArchPythonPackageIndexUrl(
             state.RuntimeGfxArch
         );
-        var torchArgs = new PipInstallArgs()
-            .AddKeyedArgs("--index-url", ["--index-url", multiArchPythonPackageIndexUrl])
-            .AddArgs(
-                new Argument($"torch[{multiArchDeviceExtra}]"),
-                new Argument($"torchvision[{multiArchDeviceExtra}]"),
-                new Argument("torchaudio")
-            );
+        var usesNightlyIndex = WindowsRocmSupport.UsesNightlyMultiArchPythonPackageIndex(
+            state.RuntimeGfxArch
+        );
 
-        if (installConfig.UpgradePackages)
-        {
-            torchArgs = torchArgs.AddArg("--upgrade");
-        }
+        // AMD's torchvision wheels carry no torch constraint, and the matched build may be published only
+        // as a pre-release that pip skips. Resolve the newest paired torch/torchvision and pin both.
+        progress?.Report(new ProgressReport(-1f, "Resolving ROCm torch...", isIndeterminate: true));
 
-        if (installConfig.ForceReinstallTorch)
-        {
-            torchArgs = torchArgs.AddArg("--force-reinstall");
-        }
+        var torchResolution = await ResolveTorchInstallAsync(
+                venvRunner,
+                multiArchPythonPackageIndexUrl,
+                multiArchDeviceExtra,
+                usesNightlyIndex,
+                onConsoleOutput,
+                cancellationToken
+            )
+            .ConfigureAwait(false);
 
-        if (installedPackage.PipOverrides != null)
+        progress?.Report(new ProgressReport(-1f, "Installing ROCm torch...", isIndeterminate: true));
+
+        var torchArgs = ApplyRocmTorchInstallOptions(
+            BuildRocmTorchArgs(
+                multiArchPythonPackageIndexUrl,
+                torchResolution.TorchSpecifier,
+                torchResolution.TorchvisionSpecifier
+            ),
+            installConfig,
+            installedPackage
+        );
+
+        if (torchResolution.AllowPrerelease)
         {
-            torchArgs = torchArgs.WithUserOverrides(installedPackage.PipOverrides);
+            torchArgs = torchArgs.AddArg("--pre");
         }
 
         await venvRunner.PipInstall(torchArgs, onConsoleOutput).ConfigureAwait(false);
@@ -296,6 +306,187 @@ public class RocmPackageHelper : IRocmPackageHelper
 
         await VerifyWindowsNativeTorchInstallAsync(venvRunner, onConsoleOutput, cancellationToken)
             .ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Applies the profile's upgrade/reinstall flags and any user pip overrides to a ROCm torch install command.
+    /// </summary>
+    private static PipInstallArgs ApplyRocmTorchInstallOptions(
+        PipInstallArgs args,
+        PipInstallConfig installConfig,
+        InstalledPackage installedPackage
+    )
+    {
+        if (installConfig.UpgradePackages)
+        {
+            args = args.AddArg("--upgrade");
+        }
+
+        if (installConfig.ForceReinstallTorch)
+        {
+            args = args.AddArg("--force-reinstall");
+        }
+
+        if (installedPackage.PipOverrides != null)
+        {
+            args = args.WithUserOverrides(installedPackage.PipOverrides);
+        }
+
+        return args;
+    }
+
+    /// <summary>
+    /// Builds the pip args for the resolved torch/torchvision pair. The specs are keyed so a user
+    /// override replaces the pin instead of being appended next to it (which pip cannot satisfy).
+    /// </summary>
+    internal static PipInstallArgs BuildRocmTorchArgs(
+        string multiArchPythonPackageIndexUrl,
+        string torchSpecifier,
+        string torchvisionSpecifier
+    )
+    {
+        return new PipInstallArgs()
+            .AddKeyedArgs("--index-url", ["--index-url", multiArchPythonPackageIndexUrl])
+            .AddArg(new Argument(key: "torch", value: torchSpecifier))
+            .AddArg(new Argument(key: "torchvision", value: torchvisionSpecifier))
+            .AddArg("torchaudio");
+    }
+
+    /// <summary>
+    /// Resolved torch and torchvision install specifiers, plus whether the install must allow
+    /// pre-releases (the fallback path where no paired build could be resolved).
+    /// </summary>
+    private readonly record struct TorchInstallResolution(
+        string TorchSpecifier,
+        string TorchvisionSpecifier,
+        bool AllowPrerelease
+    );
+
+    /// <summary>
+    /// Resolves the newest torch that has a paired torchvision on the ROCm index so both can be pinned;
+    /// falls back to unpinned, pre-release-allowing specifiers when no pair resolves.
+    /// </summary>
+    private async Task<TorchInstallResolution> ResolveTorchInstallAsync(
+        IPyVenvRunner venvRunner,
+        string multiArchPythonPackageIndexUrl,
+        string multiArchDeviceExtra,
+        bool usesNightlyIndex,
+        Action<ProcessOutput>? onConsoleOutput,
+        CancellationToken cancellationToken
+    )
+    {
+        var torchSpecifierBase = $"torch[{multiArchDeviceExtra}]";
+        var torchvisionSpecifierBase = $"torchvision[{multiArchDeviceExtra}]";
+
+        try
+        {
+            // torch: finals only on the stable channel, pre/dev builds on the nightly channel.
+            var torchIndex = await venvRunner
+                .PipIndex("torch", multiArchPythonPackageIndexUrl, includePrerelease: usesNightlyIndex)
+                .ConfigureAwait(false);
+            cancellationToken.ThrowIfCancellationRequested();
+
+            // torchvision: allow pre-releases so the matched alpha (e.g. 0.29.0a0) is visible.
+            var torchvisionIndex = await venvRunner
+                .PipIndex("torchvision", multiArchPythonPackageIndexUrl, includePrerelease: true)
+                .ConfigureAwait(false);
+            cancellationToken.ThrowIfCancellationRequested();
+
+            // On the nightly channel the local label carries the build date, so pin the newest snapshot
+            // that exists for both torch and the paired torchvision instead of letting pip pair builds
+            // from different dates.
+            if (usesNightlyIndex)
+            {
+                var snapshot = RocmTorchVersionResolver.SelectHighestPairBySnapshot(
+                    torchIndex?.AvailableVersions,
+                    torchvisionIndex?.AvailableVersions
+                );
+
+                if (snapshot is { } selectedSnapshot)
+                {
+                    Logger.Info(
+                        "Resolved ROCm nightly snapshot torch {TorchVersion} with torchvision {TorchvisionVersion}.",
+                        selectedSnapshot.Torch,
+                        selectedSnapshot.Torchvision
+                    );
+
+                    return new TorchInstallResolution(
+                        $"{torchSpecifierBase}=={selectedSnapshot.Torch}",
+                        $"{torchvisionSpecifierBase}=={selectedSnapshot.Torchvision}",
+                        AllowPrerelease: false
+                    );
+                }
+            }
+
+            var pair = RocmTorchVersionResolver.SelectHighestPair(
+                torchIndex?.AvailableVersions,
+                torchvisionIndex?.AvailableVersions
+            );
+
+            if (pair is { } selectedPair)
+            {
+                if (usesNightlyIndex)
+                {
+                    onConsoleOutput?.Invoke(
+                        ProcessOutput.FromStdErrLine(
+                            "ROCm: no nightly build shares the same date stamp for torch and torchvision; "
+                                + "falling back to the newest builds of each."
+                        )
+                    );
+                }
+
+                // pip lists versions in descending order, so the first entry is the newest torch.
+                var newestTorch = torchIndex?.AvailableVersions is { Count: > 0 } torchVersions
+                    ? RocmTorchVersionResolver.StripLocalVersion(torchVersions[0])
+                    : null;
+
+                if (
+                    !string.IsNullOrWhiteSpace(newestTorch)
+                    && !string.Equals(newestTorch, selectedPair.Torch, StringComparison.OrdinalIgnoreCase)
+                )
+                {
+                    onConsoleOutput?.Invoke(
+                        ProcessOutput.FromStdErrLine(
+                            $"ROCm: torch {newestTorch} has no matching torchvision build on the index; "
+                                + $"using torch {selectedPair.Torch} instead."
+                        )
+                    );
+                }
+
+                Logger.Info(
+                    "Resolved ROCm torch {TorchVersion} with torchvision {TorchvisionVersion}.",
+                    selectedPair.Torch,
+                    selectedPair.Torchvision
+                );
+
+                return new TorchInstallResolution(
+                    $"{torchSpecifierBase}=={selectedPair.Torch}",
+                    $"{torchvisionSpecifierBase}=={selectedPair.Torchvision}",
+                    AllowPrerelease: false
+                );
+            }
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            Logger.Warn(
+                exception,
+                "Failed to resolve a paired ROCm torch/torchvision set from the ROCm index."
+            );
+        }
+
+        onConsoleOutput?.Invoke(
+            ProcessOutput.FromStdErrLine(
+                "ROCm: no paired torch/torchvision build could be resolved from the index. "
+                    + "Falling back to the newest available builds."
+            )
+        );
+
+        // Only widen to pre-releases on nightly, where pip would otherwise select an older final.
+        return new TorchInstallResolution(
+            torchSpecifierBase,
+            torchvisionSpecifierBase,
+            AllowPrerelease: usesNightlyIndex
+        );
     }
 
     /// <summary>
@@ -433,14 +624,19 @@ public class RocmPackageHelper : IRocmPackageHelper
 
         var verificationResult = await venvRunner
             .Run(
-                "-c \"import json, torch; print(json.dumps({'version': torch.__version__, 'hip': torch.version.hip, 'cuda': torch.cuda.is_available()}))\""
+                "-c \"import json, torch, torchvision; print(json.dumps({'version': torch.__version__, 'torchvision': torchvision.__version__, 'hip': torch.version.hip, 'cuda': torch.cuda.is_available()}))\""
             )
             .ConfigureAwait(false);
 
         var verificationOutput = (verificationResult.StandardOutput ?? string.Empty).Trim();
         if (string.IsNullOrWhiteSpace(verificationOutput))
         {
-            throw new InvalidOperationException("Torch verification produced no output.");
+            var verificationError = (verificationResult.StandardError ?? string.Empty).Trim();
+            throw new InvalidOperationException(
+                string.IsNullOrWhiteSpace(verificationError)
+                    ? "Torch verification produced no output."
+                    : $"Torch verification produced no output. Standard error: {verificationError}"
+            );
         }
 
         var verificationJson = TryExtractJsonObject(verificationOutput);
@@ -470,6 +666,9 @@ public class RocmPackageHelper : IRocmPackageHelper
             var version = root.TryGetProperty("version", out var versionElement)
                 ? versionElement.GetString()
                 : null;
+            var torchvisionVersion = root.TryGetProperty("torchvision", out var torchvisionElement)
+                ? torchvisionElement.GetString()
+                : null;
             var hipVersion = root.TryGetProperty("hip", out var hipElement) ? hipElement.GetString() : null;
             var cudaAvailable = root.TryGetProperty("cuda", out var cudaElement) && cudaElement.GetBoolean();
 
@@ -477,6 +676,16 @@ public class RocmPackageHelper : IRocmPackageHelper
             {
                 throw new InvalidOperationException(
                     $"Installed torch is not a usable ROCm build. Verification output: {verificationOutput}"
+                );
+            }
+
+            // AMD's torchvision wheels declare no torch version constraint, so an ABI-mismatched pair only
+            // fails at import time. Importing it here surfaces that as an install failure instead of a
+            // confusing runtime error later.
+            if (string.IsNullOrWhiteSpace(torchvisionVersion))
+            {
+                throw new InvalidOperationException(
+                    $"Installed torchvision could not be imported. Verification output: {verificationOutput}"
                 );
             }
 
@@ -491,7 +700,7 @@ public class RocmPackageHelper : IRocmPackageHelper
 
             onConsoleOutput?.Invoke(
                 ProcessOutput.FromStdOutLine(
-                    $"Torch verification: version={version}, hip={hipVersion}, cuda={cudaAvailable}"
+                    $"Torch verification: version={version}, torchvision={torchvisionVersion}, hip={hipVersion}, cuda={cudaAvailable}"
                 )
             );
         }

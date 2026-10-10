@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
 ## v2.16.5
+### Added
+- Added **Fizgig**, a LoRA training studio for Flux 2 Klein 9B, Krea 2, MiniMax H3 and Qwen Image 2.1 with dataset prep, training, LoRA repair and extraction in one app ([#1761](https://github.com/LykosAI/StabilityMatrix/pull/1761)) - thanks to @e-nord!
 ### Fixed
 - Fixed **Open on CivArchive** opening a file URL instead of the model page on Linux ([#1765](https://github.com/LykosAI/StabilityMatrix/issues/1765)).
 - Fixed ComfyUI updates downgrading SageAttention post6 to post4 and reinstalling compatible wheels ([#1764](https://github.com/LykosAI/StabilityMatrix/issues/1764)).
@@ -14,6 +16,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed the Model Browser's **Base Model** filter being lost when using **Next Model** / **Previous Model** or refreshing a model's details ([#1436](https://github.com/LykosAI/StabilityMatrix/issues/1436))
 - Fixed release-note text being cut off beside the scrollbar in the update dialog ([#1757](https://github.com/LykosAI/StabilityMatrix/issues/1757))
 - Fixed ComfyUI installation and updates failing on Python 3.13+ because the NumPy 1.x constraint has no compatible wheel ([#1754](https://github.com/LykosAI/StabilityMatrix/issues/1754))
+- Fixed **Windows ROCm** PyTorch installs pairing mismatched `torch` and `torchvision` versions, which broke packages at `import torchvision`; a matched pair is now always installed together ([#1769](https://github.com/LykosAI/StabilityMatrix/pull/1769)) - thanks to @NeuralFault!
 
 ## v2.16.4
 ### Added

@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reactive.Disposables;
@@ -71,6 +71,7 @@ public class SettingsManager(ILogger<SettingsManager> logger) : ISettingsManager
     public DirectoryPath ImagesInferenceDirectory => ImagesDirectory.JoinDir("Inference");
     public DirectoryPath ConsolidatedImagesDirectory => ImagesDirectory.JoinDir("Consolidated");
     public DirectoryPath ExtensionPackDirectory => LibraryDir.JoinDir("ExtensionPacks");
+    public DirectoryPath PackagesDirectory => LibraryDir.JoinDir("Packages");
 
     public Settings Settings { get; private set; } = new();
 
@@ -330,9 +331,7 @@ public class SettingsManager(ILogger<SettingsManager> logger) : ISettingsManager
         {
             logger.LogInformation("Using library override path {Path}", libraryDirOverride.FullPath);
 
-            LibraryDir = libraryDirOverride;
-            SetStaticLibraryPaths();
-            LoadSettings();
+            LoadLibrary(libraryDirOverride);
             return true;
         }
 
@@ -341,9 +340,7 @@ public class SettingsManager(ILogger<SettingsManager> logger) : ISettingsManager
         IsPortableMode = File.Exists(Path.Combine(appDir, "Data", ".sm-portable"));
         if (IsPortableMode)
         {
-            LibraryDir = appDir + "Data";
-            SetStaticLibraryPaths();
-            LoadSettings();
+            LoadLibrary(appDir + "Data");
             return true;
         }
 
@@ -362,9 +359,7 @@ public class SettingsManager(ILogger<SettingsManager> logger) : ISettingsManager
                 && Directory.Exists(librarySettings.LibraryPath)
             )
             {
-                LibraryDir = librarySettings.LibraryPath;
-                SetStaticLibraryPaths();
-                LoadSettings();
+                LoadLibrary(librarySettings.LibraryPath);
                 return true;
             }
         }
@@ -373,6 +368,44 @@ public class SettingsManager(ILogger<SettingsManager> logger) : ISettingsManager
             logger.LogWarning("Failed to read library.json in AppData: {Message}", e.Message);
         }
         return false;
+    }
+
+    private void LoadLibrary(DirectoryPath libraryDirectory)
+    {
+        LibraryDir = libraryDirectory;
+        SetStaticLibraryPaths();
+        LoadSettings();
+    }
+
+    /// <inheritdoc />
+    public void EnsureAppDirectories()
+    {
+        List<DirectoryPath> directories = [Compat.AppDataHome, Compat.LogsDir];
+
+        if (IsLibraryDirSet)
+        {
+            directories.AddRange(
+                [PackagesDirectory, WorkflowDirectory, ImagesDirectory, ExtensionPackDirectory]
+            );
+
+            // Don't create an override, it may be on a drive that isn't mounted
+            if (Settings.ModelDirectoryOverride is null)
+            {
+                directories.Add(ModelsDirectory);
+            }
+        }
+
+        foreach (var directory in directories)
+        {
+            try
+            {
+                directory.Create();
+            }
+            catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+            {
+                logger.LogWarning(e, "Failed to create directory {Path}", directory.FullPath);
+            }
+        }
     }
 
     // Set static classes requiring library path

@@ -50,6 +50,11 @@ public static class Compat
     public static DirectoryPath AppDataHome { get; private set; }
 
     /// <summary>
+    /// Log files directory (AppDataHome/Logs)
+    /// </summary>
+    public static DirectoryPath LogsDir => AppDataHome.JoinDir("Logs");
+
+    /// <summary>
     /// Set AppDataHome to a custom path. Used for testing.
     /// </summary>
     public static void SetAppDataHome(string path)

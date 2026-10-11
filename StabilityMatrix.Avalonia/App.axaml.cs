@@ -1327,16 +1327,8 @@ public sealed class App : Application
             builder.ForLogger().FilterMinLevel(NLog.LogLevel.Trace).WriteTo(consoleTarget).WithAsync();
 
             // File logging
-            var fileTarget = new FileTarget("logfile")
-            {
-                Layout = "${longdate}|${level:uppercase=true}|${logger}|${message:withexception=true}",
-                FileName = "${specialfolder:folder=ApplicationData}/StabilityMatrix/Logs/app.log",
-                ArchiveOldFileOnStartup = true,
-                ArchiveFileName = "${specialfolder:folder=ApplicationData}/StabilityMatrix/Logs/app.{#}.log",
-                ArchiveDateFormat = "yyyy-MM-dd HH_mm_ss",
-                ArchiveNumbering = ArchiveNumberingMode.Date,
-                MaxArchiveFiles = 9,
-            };
+            // Use Compat.AppDataHome so logs follow --home-dir overrides
+            var fileTarget = LogFileTarget.Create(Compat.LogsDir);
             builder.ForLogger().FilterMinLevel(NLog.LogLevel.Debug).WriteTo(fileTarget).WithAsync();
 
 #if SM_LOG_WINDOW

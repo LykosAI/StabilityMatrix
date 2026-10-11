@@ -219,6 +219,18 @@ public class ForgeClassic(
             )
             .ConfigureAwait(false);
 
+        // Allow derived packages (e.g. Forge Neo on ROCm) to prepare the environment before the
+        // upstream launch.py install runs, such as pre-installing an alternative torch build.
+        await PrepareRocmInstallAsync(
+                venvRunner,
+                installedPackage,
+                options,
+                onConsoleOutput,
+                progress,
+                cancellationToken
+            )
+            .ConfigureAwait(false);
+
         progress?.Report(new ProgressReport(-1f, "Running install script...", isIndeterminate: true));
 
         // Build args for their launch.py - use --uv for fast installs, --exit to quit after setup
@@ -291,6 +303,23 @@ public class ForgeClassic(
         }
 
         progress?.Report(new ProgressReport(1f, "Install complete", isIndeterminate: false));
+    }
+
+    /// <summary>
+    /// Hook for derived packages to prepare the environment before the upstream Forge install script
+    /// runs. The default implementation does nothing. Used by Forge Neo to pre-install an alternative
+    /// ROCm torch build so the upstream launch.py does not install its default (CUDA) torch build.
+    /// </summary>
+    protected virtual Task PrepareRocmInstallAsync(
+        IPyVenvRunner venvRunner,
+        InstalledPackage installedPackage,
+        InstallPackageOptions options,
+        Action<ProcessOutput>? onConsoleOutput,
+        IProgress<ProgressReport>? progress,
+        CancellationToken cancellationToken
+    )
+    {
+        return Task.CompletedTask;
     }
 
     private async Task<int> RunInstallScriptWithPromptHandling(

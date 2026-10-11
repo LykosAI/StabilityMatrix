@@ -260,7 +260,8 @@ public class PackageFactory : IPackageFactory
                 downloadService,
                 prerequisiteHelper,
                 pyInstallationManager,
-                pipWheelService
+                pipWheelService,
+                rocmPackageHelper
             ),
             "framepack" => new FramePack(
                 githubApiCache,
@@ -271,6 +272,14 @@ public class PackageFactory : IPackageFactory
                 pipWheelService
             ),
             "framepack-studio" => new FramePackStudio(
+                githubApiCache,
+                settingsManager,
+                downloadService,
+                prerequisiteHelper,
+                pyInstallationManager,
+                pipWheelService
+            ),
+            "Fizgig" => new Fizgig(
                 githubApiCache,
                 settingsManager,
                 downloadService,

@@ -209,7 +209,7 @@ public partial class MainPackageManagerViewModel : PageViewModelBase
 
     private IEnumerable<UnknownInstalledPackage> IndexUnknownPackages()
     {
-        var packageDir = settingsManager.LibraryDir.JoinDir("Packages");
+        var packageDir = settingsManager.PackagesDirectory;
 
         if (!packageDir.Exists)
         {

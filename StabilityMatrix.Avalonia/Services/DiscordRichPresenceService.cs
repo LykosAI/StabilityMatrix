@@ -96,6 +96,7 @@ public class DiscordRichPresenceService : IDiscordRichPresenceService
 
             var packageTitle = args.CurrentPackagePair.BasePackage switch
             {
+                Fizgig => "Fizgig",
                 FluxGym => "FluxGym",
                 Fooocus => "Fooocus",
                 Reforge => "SD WebUI reForge",

@@ -2,6 +2,7 @@ using System.Text.Json;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models.Rocm;
+using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services.Rocm;
 
 namespace StabilityMatrix.Tests.Core;
@@ -112,5 +113,74 @@ public class RocmPackageHelperTests
         var gpu = new GpuInfo { Name = "AMD Radeon RX 9070 XT", MemoryBytes = 16UL * Size.GiB };
 
         Assert.IsTrue(WindowsRocmSupport.IsSupportedGpu(gpu));
+    }
+
+    [TestMethod]
+    public void BuildRocmTorchArgs_PinsTorchAndTorchvisionWithDeviceExtras()
+    {
+        var args = RocmPackageHelper.BuildRocmTorchArgs(
+            "https://stable.repo.amd.com/rocm/whl-next/",
+            "torch[device-gfx1201]==2.14.0",
+            "torchvision[device-gfx1201]==0.29.0a0"
+        );
+
+        var text = args.ToString();
+
+        StringAssert.Contains(text, "torch[device-gfx1201]==2.14.0");
+        StringAssert.Contains(text, "torchvision[device-gfx1201]==0.29.0a0");
+        StringAssert.Contains(text, "torchaudio");
+    }
+
+    [TestMethod]
+    public void BuildRocmTorchArgs_UserTorchOverrideReplacesPinnedTorch()
+    {
+        var args = RocmPackageHelper.BuildRocmTorchArgs(
+            "https://stable.repo.amd.com/rocm/whl-next/",
+            "torch[device-gfx1201]==2.14.0",
+            "torchvision[device-gfx1201]==0.29.0a0"
+        );
+
+        var overrides = new List<PipPackageSpecifierOverride>
+        {
+            new()
+            {
+                Name = "torch",
+                Constraint = "==",
+                Version = "2.13.0",
+                Action = PipPackageSpecifierOverrideAction.Update,
+            },
+        };
+
+        var text = args.WithUserOverrides(overrides).ToString();
+
+        // The override must replace the pin rather than be appended next to it (pip cannot satisfy both).
+        StringAssert.Contains(text, "torch==2.13.0");
+        Assert.IsFalse(text.Contains("torch[device-gfx1201]==2.14.0"), text);
+    }
+
+    [TestMethod]
+    public void BuildRocmTorchArgs_UserTorchvisionOverrideReplacesPinnedTorchvision()
+    {
+        var args = RocmPackageHelper.BuildRocmTorchArgs(
+            "https://stable.repo.amd.com/rocm/whl-next/",
+            "torch[device-gfx1201]==2.14.0",
+            "torchvision[device-gfx1201]==0.29.0a0"
+        );
+
+        var overrides = new List<PipPackageSpecifierOverride>
+        {
+            new()
+            {
+                Name = "torchvision",
+                Constraint = "==",
+                Version = "0.28.0",
+                Action = PipPackageSpecifierOverrideAction.Update,
+            },
+        };
+
+        var text = args.WithUserOverrides(overrides).ToString();
+
+        StringAssert.Contains(text, "torchvision==0.28.0");
+        Assert.IsFalse(text.Contains("torchvision[device-gfx1201]==0.29.0a0"), text);
     }
 }

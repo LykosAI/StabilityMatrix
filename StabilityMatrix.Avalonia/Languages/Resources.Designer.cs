@@ -2104,6 +2104,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to File not found.
+        /// </summary>
+        public static string Label_FileNotFound {
+            get {
+                return ResourceManager.GetString("Label_FileNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Files.
         /// </summary>
         public static string Label_Files {
@@ -2163,6 +2172,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_Folder {
             get {
                 return ResourceManager.GetString("Label_Folder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Folder not found.
+        /// </summary>
+        public static string Label_FolderNotFound {
+            get {
+                return ResourceManager.GetString("Label_FolderNotFound", resourceCulture);
             }
         }
         

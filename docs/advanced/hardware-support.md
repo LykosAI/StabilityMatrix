@@ -36,7 +36,7 @@ The lists below describe what the code checks for. Because hardware detection wo
 - **Caveats:**
   - The `cu130` wheels require an NVIDIA driver of version 580 or newer. ComfyUI checks the installed driver on launch and warns if it is older than 580.x while `cu130` torch is installed, suggesting either a driver update or manually downgrading to an older torch index such as `cu128`.
   - Turing (RTX 2000-series) or newer is the practical recommendation; older cards may still work but are treated as legacy.
-- **Packages:** CUDA is the most broadly supported backend. Every inference package that lists a GPU backend supports CUDA, and CUDA-only packages include Fooocus, SimpleSDXL, ForgeClassic, FramePack, and the training tools (Kohya's GUI, OneTrainer, FluxGym, AI Toolkit).
+- **Packages:** CUDA is the most broadly supported backend. Every inference package that lists a GPU backend supports CUDA, and CUDA-only packages include Fooocus, SimpleSDXL, ForgeClassic, FramePack, and the training tools (Kohya's GUI, OneTrainer, FluxGym, AI Toolkit, Fizgig).
 
 ## AMD on Windows
 

@@ -33,6 +33,7 @@
 [reforge]: https://github.com/Panchovix/stable-diffusion-webui-reForge
 [simplesdxl]: https://github.com/metercai/SimpleSDXL/
 [fluxgym]: https://github.com/cocktailpeanut/fluxgym
+[fizgig]: https://github.com/shootthesound/Fizgig
 [cogvideo]: https://github.com/THUDM/CogVideo
 [cogstudio]: https://github.com/pinokiofactory/cogstudio
 [amdforge]: https://github.com/lshqqytiger/stable-diffusion-webui-amdgpu-forge
@@ -63,6 +64,7 @@ See the [documentation index](docs/README.md) for installation, package manageme
   - [Kohya's GUI][kohya-ss]
   - [OneTrainer][onetrainer]
   - [FluxGym][fluxgym]
+  - [Fizgig][fizgig]
   - [CogVideo][cogvideo] via [CogStudio][cogstudio]
 - Manage plugins / extensions for supported packages ([Automatic1111][auto1111], [Comfy UI][comfy], [SD Web UI-UX][webui-ux], and [SD.Next][sdnext])
 - Easily install or update Python dependencies for each package

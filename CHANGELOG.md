@@ -220,12 +220,19 @@ The prompt queue has been one of our most requested features ever, and builds li
 This build leans hard into what's next: a live HuggingFace browser and Wan 2.2 video generation. None of that exploration happens without our Visionaries giving us the room to chase it. So a huge thank you to **Waterclouds**, **MrMxyzptlk12836**, **Psilocyfer18731**, **bluepopsicle**, **Ibixat**, **Droolguy**, **KalAbaddon**, **LG**, **snotty**, **whudunit**, **cusalapapen1481**, and **moon_milky2843**. You make the experiments possible. And a big hello to **SkynetFuture** and **sn3232323233350**, who join the Visionary crew this time around. We're genuinely glad you're here. 💛
 
 ## v2.16.5
+### Added
+- Added **Fizgig**, a LoRA training studio for Flux 2 Klein 9B, Krea 2, MiniMax H3 and Qwen Image 2.1 with dataset prep, training, LoRA repair and extraction in one app ([#1761](https://github.com/LykosAI/StabilityMatrix/pull/1761)) - thanks to @e-nord!
+- Added AMD ROCm support for **Stable Diffusion WebUI Forge - Neo** on Windows and Linux. Forge Neo's developer supports NVIDIA only, so report AMD issues with it to Stability Matrix ([#1770](https://github.com/LykosAI/StabilityMatrix/pull/1770)) - thanks to @NeuralFault!
 ### Fixed
+- Fixed **Open on CivArchive** opening a file URL instead of the model page on Linux ([#1765](https://github.com/LykosAI/StabilityMatrix/issues/1765)).
+- Fixed ComfyUI updates downgrading SageAttention post6 to post4 and reinstalling compatible wheels ([#1764](https://github.com/LykosAI/StabilityMatrix/issues/1764)).
 - ControlNet preprocessing in Inference now offers to update older tagged Inference Core Nodes installations to a version with the ControlNet import fixes and Python 3.12/3.13 installation support.
 - Fixed shared model folder aliases hiding DiffusionModels in Checkpoint Manager, Image Lab, and Inference, including when DiffusionModels is itself linked to another location ([#1743](https://github.com/LykosAI/StabilityMatrix/pull/1743), [#1763](https://github.com/LykosAI/StabilityMatrix/pull/1763)) - Thanks to @NeuralFault and @ionite34!
 - Fixed the Model Browser's **Base Model** filter being lost when using **Next Model** / **Previous Model** or refreshing a model's details ([#1436](https://github.com/LykosAI/StabilityMatrix/issues/1436))
 - Fixed release-note text being cut off beside the scrollbar in the update dialog ([#1757](https://github.com/LykosAI/StabilityMatrix/issues/1757))
 - Fixed ComfyUI installation and updates failing on Python 3.13+ because the NumPy 1.x constraint has no compatible wheel ([#1754](https://github.com/LykosAI/StabilityMatrix/issues/1754))
+- Fixed **Windows ROCm** PyTorch installs pairing mismatched `torch` and `torchvision` versions, which broke packages at `import torchvision`; a matched pair is now always installed together ([#1769](https://github.com/LykosAI/StabilityMatrix/pull/1769)) - thanks to @NeuralFault!
+- Fixed logs ignoring `--home-dir`, and opening a missing folder or file showing an error dialog instead of a short notice; the app's own folders are now recreated when the library loads ([#1766](https://github.com/LykosAI/StabilityMatrix/pull/1766)) - thanks to @e-nord!
 
 ## v2.16.4
 ### Added

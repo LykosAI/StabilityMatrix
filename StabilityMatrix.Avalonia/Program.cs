@@ -87,8 +87,10 @@ public static class Program
 
         Args = parseResult.Value ?? new AppArgs();
 
-        if (Args.HomeDirectoryOverride is { } homeDir)
+        if (Args.HomeDirectoryOverride is { } homeDirArg)
         {
+            // Resolve relative paths now, so later consumers (file browser, file:// URIs) get absolute paths
+            var homeDir = Path.GetFullPath(homeDirArg);
             Compat.SetAppDataHome(homeDir);
             GlobalConfig.HomeDir = homeDir;
         }

@@ -1182,6 +1182,12 @@
   <data name="Label_AppData" xml:space="preserve">
     <value>App Data</value>
   </data>
+  <data name="Label_FolderNotFound" xml:space="preserve">
+    <value>Folder not found</value>
+  </data>
+  <data name="Label_FileNotFound" xml:space="preserve">
+    <value>File not found</value>
+  </data>
   <data name="TextTemplate_PackageUpdatedToSelected" xml:space="preserve">
     <value>{0} has been updated to the selected version</value>
   </data>

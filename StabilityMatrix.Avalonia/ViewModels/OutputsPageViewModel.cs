@@ -226,7 +226,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
         if (!settingsManager.IsLibraryDirSet)
             return;
 
-        Directory.CreateDirectory(settingsManager.ImagesDirectory);
+        settingsManager.EnsureAppDirectories();
 
         RefreshCategories();
 

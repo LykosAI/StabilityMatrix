@@ -375,8 +375,6 @@ public class SettingsManager(ILogger<SettingsManager> logger) : ISettingsManager
         LibraryDir = libraryDirectory;
         SetStaticLibraryPaths();
         LoadSettings();
-        // After LoadSettings, so a ModelDirectoryOverride is known
-        EnsureAppDirectories();
     }
 
     /// <inheritdoc />

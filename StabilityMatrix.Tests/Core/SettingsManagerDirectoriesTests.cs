@@ -42,9 +42,11 @@ public class SettingsManagerDirectoriesTests
     }
 
     [TestMethod]
-    public void TryFindLibrary_CreatesAppDirectories()
+    public void EnsureAppDirectories_CreatesAppDirectories()
     {
         var settingsManager = CreateWithLibrary();
+
+        settingsManager.EnsureAppDirectories();
 
         Assert.IsTrue(Compat.AppDataHome.Exists);
         Assert.IsTrue(Compat.LogsDir.Exists);
@@ -56,16 +58,18 @@ public class SettingsManagerDirectoriesTests
     }
 
     [TestMethod]
-    public void TryFindLibrary_DoesNotCreateConsolidatedImagesDirectory()
+    public void EnsureAppDirectories_DoesNotCreateConsolidatedImagesDirectory()
     {
         // Subfolders of Images show as categories in the Outputs page
         var settingsManager = CreateWithLibrary();
+
+        settingsManager.EnsureAppDirectories();
 
         Assert.IsFalse(settingsManager.ConsolidatedImagesDirectory.Exists);
     }
 
     [TestMethod]
-    public void TryFindLibrary_DoesNotCreateModelsDirectoryOverride()
+    public void EnsureAppDirectories_DoesNotCreateModelsDirectoryOverride()
     {
         var modelsOverride = tempDir.JoinDir("UnmountedDrive", "Models");
         libraryDir
@@ -73,6 +77,8 @@ public class SettingsManagerDirectoriesTests
             .WriteAllText(JsonSerializer.Serialize(new { ModelDirectoryOverride = modelsOverride.FullPath }));
 
         var settingsManager = CreateWithLibrary();
+
+        settingsManager.EnsureAppDirectories();
 
         Assert.AreEqual(modelsOverride.FullPath, settingsManager.ModelsDirectory);
         Assert.IsFalse(modelsOverride.Exists);
@@ -83,6 +89,7 @@ public class SettingsManagerDirectoriesTests
     public void EnsureAppDirectories_RecreatesDeletedDirectory()
     {
         var settingsManager = CreateWithLibrary();
+        settingsManager.EnsureAppDirectories();
         settingsManager.PackagesDirectory.Delete(true);
 
         settingsManager.EnsureAppDirectories();

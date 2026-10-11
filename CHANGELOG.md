@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - **Model categories** in the Checkpoint Manager — tag any model (LoRAs, checkpoints, anything) with as many custom categories as you like, e.g. *Character*, *Style*, *Concept*. Categories show as coloured chips on the cards, filter from the new **Categories** section in the sidebar (or with `@name` in the search box), and can be assigned in bulk: select models and use **Categories** in the selection bar, right-click → **Set Categories**, or drop cards onto a category. Stored in the model's existing `.cm-info.json`, so they survive moves, renames, folder copies and metadata refreshes — the most requested item on the feature tracker
 - Categories reach **Inference** too: the model picker dialog gets a **Categories** filter row and shows each model's category chips, and typing a category name filters any model dropdown as well as the `<lora:` prompt autocomplete
 - Added **Fizgig**, a LoRA training studio for Flux 2 Klein 9B, Krea 2, MiniMax H3 and Qwen Image 2.1 with dataset prep, training, LoRA repair and extraction in one app ([#1761](https://github.com/LykosAI/StabilityMatrix/pull/1761)) - thanks to @e-nord!
+- Added AMD ROCm support for **Stable Diffusion WebUI Forge - Neo** on Windows and Linux. Forge Neo's developer supports NVIDIA only, so report AMD issues with it to Stability Matrix ([#1770](https://github.com/LykosAI/StabilityMatrix/pull/1770)) - thanks to @NeuralFault!
 ### Fixed
 - Fixed ComfyUI updates reinstalling compatible SageAttention wheels, including post6 and wheels supporting newer PyTorch versions ([#1764](https://github.com/LykosAI/StabilityMatrix/issues/1764)).
 - Fixed **Open on CivArchive** opening a file URL instead of the model page on Linux ([#1765](https://github.com/LykosAI/StabilityMatrix/issues/1765)).
@@ -26,6 +27,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed **Find Connected Metadata → Update Existing** wiping tags you had added yourself in the metadata editor — existing tags are now kept and merged with the refreshed ones
 - Models whose metadata you edited by hand (or disconnected) no longer disappear from **Find Connected Metadata** forever — a bulk scan now matches any model that isn't linked to a source, keeps the name and description you typed, and skips only models you explicitly disconnected. Right-click → Find Connected Metadata on a disconnected model re-links it on request
 - Fixed **Windows ROCm** PyTorch installs pairing mismatched `torch` and `torchvision` versions, which broke packages at `import torchvision`; a matched pair is now always installed together ([#1769](https://github.com/LykosAI/StabilityMatrix/pull/1769)) - thanks to @NeuralFault!
+- Fixed logs ignoring `--home-dir`, and opening a missing folder or file showing an error dialog instead of a short notice; the app's own folders are now recreated when the library loads ([#1766](https://github.com/LykosAI/StabilityMatrix/pull/1766)) - thanks to @e-nord!
 
 ## v2.17.0-pre.1
 ### Added

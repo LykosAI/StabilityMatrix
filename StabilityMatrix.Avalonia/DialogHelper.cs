@@ -696,23 +696,12 @@ public static class DialogHelper
         var fileCount = 0;
         var totalBytes = 0L;
 
-        foreach (var file in directory.EnumerateFiles())
+        foreach (
+            var file in directory.EnumerateFiles("*", EnumerationOptionConstants.AllDirectoriesExceptLinks)
+        )
         {
-            if (file.Attributes.HasFlag(FileAttributes.ReparsePoint))
-                continue;
-
             fileCount++;
             totalBytes += file.Length;
-        }
-
-        foreach (var subDir in directory.EnumerateDirectories())
-        {
-            if (subDir.Attributes.HasFlag(FileAttributes.ReparsePoint))
-                continue;
-
-            var (subCount, subBytes) = GetFileStats(subDir);
-            fileCount += subCount;
-            totalBytes += subBytes;
         }
 
         return (fileCount, totalBytes);

@@ -362,8 +362,8 @@ internal abstract class CacheBase<T>
             fileName,
             key =>
             {
-                return new ConcurrentRequest(
-                    () => GetFromCacheOrDownloadAsync(uri, key, preCacheOnly, cancellationToken)
+                return new ConcurrentRequest(() =>
+                    GetFromCacheOrDownloadAsync(uri, key, preCacheOnly, cancellationToken)
                 );
             }
         );
@@ -594,7 +594,7 @@ internal abstract class CacheBase<T>
         return instance;
     }
 
-    private async Task<T?> LoadLocalFileAsync(Uri uri, CancellationToken cancellationToken)
+    protected virtual async Task<T?> LoadLocalFileAsync(Uri uri, CancellationToken cancellationToken)
     {
         using var ms = new MemoryStream();
 

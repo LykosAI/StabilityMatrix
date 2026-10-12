@@ -13,7 +13,7 @@ namespace StabilityMatrix.Avalonia.Controls;
 [Localizable(false)]
 internal static class ImageLoaders
 {
-    private static string BaseFileCachePath => Path.Combine(Path.GetTempPath(), "StabilityMatrix", "Cache");
+    public static string BaseFileCachePath => Path.Combine(Path.GetTempPath(), "StabilityMatrix", "Cache");
 
     private static readonly Lazy<MemoryImageCache> OutputsPageImageCacheLazy = new(
         () => new MemoryImageCache { MaxMemoryCacheCount = 64 },

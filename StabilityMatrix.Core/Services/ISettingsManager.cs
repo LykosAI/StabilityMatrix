@@ -24,6 +24,7 @@ public interface ISettingsManager
     List<string> PackageInstallsInProgress { get; set; }
     DirectoryPath WorkflowDirectory { get; }
     DirectoryPath ExtensionPackDirectory { get; }
+    DirectoryPath PackagesDirectory { get; }
 
     /// <summary>
     /// Event fired when the library directory is changed
@@ -117,6 +118,14 @@ public interface ISettingsManager
     /// Creates the ./Data directory and the `.sm-portable` marker file
     /// </summary>
     void SetPortableMode();
+
+    /// <summary>
+    /// Creates the app's well-known directories (AppDataHome, Logs, and library folders such as Packages)
+    /// if they are missing. Library folders are skipped when the library is not set.
+    /// A custom models directory override is never created.
+    /// Safe to call repeatedly; failures are logged, not thrown.
+    /// </summary>
+    void EnsureAppDirectories();
 
     void SaveLaunchArgs(Guid packageId, IEnumerable<LaunchOption> launchArgs);
     bool IsEulaAccepted();

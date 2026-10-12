@@ -28,6 +28,9 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Models whose metadata you edited by hand (or disconnected) no longer disappear from **Find Connected Metadata** forever — a bulk scan now matches any model that isn't linked to a source, keeps the name and description you typed, and skips only models you explicitly disconnected. Right-click → Find Connected Metadata on a disconnected model re-links it on request
 - Fixed **Windows ROCm** PyTorch installs pairing mismatched `torch` and `torchvision` versions, which broke packages at `import torchvision`; a matched pair is now always installed together ([#1769](https://github.com/LykosAI/StabilityMatrix/pull/1769)) - thanks to @NeuralFault!
 - Fixed logs ignoring `--home-dir`, and opening a missing folder or file showing an error dialog instead of a short notice; the app's own folders are now recreated when the library loads ([#1766](https://github.com/LykosAI/StabilityMatrix/pull/1766)) - thanks to @e-nord!
+### Supporters
+#### 🌟 Visionaries
+The most requested item on our feature tracker is finally here: model categories, so every LoRA and checkpoint can go into *Character*, *Style*, or whatever system lives in your head, and you can find it again in Inference. Add Fizgig for LoRA training, AMD support for Forge Neo, and a run of metadata fixes, and nearly everything in here started as something you asked for. Our Visionaries are how we get to build it, so thank you **Waterclouds**, **bluepopsicle**, **dispenser**, **Droolguy**, **TwistedDragon**, **snotty**, **cusalapapen1481**, **moon_milky2843**, **sn3232323233350**, **CC**, **hasezou11013179**, and **Akros**. Welcome back to **SnooSnooEternal**, and a big hello to **japublicspot78364519** and **jonny90**, who join the Visionaries with this build. We're thrilled to have you. 💛
 
 ## v2.17.0-pre.1
 ### Added
@@ -235,6 +238,11 @@ This build leans hard into what's next: a live HuggingFace browser and Wan 2.2 v
 - Fixed ComfyUI installation and updates failing on Python 3.13+ because the NumPy 1.x constraint has no compatible wheel ([#1754](https://github.com/LykosAI/StabilityMatrix/issues/1754))
 - Fixed **Windows ROCm** PyTorch installs pairing mismatched `torch` and `torchvision` versions, which broke packages at `import torchvision`; a matched pair is now always installed together ([#1769](https://github.com/LykosAI/StabilityMatrix/pull/1769)) - thanks to @NeuralFault!
 - Fixed logs ignoring `--home-dir`, and opening a missing folder or file showing an error dialog instead of a short notice; the app's own folders are now recreated when the library loads ([#1766](https://github.com/LykosAI/StabilityMatrix/pull/1766)) - thanks to @e-nord!
+### Supporters
+#### 🌟 Visionaries
+This patch is a good one for AMD owners: Forge Neo now runs on ROCm on both Windows and Linux, and Windows ROCm installs always get a `torch` and `torchvision` that actually match. It also adds Fizgig, a whole LoRA training studio, to the package list. Most of it arrived as community contributions, and our Visionaries are the reason we have time to review that work properly and say yes to it. Thank you **Waterclouds**, **bluepopsicle**, **dispenser**, **Droolguy**, **TwistedDragon**, **snotty**, **cusalapapen1481**, **moon_milky2843**, **sn3232323233350**, **CC**, **hasezou11013179**, and **Akros**. It's great to see **SnooSnooEternal** back with us, and hello to **japublicspot78364519** and **jonny90**, our newest Visionaries; we're so happy you're here. 💛
+#### 🚀 Pioneers
+To our Pioneers **SinthCore**, **Jisuren**, **jweg79**, **Hurbie53**, **Cjloha**, **Alligator1907**, **CommissarGiygas16050**, **Zombop**, **Silerae**, **joshsciascia72**, **cy_hart691842**, and **okachako**: thank you for backing a patch full of fixes that make things work on more machines. Welcome back, **Tuskaruho**, it's lovely to see your name here again. And hi **acleveranagram**, our newest Pioneer; we're really glad to have you! 💛
 
 ## v2.16.4
 ### Added

@@ -1137,6 +1137,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to All.
+        /// </summary>
+        public static string Label_All {
+            get {
+                return ResourceManager.GetString("Label_All", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to All Versions.
         /// </summary>
         public static string Label_AllVersions {
@@ -1870,6 +1879,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Diffusion Models.
+        /// </summary>
+        public static string Label_DiffusionModels {
+            get {
+                return ResourceManager.GetString("Label_DiffusionModels", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Disable Update Check.
         /// </summary>
         public static string Label_DisableUpdateCheck {
@@ -2253,6 +2271,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_General {
             get {
                 return ResourceManager.GetString("Label_General", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Grid view.
+        /// </summary>
+        public static string Label_GridView {
+            get {
+                return ResourceManager.GetString("Label_GridView", resourceCulture);
             }
         }
         
@@ -2947,6 +2974,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_ShowReleaseNotesAfterUpdate {
             get {
                 return ResourceManager.GetString("Label_ShowReleaseNotesAfterUpdate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to List view.
+        /// </summary>
+        public static string Label_ListView {
+            get {
+                return ResourceManager.GetString("Label_ListView", resourceCulture);
             }
         }
         
@@ -6027,6 +6063,15 @@ namespace StabilityMatrix.Avalonia.Languages {
             }
         }
 
+        /// <summary>
+        ///   Looks up a localized string similar to Clear all filters.
+        /// </summary>
+        public static string Label_ClearAllFilters {
+            get {
+                return ResourceManager.GetString("Label_ClearAllFilters", resourceCulture);
+            }
+        }
+        
         /// <summary>
         ///   Looks up a localized string similar to Clear finished.
         /// </summary>

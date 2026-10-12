@@ -152,15 +152,36 @@ public partial class ModelPickerDialogViewModel : ContentDialogViewModelBase
             : Resources.Label_Categories;
 
     /// <summary>
-    /// Filters under the Filter button. Categories have their own button and count.
+    /// Number of base models selected under the Base Model button.
     /// </summary>
-    public int ActiveFilterCount =>
-        SelectedBaseModelOptions.Count() + (ShowCheckpointsOnly ? 1 : 0) + (ShowUnetsOnly ? 1 : 0);
+    public int SelectedBaseModelCount => SelectedBaseModelOptions.Count();
 
-    public bool HasActiveFilters => ActiveFilterCount > 0 || SelectedCategoryCount > 0;
+    public bool HasActiveFilters =>
+        SelectedBaseModelCount > 0 || ShowCheckpointsOnly || ShowUnetsOnly || SelectedCategoryCount > 0;
     public bool HasFilteredModels => FilteredModels.Count > 0;
 
-    public string FilterButtonText => ActiveFilterCount > 0 ? $"Filter ({ActiveFilterCount})" : "Filter";
+    public string BaseModelButtonText =>
+        SelectedBaseModelCount > 0
+            ? $"{Resources.Label_BaseModel} ({SelectedBaseModelCount})"
+            : Resources.Label_BaseModel;
+
+    /// <summary>
+    /// The "All" segment of the folder type selector: true when neither type filter is on.
+    /// Setting it to true clears both; setting it to false does nothing, since another segment
+    /// turning on is what clears it.
+    /// </summary>
+    public bool ShowAllFolderTypes
+    {
+        get => !ShowCheckpointsOnly && !ShowUnetsOnly;
+        set
+        {
+            if (!value)
+                return;
+
+            ShowCheckpointsOnly = false;
+            ShowUnetsOnly = false;
+        }
+    }
 
     /// <summary>
     /// Whether to show the folder type filter buttons (Checkpoints/Diffusion Models).
@@ -204,9 +225,9 @@ public partial class ModelPickerDialogViewModel : ContentDialogViewModelBase
                         return;
 
                     UpdateFilteredModels();
-                    OnPropertyChanged(nameof(ActiveFilterCount));
+                    OnPropertyChanged(nameof(SelectedBaseModelCount));
                     OnPropertyChanged(nameof(HasActiveFilters));
-                    OnPropertyChanged(nameof(FilterButtonText));
+                    OnPropertyChanged(nameof(BaseModelButtonText));
                     SaveFilterStateForCurrentSource();
                 })
         );
@@ -225,9 +246,9 @@ public partial class ModelPickerDialogViewModel : ContentDialogViewModelBase
 
                     UpdateFilteredModels();
                     OnPropertyChanged(nameof(SelectedBaseModelOptions));
-                    OnPropertyChanged(nameof(ActiveFilterCount));
+                    OnPropertyChanged(nameof(SelectedBaseModelCount));
                     OnPropertyChanged(nameof(HasActiveFilters));
-                    OnPropertyChanged(nameof(FilterButtonText));
+                    OnPropertyChanged(nameof(BaseModelButtonText));
                     SaveFilterStateForCurrentSource();
                 })
         );
@@ -303,6 +324,8 @@ public partial class ModelPickerDialogViewModel : ContentDialogViewModelBase
         {
             ShowUnetsOnly = false;
         }
+
+        OnPropertyChanged(nameof(ShowAllFolderTypes));
     }
 
     partial void OnShowUnetsOnlyChanged(bool value)
@@ -311,6 +334,8 @@ public partial class ModelPickerDialogViewModel : ContentDialogViewModelBase
         {
             ShowCheckpointsOnly = false;
         }
+
+        OnPropertyChanged(nameof(ShowAllFolderTypes));
     }
 
     public override void OnLoaded()

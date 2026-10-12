@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Models whose metadata you edited by hand (or disconnected) no longer disappear from **Find Connected Metadata** forever — a bulk scan now matches any model that isn't linked to a source, keeps the name and description you typed, and skips only models you explicitly disconnected. Right-click → Find Connected Metadata on a disconnected model re-links it on request
 - Fixed **Windows ROCm** PyTorch installs pairing mismatched `torch` and `torchvision` versions, which broke packages at `import torchvision`; a matched pair is now always installed together ([#1769](https://github.com/LykosAI/StabilityMatrix/pull/1769)) - thanks to @NeuralFault!
 - Fixed logs ignoring `--home-dir`, and opening a missing folder or file showing an error dialog instead of a short notice; the app's own folders are now recreated when the library loads ([#1766](https://github.com/LykosAI/StabilityMatrix/pull/1766)) - thanks to @e-nord!
+- Fixed the **Select Model** dialog's toolbar overlapping itself on smaller windows. The filters now wrap onto a second line, Checkpoints and Diffusion Models became one **All / Checkpoints / Diffusion Models** switch, and base model and category chips share one row in both list and grid view
 - Fixed [#1767](https://github.com/LykosAI/StabilityMatrix/issues/1767) - **AI-Toolkit** installation failing on Linux while unpacking Node.js with a "Dangerous link path" error.
 ### Supporters
 #### 🌟 Visionaries

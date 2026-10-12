@@ -84,6 +84,17 @@ internal class ImageCache(CacheOptions? options = null) : CacheBase<Bitmap>(opti
     }
 
     /// <summary>
+    /// Loads a local file through <see cref="LocalThumbnailCache"/>, so large files decode from a small
+    /// thumbnail after the first view.
+    /// </summary>
+    protected override Task<Bitmap?> LoadLocalFileAsync(Uri uri, CancellationToken cancellationToken)
+    {
+        using var bitmap = LocalThumbnailCache.Default.Decode(uri.LocalPath, CurrentDecodeWidth.Value);
+
+        return Task.FromResult(bitmap?.ToAvaloniaBitmap());
+    }
+
+    /// <summary>
     /// Checks whether file is valid or not.
     /// </summary>
     /// <param name="file">file</param>

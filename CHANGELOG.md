@@ -30,6 +30,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed logs ignoring `--home-dir`, and opening a missing folder or file showing an error dialog instead of a short notice; the app's own folders are now recreated when the library loads ([#1766](https://github.com/LykosAI/StabilityMatrix/pull/1766)) - thanks to @e-nord!
 - Fixed the **Select Model** dialog's toolbar overlapping itself on smaller windows. The filters now wrap onto a second line, Checkpoints and Diffusion Models became one **All / Checkpoints / Diffusion Models** switch, and base model and category chips share one row in both list and grid view
 - Fixed [#1767](https://github.com/LykosAI/StabilityMatrix/issues/1767) - **AI-Toolkit** installation failing on Linux while unpacking Node.js with a "Dangerous link path" error.
+- Fixed the **Checkpoint Manager** and **Outputs** grids stuttering on large images. Each image now gets a small thumbnail the first time it's shown, so scrolling back loads that instead of the full file. Your preview images and outputs stay full resolution, and thumbnails are now sharp on high-DPI displays
+- Fixed the first-run recommended models dialog looking like it never loaded its images, after CivitAI started returning full-size originals; model browser cards also load lighter images now
 - Fixed the package uninstall confirmation showing the size of your whole shared model library for packages using symlink sharing. Only the package's own files are counted; the shared models were never deleted
 ### Supporters
 #### 🌟 Visionaries

@@ -262,6 +262,9 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
         DisplayVersionName = GetDisplayedVersion()?.Name ?? string.Empty;
     }
 
+    /// <summary>Matches the DecodeWidth of the browser card image control.</summary>
+    private const int CardImageWidth = 450;
+
     private void UpdateImage()
     {
         var nsfwEnabled = settingsManager.Settings.ModelBrowserNsfwEnabled;
@@ -276,7 +279,7 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
             .FirstOrDefault(image => nsfwEnabled || image.NsfwLevel <= 1);
         if (image != null)
         {
-            CardImage = new Uri(image.Url);
+            CardImage = new Uri(CivitaiUrlHelper.CapImageWidth(image.Url, CardImageWidth));
             return;
         }
 

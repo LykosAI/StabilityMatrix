@@ -99,9 +99,10 @@ public partial class BetterAsyncImage
     }
 
     /// <summary>
-    /// Gets or sets the width (in pixels) to decode the image at. When greater than 0, images wider than this
-    /// are downscaled at decode time, which avoids keeping full-resolution bitmaps in memory for thumbnail-sized
-    /// displays. A value of 0 (the default) decodes at the source resolution.
+    /// Gets or sets the width, in device-independent pixels, to decode the image at. When greater than 0,
+    /// images wider than this times the window's render scaling are downscaled at decode time, and local
+    /// files are served from <see cref="Cache.LocalThumbnailCache"/>. Set it for the largest size the
+    /// image is shown at, including zoom. A value of 0 (the default) decodes at the source resolution.
     /// </summary>
     public int DecodeWidth
     {

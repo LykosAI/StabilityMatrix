@@ -143,15 +143,6 @@ public static class SkiaExtensions
         return stream.ToSKBitmap().ToAvaloniaImageScaled(decodeWidth);
     }
 
-    /// <summary>
-    /// Decodes an image file into an Avalonia image, downscaling to <paramref name="decodeWidth"/> if wider.
-    /// </summary>
-    public static IImage? DecodeFileToAvaloniaImageScaled(string path, int decodeWidth)
-    {
-        using var stream = new SKFileStream(path);
-        return SKBitmap.Decode(stream).ToAvaloniaImageScaled(decodeWidth);
-    }
-
     public static Bitmap ToAvaloniaBitmap(this SKBitmap bitmap)
     {
         return ToAvaloniaBitmap(bitmap, new Vector(96, 96));

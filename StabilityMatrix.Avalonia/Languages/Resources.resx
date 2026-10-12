@@ -2325,4 +2325,19 @@ Account tokens will not be viewable after saving, please make a note of them if 
   <data name="Label_CategoriesFilterHint" xml:space="preserve">
     <value>Click a category to filter. Drop models here to assign.</value>
   </data>
+  <data name="Label_All" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="Label_ClearAllFilters" xml:space="preserve">
+    <value>Clear all filters</value>
+  </data>
+  <data name="Label_DiffusionModels" xml:space="preserve">
+    <value>Diffusion Models</value>
+  </data>
+  <data name="Label_GridView" xml:space="preserve">
+    <value>Grid view</value>
+  </data>
+  <data name="Label_ListView" xml:space="preserve">
+    <value>List view</value>
+  </data>
 </root>

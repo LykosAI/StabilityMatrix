@@ -1,4 +1,4 @@
-<controls:UserControlBase
+﻿<controls:UserControlBase
     x:Class="StabilityMatrix.Avalonia.Views.Dialogs.ModelPickerDialog"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -34,6 +34,38 @@
         <converters:EnumStringConverter x:Key="EnumStringConverter" />
         <converters:ModelPickerNsfwOverlayVisibilityConverter x:Key="ModelPickerNsfwOverlayVisibilityConverter" />
         <converters:ObjectEqualsConverter x:Key="ObjectEqualsConverter" />
+
+        <!--  Base model + category chips, the same row the Checkpoint Manager cards use  -->
+        <DataTemplate x:Key="ModelChipsTemplate" x:DataType="models:HybridModelFile">
+            <WrapPanel Orientation="Horizontal">
+                <Border Classes="tag-chip" IsVisible="{Binding Local.ConnectedModelInfo.BaseModel, Converter={x:Static StringConverters.IsNotNullOrEmpty}, FallbackValue=False}">
+                    <TextBlock Text="{Binding Local.ConnectedModelInfo.BaseModel, FallbackValue=''}" />
+                </Border>
+                <ItemsControl>
+                    <ItemsControl.ItemsSource>
+                        <MultiBinding Converter="{StaticResource CategoryChipsConverter}">
+                            <Binding FallbackValue="{x:Null}" Path="Local.Categories" />
+                            <Binding Path="$parent[controls:UserControlBase].((dialogs:ModelPickerDialogViewModel)DataContext).CategoryPalette" />
+                        </MultiBinding>
+                    </ItemsControl.ItemsSource>
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel Orientation="Horizontal" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="{x:Type helpers:CategoryChip}">
+                            <Border
+                                Background="{Binding Background}"
+                                BorderBrush="{Binding Background}"
+                                Classes="tag-chip">
+                                <TextBlock Foreground="{Binding Foreground}" Text="{Binding Name}" />
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </WrapPanel>
+        </DataTemplate>
     </controls:UserControlBase.Resources>
 
     <controls:UserControlBase.Styles>
@@ -58,26 +90,32 @@
         <Style Selector="ListBoxItem:selected Border.model-list-card">
             <Setter Property="Background" Value="{DynamicResource ControlFillColorSecondaryBrush}" />
         </Style>
-        <Style Selector="ToggleButton.model-view-toggle:checked">
+        <!--  Segmented buttons: radio buttons wearing the toggle button theme, so a click never deselects  -->
+        <Style Selector="RadioButton.segment">
+            <Setter Property="Theme" Value="{DynamicResource {x:Type ToggleButton}}" />
+        </Style>
+        <Style Selector=":is(ToggleButton).segment">
+            <Setter Property="Height" Value="32" />
+            <Setter Property="Padding" Value="12,0" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style Selector=":is(ToggleButton).segment.first">
+            <Setter Property="CornerRadius" Value="4,0,0,4" />
+        </Style>
+        <Style Selector=":is(ToggleButton).segment.middle">
+            <Setter Property="CornerRadius" Value="0" />
+        </Style>
+        <Style Selector=":is(ToggleButton).segment.last">
+            <Setter Property="CornerRadius" Value="0,4,4,0" />
+        </Style>
+        <Style Selector=":is(ToggleButton).segment:checked">
             <Setter Property="Foreground" Value="{DynamicResource AccentButtonForeground}" />
         </Style>
-        <Style Selector="ToggleButton.model-view-toggle:pointerover:checked">
+        <Style Selector=":is(ToggleButton).segment:pointerover:checked">
             <Setter Property="Foreground" Value="{DynamicResource AccentButtonForegroundPointerOver}" />
         </Style>
-        <Style Selector="ToggleButton.model-view-toggle:pressed:checked">
+        <Style Selector=":is(ToggleButton).segment:pressed:checked">
             <Setter Property="Foreground" Value="{DynamicResource AccentButtonForegroundPressed}" />
-        </Style>
-        <Style Selector="ToggleButton.model-view-toggle PathIcon">
-            <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
-        </Style>
-        <Style Selector="ToggleButton.model-view-toggle:checked PathIcon">
-            <Setter Property="Foreground" Value="#151515" />
-        </Style>
-        <Style Selector="ToggleButton.model-view-toggle:pointerover:checked PathIcon">
-            <Setter Property="Foreground" Value="#151515" />
-        </Style>
-        <Style Selector="ToggleButton.model-view-toggle:pressed:checked PathIcon">
-            <Setter Property="Foreground" Value="#151515" />
         </Style>
 
         <Style Selector="Border.model-grid-card">
@@ -98,261 +136,276 @@
             Text="{Binding Title}"
             Theme="{DynamicResource TitleTextBlockStyle}" />
 
-        <!--  Search Box  -->
-        <TextBox
-            x:Name="SearchBox"
-            Grid.Row="1"
-            Text="{Binding SearchText, Mode=TwoWay}"
-            Watermark="Search name, base model, tags, categories...">
-            <TextBox.InnerLeftContent>
-                <fluentIcons:SymbolIcon
-                    Margin="8,0,4,0"
-                    FontSize="16"
-                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                    Symbol="Search" />
-            </TextBox.InnerLeftContent>
-        </TextBox>
-
-        <!--  Filter Row  -->
+        <!--  Search row: search, NSFW, view mode  -->
         <Grid
-            Grid.Row="2"
+            Grid.Row="1"
             ColumnDefinitions="*,Auto,Auto"
-            ColumnSpacing="12">
-            <StackPanel
-                Grid.Column="0"
-                Orientation="Horizontal"
-                Spacing="8">
-                <!--  Type Filters (only for Checkpoint+UNet source)  -->
-                <ToggleButton
-                    Content="Checkpoints"
-                    IsChecked="{Binding ShowCheckpointsOnly}"
-                    IsVisible="{Binding ShowFolderTypeFilters}"
-                    ToolTip.Tip="Show only AIO checkpoint models" />
-                <ToggleButton
-                    Content="Diffusion Models"
-                    IsChecked="{Binding ShowUnetsOnly}"
-                    IsVisible="{Binding ShowFolderTypeFilters}"
-                    ToolTip.Tip="Show only UNet/diffusion models" />
-                <!--  Base Model Filter Button  -->
-                <Button
-                    Height="32"
-                    VerticalAlignment="Stretch"
-                    VerticalContentAlignment="Center"
-                    BorderBrush="{DynamicResource ComboBoxBorderBrush}"
-                    BorderThickness="1">
-                    <Button.Content>
-                        <Grid HorizontalAlignment="Stretch" ColumnDefinitions="Auto,8,Auto">
-                            <TextBlock Text="{Binding FilterButtonText}" />
-                            <ui:SymbolIcon
-                                Grid.Column="2"
-                                VerticalAlignment="Center"
-                                FontSize="12"
-                                Foreground="{DynamicResource TextFillColorSecondary}"
-                                Symbol="ChevronDown" />
-                        </Grid>
-                    </Button.Content>
-                    <Button.Flyout>
-                        <Flyout Placement="BottomEdgeAlignedLeft">
-                            <StackPanel
-                                MaxWidth="400"
-                                Orientation="Vertical"
-                                Spacing="8">
-                                <Button
-                                    HorizontalAlignment="Stretch"
-                                    Classes="transparent"
-                                    Command="{Binding ClearOrSelectAllBaseModelsCommand}"
-                                    Content="Clear / Select All" />
-                                <ui:ItemsRepeater ItemsSource="{Binding BaseModelOptions}">
-                                    <ui:ItemsRepeater.Layout>
-                                        <ui:FlowLayout
-                                            LineAlignment="Center"
-                                            MinColumnSpacing="4"
-                                            MinRowSpacing="4"
-                                            Orientation="Horizontal" />
-                                    </ui:ItemsRepeater.Layout>
-                                    <ui:ItemsRepeater.ItemTemplate>
-                                        <DataTemplate DataType="{x:Type checkpointManager:BaseModelOptionViewModel}">
-                                            <ToggleButton Content="{Binding ModelType}" IsChecked="{Binding IsSelected}" />
-                                        </DataTemplate>
-                                    </ui:ItemsRepeater.ItemTemplate>
-                                </ui:ItemsRepeater>
-                            </StackPanel>
-                        </Flyout>
-                    </Button.Flyout>
-                </Button>
+            ColumnSpacing="8">
+            <TextBox
+                x:Name="SearchBox"
+                VerticalContentAlignment="Center"
+                Text="{Binding SearchText, Mode=TwoWay}"
+                Watermark="Search name, base model, tags, categories...">
+                <TextBox.InnerLeftContent>
+                    <fluentIcons:SymbolIcon
+                        Width="16"
+                        Height="16"
+                        Margin="8,0,4,0"
+                        FontSize="16"
+                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                        Symbol="Search" />
+                </TextBox.InnerLeftContent>
+            </TextBox>
 
-                <!--  Categories Button (only when the source has any)  -->
-                <Button
-                    Height="32"
-                    VerticalAlignment="Stretch"
-                    VerticalContentAlignment="Center"
-                    BorderBrush="{DynamicResource ComboBoxBorderBrush}"
-                    BorderThickness="1"
-                    IsVisible="{Binding HasCategoryOptions}">
-                    <Button.Content>
-                        <Grid HorizontalAlignment="Stretch" ColumnDefinitions="Auto,6,Auto,8,Auto">
-                            <fluentIcons:SymbolIcon
-                                VerticalAlignment="Center"
-                                FontSize="14"
-                                Symbol="Tag" />
-                            <TextBlock Grid.Column="2" Text="{Binding CategoriesButtonText}" />
-                            <ui:SymbolIcon
-                                Grid.Column="4"
-                                VerticalAlignment="Center"
-                                FontSize="12"
-                                Foreground="{DynamicResource TextFillColorSecondary}"
-                                Symbol="ChevronDown" />
-                        </Grid>
-                    </Button.Content>
-                    <Button.Flyout>
-                        <Flyout Placement="BottomEdgeAlignedLeft">
-                            <StackPanel
-                                MaxWidth="400"
-                                Orientation="Vertical"
-                                Spacing="8">
-                                <Button
-                                    HorizontalAlignment="Stretch"
-                                    Classes="transparent"
-                                    Command="{Binding ClearCategoriesCommand}"
-                                    Content="{x:Static lang:Resources.Action_ClearSelection}" />
-                                <ui:ItemsRepeater ItemsSource="{Binding CategoryOptions}">
-                                    <ui:ItemsRepeater.Layout>
-                                        <ui:FlowLayout
-                                            LineAlignment="Center"
-                                            MinColumnSpacing="4"
-                                            MinRowSpacing="4"
-                                            Orientation="Horizontal" />
-                                    </ui:ItemsRepeater.Layout>
-                                    <ui:ItemsRepeater.ItemTemplate>
-                                        <DataTemplate DataType="{x:Type checkpointManager:CategoryOptionViewModel}">
-                                            <ToggleButton IsChecked="{Binding IsSelected}">
-                                                <StackPanel Orientation="Horizontal" Spacing="6">
-                                                    <Ellipse
-                                                        Width="8"
-                                                        Height="8"
-                                                        VerticalAlignment="Center"
-                                                        Fill="{Binding ColorBrush}" />
-                                                    <TextBlock VerticalAlignment="Center" Text="{Binding Name}" />
-                                                    <TextBlock
-                                                        VerticalAlignment="Center"
-                                                        Opacity="0.7"
-                                                        Text="{Binding Count}" />
-                                                </StackPanel>
-                                            </ToggleButton>
-                                        </DataTemplate>
-                                    </ui:ItemsRepeater.ItemTemplate>
-                                </ui:ItemsRepeater>
-                            </StackPanel>
-                        </Flyout>
-                    </Button.Flyout>
-                </Button>
+            <ToggleButton
+                Grid.Column="1"
+                Height="32"
+                Padding="10,0"
+                Classes="segment"
+                IsChecked="{Binding ShowNsfwContent}"
+                ToolTip.Tip="{x:Static lang:Resources.Label_ShowNsfwContent}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <fluentIcons:SymbolIcon
+                        Width="14"
+                        Height="14"
+                        FontSize="14"
+                        Symbol="Eye" />
+                    <TextBlock Text="{x:Static lang:Resources.Label_NSFW}" />
+                </StackPanel>
+            </ToggleButton>
 
-                <!--  Sort Button  -->
-                <Button
-                    Height="32"
-                    VerticalAlignment="Stretch"
-                    VerticalContentAlignment="Center"
-                    BorderBrush="{DynamicResource ComboBoxBorderBrush}"
-                    BorderThickness="1">
-                    <Button.Content>
-                        <Grid HorizontalAlignment="Stretch" ColumnDefinitions="Auto,6,Auto,8,Auto">
-                            <fluentIcons:SymbolIcon
-                                VerticalAlignment="Center"
-                                FontSize="14"
-                                Symbol="ArrowSort" />
-                            <TextBlock Grid.Column="2" Text="{x:Static lang:Resources.Label_Sort}" />
-                            <ui:SymbolIcon
-                                Grid.Column="4"
-                                VerticalAlignment="Center"
-                                FontSize="12"
-                                Foreground="{DynamicResource TextFillColorSecondary}"
-                                Symbol="ChevronDown" />
-                        </Grid>
-                    </Button.Content>
-                    <Button.Flyout>
-                        <Flyout Placement="BottomEdgeAlignedLeft">
-                            <StackPanel Orientation="Vertical">
-                                <ListBox ItemsSource="{Binding SortOptions}" SelectedItem="{Binding SelectedSortOption}">
-                                    <ListBox.Template>
-                                        <ControlTemplate>
-                                            <ItemsPresenter />
-                                        </ControlTemplate>
-                                    </ListBox.Template>
-                                    <ListBox.ItemTemplate>
-                                        <DataTemplate DataType="{x:Type models:CheckpointSortMode}">
-                                            <TextBlock Text="{Binding ., Converter={StaticResource EnumStringConverter}}" />
-                                        </DataTemplate>
-                                    </ListBox.ItemTemplate>
-                                </ListBox>
-                                <Separator Margin="8" />
-                                <ListBox ItemsSource="{Binding SortDirections}" SelectedItem="{Binding SelectedSortDirection}">
-                                    <ListBox.Template>
-                                        <ControlTemplate>
-                                            <ItemsPresenter />
-                                        </ControlTemplate>
-                                    </ListBox.Template>
-                                    <ListBox.ItemTemplate>
-                                        <DataTemplate DataType="{x:Type componentModel:ListSortDirection}">
-                                            <TextBlock Text="{Binding ., Converter={StaticResource EnumStringConverter}}" />
-                                        </DataTemplate>
-                                    </ListBox.ItemTemplate>
-                                </ListBox>
-                            </StackPanel>
-                        </Flyout>
-                    </Button.Flyout>
-                </Button>
+            <StackPanel Grid.Column="2" Orientation="Horizontal">
+                <RadioButton
+                    Classes="segment first"
+                    GroupName="ModelPickerView"
+                    IsChecked="{Binding !IsGridView}"
+                    ToolTip.Tip="{x:Static lang:Resources.Label_ListView}">
+                    <PathIcon
+                        Width="14"
+                        Height="14"
+                        Data="M3 4H7V8H3Z M9 5H21V7H9Z M3 10H7V14H3Z M9 11H21V13H9Z M3 16H7V20H3Z M9 17H21V19H9Z" />
+                </RadioButton>
+                <RadioButton
+                    Classes="segment last"
+                    GroupName="ModelPickerView"
+                    IsChecked="{Binding IsGridView}"
+                    ToolTip.Tip="{x:Static lang:Resources.Label_GridView}">
+                    <PathIcon
+                        Width="14"
+                        Height="14"
+                        Data="M4 4H10V10H4Z M14 4H20V10H14Z M4 14H10V20H4Z M14 14H20V20H14Z" />
+                </RadioButton>
+            </StackPanel>
+        </Grid>
 
-                <!--  Clear All Filters  -->
-                <Button
-                    Padding="8,6"
-                    Command="{Binding ClearFiltersCommand}"
-                    IsVisible="{Binding HasActiveFilters}"
-                    ToolTip.Tip="Clear all filters">
-                    <fluentIcons:SymbolIcon FontSize="14" Symbol="Dismiss" />
-                </Button>
+        <!--  Filter row: wraps instead of overlapping when the dialog is narrow  -->
+        <WrapPanel
+            Grid.Row="2"
+            ItemSpacing="8"
+            LineSpacing="8"
+            Orientation="Horizontal">
+            <!--  Folder type (only for Checkpoint+UNet source)  -->
+            <StackPanel IsVisible="{Binding ShowFolderTypeFilters}" Orientation="Horizontal">
+                <RadioButton
+                    Classes="segment first"
+                    Content="{x:Static lang:Resources.Label_All}"
+                    GroupName="ModelPickerFolderType"
+                    IsChecked="{Binding ShowAllFolderTypes}" />
+                <RadioButton
+                    Classes="segment middle"
+                    Content="{x:Static lang:Resources.Label_Checkpoints}"
+                    GroupName="ModelPickerFolderType"
+                    IsChecked="{Binding ShowCheckpointsOnly}" />
+                <RadioButton
+                    Classes="segment last"
+                    Content="{x:Static lang:Resources.Label_DiffusionModels}"
+                    GroupName="ModelPickerFolderType"
+                    IsChecked="{Binding ShowUnetsOnly}" />
             </StackPanel>
 
-            <ToggleSwitch
-                Grid.Column="1"
-                VerticalAlignment="Center"
-                IsChecked="{Binding ShowNsfwContent}"
-                OffContent="NSFW Content"
-                OnContent="NSFW Content"
-                ToolTip.Tip="Show models marked as adult/NSFW" />
+            <!--  Base Model Filter Button  -->
+            <Button
+                Height="32"
+                VerticalContentAlignment="Center"
+                BorderBrush="{DynamicResource ComboBoxBorderBrush}"
+                BorderThickness="1">
+                <Button.Content>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="{Binding BaseModelButtonText}" />
+                        <ui:SymbolIcon
+                            VerticalAlignment="Center"
+                            FontSize="12"
+                            Foreground="{DynamicResource TextFillColorSecondary}"
+                            Symbol="ChevronDown" />
+                    </StackPanel>
+                </Button.Content>
+                <Button.Flyout>
+                    <Flyout Placement="BottomEdgeAlignedLeft">
+                        <StackPanel
+                            MaxWidth="400"
+                            Orientation="Vertical"
+                            Spacing="8">
+                            <Button
+                                HorizontalAlignment="Stretch"
+                                Classes="transparent"
+                                Command="{Binding ClearOrSelectAllBaseModelsCommand}"
+                                Content="Clear / Select All" />
+                            <ui:ItemsRepeater ItemsSource="{Binding BaseModelOptions}">
+                                <ui:ItemsRepeater.Layout>
+                                    <ui:FlowLayout
+                                        LineAlignment="Center"
+                                        MinColumnSpacing="4"
+                                        MinRowSpacing="4"
+                                        Orientation="Horizontal" />
+                                </ui:ItemsRepeater.Layout>
+                                <ui:ItemsRepeater.ItemTemplate>
+                                    <DataTemplate DataType="{x:Type checkpointManager:BaseModelOptionViewModel}">
+                                        <ToggleButton Content="{Binding ModelType}" IsChecked="{Binding IsSelected}" />
+                                    </DataTemplate>
+                                </ui:ItemsRepeater.ItemTemplate>
+                            </ui:ItemsRepeater>
+                        </StackPanel>
+                    </Flyout>
+                </Button.Flyout>
+            </Button>
 
-            <Grid Grid.Column="2" ColumnDefinitions="Auto,Auto">
-                <ToggleButton
-                    Grid.Column="0"
-                    Padding="10,6"
-                    Classes="model-view-toggle"
-                    CornerRadius="8,0,0,8"
-                    IsChecked="{Binding !IsGridView}"
-                    ToolTip.Tip="List view">
-                    <StackPanel Orientation="Horizontal" Spacing="6">
-                        <PathIcon
+            <!--  Categories Button (only when the source has any)  -->
+            <Button
+                Height="32"
+                VerticalContentAlignment="Center"
+                BorderBrush="{DynamicResource ComboBoxBorderBrush}"
+                BorderThickness="1"
+                IsVisible="{Binding HasCategoryOptions}">
+                <Button.Content>
+                    <Grid HorizontalAlignment="Stretch" ColumnDefinitions="Auto,6,Auto,8,Auto">
+                        <fluentIcons:SymbolIcon
                             Width="14"
                             Height="14"
-                            Data="M3 4H7V8H3Z M9 5H21V7H9Z M3 10H7V14H3Z M9 11H21V13H9Z M3 16H7V20H3Z M9 17H21V19H9Z" />
-                        <TextBlock Text="List" />
-                    </StackPanel>
-                </ToggleButton>
-                <ToggleButton
-                    Grid.Column="1"
-                    Padding="10,6"
-                    Classes="model-view-toggle"
-                    CornerRadius="0,8,8,0"
-                    IsChecked="{Binding IsGridView}"
-                    ToolTip.Tip="Grid view">
-                    <StackPanel Orientation="Horizontal" Spacing="6">
-                        <PathIcon
+                            VerticalAlignment="Center"
+                            FontSize="14"
+                            Symbol="Tag" />
+                        <TextBlock Grid.Column="2" Text="{Binding CategoriesButtonText}" />
+                        <ui:SymbolIcon
+                            Grid.Column="4"
+                            VerticalAlignment="Center"
+                            FontSize="12"
+                            Foreground="{DynamicResource TextFillColorSecondary}"
+                            Symbol="ChevronDown" />
+                    </Grid>
+                </Button.Content>
+                <Button.Flyout>
+                    <Flyout Placement="BottomEdgeAlignedLeft">
+                        <StackPanel
+                            MaxWidth="400"
+                            Orientation="Vertical"
+                            Spacing="8">
+                            <Button
+                                HorizontalAlignment="Stretch"
+                                Classes="transparent"
+                                Command="{Binding ClearCategoriesCommand}"
+                                Content="{x:Static lang:Resources.Action_ClearSelection}" />
+                            <ui:ItemsRepeater ItemsSource="{Binding CategoryOptions}">
+                                <ui:ItemsRepeater.Layout>
+                                    <ui:FlowLayout
+                                        LineAlignment="Center"
+                                        MinColumnSpacing="4"
+                                        MinRowSpacing="4"
+                                        Orientation="Horizontal" />
+                                </ui:ItemsRepeater.Layout>
+                                <ui:ItemsRepeater.ItemTemplate>
+                                    <DataTemplate DataType="{x:Type checkpointManager:CategoryOptionViewModel}">
+                                        <ToggleButton IsChecked="{Binding IsSelected}">
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <Ellipse
+                                                    Width="8"
+                                                    Height="8"
+                                                    VerticalAlignment="Center"
+                                                    Fill="{Binding ColorBrush}" />
+                                                <TextBlock VerticalAlignment="Center" Text="{Binding Name}" />
+                                                <TextBlock
+                                                    VerticalAlignment="Center"
+                                                    Opacity="0.7"
+                                                    Text="{Binding Count}" />
+                                            </StackPanel>
+                                        </ToggleButton>
+                                    </DataTemplate>
+                                </ui:ItemsRepeater.ItemTemplate>
+                            </ui:ItemsRepeater>
+                        </StackPanel>
+                    </Flyout>
+                </Button.Flyout>
+            </Button>
+
+            <!--  Sort Button  -->
+            <Button
+                Height="32"
+                VerticalContentAlignment="Center"
+                BorderBrush="{DynamicResource ComboBoxBorderBrush}"
+                BorderThickness="1">
+                <Button.Content>
+                    <Grid HorizontalAlignment="Stretch" ColumnDefinitions="Auto,6,Auto,8,Auto">
+                        <fluentIcons:SymbolIcon
                             Width="14"
                             Height="14"
-                            Data="M4 4H10V10H4Z M14 4H20V10H14Z M4 14H10V20H4Z M14 14H20V20H14Z" />
-                        <TextBlock Text="Grid" />
-                    </StackPanel>
-                </ToggleButton>
-            </Grid>
-        </Grid>
+                            VerticalAlignment="Center"
+                            FontSize="14"
+                            Symbol="ArrowSort" />
+                        <TextBlock Grid.Column="2" Text="{x:Static lang:Resources.Label_Sort}" />
+                        <ui:SymbolIcon
+                            Grid.Column="4"
+                            VerticalAlignment="Center"
+                            FontSize="12"
+                            Foreground="{DynamicResource TextFillColorSecondary}"
+                            Symbol="ChevronDown" />
+                    </Grid>
+                </Button.Content>
+                <Button.Flyout>
+                    <Flyout Placement="BottomEdgeAlignedLeft">
+                        <StackPanel Orientation="Vertical">
+                            <ListBox ItemsSource="{Binding SortOptions}" SelectedItem="{Binding SelectedSortOption}">
+                                <ListBox.Template>
+                                    <ControlTemplate>
+                                        <ItemsPresenter />
+                                    </ControlTemplate>
+                                </ListBox.Template>
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate DataType="{x:Type models:CheckpointSortMode}">
+                                        <TextBlock Text="{Binding ., Converter={StaticResource EnumStringConverter}}" />
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                            <Separator Margin="8" />
+                            <ListBox ItemsSource="{Binding SortDirections}" SelectedItem="{Binding SelectedSortDirection}">
+                                <ListBox.Template>
+                                    <ControlTemplate>
+                                        <ItemsPresenter />
+                                    </ControlTemplate>
+                                </ListBox.Template>
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate DataType="{x:Type componentModel:ListSortDirection}">
+                                        <TextBlock Text="{Binding ., Converter={StaticResource EnumStringConverter}}" />
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </StackPanel>
+                    </Flyout>
+                </Button.Flyout>
+            </Button>
+
+            <!--  Clear All Filters  -->
+            <Button
+                Height="32"
+                Padding="10,0"
+                Command="{Binding ClearFiltersCommand}"
+                IsVisible="{Binding HasActiveFilters}"
+                ToolTip.Tip="{x:Static lang:Resources.Label_ClearAllFilters}">
+                <fluentIcons:SymbolIcon
+                    Width="14"
+                    Height="14"
+                    FontSize="14"
+                    Symbol="Dismiss" />
+            </Button>
+        </WrapPanel>
 
         <!--  Model List  -->
         <Border
@@ -382,12 +435,12 @@
                                 CornerRadius="4"
                                 Cursor="Hand">
                                 <Border.HorizontalAlignment>Stretch</Border.HorizontalAlignment>
-                                <sg:SpacedGrid ColumnDefinitions="Auto,*,120" ColumnSpacing="12">
+                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
                                     <!--  Thumbnail  -->
                                     <vendorLabs:BetterAsyncImage
                                         x:Name="ListPreviewImage"
-                                        Width="48"
-                                        Height="48"
+                                        Width="56"
+                                        Height="56"
                                         CornerRadius="6"
                                         IsVisible="{Binding Local.PreviewImageFullPathGlobal, Converter={StaticResource FileExistsConverter}, FallbackValue=False}"
                                         RenderOptions.BitmapInterpolationMode="HighQuality"
@@ -396,8 +449,8 @@
 
                                     <!--  Placeholder when no image  -->
                                     <Border
-                                        Width="48"
-                                        Height="48"
+                                        Width="56"
+                                        Height="56"
                                         Background="{DynamicResource ControlFillColorSecondaryBrush}"
                                         CornerRadius="6">
                                         <Border.IsVisible>
@@ -416,8 +469,8 @@
                                             Symbol="Image" />
                                     </Border>
                                     <Border
-                                        Width="48"
-                                        Height="48"
+                                        Width="56"
+                                        Height="56"
                                         Background="{DynamicResource SolidBackgroundFillColorBaseBrush}"
                                         CornerRadius="6">
                                         <Border.IsVisible>
@@ -438,84 +491,33 @@
                                     </Border>
 
                                     <!--  Model Info  -->
-                                    <Grid
+                                    <StackPanel
                                         Grid.Column="1"
-                                        Width="460"
-                                        MinWidth="0"
-                                        MaxWidth="460"
                                         VerticalAlignment="Center"
-                                        RowDefinitions="Auto,Auto,Auto,Auto"
-                                        RowSpacing="2">
+                                        Spacing="2">
                                         <TextBlock
                                             FontWeight="SemiBold"
                                             Text="{Binding Local.DisplayModelName, FallbackValue=''}"
                                             TextTrimming="CharacterEllipsis"
                                             TextWrapping="NoWrap" />
                                         <TextBlock
-                                            Grid.Row="1"
                                             FontSize="12"
                                             Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                                             Text="{Binding Local.DisplayModelVersion, FallbackValue=''}"
                                             TextTrimming="CharacterEllipsis"
                                             TextWrapping="NoWrap" />
                                         <TextBlock
-                                            Grid.Row="2"
                                             FontSize="11"
                                             Foreground="{DynamicResource TextFillColorTertiaryBrush}"
                                             Text="{Binding FileName}"
                                             TextTrimming="CharacterEllipsis"
                                             TextWrapping="NoWrap" />
-                                        <ItemsControl Grid.Row="3" Margin="0,2,0,0">
-                                            <ItemsControl.ItemsSource>
-                                                <MultiBinding Converter="{StaticResource CategoryChipsConverter}">
-                                                    <Binding FallbackValue="{x:Null}" Path="Local.Categories" />
-                                                    <Binding ElementName="Root" Path="DataContext.CategoryPalette" />
-                                                </MultiBinding>
-                                            </ItemsControl.ItemsSource>
-                                            <ItemsControl.ItemsPanel>
-                                                <ItemsPanelTemplate>
-                                                    <WrapPanel Orientation="Horizontal" />
-                                                </ItemsPanelTemplate>
-                                            </ItemsControl.ItemsPanel>
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate DataType="{x:Type helpers:CategoryChip}">
-                                                    <Border
-                                                        Height="18"
-                                                        Margin="0,0,4,2"
-                                                        Padding="6,0,6,1"
-                                                        Background="{Binding Background}"
-                                                        BorderBrush="{Binding Background}"
-                                                        Classes="tag-chip">
-                                                        <TextBlock
-                                                            FontSize="10"
-                                                            Foreground="{Binding Foreground}"
-                                                            Text="{Binding Name}" />
-                                                    </Border>
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ItemsControl>
-                                    </Grid>
-
-                                    <!--  Badges  -->
-                                    <StackPanel
-                                        Grid.Column="2"
-                                        Width="120"
-                                        HorizontalAlignment="Right"
-                                        VerticalAlignment="Center"
-                                        Orientation="Horizontal"
-                                        Spacing="6">
-                                        <!--  Base Model Badge  -->
-                                        <Label
-                                            MinHeight="0"
-                                            Padding="8,2"
-                                            Classes="Circle LightBlue"
-                                            Content="{Binding Local.ConnectedModelInfo.BaseModel, FallbackValue=''}"
-                                            FontSize="11"
-                                            FontWeight="SemiBold"
-                                            IsVisible="{Binding Local.ConnectedModelInfo.BaseModel, Converter={x:Static StringConverters.IsNotNullOrEmpty}, FallbackValue=False}"
-                                            Theme="{StaticResource TagLabel}" />
+                                        <ContentControl
+                                            Margin="0,4,0,-4"
+                                            Content="{Binding}"
+                                            ContentTemplate="{StaticResource ModelChipsTemplate}" />
                                     </StackPanel>
-                                </sg:SpacedGrid>
+                                </Grid>
 
                                 <Interaction.Behaviors>
                                     <EventTriggerBehavior EventName="DoubleTapped">
@@ -544,13 +546,13 @@
                                 ItemsJustification="SpaceAround"
                                 ItemsStretch="None"
                                 MinColumnSpacing="12"
-                                MinItemHeight="304"
+                                MinItemHeight="272"
                                 MinItemWidth="188"
                                 MinRowSpacing="10" />
                         </ItemsRepeater.Layout>
                         <ItemsRepeater.ItemTemplate>
                             <DataTemplate x:DataType="models:HybridModelFile">
-                                <Grid Width="188" Height="304">
+                                <Grid Width="188" Height="272">
                                     <Border
                                         Padding="8"
                                         Classes="model-grid-card"
@@ -624,7 +626,16 @@
                                                         TextTrimming="CharacterEllipsis" />
                                                 </StackPanel>
                                             </Border>
-                                            <StackPanel Grid.Row="1" Spacing="4">
+                                            <!--  Chips over the artwork, like the Checkpoint Manager cards  -->
+                                            <ContentControl
+                                                Grid.Row="0"
+                                                MaxHeight="56"
+                                                Margin="6,6,6,0"
+                                                VerticalAlignment="Top"
+                                                ClipToBounds="True"
+                                                Content="{Binding}"
+                                                ContentTemplate="{StaticResource ModelChipsTemplate}" />
+                                            <StackPanel Grid.Row="1" Spacing="2">
                                                 <TextBlock
                                                     FontWeight="SemiBold"
                                                     MaxLines="2"
@@ -637,44 +648,6 @@
                                                     MaxLines="1"
                                                     Text="{Binding Local.DisplayModelVersion, FallbackValue=''}"
                                                     TextTrimming="CharacterEllipsis" />
-                                                <Label
-                                                    MinHeight="0"
-                                                    Padding="8,2"
-                                                    Classes="Circle LightBlue"
-                                                    Content="{Binding Local.ConnectedModelInfo.BaseModel, FallbackValue=''}"
-                                                    FontSize="11"
-                                                    FontWeight="SemiBold"
-                                                    IsVisible="{Binding Local.ConnectedModelInfo.BaseModel, Converter={x:Static StringConverters.IsNotNullOrEmpty}, FallbackValue=False}"
-                                                    Theme="{StaticResource TagLabel}" />
-                                                <ItemsControl Margin="0,2,0,0">
-                                                    <ItemsControl.ItemsSource>
-                                                        <MultiBinding Converter="{StaticResource CategoryChipsConverter}">
-                                                            <Binding FallbackValue="{x:Null}" Path="Local.Categories" />
-                                                            <Binding ElementName="Root" Path="DataContext.CategoryPalette" />
-                                                        </MultiBinding>
-                                                    </ItemsControl.ItemsSource>
-                                                    <ItemsControl.ItemsPanel>
-                                                        <ItemsPanelTemplate>
-                                                            <WrapPanel Orientation="Horizontal" />
-                                                        </ItemsPanelTemplate>
-                                                    </ItemsControl.ItemsPanel>
-                                                    <ItemsControl.ItemTemplate>
-                                                        <DataTemplate DataType="{x:Type helpers:CategoryChip}">
-                                                            <Border
-                                                                Height="18"
-                                                                Margin="0,0,4,2"
-                                                                Padding="6,0,6,1"
-                                                                Background="{Binding Background}"
-                                                                BorderBrush="{Binding Background}"
-                                                                Classes="tag-chip">
-                                                                <TextBlock
-                                                                    FontSize="10"
-                                                                    Foreground="{Binding Foreground}"
-                                                                    Text="{Binding Name}" />
-                                                            </Border>
-                                                        </DataTemplate>
-                                                    </ItemsControl.ItemTemplate>
-                                                </ItemsControl>
                                             </StackPanel>
 
                                         </Grid>

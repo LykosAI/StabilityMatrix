@@ -118,6 +118,15 @@
             <Setter Property="Foreground" Value="{DynamicResource AccentButtonForegroundPressed}" />
         </Style>
 
+        <!--  Filter dropdowns: no vertical padding, so descenders fit in the fixed 32px height at any scale  -->
+        <Style Selector="Button.filter-dropdown">
+            <Setter Property="Height" Value="32" />
+            <Setter Property="Padding" Value="11,0" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ComboBoxBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+
         <Style Selector="Border.model-grid-card">
             <Setter Property="BorderBrush" Value="Transparent" />
             <Setter Property="BorderThickness" Value="1" />
@@ -224,11 +233,7 @@
             </StackPanel>
 
             <!--  Base Model Filter Button  -->
-            <Button
-                Height="32"
-                VerticalContentAlignment="Center"
-                BorderBrush="{DynamicResource ComboBoxBorderBrush}"
-                BorderThickness="1">
+            <Button Classes="filter-dropdown">
                 <Button.Content>
                     <StackPanel Orientation="Horizontal" Spacing="8">
                         <TextBlock Text="{Binding BaseModelButtonText}" />
@@ -270,12 +275,7 @@
             </Button>
 
             <!--  Categories Button (only when the source has any)  -->
-            <Button
-                Height="32"
-                VerticalContentAlignment="Center"
-                BorderBrush="{DynamicResource ComboBoxBorderBrush}"
-                BorderThickness="1"
-                IsVisible="{Binding HasCategoryOptions}">
+            <Button Classes="filter-dropdown" IsVisible="{Binding HasCategoryOptions}">
                 <Button.Content>
                     <Grid HorizontalAlignment="Stretch" ColumnDefinitions="Auto,6,Auto,8,Auto">
                         <fluentIcons:SymbolIcon
@@ -337,11 +337,7 @@
             </Button>
 
             <!--  Sort Button  -->
-            <Button
-                Height="32"
-                VerticalContentAlignment="Center"
-                BorderBrush="{DynamicResource ComboBoxBorderBrush}"
-                BorderThickness="1">
+            <Button Classes="filter-dropdown">
                 <Button.Content>
                     <Grid HorizontalAlignment="Stretch" ColumnDefinitions="Auto,6,Auto,8,Auto">
                         <fluentIcons:SymbolIcon

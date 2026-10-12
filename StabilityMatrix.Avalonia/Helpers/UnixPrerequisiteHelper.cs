@@ -560,7 +560,7 @@ public class UnixPrerequisiteHelper(
         );
 
         // unzip
-        await ArchiveHelper.Extract7ZAuto(nodeDownloadPath, AssetsDir);
+        await TarGZipExtractor.ExtractAsync(nodeDownloadPath, AssetsDir);
 
         var nodeDir = Compat.IsMacOS
             ? AssetsDir.JoinDir("node-v20.19.3-darwin-arm64")

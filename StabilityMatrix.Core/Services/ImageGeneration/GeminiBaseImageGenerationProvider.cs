@@ -56,6 +56,11 @@ public abstract class GeminiBaseImageGenerationProvider(
 
             return ParseGeminiResponse(response);
         }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            logger.LogInformation("Image generation was cancelled");
+            throw;
+        }
         catch (ApiException apiEx) when (apiEx.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
         {
             logger.LogError(apiEx, "Rate limit or quota exceeded for Gemini API");

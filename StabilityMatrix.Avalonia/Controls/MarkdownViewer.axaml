@@ -1,7 +1,6 @@
 ﻿<Styles
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:avalonia="clr-namespace:TheArtOfDev.HtmlRenderer.Avalonia;assembly=Avalonia.HtmlRenderer"
     xmlns:controls="using:StabilityMatrix.Avalonia.Controls">
     <Design.PreviewWith>
         <controls:MarkdownViewer
@@ -15,10 +14,11 @@
         <!--  Set Defaults  -->
         <Setter Property="Template">
             <ControlTemplate>
-                <avalonia:HtmlPanel
-                    x:Name="PART_HtmlPanel"
+                <controls:MarkdownHtmlLabel
+                    x:Name="PART_HtmlLabel"
+                    AutoSizeHeightOnly="True"
                     Background="Transparent"
-                    Text="{TemplateBinding Html}" />
+                    FitToContent="{TemplateBinding FitToContent}" />
             </ControlTemplate>
         </Setter>
     </Style>

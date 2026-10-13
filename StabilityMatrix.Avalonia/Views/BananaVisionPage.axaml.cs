@@ -138,8 +138,9 @@ public partial class BananaVisionPage : UserControlBase
         if (messageScrollViewer == null)
             return;
 
-        isNearBottom = IsScrollNearBottom(messageScrollViewer);
-
+        // Use where the user was before the new message grew the content: a large image or the
+        // loading placeholder is taller than the threshold, so measuring now would always say
+        // they had scrolled up.
         if (isNearBottom)
         {
             messageScrollViewer.ScrollToEnd();
@@ -173,6 +174,10 @@ public partial class BananaVisionPage : UserControlBase
     private void OnMessageScrollChanged(object? sender, ScrollChangedEventArgs e)
     {
         if (messageScrollViewer == null)
+            return;
+
+        // Content growing under a still viewport isn't the user scrolling away
+        if (e.OffsetDelta.Y == 0 && e.ExtentDelta.Y > 0)
             return;
 
         isNearBottom = IsScrollNearBottom(messageScrollViewer);

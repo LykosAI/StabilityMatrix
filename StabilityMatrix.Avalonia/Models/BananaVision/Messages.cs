@@ -69,7 +69,9 @@ public partial class ThinkingMessage : ObservableObject
     /// Preview of the thinking content (first ~100 chars)
     /// </summary>
     public string ThinkingPreview =>
-        ThinkingContent.Length > 100 ? ThinkingContent[..100] + "..." : ThinkingContent;
+        ThinkingContent.Length > 100
+            ? ThinkingContent[..(char.IsHighSurrogate(ThinkingContent[99]) ? 99 : 100)] + "..."
+            : ThinkingContent;
 
     /// <summary>
     /// Whether the thinking section is expanded

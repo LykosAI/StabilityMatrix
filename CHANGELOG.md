@@ -34,6 +34,17 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed the **Checkpoint Manager** and **Outputs** grids stuttering on large images. Each image now gets a small thumbnail the first time it's shown, so scrolling back loads that instead of the full file. Your preview images and outputs stay full resolution, and thumbnails are now sharp on high-DPI displays
 - Fixed the first-run recommended models dialog looking like it never loaded its images, after CivitAI started returning full-size originals; model browser cards also load lighter images now
 - Fixed the package uninstall confirmation showing the size of your whole shared model library for packages using symlink sharing. Only the package's own files are counted; the shared models were never deleted
+- Fixed text in **Image Lab** messages and thinking blocks being cut off at the right edge
+- **Image Lab** message bubbles now fit their text, so short messages no longer stretch across the chat, and inline code in messages is easier to read
+- Fixed emoji showing as `��` in Image Lab messages and in CivitAI and CivArchive model descriptions
+- Fixed **Save & Regenerate** in Image Lab deleting the images generated later in the conversation and dropping the edited message's attached images. It now shows progress and can be cancelled like any other generation
+- Fixed cancelling a Gemini generation in Image Lab showing a "Generation failed" error instead of "Cancelled"
+- Fixed deleting one image from a multi-image message in Image Lab deleting your original file when Image Lab hadn't been able to keep its own copy of it
+- Fixed **Image Lab** pulling you back to a conversation when its generation finished while you were in another one, and that generation's error banner showing in the conversation you had open
+- Fixed **Regenerate** in Image Lab removing the old response before the new one was ready. A failed or cancelled regenerate now keeps it
+- Fixed your message in Image Lab not being editable or deletable after a failed or cancelled generation until you reopened the conversation
+- Fixed Image Lab not scrolling to a new message or image when you were already at the bottom of the conversation
+- Fixed a ComfyUI generation in Image Lab not stopping when ComfyUI disconnected, if you had opened a conversation using Gemini in the meantime
 ### Supporters
 #### 🌟 Visionaries
 The most requested item on our feature tracker is finally here: model categories, so every LoRA and checkpoint can go into *Character*, *Style*, or whatever system lives in your head, and you can find it again in Inference. Add Fizgig for LoRA training, AMD support for Forge Neo, and a run of metadata fixes, and nearly everything in here started as something you asked for. Our Visionaries are how we get to build it, so thank you **Waterclouds**, **bluepopsicle**, **dispenser**, **Droolguy**, **TwistedDragon**, **snotty**, **cusalapapen1481**, **moon_milky2843**, **sn3232323233350**, **CC**, **hasezou11013179**, and **Akros**. Welcome back to **SnooSnooEternal**, and a big hello to **japublicspot78364519** and **jonny90**, who join the Visionaries with this build. We're thrilled to have you. 💛

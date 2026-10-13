@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using System.Collections;
+using System.Reflection;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
@@ -13,6 +15,8 @@ using StabilityMatrix.Core.Services;
 using StabilityMatrix.Core.Updater;
 using StabilityMatrix.UITests;
 using StabilityMatrix.UITests.Fakes;
+using TheArtOfDev.HtmlRenderer.Adapters;
+using TheArtOfDev.HtmlRenderer.Avalonia;
 
 [assembly: AvaloniaTestApplication(typeof(TestAppBuilder))]
 
@@ -31,7 +35,27 @@ public static class TestAppBuilder
         return AppBuilder
             .Configure<App>()
             .UseSkia()
-            .UseHeadless(new AvaloniaHeadlessPlatformOptions { UseHeadlessDrawing = false });
+            .UseHeadless(new AvaloniaHeadlessPlatformOptions { UseHeadlessDrawing = false })
+            .AfterSetup(_ => ClearHtmlRendererFontCache());
+    }
+
+    /// <summary>
+    /// HtmlRenderer (behind MarkdownViewer) caches fonts in a process-wide static, while each
+    /// headless test gets its own FontManager that is disposed when the test ends. A later test
+    /// would then measure text with a freed HarfBuzz font and crash the test host, so the cache is
+    /// emptied as each test's app is set up. The app itself has one FontManager for its lifetime.
+    /// </summary>
+    private static void ClearHtmlRendererFontCache()
+    {
+        const BindingFlags instance = BindingFlags.Instance | BindingFlags.NonPublic;
+        var adapter = typeof(HtmlControl)
+            .Assembly.GetType("TheArtOfDev.HtmlRenderer.Avalonia.Adapters.AvaloniaAdapter")!
+            .GetProperty("Instance", BindingFlags.Static | BindingFlags.Public)!
+            .GetValue(null)!;
+        var fontsHandler = typeof(RAdapter).GetField("_fontsHandler", instance)!.GetValue(adapter)!;
+        var fontsCache = (IDictionary)
+            fontsHandler.GetType().GetField("_fontsCache", instance)!.GetValue(fontsHandler)!;
+        fontsCache.Clear();
     }
 
     private static void ConfigureGlobals()

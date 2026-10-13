@@ -10,29 +10,29 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added **Fizgig**, a LoRA training studio for Flux 2 Klein 9B, Krea 2, MiniMax H3 and Qwen Image 2.1 with dataset prep, training, LoRA repair and extraction in one app ([#1761](https://github.com/LykosAI/StabilityMatrix/pull/1761)) - thanks to @e-nord!
 - Added AMD ROCm support for **Stable Diffusion WebUI Forge - Neo** on Windows and Linux. Forge Neo's developer supports NVIDIA only, so report AMD issues with it to Stability Matrix ([#1770](https://github.com/LykosAI/StabilityMatrix/pull/1770)) - thanks to @NeuralFault!
 ### Fixed
-- Fixed **Open on CivArchive** opening a file URL instead of the model page on Linux ([#1765](https://github.com/LykosAI/StabilityMatrix/issues/1765)).
+- Fixed **Wan2GP** installs on Python 3.11 failing with `sageattention ... has no wheels with a matching Python version tag`. New Wan2GP installs now use Python 3.11 with PyTorch 2.10 and CUDA 13 with matching Triton, SageAttention and Flash Attention, the same setup Wan2GP's own installer uses. CUDA 13 needs NVIDIA driver 580 or newer. GTX 10XX cards stay on Python 3.10
+- Existing **Wan2GP** installs on Python 3.10 keep their PyTorch 2.7 setup when updated. If a newer model such as LTX 2.5 fails with a Triton error, add Wan2GP again as a new install, which now uses Python 3.11, and move your outputs across ([#1756](https://github.com/LykosAI/StabilityMatrix/issues/1756))
 - Fixed ComfyUI updates downgrading SageAttention post6 to post4 and reinstalling compatible wheels ([#1764](https://github.com/LykosAI/StabilityMatrix/issues/1764)).
-- ControlNet preprocessing in Inference now offers to update older tagged Inference Core Nodes installations to a version with the ControlNet import fixes and Python 3.12/3.13 installation support.
-- Fixed shared model folder aliases hiding DiffusionModels in Checkpoint Manager, Image Lab, and Inference, including when DiffusionModels is itself linked to another location ([#1743](https://github.com/LykosAI/StabilityMatrix/pull/1743), [#1763](https://github.com/LykosAI/StabilityMatrix/pull/1763)) - Thanks to @NeuralFault and @ionite34!
-- Fixed the Model Browser's **Base Model** filter being lost when using **Next Model** / **Previous Model** or refreshing a model's details ([#1436](https://github.com/LykosAI/StabilityMatrix/issues/1436))
-- Fixed release-note text being cut off beside the scrollbar in the update dialog ([#1757](https://github.com/LykosAI/StabilityMatrix/issues/1757))
 - Fixed ComfyUI installation and updates failing on Python 3.13+ because the NumPy 1.x constraint has no compatible wheel ([#1754](https://github.com/LykosAI/StabilityMatrix/issues/1754))
-- Fixed **Windows ROCm** PyTorch installs pairing mismatched `torch` and `torchvision` versions, which broke packages at `import torchvision`; a matched pair is now always installed together ([#1769](https://github.com/LykosAI/StabilityMatrix/pull/1769)) - thanks to @NeuralFault!
-- Fixed logs ignoring `--home-dir`, and opening a missing folder or file showing an error dialog instead of a short notice; the app's own folders are now recreated when the library loads ([#1766](https://github.com/LykosAI/StabilityMatrix/pull/1766)) - thanks to @e-nord!
-- Fixed [#1767](https://github.com/LykosAI/StabilityMatrix/issues/1767) - **AI-Toolkit** installation failing on Linux while unpacking Node.js with a "Dangerous link path" error.
-- Fixed the package uninstall confirmation showing the size of your whole shared model library for packages using symlink sharing. Only the package's own files are counted; the shared models were never deleted
-- Fixed **Wan2GP** installs on Python 3.11 failing with `sageattention ... has no wheels with a matching Python version tag`. New Wan2GP installs now use Python 3.11 with PyTorch 2.10 and CUDA 13, the same setup Wan2GP's own installer uses, including matching Triton, SageAttention and Flash Attention. GTX 10XX cards stay on Python 3.10, and existing Python 3.10 installs keep updating as before. CUDA 13 needs NVIDIA driver 580 or newer
-- Fixed text in **Image Lab** messages and thinking blocks being cut off at the right edge
-- **Image Lab** message bubbles now fit their text, so short messages no longer stretch across the chat, and inline code in messages is easier to read
+- Fixed **AI-Toolkit** installation failing on Linux while unpacking Node.js with a "Dangerous link path" error ([#1767](https://github.com/LykosAI/StabilityMatrix/issues/1767))
+- Fixed **Windows ROCm** PyTorch installs pairing mismatched `torch` and `torchvision` versions, which broke packages at `import torchvision` ([#1769](https://github.com/LykosAI/StabilityMatrix/pull/1769)) - thanks to @NeuralFault!
+- ControlNet preprocessing in Inference now offers to update older tagged Inference Core Nodes installs to a version with the ControlNet import fixes and Python 3.12/3.13 support
+- Fixed the package uninstall confirmation counting your whole shared model library for packages using symlink sharing. Only the package's own files are counted; shared models were never deleted
+- Fixed logs ignoring `--home-dir`, and opening a missing folder or file showing an error dialog instead of a short notice ([#1766](https://github.com/LykosAI/StabilityMatrix/pull/1766)) - thanks to @e-nord!
+- Fixed shared model folder links hiding **DiffusionModels** in the Checkpoint Manager, Image Lab and Inference, including when DiffusionModels is itself a link ([#1743](https://github.com/LykosAI/StabilityMatrix/pull/1743), [#1763](https://github.com/LykosAI/StabilityMatrix/pull/1763)) - thanks to @NeuralFault and @ionite34!
+- Fixed the Model Browser's **Base Model** filter being lost when using **Next Model** / **Previous Model** or refreshing a model's details ([#1436](https://github.com/LykosAI/StabilityMatrix/issues/1436))
+- Fixed **Open on CivArchive** opening a file URL instead of the model page on Linux ([#1765](https://github.com/LykosAI/StabilityMatrix/issues/1765))
 - Fixed emoji showing as `��` in Image Lab messages and in CivitAI and CivArchive model descriptions
-- Fixed **Save & Regenerate** in Image Lab deleting the images generated later in the conversation and dropping the edited message's attached images. It now shows progress and can be cancelled like any other generation
-- Fixed cancelling a Gemini generation in Image Lab showing a "Generation failed" error instead of "Cancelled"
-- Fixed deleting one image from a multi-image message in Image Lab deleting your original file when Image Lab hadn't been able to keep its own copy of it
-- Fixed **Image Lab** pulling you back to a conversation when its generation finished while you were in another one, and that generation's error banner showing in the conversation you had open
+- Fixed release-note text being cut off beside the scrollbar in the update dialog ([#1757](https://github.com/LykosAI/StabilityMatrix/issues/1757))
+- Fixed text in **Image Lab** messages and thinking blocks being cut off at the right edge. Message bubbles now fit their text, and inline code is easier to read
+- Fixed **Save & Regenerate** in Image Lab deleting later images and dropping the edited message's attachments. It now shows progress and can be cancelled
 - Fixed **Regenerate** in Image Lab removing the old response before the new one was ready. A failed or cancelled regenerate now keeps it
-- Fixed your message in Image Lab not being editable or deletable after a failed or cancelled generation until you reopened the conversation
-- Fixed Image Lab not scrolling to a new message or image when you were already at the bottom of the conversation
-- Fixed a ComfyUI generation in Image Lab not stopping when ComfyUI disconnected, if you had opened a conversation using Gemini in the meantime
+- Fixed Image Lab pulling you back to a conversation when its generation finished while you were in another, and showing that generation's error in the one you had open
+- Fixed deleting one image from a multi-image message in Image Lab deleting your original file when Image Lab hadn't kept its own copy
+- Fixed your message in Image Lab not being editable or deletable after a failed or cancelled generation
+- Fixed cancelling a Gemini generation in Image Lab showing "Generation failed" instead of "Cancelled"
+- Fixed Image Lab not scrolling to a new message when you were already at the bottom of the conversation
+- Fixed a ComfyUI generation in Image Lab not stopping when ComfyUI disconnected, if you had opened a Gemini conversation in the meantime
 ### Supporters
 #### 🌟 Visionaries
 This patch is a good one for AMD owners: Forge Neo now runs on ROCm on both Windows and Linux, and Windows ROCm installs always get a `torch` and `torchvision` that actually match. It also adds Fizgig, a whole LoRA training studio, to the package list. Most of it arrived as community contributions, and our Visionaries are the reason we have time to review that work properly and say yes to it. Thank you **Waterclouds**, **bluepopsicle**, **dispenser**, **Droolguy**, **TwistedDragon**, **snotty**, **cusalapapen1481**, **moon_milky2843**, **sn3232323233350**, **CC**, **hasezou11013179**, and **Akros**. It's great to see **SnooSnooEternal** back with us, and hello to **japublicspot78364519** and **jonny90**, our newest Visionaries; we're so happy you're here. 💛

@@ -22,6 +22,17 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed [#1767](https://github.com/LykosAI/StabilityMatrix/issues/1767) - **AI-Toolkit** installation failing on Linux while unpacking Node.js with a "Dangerous link path" error.
 - Fixed the package uninstall confirmation showing the size of your whole shared model library for packages using symlink sharing. Only the package's own files are counted; the shared models were never deleted
 - Fixed **Wan2GP** installs on Python 3.11 failing with `sageattention ... has no wheels with a matching Python version tag`. New Wan2GP installs now use Python 3.11 with PyTorch 2.10 and CUDA 13, the same setup Wan2GP's own installer uses, including matching Triton, SageAttention and Flash Attention. GTX 10XX cards stay on Python 3.10, and existing Python 3.10 installs keep updating as before. CUDA 13 needs NVIDIA driver 580 or newer
+- Fixed text in **Image Lab** messages and thinking blocks being cut off at the right edge
+- **Image Lab** message bubbles now fit their text, so short messages no longer stretch across the chat, and inline code in messages is easier to read
+- Fixed emoji showing as `��` in Image Lab messages and in CivitAI and CivArchive model descriptions
+- Fixed **Save & Regenerate** in Image Lab deleting the images generated later in the conversation and dropping the edited message's attached images. It now shows progress and can be cancelled like any other generation
+- Fixed cancelling a Gemini generation in Image Lab showing a "Generation failed" error instead of "Cancelled"
+- Fixed deleting one image from a multi-image message in Image Lab deleting your original file when Image Lab hadn't been able to keep its own copy of it
+- Fixed **Image Lab** pulling you back to a conversation when its generation finished while you were in another one, and that generation's error banner showing in the conversation you had open
+- Fixed **Regenerate** in Image Lab removing the old response before the new one was ready. A failed or cancelled regenerate now keeps it
+- Fixed your message in Image Lab not being editable or deletable after a failed or cancelled generation until you reopened the conversation
+- Fixed Image Lab not scrolling to a new message or image when you were already at the bottom of the conversation
+- Fixed a ComfyUI generation in Image Lab not stopping when ComfyUI disconnected, if you had opened a conversation using Gemini in the meantime
 ### Supporters
 #### 🌟 Visionaries
 This patch is a good one for AMD owners: Forge Neo now runs on ROCm on both Windows and Linux, and Windows ROCm installs always get a `torch` and `torchvision` that actually match. It also adds Fizgig, a whole LoRA training studio, to the package list. Most of it arrived as community contributions, and our Visionaries are the reason we have time to review that work properly and say yes to it. Thank you **Waterclouds**, **bluepopsicle**, **dispenser**, **Droolguy**, **TwistedDragon**, **snotty**, **cusalapapen1481**, **moon_milky2843**, **sn3232323233350**, **CC**, **hasezou11013179**, and **Akros**. It's great to see **SnooSnooEternal** back with us, and hello to **japublicspot78364519** and **jonny90**, our newest Visionaries; we're so happy you're here. 💛

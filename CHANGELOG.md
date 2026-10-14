@@ -242,6 +242,7 @@ The prompt queue has been one of our most requested features ever, and builds li
 This build leans hard into what's next: a live HuggingFace browser and Wan 2.2 video generation. None of that exploration happens without our Visionaries giving us the room to chase it. So a huge thank you to **Waterclouds**, **MrMxyzptlk12836**, **Psilocyfer18731**, **bluepopsicle**, **Ibixat**, **Droolguy**, **KalAbaddon**, **LG**, **snotty**, **whudunit**, **cusalapapen1481**, and **moon_milky2843**. You make the experiments possible. And a big hello to **SkynetFuture** and **sn3232323233350**, who join the Visionary crew this time around. We're genuinely glad you're here. 💛
 
 ## v2.16.5
+> Full technical notes for this release: [docs.lykos.ai/stability-matrix/release-notes/2.16.5](https://docs.lykos.ai/stability-matrix/release-notes/2.16.5)
 ### Added
 - Added **Fizgig**, a LoRA training studio for Flux 2 Klein 9B, Krea 2, MiniMax H3 and Qwen Image 2.1 with dataset prep, training, LoRA repair and extraction in one app ([#1761](https://github.com/LykosAI/StabilityMatrix/pull/1761)) - thanks to @e-nord!
 - Added AMD ROCm support for **Stable Diffusion WebUI Forge - Neo** on Windows and Linux. Forge Neo's developer supports NVIDIA only, so report AMD issues with it to Stability Matrix ([#1770](https://github.com/LykosAI/StabilityMatrix/pull/1770)) - thanks to @NeuralFault!

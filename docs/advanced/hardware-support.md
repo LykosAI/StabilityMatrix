@@ -58,7 +58,7 @@ Architectures in the `gfx110x`, `gfx115x`, and `gfx120x` ranges are treated as "
 - Torch is installed from AMD's ROCm multi-arch index (`repo.amd.com/rocm/whl-multi-arch/`) as device-specific wheels (`torch[device-gfxNNNN]`). Vega parts (`gfx900` / `gfx906`) pull from the 'TheRock' nightly multi-arch feed instead, since these architecture builds currently are only available there instead of the stable production distribution stream.
 - On modern architectures it applies a set of ROCm performance and attention environment variables at launch (MIOpen find-mode tuning, AOTriton experimental flash attention, `COMFYUI_ENABLE_MIOPEN`, and an allocator tuning string). AOTriton is excluded on the `gfx1152` / `gfx1153` APU architectures, which it does not yet support. Legacy architectures instead force a math SDP fallback. The full variable list and exactly which ones are auto-applied are documented in [Environment Variables](environment-variables.md#amd-and-rocm-variables).
 - ComfyUI offers optional extra commands for supported AMD GPUs, including **Install Triton and SageAttention (ROCm)** (Sage Attention 1.x), **Install Flash Attention (ROCm)** (legacy architectures), an **Install ROCm Development SDK** step, and an **Install bitsandbytes (ROCm)** step for Python 3.12 environments.
-- **Packages:** ComfyUI, Stable Diffusion WebUI Reforge, InvokeAI, SwarmUI, and Wan2GP are supported by this install path.
+- **Packages:** ComfyUI, Stable Diffusion WebUI Reforge, Stable Diffusion WebUI Forge - Neo, InvokeAI, SwarmUI, and Wan2GP are supported by this install path.
   > [!NOTE] While not managed by Stability Matrix for ROCm installs, SD.Next has a Windows-native ROCm install when the "ROCm" Pytorch index is selected in Advanced Installation Options during initial package install and `--use-rocm` is set in launch options. This install path is internally handled by SD.Next itself and currently only supports RDNA2 dedicated GPUs, RDNA3, RDNA3.5, and RDNA4 GPUs.
 
 **Caveats:**
@@ -100,7 +100,10 @@ On Linux, AMD GPUs use native ROCm directly, which is the mature AMD path.
 - **Caveats:**
   - Native ROCm on Linux depends on a system-level ROCm installation and a compatible kernel/driver stack, which Stability Matrix does not install for you.
   - The Windows-only ROCm performance environment overrides described above are not auto-applied on Linux, so if you want them you can set them yourself via the [Environment Variables](environment-variables.md) editor.
-- **Packages:** ComfyUI, Stable Diffusion WebUI, SD.Next, Stable Diffusion WebUI Forge, InvokeAI, SwarmUI, SDFX, OneTrainer, and Wan2GP list ROCm support.
+- **Packages:** ComfyUI, Stable Diffusion WebUI, SD.Next, Stable Diffusion WebUI Forge, Stable Diffusion WebUI Forge - Neo, InvokeAI, SwarmUI, SDFX, OneTrainer, and Wan2GP list ROCm support.
+
+  > [!NOTE]
+  > Forge Neo's upstream project officially supports NVIDIA CUDA only, so its ROCm support here is added by Stability Matrix and is not supported by the upstream developers.
 
 ## Intel (IPEX)
 

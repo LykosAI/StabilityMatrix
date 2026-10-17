@@ -52,7 +52,7 @@ public partial class Fizgig(
     public override string LaunchCommand => "lora_trainer_gui.py";
 
     public override Uri PreviewImageUri =>
-        new("https://github.com/shootthesound/Fizgig/blob/master/icon.png?raw=true");
+        new("https://github.com/shootthesound/Fizgig/blob/master/src/fizgig/web/static/icon.png?raw=true");
 
     public override string MainBranch => "master";
     public override PackageType PackageType => PackageType.SdTraining;

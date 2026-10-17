@@ -33,7 +33,7 @@ public partial class Fizgig(
     public override string Author => "shootthesound";
 
     public override string Blurb =>
-        "LoRA training studio for Flux 2 Klein 9B, Krea 2, MiniMax H3 and Qwen Image 2.1. Train, profile, repair and extract";
+        "LoRA trainer and workbench for image, video and music models, with tools to profile, edit and extract LoRAs";
 
     // Shown in the install browser before the user commits to installing.
     public override string Disclaimer =>
@@ -45,14 +45,12 @@ public partial class Fizgig(
     public override string LicenseType => "Apache-2.0";
     public override string LicenseUrl => "https://github.com/shootthesound/Fizgig/blob/master/LICENSE";
 
-    // NOT launch.pyw: that launcher re-spawns itself under venv/Scripts/pythonw.exe and exits,
-    // which would drop the process we track (no console output, no working Stop button) and
-    // leave the GUI orphaned. lora_trainer_gui.py has a standalone main() and is what upstream's
-    // run_fizgig.sh invokes directly.
-    public override string LaunchCommand => "lora_trainer_gui.py";
+    // Keep this aligned with Fizgig's shipped Windows launcher, which starts fizgig.py.
+    // lora_trainer_gui.py is no longer the launch entry point in the current upstream tree.
+    public override string LaunchCommand => "fizgig.py";
 
     public override Uri PreviewImageUri =>
-        new("https://github.com/shootthesound/Fizgig/blob/master/icon.png?raw=true");
+        new("https://github.com/shootthesound/Fizgig/blob/master/src/fizgig/web/static/icon.png?raw=true");
 
     public override string MainBranch => "master";
     public override PackageType PackageType => PackageType.SdTraining;

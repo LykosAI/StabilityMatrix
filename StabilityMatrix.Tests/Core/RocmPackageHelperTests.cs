@@ -1,7 +1,9 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.HardwareInfo;
+using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Models.Rocm;
+using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services.Rocm;
 
@@ -130,6 +132,52 @@ public class RocmPackageHelperTests
         StringAssert.Contains(text, "torchvision[device-gfx1201]==0.29.0a0");
         StringAssert.Contains(text, "torchaudio");
     }
+
+    [TestMethod]
+    public void ApplyRocmTorchInstallOptions_ScopesUpgradeAndReinstallToTorchTrio()
+    {
+        var args = RocmPackageHelper.ApplyRocmTorchInstallOptions(
+            new PipInstallArgs().AddArg("torch[device-gfx1201]==2.14.0"),
+            new PipInstallConfig { UpgradePackages = true, ForceReinstallTorch = true },
+            pipOverrides: null
+        );
+
+        var values = args.Arguments.Select(argument => argument.Value).ToList();
+        var expectedTargets = new[] { "torch", "torchvision", "torchaudio" };
+
+        // A blanket --upgrade would re-resolve numpy (and friends) against the multi-arch index; a blanket
+        // --force-reinstall would reinstall the whole graph. Neither may come back.
+        CollectionAssert.DoesNotContain(values, "--upgrade");
+        CollectionAssert.DoesNotContain(values, "--force-reinstall");
+
+        Assert.AreEqual(3, values.Count(value => value == "--upgrade-package"));
+        Assert.AreEqual(3, values.Count(value => value == "--reinstall-package"));
+        CollectionAssert.AreEqual(expectedTargets, TargetsOf(values, "--upgrade-package"));
+        CollectionAssert.AreEqual(expectedTargets, TargetsOf(values, "--reinstall-package"));
+    }
+
+    [TestMethod]
+    public void ApplyRocmTorchInstallOptions_WithoutUpgradePackages_ReinstallsTrioWithoutUpgrading()
+    {
+        var args = RocmPackageHelper.ApplyRocmTorchInstallOptions(
+            new PipInstallArgs().AddArg("torch[device-gfx1201]==2.14.0"),
+            new PipInstallConfig { UpgradePackages = false, ForceReinstallTorch = true },
+            pipOverrides: null
+        );
+
+        var values = args.Arguments.Select(argument => argument.Value).ToList();
+
+        CollectionAssert.DoesNotContain(values, "--upgrade");
+        CollectionAssert.DoesNotContain(values, "--upgrade-package");
+        Assert.AreEqual(3, values.Count(value => value == "--reinstall-package"));
+    }
+
+    private static string[] TargetsOf(List<string> values, string flag) =>
+        values
+            .Select((value, index) => (value, index))
+            .Where(pair => pair.value == flag)
+            .Select(pair => values[pair.index + 1])
+            .ToArray();
 
     [TestMethod]
     public void BuildRocmTorchArgs_UserTorchOverrideReplacesPinnedTorch()

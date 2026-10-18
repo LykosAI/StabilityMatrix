@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using Injectio.Attributes;
 using NLog;
 using StabilityMatrix.Core.Exceptions;
@@ -25,6 +25,18 @@ public class RocmPackageHelper : IRocmPackageHelper
     private static readonly StringComparer EnvComparer = StringComparer.OrdinalIgnoreCase;
 
     private const string RocmSdkDevelPackageName = "rocm-sdk-devel";
+
+    // The ROCm torch install only ever needs to move the torch trio. Bundling or upgrading anything
+    // wider lets the resolver re-evaluate transitive dependencies against the multi-arch index.
+    private static readonly string[] RocmTorchPackageNames = ["torch", "torchvision", "torchaudio"];
+    private static readonly string[] RocmTorchUpgradePackageArgs = BuildRepeatablePackageArgs(
+        "--upgrade-package",
+        RocmTorchPackageNames
+    );
+    private static readonly string[] RocmTorchReinstallPackageArgs = BuildRepeatablePackageArgs(
+        "--reinstall-package",
+        RocmTorchPackageNames
+    );
     private static readonly string[] WindowsLaunchNoticeLines =
     [
         "Stability Matrix Windows ROCm Notice: Windows AMD ROCm support is experimental. Please report any issues to Stability Matrix first so it can be determined whether the issue is package-specific.",
@@ -280,7 +292,7 @@ public class RocmPackageHelper : IRocmPackageHelper
                 torchResolution.TorchvisionSpecifier
             ),
             installConfig,
-            installedPackage
+            installedPackage.PipOverrides
         );
 
         if (torchResolution.AllowPrerelease)
@@ -310,30 +322,41 @@ public class RocmPackageHelper : IRocmPackageHelper
 
     /// <summary>
     /// Applies the profile's upgrade/reinstall flags and any user pip overrides to a ROCm torch install command.
+    /// Scope is deliberately limited to the torch trio. A blanket <c>--upgrade</c> lets the resolver move
+    /// transitive dependencies against the multi-arch index, numpy foremost, where the only build may be
+    /// numpy 2.5.2 (cp312+). A blanket <c>--force-reinstall</c> reinstalls the whole graph for the same reason.
+    /// Packages that must follow the torch build, amd-torch-device-gfx* and triton, are exact-pinned by the
+    /// wheel metadata, so they are still replaced to satisfy the resolved pin.
     /// </summary>
-    private static PipInstallArgs ApplyRocmTorchInstallOptions(
+    internal static PipInstallArgs ApplyRocmTorchInstallOptions(
         PipInstallArgs args,
         PipInstallConfig installConfig,
-        InstalledPackage installedPackage
+        IEnumerable<PipPackageSpecifierOverride>? pipOverrides
     )
     {
         if (installConfig.UpgradePackages)
         {
-            args = args.AddArg("--upgrade");
+            args = args.AddKeyedArgs("--upgrade-package", RocmTorchUpgradePackageArgs);
         }
 
         if (installConfig.ForceReinstallTorch)
         {
-            args = args.AddArg("--force-reinstall");
+            args = args.AddKeyedArgs("--reinstall-package", RocmTorchReinstallPackageArgs);
         }
 
-        if (installedPackage.PipOverrides != null)
+        if (pipOverrides != null)
         {
-            args = args.WithUserOverrides(installedPackage.PipOverrides);
+            args = args.WithUserOverrides(pipOverrides.ToList());
         }
 
         return args;
     }
+
+    /// <summary>
+    /// Expands a repeatable flag so each package gets its own <c>flag value</c> pair.
+    /// </summary>
+    private static string[] BuildRepeatablePackageArgs(string flag, IEnumerable<string> packages) =>
+        packages.SelectMany(package => new[] { flag, package }).ToArray();
 
     /// <summary>
     /// Builds the pip args for the resolved torch/torchvision pair. The specs are keyed so a user

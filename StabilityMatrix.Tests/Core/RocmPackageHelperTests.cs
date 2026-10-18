@@ -134,6 +134,44 @@ public class RocmPackageHelperTests
     }
 
     [TestMethod]
+    [DataRow("gfx908")]
+    [DataRow("gfx90a")]
+    [DataRow("gfx942")]
+    [DataRow("gfx950")]
+    public void WindowsRocmSupport_IsSupportedArchitecture_AcceptsCdnaTargets(string arch)
+    {
+        Assert.IsTrue(WindowsRocmSupport.IsSupportedArchitecture(arch));
+    }
+
+    [TestMethod]
+    [DataRow("AMD Instinct MI100", "gfx908")]
+    [DataRow("AMD Instinct MI210", "gfx90a")]
+    public void GpuInfo_GetAmdGfxArch_ResolvesInstinctCdnaTargets(string name, string expected)
+    {
+        var gpu = new GpuInfo { Name = name };
+
+        Assert.AreEqual(expected, gpu.GetAmdGfxArch());
+    }
+
+    [TestMethod]
+    [DataRow("gfx908", true)]
+    [DataRow("gfx90a", false)]
+    [DataRow("gfx942", false)]
+    [DataRow("gfx950", false)]
+    [DataRow("gfx1030", true)]
+    [DataRow("gfx1100", false)]
+    [DataRow("gfx1201", false)]
+    public void WindowsRocmSupport_PreferMathSdpaFallback_MatchesAotritonImageList(
+        string arch,
+        bool expectFallback
+    )
+    {
+        // AOTriton ships images for gfx90a, gfx942, gfx950, gfx11xx and gfx120x. Everything else has no
+        // fused SDPA kernels and must be forced onto the math backend.
+        Assert.AreEqual(expectFallback, WindowsRocmSupport.PreferMathSdpaFallback(arch));
+    }
+
+    [TestMethod]
     public void ApplyRocmTorchInstallOptions_ScopesUpgradeAndReinstallToTorchTrio()
     {
         var args = RocmPackageHelper.ApplyRocmTorchInstallOptions(

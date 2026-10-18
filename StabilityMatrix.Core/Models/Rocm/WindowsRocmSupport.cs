@@ -1,4 +1,4 @@
-using StabilityMatrix.Core.Helper.HardwareInfo;
+﻿using StabilityMatrix.Core.Helper.HardwareInfo;
 
 namespace StabilityMatrix.Core.Models.Rocm;
 
@@ -57,6 +57,24 @@ public static class WindowsRocmSupport
         return IsLegacyArchitecture(gfxArch);
     }
 
+    /// <summary>
+    /// True for targets that ship fused SDPA kernels, which on ROCm means the target has an AOTriton
+    /// image: RDNA3, RDNA3.5, RDNA4 and CDNA2 or newer. gfx908 and the GCN/RDNA1/RDNA2 targets have
+    /// no fused kernels and fall back to the math backend.
+    /// </summary>
+    public static bool SupportsFusedSdpa(string? gfxArch)
+    {
+        var canonicalArch = TryGetCanonicalArchitecture(gfxArch);
+        return canonicalArch is not null
+            && (IsModernArchitecture(canonicalArch) || canonicalArch is "gfx90a" or "gfx942" or "gfx950");
+    }
+
+    /// <summary>
+    /// True when the target has no fused SDPA kernels and the math backend has to be forced.
+    /// </summary>
+    public static bool PreferMathSdpaFallback(string? gfxArch) =>
+        IsSupportedArchitecture(gfxArch) && !SupportsFusedSdpa(gfxArch);
+
     public static bool UsesNightlyMultiArchPythonPackageIndex(string? gfxArch)
     {
         var canonicalArch = TryGetCanonicalArchitecture(gfxArch);
@@ -73,7 +91,16 @@ public static class WindowsRocmSupport
 
         return normalizedArch switch
         {
-            "gfx900" or "gfx906" or "gfx1150" or "gfx1151" or "gfx1152" or "gfx1153" => normalizedArch,
+            "gfx900"
+            or "gfx906"
+            or "gfx908"
+            or "gfx90a"
+            or "gfx942"
+            or "gfx950"
+            or "gfx1150"
+            or "gfx1151"
+            or "gfx1152"
+            or "gfx1153" => normalizedArch,
             var s
                 when s.StartsWith("gfx101", StringComparison.Ordinal)
                     || s.StartsWith("gfx103", StringComparison.Ordinal)

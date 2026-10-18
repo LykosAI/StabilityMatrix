@@ -819,7 +819,7 @@ public class RocmPackageHelper : IRocmPackageHelper
             environment["TORCH_ROCM_AOTRITON_ENABLE_EXPERIMENTAL"] = "1";
         }
 
-        if (options.ApplyLegacySdpFallback && WindowsRocmSupport.IsLegacyArchitecture(gfxArch))
+        if (options.ApplyLegacySdpFallback && WindowsRocmSupport.PreferMathSdpaFallback(gfxArch))
         {
             environment["TORCH_BACKENDS_CUDA_FLASH_SDP_ENABLED"] = "0";
             environment["TORCH_BACKENDS_CUDA_MEM_EFF_SDP_ENABLED"] = "0";

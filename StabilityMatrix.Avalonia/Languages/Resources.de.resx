@@ -1137,9 +1137,6 @@ Konto-Tokens sind nach dem Speichern nicht mehr einsehbar. Bitte notiere sie, we
   <data name="Label_PromptAmplifierRateLimitTitle" xml:space="preserve">
     <value>Nutzungslimit erreicht</value>
   </data>
-  <data name="Label_PromptAmplifierRateLimitMessage" xml:space="preserve">
-    <value>Du hast diesen Monat keine Prompt-Amplifier-Nutzung mehr übrig. Die Nutzung wird am 1. jedes Monats zurückgesetzt. (noch {0} Tage)</value>
-  </data>
   <data name="Label_PromptAmplifierError" xml:space="preserve">
     <value>Prompt-Amplifier-Fehler</value>
   </data>

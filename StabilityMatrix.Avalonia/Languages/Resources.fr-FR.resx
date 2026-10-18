@@ -1229,9 +1229,6 @@ Les jetons de compte ne seront plus visibles après l'enregistrement. Veuillez e
   <data name="Label_PromptAmplifierRateLimitTitle" xml:space="preserve">
     <value>Limite d'utilisation atteinte</value>
   </data>
-  <data name="Label_PromptAmplifierRateLimitMessage" xml:space="preserve">
-    <value>Vous n'avez plus d'utilisation Prompt Amplifier ce mois-ci. L'utilisation est réinitialisée le 1er de chaque mois. ({0} jours restants)</value>
-  </data>
   <data name="Label_PromptAmplifierError" xml:space="preserve">
     <value>Erreur Prompt Amplifier</value>
   </data>

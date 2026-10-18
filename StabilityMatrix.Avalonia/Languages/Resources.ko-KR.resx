@@ -1376,9 +1376,6 @@
   <data name="Label_PromptAmplifierRateLimitTitle" xml:space="preserve">
     <value>사용 한도 도달</value>
   </data>
-  <data name="Label_PromptAmplifierRateLimitMessage" xml:space="preserve">
-    <value>이번 달 프롬프트 증폭기 사용량이 모두 소진되었습니다. 사용량은 매월 1일에 초기화됩니다. ({0}일 남음)</value>
-  </data>
   <data name="Label_PromptAmplifierError" xml:space="preserve">
     <value>프롬프트 증폭기 오류</value>
   </data>

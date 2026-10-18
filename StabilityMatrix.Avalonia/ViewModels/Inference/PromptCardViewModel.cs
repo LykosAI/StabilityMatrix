@@ -115,7 +115,7 @@ public partial class PromptCardViewModel
     public bool ShowLowTokenWarning => TokensRemaining <= LowTokenThreshold && TokensRemaining >= 0;
 
     public string LowTokenWarningText =>
-        $"{TokensRemaining} amplification{(TokensRemaining == 1 ? "" : "s")} remaining (resets in {Utilities.GetNumDaysTilBeginningOfNextMonth()} days)";
+        $"{TokensRemaining} amplification{(TokensRemaining == 1 ? "" : "s")} remaining (resets in {Utilities.FormatTimeUntilNextWeeklyReset()})";
 
     /// <inheritdoc />
     public PromptCardViewModel(
@@ -661,7 +661,7 @@ public partial class PromptCardViewModel
                     var dialog = DialogHelper.CreateMarkdownDialog(
                         string.Format(
                             Resources.Label_PromptAmplifierRateLimitMessage,
-                            Utilities.GetNumDaysTilBeginningOfNextMonth()
+                            Utilities.FormatTimeUntilNextWeeklyReset()
                         ),
                         Resources.Label_PromptAmplifierRateLimitTitle
                     );

@@ -1687,8 +1687,8 @@ Account tokens will not be viewable after saving, please make a note of them if 
     <value>Rate Limit Reached</value>
   </data>
   <data name="Label_PromptAmplifierRateLimitMessage" xml:space="preserve">
-    <value>You have no Prompt Amplifier usage left this month. Usage resets on the 1st of each month. ({0} days left)</value>
-    <comment>{0} = days remaining until next month</comment>
+    <value>You have no Prompt Amplifier usage left this week. Usage resets every Monday at 00:00 UTC (in {0}).</value>
+    <comment>{0} = time left until the weekly reset, already formatted in English, e.g. "3 days" or "5 hours"</comment>
   </data>
   <data name="Label_PromptAmplifierError" xml:space="preserve">
     <value>Prompt Amplifier Error</value>

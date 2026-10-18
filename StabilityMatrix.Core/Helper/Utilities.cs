@@ -82,12 +82,43 @@ public static partial class Utilities
         return await process.StandardOutput.ReadToEndAsync().ConfigureAwait(false);
     }
 
-    public static int GetNumDaysTilBeginningOfNextMonth()
+    /// <summary>
+    /// Day the Lykos weekly credit allowance resets for everyone, at 00:00 UTC.
+    /// </summary>
+    public const DayOfWeek WeeklyResetDay = DayOfWeek.Monday;
+
+    /// <summary>
+    /// Time left until the next Lykos weekly credit reset (<see cref="WeeklyResetDay"/>, 00:00 UTC).
+    /// Exactly at the reset instant, the next one is a full week away.
+    /// </summary>
+    public static TimeSpan GetTimeUntilNextWeeklyReset(DateTimeOffset? now = null)
     {
-        var now = DateTimeOffset.UtcNow;
-        var firstDayOfNextMonth = new DateTime(now.Year, now.Month, 1).AddMonths(1);
-        var daysUntilNextMonth = (firstDayOfNextMonth - now).Days;
-        return daysUntilNextMonth;
+        var utcNow = (now ?? DateTimeOffset.UtcNow).ToUniversalTime();
+        var daysAhead = ((int)WeeklyResetDay - (int)utcNow.DayOfWeek + 7) % 7;
+        var nextReset = new DateTimeOffset(utcNow.Date, TimeSpan.Zero).AddDays(daysAhead);
+        if (nextReset <= utcNow)
+            nextReset = nextReset.AddDays(7);
+        return nextReset - utcNow;
+    }
+
+    /// <summary>
+    /// "3 days", "1 day", "5 hours", "1 hour" or "less than an hour" until the next weekly reset,
+    /// for "resets in …" copy.
+    /// </summary>
+    public static string FormatTimeUntilNextWeeklyReset(DateTimeOffset? now = null)
+    {
+        var left = GetTimeUntilNextWeeklyReset(now);
+        if (left.TotalDays >= 1)
+        {
+            var days = (int)left.TotalDays;
+            return days == 1 ? "1 day" : $"{days} days";
+        }
+        if (left.TotalHours >= 1)
+        {
+            var hours = (int)left.TotalHours;
+            return hours == 1 ? "1 hour" : $"{hours} hours";
+        }
+        return "less than an hour";
     }
 
     public static string RemoveHtml(string? stringWithHtml)

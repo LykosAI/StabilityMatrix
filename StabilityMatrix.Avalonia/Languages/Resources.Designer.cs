@@ -3292,7 +3292,7 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to You have no Prompt Amplifier usage left this month. Usage resets on the 1st of each month. ({0} days left).
+        ///   Looks up a localized string similar to You have no Prompt Amplifier usage left this week. Usage resets every Monday at 00:00 UTC (in {0})..
         /// </summary>
         public static string Label_PromptAmplifierRateLimitMessage {
             get {

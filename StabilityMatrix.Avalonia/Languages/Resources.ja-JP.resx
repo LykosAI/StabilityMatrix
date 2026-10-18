@@ -1550,9 +1550,6 @@ Sparkは兆レベルのパラメータを持つ基盤モデルで、膨大なパ
   <data name="Label_PromptAmplifierRateLimitTitle" xml:space="preserve">
     <value>利用上限に達しました</value>
   </data>
-  <data name="Label_PromptAmplifierRateLimitMessage" xml:space="preserve">
-    <value>今月のプロンプトアンプリファイアの利用回数がなくなりました。利用回数は毎月1日にリセットされます。（残り{0}日）</value>
-  </data>
   <data name="Label_PromptAmplifierError" xml:space="preserve">
     <value>プロンプトアンプリファイアエラー</value>
   </data>

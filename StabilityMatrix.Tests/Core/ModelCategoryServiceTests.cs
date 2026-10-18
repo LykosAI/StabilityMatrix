@@ -189,6 +189,22 @@ public class ModelCategoryServiceTests
     }
 
     [TestMethod]
+    public void SetCategoryOrder_ReordersKeepsColoursAndRegistersUnknownNames()
+    {
+        service.AddCategory("Concept", "#D9930D");
+        service.AddCategory("Character");
+        service.AddCategory("Tweak");
+
+        service.SetCategoryOrder(["tweak", "Unregistered", "Concept"]);
+
+        CollectionAssert.AreEqual(
+            new[] { "Tweak", "Unregistered", "Concept", "Character" },
+            settings.ModelCategories.Select(c => c.Name).ToList()
+        );
+        Assert.AreEqual("#D9930D", settings.ModelCategories[2].Color);
+    }
+
+    [TestMethod]
     public async Task RenameCategory_UpdatesRegistryAndEveryAffectedModel()
     {
         service.AddCategory("Charcter");

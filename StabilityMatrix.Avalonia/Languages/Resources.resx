@@ -2322,6 +2322,9 @@ Account tokens will not be viewable after saving, please make a note of them if 
   <data name="Label_DeleteCategoryConfirm" xml:space="preserve">
     <value>Remove the category '{0}'? It will be removed from {1} models.</value>
   </data>
+  <data name="Label_DragToReorder" xml:space="preserve">
+    <value>Drag to reorder</value>
+  </data>
   <data name="Label_CategoriesFilterHint" xml:space="preserve">
     <value>Click a category to filter. Drop models here to assign.</value>
   </data>

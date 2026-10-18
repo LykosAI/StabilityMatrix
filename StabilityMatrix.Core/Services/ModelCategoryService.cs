@@ -66,6 +66,35 @@ public class ModelCategoryService(
     }
 
     /// <inheritdoc />
+    public void SetCategoryOrder(IEnumerable<string> names)
+    {
+        var order = names.Select(NormalizeName).Distinct(NameComparer).ToList();
+
+        settingsManager.Transaction(s =>
+        {
+            var remaining = s.ModelCategories.ToList();
+            var reordered = new List<ModelCategory>(remaining.Count);
+
+            foreach (var name in order)
+            {
+                var existing = remaining.FirstOrDefault(c => NameComparer.Equals(c.Name, name));
+                if (existing is null)
+                {
+                    reordered.Add(new ModelCategory { Name = name });
+                }
+                else
+                {
+                    remaining.Remove(existing);
+                    reordered.Add(existing);
+                }
+            }
+
+            s.ModelCategories.Clear();
+            s.ModelCategories.AddRange([.. reordered, .. remaining]);
+        });
+    }
+
+    /// <inheritdoc />
     public async Task RenameCategoryAsync(string oldName, string newName)
     {
         oldName = NormalizeName(oldName);

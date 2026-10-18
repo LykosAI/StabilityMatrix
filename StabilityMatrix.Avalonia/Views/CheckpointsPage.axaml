@@ -1,4 +1,4 @@
-<controls:UserControlBase
+﻿<controls:UserControlBase
     x:Class="StabilityMatrix.Avalonia.Views.CheckpointsPage"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -472,7 +472,8 @@
                         </Button>
                     </Grid>
                     <ScrollViewer Grid.Row="1">
-                        <ItemsControl ItemsSource="{Binding CategoryOptions}">
+                        <!--  Right margin keeps the counts clear of the overlay scrollbar  -->
+                        <ItemsControl Margin="0,0,14,0" ItemsSource="{Binding CategoryOptions}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate DataType="{x:Type checkpointManager:CategoryOptionViewModel}">
                                     <ToggleButton
@@ -486,13 +487,13 @@
                                         <ToggleButton.ContextFlyout>
                                             <ui:FAMenuFlyout>
                                                 <ui:MenuFlyoutItem
-                                                    Command="{Binding $parent[ItemsControl].((viewModels:CheckpointsPageViewModel)DataContext).RenameCategoryCommand}"
+                                                    Command="{Binding $parent[controls:UserControlBase].((viewModels:CheckpointsPageViewModel)DataContext).RenameCategoryCommand}"
                                                     CommandParameter="{Binding}"
                                                     IconSource="Rename"
                                                     IsVisible="{Binding !IsUncategorized}"
                                                     Text="{x:Static lang:Resources.Action_Rename}" />
                                                 <ui:MenuFlyoutItem
-                                                    Command="{Binding $parent[ItemsControl].((viewModels:CheckpointsPageViewModel)DataContext).DeleteCategoryCommand}"
+                                                    Command="{Binding $parent[controls:UserControlBase].((viewModels:CheckpointsPageViewModel)DataContext).DeleteCategoryCommand}"
                                                     CommandParameter="{Binding}"
                                                     IconSource="Delete"
                                                     IsVisible="{Binding !IsUncategorized}"

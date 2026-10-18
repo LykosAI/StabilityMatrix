@@ -559,12 +559,16 @@ public class UnixPrerequisiteHelper(
             )
         );
 
-        // unzip
-        await ArchiveHelper.Extract7ZAuto(nodeDownloadPath, AssetsDir);
-
         var nodeDir = Compat.IsMacOS
             ? AssetsDir.JoinDir("node-v20.19.3-darwin-arm64")
             : AssetsDir.JoinDir("node-v20.19.3-linux-x64");
+
+        // Node's tarball contains relative symlinks from bin/ into lib/ (e.g. bin/npm -> ../lib/...).
+        // Bundled 7-Zip 26.01's default symlink checks reject these ../lib links, regardless of filesystem.
+        // -snld6 was the lowest level that accepted them in testing, so relax the check for this archive only.
+        // A filesystem that cannot create symlinks (e.g. exFAT) may still fail independently.
+        await ArchiveHelper.Extract7ZTar(nodeDownloadPath, AssetsDir, symlinkSecurityLevel: 6);
+
         Directory.Move(nodeDir, NodeDir);
 
         progress?.Report(

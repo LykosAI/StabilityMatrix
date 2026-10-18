@@ -1,5 +1,6 @@
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
+using StabilityMatrix.Avalonia.Languages;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
@@ -12,6 +13,7 @@ public partial class ModelCategoryRowViewModel : ObservableObject
     public required string Name { get; init; }
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(DeleteConfirmation))]
     public partial int Count { get; set; }
 
     [ObservableProperty]
@@ -19,4 +21,6 @@ public partial class ModelCategoryRowViewModel : ObservableObject
 
     [ObservableProperty]
     public partial Color Color { get; set; }
+
+    public string DeleteConfirmation => string.Format(Resources.Label_DeleteCategoryConfirm, Name, Count);
 }

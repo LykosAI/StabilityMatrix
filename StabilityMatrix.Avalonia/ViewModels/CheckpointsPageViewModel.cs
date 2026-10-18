@@ -1544,7 +1544,17 @@ public partial class CheckpointsPageViewModel(
         var vm = dialogFactory.Get<ModelCategoriesDialogViewModel>(vm => vm.Targets = targets);
         await vm.GetDialog().ShowAsync();
 
-        // Colours and registry entries may have changed without an index refresh
+        // Categories deleted in the dialog must not linger as an invisible filter
+        var known = categoryService
+            .GetCategories()
+            .Select(c => c.Name)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        if (SelectedCategories.Any(name => !known.Contains(name)))
+        {
+            SelectedCategories = new ObservableCollection<string>(SelectedCategories.Where(known.Contains));
+        }
+
+        // Colours, order and registry entries may have changed without an index refresh
         RefreshCategoryOptions();
     }
 

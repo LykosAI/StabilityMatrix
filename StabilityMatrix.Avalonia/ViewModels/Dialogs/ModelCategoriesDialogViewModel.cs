@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -22,9 +23,9 @@ using StabilityMatrix.Core.Services;
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
 /// <summary>
-/// Assigns categories to one or more models and lets the user add categories or change their
-/// colour. Every change is applied immediately, so the dialog only has a Close button.
-/// With no <see cref="Targets"/> it acts as a plain category manager.
+/// Assigns categories to one or more models and lets the user add, delete, reorder (by dragging
+/// a row) or recolour categories. Every change is applied immediately, so the dialog only has a
+/// Close button. With no <see cref="Targets"/> it acts as a plain category manager.
 /// </summary>
 [View(typeof(ModelCategoriesDialog))]
 [ManagedService]
@@ -67,7 +68,14 @@ public partial class ModelCategoriesDialogViewModel(
     public override void OnLoaded()
     {
         base.OnLoaded();
+        Rows.CollectionChanged += OnRowsCollectionChanged;
         LoadRows();
+    }
+
+    public override void OnUnloaded()
+    {
+        base.OnUnloaded();
+        Rows.CollectionChanged -= OnRowsCollectionChanged;
     }
 
     public override BetterContentDialog GetDialog()
@@ -175,6 +183,51 @@ public partial class ModelCategoriesDialogViewModel(
         }
     }
 
+    /// <summary>
+    /// A drag reorder moves a row as a remove followed by an insert; the insert completes the
+    /// move, so that is when the new order is saved.
+    /// </summary>
+    private void OnRowsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        if (
+            isLoadingRows
+            || e.Action is not (NotifyCollectionChangedAction.Add or NotifyCollectionChangedAction.Move)
+        )
+        {
+            return;
+        }
+
+        try
+        {
+            categoryService.SetCategoryOrder(Rows.Select(r => r.Name));
+        }
+        catch (Exception ex)
+        {
+            notificationService.Show(Resources.Label_Categories, ex.Message, NotificationType.Error);
+        }
+    }
+
+    [RelayCommand]
+    private async Task DeleteCategory(ModelCategoryRowViewModel? row)
+    {
+        if (row is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await categoryService.DeleteCategoryAsync(row.Name);
+            RefreshTargets();
+        }
+        catch (Exception ex)
+        {
+            notificationService.Show(Resources.Label_Categories, ex.Message, NotificationType.Error);
+        }
+
+        LoadRows();
+    }
+
     [RelayCommand(CanExecute = nameof(CanAddCategory))]
     private async Task AddCategory()
     {
@@ -182,7 +235,8 @@ public partial class ModelCategoriesDialogViewModel(
 
         try
         {
-            categoryService.AddCategory(name);
+            var color = ModelCategoryStyle.NextPaletteColor(categoryService.GetCategories());
+            categoryService.AddCategory(name, ModelCategoryStyle.ToHex(color));
 
             if (HasTargets)
             {

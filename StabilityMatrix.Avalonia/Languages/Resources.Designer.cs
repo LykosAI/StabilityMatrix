@@ -6397,6 +6397,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Drag to reorder.
+        /// </summary>
+        public static string Label_DragToReorder {
+            get {
+                return ResourceManager.GetString("Label_DragToReorder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Click a category to filter. Drop models here to assign..
         /// </summary>
         public static string Label_CategoriesFilterHint {

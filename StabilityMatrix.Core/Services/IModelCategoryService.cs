@@ -28,6 +28,13 @@ public interface IModelCategoryService
     void SetCategoryColor(string name, string? color);
 
     /// <summary>
+    /// Reorders the registry so the given names come first, in that order. Names that are not
+    /// registered yet are registered; registered categories left out keep their relative order
+    /// after the listed ones.
+    /// </summary>
+    void SetCategoryOrder(IEnumerable<string> names);
+
+    /// <summary>
     /// Renames a category in the registry and on every indexed model that carries it.
     /// </summary>
     Task RenameCategoryAsync(string oldName, string newName);

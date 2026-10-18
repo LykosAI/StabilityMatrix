@@ -21,6 +21,33 @@ public static class ModelCategoryStyle
     /// </summary>
     public static readonly Color DefaultColor = Color.Parse("#3B82F6");
 
+    /// <summary>
+    /// Preset chip colours offered in the colour picker, ordered so neighbours contrast.
+    /// New categories take the first one no registered category uses yet.
+    /// </summary>
+    public static IReadOnlyList<Color> Palette { get; } =
+        new[]
+        {
+            "#3B82F6",
+            "#F59E0B",
+            "#10B981",
+            "#F43F5E",
+            "#8B5CF6",
+            "#06B6D4",
+            "#F97316",
+            "#84CC16",
+            "#EC4899",
+            "#14B8A6",
+            "#6366F1",
+            "#EF4444",
+            "#EAB308",
+            "#22C55E",
+            "#D946EF",
+            "#64748B",
+        }
+            .Select(Color.Parse)
+            .ToList();
+
     private static readonly IBrush LightForeground = new SolidColorBrush(Color.Parse("#F5FAFF"));
     private static readonly IBrush DarkForeground = new SolidColorBrush(Color.Parse("#1B1B1F"));
 
@@ -35,6 +62,20 @@ public static class ModelCategoryStyle
     public static string ToHex(Color color)
     {
         return $"#{color.R:X2}{color.G:X2}{color.B:X2}";
+    }
+
+    /// <summary>
+    /// The first <see cref="Palette"/> colour none of the given categories uses, cycling through
+    /// the palette once every colour is taken. Categories without a colour count as
+    /// <see cref="DefaultColor"/>.
+    /// </summary>
+    public static Color NextPaletteColor(IReadOnlyList<ModelCategory> existing)
+    {
+        var used = existing.Select(c => ParseColor(c.Color)).ToHashSet();
+        return Palette.FirstOrDefault(
+            color => !used.Contains(color),
+            Palette[existing.Count % Palette.Count]
+        );
     }
 
     /// <summary>

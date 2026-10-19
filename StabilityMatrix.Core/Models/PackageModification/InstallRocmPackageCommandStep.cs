@@ -1,4 +1,4 @@
-using StabilityMatrix.Core.Helper;
+﻿using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Models.Rocm;
@@ -9,7 +9,7 @@ using StabilityMatrix.Core.Services.Rocm;
 
 namespace StabilityMatrix.Core.Models.PackageModification;
 
-public enum WindowsRocmPackageCommandType
+public enum RocmPackageCommandType
 {
     SageAttention,
     DevelopmentSdk,
@@ -17,7 +17,7 @@ public enum WindowsRocmPackageCommandType
     FlashAttention,
 }
 
-public class InstallWindowsRocmPackageCommandStep(
+public class InstallRocmPackageCommandStep(
     IDownloadService downloadService,
     IPyInstallationManager pyInstallationManager,
     IPrerequisiteHelper prerequisiteHelper,
@@ -44,16 +44,16 @@ public class InstallWindowsRocmPackageCommandStep(
 
     public required InstalledPackage InstalledPackage { get; init; }
     public required DirectoryPath WorkingDirectory { get; init; }
-    public required WindowsRocmPackageCommandType CommandType { get; init; }
+    public required RocmPackageCommandType CommandType { get; init; }
     public IReadOnlyDictionary<string, string>? EnvironmentVariables { get; init; }
 
     public string ProgressTitle =>
         CommandType switch
         {
-            WindowsRocmPackageCommandType.SageAttention => "Installing Windows ROCm SageAttention",
-            WindowsRocmPackageCommandType.DevelopmentSdk => "Installing Windows ROCm Development SDK",
-            WindowsRocmPackageCommandType.BitsAndBytes => "Installing Windows ROCm bitsandbytes",
-            WindowsRocmPackageCommandType.FlashAttention => "Installing Windows ROCm Flash Attention",
+            RocmPackageCommandType.SageAttention => "Installing Windows ROCm SageAttention",
+            RocmPackageCommandType.DevelopmentSdk => "Installing Windows ROCm Development SDK",
+            RocmPackageCommandType.BitsAndBytes => "Installing Windows ROCm bitsandbytes",
+            RocmPackageCommandType.FlashAttention => "Installing Windows ROCm Flash Attention",
             _ => "Running Windows ROCm package command",
         };
 
@@ -97,16 +97,16 @@ public class InstallWindowsRocmPackageCommandStep(
 
         switch (CommandType)
         {
-            case WindowsRocmPackageCommandType.SageAttention:
+            case RocmPackageCommandType.SageAttention:
                 await ExecuteSageAttentionAsync(venvRunner, progress).ConfigureAwait(false);
                 break;
-            case WindowsRocmPackageCommandType.DevelopmentSdk:
+            case RocmPackageCommandType.DevelopmentSdk:
                 await ExecuteDevelopmentSdkAsync(venvRunner, progress).ConfigureAwait(false);
                 break;
-            case WindowsRocmPackageCommandType.BitsAndBytes:
+            case RocmPackageCommandType.BitsAndBytes:
                 await ExecuteBitsAndBytesAsync(venvRunner, pyVersion, progress).ConfigureAwait(false);
                 break;
-            case WindowsRocmPackageCommandType.FlashAttention:
+            case RocmPackageCommandType.FlashAttention:
                 await ExecuteFlashAttentionAsync(venvRunner, progress).ConfigureAwait(false);
                 break;
             default:
@@ -144,7 +144,7 @@ public class InstallWindowsRocmPackageCommandStep(
     )
     {
         EnsureRocmCompatibility();
-        await rocmPackageHelper.EnsureWindowsSdkDevelAsync(venvRunner, progress).ConfigureAwait(false);
+        await rocmPackageHelper.EnsureRocmSdkDevelAsync(venvRunner, progress).ConfigureAwait(false);
     }
 
     private async Task ExecuteSageAttentionAsync(
@@ -154,7 +154,7 @@ public class InstallWindowsRocmPackageCommandStep(
     {
         EnsureRocmCompatibility();
         await EnsureVcBuildToolsAsync(progress).ConfigureAwait(false);
-        await rocmPackageHelper.EnsureWindowsSdkDevelAsync(venvRunner, progress).ConfigureAwait(false);
+        await rocmPackageHelper.EnsureRocmSdkDevelAsync(venvRunner, progress).ConfigureAwait(false);
 
         progress?.Report(
             new ProgressReport(

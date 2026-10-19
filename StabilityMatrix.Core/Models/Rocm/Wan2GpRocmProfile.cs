@@ -1,13 +1,13 @@
-using StabilityMatrix.Core.Models.Packages;
+﻿using StabilityMatrix.Core.Models.Packages;
 
 namespace StabilityMatrix.Core.Models.Rocm;
 
 /// <summary>
-/// Shared Windows ROCm profile for Wan2GP.
+/// Shared ROCm profile for Wan2GP.
 /// </summary>
-public class Wan2GpWindowsRocmProfile : RocmPackageProfile
+public class Wan2GpRocmProfile : RocmPackageProfile
 {
-    public Wan2GpWindowsRocmProfile()
+    public Wan2GpRocmProfile()
     {
         InstallConfig = new PipInstallConfig
         {
@@ -17,5 +17,5 @@ public class Wan2GpWindowsRocmProfile : RocmPackageProfile
         };
     }
 
-    public static RocmPackageProfile Default { get; } = new Wan2GpWindowsRocmProfile();
+    public static RocmPackageProfile Default { get; } = new Wan2GpRocmProfile();
 }

@@ -1,15 +1,15 @@
-using StabilityMatrix.Core.Helper;
+﻿using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Services.Rocm;
 
 namespace StabilityMatrix.Core.Models.Rocm;
 
 /// <summary>
-/// Windows ROCm profile for Forge Neo.
+/// ROCm profile for Forge Neo.
 /// Forge Neo has no native AMD support, so the helper owns the ROCm torch install and the launch
 /// environment, while Forge Neo's own launch.py still installs the rest of its dependencies.
 /// </summary>
-public class ForgeNeoWindowsRocmProfile : RocmPackageProfile
+public class ForgeNeoRocmProfile : RocmPackageProfile
 {
     private const string DisableSmartMemoryOptionName = "Disable Smart Memory";
     private const string UsePytorchCrossAttentionOptionName = "Use PyTorch Cross Attention";
@@ -18,7 +18,7 @@ public class ForgeNeoWindowsRocmProfile : RocmPackageProfile
     private static readonly string[] EnableLaunchOptionNames = ["Pin Shared Memory", "CUDA Stream"];
     private static readonly string[] DisableLaunchOptionNames = ["CUDA Malloc"];
 
-    public ForgeNeoWindowsRocmProfile()
+    public ForgeNeoRocmProfile()
     {
         InstallConfig = new PipInstallConfig
         {
@@ -31,12 +31,12 @@ public class ForgeNeoWindowsRocmProfile : RocmPackageProfile
         ExtraEnvironmentFactory = BuildEnvironment;
     }
 
-    public static ForgeNeoWindowsRocmProfile Default { get; } = new ForgeNeoWindowsRocmProfile();
+    public static ForgeNeoRocmProfile Default { get; } = new ForgeNeoRocmProfile();
 
     private static IReadOnlyDictionary<string, string> BuildEnvironment(RocmRuntimeContext runtimeContext)
     {
-        var indexUrl = WindowsRocmSupport.GetMultiArchPythonPackageIndexUrl(runtimeContext.RuntimeGfxArch);
-        var deviceExtra = WindowsRocmSupport.TryGetMultiArchDeviceExtra(runtimeContext.RuntimeGfxArch);
+        var indexUrl = RocmSupport.GetMultiArchPythonPackageIndexUrl(runtimeContext.RuntimeGfxArch);
+        var deviceExtra = RocmSupport.TryGetMultiArchDeviceExtra(runtimeContext.RuntimeGfxArch);
 
         if (string.IsNullOrWhiteSpace(deviceExtra))
         {
@@ -56,7 +56,7 @@ public class ForgeNeoWindowsRocmProfile : RocmPackageProfile
         };
     }
 
-    public override void ApplyWindowsRocmLaunchDefaults(
+    public override void ApplyRocmLaunchDefaults(
         List<LaunchOptionDefinition> launchOptions,
         IRocmPackageHelper rocmPackageHelper
     )

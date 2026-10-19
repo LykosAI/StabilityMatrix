@@ -1,9 +1,9 @@
-using StabilityMatrix.Core.Helper.HardwareInfo;
+﻿using StabilityMatrix.Core.Helper.HardwareInfo;
 
 namespace StabilityMatrix.Core.Models.Rocm;
 
 /// <summary>
-/// Captures the canonical Windows ROCm machine state resolved by the helper.
+/// Captures the canonical ROCm machine state resolved by the helper.
 /// </summary>
 public class RocmMachineState
 {

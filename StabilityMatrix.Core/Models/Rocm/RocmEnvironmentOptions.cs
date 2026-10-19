@@ -1,4 +1,4 @@
-namespace StabilityMatrix.Core.Models.Rocm;
+﻿namespace StabilityMatrix.Core.Models.Rocm;
 
 /// <summary>
 /// Controls how ROCm helper defaults, package-specific variables, and user overrides are layered at launch.
@@ -48,7 +48,7 @@ public class RocmEnvironmentOptions
     public string? FlashAttentionTritonAmdEnable { get; init; } = "TRUE";
 
     /// <summary>
-    /// When true, helper-managed defaults will enable ROCm AOTriton on modern Windows ROCm architectures.
+    /// When true, helper-managed defaults will enable ROCm AOTriton on modern ROCm architectures.
     /// </summary>
     public bool ApplyAotritonExperimental { get; init; } = true;
 

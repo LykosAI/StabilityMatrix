@@ -3,10 +3,10 @@
 namespace StabilityMatrix.Core.Models.Rocm;
 
 /// <summary>
-/// Centralizes Windows ROCm support and architecture policy so hardware detection, package selection,
+/// Centralizes ROCm support and architecture policy so hardware detection, package selection,
 /// installation, and shared launch decisions use the same support map.
 /// </summary>
-public static class WindowsRocmSupport
+public static class RocmSupport
 {
     public const string StableMultiArchPythonPackageIndexUrl = "https://stable.repo.amd.com/rocm/whl-next/";
     public const string NightlyMultiArchPythonPackageIndexUrl = "https://nightly.repo.amd.com/rocm/whl-next/";

@@ -1,4 +1,4 @@
-using StabilityMatrix.Core.Models;
+﻿using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Models.Rocm;
@@ -23,22 +23,22 @@ public interface IRocmPackageHelper
     IReadOnlyDictionary<string, string> BuildLaunchEnvironment(RocmPackageProfile profile);
 
     /// <summary>
-    /// Returns shared Windows ROCm launch notice lines if the current machine and selected torch index
-    /// qualify for the Windows native ROCm launch environment; otherwise returns an empty list.
+    /// Returns shared ROCm launch notice lines when the selected torch index qualifies for the
+    /// helper-managed ROCm launch environment on this machine; otherwise returns an empty list.
     /// </summary>
-    IReadOnlyList<string> GetWindowsLaunchNoticeLines(TorchIndex selectedTorchIndex);
+    IReadOnlyList<string> GetLaunchNoticeLines(TorchIndex selectedTorchIndex);
 
     /// <summary>
-    /// Returns true when the current machine is Windows, the selected torch index is ROCm,
-    /// and the machine is compatible with Windows native ROCm.
+    /// Returns true when the selected torch index is ROCm and the helper can manage a native ROCm
+    /// install on the current machine.
     /// </summary>
-    bool ShouldApplyWindowsLaunchEnvironment(TorchIndex selectedTorchIndex);
+    bool ShouldApplyLaunchEnvironment(TorchIndex selectedTorchIndex);
 
     /// <summary>
-    /// Ensures a usable Windows ROCm SDK devel package is installed from the ROCm multi-arch index,
+    /// Ensures a usable ROCm SDK devel package is installed from the ROCm index,
     /// preferring the same build date token as the installed torch build and falling back to the latest available build.
     /// </summary>
-    Task EnsureWindowsSdkDevelAsync(
+    Task EnsureRocmSdkDevelAsync(
         IPyVenvRunner venvRunner,
         IProgress<ProgressReport>? progress = null,
         Action<ProcessOutput>? onConsoleOutput = null,

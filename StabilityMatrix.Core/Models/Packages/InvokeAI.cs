@@ -232,7 +232,7 @@ public class InvokeAI(
         progress?.Report(new ProgressReport(-1f, "Installing Package", isIndeterminate: true));
 
         var torchVersion = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
-        var isSupportedWindowsRocmInstall =
+        var isSupportedRocmInstall =
             Compat.IsWindows
             && torchVersion == TorchIndex.Rocm
             && rocmPackageHelper.GetCompatibility().IsCompatible;
@@ -268,7 +268,7 @@ public class InvokeAI(
             torchVersion.ToString().ToLowerInvariant()
         ]?.GetValue<string>();
 
-        if (isSupportedWindowsRocmInstall)
+        if (isSupportedRocmInstall)
         {
             index = null;
         }
@@ -286,9 +286,9 @@ public class InvokeAI(
 
         await venvRunner.PipInstall(invokeInstallArgs, onConsoleOutput).ConfigureAwait(false);
 
-        if (isSupportedWindowsRocmInstall)
+        if (isSupportedRocmInstall)
         {
-            var installProfile = InvokeAiWindowsRocmProfile.CreateInstallProfile(
+            var installProfile = InvokeAiRocmProfile.CreateInstallProfile(
                 options.PythonOptions.PythonVersion ?? RecommendedPythonVersion
             );
 
@@ -662,17 +662,17 @@ public class InvokeAI(
         env = GetEnvVars(env, installPath);
 
         var selectedTorchIndex = installedPackage.PreferredTorchIndex ?? GetRecommendedTorchVersion();
-        if (!rocmPackageHelper.ShouldApplyWindowsLaunchEnvironment(selectedTorchIndex))
+        if (!rocmPackageHelper.ShouldApplyLaunchEnvironment(selectedTorchIndex))
         {
             return env;
         }
 
-        return env.SetItems(rocmPackageHelper.BuildLaunchEnvironment(InvokeAiWindowsRocmProfile.Default));
+        return env.SetItems(rocmPackageHelper.BuildLaunchEnvironment(InvokeAiRocmProfile.Default));
     }
 
     private IReadOnlyList<string> GetLaunchNoticeLines(InstalledPackage installedPackage)
     {
         var selectedTorchIndex = installedPackage.PreferredTorchIndex ?? GetRecommendedTorchVersion();
-        return rocmPackageHelper.GetWindowsLaunchNoticeLines(selectedTorchIndex);
+        return rocmPackageHelper.GetLaunchNoticeLines(selectedTorchIndex);
     }
 }

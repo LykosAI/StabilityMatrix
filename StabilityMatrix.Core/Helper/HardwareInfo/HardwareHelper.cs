@@ -320,11 +320,11 @@ public static partial class HardwareHelper
         return IterGpuInfo().Any(gpu => gpu.IsAmd);
     }
 
-    public static bool HasWindowsRocmSupportedGpu() => IterGpuInfo().Any(WindowsRocmSupport.IsSupportedGpu);
+    public static bool HasRocmSupportedGpu() => IterGpuInfo().Any(RocmSupport.IsSupportedGpu);
 
-    public static GpuInfo? GetWindowsRocmSupportedGpu()
+    public static GpuInfo? GetRocmSupportedGpu()
     {
-        return IterGpuInfo().FirstOrDefault(WindowsRocmSupport.IsSupportedGpu);
+        return IterGpuInfo().FirstOrDefault(RocmSupport.IsSupportedGpu);
     }
 
     public static bool HasIntelGpu() => IterGpuInfo().Any(gpu => gpu.IsIntel);
@@ -334,7 +334,7 @@ public static partial class HardwareHelper
 
     // Set DirectML for default if AMD and Windows
     public static bool PreferDirectMLOrZluda() =>
-        !HasNvidiaGpu() && HasAmdGpu() && Compat.IsWindows && !HasWindowsRocmSupportedGpu();
+        !HasNvidiaGpu() && HasAmdGpu() && Compat.IsWindows && !HasRocmSupportedGpu();
 
     private static readonly Lazy<bool> IsMemoryInfoAvailableLazy = new(() => TryGetMemoryInfo(out _));
     public static bool IsMemoryInfoAvailable => IsMemoryInfoAvailableLazy.Value;

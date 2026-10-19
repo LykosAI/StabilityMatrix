@@ -58,10 +58,7 @@ public class Reforge(
             // Adjust inherited launch defaults for the Windows ROCm path before inserting reForge-specific options.
             // Makes the reForge-specific attention options visible in the UI and leaves them unset by default
             // for non-Windows-ROCm installs so reForge can keep using its normal internal attention selection.
-            ReforgeWindowsRocmProfile.Default.ApplyWindowsRocmLaunchDefaults(
-                baseLaunchOptions,
-                rocmPackageHelper
-            );
+            ReforgeRocmProfile.Default.ApplyRocmLaunchDefaults(baseLaunchOptions, rocmPackageHelper);
 
             baseLaunchOptions.Insert(
                 extrasIndex >= 0 ? extrasIndex : baseLaunchOptions.Count,
@@ -69,7 +66,7 @@ public class Reforge(
                 {
                     Name = "Cross Attention Method",
                     Type = LaunchOptionType.Bool,
-                    InitialValue = ReforgeWindowsRocmProfile.Default.GetPreferredCrossAttentionArgument(
+                    InitialValue = ReforgeRocmProfile.Default.GetPreferredCrossAttentionArgument(
                         rocmPackageHelper
                     ),
                     Options = ["--attention-split", "--attention-quad", "--attention-pytorch"],
@@ -106,7 +103,7 @@ public class Reforge(
     {
         var torchIndex = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
 
-        if (!rocmPackageHelper.ShouldApplyWindowsLaunchEnvironment(torchIndex))
+        if (!rocmPackageHelper.ShouldApplyLaunchEnvironment(torchIndex))
         {
             await base.InstallPackage(
                     installLocation,
@@ -127,7 +124,7 @@ public class Reforge(
             )
             .ConfigureAwait(false);
 
-        var profile = ReforgeWindowsRocmProfile.CreateProfile(GetRequirementsPaths(installLocation));
+        var profile = ReforgeRocmProfile.CreateProfile(GetRequirementsPaths(installLocation));
         var config = rocmPackageHelper.BuildWindowsNativeInstallConfig(profile);
 
         await StandardPipInstallProcessAsync(
@@ -173,17 +170,17 @@ public class Reforge(
         env = base.GetEnvVars(env, installedPackage);
         env = env.SetItem("STABLE_DIFFUSION_REPO", StableDiffusionRepoOverride);
 
-        if (!rocmPackageHelper.ShouldApplyWindowsLaunchEnvironment(selectedTorchIndex))
+        if (!rocmPackageHelper.ShouldApplyLaunchEnvironment(selectedTorchIndex))
         {
             return env;
         }
 
-        return env.SetItems(rocmPackageHelper.BuildLaunchEnvironment(ReforgeWindowsRocmProfile.Default));
+        return env.SetItems(rocmPackageHelper.BuildLaunchEnvironment(ReforgeRocmProfile.Default));
     }
 
     protected override IReadOnlyList<string> GetLaunchNoticeLines(InstalledPackage installedPackage)
     {
         var selectedTorchIndex = installedPackage.PreferredTorchIndex ?? GetRecommendedTorchVersion();
-        return rocmPackageHelper.GetWindowsLaunchNoticeLines(selectedTorchIndex);
+        return rocmPackageHelper.GetLaunchNoticeLines(selectedTorchIndex);
     }
 }

@@ -62,9 +62,9 @@ public record GpuInfo
         return ComputeCapabilityValue < 7.5m;
     }
 
-    public bool IsWindowsRocmSupportedGpu()
+    public bool IsRocmSupportedGpu()
     {
-        return WindowsRocmSupport.IsSupportedGpu(this);
+        return RocmSupport.IsSupportedGpu(this);
     }
 
     public bool IsAmd => Name?.Contains("amd", StringComparison.OrdinalIgnoreCase) ?? false;

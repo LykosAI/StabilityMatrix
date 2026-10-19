@@ -16,6 +16,13 @@ public class RocmEnvironmentOptions
     public bool IncludeUserOverrides { get; init; } = true;
 
     /// <summary>
+    /// When true, inherited system ROCm/HIP SDK variables are neutralized so a helper-managed,
+    /// self-contained ROCm SDK is used. Disable for installs that intentionally rely on a system
+    /// ROCm or a PyTorch-bundled runtime instead.
+    /// </summary>
+    public bool SanitizeRocmSdkEnvironment { get; init; } = true;
+
+    /// <summary>
     /// When set, overrides the default PyTorch allocator tuning string added by the ROCm helper.
     /// </summary>
     public string? PyTorchAllocConf { get; init; } = "max_split_size_mb:512,garbage_collection_threshold:0.8";

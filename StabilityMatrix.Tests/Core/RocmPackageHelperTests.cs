@@ -172,6 +172,25 @@ public class RocmPackageHelperTests
     }
 
     [TestMethod]
+    public void ApplyRocmSdkEnvironmentSanitization_MarksInheritedSdkVariablesForRemoval()
+    {
+        var environment = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["ROCM_PATH"] = "/opt/rocm",
+            ["PATH"] = "/usr/bin",
+        };
+
+        RocmPackageHelper.ApplyRocmSdkEnvironmentSanitization(environment);
+
+        foreach (var key in WindowsRocmSupport.ConflictingRocmEnvironmentVariables)
+        {
+            Assert.AreEqual(ProcessRunner.UnsetEnvironmentVariable, environment[key], key);
+        }
+
+        Assert.AreEqual("/usr/bin", environment["PATH"]);
+    }
+
+    [TestMethod]
     public void ApplyRocmTorchInstallOptions_ScopesUpgradeAndReinstallToTorchTrio()
     {
         var args = RocmPackageHelper.ApplyRocmTorchInstallOptions(

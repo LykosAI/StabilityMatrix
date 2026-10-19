@@ -857,6 +857,13 @@ public class RocmPackageHelper : IRocmPackageHelper
             }
         }
 
+        // Neutralize inherited system ROCm/HIP SDK variables so the venv's self-contained SDK is used.
+        // User overrides below can still intentionally re-set these keys.
+        if (options.SanitizeRocmSdkEnvironment)
+        {
+            ApplyRocmSdkEnvironmentSanitization(merged);
+        }
+
         if (
             options.IncludeUserOverrides
             && settingsManager.Settings.EnvironmentVariables is { Count: > 0 } userOverrides
@@ -869,5 +876,17 @@ public class RocmPackageHelper : IRocmPackageHelper
         }
 
         return merged;
+    }
+
+    /// <summary>
+    /// Marks the inherited system ROCm/HIP SDK variables for removal from the child process, so the
+    /// venv's self-contained SDK wins over any system install that happens to be on PATH.
+    /// </summary>
+    internal static void ApplyRocmSdkEnvironmentSanitization(IDictionary<string, string> environment)
+    {
+        foreach (var key in WindowsRocmSupport.ConflictingRocmEnvironmentVariables)
+        {
+            environment[key] = ProcessRunner.UnsetEnvironmentVariable;
+        }
     }
 }

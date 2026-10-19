@@ -19,6 +19,20 @@ public static class WindowsRocmSupport
         "gfx1153",
     ];
 
+    /// <summary>
+    /// System-level ROCm/HIP SDK variables that conflict with the self-contained pip ROCm SDK the
+    /// helper manages. They are removed from helper-managed child environments so a stale system
+    /// ROCm or HIP SDK install cannot shadow the venv toolchain or its compiled extensions.
+    /// </summary>
+    public static readonly string[] ConflictingRocmEnvironmentVariables =
+    [
+        "ROCM_PATH",
+        "ROCM_HOME",
+        "HIP_PATH",
+        "ROCM_DIR",
+        "HIP_DIR",
+    ];
+
     public static bool IsSupportedGpu(GpuInfo? gpu)
     {
         if (gpu is null || !gpu.IsAmd || string.IsNullOrWhiteSpace(gpu.Name))

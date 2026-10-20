@@ -178,13 +178,94 @@ public class RocmPackageHelperTests
     }
 
     [TestMethod]
-    public void RocmArchDetector_TryParseNode_SkipsCpuNodesAndParsesGpuNodes()
+    public void RocmArchDetector_TryParseNode_SkipsCpuNodes()
     {
         const string cpuNode = "cpu_cores_count 16\nsimd_count 0\ngfx_target_version 0\n";
+
+        Assert.IsNull(RocmArchDetector.TryParseNode(cpuNode, 0));
+    }
+
+    [TestMethod]
+    public void RocmArchDetector_TryParseNode_ParsesGpuNodes()
+    {
         const string gpuNode = "simd_count 192\ngfx_target_version 110000\ndevice_id 29772\n";
 
-        Assert.IsNull(RocmArchDetector.TryParseNode(cpuNode));
-        Assert.AreEqual("gfx1100", RocmArchDetector.TryParseNode(gpuNode));
+        var device = RocmArchDetector.TryParseNode(gpuNode, 1);
+
+        Assert.IsNotNull(device);
+        Assert.AreEqual("gfx1100", device.GfxArch);
+        Assert.AreEqual(1, device.DeviceIndex);
+        Assert.AreEqual(192, device.SimdCount);
+    }
+
+    [TestMethod]
+    public void RocmArchDetector_SelectPreferred_PrefersTheDiscreteDevice()
+    {
+        // An APU is a couple of SIMD units; the discrete card is two orders of magnitude more. Node order
+        // carries no information about which is which, so both orders have to resolve the same way.
+        var apuFirst = new[]
+        {
+            new RocmDetectedDevice
+            {
+                GfxArch = "gfx1036",
+                DeviceIndex = 0,
+                SimdCount = 4,
+            },
+            new RocmDetectedDevice
+            {
+                GfxArch = "gfx1100",
+                DeviceIndex = 1,
+                SimdCount = 192,
+            },
+        };
+        var dgpuFirst = new[]
+        {
+            new RocmDetectedDevice
+            {
+                GfxArch = "gfx1100",
+                DeviceIndex = 0,
+                SimdCount = 192,
+            },
+            new RocmDetectedDevice
+            {
+                GfxArch = "gfx1036",
+                DeviceIndex = 1,
+                SimdCount = 4,
+            },
+        };
+
+        Assert.AreEqual("gfx1100", RocmArchDetector.SelectPreferred(apuFirst)!.GfxArch);
+        Assert.AreEqual("gfx1100", RocmArchDetector.SelectPreferred(dgpuFirst)!.GfxArch);
+    }
+
+    [TestMethod]
+    public void RocmArchDetector_SelectPreferred_BreaksTiesOnDeviceIndex()
+    {
+        var first = new RocmDetectedDevice
+        {
+            GfxArch = "gfx1100",
+            DeviceIndex = 0,
+            SimdCount = 192,
+        };
+        var second = new RocmDetectedDevice
+        {
+            GfxArch = "gfx1100",
+            DeviceIndex = 1,
+            SimdCount = 192,
+        };
+
+        Assert.AreEqual(0, RocmArchDetector.SelectPreferred([first, second])!.DeviceIndex);
+    }
+
+    [TestMethod]
+    public void SelectPreferredGpu_PrefersTheCardWithMoreMemory()
+    {
+        // On Windows the APU reports its carveout, so memory is the only discrete signal available.
+        var apu = new GpuInfo { Name = "AMD Radeon(TM) Graphics", MemoryBytes = 512UL * 1024 * 1024 };
+        var dgpu = new GpuInfo { Name = "AMD Radeon RX 7900 XTX", MemoryBytes = 24UL * 1024 * 1024 * 1024 };
+
+        Assert.AreEqual(dgpu, RocmPackageHelper.SelectPreferredGpu([apu, dgpu]));
+        Assert.AreEqual(dgpu, RocmPackageHelper.SelectPreferredGpu([dgpu, apu]));
     }
 
     [TestMethod]

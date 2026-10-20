@@ -3,7 +3,24 @@
 namespace StabilityMatrix.Core.Services.Rocm;
 
 /// <summary>
-/// Reads the ISA targets the amdgpu kernel module exports through the KFD topology. On Linux this is the
+/// One AMD GPU exposed through the KFD topology.
+/// </summary>
+internal sealed record RocmDetectedDevice
+{
+    public required string GfxArch { get; init; }
+
+    /// <summary>
+    /// ROCm device index: the position among GPU nodes in KFD node order, which is the order the runtime
+    /// enumerates devices in.
+    /// </summary>
+    public required int DeviceIndex { get; init; }
+
+    /// <summary>SIMD count reported by the driver. Used to tell a discrete card from an APU.</summary>
+    public required int SimdCount { get; init; }
+}
+
+/// <summary>
+/// Reads the GPUs the amdgpu kernel module exports through the KFD topology. On Linux this is the
 /// driver's own answer, so no ROCm userspace and no marketing-name table is involved. Windows has no KFD
 /// node and keeps resolving architectures from the adapter name table.
 /// </summary>
@@ -13,10 +30,10 @@ internal static class RocmArchDetector
 
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private static readonly object Gate = new();
-    private static IReadOnlyList<string>? cached;
+    private static IReadOnlyList<RocmDetectedDevice>? cached;
 
-    /// <summary>ISA targets the driver reports, in node order. Empty when KFD is unavailable.</summary>
-    internal static IReadOnlyList<string> Architectures
+    /// <summary>GPUs the driver reports, in node order. Empty when KFD is unavailable.</summary>
+    internal static IReadOnlyList<RocmDetectedDevice> Devices
     {
         get
         {
@@ -41,7 +58,7 @@ internal static class RocmArchDetector
         }
     }
 
-    private static IReadOnlyList<string> Detect()
+    private static IReadOnlyList<RocmDetectedDevice> Detect()
     {
         try
         {
@@ -50,9 +67,15 @@ internal static class RocmArchDetector
                 return [];
             }
 
-            List<string> architectures = [];
+            List<RocmDetectedDevice> devices = [];
 
-            foreach (var nodePath in Directory.EnumerateDirectories(KfdNodesPath))
+            // Node ids ascend with PCI topology, so sort numerically rather than by directory name. The
+            // device index counts GPU nodes only, because that is what the runtime exposes.
+            var nodePaths = Directory
+                .EnumerateDirectories(KfdNodesPath)
+                .OrderBy(path => int.TryParse(Path.GetFileName(path), out var node) ? node : int.MaxValue);
+
+            foreach (var nodePath in nodePaths)
             {
                 var propertiesPath = Path.Combine(nodePath, "properties");
                 if (!File.Exists(propertiesPath))
@@ -60,14 +83,14 @@ internal static class RocmArchDetector
                     continue;
                 }
 
-                var architecture = TryParseNode(File.ReadAllText(propertiesPath));
-                if (architecture is not null)
+                var device = TryParseNode(File.ReadAllText(propertiesPath), devices.Count);
+                if (device is not null)
                 {
-                    architectures.Add(architecture);
+                    devices.Add(device);
                 }
             }
 
-            return architectures;
+            return devices;
         }
         catch (Exception exception)
         {
@@ -79,7 +102,7 @@ internal static class RocmArchDetector
     /// <summary>
     /// Decodes one node's properties text, or returns null for CPU nodes and unparsable nodes.
     /// </summary>
-    internal static string? TryParseNode(string properties)
+    internal static RocmDetectedDevice? TryParseNode(string properties, int deviceIndex)
     {
         Dictionary<string, int> values = new(StringComparer.Ordinal);
 
@@ -106,8 +129,24 @@ internal static class RocmArchDetector
             return null;
         }
 
-        return FormatGfxTarget(targetVersion);
+        return new RocmDetectedDevice
+        {
+            GfxArch = FormatGfxTarget(targetVersion),
+            DeviceIndex = deviceIndex,
+            SimdCount = simdCount,
+        };
     }
+
+    /// <summary>
+    /// Picks the device an install should target when the user has no preference: the one with the most
+    /// compute. An APU reports a handful of SIMD units, a discrete card reports tens to hundreds, and KFD
+    /// node order is not a reliable indicator of which is which.
+    /// </summary>
+    internal static RocmDetectedDevice? SelectPreferred(IReadOnlyList<RocmDetectedDevice> devices) =>
+        devices
+            .OrderByDescending(device => device.SimdCount)
+            .ThenBy(device => device.DeviceIndex)
+            .FirstOrDefault();
 
     /// <summary>
     /// Decodes the KFD <c>gfx_target_version</c> integer into its ISA name: 110000 to gfx1100,

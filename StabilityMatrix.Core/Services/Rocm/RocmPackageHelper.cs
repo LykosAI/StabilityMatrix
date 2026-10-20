@@ -576,7 +576,8 @@ public class RocmPackageHelper : IRocmPackageHelper
 
         var selectedGpu =
             TryResolvePreferredAmdGpu(supportedAmdGpus, settingsManager.Settings.PreferredGpu)
-            ?? supportedAmdGpus.FirstOrDefault()
+            ?? SelectPreferredGpu(supportedAmdGpus)
+            ?? SelectPreferredGpu(amdGpus)
             ?? amdGpus[0];
         var runtimeGfxArch =
             detectedArch
@@ -596,8 +597,8 @@ public class RocmPackageHelper : IRocmPackageHelper
     }
 
     /// <summary>
-    /// First supported ISA target the kernel reports through KFD, or null when KFD is unavailable. The
-    /// driver's answer takes precedence over the adapter-name table on Linux.
+    /// ISA target of the GPU the kernel reports through KFD, or null when KFD is unavailable or reports
+    /// nothing supported. The driver's answer takes precedence over the adapter-name table on Linux.
     /// </summary>
     private static string? TryDetectLinuxArchitecture()
     {
@@ -606,16 +607,20 @@ public class RocmPackageHelper : IRocmPackageHelper
             return null;
         }
 
-        foreach (var architecture in RocmArchDetector.Architectures)
-        {
-            if (RocmSupport.TryGetCanonicalArchitecture(architecture) is { } canonical)
-            {
-                return canonical;
-            }
-        }
+        var supportedDevices = RocmArchDetector
+            .Devices.Where(device => RocmSupport.TryGetCanonicalArchitecture(device.GfxArch) is not null)
+            .ToList();
+        var selected = RocmArchDetector.SelectPreferred(supportedDevices);
 
-        return null;
+        return selected is null ? null : RocmSupport.TryGetCanonicalArchitecture(selected.GfxArch);
     }
+
+    /// <summary>
+    /// Picks between candidate adapters when the user has no preference: the one with the most memory,
+    /// which separates a discrete card from an APU's shared carveout.
+    /// </summary>
+    internal static GpuInfo? SelectPreferredGpu(IEnumerable<GpuInfo> candidates) =>
+        candidates.OrderByDescending(gpu => gpu.MemoryBytes).FirstOrDefault();
 
     /// <summary>
     /// Returns AMD GPUs from Stability Matrix's internal hardware model.

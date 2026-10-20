@@ -16,6 +16,12 @@ public class RocmPackageProfile
     public PipInstallConfig InstallConfig { get; init; } = new();
 
     /// <summary>
+    /// Index to install torch from, overriding the platform default. Leave null unless the package needs a
+    /// specific ROCm channel.
+    /// </summary>
+    public RocmIndexKind? Index { get; init; }
+
+    /// <summary>
     /// Optional callback for package-specific environment variables derived from a resolved ROCm context.
     /// </summary>
     public Func<

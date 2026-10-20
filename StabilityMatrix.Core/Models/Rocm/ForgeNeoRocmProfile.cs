@@ -35,10 +35,9 @@ public class ForgeNeoRocmProfile : RocmPackageProfile
 
     private static IReadOnlyDictionary<string, string> BuildEnvironment(RocmRuntimeContext runtimeContext)
     {
-        var indexUrl = RocmSupport.GetMultiArchPythonPackageIndexUrl(runtimeContext.RuntimeGfxArch);
-        var deviceExtra = RocmSupport.TryGetMultiArchDeviceExtra(runtimeContext.RuntimeGfxArch);
+        var target = RocmSupport.ResolveTarget(runtimeContext.RuntimeGfxArch);
 
-        if (string.IsNullOrWhiteSpace(deviceExtra))
+        if (string.IsNullOrWhiteSpace(target.DeviceExtra))
         {
             return new Dictionary<string, string>();
         }
@@ -46,12 +45,12 @@ public class ForgeNeoRocmProfile : RocmPackageProfile
         // Persisted so that if Forge Neo re-runs its own torch install step it targets AMD's index
         // instead of pulling the NVIDIA CUDA build from PyTorch.
         var torchCommand =
-            $"pip install --index-url {indexUrl} "
-            + $"\"torch[{deviceExtra}]\" \"torchvision[{deviceExtra}]\" torchaudio \"rocm[devel]\"";
+            $"pip install --index-url {target.IndexUrl} "
+            + $"\"torch[{target.DeviceExtra}]\" \"torchvision[{target.DeviceExtra}]\" torchaudio \"rocm[devel]\"";
 
         return new Dictionary<string, string>
         {
-            ["TORCH_INDEX_URL"] = indexUrl,
+            ["TORCH_INDEX_URL"] = target.IndexUrl,
             ["TORCH_COMMAND"] = torchCommand,
         };
     }

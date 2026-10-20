@@ -130,10 +130,45 @@ public static class RocmSupport
         return canonicalArch is null ? null : $"device-{canonicalArch}";
     }
 
-    public static string GetMultiArchPythonPackageIndexUrl(string? gfxArch)
+    /// <summary>URL of the index a target resolves torch from.</summary>
+    public static string GetIndexUrl(RocmIndexKind kind) =>
+        kind switch
+        {
+            RocmIndexKind.AmdStable => StableMultiArchPythonPackageIndexUrl,
+            RocmIndexKind.AmdNightly => NightlyMultiArchPythonPackageIndexUrl,
+            RocmIndexKind.PyTorchRocm72 => "https://download.pytorch.org/whl/rocm7.2",
+            RocmIndexKind.PyTorchRocm714 => "https://download.pytorch.org/whl/rocm7.14",
+            _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Unknown ROCm index kind."),
+        };
+
+    /// <summary>
+    /// Resolves everything an install needs: the index to use, whether per-architecture
+    /// device packages apply, and whether torch has to be paired with torchvision by the helper.
+    /// </summary>
+    public static RocmInstallTarget ResolveTarget(string? gfxArch, RocmIndexKind? indexOverride = null)
     {
-        return UsesNightlyMultiArchPythonPackageIndex(gfxArch)
-            ? NightlyMultiArchPythonPackageIndexUrl
-            : StableMultiArchPythonPackageIndexUrl;
+        // Vega is only published on AMD's nightly feed. Every other target uses stable unless the package
+        // profile pins a specific index.
+        var indexKind =
+            indexOverride
+            ?? (
+                UsesNightlyMultiArchPythonPackageIndex(gfxArch)
+                    ? RocmIndexKind.AmdNightly
+                    : RocmIndexKind.AmdStable
+            );
+        var usesAmdIndex = indexKind is RocmIndexKind.AmdStable or RocmIndexKind.AmdNightly;
+
+        return new RocmInstallTarget
+        {
+            IndexKind = indexKind,
+            IndexUrl = GetIndexUrl(indexKind),
+            // AMD's feeds publish per-architecture device packages for both win_amd64 and linux_x86_64.
+            // The upstream PyTorch includes GPU libraries for all supported device architectures.
+            DeviceExtra = usesAmdIndex ? TryGetMultiArchDeviceExtra(gfxArch) : null,
+            SupportsDeviceExtras = usesAmdIndex,
+            SupportsSdkDevel = usesAmdIndex,
+            // AMD's torchvision wheels declare no torch constraint, so the pair has to be resolved here.
+            RequiresPairResolution = usesAmdIndex,
+        };
     }
 }

@@ -144,9 +144,19 @@ public class RocmPackageHelper : IRocmPackageHelper
     )
     {
         var state = machineState.Value;
-        var multiArchPythonPackageIndexUrl = RocmSupport.GetMultiArchPythonPackageIndexUrl(
-            state.RuntimeGfxArch
-        );
+        var target = RocmSupport.ResolveTarget(state.RuntimeGfxArch);
+
+        if (!target.SupportsSdkDevel)
+        {
+            Logger.Info(
+                "The {IndexKind} index does not publish {Package}; skipping the SDK devel step.",
+                target.IndexKind,
+                RocmSdkDevelPackageName
+            );
+            return;
+        }
+
+        var multiArchPythonPackageIndexUrl = target.IndexUrl;
 
         var torchInfo = await venvRunner.PipShow("torch").ConfigureAwait(false);
         if (torchInfo is null)
@@ -252,20 +262,20 @@ public class RocmPackageHelper : IRocmPackageHelper
             );
         }
 
-        var multiArchDeviceExtra = state.MultiArchDeviceExtra;
+        var target = RocmSupport.ResolveTarget(state.RuntimeGfxArch, profile.Index);
 
-        if (string.IsNullOrWhiteSpace(multiArchDeviceExtra))
+        if (string.IsNullOrWhiteSpace(target.DeviceExtra))
         {
             throw new InvalidOperationException(
-                $"No Windows ROCm multi-arch device extra is available for '{state.RuntimeGfxArch ?? "unknown"}'."
+                $"No ROCm device package is available for '{state.RuntimeGfxArch ?? "unknown"}' "
+                    + $"on the {target.IndexKind} index."
             );
         }
 
+        var multiArchDeviceExtra = target.DeviceExtra;
         var installConfig = profile.InstallConfig;
-        var multiArchPythonPackageIndexUrl = RocmSupport.GetMultiArchPythonPackageIndexUrl(
-            state.RuntimeGfxArch
-        );
-        var usesNightlyIndex = RocmSupport.UsesNightlyMultiArchPythonPackageIndex(state.RuntimeGfxArch);
+        var multiArchPythonPackageIndexUrl = target.IndexUrl;
+        var usesNightlyIndex = target.IndexKind == RocmIndexKind.AmdNightly;
 
         // AMD's torchvision wheels carry no torch constraint, and the matched build may be published only
         // as a pre-release that pip skips. Resolve the newest paired torch/torchvision and pin both.
@@ -576,7 +586,6 @@ public class RocmPackageHelper : IRocmPackageHelper
                 : "No supported AMD GFX architecture could be resolved for ROCm.",
             SelectedGpu = selectedGpu,
             RuntimeGfxArch = runtimeGfxArch,
-            MultiArchDeviceExtra = RocmSupport.TryGetMultiArchDeviceExtra(runtimeGfxArch),
         };
     }
 

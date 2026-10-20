@@ -166,6 +166,59 @@ public class RocmPackageHelperTests
     }
 
     [TestMethod]
+    public void ResolveTarget_WindowsStable_KeepsAmdFeedAndDeviceExtra()
+    {
+        var target = RocmSupport.ResolveTarget("gfx1201");
+
+        Assert.AreEqual(RocmIndexKind.AmdStable, target.IndexKind);
+        Assert.AreEqual(RocmSupport.StableMultiArchPythonPackageIndexUrl, target.IndexUrl);
+        Assert.AreEqual("device-gfx1201", target.DeviceExtra);
+        Assert.IsTrue(target.SupportsDeviceExtras);
+        Assert.IsTrue(target.SupportsSdkDevel);
+        Assert.IsTrue(target.RequiresPairResolution);
+    }
+
+    [TestMethod]
+    public void ResolveTarget_VegaUsesNightlyFeed()
+    {
+        var target = RocmSupport.ResolveTarget("gfx906");
+
+        Assert.AreEqual(RocmIndexKind.AmdNightly, target.IndexKind);
+        Assert.AreEqual(RocmSupport.NightlyMultiArchPythonPackageIndexUrl, target.IndexUrl);
+    }
+
+    [TestMethod]
+    public void ResolveTarget_LinuxAmdFeed_KeepsDeviceExtras()
+    {
+        // The feed publishes linux_x86_64 device packages, so the extra applies on both platforms.
+        var target = RocmSupport.ResolveTarget("gfx1100");
+
+        Assert.AreEqual(RocmSupport.StableMultiArchPythonPackageIndexUrl, target.IndexUrl);
+        Assert.AreEqual("device-gfx1100", target.DeviceExtra);
+    }
+
+    [TestMethod]
+    public void ResolveTarget_PyTorchOverride_DropsDeviceExtrasAndSdkDevel()
+    {
+        var target = RocmSupport.ResolveTarget("gfx1100", RocmIndexKind.PyTorchRocm72);
+
+        Assert.AreEqual("https://download.pytorch.org/whl/rocm7.2", target.IndexUrl);
+        Assert.IsNull(target.DeviceExtra);
+        Assert.IsFalse(target.SupportsDeviceExtras);
+        Assert.IsFalse(target.SupportsSdkDevel);
+        Assert.IsFalse(target.RequiresPairResolution);
+    }
+
+    [TestMethod]
+    public void ResolveTarget_UnsupportedArch_HasNoDeviceExtra()
+    {
+        var target = RocmSupport.ResolveTarget("gfx9999");
+
+        Assert.IsNull(target.DeviceExtra);
+        Assert.AreEqual(RocmIndexKind.AmdStable, target.IndexKind);
+    }
+
+    [TestMethod]
     public void ApplyRocmSdkEnvironmentSanitization_MarksInheritedSdkVariablesForRemoval()
     {
         var environment = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)

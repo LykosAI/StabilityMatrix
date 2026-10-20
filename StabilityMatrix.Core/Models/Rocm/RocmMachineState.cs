@@ -14,6 +14,4 @@ public class RocmMachineState
     public GpuInfo? SelectedGpu { get; init; }
 
     public string? RuntimeGfxArch { get; init; }
-
-    public string? MultiArchDeviceExtra { get; init; }
 }

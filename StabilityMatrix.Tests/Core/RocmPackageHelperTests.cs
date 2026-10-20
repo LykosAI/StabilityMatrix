@@ -166,6 +166,28 @@ public class RocmPackageHelperTests
     }
 
     [TestMethod]
+    [DataRow(110000, "gfx1100")]
+    [DataRow(120001, "gfx1201")]
+    [DataRow(100300, "gfx1030")]
+    [DataRow(90402, "gfx942")]
+    [DataRow(90010, "gfx90a")]
+    [DataRow(110500, "gfx1150")]
+    public void RocmArchDetector_FormatGfxTarget_DecodesKfdTargetVersion(int version, string expected)
+    {
+        Assert.AreEqual(expected, RocmArchDetector.FormatGfxTarget(version));
+    }
+
+    [TestMethod]
+    public void RocmArchDetector_TryParseNode_SkipsCpuNodesAndParsesGpuNodes()
+    {
+        const string cpuNode = "cpu_cores_count 16\nsimd_count 0\ngfx_target_version 0\n";
+        const string gpuNode = "simd_count 192\ngfx_target_version 110000\ndevice_id 29772\n";
+
+        Assert.IsNull(RocmArchDetector.TryParseNode(cpuNode));
+        Assert.AreEqual("gfx1100", RocmArchDetector.TryParseNode(gpuNode));
+    }
+
+    [TestMethod]
     public void ResolveTarget_WindowsStable_KeepsAmdFeedAndDeviceExtra()
     {
         var target = RocmSupport.ResolveTarget("gfx1201");

@@ -561,20 +561,26 @@ public class RocmPackageHelper : IRocmPackageHelper
         }
 
         var supportedAmdGpus = amdGpus.Where(RocmSupport.IsSupportedGpu).ToList();
-        if (supportedAmdGpus.Count == 0)
+        var detectedArch = TryDetectLinuxArchitecture();
+
+        // The driver can resolve an architecture the adapter-name table has never heard of, so only fail
+        // when neither source produced one.
+        if (supportedAmdGpus.Count == 0 && detectedArch is null)
         {
             return new RocmMachineState
             {
                 IsCompatible = false,
-                FailureReason = "No AMD GPU with a supported Windows ROCm architecture was detected.",
+                FailureReason = "No AMD GPU with a supported ROCm architecture was detected.",
             };
         }
 
         var selectedGpu =
             TryResolvePreferredAmdGpu(supportedAmdGpus, settingsManager.Settings.PreferredGpu)
-            ?? supportedAmdGpus.First();
+            ?? supportedAmdGpus.FirstOrDefault()
+            ?? amdGpus[0];
         var runtimeGfxArch =
-            RocmSupport.TryGetCanonicalArchitecture(selectedGpu.GetAmdGfxArch())
+            detectedArch
+            ?? RocmSupport.TryGetCanonicalArchitecture(selectedGpu.GetAmdGfxArch())
             ?? GetSupportedFallbackGfxArch(supportedAmdGpus);
         var isCompatible = !string.IsNullOrWhiteSpace(runtimeGfxArch);
 
@@ -587,6 +593,28 @@ public class RocmPackageHelper : IRocmPackageHelper
             SelectedGpu = selectedGpu,
             RuntimeGfxArch = runtimeGfxArch,
         };
+    }
+
+    /// <summary>
+    /// First supported ISA target the kernel reports through KFD, or null when KFD is unavailable. The
+    /// driver's answer takes precedence over the adapter-name table on Linux.
+    /// </summary>
+    private static string? TryDetectLinuxArchitecture()
+    {
+        if (!OperatingSystem.IsLinux())
+        {
+            return null;
+        }
+
+        foreach (var architecture in RocmArchDetector.Architectures)
+        {
+            if (RocmSupport.TryGetCanonicalArchitecture(architecture) is { } canonical)
+            {
+                return canonical;
+            }
+        }
+
+        return null;
     }
 
     /// <summary>

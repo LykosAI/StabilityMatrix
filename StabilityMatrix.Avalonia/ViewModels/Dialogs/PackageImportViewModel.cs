@@ -361,8 +361,11 @@ public partial class PackageImportViewModel(
 
             var candidates = AvailablePackages
                 .Where(p =>
-                    GetGitHubSlug(p.GithubUrl) is { } slug
-                    && string.Equals(slug, remoteSlug, StringComparison.OrdinalIgnoreCase)
+                    p.FormerGithubUrls.Prepend(p.GithubUrl)
+                        .Any(url =>
+                            GetGitHubSlug(url) is { } slug
+                            && string.Equals(slug, remoteSlug, StringComparison.OrdinalIgnoreCase)
+                        )
                 )
                 .ToList();
 

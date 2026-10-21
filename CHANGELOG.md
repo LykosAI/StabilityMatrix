@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Added
 - Added **Fizgig**, a LoRA training studio for Flux 2 Klein 9B, Krea 2, MiniMax H3 and Qwen Image 2.1 with dataset prep, training, LoRA repair and extraction in one app ([#1761](https://github.com/LykosAI/StabilityMatrix/pull/1761)) - thanks to @e-nord!
 - Added AMD ROCm support for **Stable Diffusion WebUI Forge - Neo** on Windows and Linux. Forge Neo's developer supports NVIDIA only, so report AMD issues with it to Stability Matrix ([#1770](https://github.com/LykosAI/StabilityMatrix/pull/1770)) - thanks to @NeuralFault!
+### Changed
+- ComfyUI now installs and updates from its current GitHub home, [Comfy-Org/ComfyUI](https://github.com/Comfy-Org/ComfyUI)
 ### Fixed
 - Fixed **Wan2GP** installs on Python 3.11 failing with `sageattention ... has no wheels with a matching Python version tag`. New Wan2GP installs now use Python 3.11 with PyTorch 2.10 and CUDA 13 with matching Triton, SageAttention and Flash Attention, the same setup Wan2GP's own installer uses. CUDA 13 needs NVIDIA driver 580 or newer. GTX 10XX cards stay on Python 3.10
 - Existing **Wan2GP** installs on Python 3.10 keep their PyTorch 2.7 setup when updated. If a newer model such as LTX 2.5 fails with a Triton error, add Wan2GP again as a new install, which now uses Python 3.11, and move your outputs across ([#1756](https://github.com/LykosAI/StabilityMatrix/issues/1756))
@@ -34,6 +36,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed cancelling a Gemini generation in Image Lab showing "Generation failed" instead of "Cancelled"
 - Fixed Image Lab not scrolling to a new message when you were already at the bottom of the conversation
 - Fixed a ComfyUI generation in Image Lab not stopping when ComfyUI disconnected, if you had opened a Gemini conversation in the meantime
+- Fixed package version lists and update checks showing an old release as the newest, because startup update checks ran into GitHub's rate limit
 ### Supporters
 #### 🌟 Visionaries
 This patch is a good one for AMD owners: Forge Neo now runs on ROCm on both Windows and Linux, and Windows ROCm installs always get a `torch` and `torchvision` that actually match. It also adds Fizgig, a whole LoRA training studio, to the package list. Most of it arrived as community contributions, and our Visionaries are the reason we have time to review that work properly and say yes to it. Thank you **Waterclouds**, **MrMxyzptlk12836**, **bluepopsicle**, **dispenser**, **Droolguy**, **TwistedDragon**, **snotty**, **cusalapapen1481**, **moon_milky2843**, **sn3232323233350**, **CC**, **hasezou11013179**, and **Akros**. It's great to see **SnooSnooEternal** back with us, and hello to **japublicspot78364519** and **jonny90**, our newest Visionaries; we're so happy you're here. 💛

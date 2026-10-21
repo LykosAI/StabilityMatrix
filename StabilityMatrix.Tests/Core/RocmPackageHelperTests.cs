@@ -278,7 +278,6 @@ public class RocmPackageHelperTests
         Assert.AreEqual("device-gfx1201", target.DeviceExtra);
         Assert.IsTrue(target.SupportsDeviceExtras);
         Assert.IsTrue(target.SupportsSdkDevel);
-        Assert.IsTrue(target.RequiresPairResolution);
     }
 
     [TestMethod]
@@ -309,7 +308,6 @@ public class RocmPackageHelperTests
         Assert.IsNull(target.DeviceExtra);
         Assert.IsFalse(target.SupportsDeviceExtras);
         Assert.IsFalse(target.SupportsSdkDevel);
-        Assert.IsFalse(target.RequiresPairResolution);
     }
 
     [TestMethod]
@@ -319,6 +317,20 @@ public class RocmPackageHelperTests
 
         Assert.IsNull(target.DeviceExtra);
         Assert.AreEqual(RocmIndexKind.AmdStable, target.IndexKind);
+    }
+
+    [TestMethod]
+    [DataRow("torch", "device-gfx1201", "torch[device-gfx1201]")]
+    [DataRow("torchvision", "device-gfx1201", "torchvision[device-gfx1201]")]
+    [DataRow("torch", null, "torch")]
+    [DataRow("torchvision", "", "torchvision")]
+    public void BuildTorchSpecifier_UsesDeviceExtrasOnlyWhenTheIndexHasThem(
+        string package,
+        string? deviceExtra,
+        string expected
+    )
+    {
+        Assert.AreEqual(expected, RocmPackageHelper.BuildTorchSpecifier(package, deviceExtra));
     }
 
     [TestMethod]

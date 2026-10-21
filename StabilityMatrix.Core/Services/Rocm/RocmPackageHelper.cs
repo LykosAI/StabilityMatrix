@@ -27,7 +27,7 @@ public class RocmPackageHelper : IRocmPackageHelper
     private const string RocmSdkDevelPackageName = "rocm-sdk-devel";
 
     // The ROCm torch install only ever needs to move the torch trio. Bundling or upgrading anything
-    // wider lets the resolver re-evaluate transitive dependencies against the multi-arch index.
+    // wider lets the resolver re-evaluate transitive dependencies against AMD's feed.
     private static readonly string[] RocmTorchPackageNames = ["torch", "torchvision", "torchaudio"];
     private static readonly string[] RocmTorchUpgradePackageArgs = BuildRepeatablePackageArgs(
         "--upgrade-package",
@@ -52,7 +52,7 @@ public class RocmPackageHelper : IRocmPackageHelper
     public RocmPackageHelper(ISettingsManager settingsManager)
     {
         this.settingsManager = settingsManager;
-        machineState = new Lazy<RocmMachineState>(ResolveWindowsMachineState);
+        machineState = new Lazy<RocmMachineState>(ResolveMachineState);
     }
 
     /// <summary>
@@ -135,7 +135,7 @@ public class RocmPackageHelper : IRocmPackageHelper
     }
 
     /// <summary>
-    /// Ensures <c>rocm-sdk-devel</c> is installed from the ROCm multi-arch index.
+    /// Ensures <c>rocm-sdk-devel</c> is installed from the resolved ROCm index.
     /// It prefers a build whose date token matches the installed ROCm torch build and falls back to the latest available build when no exact match is available.
     /// </summary>
     public async Task EnsureRocmSdkDevelAsync(
@@ -158,20 +158,20 @@ public class RocmPackageHelper : IRocmPackageHelper
             return;
         }
 
-        var multiArchPythonPackageIndexUrl = target.IndexUrl;
+        var indexUrl = target.IndexUrl;
 
         var torchInfo = await venvRunner.PipShow("torch").ConfigureAwait(false);
         if (torchInfo is null)
         {
             throw new InvalidOperationException(
-                "torch is not installed in this environment. Install the Windows ROCm torch build first."
+                "torch is not installed in this environment. Install the ROCm torch build first."
             );
         }
 
         if (!IsUsableRocmTorchBuild(torchInfo.Version, null))
         {
             throw new InvalidOperationException(
-                $"Installed torch is not a usable Windows ROCm build (detected version: {torchInfo.Version})."
+                $"Installed torch is not a usable ROCm build (detected version: {torchInfo.Version})."
             );
         }
 
@@ -185,9 +185,7 @@ public class RocmPackageHelper : IRocmPackageHelper
             return;
         }
 
-        var indexResult = await venvRunner
-            .PipIndex(RocmSdkDevelPackageName, multiArchPythonPackageIndexUrl)
-            .ConfigureAwait(false);
+        var indexResult = await venvRunner.PipIndex(RocmSdkDevelPackageName, indexUrl).ConfigureAwait(false);
 
         var latestVersion = indexResult?.AvailableVersions.FirstOrDefault();
         var matchingVersion = string.IsNullOrWhiteSpace(nightlyBuildDateToken)
@@ -209,7 +207,7 @@ public class RocmPackageHelper : IRocmPackageHelper
             progress?.Report(
                 new ProgressReport(
                     -1f,
-                    $"Installing {RocmSdkDevelPackageName} {matchingVersion} for Windows ROCm...",
+                    $"Installing {RocmSdkDevelPackageName} {matchingVersion} for ROCm...",
                     isIndeterminate: true
                 )
             );
@@ -219,7 +217,7 @@ public class RocmPackageHelper : IRocmPackageHelper
             progress?.Report(
                 new ProgressReport(
                     -1f,
-                    $"Falling back to latest available {RocmSdkDevelPackageName} build {versionToInstall} for Windows ROCm...",
+                    $"Falling back to latest available {RocmSdkDevelPackageName} build {versionToInstall} for ROCm...",
                     isIndeterminate: true
                 )
             );
@@ -229,7 +227,7 @@ public class RocmPackageHelper : IRocmPackageHelper
             .PipInstall(
                 new PipInstallArgs()
                     .AddArg("--upgrade")
-                    .AddKeyedArgs("--index-url", ["--index-url", multiArchPythonPackageIndexUrl])
+                    .AddKeyedArgs("--index-url", ["--index-url", indexUrl])
                     .AddArg($"{RocmSdkDevelPackageName}=={versionToInstall}"),
                 onConsoleOutput
             )
@@ -237,17 +235,18 @@ public class RocmPackageHelper : IRocmPackageHelper
     }
 
     /// <summary>
-    /// Builds the standard pip install config for helper-managed Windows ROCm package installs.
+    /// Builds the standard pip install config for helper-managed ROCm package installs.
     /// </summary>
-    public PipInstallConfig BuildWindowsNativeInstallConfig(RocmPackageProfile profile)
+    public PipInstallConfig BuildRocmInstallConfig(RocmPackageProfile profile)
     {
         return profile.InstallConfig with { SkipTorchInstall = true };
     }
 
     /// <summary>
-    /// Installs the ROCm torch wheel set from the multi-arch index and verifies that the resulting torch installation reports usable ROCm metadata.
+    /// Installs the ROCm torch wheel set from the resolved index and verifies that the resulting torch
+    /// installation reports usable ROCm metadata.
     /// </summary>
-    public async Task InstallWindowsNativeTorchAsync(
+    public async Task InstallRocmTorchAsync(
         IPyVenvRunner venvRunner,
         InstalledPackage installedPackage,
         RocmPackageProfile profile,
@@ -260,13 +259,16 @@ public class RocmPackageHelper : IRocmPackageHelper
         if (!state.IsCompatible)
         {
             throw new InvalidOperationException(
-                state.FailureReason ?? "Windows ROCm installation is not supported for the current machine."
+                state.FailureReason ?? "ROCm installation is not supported for the current machine."
             );
         }
 
         var target = RocmSupport.ResolveTarget(state.RuntimeGfxArch, profile.Index);
 
-        if (string.IsNullOrWhiteSpace(target.DeviceExtra))
+        // AMD's feeds select device code through a per-architecture extra; the upstream PyTorch feeds
+        // either ship one multi-architecture wheel (e.g: 7.2) or explicitly force-installs all device extras (e.g 7.14),
+        // so an index without device extras is still installable.
+        if (target.SupportsDeviceExtras && string.IsNullOrWhiteSpace(target.DeviceExtra))
         {
             throw new InvalidOperationException(
                 $"No ROCm device package is available for '{state.RuntimeGfxArch ?? "unknown"}' "
@@ -274,9 +276,8 @@ public class RocmPackageHelper : IRocmPackageHelper
             );
         }
 
-        var multiArchDeviceExtra = target.DeviceExtra;
         var installConfig = profile.InstallConfig;
-        var multiArchPythonPackageIndexUrl = target.IndexUrl;
+        var indexUrl = target.IndexUrl;
         var usesNightlyIndex = target.IndexKind == RocmIndexKind.AmdNightly;
 
         // AMD's torchvision wheels carry no torch constraint, and the matched build may be published only
@@ -285,8 +286,8 @@ public class RocmPackageHelper : IRocmPackageHelper
 
         var torchResolution = await ResolveTorchInstallAsync(
                 venvRunner,
-                multiArchPythonPackageIndexUrl,
-                multiArchDeviceExtra,
+                indexUrl,
+                target.DeviceExtra,
                 usesNightlyIndex,
                 onConsoleOutput,
                 cancellationToken
@@ -297,7 +298,7 @@ public class RocmPackageHelper : IRocmPackageHelper
 
         var torchArgs = ApplyRocmTorchInstallOptions(
             BuildRocmTorchArgs(
-                multiArchPythonPackageIndexUrl,
+                indexUrl,
                 torchResolution.TorchSpecifier,
                 torchResolution.TorchvisionSpecifier
             ),
@@ -326,14 +327,14 @@ public class RocmPackageHelper : IRocmPackageHelper
             await venvRunner.PipInstall(postTorchInstallPipArgs, onConsoleOutput).ConfigureAwait(false);
         }
 
-        await VerifyWindowsNativeTorchInstallAsync(venvRunner, onConsoleOutput, cancellationToken)
+        await VerifyRocmTorchInstallAsync(venvRunner, onConsoleOutput, cancellationToken)
             .ConfigureAwait(false);
     }
 
     /// <summary>
     /// Applies the profile's upgrade/reinstall flags and any user pip overrides to a ROCm torch install command.
     /// Scope is deliberately limited to the torch trio. A blanket <c>--upgrade</c> lets the resolver move
-    /// transitive dependencies against the multi-arch index, numpy foremost, where the only build may be
+    /// transitive dependencies against AMD's feed, numpy foremost, where the only build may be
     /// numpy 2.5.2 (cp312+). A blanket <c>--force-reinstall</c> reinstalls the whole graph for the same reason.
     /// Packages that must follow the torch build, amd-torch-device-gfx* and triton, are exact-pinned by the
     /// wheel metadata, so they are still replaced to satisfy the resolved pin.
@@ -372,14 +373,22 @@ public class RocmPackageHelper : IRocmPackageHelper
     /// Builds the pip args for the resolved torch/torchvision pair. The specs are keyed so a user
     /// override replaces the pin instead of being appended next to it (which pip cannot satisfy).
     /// </summary>
+    /// <summary>
+    /// Requirement form for a torch package on the resolved index: a per-architecture extra on AMD's
+    /// feeds, a plain requirement on the upstream PyTorch feeds, which ship one multi-architecture wheel
+    /// or all supported device libraries.
+    /// </summary>
+    internal static string BuildTorchSpecifier(string packageName, string? deviceExtra) =>
+        string.IsNullOrWhiteSpace(deviceExtra) ? packageName : $"{packageName}[{deviceExtra}]";
+
     internal static PipInstallArgs BuildRocmTorchArgs(
-        string multiArchPythonPackageIndexUrl,
+        string indexUrl,
         string torchSpecifier,
         string torchvisionSpecifier
     )
     {
         return new PipInstallArgs()
-            .AddKeyedArgs("--index-url", ["--index-url", multiArchPythonPackageIndexUrl])
+            .AddKeyedArgs("--index-url", ["--index-url", indexUrl])
             .AddArg(new Argument(key: "torch", value: torchSpecifier))
             .AddArg(new Argument(key: "torchvision", value: torchvisionSpecifier))
             .AddArg("torchaudio");
@@ -401,27 +410,27 @@ public class RocmPackageHelper : IRocmPackageHelper
     /// </summary>
     private async Task<TorchInstallResolution> ResolveTorchInstallAsync(
         IPyVenvRunner venvRunner,
-        string multiArchPythonPackageIndexUrl,
-        string multiArchDeviceExtra,
+        string indexUrl,
+        string? deviceExtra,
         bool usesNightlyIndex,
         Action<ProcessOutput>? onConsoleOutput,
         CancellationToken cancellationToken
     )
     {
-        var torchSpecifierBase = $"torch[{multiArchDeviceExtra}]";
-        var torchvisionSpecifierBase = $"torchvision[{multiArchDeviceExtra}]";
+        var torchSpecifierBase = BuildTorchSpecifier("torch", deviceExtra);
+        var torchvisionSpecifierBase = BuildTorchSpecifier("torchvision", deviceExtra);
 
         try
         {
             // torch: finals only on the stable channel, pre/dev builds on the nightly channel.
             var torchIndex = await venvRunner
-                .PipIndex("torch", multiArchPythonPackageIndexUrl, includePrerelease: usesNightlyIndex)
+                .PipIndex("torch", indexUrl, includePrerelease: usesNightlyIndex)
                 .ConfigureAwait(false);
             cancellationToken.ThrowIfCancellationRequested();
 
             // torchvision: allow pre-releases so the matched alpha (e.g. 0.29.0a0) is visible.
             var torchvisionIndex = await venvRunner
-                .PipIndex("torchvision", multiArchPythonPackageIndexUrl, includePrerelease: true)
+                .PipIndex("torchvision", indexUrl, includePrerelease: true)
                 .ConfigureAwait(false);
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -539,7 +548,7 @@ public class RocmPackageHelper : IRocmPackageHelper
         };
     }
 
-    private RocmMachineState ResolveWindowsMachineState()
+    private RocmMachineState ResolveMachineState()
     {
         if (settingsManager.Settings.PreferredGpu is { } preferredGpu && !preferredGpu.IsAmd)
         {
@@ -680,7 +689,7 @@ public class RocmPackageHelper : IRocmPackageHelper
     /// <summary>
     /// Verifies that the installed torch build still reports usable ROCm metadata after helper-managed installs complete.
     /// </summary>
-    private static async Task VerifyWindowsNativeTorchInstallAsync(
+    private static async Task VerifyRocmTorchInstallAsync(
         IPyVenvRunner venvRunner,
         Action<ProcessOutput>? onConsoleOutput,
         CancellationToken cancellationToken
@@ -691,7 +700,7 @@ public class RocmPackageHelper : IRocmPackageHelper
         var torchInfo = await venvRunner.PipShow("torch").ConfigureAwait(false);
         if (torchInfo is null)
         {
-            throw new InvalidOperationException("torch was not installed after Windows ROCm setup.");
+            throw new InvalidOperationException("torch was not installed after ROCm setup.");
         }
 
         var verificationResult = await venvRunner
@@ -751,7 +760,7 @@ public class RocmPackageHelper : IRocmPackageHelper
                 );
             }
 
-            // AMD's torchvision wheels declare no torch version constraint, so an ABI-mismatched pair only
+            // If AMD's torchvision wheels declare no torch version constraint, so an ABI-mismatched pair only
             // fails at import time. Importing it here surfaces that as an install failure instead of a
             // confusing runtime error later.
             if (string.IsNullOrWhiteSpace(torchvisionVersion))

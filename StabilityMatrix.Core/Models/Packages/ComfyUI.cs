@@ -490,7 +490,7 @@ public class ComfyUI(
 
         if (Compat.IsWindows && torchIndex == TorchIndex.Rocm && HasRocmSupport())
         {
-            var config = rocmPackageHelper.BuildWindowsNativeInstallConfig(ComfyRocmProfile.Default);
+            var config = rocmPackageHelper.BuildRocmInstallConfig(ComfyRocmProfile.Default);
 
             await StandardPipInstallProcessAsync(
                     venvRunner,
@@ -504,7 +504,7 @@ public class ComfyUI(
                 .ConfigureAwait(false);
 
             await rocmPackageHelper
-                .InstallWindowsNativeTorchAsync(
+                .InstallRocmTorchAsync(
                     venvRunner,
                     installedPackage,
                     ComfyRocmProfile.Default,

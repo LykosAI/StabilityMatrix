@@ -167,8 +167,6 @@ public static class RocmSupport
             DeviceExtra = usesAmdIndex ? TryGetMultiArchDeviceExtra(gfxArch) : null,
             SupportsDeviceExtras = usesAmdIndex,
             SupportsSdkDevel = usesAmdIndex,
-            // AMD's torchvision wheels declare no torch constraint, so the pair has to be resolved here.
-            RequiresPairResolution = usesAmdIndex,
         };
     }
 }

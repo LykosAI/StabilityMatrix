@@ -297,7 +297,7 @@ public class InvokeAI(
             );
 
             await rocmPackageHelper
-                .InstallWindowsNativeTorchAsync(
+                .InstallRocmTorchAsync(
                     venvRunner,
                     installedPackage,
                     installProfile,

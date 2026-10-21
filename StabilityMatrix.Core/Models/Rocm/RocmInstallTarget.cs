@@ -36,10 +36,4 @@ public sealed record RocmInstallTarget
     public required bool SupportsDeviceExtras { get; init; }
 
     public required bool SupportsSdkDevel { get; init; }
-
-    /// <summary>
-    /// True when torchvision on this index declares no torch constraint, so the helper has to resolve the
-    /// torch/torchvision pair and pin both.
-    /// </summary>
-    public required bool RequiresPairResolution { get; init; }
 }

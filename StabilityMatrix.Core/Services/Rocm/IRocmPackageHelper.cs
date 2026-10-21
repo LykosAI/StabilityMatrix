@@ -46,14 +46,16 @@ public interface IRocmPackageHelper
     );
 
     /// <summary>
-    /// Builds the standard pip install config for a Windows ROCm package, ensuring torch installation stays helper-managed.
+    /// Builds the standard pip install config for a ROCm package, ensuring torch installation stays
+    /// helper-managed.
     /// </summary>
-    PipInstallConfig BuildWindowsNativeInstallConfig(RocmPackageProfile profile);
+    PipInstallConfig BuildRocmInstallConfig(RocmPackageProfile profile);
 
     /// <summary>
-    /// Installs the Windows-native ROCm torch wheel set for a package using helper-resolved multi-arch device extras.
+    /// Installs the ROCm torch wheel set for a package from the resolved index, selecting device code
+    /// through the index's device extra when it has one.
     /// </summary>
-    Task InstallWindowsNativeTorchAsync(
+    Task InstallRocmTorchAsync(
         IPyVenvRunner venvRunner,
         InstalledPackage installedPackage,
         RocmPackageProfile profile,

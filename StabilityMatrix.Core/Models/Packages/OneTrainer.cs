@@ -93,7 +93,7 @@ public class OneTrainer(
 
         if (isWindowsRocm)
         {
-            var config = rocmPackageHelper.BuildWindowsNativeInstallConfig(OneTrainerRocmProfile.Default);
+            var config = rocmPackageHelper.BuildRocmInstallConfig(OneTrainerRocmProfile.Default);
 
             await StandardPipInstallProcessAsync(
                     venvRunner,
@@ -114,7 +114,7 @@ public class OneTrainer(
             );
 
             await rocmPackageHelper
-                .InstallWindowsNativeTorchAsync(
+                .InstallRocmTorchAsync(
                     venvRunner,
                     installedPackage,
                     OneTrainerRocmProfile.CreateInstallProfile(

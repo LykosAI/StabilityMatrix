@@ -125,7 +125,7 @@ public class Reforge(
             .ConfigureAwait(false);
 
         var profile = ReforgeRocmProfile.CreateProfile(GetRequirementsPaths(installLocation));
-        var config = rocmPackageHelper.BuildWindowsNativeInstallConfig(profile);
+        var config = rocmPackageHelper.BuildRocmInstallConfig(profile);
 
         await StandardPipInstallProcessAsync(
                 venvRunner,
@@ -139,7 +139,7 @@ public class Reforge(
             .ConfigureAwait(false);
 
         await rocmPackageHelper
-            .InstallWindowsNativeTorchAsync(
+            .InstallRocmTorchAsync(
                 venvRunner,
                 installedPackage,
                 profile,

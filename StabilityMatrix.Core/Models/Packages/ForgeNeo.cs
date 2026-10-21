@@ -144,10 +144,10 @@ public class ForgeNeo(
 
         if (Compat.IsWindows)
         {
-            // Install the AMD multi-arch torch build before launch.py runs, so its is_installed("torch")
+            // Install the helper-managed ROCm torch build before launch.py runs, so its is_installed("torch")
             // gate skips the default NVIDIA CUDA torch install.
             await rocmPackageHelper
-                .InstallWindowsNativeTorchAsync(
+                .InstallRocmTorchAsync(
                     venvRunner,
                     installedPackage,
                     profile,

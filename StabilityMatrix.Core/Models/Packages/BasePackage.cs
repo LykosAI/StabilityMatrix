@@ -25,6 +25,13 @@ public abstract class BasePackage(ISettingsManager settingsManager)
     public abstract string Author { get; }
     public abstract string Blurb { get; }
     public abstract string GithubUrl { get; }
+
+    /// <summary>
+    /// URLs the repository was published under before it moved. GitHub redirects them, so clones made
+    /// before the move can still have one as their remote.
+    /// </summary>
+    public virtual IReadOnlyList<string> FormerGithubUrls => [];
+
     public abstract string LicenseType { get; }
     public abstract string LicenseUrl { get; }
     public virtual string Disclaimer => string.Empty;

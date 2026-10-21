@@ -45,9 +45,10 @@ public class ComfyUI(
 
     public override string Name => "ComfyUI";
     public override string DisplayName { get; set; } = "ComfyUI";
-    public override string Author => "comfyanonymous";
+    public override string Author => "Comfy-Org";
+    public override IReadOnlyList<string> FormerGithubUrls => ["https://github.com/comfyanonymous/ComfyUI"];
     public override string LicenseType => "GPL-3.0";
-    public override string LicenseUrl => "https://github.com/comfyanonymous/ComfyUI/blob/master/LICENSE";
+    public override string LicenseUrl => "https://github.com/Comfy-Org/ComfyUI/blob/master/LICENSE";
     public override string Blurb => "A powerful and modular stable diffusion GUI and backend";
     public override string LaunchCommand => "main.py";
 

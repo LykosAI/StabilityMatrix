@@ -47,6 +47,7 @@ public class ComfyZluda(
     public override string Name => "ComfyUI-Zluda";
     public override string DisplayName => "ComfyUI-Zluda";
     public override string Author => "patientx";
+    public override IReadOnlyList<string> FormerGithubUrls => [];
     public override string LicenseUrl => "https://github.com/patientx/ComfyUI-Zluda/blob/master/LICENSE";
     public override string Blurb =>
         "Windows-only version of ComfyUI which uses ZLUDA to get better performance with AMD GPUs.";

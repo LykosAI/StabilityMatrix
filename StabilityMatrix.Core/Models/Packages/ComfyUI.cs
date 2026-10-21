@@ -488,7 +488,7 @@ public class ComfyUI(
                 ?? HardwareHelper.HasLegacyNvidiaGpu()
             );
 
-        if (Compat.IsWindows && torchIndex == TorchIndex.Rocm && HasRocmSupport())
+        if (torchIndex == TorchIndex.Rocm && HasRocmSupport())
         {
             var config = rocmPackageHelper.BuildRocmInstallConfig(ComfyRocmProfile.Default);
 
@@ -522,7 +522,7 @@ public class ComfyUI(
                 ExtraPipArgs = ["numpy<2"],
                 TorchaudioVersion = " ", // Request torchaudio without a specific version
                 CudaIndex = isLegacyNvidia ? "cu126" : "cu130",
-                RocmIndex = "rocm7.2",
+                RocmIndex = "rocm7.14",
                 XpuIndex = "xpu",
                 UpgradePackages = true,
                 PostInstallPipArgs = ["typing-extensions>=4.15.0"],
@@ -540,7 +540,7 @@ public class ComfyUI(
                 .ConfigureAwait(false);
         }
 
-        if (!(Compat.IsWindows && torchIndex == TorchIndex.Rocm && HasRocmSupport()))
+        if (!(torchIndex == TorchIndex.Rocm && HasRocmSupport()))
         {
             try
             {
@@ -1229,8 +1229,6 @@ public class ComfyUI(
         InstalledPackage installedPackage
     )
     {
-        // if we're not on windows or we don't have a windows rocm gpu, return original env
-        var hasRocmGpu = HasRocmSupport();
         var selectedTorchIndex = installedPackage.PreferredTorchIndex ?? GetRecommendedTorchVersion();
 
         // Add FFmpeg to PATH if it's installed (optional - for video processing)
@@ -1245,7 +1243,7 @@ public class ComfyUI(
             }
         }
 
-        if (!Compat.IsWindows || !hasRocmGpu || selectedTorchIndex != TorchIndex.Rocm)
+        if (!rocmPackageHelper.ShouldApplyLaunchEnvironment(selectedTorchIndex))
             return env;
 
         var rocmEnvironment = rocmPackageHelper.BuildLaunchEnvironment(ComfyRocmProfile.Default);

@@ -91,11 +91,6 @@ public abstract class BaseGitPackage : BasePackage
 
     protected RocmCompatibilityResult GetRocmCompatibility(IRocmPackageHelper rocmPackageHelper)
     {
-        if (!Compat.IsWindows)
-        {
-            return new RocmCompatibilityResult { IsCompatible = false };
-        }
-
         return rocmPackageHelper.GetCompatibility();
     }
 

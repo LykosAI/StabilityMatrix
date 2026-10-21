@@ -662,7 +662,8 @@ public class InvokeAI(
         env = GetEnvVars(env, installPath);
 
         var selectedTorchIndex = installedPackage.PreferredTorchIndex ?? GetRecommendedTorchVersion();
-        if (!rocmPackageHelper.ShouldApplyLaunchEnvironment(selectedTorchIndex))
+        // Gated to Windows until this package installs through the helper on Linux as well.
+        if (!Compat.IsWindows || !rocmPackageHelper.ShouldApplyLaunchEnvironment(selectedTorchIndex))
         {
             return env;
         }

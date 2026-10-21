@@ -39,7 +39,7 @@ public class RocmPackageHelper : IRocmPackageHelper
     );
     private static readonly string[] LaunchNoticeLines =
     [
-        "Stability Matrix Windows ROCm Notice: Windows AMD ROCm support is experimental. Please report any issues to Stability Matrix first so it can be determined whether the issue is package-specific.",
+        "Stability Matrix ROCm Notice: AMD ROCm support is experimental. Please report any issues to Stability Matrix first so it can be determined whether the issue is package-specific.",
         "Because this setup may not be officially supported by package developers, only contact upstream support for issues clearly caused by the package itself.",
     ];
 
@@ -123,7 +123,7 @@ public class RocmPackageHelper : IRocmPackageHelper
     /// <inheritdoc />
     public bool ShouldApplyLaunchEnvironment(TorchIndex selectedTorchIndex)
     {
-        if (!Compat.IsWindows || selectedTorchIndex != TorchIndex.Rocm)
+        if (selectedTorchIndex != TorchIndex.Rocm)
             return false;
         return GetCompatibility().IsCompatible;
     }

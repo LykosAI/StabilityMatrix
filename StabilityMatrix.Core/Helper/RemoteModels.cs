@@ -316,6 +316,7 @@ public static class RemoteModels
             Qwen3_8bTextEncoder,
             Qwen3_06bBaseTextEncoder,
             Qwen3Vl4bTextEncoder,
+            Qwen35_9bTextEncoder,
             ClipLHiDreamTextEncoder,
             ClipGHiDreamTextEncoder,
             Llama31_8bInstructTextEncoder,
@@ -613,6 +614,19 @@ public static class RemoteModels
             ),
             InfoUrl = new Uri("https://huggingface.co/Comfy-Org/Krea-2"),
             HashSha256 = "54bd5144df0bbc25dd6ccadfcb826b521445a1b06ae5a42570bdd2974ca87094",
+            Author = "Alibaba Qwen",
+            LicenseType = "Apache 2.0",
+            ContextType = SharedFolderType.TextEncoders,
+        };
+
+    public static RemoteResource Qwen35_9bTextEncoder { get; } =
+        new()
+        {
+            Url = new Uri(
+                "https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/text_encoders/qwen3.5_9b_w4a8_gptq.safetensors"
+            ),
+            InfoUrl = new Uri("https://huggingface.co/Comfy-Org/MOSS-Image"),
+            HashSha256 = "4cc6a1543ad2061806da46f35f90cadb4801dcba246c44782cf42ec0feb6407c",
             Author = "Alibaba Qwen",
             LicenseType = "Apache 2.0",
             ContextType = SharedFolderType.TextEncoders,

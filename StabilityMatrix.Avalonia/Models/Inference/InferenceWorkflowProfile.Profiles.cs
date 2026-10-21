@@ -33,6 +33,9 @@ public sealed partial class InferenceWorkflowProfile
             RemoteModels.QwenImageVae
         );
 
+    private static InferenceCompanion Flux2VaeCompanion { get; } =
+        new("Flux.2 VAE", Flux2KleinModelManager.IsFlux2Vae, RemoteModels.Flux2Vae);
+
     // Z-Image uses the Qwen3 4B encoder (the same qwen_3_4b.safetensors file Klein 4B uses).
     private static InferenceCompanion ZImageEncoderCompanion { get; } =
         new(
@@ -148,11 +151,7 @@ public sealed partial class InferenceWorkflowProfile
                     ),
                 ];
             },
-            VaeCompanion = new InferenceCompanion(
-                "Flux.2 VAE",
-                Flux2KleinModelManager.IsFlux2Vae,
-                RemoteModels.Flux2Vae
-            ),
+            VaeCompanion = Flux2VaeCompanion,
         };
 
     public static InferenceWorkflowProfile ZImageBase { get; } =
@@ -323,6 +322,31 @@ public sealed partial class InferenceWorkflowProfile
             VaeCompanion = QwenVaeCompanion,
         };
 
+    // Base and SFT share one graph and the same settings. Shift 5 is ComfyUI's model default,
+    // so no model-sampling node (and no Shift control) is needed.
+    public static InferenceWorkflowProfile MossImage { get; } =
+        new()
+        {
+            Key = "MossImage",
+            DisplayName = "MOSS Image",
+            ClipType = "moss_image",
+            UsesStandaloneLoader = true,
+            RequiresStandaloneFile = true,
+            Latent = LatentType.Flux2,
+            RecommendedDefaults = new(ComfySampler.ErSde, ComfyScheduler.Simple, 25, 2.5),
+            PreferredBaseModels = ["MOSS Image"],
+            GetEncoderCompanions = _ =>
+                [
+                    new InferenceCompanion(
+                        "Qwen3.5 9B text encoder",
+                        name => Qwen35_9bEncoderRegex().IsMatch(name),
+                        RemoteModels.Qwen35_9bTextEncoder
+                    ),
+                ],
+            // MOSS shares Flux.2's latent space; its own small-decoder VAE build matches too.
+            VaeCompanion = Flux2VaeCompanion,
+        };
+
     /// <summary>Display order for the profile dropdown — Custom deliberately last.</summary>
     public static IReadOnlyList<InferenceWorkflowProfile> All { get; } =
         [
@@ -337,6 +361,7 @@ public sealed partial class InferenceWorkflowProfile
             QwenImage,
             Krea2Turbo,
             Krea2Raw,
+            MossImage,
             Custom,
         ];
 
@@ -392,6 +417,9 @@ public sealed partial class InferenceWorkflowProfile
                     ? Krea2Raw
                     : Krea2Turbo;
             }
+
+            if (baseModel.StartsWith("MOSS", StringComparison.OrdinalIgnoreCase))
+                return MossImage;
         }
 
         var name = model?.RelativePath ?? string.Empty;
@@ -442,6 +470,9 @@ public sealed partial class InferenceWorkflowProfile
             return name.Contains("raw", StringComparison.OrdinalIgnoreCase) ? Krea2Raw : Krea2Turbo;
         }
 
+        if (MossImageNameRegex().IsMatch(name))
+            return MossImage;
+
         return DefaultCheckpoint;
     }
 
@@ -465,4 +496,15 @@ public sealed partial class InferenceWorkflowProfile
 
     [GeneratedRegex(@"(?<![\p{L}])anima(?![\p{L}])", RegexOptions.IgnoreCase)]
     private static partial Regex AnimaNameRegex();
+
+    /// <summary>"moss_image" / "moss-image" / "mossimage", the way OpenMOSS and Comfy-Org name the files.</summary>
+    [GeneratedRegex(@"moss[_ .-]?image", RegexOptions.IgnoreCase)]
+    private static partial Regex MossImageNameRegex();
+
+    /// <summary>
+    /// Qwen3.5 9B ("qwen3.5_9b_w4a8_gptq", "qwen3_5_9b_bf16"). Not Klein's qwen_3_8b or any 4B,
+    /// which are shape-incompatible.
+    /// </summary>
+    [GeneratedRegex(@"qwen[_ .-]*3[_ .-]*5[_ .-]*9b(?:[_ .-]|$)", RegexOptions.IgnoreCase)]
+    private static partial Regex Qwen35_9bEncoderRegex();
 }

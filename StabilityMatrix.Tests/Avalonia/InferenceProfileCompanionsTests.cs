@@ -113,7 +113,9 @@ public class InferenceProfileCompanionsTests
         var all = InferenceWorkflowProfile.All;
 
         CollectionAssert.AllItemsAreUnique(all.Select(p => p.Key).ToList());
-        CollectionAssert.AllItemsAreUnique(all.Select(p => p.LegacyValue).ToList());
+        CollectionAssert.AllItemsAreUnique(
+            all.Where(p => p.LegacyValue is not null).Select(p => p.LegacyValue).ToList()
+        );
         Assert.AreSame(
             InferenceWorkflowProfile.Custom,
             all[^1],

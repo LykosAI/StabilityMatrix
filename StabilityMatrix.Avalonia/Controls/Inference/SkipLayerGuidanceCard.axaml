@@ -1,0 +1,92 @@
+﻿<Styles
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
+    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+    xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+    xmlns:vmInference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
+    x:DataType="vmInference:SkipLayerGuidanceCardViewModel">
+    <Design.PreviewWith>
+        <controls:SkipLayerGuidanceCard />
+    </Design.PreviewWith>
+
+    <Style Selector="controls|SkipLayerGuidanceCard">
+        <Setter Property="Template">
+            <ControlTemplate>
+                <controls:Card x:Name="PART_Card">
+                    <controls:Card.Styles>
+                        <Style Selector="ui|NumberBox">
+                            <Setter Property="Margin" Value="12,4,0,4" />
+                            <Setter Property="MinWidth" Value="70" />
+                            <Setter Property="HorizontalAlignment" Value="Stretch" />
+                            <Setter Property="ValidationMode" Value="InvalidInputOverwritten" />
+                            <Setter Property="SpinButtonPlacementMode" Value="Inline" />
+                        </Style>
+                        <Style Selector="TextBox">
+                            <Setter Property="Margin" Value="12,4,0,4" />
+                            <Setter Property="HorizontalAlignment" Value="Stretch" />
+                            <Setter Property="ToolTip.Tip" Value="{x:Static lang:Resources.Label_SkipLayersTooltip}" />
+                        </Style>
+                    </controls:Card.Styles>
+                    <Grid ColumnDefinitions="Auto,*,*" RowDefinitions="*,*,*,*">
+                        <TextBlock
+                            Grid.Row="0"
+                            Grid.Column="0"
+                            VerticalAlignment="Center"
+                            Text="{x:Static lang:Resources.Label_SingleBlocks}" />
+                        <TextBox
+                            Grid.Row="0"
+                            Grid.Column="1"
+                            Grid.ColumnSpan="2"
+                            Text="{Binding SingleLayers}" />
+
+                        <TextBlock
+                            Grid.Row="1"
+                            Grid.Column="0"
+                            VerticalAlignment="Center"
+                            Text="{x:Static lang:Resources.Label_DoubleBlocks}" />
+                        <TextBox
+                            Grid.Row="1"
+                            Grid.Column="1"
+                            Grid.ColumnSpan="2"
+                            Text="{Binding DoubleLayers}" />
+
+                        <TextBlock
+                            Grid.Row="2"
+                            Grid.Column="0"
+                            VerticalAlignment="Center"
+                            Text="{x:Static lang:Resources.Label_ActiveSteps}" />
+                        <ui:NumberBox
+                            Grid.Row="2"
+                            Grid.Column="1"
+                            Maximum="1"
+                            Minimum="0"
+                            SimpleNumberFormat="P0"
+                            SmallChange="0.01"
+                            Value="{Binding StartPercent}" />
+                        <ui:NumberBox
+                            Grid.Row="2"
+                            Grid.Column="2"
+                            Maximum="1"
+                            Minimum="0"
+                            SimpleNumberFormat="P0"
+                            SmallChange="0.01"
+                            Value="{Binding EndPercent}" />
+
+                        <ui:RangeSlider
+                            Grid.Row="3"
+                            Grid.Column="0"
+                            Grid.ColumnSpan="3"
+                            Margin="0,4,0,0"
+                            Maximum="1"
+                            Minimum="0"
+                            RangeEnd="{Binding EndPercent}"
+                            RangeStart="{Binding StartPercent}"
+                            ShowValueToolTip="False"
+                            StepFrequency="0.01" />
+                    </Grid>
+                </controls:Card>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+</Styles>

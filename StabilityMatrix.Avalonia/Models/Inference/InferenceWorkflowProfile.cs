@@ -25,8 +25,11 @@ public sealed partial class InferenceWorkflowProfile
 
     public required string DisplayName { get; init; }
 
-    /// <summary>Numeric value pre-2.17 saved projects stored for this profile.</summary>
-    public required int LegacyValue { get; init; }
+    /// <summary>
+    /// Numeric value pre-2.17 saved projects stored for this profile; null for profiles that
+    /// were only ever persisted by key.
+    /// </summary>
+    public int? LegacyValue { get; init; }
 
     /// <summary>ComfyUI CLIPLoader type; null leaves the user's selection alone.</summary>
     public string? ClipType { get; init; }

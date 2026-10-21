@@ -446,6 +446,28 @@ public class ModelCardWorkflowProfileTests
     }
 
     [TestMethod]
+    public void AutoSelect_MossImageUnet_FillsQwen35EncoderAndFlux2Vae()
+    {
+        var qwen8B = LocalModel("qwen_3_8b.safetensors", SharedFolderType.TextEncoders);
+        var qwen35 = LocalModel("qwen3.5_9b_w4a8_gptq.safetensors", SharedFolderType.TextEncoders);
+        var smallVae = LocalModel("flux2-vae_small.safetensors", SharedFolderType.VAE);
+
+        var vm = CreateViewModel(clipModels: [qwen8B, qwen35], vaeModels: [smallVae]);
+
+        vm.SelectedUnifiedModel = LocalModel(
+            "moss_image_sft_int8_convrot.safetensors",
+            SharedFolderType.DiffusionModels
+        );
+
+        Assert.AreEqual(InferenceWorkflowProfile.MossImage, vm.ResolvedWorkflowProfile);
+        Assert.AreEqual("moss_image", vm.SelectedClipType);
+        Assert.AreEqual(1, vm.TextEncoders.Count);
+        Assert.AreEqual(qwen35, vm.TextEncoders[0].SelectedModel);
+        Assert.AreEqual(smallVae, vm.SelectedVae);
+        Assert.IsFalse(vm.ShowShift, "MOSS uses ComfyUI's built-in shift; a card default would override it");
+    }
+
+    [TestMethod]
     public void AutoSelect_SwitchingKleinVariant_ReplacesAutoFilledEncoder()
     {
         var qwen4B = LocalModel("qwen_3_4b.safetensors", SharedFolderType.TextEncoders);

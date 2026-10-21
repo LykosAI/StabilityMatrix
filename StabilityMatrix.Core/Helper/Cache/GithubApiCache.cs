@@ -98,8 +98,14 @@ public class GithubApiCache(
 
         try
         {
+            // Newest page only: paging the whole history costs several unauthenticated
+            // requests per repo and exhausts the 60/hour rate limit during startup update checks
             var allReleases = await githubApi
-                .Repository.Release.GetAll(username, repository)
+                .Repository.Release.GetAll(
+                    username,
+                    repository,
+                    new ApiOptions { PageSize = 100, PageCount = 1 }
+                )
                 .ConfigureAwait(false);
             if (allReleases == null)
             {

@@ -1,4 +1,4 @@
-﻿using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;
 using Injectio.Attributes;
 using NLog;
 using Octokit;
@@ -117,15 +117,20 @@ public class PipWheelService(
             .OrderByDescending(r => r.CreatedAt)
             .ToList();
 
-        if (releaseList.Count == 0)
-        {
-            Logger.Warn("No SageAttention Windows releases found");
-            await InstallSageAttentionFromSourceAsync(venv, progress).ConfigureAwait(false);
-            return;
-        }
-
         // Find matching wheel from release assets
         var wheelUrl = FindMatchingWheelAsset(releaseList, torchInfo, venv.Version, version);
+
+        // GitHub can come back empty (rate limited with a cold cache, offline) - try the
+        // known-good wheel list before resorting to a source build
+        if (string.IsNullOrWhiteSpace(wheelUrl))
+        {
+            wheelUrl = FindFallbackWheelUrl(torchInfo, venv.Version, version);
+
+            if (!string.IsNullOrWhiteSpace(wheelUrl))
+            {
+                Logger.Info("Using fallback SageAttention wheel: {Url}", wheelUrl);
+            }
+        }
 
         if (!string.IsNullOrWhiteSpace(wheelUrl))
         {
@@ -159,13 +164,6 @@ public class PipWheelService(
         var baseTorchVersion = plusIndex >= 0 ? torchVersionStr[..plusIndex] : torchVersionStr;
         var cudaIndex = plusIndex >= 0 ? torchVersionStr[(plusIndex + 1)..] : "";
 
-        // Get major.minor of torch
-        var torchParts = baseTorchVersion.Split('.');
-        var shortTorch = torchParts.Length >= 2 ? $"{torchParts[0]}.{torchParts[1]}" : baseTorchVersion;
-
-        // Get python version string (e.g., "cp312")
-        var shortPy = $"cp3{pyVersion.Minor}";
-
         foreach (var release in releases)
         {
             // If a specific version is requested, filter releases
@@ -174,38 +172,9 @@ public class PipWheelService(
 
             foreach (var asset in release.Assets)
             {
-                var name = asset.Name;
-
-                // Must be a wheel file
-                if (!name.EndsWith(".whl"))
-                    continue;
-
-                // Must be for Windows
-                if (!name.Contains("win_amd64"))
-                    continue;
-
-                // Check Python version compatibility (cp39-abi3 works for cp39+, or specific version)
-                var matchesPython =
-                    name.Contains($"{shortPy}-{shortPy}")
-                    || name.Contains("cp39-abi3")
-                    || (pyVersion.Minor >= 9 && name.Contains("abi3"));
-
-                if (!matchesPython)
-                    continue;
-
-                // Check torch version match
-                // Assets use patterns like: cu128torch2.9.0 or cu130torch2.9.0andhigher
-                var matchesTorch =
-                    name.Contains($"torch{shortTorch}")
-                    || name.Contains($"torch{baseTorchVersion}")
-                    || (name.Contains("andhigher") && CompareTorchVersions(baseTorchVersion, name));
-
-                // Check CUDA index match
-                var matchesCuda = !string.IsNullOrEmpty(cudaIndex) && name.Contains(cudaIndex);
-
-                if (matchesTorch && matchesCuda)
+                if (IsMatchingSageWheel(asset.Name, baseTorchVersion, cudaIndex, pyVersion))
                 {
-                    Logger.Info("Found matching SageAttention wheel: {Name}", name);
+                    Logger.Info("Found matching SageAttention wheel: {Name}", asset.Name);
                     return asset.BrowserDownloadUrl;
                 }
             }
@@ -214,10 +183,48 @@ public class PipWheelService(
         return null;
     }
 
-    private static bool CompareTorchVersions(string installedTorch, string assetName)
+    internal static bool IsMatchingSageWheel(
+        string assetName,
+        string baseTorchVersion,
+        string cudaIndex,
+        PyVersion pyVersion
+    )
     {
-        // Extract torch version from asset name (e.g., "torch2.9.0andhigher" -> "2.9.0")
-        var match = Regex.Match(assetName, @"torch(\d+\.\d+\.\d+)");
+        // Must be a Windows wheel file
+        if (!assetName.EndsWith(".whl") || !assetName.Contains("win_amd64"))
+            return false;
+
+        // Check Python version compatibility: abi3 wheels declare their minimum
+        // interpreter (cp39-abi3 = 3.9+, cp310-abi3 = 3.10+), others need an exact match
+        var abi3Match = Regex.Match(assetName, @"cp3(\d+)-abi3");
+        var shortPy = $"cp3{pyVersion.Minor}";
+        var matchesPython = abi3Match.Success
+            ? pyVersion.Minor >= int.Parse(abi3Match.Groups[1].Value)
+            : assetName.Contains($"{shortPy}-{shortPy}");
+
+        if (!matchesPython)
+            return false;
+
+        return IsCompatibleSageAttention(assetName, $"{baseTorchVersion}+{cudaIndex}");
+    }
+
+    internal static bool IsCompatibleSageAttention(string sageVersion, string torchVersion)
+    {
+        var plusIndex = torchVersion.IndexOf('+');
+        var baseTorchVersion = plusIndex >= 0 ? torchVersion[..plusIndex] : torchVersion;
+        var cudaIndex = plusIndex >= 0 ? torchVersion[(plusIndex + 1)..] : "";
+        var sageCuda = Regex.Match(sageVersion, @"\+cu(\d+)torch");
+
+        return sageCuda.Success
+            && cudaIndex == $"cu{sageCuda.Groups[1].Value}"
+            && MatchesTorchVersion(sageVersion, baseTorchVersion);
+    }
+
+    private static bool MatchesTorchVersion(string assetName, string installedTorch)
+    {
+        // Assets embed the torch they were built for: "cu128torch2.9.1.post6" needs that
+        // major.minor line, "cu130torch2.10.0andhigher.post6" works for that version and up
+        var match = Regex.Match(assetName, @"torch(\d+\.\d+(?:\.\d+)?)");
         if (!match.Success)
             return false;
 
@@ -227,8 +234,90 @@ public class PipWheelService(
         if (!Version.TryParse(match.Groups[1].Value, out var required))
             return false;
 
-        // "andhigher" means installed version must be >= required version
-        return installed >= required;
+        return assetName.Contains("andhigher")
+            ? installed >= required
+            : installed.Major == required.Major && installed.Minor == required.Minor;
+    }
+
+    /// <summary>
+    /// Known-good wheels from https://github.com/woct0rdho/SageAttention/releases, used when the
+    /// GitHub API yields nothing. Refresh these when new Windows releases are published.
+    /// </summary>
+    internal static string? FindFallbackWheelUrl(
+        PipShowResult torchInfo,
+        PyVersion pyVersion,
+        string? targetVersion
+    )
+    {
+        const string releaseBase = "https://github.com/woct0rdho/SageAttention/releases/download";
+
+        var versionString = torchInfo.Version;
+        var plusIndex = versionString.IndexOf('+');
+        var baseVersionString = plusIndex >= 0 ? versionString[..plusIndex] : versionString;
+        var cudaIndex = plusIndex >= 0 ? versionString[(plusIndex + 1)..] : string.Empty;
+
+        if (!Version.TryParse(baseVersionString, out var torchVersion))
+            return null;
+
+        string? url = null;
+
+        // v2.2.0-windows.post6 wheels are cp310-abi3 (Python 3.10+) for torch 2.9.x / 2.10+
+        if (torchVersion >= new Version(2, 10, 0) && pyVersion.Minor >= 10)
+        {
+            if (cudaIndex.Contains("cu128"))
+            {
+                url =
+                    $"{releaseBase}/v2.2.0-windows.post6/sageattention-2.2.0+cu128torch2.10.0andhigher.post6-cp310-abi3-win_amd64.whl";
+            }
+            else if (cudaIndex.Contains("cu130"))
+            {
+                url =
+                    $"{releaseBase}/v2.2.0-windows.post6/sageattention-2.2.0+cu130torch2.10.0andhigher.post6-cp310-abi3-win_amd64.whl";
+            }
+        }
+        else if (torchVersion >= new Version(2, 9, 0) && pyVersion.Minor >= 10)
+        {
+            if (cudaIndex.Contains("cu128"))
+            {
+                url =
+                    $"{releaseBase}/v2.2.0-windows.post6/sageattention-2.2.0+cu128torch2.9.1.post6-cp310-abi3-win_amd64.whl";
+            }
+            else if (cudaIndex.Contains("cu130"))
+            {
+                url =
+                    $"{releaseBase}/v2.2.0-windows.post6/sageattention-2.2.0+cu130torch2.9.1.post6-cp310-abi3-win_amd64.whl";
+            }
+        }
+        // Older torch lines only have cp39-abi3 (Python 3.9+) wheels in earlier releases
+        else if (pyVersion.Minor >= 9)
+        {
+            if (versionString.Contains("2.8.0") && versionString.Contains("cu128"))
+            {
+                url =
+                    $"{releaseBase}/v2.2.0-windows.post3/sageattention-2.2.0+cu128torch2.8.0.post3-cp39-abi3-win_amd64.whl";
+            }
+            else if (versionString.Contains("2.7.1") && versionString.Contains("cu128"))
+            {
+                url =
+                    $"{releaseBase}/v2.2.0-windows.post3/sageattention-2.2.0+cu128torch2.7.1.post3-cp39-abi3-win_amd64.whl";
+            }
+            else if (versionString.Contains("2.6.0") && versionString.Contains("cu126"))
+            {
+                url =
+                    $"{releaseBase}/v2.2.0-windows.post3/sageattention-2.2.0+cu126torch2.6.0.post3-cp39-abi3-win_amd64.whl";
+            }
+            else if (versionString.Contains("2.5.1") && versionString.Contains("cu124"))
+            {
+                url =
+                    $"{releaseBase}/v2.2.0-windows.post3/sageattention-2.2.0+cu124torch2.5.1.post3-cp39-abi3-win_amd64.whl";
+            }
+        }
+
+        // Honor a pinned sageattention version request (e.g. "2.2.0")
+        if (url is not null && !string.IsNullOrWhiteSpace(targetVersion) && !url.Contains(targetVersion))
+            return null;
+
+        return url;
     }
 
     private async Task InstallSageAttentionFromSourceAsync(
@@ -469,122 +558,6 @@ public class PipWheelService(
                     shortPy,
                     shortTorch
                 );
-                return asset.BrowserDownloadUrl;
-            }
-        }
-
-        return null;
-    }
-
-    #endregion
-
-    #region FlashAttention
-
-    /// <inheritdoc />
-    public async Task InstallFlashAttentionAsync(
-        IPyVenvRunner venv,
-        IProgress<ProgressReport>? progress = null,
-        string? version = null
-    )
-    {
-        // Windows only
-        if (!Compat.IsWindows)
-        {
-            Logger.Info("Skipping FlashAttention installation - Windows only");
-            return;
-        }
-
-        var torchInfo = await venv.PipShow("torch").ConfigureAwait(false);
-        if (torchInfo is null)
-        {
-            Logger.Warn("Cannot install FlashAttention - torch not installed");
-            return;
-        }
-
-        progress?.Report(new ProgressReport(-1f, "Finding FlashAttention wheel", isIndeterminate: true));
-
-        // Get releases from GitHub
-        var releases = await githubApi
-            .GetAllReleases("mjun0812", "flash-attention-prebuild-wheels")
-            .ConfigureAwait(false);
-        var releaseList = releases.OrderByDescending(r => r.CreatedAt).ToList();
-
-        if (releaseList.Count == 0)
-        {
-            Logger.Warn("No FlashAttention releases found");
-            return;
-        }
-
-        var wheelUrl = FindMatchingFlashAttentionWheelAsset(releaseList, torchInfo, venv.Version, version);
-
-        if (string.IsNullOrWhiteSpace(wheelUrl))
-        {
-            Logger.Warn(
-                "No compatible FlashAttention wheel found for torch {TorchVersion}",
-                torchInfo.Version
-            );
-            return;
-        }
-
-        progress?.Report(new ProgressReport(-1f, "Installing FlashAttention", isIndeterminate: true));
-        // Use --no-deps to prevent reinstalling torch without CUDA
-        await venv.PipInstall(
-                new PipInstallArgs("--no-deps").AddArg(wheelUrl),
-                progress.AsProcessOutputHandler()
-            )
-            .ConfigureAwait(false);
-        progress?.Report(new ProgressReport(1f, "FlashAttention installed", isIndeterminate: false));
-    }
-
-    private static string? FindMatchingFlashAttentionWheelAsset(
-        IEnumerable<Release> releases,
-        PipShowResult torchInfo,
-        PyVersion pyVersion,
-        string? targetVersion
-    )
-    {
-        // Parse torch version and CUDA index
-        var torchVersionStr = torchInfo.Version;
-        var plusIndex = torchVersionStr.IndexOf('+');
-        var baseTorchVersion = plusIndex >= 0 ? torchVersionStr[..plusIndex] : torchVersionStr;
-        var cudaIndex = plusIndex >= 0 ? torchVersionStr[(plusIndex + 1)..] : "";
-        var torchParts = baseTorchVersion.Split('.');
-        var shortTorch = torchParts.Length >= 2 ? $"{torchParts[0]}.{torchParts[1]}" : baseTorchVersion;
-
-        // Get python version string
-        var shortPy = $"cp3{pyVersion.Minor}";
-
-        foreach (var release in releases)
-        {
-            foreach (var asset in release.Assets)
-            {
-                var name = asset.Name;
-
-                if (!name.EndsWith(".whl"))
-                    continue;
-
-                if (!name.Contains("win_amd64"))
-                    continue;
-
-                // Check for specific version if requested
-                if (
-                    !string.IsNullOrWhiteSpace(targetVersion) && !name.Contains($"flash_attn-{targetVersion}")
-                )
-                    continue;
-
-                // Check Python version
-                if (!name.Contains($"{shortPy}-{shortPy}"))
-                    continue;
-
-                // Check torch version
-                if (!name.Contains($"torch{shortTorch}"))
-                    continue;
-
-                // Check CUDA index
-                if (!string.IsNullOrEmpty(cudaIndex) && !name.Contains(cudaIndex))
-                    continue;
-
-                Logger.Info("Found matching FlashAttention wheel: {Name}", name);
                 return asset.BrowserDownloadUrl;
             }
         }

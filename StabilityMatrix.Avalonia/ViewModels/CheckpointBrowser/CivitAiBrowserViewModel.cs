@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Reactive.Linq;
@@ -616,7 +616,7 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
 
                 if (doesBaseModelTypeMatch && doesModelTypeMatch)
                 {
-                    UpdateModelCards(models, isInfiniteScroll);
+                    UpdateModelCards(models, request.BaseModels, isInfiniteScroll);
                 }
             }
 
@@ -681,11 +681,16 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
         }
     }
 
+    private string[] resultBaseModels = [];
+
     /// <summary>
     /// Updates model cards using api response object.
     /// </summary>
-    private void UpdateModelCards(List<CivitModel>? models, bool addCards = false)
+    private void UpdateModelCards(List<CivitModel>? models, string[]? baseModels, bool addCards = false)
     {
+        // Keep the filter that produced these results, including searches that bypass it.
+        resultBaseModels = baseModels?.ToArray() ?? [];
+
         if (models is null)
         {
             modelCache.Clear();
@@ -863,7 +868,7 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
                 elapsed.TotalSeconds
             );
             NextPageCursor = cachedQuery.Metadata?.NextCursor;
-            UpdateModelCards(cachedQuery.Items, isInfiniteScroll);
+            UpdateModelCards(cachedQuery.Items, modelRequest.BaseModels, isInfiniteScroll);
 
             // Start remote query (background mode)
             // Skip when last query was less than 2 min ago
@@ -973,6 +978,7 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
 
             vm.ModelIdList = allModelIds;
             vm.CurrentIndex = index;
+            vm.BaseModelFilter = resultBaseModels.ToArray();
             vm.CivitModel = model;
             return vm;
         });

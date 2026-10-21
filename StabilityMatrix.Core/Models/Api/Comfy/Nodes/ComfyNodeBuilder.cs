@@ -834,7 +834,7 @@ public class ComfyNodeBuilder
 
     [TypedNodeOptions(
         Name = "Inference_Core_AIO_Preprocessor",
-        RequiredExtensions = ["https://github.com/LykosAI/ComfyUI-Inference-Core-Nodes >= 0.2.0"]
+        RequiredExtensions = ["https://github.com/LykosAI/ComfyUI-Inference-Core-Nodes >= 0.5.2"]
     )]
     public record AIOPreprocessor : ComfyTypedNodeBase<ImageNodeConnection>
     {

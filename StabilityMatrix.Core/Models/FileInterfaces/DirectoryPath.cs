@@ -79,6 +79,7 @@ public class DirectoryPath : FileSystemPath, IPathObject, IEnumerable<FileSystem
     /// </summary>
     /// <param name="includeSymbolicLinks">
     /// Whether to include files and subdirectories that are symbolic links / reparse points.
+    /// When false, links at any depth are skipped, matching what a recursive delete removes.
     /// </param>
     public long GetSize(bool includeSymbolicLinks)
     {
@@ -86,17 +87,8 @@ public class DirectoryPath : FileSystemPath, IPathObject, IEnumerable<FileSystem
             return GetSize();
 
         Info.Refresh();
-        var files = Info.GetFiles()
-            .Where(file => !file.Attributes.HasFlag(FileAttributes.ReparsePoint))
+        return Info.EnumerateFiles("*", EnumerationOptionConstants.AllDirectoriesExceptLinks)
             .Sum(file => file.Length);
-        var subDirs = Info.GetDirectories()
-            .Where(dir => !dir.Attributes.HasFlag(FileAttributes.ReparsePoint))
-            .Sum(
-                dir =>
-                    dir.EnumerateFiles("*", EnumerationOptionConstants.AllDirectories)
-                        .Sum(file => file.Length)
-            );
-        return files + subDirs;
     }
 
     /// <summary>
@@ -298,14 +290,13 @@ public class DirectoryPath : FileSystemPath, IPathObject, IEnumerable<FileSystem
     public IEnumerator<FileSystemPath> GetEnumerator()
     {
         return Info.EnumerateFileSystemInfos("*", EnumerationOptionConstants.TopLevelOnly)
-            .Select<FileSystemInfo, FileSystemPath>(
-                fsInfo =>
-                    fsInfo switch
-                    {
-                        FileInfo file => new FilePath(file),
-                        DirectoryInfo directory => new DirectoryPath(directory),
-                        _ => throw new InvalidOperationException("Unknown file system info type")
-                    }
+            .Select<FileSystemInfo, FileSystemPath>(fsInfo =>
+                fsInfo switch
+                {
+                    FileInfo file => new FilePath(file),
+                    DirectoryInfo directory => new DirectoryPath(directory),
+                    _ => throw new InvalidOperationException("Unknown file system info type"),
+                }
             )
             .GetEnumerator();
     }

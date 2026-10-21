@@ -1,4 +1,4 @@
-﻿using System.Collections.Immutable;
+using System.Collections.Immutable;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Injectio.Attributes;
@@ -18,6 +18,7 @@ using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 using StabilityMatrix.Core.Services.Rocm;
+using SageWheelService = StabilityMatrix.Core.Services.PipWheelService;
 
 namespace StabilityMatrix.Core.Models.Packages;
 
@@ -44,9 +45,10 @@ public class ComfyUI(
 
     public override string Name => "ComfyUI";
     public override string DisplayName { get; set; } = "ComfyUI";
-    public override string Author => "comfyanonymous";
+    public override string Author => "Comfy-Org";
+    public override IReadOnlyList<string> FormerGithubUrls => ["https://github.com/comfyanonymous/ComfyUI"];
     public override string LicenseType => "GPL-3.0";
-    public override string LicenseUrl => "https://github.com/comfyanonymous/ComfyUI/blob/master/LICENSE";
+    public override string LicenseUrl => "https://github.com/Comfy-Org/ComfyUI/blob/master/LICENSE";
     public override string Blurb => "A powerful and modular stable diffusion GUI and backend";
     public override string LaunchCommand => "main.py";
 
@@ -521,17 +523,7 @@ public class ComfyUI(
         }
         else
         {
-            var config = new PipInstallConfig
-            {
-                RequirementsFilePaths = ["requirements.txt"],
-                ExtraPipArgs = ["numpy<2"],
-                TorchaudioVersion = " ", // Request torchaudio without a specific version
-                CudaIndex = isLegacyNvidia ? "cu126" : "cu130",
-                RocmIndex = "rocm7.2",
-                XpuIndex = "xpu",
-                UpgradePackages = true,
-                PostInstallPipArgs = ["typing-extensions>=4.15.0"],
-            };
+            var config = GetStandardInstallConfig(venvRunner.Version, isLegacyNvidia);
 
             await StandardPipInstallProcessAsync(
                     venvRunner,
@@ -545,56 +537,7 @@ public class ComfyUI(
                 .ConfigureAwait(false);
         }
 
-        if (!(Compat.IsWindows && torchIndex == TorchIndex.Rocm && HasWindowsRocmSupport()))
-        {
-            try
-            {
-                var sageVersion = await venvRunner.PipShow("sageattention").ConfigureAwait(false);
-                var torchVersion = await venvRunner.PipShow("torch").ConfigureAwait(false);
-
-                if (torchVersion is not null && sageVersion is not null)
-                {
-                    var version = torchVersion.Version;
-                    var plusPos = version.IndexOf('+');
-                    var index = plusPos >= 0 ? version[(plusPos + 1)..] : string.Empty;
-                    var versionWithoutIndex = plusPos >= 0 ? version[..plusPos] : version;
-
-                    if (
-                        !sageVersion.Version.Contains(index)
-                        || !sageVersion.Version.Contains(versionWithoutIndex)
-                    )
-                    {
-                        progress?.Report(
-                            new ProgressReport(-1f, "Updating SageAttention...", isIndeterminate: true)
-                        );
-
-                        var step = new InstallSageAttentionStep(
-                            downloadService,
-                            prerequisiteHelper,
-                            pyInstallationManager
-                        )
-                        {
-                            InstalledPackage = installedPackage,
-                            IsBlackwellGpu =
-                                SettingsManager.Settings.PreferredGpu?.IsBlackwellGpu()
-                                ?? HardwareHelper.HasBlackwellGpu(),
-                            WorkingDirectory = installLocation,
-                            EnvironmentVariables = GetEnvVars(
-                                venvRunner.EnvironmentVariables,
-                                installLocation,
-                                installedPackage
-                            ),
-                        };
-
-                        await step.ExecuteAsync(progress).ConfigureAwait(false);
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                Logger.Error(e, "Failed to verify/update SageAttention after installation");
-            }
-        }
+        await UpdateSageAttentionAsync(venvRunner, torchIndex, progress).ConfigureAwait(false);
 
         // Install Comfy Manager (built-in to ComfyUI)
         try
@@ -620,6 +563,22 @@ public class ComfyUI(
         }
 
         progress?.Report(new ProgressReport(1, "Install complete", isIndeterminate: false));
+    }
+
+    internal PipInstallConfig GetStandardInstallConfig(PyVersion pythonVersion, bool isLegacyNvidia)
+    {
+        return new PipInstallConfig
+        {
+            RequirementsFilePaths = ["requirements.txt"],
+            // NumPy 1.x supports Python through 3.12; older torch builds need its ABI.
+            ExtraPipArgs = pythonVersion < new PyVersion(3, 13, 0) ? ["numpy<2"] : [],
+            TorchaudioVersion = " ", // Request torchaudio without a specific version
+            CudaIndex = isLegacyNvidia ? "cu126" : "cu130",
+            RocmIndex = "rocm7.2",
+            XpuIndex = "xpu",
+            UpgradePackages = true,
+            PostInstallPipArgs = ["typing-extensions>=4.15.0"],
+        };
     }
 
     public override async Task RunPackage(
@@ -1005,6 +964,44 @@ public class ComfyUI(
                     progress?.Report(new ProgressReport(1f, $"Ran launch.py for {installedDir.Name}"));
                 }
             }
+        }
+    }
+
+    internal async Task UpdateSageAttentionAsync(
+        IPyVenvRunner venvRunner,
+        TorchIndex torchIndex,
+        IProgress<ProgressReport>? progress = null
+    )
+    {
+        if (Compat.IsWindows && torchIndex == TorchIndex.Rocm && HasWindowsRocmSupport())
+            return;
+
+        try
+        {
+            var sageVersion = await venvRunner.PipShow("sageattention").ConfigureAwait(false);
+            var torchVersion = await venvRunner.PipShow("torch").ConfigureAwait(false);
+
+            if (torchVersion is not null && sageVersion is not null)
+            {
+                if (!SageWheelService.IsCompatibleSageAttention(sageVersion.Version, torchVersion.Version))
+                {
+                    progress?.Report(
+                        new ProgressReport(-1f, "Updating SageAttention...", isIndeterminate: true)
+                    );
+
+                    var gpuInfo =
+                        SettingsManager.Settings.PreferredGpu
+                        ?? HardwareHelper.IterGpuInfo().FirstOrDefault(x => x.IsNvidia);
+
+                    await PipWheelService
+                        .InstallSageAttentionAsync(venvRunner, gpuInfo, progress)
+                        .ConfigureAwait(false);
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            Logger.Error(e, "Failed to verify/update SageAttention after installation");
         }
     }
 

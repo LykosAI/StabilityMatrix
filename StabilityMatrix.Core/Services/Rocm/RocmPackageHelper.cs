@@ -86,6 +86,8 @@ public class RocmPackageHelper : IRocmPackageHelper
             IsSupported = true,
             SelectedGpu = state.SelectedGpu,
             RuntimeGfxArch = state.RuntimeGfxArch,
+            AmdDeviceCount = state.AmdDeviceCount,
+            DeviceIndex = state.DeviceIndex,
         };
     }
 
@@ -561,7 +563,13 @@ public class RocmPackageHelper : IRocmPackageHelper
         }
 
         var supportedAmdGpus = amdGpus.Where(RocmSupport.IsSupportedGpu).ToList();
-        var detectedArch = TryDetectLinuxArchitecture();
+        var linuxDevice = TrySelectLinuxDevice();
+        var detectedArch = linuxDevice is null
+            ? null
+            : RocmSupport.TryGetCanonicalArchitecture(linuxDevice.GfxArch);
+        // Prefer the driver's count when it has one, since it counts GPU agents rather than adapters.
+        var driverDeviceCount = RocmArchDetector.Devices.Count;
+        var amdDeviceCount = driverDeviceCount > 0 ? driverDeviceCount : amdGpus.Count;
 
         // The driver can resolve an architecture the adapter-name table has never heard of, so only fail
         // when neither source produced one.
@@ -593,6 +601,8 @@ public class RocmPackageHelper : IRocmPackageHelper
                 : "No supported AMD GFX architecture could be resolved for ROCm.",
             SelectedGpu = selectedGpu,
             RuntimeGfxArch = runtimeGfxArch,
+            AmdDeviceCount = amdDeviceCount,
+            DeviceIndex = linuxDevice?.DeviceIndex,
         };
     }
 
@@ -600,7 +610,7 @@ public class RocmPackageHelper : IRocmPackageHelper
     /// ISA target of the GPU the kernel reports through KFD, or null when KFD is unavailable or reports
     /// nothing supported. The driver's answer takes precedence over the adapter-name table on Linux.
     /// </summary>
-    private static string? TryDetectLinuxArchitecture()
+    private static RocmDetectedDevice? TrySelectLinuxDevice()
     {
         if (!OperatingSystem.IsLinux())
         {
@@ -610,9 +620,8 @@ public class RocmPackageHelper : IRocmPackageHelper
         var supportedDevices = RocmArchDetector
             .Devices.Where(device => RocmSupport.TryGetCanonicalArchitecture(device.GfxArch) is not null)
             .ToList();
-        var selected = RocmArchDetector.SelectPreferred(supportedDevices);
 
-        return selected is null ? null : RocmSupport.TryGetCanonicalArchitecture(selected.GfxArch);
+        return RocmArchDetector.SelectPreferred(supportedDevices);
     }
 
     /// <summary>
@@ -838,8 +847,33 @@ public class RocmPackageHelper : IRocmPackageHelper
         var gfxArch = runtimeContext.RuntimeGfxArch;
 
         ApplyDefaultLaunchEnvironment(environment, gfxArch, options);
+        ApplyDeviceVisibility(environment, runtimeContext);
 
         return environment;
+    }
+
+    /// <summary>
+    /// Pins the runtime to the GPU the helper selected when the machine exposes more than one, so an APU
+    /// that enumerates first cannot become the device an app opens. <c>ROCR_VISIBLE_DEVICES</c> is the
+    /// lowest device filter and the runtime renumbers what remains from zero. Single-GPU machines are
+    /// left alone, as are machines whose selection has no device index.
+    /// </summary>
+    internal static void ApplyDeviceVisibility(
+        IDictionary<string, string> environment,
+        RocmRuntimeContext runtimeContext
+    )
+    {
+        if (runtimeContext.AmdDeviceCount <= 1 || runtimeContext.DeviceIndex is not { } deviceIndex)
+        {
+            return;
+        }
+
+        environment["ROCR_VISIBLE_DEVICES"] = deviceIndex.ToString();
+        Logger.Info(
+            "Pinning ROCm device visibility to device {Index} of {Count}.",
+            deviceIndex,
+            runtimeContext.AmdDeviceCount
+        );
     }
 
     private void ApplyDefaultLaunchEnvironment(

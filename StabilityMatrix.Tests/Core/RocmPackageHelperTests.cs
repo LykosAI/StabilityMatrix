@@ -322,6 +322,60 @@ public class RocmPackageHelperTests
     }
 
     [TestMethod]
+    public void ApplyDeviceVisibility_PinsSelectedDeviceWhenSeveralAmdGpusExist()
+    {
+        var environment = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+        RocmPackageHelper.ApplyDeviceVisibility(
+            environment,
+            new RocmRuntimeContext
+            {
+                IsSupported = true,
+                AmdDeviceCount = 2,
+                DeviceIndex = 1,
+            }
+        );
+
+        Assert.AreEqual("1", environment["ROCR_VISIBLE_DEVICES"]);
+    }
+
+    [TestMethod]
+    public void ApplyDeviceVisibility_LeavesSingleGpuMachinesAlone()
+    {
+        var environment = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+        RocmPackageHelper.ApplyDeviceVisibility(
+            environment,
+            new RocmRuntimeContext
+            {
+                IsSupported = true,
+                AmdDeviceCount = 1,
+                DeviceIndex = 0,
+            }
+        );
+
+        Assert.IsFalse(environment.ContainsKey("ROCR_VISIBLE_DEVICES"));
+    }
+
+    [TestMethod]
+    public void ApplyDeviceVisibility_SkipsWhenThePlatformReportsNoIndex()
+    {
+        var environment = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+        RocmPackageHelper.ApplyDeviceVisibility(
+            environment,
+            new RocmRuntimeContext
+            {
+                IsSupported = true,
+                AmdDeviceCount = 2,
+                DeviceIndex = null,
+            }
+        );
+
+        Assert.IsFalse(environment.ContainsKey("ROCR_VISIBLE_DEVICES"));
+    }
+
+    [TestMethod]
     public void ApplyRocmSdkEnvironmentSanitization_MarksInheritedSdkVariablesForRemoval()
     {
         var environment = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)

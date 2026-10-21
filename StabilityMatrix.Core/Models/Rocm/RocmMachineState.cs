@@ -14,4 +14,10 @@ public class RocmMachineState
     public GpuInfo? SelectedGpu { get; init; }
 
     public string? RuntimeGfxArch { get; init; }
+
+    /// <summary>Number of AMD GPUs the machine exposes, GPU agents only.</summary>
+    public int AmdDeviceCount { get; init; }
+
+    /// <summary>ROCm device index of the selected GPU, when known.</summary>
+    public int? DeviceIndex { get; init; }
 }

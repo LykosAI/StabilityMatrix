@@ -11,9 +11,12 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - The category colour picker now has a palette of preset colours, and each new category picks its own colour from it
 - Added **MOSS Image** (Base and SFT) to Inference, with one-click downloads for its Qwen3.5 9B text encoder and the Flux.2 VAE. Needs an up-to-date ComfyUI
 - Added a **Skip Layer Guidance** addon to the Inference sampler. It starts on MOSS Image's recommended settings and also works with other DiT models like SD 3.5
+### Changed
+- ComfyUI now installs and updates from its current GitHub home, [Comfy-Org/ComfyUI](https://github.com/Comfy-Org/ComfyUI)
 ### Fixed
 - Fixed **Delete** and **Rename** in a category's right-click menu doing nothing
 - Fixed the **Categories** sidebar hiding model counts behind its scrollbar
+- Fixed package version lists and update checks showing an old release as the newest, because startup update checks ran into GitHub's rate limit
 
 ## v2.17.0-pre.2
 > Full technical notes for this release: [docs.lykos.ai/stability-matrix/release-notes/2.17.0-pre.2](https://docs.lykos.ai/stability-matrix/release-notes/2.17.0-pre.2)

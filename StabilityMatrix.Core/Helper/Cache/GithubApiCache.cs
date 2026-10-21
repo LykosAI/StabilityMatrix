@@ -1,4 +1,5 @@
-﻿using Injectio.Attributes;
+﻿using System.Collections.Concurrent;
+using Injectio.Attributes;
 using Microsoft.Extensions.Logging;
 using Octokit;
 using StabilityMatrix.Core.Database;
@@ -24,6 +25,12 @@ public class GithubApiCache(
     /// Lock for thread-safe rate limit state updates
     /// </summary>
     private readonly object rateLimitLock = new();
+
+    /// <summary>
+    /// GitHub requests in flight, by cache key. Callers that miss the cache while a request for the
+    /// same key is running await that request instead of sending their own.
+    /// </summary>
+    private readonly ConcurrentDictionary<string, Lazy<Task>> inFlightRequests = new();
 
     /// <summary>
     /// Checks if we're currently rate limited and should skip API calls
@@ -98,8 +105,17 @@ public class GithubApiCache(
 
         try
         {
-            var allReleases = await githubApi
-                .Repository.Release.GetAll(username, repository)
+            // Newest page only: paging the whole history costs several unauthenticated
+            // requests per repo and exhausts the 60/hour rate limit during startup update checks
+            var allReleases = await RequestOnce(
+                    cacheKey,
+                    () =>
+                        githubApi.Repository.Release.GetAll(
+                            username,
+                            repository,
+                            new ApiOptions { PageSize = 100, PageCount = 1 }
+                        )
+                )
                 .ConfigureAwait(false);
             if (allReleases == null)
             {
@@ -151,8 +167,10 @@ public class GithubApiCache(
 
         try
         {
-            var branches = await githubApi
-                .Repository.Branch.GetAll(username, repository)
+            var branches = await RequestOnce(
+                    cacheKey,
+                    () => githubApi.Repository.Branch.GetAll(username, repository)
+                )
                 .ConfigureAwait(false);
             if (branches == null)
             {
@@ -206,17 +224,20 @@ public class GithubApiCache(
 
         try
         {
-            var commits = await githubApi
-                .Repository.Commit.GetAll(
-                    username,
-                    repository,
-                    new CommitRequest { Sha = branch },
-                    new ApiOptions
-                    {
-                        PageCount = page,
-                        PageSize = perPage,
-                        StartPage = page,
-                    }
+            var commits = await RequestOnce(
+                    cacheKey,
+                    () =>
+                        githubApi.Repository.Commit.GetAll(
+                            username,
+                            repository,
+                            new CommitRequest { Sha = branch },
+                            new ApiOptions
+                            {
+                                PageCount = page,
+                                PageSize = perPage,
+                                StartPage = page,
+                            }
+                        )
                 )
                 .ConfigureAwait(false);
 
@@ -243,6 +264,23 @@ public class GithubApiCache(
         {
             logger.LogWarning(ex, "Failed to get commits from Github API.");
             return cacheEntry?.Commits ?? [];
+        }
+    }
+
+    /// <summary>
+    /// Sends <paramref name="request"/> unless one for <paramref name="cacheKey"/> is already in flight,
+    /// in which case this awaits that one. Its result or exception reaches every caller.
+    /// </summary>
+    private async Task<T> RequestOnce<T>(string cacheKey, Func<Task<T>> request)
+    {
+        var inFlight = inFlightRequests.GetOrAdd(cacheKey, _ => new Lazy<Task>(request));
+        try
+        {
+            return await ((Task<T>)inFlight.Value).ConfigureAwait(false);
+        }
+        finally
+        {
+            inFlightRequests.TryRemove(KeyValuePair.Create(cacheKey, inFlight));
         }
     }
 

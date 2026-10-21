@@ -42,14 +42,4 @@ public interface IPipWheelService
         IProgress<ProgressReport>? progress = null,
         string? version = null
     );
-
-    /// <summary>
-    /// Installs FlashAttention from pre-built wheels.
-    /// Windows only. No-ops on Linux/macOS.
-    /// </summary>
-    Task InstallFlashAttentionAsync(
-        IPyVenvRunner venv,
-        IProgress<ProgressReport>? progress = null,
-        string? version = null
-    );
 }

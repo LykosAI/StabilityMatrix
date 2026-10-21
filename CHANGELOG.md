@@ -9,9 +9,12 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Added
 - **Manage Categories** now lets you reorder categories by dragging them, and delete them from the list
 - The category colour picker now has a palette of preset colours, and each new category picks its own colour from it
+### Changed
+- ComfyUI now installs and updates from its current GitHub home, [Comfy-Org/ComfyUI](https://github.com/Comfy-Org/ComfyUI)
 ### Fixed
 - Fixed **Delete** and **Rename** in a category's right-click menu doing nothing
 - Fixed the **Categories** sidebar hiding model counts behind its scrollbar
+- Fixed package version lists and update checks showing an old release as the newest, because startup update checks ran into GitHub's rate limit
 
 ## v2.17.0-pre.2
 > Full technical notes for this release: [docs.lykos.ai/stability-matrix/release-notes/2.17.0-pre.2](https://docs.lykos.ai/stability-matrix/release-notes/2.17.0-pre.2)

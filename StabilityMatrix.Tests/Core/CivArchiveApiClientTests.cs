@@ -10,6 +10,46 @@ namespace StabilityMatrix.Tests.Core;
 public class CivArchiveApiClientTests
 {
     [TestMethod]
+    [DataRow(
+        "/models/2612109?modelVersionId=2932986",
+        "https://civarchive.com/models/2612109?modelVersionId=2932986"
+    )]
+    [DataRow(
+        "/seaart/models/07a9c14c35691c1a7de156a462355bd4/versions/7b9fc01641ec058d815d8e25aaa950ad",
+        "https://civarchive.com/seaart/models/07a9c14c35691c1a7de156a462355bd4/versions/7b9fc01641ec058d815d8e25aaa950ad"
+    )]
+    [DataRow("models/123?modelVersionId=456", "https://civarchive.com/models/123?modelVersionId=456")]
+    [DataRow(
+        "https://huggingface.co/example/model/resolve/main/model.safetensors?download=true",
+        "https://huggingface.co/example/model/resolve/main/model.safetensors?download=true"
+    )]
+    [DataRow("http://example.org/model?download=true", "http://example.org/model?download=true")]
+    [DataRow("//example.org/model?download=true", "https://example.org/model?download=true")]
+    [DataRow("/models/a%20b?name=a%2Fb#files", "https://civarchive.com/models/a%20b?name=a%2Fb#files")]
+    [DataRow("", "https://civarchive.com/")]
+    [DataRow(" ", "https://civarchive.com/")]
+    [DataRow("file:///tmp/model", "file:///tmp/model")]
+    [DataRow("mailto:test@example.org", "mailto:test@example.org")]
+    public void GetAbsoluteUri_ResolvesRoutesAndPreservesExplicitUris(string input, string expected)
+    {
+        var client = CreateClient(
+            new RecordingHandler((_, _) => throw new AssertFailedException("Unexpected HTTP request"))
+        );
+
+        Assert.AreEqual(expected, client.GetAbsoluteUri(input).AbsoluteUri);
+    }
+
+    [TestMethod]
+    public void GetAbsoluteUri_RejectsMalformedAbsoluteUri()
+    {
+        var client = CreateClient(
+            new RecordingHandler((_, _) => throw new AssertFailedException("Unexpected HTTP request"))
+        );
+
+        Assert.ThrowsException<UriFormatException>(() => client.GetAbsoluteUri("http://[invalid"));
+    }
+
+    [TestMethod]
     public void BuildSearchDataPath_UsesDefaultFilterValues()
     {
         var result = CivArchiveApiClient.BuildSearchDataPath("/search", new CivArchiveSearchFilters());

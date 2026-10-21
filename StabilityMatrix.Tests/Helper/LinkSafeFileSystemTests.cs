@@ -164,6 +164,8 @@ public class LinkSafeFileSystemTests
 
     [DataTestMethod]
     [DataRow("diffusion_models")]
+    [DataRow("Diffusion_Models")]
+    [DataRow("z_alias")]
     [DataRow("a_alias")]
     [DataRow("sub", "alias")]
     public void EnumerateFiles_RealFolderShadowedByLink_KeepsRealFolderPaths(params string[] linkSegments)

@@ -75,9 +75,11 @@ public class Wan2GP(
     public override Dictionary<SharedOutputType, IReadOnlyList<string>> SharedOutputFolders =>
         new() { [SharedOutputType.Img2Vid] = ["outputs"] };
 
-    // Wan2GP currently uses Python 3.11 for ROCm and 3.10 for CUDA.
+    // Wan2GP's installer keeps Python 3.10 (torch 2.7.1) only for GTX 10XX, which CUDA 13 dropped.
     public override PyVersion RecommendedPythonVersion =>
-        IsAmdRocm ? Python.PyInstallationManager.Python_3_11_13 : Python.PyInstallationManager.Python_3_10_17;
+        IsLegacyNvidia
+            ? Python.PyInstallationManager.Python_3_10_17
+            : Python.PyInstallationManager.Python_3_11_13;
 
     public override string Disclaimer =>
         IsAmdRocm && Compat.IsWindows
@@ -88,6 +90,9 @@ public class Wan2GP(
     /// Helper property to check if we're using AMD ROCm
     /// </summary>
     private bool IsAmdRocm => GetRecommendedTorchVersion() == TorchIndex.Rocm;
+
+    private bool IsLegacyNvidia =>
+        SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu() ?? HardwareHelper.HasLegacyNvidiaGpu();
 
     private bool HasRocmSupport()
     {
@@ -292,18 +297,10 @@ public class Wan2GP(
         Action<ProcessOutput>? onConsoleOutput
     )
     {
-        var isLegacyNvidia =
-            SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu() ?? HardwareHelper.HasLegacyNvidiaGpu();
+        var isLegacyNvidia = IsLegacyNvidia;
         var isNewerNvidia =
             SettingsManager.Settings.PreferredGpu?.IsAmpereOrNewerGpu()
             ?? HardwareHelper.HasAmpereOrNewerGpu();
-
-        // Platform-specific versions from pinokio torch.js
-        // Windows: torch 2.7.1, Linux: torch 2.7.0 (to match prebuilt attention wheel requirements)
-        var torchVersion = Compat.IsWindows ? "2.7.1" : "2.7.0";
-        var torchvisionVersion = Compat.IsWindows ? "0.22.1" : "0.22.0";
-        var torchaudioVersion = Compat.IsWindows ? "2.7.1" : "2.7.0";
-        var cudaIndex = isLegacyNvidia ? "cu126" : "cu128";
 
         progress?.Report(new ProgressReport(-1f, "Upgrading pip...", isIndeterminate: true));
         await venvRunner.PipInstall("--upgrade pip wheel", onConsoleOutput).ConfigureAwait(false);
@@ -311,6 +308,113 @@ public class Wan2GP(
         // Install requirements directly using -r flag (handles @ URL syntax properly)
         progress?.Report(new ProgressReport(-1f, "Installing requirements...", isIndeterminate: true));
         await venvRunner.PipInstall("-r requirements.txt", onConsoleOutput).ConfigureAwait(false);
+
+        // Mirrors Wan2GP's setup_config.json: Python 3.11+ runs torch 2.10 on CUDA 13, Python 3.10
+        // stays on torch 2.7 (GTX 10XX, and venvs created before Wan2GP moved to 3.11). Every
+        // attention wheel below is built for one of those two stacks.
+        if (!isLegacyNvidia && venvRunner.Version >= new PyVersion(3, 11, 0))
+        {
+            await InstallCuda13StackAsync(venvRunner, isNewerNvidia, progress, onConsoleOutput)
+                .ConfigureAwait(false);
+        }
+        else
+        {
+            await InstallTorch27StackAsync(
+                    venvRunner,
+                    isLegacyNvidia,
+                    isNewerNvidia,
+                    progress,
+                    onConsoleOutput
+                )
+                .ConfigureAwait(false);
+        }
+    }
+
+    private async Task InstallCuda13StackAsync(
+        IPyVenvRunner venvRunner,
+        bool isNewerNvidia,
+        IProgress<ProgressReport>? progress,
+        Action<ProcessOutput>? onConsoleOutput
+    )
+    {
+        // With deps: the CUDA 13 runtime libraries and Linux triton come in as torch dependencies
+        progress?.Report(new ProgressReport(-1f, "Installing PyTorch...", isIndeterminate: true));
+        var torchArgs = new PipInstallArgs()
+            .WithTorch("==2.10.0")
+            .WithTorchVision("==0.25.0")
+            .WithTorchAudio("==2.10.0")
+            .WithTorchExtraIndex("cu130")
+            .AddArg("--force-reinstall");
+
+        await venvRunner.PipInstall(torchArgs, onConsoleOutput).ConfigureAwait(false);
+
+        await venvRunner.PipInstall("hf-xet \"setuptools<70.0.0\"", onConsoleOutput).ConfigureAwait(false);
+
+        if (!isNewerNvidia)
+            return;
+
+        if (Compat.IsWindows)
+        {
+            progress?.Report(new ProgressReport(-1f, "Installing triton-windows...", isIndeterminate: true));
+            await venvRunner
+                .PipInstall("\"triton-windows>=3.6,<3.7\"", onConsoleOutput)
+                .ConfigureAwait(false);
+
+            // Resolves woct0rdho's post6 cu130torch2.10.0andhigher wheel, the one Wan2GP installs
+            await PipWheelService
+                .InstallSageAttentionAsync(venvRunner, SettingsManager.Settings.PreferredGpu, progress)
+                .ConfigureAwait(false);
+
+            // Wan2GP only publishes this wheel for cp311
+            if (venvRunner.Version.Minor == 11)
+            {
+                progress?.Report(
+                    new ProgressReport(-1f, "Installing Flash Attention...", isIndeterminate: true)
+                );
+                await venvRunner
+                    .PipInstall(
+                        "https://github.com/deepbeepmeep/kernels/releases/download/Flash2/flash_attn-2.8.3-cp311-cp311-win_amd64.whl",
+                        onConsoleOutput
+                    )
+                    .ConfigureAwait(false);
+            }
+        }
+        else if (Compat.IsLinux)
+        {
+            // Wan2GP's SageAttention fork (CUDA graph capable kernels); PyPI's sageattention is 1.x.
+            // Flash Attention is skipped: Wan2GP's Linux installer builds it from source.
+            if (venvRunner.Version.Minor is >= 10 and <= 12)
+            {
+                var py = $"cp3{venvRunner.Version.Minor}";
+                progress?.Report(
+                    new ProgressReport(-1f, "Installing SageAttention...", isIndeterminate: true)
+                );
+                await venvRunner
+                    .PipInstall(
+                        $"https://github.com/deepbeepmeep/SageAttention/releases/download/v2.2.0-linux.cg1/sageattention-2.2.0+cu130torch2.10.0.cg1-{py}-{py}-linux_x86_64.whl",
+                        onConsoleOutput
+                    )
+                    .ConfigureAwait(false);
+            }
+
+            await venvRunner.PipInstall("numpy==2.1.2", onConsoleOutput).ConfigureAwait(false);
+        }
+    }
+
+    private async Task InstallTorch27StackAsync(
+        IPyVenvRunner venvRunner,
+        bool isLegacyNvidia,
+        bool isNewerNvidia,
+        IProgress<ProgressReport>? progress,
+        Action<ProcessOutput>? onConsoleOutput
+    )
+    {
+        // Platform-specific versions from pinokio torch.js
+        // Windows: torch 2.7.1, Linux: torch 2.7.0 (to match prebuilt attention wheel requirements)
+        var torchVersion = Compat.IsWindows ? "2.7.1" : "2.7.0";
+        var torchvisionVersion = Compat.IsWindows ? "0.22.1" : "0.22.0";
+        var torchaudioVersion = Compat.IsWindows ? "2.7.1" : "2.7.0";
+        var cudaIndex = isLegacyNvidia ? "cu126" : "cu128";
 
         // Install torch with specific versions and CUDA index (force reinstall to ensure correct version)
         progress?.Report(new ProgressReport(-1f, "Installing PyTorch...", isIndeterminate: true));
@@ -446,6 +550,11 @@ public class Wan2GP(
     {
         await SetupVenv(installLocation, pythonVersion: PyVersion.Parse(installedPackage.PythonVersion))
             .ConfigureAwait(false);
+
+        if (await WarnIfNvidiaDriverBelowCu130MinimumAsync(VenvRunner, onConsoleOutput).ConfigureAwait(false))
+        {
+            return;
+        }
 
         var selectedTorchIndex = installedPackage.PreferredTorchIndex ?? GetRecommendedTorchVersion();
 

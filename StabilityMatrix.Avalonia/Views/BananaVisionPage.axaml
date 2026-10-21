@@ -1339,7 +1339,10 @@
                                             </Style>
                                         </Border.Styles>
                                         <StackPanel MaxWidth="520">
-                                            <controls:MarkdownViewer CustomCss=".markdown-body { padding: 0; word-break: break-word; overflow-wrap: break-word; white-space: normal; max-width: 100%; box-sizing: border-box; }" Text="{Binding Text}" />
+                                            <controls:MarkdownViewer
+                                                CustomCss=".markdown-body { padding: 0; word-break: break-word; overflow-wrap: break-word; white-space: normal; max-width: 100%; box-sizing: border-box; } .markdown-body code { font-family: Consolas, monospace; font-size: 13px; }"
+                                                FitToContent="True"
+                                                Text="{Binding Text}" />
                                             <TextBlock
                                                 Margin="0,6,0,0"
                                                 HorizontalAlignment="Right"
@@ -1658,20 +1661,16 @@
                                                 Text="{Binding ThinkingPreview}" />
 
                                             <!--
-                                                Expanded content. HtmlPanel measures its own
-                                                width slightly aggressively, so we add a 12px
-                                                right padding inside the markdown body — this
-                                                ensures text always has a gutter between the
-                                                last glyph and the vertical scrollbar regardless
-                                                of how Avalonia's ScrollBar layout reserves
-                                                space.
+                                                Expanded content. The 12px right padding inside
+                                                the markdown body keeps text clear of the
+                                                vertical scrollbar, which overlays the content.
                                             -->
                                             <ScrollViewer
                                                 MaxHeight="300"
                                                 HorizontalScrollBarVisibility="Disabled"
                                                 IsVisible="{Binding IsExpanded}"
                                                 VerticalScrollBarVisibility="Auto">
-                                                <controls:MarkdownViewer CustomCss=".markdown-body { color: #B0B0C0; font-family: 'Segoe UI', sans-serif; font-size: 12px; line-height: 1.6; padding: 0 12px 0 0; word-wrap: break-word; overflow-wrap: break-word; white-space: normal; } p { margin-top: 0; margin-bottom: 6px; } pre { background-color: #151525; padding: 8px; border-radius: 4px; overflow: auto; } code { background-color: #252535; padding: 2px 4px; border-radius: 3px; font-family: Consolas, monospace; }" Text="{Binding ThinkingContent}" />
+                                                <controls:MarkdownViewer CustomCss=".markdown-body { color: #B0B0C0; font-family: 'Segoe UI', sans-serif; font-size: 12px; line-height: 1.6; padding: 0 12px 0 0; word-wrap: break-word; overflow-wrap: break-word; white-space: normal; } p { margin-top: 0; margin-bottom: 6px; } pre { background-color: #151525; padding: 8px; border-radius: 4px; overflow: auto; } .markdown-body code { background-color: #252535; padding: 2px 4px; border-radius: 3px; font-family: Consolas, monospace; }" Text="{Binding ThinkingContent}" />
                                             </ScrollViewer>
 
                                             <!--  Timestamp  -->

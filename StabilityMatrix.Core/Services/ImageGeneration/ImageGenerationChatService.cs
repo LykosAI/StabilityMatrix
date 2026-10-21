@@ -352,8 +352,14 @@ public class ImageGenerationChatService(
             .Where(p => !string.Equals(p, imagePath, StringComparison.OrdinalIgnoreCase))
             .ToList();
 
-        // Delete the image file
-        if (File.Exists(imagePath))
+        // Delete the image file, but only if Image Lab owns it (never a user's original)
+        if (
+            File.Exists(imagePath)
+            && (
+                IsPathUnderDirectory(imagePath, GetOutputDirectory())
+                || IsPathUnderDirectory(imagePath, GetInputDirectory(message.ConversationId))
+            )
+        )
         {
             try
             {
@@ -810,14 +816,22 @@ public class ImageGenerationChatService(
             throw new InvalidOperationException($"Provider {providerId} not found");
         }
 
-        // Get all messages to find the last user message and build history
+        // The last user message is the prompt and everything before it is history. Responses
+        // after it are the ones being regenerated, so they stay out of the request.
         var allMessages = await GetMessagesAsync(conversationId).ConfigureAwait(false);
+        var lastUserMessage = allMessages.LastOrDefault(m => m.Role == MessageRole.User);
+        if (lastUserMessage == null)
+        {
+            throw new InvalidOperationException("No user message found to retry");
+        }
+
+        var priorMessages = allMessages.Take(allMessages.IndexOf(lastUserMessage)).ToList();
 
         // Check for provider compatibility - thought signature requirements
         string? carryForwardImagePath = null;
         if (provider.RequiresThoughtSignatures)
         {
-            var incompatibleMessages = allMessages
+            var incompatibleMessages = priorMessages
                 .Where(m =>
                     m.Role == MessageRole.Assistant
                     && !string.IsNullOrEmpty(m.ImagePath)
@@ -828,7 +842,7 @@ public class ImageGenerationChatService(
             if (incompatibleMessages.Count > 0)
             {
                 // Find the last assistant message with an image to carry forward
-                var lastAssistantImage = allMessages
+                var lastAssistantImage = priorMessages
                     .Where(m => m.Role == MessageRole.Assistant && !string.IsNullOrEmpty(m.ImagePath))
                     .OrderByDescending(m => m.Timestamp)
                     .FirstOrDefault();
@@ -849,20 +863,13 @@ public class ImageGenerationChatService(
             }
         }
 
-        // Find the last user message
-        var lastUserMessage = allMessages.LastOrDefault(m => m.Role == MessageRole.User);
-        if (lastUserMessage == null)
-        {
-            throw new InvalidOperationException("No user message found to retry");
-        }
-
-        // Build conversation history (everything except the last user message)
+        // Build conversation history (everything before the last user message)
         // If we're carrying forward an image, skip the incompatible history
         var conversationHistory = new List<ConversationMessage>();
 
         if (string.IsNullOrEmpty(carryForwardImagePath))
         {
-            foreach (var m in allMessages.Where(msg => msg.Id != lastUserMessage.Id))
+            foreach (var m in priorMessages)
             {
                 var messageImagePaths = GetMessageImagePaths(m).Where(File.Exists).ToList();
 

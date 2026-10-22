@@ -79,6 +79,13 @@ public sealed partial class InferenceWorkflowProfile
     /// <summary>Whether the profile shows the Shift control.</summary>
     public bool UsesShift => UsesAuraFlowShift || UsesSd3ModelSamplingShift;
 
+    /// <summary>
+    /// The profile whose latent, sampler path and shift node a workflow follows: this profile,
+    /// or for <see cref="Custom"/> the built-in profile that owns <paramref name="clipType"/>.
+    /// </summary>
+    public InferenceWorkflowProfile ForSampling(string? clipType) =>
+        this == Custom ? ForClipType(clipType) ?? Custom : this;
+
     public override string ToString() => DisplayName;
 }
 

@@ -255,12 +255,17 @@ public sealed partial class InferenceWorkflowProfile
             VaeCompanion = FluxVaeCompanion,
         };
 
+    // Custom takes its sampling from the built-in profile that owns the selected clip type
+    // (see ForSampling). These flags cover clip types no built-in profile owns (sd3, chroma,
+    // wan, ...).
     public static InferenceWorkflowProfile Custom { get; } =
         new()
         {
             Key = "Custom",
             DisplayName = "Custom",
             LegacyValue = 8,
+            Latent = LatentType.Sd3,
+            UsesFluxGuidance = true,
         };
 
     public static InferenceWorkflowProfile QwenImage { get; } =
@@ -370,6 +375,14 @@ public sealed partial class InferenceWorkflowProfile
 
     public static InferenceWorkflowProfile FromLegacyValue(int value) =>
         All.FirstOrDefault(p => p.LegacyValue == value) ?? Auto;
+
+    /// <summary>
+    /// The built-in profile that owns a ComfyUI clip type, or null when none does. Profiles that
+    /// share a clip type (Z-Image Base and Turbo, Krea 2 Turbo and Raw) sample the same way, so
+    /// the first match stands for all of them.
+    /// </summary>
+    public static InferenceWorkflowProfile? ForClipType(string? clipType) =>
+        clipType is null ? null : All.FirstOrDefault(p => p.ClipType == clipType);
 
     /// <summary>
     /// Detects the workflow profile for a model. CivitAI BaseModel tags win over filename

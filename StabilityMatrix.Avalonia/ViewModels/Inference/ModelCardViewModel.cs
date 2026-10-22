@@ -182,7 +182,7 @@ public partial class ModelCardViewModel(
         nameof(IsSd3Clip),
         nameof(IsHiDreamClip),
         nameof(ResolvedWorkflowProfile),
-        nameof(IsCustomWorkflow),
+        nameof(SamplingProfile),
         nameof(IsHiDreamWorkflow),
         nameof(ShowShift),
         nameof(ShowEncoderTypeSelection),
@@ -196,7 +196,7 @@ public partial class ModelCardViewModel(
     [ObservableProperty]
     [NotifyPropertyChangedFor(
         nameof(ResolvedWorkflowProfile),
-        nameof(IsCustomWorkflow),
+        nameof(SamplingProfile),
         nameof(IsHiDreamWorkflow),
         nameof(ShowShift),
         nameof(ShowEncoderTypeSelection),
@@ -284,10 +284,7 @@ public partial class ModelCardViewModel(
 
     public bool IsSd3Clip => SelectedClipType == "sd3";
     public bool IsHiDreamClip => SelectedClipType == "hidream";
-    public bool IsCustomWorkflow => ResolvedWorkflowProfile == InferenceWorkflowProfile.Custom;
-    public bool IsHiDreamWorkflow =>
-        ResolvedWorkflowProfile.UsesSd3ModelSamplingShift
-        || (IsCustomWorkflow && SelectedClipType == "hidream");
+    public bool IsHiDreamWorkflow => SamplingProfile.UsesSd3ModelSamplingShift;
     public bool IsGguf => SelectedUnetModel?.RelativePath.EndsWith("gguf") ?? false;
 
     /// <summary>
@@ -319,14 +316,9 @@ public partial class ModelCardViewModel(
 
     /// <summary>
     /// Whether to show the Shift control (profiles with a model-sampling shift node, only
-    /// when in UNet mode — or their clip types selected through the Custom profile).
+    /// when in UNet mode).
     /// </summary>
-    public bool ShowShift =>
-        ShowEncoderSection
-        && (
-            ResolvedWorkflowProfile.UsesShift
-            || (IsCustomWorkflow && SelectedClipType is "hidream" or "lumina2" or "qwen_image")
-        );
+    public bool ShowShift => ShowEncoderSection && SamplingProfile.UsesShift;
     public bool ShowEncoderTypeSelection =>
         SelectedWorkflowProfile == InferenceWorkflowProfile.Custom
         || (ShowEncoderSection && SelectedWorkflowProfile != InferenceWorkflowProfile.Auto);
@@ -334,6 +326,14 @@ public partial class ModelCardViewModel(
         SelectedWorkflowProfile == InferenceWorkflowProfile.Auto
             ? InferWorkflowProfile()
             : SelectedWorkflowProfile;
+
+    /// <summary>
+    /// The profile whose latent, sampler path and shift node the workflow follows. Same as
+    /// <see cref="ResolvedWorkflowProfile"/>, except that Custom follows the built-in profile
+    /// that owns <see cref="SelectedClipType"/>.
+    /// </summary>
+    public InferenceWorkflowProfile SamplingProfile => ResolvedWorkflowProfile.ForSampling(SelectedClipType);
+
     public bool HasRecommendedDefaults => ResolvedWorkflowProfile.RecommendedDefaults is not null;
     public bool ShowWorkflowProfileStatus =>
         SelectedWorkflowProfile == InferenceWorkflowProfile.Auto
@@ -1210,7 +1210,7 @@ public partial class ModelCardViewModel(
     private void NotifyWorkflowProfileStateChanged()
     {
         OnPropertyChanged(nameof(ResolvedWorkflowProfile));
-        OnPropertyChanged(nameof(IsCustomWorkflow));
+        OnPropertyChanged(nameof(SamplingProfile));
         OnPropertyChanged(nameof(IsHiDreamWorkflow));
         OnPropertyChanged(nameof(ShowShift));
         OnPropertyChanged(nameof(ShowEncoderTypeSelection));

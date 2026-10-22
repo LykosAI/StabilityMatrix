@@ -254,57 +254,19 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
 
     protected bool IsUnetLoader => ModelCardViewModel.SelectedModelLoader is ModelLoader.Unet;
 
-    protected InferenceWorkflowProfile ResolvedWorkflowProfile => ModelCardViewModel.ResolvedWorkflowProfile;
+    protected InferenceWorkflowProfile SamplingProfile => ModelCardViewModel.SamplingProfile;
 
-    protected bool IsCustomProfile => ResolvedWorkflowProfile == InferenceWorkflowProfile.Custom;
-
-    protected bool IsFlux2Unet =>
-        IsUnetLoader
-        && (
-            ResolvedWorkflowProfile.UsesFlux2Scheduler
-            || (IsCustomProfile && ModelCardViewModel.SelectedClipType is "flux2")
-        );
+    protected bool IsFlux2Unet => IsUnetLoader && SamplingProfile.UsesFlux2Scheduler;
 
     /// <summary>Whether the empty latent is EmptyFlux2LatentImage (Flux.2, MOSS Image).</summary>
-    protected bool UsesFlux2Latent =>
-        IsUnetLoader
-        && (
-            ResolvedWorkflowProfile.Latent == LatentType.Flux2
-            || (IsCustomProfile && ModelCardViewModel.SelectedClipType is "flux2" or "moss_image")
-        );
+    protected bool UsesFlux2Latent => IsUnetLoader && SamplingProfile.Latent == LatentType.Flux2;
 
-    /// <summary>
-    /// Whether the workflow applies ModelSamplingAuraFlow (Z-Image, Qwen Image — or their
-    /// clip types selected through the Custom profile).
-    /// </summary>
-    protected bool UsesAuraFlowModelSampling =>
-        IsUnetLoader
-        && (
-            ResolvedWorkflowProfile.UsesAuraFlowShift
-            || (IsCustomProfile && ModelCardViewModel.SelectedClipType is "lumina2" or "qwen_image")
-        );
+    /// <summary>Whether the workflow applies ModelSamplingAuraFlow (Z-Image, Qwen Image).</summary>
+    protected bool UsesAuraFlowModelSampling => IsUnetLoader && SamplingProfile.UsesAuraFlowShift;
 
-    protected bool UsesSd3Latent =>
-        ResolvedWorkflowProfile.Latent == LatentType.Sd3
-        || (
-            IsCustomProfile
-            && ModelCardViewModel.SelectedClipType
-                is not "stable_diffusion"
-                    and not "flux2"
-                    and not "moss_image"
-        );
+    protected bool UsesSd3Latent => SamplingProfile.Latent == LatentType.Sd3;
 
-    protected bool UsesFluxGuidanceSampler =>
-        ResolvedWorkflowProfile.UsesFluxGuidance
-        || (
-            IsCustomProfile
-            && IsUnetLoader
-            && ModelCardViewModel.SelectedClipType
-                is not "stable_diffusion"
-                    and not "lumina2"
-                    and not "flux2"
-                    and not "moss_image"
-        );
+    protected bool UsesFluxGuidanceSampler => SamplingProfile.UsesFluxGuidance;
 
     protected void ApplyModelSamplingForCurrentWorkflow(ModuleApplyStepEventArgs applyArgs)
     {

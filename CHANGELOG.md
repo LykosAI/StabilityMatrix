@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed the **Categories** sidebar hiding model counts behind its scrollbar
 - Fixed package version lists and update checks showing an old release as the newest, because startup update checks ran into GitHub's rate limit
 - Fixed the **FreeU**, **NRS** and **Discrete Model Sampling** addons making the base model's steps run on the refiner model when a refiner was selected
+- Fixed the **Custom** Inference workflow ignoring CFG and the negative prompt with the `qwen_image` and `krea2` encoder types. They now sample like the **Qwen Image** and **Krea 2** workflows
 
 ## v2.17.0-pre.2
 > Full technical notes for this release: [docs.lykos.ai/stability-matrix/release-notes/2.17.0-pre.2](https://docs.lykos.ai/stability-matrix/release-notes/2.17.0-pre.2)

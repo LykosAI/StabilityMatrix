@@ -5,6 +5,12 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.16.6
+### Changed
+- Updated the bundled Node.js used by AI-Toolkit and InvokeAI to 24.22.1 LTS, which includes the October 2026 Node.js security fixes. Installing or updating AI-Toolkit brings it up to date
+### Security
+- Package installs now check HTTPS certificates against your operating system's certificate store instead of uv's built-in list, so certificates your OS has revoked are rejected. To opt out, set `UV_SYSTEM_CERTS` to `0` in Settings → Environment Variables
+
 ## v2.16.5
 > Full technical notes for this release: [docs.lykos.ai/stability-matrix/release-notes/2.16.5](https://docs.lykos.ai/stability-matrix/release-notes/2.16.5)
 ### Added

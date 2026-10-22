@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using Injectio.Attributes;
 using NLog;
 using StabilityMatrix.Core.Exceptions;
@@ -25,9 +25,21 @@ public class RocmPackageHelper : IRocmPackageHelper
     private static readonly StringComparer EnvComparer = StringComparer.OrdinalIgnoreCase;
 
     private const string RocmSdkDevelPackageName = "rocm-sdk-devel";
-    private static readonly string[] WindowsLaunchNoticeLines =
+
+    // The ROCm torch install only ever needs to move the torch trio. Bundling or upgrading anything
+    // wider lets the resolver re-evaluate transitive dependencies against AMD's feed.
+    private static readonly string[] RocmTorchPackageNames = ["torch", "torchvision", "torchaudio"];
+    private static readonly string[] RocmTorchUpgradePackageArgs = BuildRepeatablePackageArgs(
+        "--upgrade-package",
+        RocmTorchPackageNames
+    );
+    private static readonly string[] RocmTorchReinstallPackageArgs = BuildRepeatablePackageArgs(
+        "--reinstall-package",
+        RocmTorchPackageNames
+    );
+    private static readonly string[] LaunchNoticeLines =
     [
-        "Stability Matrix Windows ROCm Notice: Windows AMD ROCm support is experimental. Please report any issues to Stability Matrix first so it can be determined whether the issue is package-specific.",
+        "Stability Matrix ROCm Notice: AMD ROCm support is experimental. Please report any issues to Stability Matrix first so it can be determined whether the issue is package-specific.",
         "Because this setup may not be officially supported by package developers, only contact upstream support for issues clearly caused by the package itself.",
     ];
 
@@ -40,11 +52,11 @@ public class RocmPackageHelper : IRocmPackageHelper
     public RocmPackageHelper(ISettingsManager settingsManager)
     {
         this.settingsManager = settingsManager;
-        machineState = new Lazy<RocmMachineState>(ResolveWindowsMachineState);
+        machineState = new Lazy<RocmMachineState>(ResolveMachineState);
     }
 
     /// <summary>
-    /// Evaluates the current Windows machine state and returns the resolved ROCm compatibility result.
+    /// Evaluates the current machine state and returns the resolved ROCm compatibility result.
     /// </summary>
     public RocmCompatibilityResult GetCompatibility()
     {
@@ -52,7 +64,7 @@ public class RocmPackageHelper : IRocmPackageHelper
     }
 
     /// <summary>
-    /// Resolves launch-time ROCm runtime details from the current Windows machine state.
+    /// Resolves launch-time ROCm runtime details from the current machine state.
     /// This is used to build helper-managed environment variables for package launch.
     /// </summary>
     private RocmRuntimeContext ResolveRuntimeContext()
@@ -74,6 +86,8 @@ public class RocmPackageHelper : IRocmPackageHelper
             IsSupported = true,
             SelectedGpu = state.SelectedGpu,
             RuntimeGfxArch = state.RuntimeGfxArch,
+            AmdDeviceCount = state.AmdDeviceCount,
+            DeviceIndex = state.DeviceIndex,
         };
     }
 
@@ -101,30 +115,31 @@ public class RocmPackageHelper : IRocmPackageHelper
         return mergedEnvironment;
     }
 
-    private IReadOnlyList<string> GetWindowsLaunchNoticeLines()
+    private IReadOnlyList<string> GetLaunchNoticeLines()
     {
-        return WindowsLaunchNoticeLines;
+        return LaunchNoticeLines;
     }
 
     /// <inheritdoc />
-    public bool ShouldApplyWindowsLaunchEnvironment(TorchIndex selectedTorchIndex)
+    public bool ShouldApplyLaunchEnvironment(TorchIndex selectedTorchIndex)
     {
-        if (!Compat.IsWindows || selectedTorchIndex != TorchIndex.Rocm)
+        if (selectedTorchIndex != TorchIndex.Rocm)
             return false;
         return GetCompatibility().IsCompatible;
     }
 
     /// <inheritdoc />
-    public IReadOnlyList<string> GetWindowsLaunchNoticeLines(TorchIndex selectedTorchIndex)
+    public IReadOnlyList<string> GetLaunchNoticeLines(TorchIndex selectedTorchIndex)
     {
-        return ShouldApplyWindowsLaunchEnvironment(selectedTorchIndex) ? GetWindowsLaunchNoticeLines() : [];
+        return ShouldApplyLaunchEnvironment(selectedTorchIndex) ? GetLaunchNoticeLines() : [];
     }
 
     /// <summary>
-    /// Ensures <c>rocm-sdk-devel</c> is installed from the ROCm multi-arch index.
-    /// It prefers a build whose date token matches the installed ROCm torch build and falls back to the latest available build when no exact match is available.
+    /// Ensures <c>rocm-sdk-devel</c> is installed from the resolved ROCm index, on the same ROCm line as
+    /// the installed torch build. Nightly builds match on their build date token, stable builds on the
+    /// ROCm version in torch's local label, and only when neither matches is the newest build used.
     /// </summary>
-    public async Task EnsureWindowsSdkDevelAsync(
+    public async Task EnsureRocmSdkDevelAsync(
         IPyVenvRunner venvRunner,
         IProgress<ProgressReport>? progress = null,
         Action<ProcessOutput>? onConsoleOutput = null,
@@ -132,70 +147,98 @@ public class RocmPackageHelper : IRocmPackageHelper
     )
     {
         var state = machineState.Value;
-        var multiArchPythonPackageIndexUrl = WindowsRocmSupport.GetMultiArchPythonPackageIndexUrl(
-            state.RuntimeGfxArch
-        );
+        var target = RocmSupport.ResolveTarget(state.RuntimeGfxArch);
+
+        if (!target.SupportsSdkDevel)
+        {
+            Logger.Info(
+                "The {IndexKind} index does not publish {Package}; skipping the SDK devel step.",
+                target.IndexKind,
+                RocmSdkDevelPackageName
+            );
+            return;
+        }
+
+        var indexUrl = target.IndexUrl;
 
         var torchInfo = await venvRunner.PipShow("torch").ConfigureAwait(false);
         if (torchInfo is null)
         {
             throw new InvalidOperationException(
-                "torch is not installed in this environment. Install the Windows ROCm torch build first."
+                "torch is not installed in this environment. Install the ROCm torch build first."
             );
         }
 
-        if (!IsUsableWindowsNativeTorchBuild(torchInfo.Version, null))
+        if (!IsUsableRocmTorchBuild(torchInfo.Version, null))
         {
             throw new InvalidOperationException(
-                $"Installed torch is not a usable Windows ROCm build (detected version: {torchInfo.Version})."
+                $"Installed torch is not a usable ROCm build (detected version: {torchInfo.Version})."
             );
         }
 
         var nightlyBuildDateToken = TryGetNightlyBuildDateToken(torchInfo.Version);
+        var rocmVersion = TryGetRocmVersionLabel(torchInfo.Version);
         var installedRocmSdkDevel = await venvRunner.PipShow(RocmSdkDevelPackageName).ConfigureAwait(false);
+
+        // Already on the right line: a nightly build with the matching date token, or a stable build
+        // matching the ROCm version the torch wheel was compiled against.
         if (
-            !string.IsNullOrWhiteSpace(nightlyBuildDateToken)
-            && HasNightlyBuildDateToken(installedRocmSdkDevel?.Version, nightlyBuildDateToken)
+            (
+                !string.IsNullOrWhiteSpace(nightlyBuildDateToken)
+                && HasNightlyBuildDateToken(installedRocmSdkDevel?.Version, nightlyBuildDateToken)
+            ) || IsRocmSdkDevelMatch(installedRocmSdkDevel?.Version, rocmVersion)
         )
         {
             return;
         }
 
-        var indexResult = await venvRunner
-            .PipIndex(RocmSdkDevelPackageName, multiArchPythonPackageIndexUrl)
-            .ConfigureAwait(false);
+        var indexResult = await venvRunner.PipIndex(RocmSdkDevelPackageName, indexUrl).ConfigureAwait(false);
 
-        var latestVersion = indexResult?.AvailableVersions.FirstOrDefault();
-        var matchingVersion = string.IsNullOrWhiteSpace(nightlyBuildDateToken)
-            ? null
-            : indexResult?.AvailableVersions.FirstOrDefault(version =>
-                HasNightlyBuildDateToken(version, nightlyBuildDateToken)
-            );
-        var versionToInstall = matchingVersion ?? latestVersion;
+        var selection = SelectSdkDevelVersion(
+            indexResult?.AvailableVersions,
+            rocmVersion,
+            nightlyBuildDateToken
+        );
 
-        if (string.IsNullOrWhiteSpace(versionToInstall))
+        if (selection is not { } chosen)
         {
             throw new InvalidOperationException(
-                $"No {RocmSdkDevelPackageName} builds were found on the ROCm multi-arch index."
+                $"No {RocmSdkDevelPackageName} builds were found on the ROCm index."
             );
         }
+
+        var versionToInstall = chosen.Version;
+        var matchingVersion = chosen.IsExactMatch ? versionToInstall : null;
 
         if (!string.IsNullOrWhiteSpace(matchingVersion))
         {
             progress?.Report(
                 new ProgressReport(
                     -1f,
-                    $"Installing {RocmSdkDevelPackageName} {matchingVersion} for Windows ROCm...",
+                    $"Installing {RocmSdkDevelPackageName} {matchingVersion} for ROCm...",
                     isIndeterminate: true
                 )
             );
         }
         else
         {
+            if (!string.IsNullOrWhiteSpace(rocmVersion))
+            {
+                Logger.Warn(
+                    "No {Package} build matches the ROCm {RocmVersion} line of the installed torch "
+                        + "({TorchVersion}); installing {Version} instead. Builds against the development "
+                        + "SDK may then not load in this environment.",
+                    RocmSdkDevelPackageName,
+                    rocmVersion,
+                    torchInfo.Version,
+                    versionToInstall
+                );
+            }
+
             progress?.Report(
                 new ProgressReport(
                     -1f,
-                    $"Falling back to latest available {RocmSdkDevelPackageName} build {versionToInstall} for Windows ROCm...",
+                    $"Falling back to latest available {RocmSdkDevelPackageName} build {versionToInstall} for ROCm...",
                     isIndeterminate: true
                 )
             );
@@ -205,7 +248,7 @@ public class RocmPackageHelper : IRocmPackageHelper
             .PipInstall(
                 new PipInstallArgs()
                     .AddArg("--upgrade")
-                    .AddKeyedArgs("--index-url", ["--index-url", multiArchPythonPackageIndexUrl])
+                    .AddKeyedArgs("--index-url", ["--index-url", indexUrl])
                     .AddArg($"{RocmSdkDevelPackageName}=={versionToInstall}"),
                 onConsoleOutput
             )
@@ -213,17 +256,18 @@ public class RocmPackageHelper : IRocmPackageHelper
     }
 
     /// <summary>
-    /// Builds the standard pip install config for helper-managed Windows ROCm package installs.
+    /// Builds the standard pip install config for helper-managed ROCm package installs.
     /// </summary>
-    public PipInstallConfig BuildWindowsNativeInstallConfig(RocmPackageProfile profile)
+    public PipInstallConfig BuildRocmInstallConfig(RocmPackageProfile profile)
     {
         return profile.InstallConfig with { SkipTorchInstall = true };
     }
 
     /// <summary>
-    /// Installs the ROCm torch wheel set from the multi-arch index and verifies that the resulting torch installation reports usable ROCm metadata.
+    /// Installs the ROCm torch wheel set from the resolved index and verifies that the resulting torch
+    /// installation reports usable ROCm metadata.
     /// </summary>
-    public async Task InstallWindowsNativeTorchAsync(
+    public async Task InstallRocmTorchAsync(
         IPyVenvRunner venvRunner,
         InstalledPackage installedPackage,
         RocmPackageProfile profile,
@@ -236,26 +280,26 @@ public class RocmPackageHelper : IRocmPackageHelper
         if (!state.IsCompatible)
         {
             throw new InvalidOperationException(
-                state.FailureReason ?? "Windows ROCm installation is not supported for the current machine."
+                state.FailureReason ?? "ROCm installation is not supported for the current machine."
             );
         }
 
-        var multiArchDeviceExtra = state.MultiArchDeviceExtra;
+        var target = RocmSupport.ResolveTarget(state.RuntimeGfxArch, profile.Index);
 
-        if (string.IsNullOrWhiteSpace(multiArchDeviceExtra))
+        // AMD's feeds select device code through a per-architecture extra; the upstream PyTorch feeds
+        // either ship one multi-architecture wheel (e.g: 7.2) or explicitly force-installs all device extras (e.g 7.14),
+        // so an index without device extras is still installable.
+        if (target.SupportsDeviceExtras && string.IsNullOrWhiteSpace(target.DeviceExtra))
         {
             throw new InvalidOperationException(
-                $"No Windows ROCm multi-arch device extra is available for '{state.RuntimeGfxArch ?? "unknown"}'."
+                $"No ROCm device package is available for '{state.RuntimeGfxArch ?? "unknown"}' "
+                    + $"on the {target.IndexKind} index."
             );
         }
 
         var installConfig = profile.InstallConfig;
-        var multiArchPythonPackageIndexUrl = WindowsRocmSupport.GetMultiArchPythonPackageIndexUrl(
-            state.RuntimeGfxArch
-        );
-        var usesNightlyIndex = WindowsRocmSupport.UsesNightlyMultiArchPythonPackageIndex(
-            state.RuntimeGfxArch
-        );
+        var indexUrl = target.IndexUrl;
+        var usesNightlyIndex = target.IndexKind == RocmIndexKind.AmdNightly;
 
         // AMD's torchvision wheels carry no torch constraint, and the matched build may be published only
         // as a pre-release that pip skips. Resolve the newest paired torch/torchvision and pin both.
@@ -263,8 +307,8 @@ public class RocmPackageHelper : IRocmPackageHelper
 
         var torchResolution = await ResolveTorchInstallAsync(
                 venvRunner,
-                multiArchPythonPackageIndexUrl,
-                multiArchDeviceExtra,
+                indexUrl,
+                target.DeviceExtra,
                 usesNightlyIndex,
                 onConsoleOutput,
                 cancellationToken
@@ -275,12 +319,12 @@ public class RocmPackageHelper : IRocmPackageHelper
 
         var torchArgs = ApplyRocmTorchInstallOptions(
             BuildRocmTorchArgs(
-                multiArchPythonPackageIndexUrl,
+                indexUrl,
                 torchResolution.TorchSpecifier,
                 torchResolution.TorchvisionSpecifier
             ),
             installConfig,
-            installedPackage
+            installedPackage.PipOverrides
         );
 
         if (torchResolution.AllowPrerelease)
@@ -304,49 +348,76 @@ public class RocmPackageHelper : IRocmPackageHelper
             await venvRunner.PipInstall(postTorchInstallPipArgs, onConsoleOutput).ConfigureAwait(false);
         }
 
-        await VerifyWindowsNativeTorchInstallAsync(venvRunner, onConsoleOutput, cancellationToken)
+        await VerifyRocmTorchInstallAsync(venvRunner, onConsoleOutput, cancellationToken)
             .ConfigureAwait(false);
+
+        // A development SDK that is already present has to follow the torch build it sits beside, or the
+        // headers and libraries come from a different ROCm line than the runtime loading them.
+        if (await venvRunner.PipShow(RocmSdkDevelPackageName).ConfigureAwait(false) is not null)
+        {
+            await EnsureRocmSdkDevelAsync(venvRunner, progress, onConsoleOutput, cancellationToken)
+                .ConfigureAwait(false);
+        }
     }
 
     /// <summary>
     /// Applies the profile's upgrade/reinstall flags and any user pip overrides to a ROCm torch install command.
+    /// Scope is deliberately limited to the torch trio. A blanket <c>--upgrade</c> lets the resolver move
+    /// transitive dependencies against AMD's feed, numpy foremost, where the only build may be
+    /// numpy 2.5.2 (cp312+). A blanket <c>--force-reinstall</c> reinstalls the whole graph for the same reason.
+    /// Packages that must follow the torch build, amd-torch-device-gfx* and triton, are exact-pinned by the
+    /// wheel metadata, so they are still replaced to satisfy the resolved pin.
     /// </summary>
-    private static PipInstallArgs ApplyRocmTorchInstallOptions(
+    internal static PipInstallArgs ApplyRocmTorchInstallOptions(
         PipInstallArgs args,
         PipInstallConfig installConfig,
-        InstalledPackage installedPackage
+        IEnumerable<PipPackageSpecifierOverride>? pipOverrides
     )
     {
         if (installConfig.UpgradePackages)
         {
-            args = args.AddArg("--upgrade");
+            args = args.AddKeyedArgs("--upgrade-package", RocmTorchUpgradePackageArgs);
         }
 
         if (installConfig.ForceReinstallTorch)
         {
-            args = args.AddArg("--force-reinstall");
+            args = args.AddKeyedArgs("--reinstall-package", RocmTorchReinstallPackageArgs);
         }
 
-        if (installedPackage.PipOverrides != null)
+        if (pipOverrides != null)
         {
-            args = args.WithUserOverrides(installedPackage.PipOverrides);
+            args = args.WithUserOverrides(pipOverrides.ToList());
         }
 
         return args;
     }
 
     /// <summary>
+    /// Expands a repeatable flag so each package gets its own <c>flag value</c> pair.
+    /// </summary>
+    private static string[] BuildRepeatablePackageArgs(string flag, IEnumerable<string> packages) =>
+        packages.SelectMany(package => new[] { flag, package }).ToArray();
+
+    /// <summary>
     /// Builds the pip args for the resolved torch/torchvision pair. The specs are keyed so a user
     /// override replaces the pin instead of being appended next to it (which pip cannot satisfy).
     /// </summary>
+    /// <summary>
+    /// Requirement form for a torch package on the resolved index: a per-architecture extra on AMD's
+    /// feeds, a plain requirement on the upstream PyTorch feeds, which ship one multi-architecture wheel
+    /// or all supported device libraries.
+    /// </summary>
+    internal static string BuildTorchSpecifier(string packageName, string? deviceExtra) =>
+        string.IsNullOrWhiteSpace(deviceExtra) ? packageName : $"{packageName}[{deviceExtra}]";
+
     internal static PipInstallArgs BuildRocmTorchArgs(
-        string multiArchPythonPackageIndexUrl,
+        string indexUrl,
         string torchSpecifier,
         string torchvisionSpecifier
     )
     {
         return new PipInstallArgs()
-            .AddKeyedArgs("--index-url", ["--index-url", multiArchPythonPackageIndexUrl])
+            .AddKeyedArgs("--index-url", ["--index-url", indexUrl])
             .AddArg(new Argument(key: "torch", value: torchSpecifier))
             .AddArg(new Argument(key: "torchvision", value: torchvisionSpecifier))
             .AddArg("torchaudio");
@@ -368,27 +439,27 @@ public class RocmPackageHelper : IRocmPackageHelper
     /// </summary>
     private async Task<TorchInstallResolution> ResolveTorchInstallAsync(
         IPyVenvRunner venvRunner,
-        string multiArchPythonPackageIndexUrl,
-        string multiArchDeviceExtra,
+        string indexUrl,
+        string? deviceExtra,
         bool usesNightlyIndex,
         Action<ProcessOutput>? onConsoleOutput,
         CancellationToken cancellationToken
     )
     {
-        var torchSpecifierBase = $"torch[{multiArchDeviceExtra}]";
-        var torchvisionSpecifierBase = $"torchvision[{multiArchDeviceExtra}]";
+        var torchSpecifierBase = BuildTorchSpecifier("torch", deviceExtra);
+        var torchvisionSpecifierBase = BuildTorchSpecifier("torchvision", deviceExtra);
 
         try
         {
             // torch: finals only on the stable channel, pre/dev builds on the nightly channel.
             var torchIndex = await venvRunner
-                .PipIndex("torch", multiArchPythonPackageIndexUrl, includePrerelease: usesNightlyIndex)
+                .PipIndex("torch", indexUrl, includePrerelease: usesNightlyIndex)
                 .ConfigureAwait(false);
             cancellationToken.ThrowIfCancellationRequested();
 
             // torchvision: allow pre-releases so the matched alpha (e.g. 0.29.0a0) is visible.
             var torchvisionIndex = await venvRunner
-                .PipIndex("torchvision", multiArchPythonPackageIndexUrl, includePrerelease: true)
+                .PipIndex("torchvision", indexUrl, includePrerelease: true)
                 .ConfigureAwait(false);
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -506,7 +577,7 @@ public class RocmPackageHelper : IRocmPackageHelper
         };
     }
 
-    private RocmMachineState ResolveWindowsMachineState()
+    private RocmMachineState ResolveMachineState()
     {
         if (settingsManager.Settings.PreferredGpu is { } preferredGpu && !preferredGpu.IsAmd)
         {
@@ -529,21 +600,34 @@ public class RocmPackageHelper : IRocmPackageHelper
             };
         }
 
-        var supportedAmdGpus = amdGpus.Where(WindowsRocmSupport.IsSupportedGpu).ToList();
-        if (supportedAmdGpus.Count == 0)
+        var supportedAmdGpus = amdGpus.Where(RocmSupport.IsSupportedGpu).ToList();
+        var linuxDevice = TrySelectLinuxDevice();
+        var detectedArch = linuxDevice is null
+            ? null
+            : RocmSupport.TryGetCanonicalArchitecture(linuxDevice.GfxArch);
+        // Prefer the driver's count when it has one, since it counts GPU agents rather than adapters.
+        var driverDeviceCount = RocmArchDetector.Devices.Count;
+        var amdDeviceCount = driverDeviceCount > 0 ? driverDeviceCount : amdGpus.Count;
+
+        // The driver can resolve an architecture the adapter-name table has never heard of, so only fail
+        // when neither source produced one.
+        if (supportedAmdGpus.Count == 0 && detectedArch is null)
         {
             return new RocmMachineState
             {
                 IsCompatible = false,
-                FailureReason = "No AMD GPU with a supported Windows ROCm architecture was detected.",
+                FailureReason = "No AMD GPU with a supported ROCm architecture was detected.",
             };
         }
 
         var selectedGpu =
             TryResolvePreferredAmdGpu(supportedAmdGpus, settingsManager.Settings.PreferredGpu)
-            ?? supportedAmdGpus.First();
+            ?? SelectPreferredGpu(supportedAmdGpus)
+            ?? SelectPreferredGpu(amdGpus)
+            ?? amdGpus[0];
         var runtimeGfxArch =
-            WindowsRocmSupport.TryGetCanonicalArchitecture(selectedGpu.GetAmdGfxArch())
+            detectedArch
+            ?? RocmSupport.TryGetCanonicalArchitecture(selectedGpu.GetAmdGfxArch())
             ?? GetSupportedFallbackGfxArch(supportedAmdGpus);
         var isCompatible = !string.IsNullOrWhiteSpace(runtimeGfxArch);
 
@@ -555,9 +639,35 @@ public class RocmPackageHelper : IRocmPackageHelper
                 : "No supported AMD GFX architecture could be resolved for ROCm.",
             SelectedGpu = selectedGpu,
             RuntimeGfxArch = runtimeGfxArch,
-            MultiArchDeviceExtra = WindowsRocmSupport.TryGetMultiArchDeviceExtra(runtimeGfxArch),
+            AmdDeviceCount = amdDeviceCount,
+            DeviceIndex = linuxDevice?.DeviceIndex,
         };
     }
+
+    /// <summary>
+    /// ISA target of the GPU the kernel reports through KFD, or null when KFD is unavailable or reports
+    /// nothing supported. The driver's answer takes precedence over the adapter-name table on Linux.
+    /// </summary>
+    private static RocmDetectedDevice? TrySelectLinuxDevice()
+    {
+        if (!OperatingSystem.IsLinux())
+        {
+            return null;
+        }
+
+        var supportedDevices = RocmArchDetector
+            .Devices.Where(device => RocmSupport.TryGetCanonicalArchitecture(device.GfxArch) is not null)
+            .ToList();
+
+        return RocmArchDetector.SelectPreferred(supportedDevices);
+    }
+
+    /// <summary>
+    /// Picks between candidate adapters when the user has no preference: the one with the most memory,
+    /// which separates a discrete card from an APU's shared carveout.
+    /// </summary>
+    internal static GpuInfo? SelectPreferredGpu(IEnumerable<GpuInfo> candidates) =>
+        candidates.OrderByDescending(gpu => gpu.MemoryBytes).FirstOrDefault();
 
     /// <summary>
     /// Returns AMD GPUs from Stability Matrix's internal hardware model.
@@ -600,15 +710,15 @@ public class RocmPackageHelper : IRocmPackageHelper
     private static string? GetSupportedFallbackGfxArch(IEnumerable<GpuInfo> availableGpus)
     {
         return availableGpus
-            .Where(WindowsRocmSupport.IsSupportedGpu)
-            .Select(gpu => WindowsRocmSupport.TryGetCanonicalArchitecture(gpu.GetAmdGfxArch()))
-            .FirstOrDefault(WindowsRocmSupport.IsSupportedArchitecture);
+            .Where(RocmSupport.IsSupportedGpu)
+            .Select(gpu => RocmSupport.TryGetCanonicalArchitecture(gpu.GetAmdGfxArch()))
+            .FirstOrDefault(RocmSupport.IsSupportedArchitecture);
     }
 
     /// <summary>
     /// Verifies that the installed torch build still reports usable ROCm metadata after helper-managed installs complete.
     /// </summary>
-    private static async Task VerifyWindowsNativeTorchInstallAsync(
+    private static async Task VerifyRocmTorchInstallAsync(
         IPyVenvRunner venvRunner,
         Action<ProcessOutput>? onConsoleOutput,
         CancellationToken cancellationToken
@@ -619,7 +729,7 @@ public class RocmPackageHelper : IRocmPackageHelper
         var torchInfo = await venvRunner.PipShow("torch").ConfigureAwait(false);
         if (torchInfo is null)
         {
-            throw new InvalidOperationException("torch was not installed after Windows ROCm setup.");
+            throw new InvalidOperationException("torch was not installed after ROCm setup.");
         }
 
         var verificationResult = await venvRunner
@@ -672,14 +782,14 @@ public class RocmPackageHelper : IRocmPackageHelper
             var hipVersion = root.TryGetProperty("hip", out var hipElement) ? hipElement.GetString() : null;
             var cudaAvailable = root.TryGetProperty("cuda", out var cudaElement) && cudaElement.GetBoolean();
 
-            if (!IsUsableWindowsNativeTorchBuild(version, hipVersion))
+            if (!IsUsableRocmTorchBuild(version, hipVersion))
             {
                 throw new InvalidOperationException(
                     $"Installed torch is not a usable ROCm build. Verification output: {verificationOutput}"
                 );
             }
 
-            // AMD's torchvision wheels declare no torch version constraint, so an ABI-mismatched pair only
+            // If AMD's torchvision wheels declare no torch version constraint, so an ABI-mismatched pair only
             // fails at import time. Importing it here surfaces that as an install failure instead of a
             // confusing runtime error later.
             if (string.IsNullOrWhiteSpace(torchvisionVersion))
@@ -706,7 +816,7 @@ public class RocmPackageHelper : IRocmPackageHelper
         }
     }
 
-    internal static bool IsUsableWindowsNativeTorchBuild(string? version, string? hipVersion)
+    internal static bool IsUsableRocmTorchBuild(string? version, string? hipVersion)
     {
         if (!string.IsNullOrWhiteSpace(hipVersion))
             return true;
@@ -737,6 +847,87 @@ public class RocmPackageHelper : IRocmPackageHelper
         return !string.IsNullOrWhiteSpace(version)
             && !string.IsNullOrWhiteSpace(nightlyBuildDateToken)
             && version.Contains($"dev{nightlyBuildDateToken}", StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// ROCm version a torch build was compiled against, taken from its local label: 2.14.0+rocm10.0.0
+    /// becomes 10.0.0. Returns null when the build carries no rocm local label.
+    /// </summary>
+    internal static string? TryGetRocmVersionLabel(string? torchVersion)
+    {
+        if (string.IsNullOrWhiteSpace(torchVersion))
+        {
+            return null;
+        }
+
+        var plusIndex = torchVersion.IndexOf('+');
+        if (plusIndex < 0 || plusIndex == torchVersion.Length - 1)
+        {
+            return null;
+        }
+
+        var localLabel = torchVersion[(plusIndex + 1)..].Trim();
+        const string prefix = "rocm";
+        if (!localLabel.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        var version = localLabel[prefix.Length..].Trim();
+        return version.Length == 0 ? null : version;
+    }
+
+    /// <summary>True when a rocm-sdk-devel build sits on the given ROCm version line.</summary>
+    internal static bool IsRocmSdkDevelMatch(string? sdkDevelVersion, string? rocmVersion)
+    {
+        return !string.IsNullOrWhiteSpace(sdkDevelVersion)
+            && !string.IsNullOrWhiteSpace(rocmVersion)
+            && string.Equals(sdkDevelVersion.Trim(), rocmVersion.Trim(), StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>A rocm-sdk-devel build to install, and whether it matched the torch build exactly.</summary>
+    internal readonly record struct SdkDevelSelection(string Version, bool IsExactMatch);
+
+    /// <summary>
+    /// Chooses the rocm-sdk-devel build for a torch install: the nightly build date token first, then the
+    /// ROCm line of the torch wheel, and the newest published build only when neither matches.
+    /// </summary>
+    internal static SdkDevelSelection? SelectSdkDevelVersion(
+        IReadOnlyList<string>? availableVersions,
+        string? rocmVersion,
+        string? nightlyBuildDateToken
+    )
+    {
+        if (availableVersions is null || availableVersions.Count == 0)
+        {
+            return null;
+        }
+
+        if (!string.IsNullOrWhiteSpace(nightlyBuildDateToken))
+        {
+            var nightly = availableVersions.FirstOrDefault(version =>
+                HasNightlyBuildDateToken(version, nightlyBuildDateToken)
+            );
+
+            if (nightly is not null)
+            {
+                return new SdkDevelSelection(nightly, true);
+            }
+        }
+
+        if (!string.IsNullOrWhiteSpace(rocmVersion))
+        {
+            var exact = availableVersions.FirstOrDefault(version =>
+                IsRocmSdkDevelMatch(version, rocmVersion)
+            );
+
+            if (exact is not null)
+            {
+                return new SdkDevelSelection(exact, true);
+            }
+        }
+
+        return new SdkDevelSelection(availableVersions[0], false);
     }
 
     internal static string? TryExtractJsonObject(string output)
@@ -775,8 +966,33 @@ public class RocmPackageHelper : IRocmPackageHelper
         var gfxArch = runtimeContext.RuntimeGfxArch;
 
         ApplyDefaultLaunchEnvironment(environment, gfxArch, options);
+        ApplyDeviceVisibility(environment, runtimeContext);
 
         return environment;
+    }
+
+    /// <summary>
+    /// Pins the runtime to the GPU the helper selected when the machine exposes more than one, so an APU
+    /// that enumerates first cannot become the device an app opens. <c>ROCR_VISIBLE_DEVICES</c> is the
+    /// lowest device filter and the runtime renumbers what remains from zero. Single-GPU machines are
+    /// left alone, as are machines whose selection has no device index.
+    /// </summary>
+    internal static void ApplyDeviceVisibility(
+        IDictionary<string, string> environment,
+        RocmRuntimeContext runtimeContext
+    )
+    {
+        if (runtimeContext.AmdDeviceCount <= 1 || runtimeContext.DeviceIndex is not { } deviceIndex)
+        {
+            return;
+        }
+
+        environment["ROCR_VISIBLE_DEVICES"] = deviceIndex.ToString();
+        Logger.Info(
+            "Pinning ROCm device visibility to device {Index} of {Count}.",
+            deviceIndex,
+            runtimeContext.AmdDeviceCount
+        );
     }
 
     private void ApplyDefaultLaunchEnvironment(
@@ -791,12 +1007,12 @@ public class RocmPackageHelper : IRocmPackageHelper
         SetIfNotNull(environment, "MIOPEN_FIND_ENFORCE", options.MiopenFindEnforce);
         SetIfNotNull(environment, "PYTORCH_ALLOC_CONF", options.PyTorchAllocConf);
 
-        if (options.ApplyAotritonExperimental && WindowsRocmSupport.SupportsAotritonExperimental(gfxArch))
+        if (options.ApplyAotritonExperimental && RocmSupport.SupportsAotritonExperimental(gfxArch))
         {
             environment["TORCH_ROCM_AOTRITON_ENABLE_EXPERIMENTAL"] = "1";
         }
 
-        if (options.ApplyLegacySdpFallback && WindowsRocmSupport.IsLegacyArchitecture(gfxArch))
+        if (options.ApplyLegacySdpFallback && RocmSupport.PreferMathSdpaFallback(gfxArch))
         {
             environment["TORCH_BACKENDS_CUDA_FLASH_SDP_ENABLED"] = "0";
             environment["TORCH_BACKENDS_CUDA_MEM_EFF_SDP_ENABLED"] = "0";
@@ -834,6 +1050,13 @@ public class RocmPackageHelper : IRocmPackageHelper
             }
         }
 
+        // Neutralize inherited system ROCm/HIP SDK variables so the venv's self-contained SDK is used.
+        // User overrides below can still intentionally re-set these keys.
+        if (options.SanitizeRocmSdkEnvironment)
+        {
+            ApplyRocmSdkEnvironmentSanitization(merged);
+        }
+
         if (
             options.IncludeUserOverrides
             && settingsManager.Settings.EnvironmentVariables is { Count: > 0 } userOverrides
@@ -846,5 +1069,17 @@ public class RocmPackageHelper : IRocmPackageHelper
         }
 
         return merged;
+    }
+
+    /// <summary>
+    /// Marks the inherited system ROCm/HIP SDK variables for removal from the child process, so the
+    /// venv's self-contained SDK wins over any system install that happens to be on PATH.
+    /// </summary>
+    internal static void ApplyRocmSdkEnvironmentSanitization(IDictionary<string, string> environment)
+    {
+        foreach (var key in RocmSupport.ConflictingRocmEnvironmentVariables)
+        {
+            environment[key] = ProcessRunner.UnsetEnvironmentVariable;
+        }
     }
 }

@@ -7,6 +7,24 @@ namespace StabilityMatrix.Tests.Core;
 public class ProcessRunnerTests
 {
     [TestMethod]
+    public void PrepareEnvironment_RemovesInheritedVariable_WhenUnsetSentinelIsUsed()
+    {
+        var info = new ProcessStartInfo();
+        info.Environment["ROCM_PATH"] = "/opt/rocm";
+        info.Environment["HIP_PATH"] = "/opt/rocm";
+
+        ProcessRunner.PrepareEnvironment(
+            info,
+            "python3",
+            new Dictionary<string, string> { ["ROCM_PATH"] = ProcessRunner.UnsetEnvironmentVariable }
+        );
+
+        // The sentinel removes the inherited value instead of shadowing it with an empty string.
+        Assert.IsFalse(info.Environment.ContainsKey("ROCM_PATH"));
+        Assert.AreEqual("/opt/rocm", info.Environment["HIP_PATH"]);
+    }
+
+    [TestMethod]
     public void PrepareEnvironment_SanitizesInheritedPythonVariables_ForPythonProcesses()
     {
         var info = new ProcessStartInfo();

@@ -62,9 +62,9 @@ public record GpuInfo
         return ComputeCapabilityValue < 7.5m;
     }
 
-    public bool IsWindowsRocmSupportedGpu()
+    public bool IsRocmSupportedGpu()
     {
-        return WindowsRocmSupport.IsSupportedGpu(this);
+        return RocmSupport.IsSupportedGpu(this);
     }
 
     public bool IsAmd => Name?.Contains("amd", StringComparison.OrdinalIgnoreCase) ?? false;
@@ -83,7 +83,7 @@ public record GpuInfo
         {
             // RDNA4
             _ when Has("R9700") || Has("R9600") || Has("9070") => "gfx1201",
-            _ when Has("9060") => "gfx1200",
+            _ when Has("9060") || Has("9050") => "gfx1200",
 
             // RDNA3.5 APUs
             _ when Has("860M") => "gfx1152",
@@ -130,6 +130,10 @@ public record GpuInfo
 
             // RDNA1 Navi10 XT
             _ when Has("5600") || Has("5700") => "gfx1010",
+
+            // CDNA (PCI-E slot Instincts)
+            _ when Has("mi100") => "gfx908",
+            _ when Has("mi210") => "gfx90a",
 
             // Vega/GCN5 Dedicated GPUs
             _ when Has("rx vega") || Has("vega 64") || Has("vega 56") || Has("vega frontier") => "gfx900",

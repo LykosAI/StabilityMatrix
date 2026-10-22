@@ -49,7 +49,7 @@ public class ForgeNeo(
     /// Windows installs use AMD repo wheels; Linux uses the upstream PyTorch ROCm index.
     /// </summary>
     private RocmPackageProfile ActiveRocmProfile =>
-        Compat.IsWindows ? ForgeNeoWindowsRocmProfile.Default : LinuxRocmProfile;
+        Compat.IsWindows ? ForgeNeoRocmProfile.Default : LinuxRocmProfile;
 
     public override string Name => "forge-neo";
     public override string DisplayName { get; set; } = "Stable Diffusion WebUI Forge - Neo";
@@ -103,7 +103,7 @@ public class ForgeNeo(
                 }
             );
 
-            ForgeNeoWindowsRocmProfile.Default.ApplyWindowsRocmLaunchDefaults(options, rocmPackageHelper);
+            ForgeNeoRocmProfile.Default.ApplyRocmLaunchDefaults(options, rocmPackageHelper);
 
             return options;
         }
@@ -144,10 +144,10 @@ public class ForgeNeo(
 
         if (Compat.IsWindows)
         {
-            // Install the AMD multi-arch torch build before launch.py runs, so its is_installed("torch")
+            // Install the helper-managed ROCm torch build before launch.py runs, so its is_installed("torch")
             // gate skips the default NVIDIA CUDA torch install.
             await rocmPackageHelper
-                .InstallWindowsNativeTorchAsync(
+                .InstallRocmTorchAsync(
                     venvRunner,
                     installedPackage,
                     profile,
@@ -214,8 +214,8 @@ public class ForgeNeo(
     protected override IReadOnlyList<string> GetLaunchNoticeLines(InstalledPackage installedPackage)
     {
         var selectedTorchIndex = installedPackage.PreferredTorchIndex ?? GetRecommendedTorchVersion();
-        // The helper returns an empty list on non-Windows platforms.
-        return rocmPackageHelper.GetWindowsLaunchNoticeLines(selectedTorchIndex);
+        // Launch notices only apply where the helper manages a native ROCm install.
+        return rocmPackageHelper.GetLaunchNoticeLines(selectedTorchIndex);
     }
 
     public override string Blurb =>

@@ -5,12 +5,12 @@
     xmlns:fluentIcons="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
     xmlns:input="clr-namespace:FluentAvalonia.UI.Input;assembly=FluentAvalonia"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+    xmlns:markupExtensions="clr-namespace:StabilityMatrix.Avalonia.MarkupExtensions"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
     xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
     xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
     xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
     xmlns:vmInference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
-    xmlns:markupExtensions="clr-namespace:StabilityMatrix.Avalonia.MarkupExtensions"
     x:DataType="vmInference:ControlNetCardViewModel">
     <Design.PreviewWith>
         <StackPanel Width="400" Height="500">
@@ -54,20 +54,20 @@
                                 ColumnDefinitions="*,Auto">
                                 <ui:FAComboBox
                                     Margin="0,0,0,4"
-                                    SelectedItem="{Binding SelectedPreprocessor}"
-                                    ItemsSource="{Binding ClientManager.Preprocessors}"
-                                    DisplayMemberBinding="{Binding DisplayName}"
                                     HorizontalAlignment="Stretch"
-                                    Header="{x:Static lang:Resources.Label_Preprocessor}"/>
-                                
-                                <Button 
-                                    ToolTip.Tip="{x:Static lang:Resources.Action_PreviewPreprocessor}"
+                                    DisplayMemberBinding="{Binding DisplayName}"
+                                    Header="{x:Static lang:Resources.Label_Preprocessor}"
+                                    ItemsSource="{Binding ClientManager.Preprocessors}"
+                                    SelectedItem="{Binding SelectedPreprocessor}" />
+
+                                <Button
+                                    Grid.Column="1"
+                                    Margin="0,23,0,0"
                                     Padding="7"
                                     VerticalAlignment="Center"
-                                    Margin="0,23,0,0"
                                     Command="{Binding PreviewPreprocessorCommand}"
                                     CommandParameter="{Binding SelectedPreprocessor}"
-                                    Grid.Column="1">
+                                    ToolTip.Tip="{x:Static lang:Resources.Action_PreviewPreprocessor}">
                                     <fluentIcons:SymbolIcon
                                         VerticalAlignment="Center"
                                         FontSize="15"
@@ -113,51 +113,56 @@
                                 </ui:FAComboBox.DataTemplates>
 
                             </controls:FADownloadableComboBox>
-                            
-                            <!-- Dimensions -->
+
+                            <!--  Dimensions  -->
                             <Grid
                                 Grid.Row="2"
                                 Grid.Column="1"
                                 Margin="0,4,0,0"
-                                ColumnDefinitions="*,Auto,*" 
+                                ColumnDefinitions="*,Auto,*"
                                 RowDefinitions="Auto,*">
                                 <TextBlock
                                     Grid.Row="0"
                                     Grid.Column="0"
                                     Margin="0,0,4,4"
-                                    Text="{x:Static lang:Resources.Label_Width}"/>
+                                    Text="{x:Static lang:Resources.Label_Width}" />
                                 <ui:NumberBox
                                     Grid.Row="1"
                                     Grid.Column="0"
                                     Margin="0,0,4,0"
+                                    HorizontalAlignment="Stretch"
                                     PlaceholderText="128"
                                     SmallChange="128"
-                                    Value="{Binding Width}"
+                                    SpinButtonPlacementMode="Compact"
                                     ValidationMode="InvalidInputOverwritten"
-                                    HorizontalAlignment="Stretch"
-                                    SpinButtonPlacementMode="Compact"/>
+                                    Value="{Binding Width}" />
                                 <TextBlock
                                     Grid.Row="0"
                                     Grid.Column="2"
                                     Margin="4,0,0,4"
-                                    Text="{x:Static lang:Resources.Label_Height}"/>
+                                    Text="{x:Static lang:Resources.Label_Height}" />
                                 <ui:NumberBox
                                     Grid.Row="1"
                                     Grid.Column="2"
                                     Margin="4,0,0,0"
+                                    HorizontalAlignment="Stretch"
                                     PlaceholderText="128"
                                     SmallChange="128"
-                                    Value="{Binding Height}"
+                                    SpinButtonPlacementMode="Compact"
                                     ValidationMode="InvalidInputOverwritten"
-                                    HorizontalAlignment="Stretch"
-                                    SpinButtonPlacementMode="Compact"/>
+                                    Value="{Binding Height}" />
                             </Grid>
 
                         </sg:SpacedGrid>
                         <sg:SpacedGrid
-                            ColumnDefinitions="*,Auto,Auto"
-                            RowDefinitions="Auto,Auto,Auto,Auto"
+                            Grid.IsSharedSizeScope="True"
+                            RowDefinitions="Auto,Auto,Auto"
                             RowSpacing="0">
+                            <sg:SpacedGrid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" SharedSizeGroup="StepRangeStart" />
+                                <ColumnDefinition Width="Auto" SharedSizeGroup="StepRangeEnd" />
+                            </sg:SpacedGrid.ColumnDefinitions>
                             <!--  Strength  -->
                             <TextBlock
                                 VerticalAlignment="Center"
@@ -186,45 +191,13 @@
                                 TickFrequency="0.01"
                                 Value="{Binding Strength}" />
 
-                            <!--  Start end percent  -->
-                            <TextBlock
+                            <controls:StepRangeEditor
                                 Grid.Row="2"
-                                Grid.Column="0"
-                                VerticalAlignment="Center"
-                                Text="{x:Static lang:Resources.Label_ControlSteps}"
-                                TextAlignment="Left" />
-
-                            <ui:NumberBox
-                                Grid.Row="2"
-                                Grid.Column="1"
-                                HorizontalAlignment="Stretch"
-                                Maximum="10"
-                                Minimum="0"
-                                SimpleNumberFormat="P0"
-                                SmallChange="0.01"
-                                Value="{Binding StartPercent}" />
-                            <ui:NumberBox
-                                Grid.Row="2"
-                                Grid.Column="2"
-                                HorizontalAlignment="Stretch"
-                                Maximum="10"
-                                Minimum="0"
-                                SimpleNumberFormat="P0"
-                                SmallChange="0.01"
-                                Value="{Binding EndPercent}" />
-
-                            <ui:RangeSlider
-                                Grid.Row="3"
                                 Grid.Column="0"
                                 Grid.ColumnSpan="3"
-                                Margin="0,4,0,0"
-                                Maximum="1"
-                                Minimum="0"
-                                RangeEnd="{Binding EndPercent}"
-                                RangeStart="{Binding StartPercent}"
-                                ShowValueToolTip="False"
-                                StepFrequency="0.01"
-                                ToolTipStringFormat="P" />
+                                End="{Binding EndPercent}"
+                                Header="{x:Static lang:Resources.Label_ControlSteps}"
+                                Start="{Binding StartPercent}" />
                         </sg:SpacedGrid>
                     </StackPanel>
                 </controls:Card>

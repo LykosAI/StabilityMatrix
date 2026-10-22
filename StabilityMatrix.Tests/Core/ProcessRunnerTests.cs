@@ -61,6 +61,44 @@ public class ProcessRunnerTests
     }
 
     [TestMethod]
+    [DataRow("uv.exe")]
+    [DataRow("python.exe")]
+    [DataRow("install-n.bat")]
+    public void PrepareEnvironment_DefaultsUvToSystemCerts(string fileName)
+    {
+        var info = new ProcessStartInfo();
+        info.Environment.Remove("UV_SYSTEM_CERTS");
+
+        ProcessRunner.PrepareEnvironment(info, fileName, null);
+
+        Assert.AreEqual("1", info.Environment["UV_SYSTEM_CERTS"]);
+    }
+
+    [TestMethod]
+    public void PrepareEnvironment_PreservesExplicitUvSystemCerts()
+    {
+        var info = new ProcessStartInfo();
+        info.Environment["UV_SYSTEM_CERTS"] = "1";
+
+        var explicitEnvironment = new Dictionary<string, string> { ["UV_SYSTEM_CERTS"] = "0" };
+
+        ProcessRunner.PrepareEnvironment(info, "uv.exe", explicitEnvironment);
+
+        Assert.AreEqual("0", info.Environment["UV_SYSTEM_CERTS"]);
+    }
+
+    [TestMethod]
+    public void PrepareEnvironment_PreservesInheritedUvSystemCerts()
+    {
+        var info = new ProcessStartInfo();
+        info.Environment["UV_SYSTEM_CERTS"] = "0";
+
+        ProcessRunner.PrepareEnvironment(info, "uv.exe", null);
+
+        Assert.AreEqual("0", info.Environment["UV_SYSTEM_CERTS"]);
+    }
+
+    [TestMethod]
     public void SanitizeCurrentProcessPythonEnvironment_RemovesInheritedValues()
     {
         const string pythonHome = @"C:\host\python";

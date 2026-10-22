@@ -10,6 +10,8 @@ public static class ProcessRunner
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
+    private const string UvSystemCertsVariable = "UV_SYSTEM_CERTS";
+
     // Managed Python/uv subprocesses should not inherit ambient Python/venv activation state.
     private static readonly string[] PythonEnvironmentVariablesToSanitize =
     [
@@ -87,6 +89,11 @@ public static class ProcessRunner
                 );
             }
         }
+
+        // uv's bundled CA roots can't revoke a CA between uv releases; the OS store can.
+        // Set for every process, since launch scripts (.bat/.sh) and Python itself also run uv.
+        // An explicit value (user env var setting, or inherited) still wins.
+        info.Environment.TryAdd(UvSystemCertsVariable, "1");
 
         ApplyEnvironmentVariables(info, environmentVariables);
     }
@@ -610,7 +617,7 @@ public static class ProcessRunner
             WorkingDirectory = workingDirectory,
         };
 
-        ApplyEnvironmentVariables(processInfo, environmentVariables);
+        PrepareEnvironment(processInfo, "bash", environmentVariables);
 
         using var process = new Process();
         process.StartInfo = processInfo;
@@ -651,9 +658,10 @@ public static class ProcessRunner
     /// </summary>
     public static string Quote(string argument)
     {
-        var inner = argument.Length >= 2 && argument.StartsWith('"') && argument.EndsWith('"')
-            ? argument[1..^1]
-            : argument;
+        var inner =
+            argument.Length >= 2 && argument.StartsWith('"') && argument.EndsWith('"')
+                ? argument[1..^1]
+                : argument;
 
         if (!inner.Contains(' ') && !inner.Contains('"'))
             return argument;

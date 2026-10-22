@@ -269,6 +269,74 @@ public class RocmPackageHelperTests
     }
 
     [TestMethod]
+    [DataRow("2.14.0+rocm10.0.0", "10.0.0")]
+    [DataRow("2.14.0+rocm10.1.0", "10.1.0")]
+    [DataRow("2.13.0+rocm7.2.0", "7.2.0")]
+    [DataRow("2.14.0", null)]
+    [DataRow("2.14.0+cpu", null)]
+    [DataRow("2.14.0+cu130", null)]
+    [DataRow("", null)]
+    public void TryGetRocmVersionLabel_ReadsTheLocalLabel(string torchVersion, string? expected)
+    {
+        Assert.AreEqual(expected, RocmPackageHelper.TryGetRocmVersionLabel(torchVersion));
+    }
+
+    [TestMethod]
+    public void SelectSdkDevelVersion_PrefersTheRocmLineOfTheTorchBuild()
+    {
+        // The exact case from a gfx1100 install: torch landed on 10.0.0 because torchvision 0.29.0 only
+        // exists for that line, and the newest devel on the index was 10.1.0.
+        string[] available = ["10.1.0", "10.0.0"];
+
+        var selection = RocmPackageHelper.SelectSdkDevelVersion(available, "10.0.0", null);
+
+        Assert.IsNotNull(selection);
+        Assert.AreEqual("10.0.0", selection.Value.Version);
+        Assert.IsTrue(selection.Value.IsExactMatch);
+    }
+
+    [TestMethod]
+    public void SelectSdkDevelVersion_PrefersTheNightlyDateToken()
+    {
+        string[] available = ["10.1.0.dev20261006", "10.1.0.dev20261001", "10.0.0"];
+
+        var selection = RocmPackageHelper.SelectSdkDevelVersion(available, "10.1.0", "20261001");
+
+        Assert.IsNotNull(selection);
+        Assert.AreEqual("10.1.0.dev20261001", selection.Value.Version);
+        Assert.IsTrue(selection.Value.IsExactMatch);
+    }
+
+    [TestMethod]
+    public void SelectSdkDevelVersion_FallsBackToNewestWhenTheLineIsMissing()
+    {
+        string[] available = ["10.1.0"];
+
+        var selection = RocmPackageHelper.SelectSdkDevelVersion(available, "10.0.0", null);
+
+        Assert.IsNotNull(selection);
+        Assert.AreEqual("10.1.0", selection.Value.Version);
+        Assert.IsFalse(selection.Value.IsExactMatch);
+    }
+
+    [TestMethod]
+    public void SelectSdkDevelVersion_ReturnsNullWhenNothingIsPublished()
+    {
+        Assert.IsNull(RocmPackageHelper.SelectSdkDevelVersion([], "10.0.0", null));
+        Assert.IsNull(RocmPackageHelper.SelectSdkDevelVersion(null, "10.0.0", null));
+    }
+
+    [TestMethod]
+    [DataRow("10.0.0", "10.0.0", true)]
+    [DataRow("10.1.0", "10.0.0", false)]
+    [DataRow("10.0.0", null, false)]
+    [DataRow(null, "10.0.0", false)]
+    public void IsRocmSdkDevelMatch_ComparesTheRocmLine(string? sdkDevel, string? rocm, bool expected)
+    {
+        Assert.AreEqual(expected, RocmPackageHelper.IsRocmSdkDevelMatch(sdkDevel, rocm));
+    }
+
+    [TestMethod]
     public void ResolveTarget_WindowsStable_KeepsAmdFeedAndDeviceExtra()
     {
         var target = RocmSupport.ResolveTarget("gfx1201");

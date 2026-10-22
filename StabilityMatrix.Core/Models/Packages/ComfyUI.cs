@@ -435,14 +435,6 @@ public class ComfyUI(
             commands.Add(
                 new ExtraPackageCommand
                 {
-                    CommandName = "Install ROCm Development SDK",
-                    Command = InstallWindowsRocmDevelopmentSdk,
-                }
-            );
-
-            commands.Add(
-                new ExtraPackageCommand
-                {
                     CommandName = "Install bitsandbytes (ROCm)",
                     Command = InstallWindowsRocmBitsAndBytes,
                     IsVisible = installedPackage =>
@@ -452,6 +444,17 @@ public class ComfyUI(
 
                         return pyVersion.Major == 3 && pyVersion.Minor == 12;
                     },
+                }
+            );
+        }
+
+        if (HasRocmSupport())
+        {
+            commands.Add(
+                new ExtraPackageCommand
+                {
+                    CommandName = "Install ROCm Development SDK",
+                    Command = InstallRocmDevelopmentSdk,
                 }
             );
         }
@@ -1063,12 +1066,12 @@ public class ComfyUI(
         await EnableSageAttentionAsync(installedPackage).ConfigureAwait(false);
     }
 
-    private async Task InstallWindowsRocmDevelopmentSdk(InstalledPackage? installedPackage)
+    private async Task InstallRocmDevelopmentSdk(InstalledPackage? installedPackage)
     {
         await RunRocmPackageCommandAsync(
                 installedPackage,
                 RocmPackageCommandType.DevelopmentSdk,
-                "Windows ROCm Development SDK installed successfully",
+                "ROCm Development SDK installed successfully",
                 includeEnvironmentVariables: false
             )
             .ConfigureAwait(false);

@@ -135,8 +135,9 @@ public class RocmPackageHelper : IRocmPackageHelper
     }
 
     /// <summary>
-    /// Ensures <c>rocm-sdk-devel</c> is installed from the resolved ROCm index.
-    /// It prefers a build whose date token matches the installed ROCm torch build and falls back to the latest available build when no exact match is available.
+    /// Ensures <c>rocm-sdk-devel</c> is installed from the resolved ROCm index, on the same ROCm line as
+    /// the installed torch build. Nightly builds match on their build date token, stable builds on the
+    /// ROCm version in torch's local label, and only when neither matches is the newest build used.
     /// </summary>
     public async Task EnsureRocmSdkDevelAsync(
         IPyVenvRunner venvRunner,
@@ -176,10 +177,16 @@ public class RocmPackageHelper : IRocmPackageHelper
         }
 
         var nightlyBuildDateToken = TryGetNightlyBuildDateToken(torchInfo.Version);
+        var rocmVersion = TryGetRocmVersionLabel(torchInfo.Version);
         var installedRocmSdkDevel = await venvRunner.PipShow(RocmSdkDevelPackageName).ConfigureAwait(false);
+
+        // Already on the right line: a nightly build with the matching date token, or a stable build
+        // matching the ROCm version the torch wheel was compiled against.
         if (
-            !string.IsNullOrWhiteSpace(nightlyBuildDateToken)
-            && HasNightlyBuildDateToken(installedRocmSdkDevel?.Version, nightlyBuildDateToken)
+            (
+                !string.IsNullOrWhiteSpace(nightlyBuildDateToken)
+                && HasNightlyBuildDateToken(installedRocmSdkDevel?.Version, nightlyBuildDateToken)
+            ) || IsRocmSdkDevelMatch(installedRocmSdkDevel?.Version, rocmVersion)
         )
         {
             return;
@@ -187,20 +194,21 @@ public class RocmPackageHelper : IRocmPackageHelper
 
         var indexResult = await venvRunner.PipIndex(RocmSdkDevelPackageName, indexUrl).ConfigureAwait(false);
 
-        var latestVersion = indexResult?.AvailableVersions.FirstOrDefault();
-        var matchingVersion = string.IsNullOrWhiteSpace(nightlyBuildDateToken)
-            ? null
-            : indexResult?.AvailableVersions.FirstOrDefault(version =>
-                HasNightlyBuildDateToken(version, nightlyBuildDateToken)
-            );
-        var versionToInstall = matchingVersion ?? latestVersion;
+        var selection = SelectSdkDevelVersion(
+            indexResult?.AvailableVersions,
+            rocmVersion,
+            nightlyBuildDateToken
+        );
 
-        if (string.IsNullOrWhiteSpace(versionToInstall))
+        if (selection is not { } chosen)
         {
             throw new InvalidOperationException(
-                $"No {RocmSdkDevelPackageName} builds were found on the ROCm multi-arch index."
+                $"No {RocmSdkDevelPackageName} builds were found on the ROCm index."
             );
         }
+
+        var versionToInstall = chosen.Version;
+        var matchingVersion = chosen.IsExactMatch ? versionToInstall : null;
 
         if (!string.IsNullOrWhiteSpace(matchingVersion))
         {
@@ -214,6 +222,19 @@ public class RocmPackageHelper : IRocmPackageHelper
         }
         else
         {
+            if (!string.IsNullOrWhiteSpace(rocmVersion))
+            {
+                Logger.Warn(
+                    "No {Package} build matches the ROCm {RocmVersion} line of the installed torch "
+                        + "({TorchVersion}); installing {Version} instead. Builds against the development "
+                        + "SDK may then not load in this environment.",
+                    RocmSdkDevelPackageName,
+                    rocmVersion,
+                    torchInfo.Version,
+                    versionToInstall
+                );
+            }
+
             progress?.Report(
                 new ProgressReport(
                     -1f,
@@ -329,6 +350,14 @@ public class RocmPackageHelper : IRocmPackageHelper
 
         await VerifyRocmTorchInstallAsync(venvRunner, onConsoleOutput, cancellationToken)
             .ConfigureAwait(false);
+
+        // A development SDK that is already present has to follow the torch build it sits beside, or the
+        // headers and libraries come from a different ROCm line than the runtime loading them.
+        if (await venvRunner.PipShow(RocmSdkDevelPackageName).ConfigureAwait(false) is not null)
+        {
+            await EnsureRocmSdkDevelAsync(venvRunner, progress, onConsoleOutput, cancellationToken)
+                .ConfigureAwait(false);
+        }
     }
 
     /// <summary>
@@ -818,6 +847,87 @@ public class RocmPackageHelper : IRocmPackageHelper
         return !string.IsNullOrWhiteSpace(version)
             && !string.IsNullOrWhiteSpace(nightlyBuildDateToken)
             && version.Contains($"dev{nightlyBuildDateToken}", StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// ROCm version a torch build was compiled against, taken from its local label: 2.14.0+rocm10.0.0
+    /// becomes 10.0.0. Returns null when the build carries no rocm local label.
+    /// </summary>
+    internal static string? TryGetRocmVersionLabel(string? torchVersion)
+    {
+        if (string.IsNullOrWhiteSpace(torchVersion))
+        {
+            return null;
+        }
+
+        var plusIndex = torchVersion.IndexOf('+');
+        if (plusIndex < 0 || plusIndex == torchVersion.Length - 1)
+        {
+            return null;
+        }
+
+        var localLabel = torchVersion[(plusIndex + 1)..].Trim();
+        const string prefix = "rocm";
+        if (!localLabel.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        var version = localLabel[prefix.Length..].Trim();
+        return version.Length == 0 ? null : version;
+    }
+
+    /// <summary>True when a rocm-sdk-devel build sits on the given ROCm version line.</summary>
+    internal static bool IsRocmSdkDevelMatch(string? sdkDevelVersion, string? rocmVersion)
+    {
+        return !string.IsNullOrWhiteSpace(sdkDevelVersion)
+            && !string.IsNullOrWhiteSpace(rocmVersion)
+            && string.Equals(sdkDevelVersion.Trim(), rocmVersion.Trim(), StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>A rocm-sdk-devel build to install, and whether it matched the torch build exactly.</summary>
+    internal readonly record struct SdkDevelSelection(string Version, bool IsExactMatch);
+
+    /// <summary>
+    /// Chooses the rocm-sdk-devel build for a torch install: the nightly build date token first, then the
+    /// ROCm line of the torch wheel, and the newest published build only when neither matches.
+    /// </summary>
+    internal static SdkDevelSelection? SelectSdkDevelVersion(
+        IReadOnlyList<string>? availableVersions,
+        string? rocmVersion,
+        string? nightlyBuildDateToken
+    )
+    {
+        if (availableVersions is null || availableVersions.Count == 0)
+        {
+            return null;
+        }
+
+        if (!string.IsNullOrWhiteSpace(nightlyBuildDateToken))
+        {
+            var nightly = availableVersions.FirstOrDefault(version =>
+                HasNightlyBuildDateToken(version, nightlyBuildDateToken)
+            );
+
+            if (nightly is not null)
+            {
+                return new SdkDevelSelection(nightly, true);
+            }
+        }
+
+        if (!string.IsNullOrWhiteSpace(rocmVersion))
+        {
+            var exact = availableVersions.FirstOrDefault(version =>
+                IsRocmSdkDevelMatch(version, rocmVersion)
+            );
+
+            if (exact is not null)
+            {
+                return new SdkDevelSelection(exact, true);
+            }
+        }
+
+        return new SdkDevelSelection(availableVersions[0], false);
     }
 
     internal static string? TryExtractJsonObject(string output)

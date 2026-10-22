@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed **Delete** and **Rename** in a category's right-click menu doing nothing
 - Fixed the **Categories** sidebar hiding model counts behind its scrollbar
 - Fixed package version lists and update checks showing an old release as the newest, because startup update checks ran into GitHub's rate limit
+- Fixed the **FreeU**, **NRS** and **Discrete Model Sampling** addons making the base model's steps run on the refiner model when a refiner was selected
 
 ## v2.17.0-pre.2
 > Full technical notes for this release: [docs.lykos.ai/stability-matrix/release-notes/2.17.0-pre.2](https://docs.lykos.ai/stability-matrix/release-notes/2.17.0-pre.2)

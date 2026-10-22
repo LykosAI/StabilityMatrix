@@ -30,22 +30,21 @@ public class FreeUModule : ModuleBase
         // Currently applies to all models
         // TODO: Add option to apply to either base or refiner
 
-        foreach (var modelConnections in e.Builder.Connections.Models.Values.Where(m => m.Model is not null))
-        {
-            var freeUOutput = e.Nodes.AddTypedNode(
-                new ComfyNodeBuilder.FreeU
-                {
-                    Name = e.Nodes.GetUniqueName($"FreeU_{modelConnections.Name}"),
-                    Model = modelConnections.Model!,
-                    B1 = card.B1,
-                    B2 = card.B2,
-                    S1 = card.S1,
-                    S2 = card.S2
-                }
-            ).Output;
-
-            modelConnections.Model = freeUOutput;
-            e.Temp.Base.Model = freeUOutput;
-        }
+        e.PatchModels(
+            (name, model) =>
+                e
+                    .Nodes.AddTypedNode(
+                        new ComfyNodeBuilder.FreeU
+                        {
+                            Name = e.Nodes.GetUniqueName($"FreeU_{name}"),
+                            Model = model,
+                            B1 = card.B1,
+                            B2 = card.B2,
+                            S1 = card.S1,
+                            S2 = card.S2,
+                        }
+                    )
+                    .Output
+        );
     }
 }

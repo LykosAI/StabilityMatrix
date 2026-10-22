@@ -27,34 +27,21 @@ public class SkipLayerGuidanceModule : ModuleBase
     {
         var vm = GetCard<SkipLayerGuidanceCardViewModel>();
 
-        foreach (var modelConnections in e.Builder.Connections.Models.Values)
-        {
-            if (modelConnections.Model is not { } model)
-                continue;
-
-            var slg = e.Nodes.AddTypedNode(
-                new ComfyNodeBuilder.SkipLayerGuidanceDiTSimple
-                {
-                    Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.SkipLayerGuidanceDiTSimple)),
-                    Model = model,
-                    DoubleLayers = vm.DoubleLayers,
-                    SingleLayers = vm.SingleLayers,
-                    StartPercent = vm.StartPercent,
-                    EndPercent = vm.EndPercent,
-                }
-            );
-
-            modelConnections.Model = slg.Output;
-
-            switch (modelConnections.Name)
-            {
-                case "Base":
-                    e.Temp.Base.Model = slg.Output;
-                    break;
-                case "Refiner":
-                    e.Temp.Refiner.Model = slg.Output;
-                    break;
-            }
-        }
+        e.PatchModels(
+            (_, model) =>
+                e
+                    .Nodes.AddTypedNode(
+                        new ComfyNodeBuilder.SkipLayerGuidanceDiTSimple
+                        {
+                            Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.SkipLayerGuidanceDiTSimple)),
+                            Model = model,
+                            DoubleLayers = vm.DoubleLayers,
+                            SingleLayers = vm.SingleLayers,
+                            StartPercent = vm.StartPercent,
+                            EndPercent = vm.EndPercent,
+                        }
+                    )
+                    .Output
+        );
     }
 }

@@ -22,31 +22,18 @@ public class RescaleCfgModule : ModuleBase
     {
         var vm = GetCard<RescaleCfgCardViewModel>();
 
-        foreach (var modelConnections in e.Builder.Connections.Models.Values)
-        {
-            if (modelConnections.Model is not { } model)
-                continue;
-
-            var rescaleCfg = e.Nodes.AddTypedNode(
-                new ComfyNodeBuilder.RescaleCFG
-                {
-                    Name = e.Nodes.GetUniqueName("RescaleCFG"),
-                    Model = model,
-                    Multiplier = vm.Multiplier
-                }
-            );
-
-            modelConnections.Model = rescaleCfg.Output;
-
-            switch (modelConnections.Name)
-            {
-                case "Base":
-                    e.Temp.Base.Model = rescaleCfg.Output;
-                    break;
-                case "Refiner":
-                    e.Temp.Refiner.Model = rescaleCfg.Output;
-                    break;
-            }
-        }
+        e.PatchModels(
+            (_, model) =>
+                e
+                    .Nodes.AddTypedNode(
+                        new ComfyNodeBuilder.RescaleCFG
+                        {
+                            Name = e.Nodes.GetUniqueName("RescaleCFG"),
+                            Model = model,
+                            Multiplier = vm.Multiplier,
+                        }
+                    )
+                    .Output
+        );
     }
 }

@@ -11,9 +11,9 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - The category colour picker now has a palette of preset colours, and each new category picks its own colour from it
 ### Changed
 - ComfyUI now installs and updates from its current GitHub home, [Comfy-Org/ComfyUI](https://github.com/Comfy-Org/ComfyUI)
-- Updated the bundled Node.js used by AI-Toolkit and InvokeAI to 24.22.1 LTS, which includes the October 2026 Node.js security fixes. It updates automatically the next time a package needs it
+- Updated the bundled Node.js used by AI-Toolkit and InvokeAI to 24.22.1 LTS, which includes the October 2026 Node.js security fixes. Installing or updating AI-Toolkit brings it up to date
 ### Security
-- Package installs now check HTTPS certificates against your operating system's certificate store instead of uv's built-in list, so certificates your OS has revoked, like the compromised eMudhra CAs, are rejected. To opt out, set `UV_SYSTEM_CERTS` to `0` in Settings → Environment Variables
+- Package installs now check HTTPS certificates against your operating system's certificate store instead of uv's built-in list, so certificates your OS has revoked are rejected. To opt out, set `UV_SYSTEM_CERTS` to `0` in Settings → Environment Variables
 ### Fixed
 - Fixed **Delete** and **Rename** in a category's right-click menu doing nothing
 - Fixed the **Categories** sidebar hiding model counts behind its scrollbar

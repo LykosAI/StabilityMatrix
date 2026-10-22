@@ -42,16 +42,29 @@ public class InferenceWorkflowProfileSamplingTests
     [TestMethod]
     [DataRow("sd3")]
     [DataRow("chroma")]
-    [DataRow("wan")]
+    [DataRow("sdxl")]
     [DataRow(null)]
-    public void Custom_WithUnownedClipType_KeepsSd3LatentAndFluxGuidance(string? clipType)
+    public void Custom_WithUnownedClipType_SamplesWithCfg(string? clipType)
     {
         var sampling = InferenceWorkflowProfile.Custom.ForSampling(clipType);
 
         Assert.AreSame(InferenceWorkflowProfile.Custom, sampling);
         Assert.AreEqual(LatentType.Sd3, sampling.Latent);
-        Assert.IsTrue(sampling.UsesFluxGuidance);
+        Assert.IsFalse(sampling.UsesFluxGuidance);
         Assert.IsFalse(sampling.UsesShift);
+    }
+
+    /// <summary>
+    /// FluxGuidance drops CFG and the negative prompt, so only models with a guidance embedding
+    /// may use it. Of the image models, ComfyUI's official templates use it for Flux.1 alone.
+    /// </summary>
+    [TestMethod]
+    public void FluxGuidance_IsOnlyForFlux()
+    {
+        CollectionAssert.AreEqual(
+            new[] { InferenceWorkflowProfile.Flux },
+            InferenceWorkflowProfile.All.Where(p => p.UsesFluxGuidance).ToArray()
+        );
     }
 
     [TestMethod]

@@ -224,7 +224,6 @@ public sealed partial class InferenceWorkflowProfile
             UsesStandaloneLoader = true,
             RequiresStandaloneFile = true,
             Latent = LatentType.Sd3,
-            UsesFluxGuidance = true,
             UsesSd3ModelSamplingShift = true,
             PreferredBaseModels = ["HiDream"],
             GetEncoderCompanions = _ =>
@@ -256,8 +255,8 @@ public sealed partial class InferenceWorkflowProfile
         };
 
     // Custom takes its sampling from the built-in profile that owns the selected clip type
-    // (see ForSampling). These flags cover clip types no built-in profile owns (sd3, chroma,
-    // wan, ...).
+    // (see ForSampling). Clip types no built-in profile owns (sd3, chroma, sdxl, ...) sample with
+    // CFG and the negative prompt, as their official ComfyUI templates do.
     public static InferenceWorkflowProfile Custom { get; } =
         new()
         {
@@ -265,7 +264,6 @@ public sealed partial class InferenceWorkflowProfile
             DisplayName = "Custom",
             LegacyValue = 8,
             Latent = LatentType.Sd3,
-            UsesFluxGuidance = true,
         };
 
     public static InferenceWorkflowProfile QwenImage { get; } =

@@ -617,7 +617,7 @@ public static class ProcessRunner
             WorkingDirectory = workingDirectory,
         };
 
-        ApplyEnvironmentVariables(processInfo, environmentVariables);
+        PrepareEnvironment(processInfo, "bash", environmentVariables);
 
         using var process = new Process();
         process.StartInfo = processInfo;

@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Data;
+using Avalonia.Threading;
 using Avalonia.VisualTree;
 using CommunityToolkit.Mvvm.ComponentModel;
 using FluentAvalonia.UI.Controls;
@@ -73,17 +74,60 @@ public partial class StepRangeEditorTests
         }
     }
 
-    private static (StepRangeEditor, RangeSource) ShowEditor(double start, double end)
+    [AvaloniaFact]
+    public void ClearedBox_KeepsValueAndOrdering()
+    {
+        var (editor, source) = ShowEditor(0.2, 0.8);
+
+        var startBox = GetBox(editor, "PART_StartBox");
+        startBox.Value = double.NaN;
+        Dispatcher.UIThread.RunJobs();
+        Assert.Equal((0.2, 0.2), (source.Start, startBox.Value));
+
+        GetBox(editor, "PART_EndBox").Value = 0.1;
+        Assert.Equal((0.1, 0.1), (source.Start, source.End));
+    }
+
+    [AvaloniaFact]
+    public void Source_OutOfRange_IsClampedInSource()
+    {
+        var (_, source) = ShowEditor(0, 0.5);
+
+        source.End = 5;
+
+        Assert.Equal(1, source.End);
+    }
+
+    [AvaloniaFact]
+    public void LateDataContext_OutOfRangeSource_IsClampedInSource()
+    {
+        // An old ControlNet End from when its box allowed up to 1000%, arriving after the template.
+        var (editor, source) = ShowEditor(0, 5, dataContextAfterShow: true);
+        Dispatcher.UIThread.RunJobs();
+
+        Assert.Equal((1d, 1d), (editor.End, source.End));
+    }
+
+    private static (StepRangeEditor, RangeSource) ShowEditor(
+        double start,
+        double end,
+        bool dataContextAfterShow = false
+    )
     {
         var source = new RangeSource { Start = start, End = end };
         var editor = new StepRangeEditor
         {
-            DataContext = source,
             [!StepRangeEditor.StartProperty] = new Binding(nameof(RangeSource.Start)),
             [!StepRangeEditor.EndProperty] = new Binding(nameof(RangeSource.End)),
         };
 
+        if (!dataContextAfterShow)
+            editor.DataContext = source;
+
         new Window { Content = editor }.Show();
+
+        if (dataContextAfterShow)
+            editor.DataContext = source;
 
         return (editor, source);
     }

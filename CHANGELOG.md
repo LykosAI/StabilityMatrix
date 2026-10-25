@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed package version lists and update checks showing an old release as the newest, because startup update checks ran into GitHub's rate limit
 - Fixed the **FreeU**, **NRS** and **Discrete Model Sampling** addons making the base model's steps run on the refiner model when a refiner was selected
 - Fixed the start and end steps in the **ControlNet**, **IP-Adapter** and **Skip Layer Guidance** addons accepting a start after the end, which made the addon never apply. Typing one past the other now moves the other with it, and ControlNet's can no longer be typed past 100%
+- Fixed the **Custom** Inference workflow ignoring CFG and the negative prompt for most encoder types, including `sd3`, `chroma`, `qwen_image` and `krea2`. Encoder types that have their own workflow, like **Qwen Image** and **Krea 2**, now sample exactly like it
+- Fixed the **HiDream** workflow ignoring CFG and the negative prompt, which held back HiDream I1 Full. HiDream Dev and Fast are made for CFG 1, so set CFG to 1 when using those
 
 ## v2.17.0-pre.2
 > Full technical notes for this release: [docs.lykos.ai/stability-matrix/release-notes/2.17.0-pre.2](https://docs.lykos.ai/stability-matrix/release-notes/2.17.0-pre.2)

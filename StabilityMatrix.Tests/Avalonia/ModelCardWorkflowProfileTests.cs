@@ -113,6 +113,33 @@ public class ModelCardWorkflowProfileTests
     }
 
     [TestMethod]
+    [DynamicData(
+        nameof(InferenceWorkflowProfileSamplingTests.ProfilesWithClipType),
+        typeof(InferenceWorkflowProfileSamplingTests)
+    )]
+    public void CustomProfile_WithBuiltInClipType_MatchesTheProfile(string key)
+    {
+        var profile = InferenceWorkflowProfile.FromKey(key);
+
+        var builtIn = CreateViewModel();
+        builtIn.SelectedWorkflowProfile = profile;
+
+        var custom = CreateViewModel();
+        custom.SelectedModelLoader = ModelLoader.Unet;
+        custom.SelectedWorkflowProfile = InferenceWorkflowProfile.Custom;
+        custom.SelectedClipType = profile.ClipType;
+
+        CollectionAssert.Contains(custom.ClipTypes, profile.ClipType, "Custom can't select this clip type");
+        Assert.IsTrue(builtIn.ShowEncoderSection && custom.ShowEncoderSection);
+        Assert.AreEqual(
+            InferenceWorkflowProfileSamplingTests.SamplingFlags(profile),
+            InferenceWorkflowProfileSamplingTests.SamplingFlags(custom.SamplingProfile)
+        );
+        Assert.AreEqual(builtIn.ShowShift, custom.ShowShift);
+        Assert.AreEqual(builtIn.IsHiDreamWorkflow, custom.IsHiDreamWorkflow);
+    }
+
+    [TestMethod]
     public void CustomProfile_OffersCurrentComfyDualClipTypes()
     {
         var vm = CreateViewModel();

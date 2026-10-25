@@ -181,7 +181,7 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
             || (IsUnetLoader && UsesSd3Latent);
         var usePlasmaNoise = SamplerCardViewModel.ModulesCardViewModel.IsModuleEnabled<PlasmaNoiseModule>();
 
-        if (IsFlux2Unet)
+        if (UsesFlux2Latent)
         {
             builder.SetupEmptyLatentSource(
                 SamplerCardViewModel.Width,
@@ -265,6 +265,14 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
             || (IsCustomProfile && ModelCardViewModel.SelectedClipType is "flux2")
         );
 
+    /// <summary>Whether the empty latent is EmptyFlux2LatentImage (Flux.2, MOSS Image).</summary>
+    protected bool UsesFlux2Latent =>
+        IsUnetLoader
+        && (
+            ResolvedWorkflowProfile.Latent == LatentType.Flux2
+            || (IsCustomProfile && ModelCardViewModel.SelectedClipType is "flux2" or "moss_image")
+        );
+
     /// <summary>
     /// Whether the workflow applies ModelSamplingAuraFlow (Z-Image, Qwen Image — or their
     /// clip types selected through the Custom profile).
@@ -278,14 +286,24 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
 
     protected bool UsesSd3Latent =>
         ResolvedWorkflowProfile.Latent == LatentType.Sd3
-        || (IsCustomProfile && ModelCardViewModel.SelectedClipType is not "stable_diffusion" and not "flux2");
+        || (
+            IsCustomProfile
+            && ModelCardViewModel.SelectedClipType
+                is not "stable_diffusion"
+                    and not "flux2"
+                    and not "moss_image"
+        );
 
     protected bool UsesFluxGuidanceSampler =>
         ResolvedWorkflowProfile.UsesFluxGuidance
         || (
             IsCustomProfile
             && IsUnetLoader
-            && ModelCardViewModel.SelectedClipType is not "stable_diffusion" and not "lumina2" and not "flux2"
+            && ModelCardViewModel.SelectedClipType
+                is not "stable_diffusion"
+                    and not "lumina2"
+                    and not "flux2"
+                    and not "moss_image"
         );
 
     protected void ApplyModelSamplingForCurrentWorkflow(ModuleApplyStepEventArgs applyArgs)

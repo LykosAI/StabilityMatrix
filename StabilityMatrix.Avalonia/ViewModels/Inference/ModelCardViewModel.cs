@@ -251,6 +251,7 @@ public partial class ModelCardViewModel(
             "ace",
             "krea2",
             "lumina2",
+            "moss_image",
             "qwen_image",
             "wan",
             "omnigen2",

@@ -160,6 +160,7 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
                 typeof(FluxGuidanceModule),
                 typeof(DiscreteModelSamplingModule),
                 typeof(RescaleCfgModule),
+                typeof(SkipLayerGuidanceModule),
                 typeof(PlasmaNoiseModule),
                 typeof(NRSModule),
                 typeof(TiledVAEModule),

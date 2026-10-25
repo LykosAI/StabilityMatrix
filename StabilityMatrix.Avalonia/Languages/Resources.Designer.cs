@@ -6413,5 +6413,50 @@ namespace StabilityMatrix.Avalonia.Languages {
                 return ResourceManager.GetString("Label_CategoriesFilterHint", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Skip Layer Guidance.
+        /// </summary>
+        public static string Label_SkipLayerGuidance {
+            get {
+                return ResourceManager.GetString("Label_SkipLayerGuidance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Single Blocks.
+        /// </summary>
+        public static string Label_SingleBlocks {
+            get {
+                return ResourceManager.GetString("Label_SingleBlocks", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Double Blocks.
+        /// </summary>
+        public static string Label_DoubleBlocks {
+            get {
+                return ResourceManager.GetString("Label_DoubleBlocks", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Active Steps.
+        /// </summary>
+        public static string Label_ActiveSteps {
+            get {
+                return ResourceManager.GetString("Label_ActiveSteps", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Block numbers to skip on the negative prompt, separated by commas.
+        /// </summary>
+        public static string Label_SkipLayersTooltip {
+            get {
+                return ResourceManager.GetString("Label_SkipLayersTooltip", resourceCulture);
+            }
+        }
     }
 }

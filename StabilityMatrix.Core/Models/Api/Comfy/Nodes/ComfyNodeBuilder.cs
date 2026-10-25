@@ -748,6 +748,19 @@ public class ComfyNodeBuilder
         public required double Multiplier { get; init; }
     }
 
+    /// <summary>
+    /// Skips the given DiT blocks on the negative (uncond) pass within the start/end range.
+    /// Layers are comma-separated block indices; an empty list skips nothing.
+    /// </summary>
+    public record SkipLayerGuidanceDiTSimple : ComfyTypedNodeBase<ModelNodeConnection>
+    {
+        public required ModelNodeConnection Model { get; init; }
+        public required string DoubleLayers { get; init; }
+        public required string SingleLayers { get; init; }
+        public required double StartPercent { get; init; }
+        public required double EndPercent { get; init; }
+    }
+
     public record SetLatentNoiseMask : ComfyTypedNodeBase<LatentNodeConnection>
     {
         public required LatentNodeConnection Samples { get; init; }

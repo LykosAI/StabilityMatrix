@@ -286,19 +286,13 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
         builder.Connections.Base.Model = modelSampling.Output;
     }
 
-    protected void ApplySamplerForCurrentWorkflow(
-        ModuleApplyStepEventArgs applyArgs,
-        bool includeGgufAsFluxGuidance = false
-    )
+    protected void ApplySamplerForCurrentWorkflow(ModuleApplyStepEventArgs applyArgs)
     {
         if (IsFlux2Unet)
         {
             SamplerCardViewModel.ApplyStepsInitialCustomSampler(applyArgs, false, useFlux2Scheduler: true);
         }
-        else if (
-            (includeGgufAsFluxGuidance && ModelCardViewModel.IsGguf)
-            || (IsUnetLoader && UsesFluxGuidanceSampler)
-        )
+        else if (IsUnetLoader && UsesFluxGuidanceSampler)
         {
             SamplerCardViewModel.ApplyStepsInitialCustomSampler(applyArgs, true);
         }

@@ -82,7 +82,7 @@ public class InferenceImageToImageViewModel : InferenceTextToImageViewModel
         ApplyModelSamplingForCurrentWorkflow(applyArgs);
 
         // Setup Sampler and Refiner if enabled
-        ApplySamplerForCurrentWorkflow(applyArgs, includeGgufAsFluxGuidance: true);
+        ApplySamplerForCurrentWorkflow(applyArgs);
 
         // Apply module steps
         foreach (var module in ModulesCardViewModel.Cards.OfType<ModuleBase>())

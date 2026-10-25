@@ -53,7 +53,10 @@ public sealed partial class InferenceWorkflowProfile
     /// <summary>Sampling via CFGGuider + Flux2Scheduler instead of a plain KSampler.</summary>
     public bool UsesFlux2Scheduler { get; init; }
 
-    /// <summary>Sampling via the FluxGuidance custom-sampler path (Flux.1, HiDream).</summary>
+    /// <summary>
+    /// Sampling via FluxGuidance + BasicGuider, which drops CFG and the negative prompt. Only for
+    /// models with a guidance embedding (Flux.1).
+    /// </summary>
     public bool UsesFluxGuidance { get; init; }
 
     /// <summary>Applies ModelSamplingAuraFlow with the card's Shift value (Z-Image, Qwen).</summary>

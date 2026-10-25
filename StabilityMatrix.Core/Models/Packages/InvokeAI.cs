@@ -109,7 +109,7 @@ public class InvokeAI(
         ];
 
     public override IEnumerable<TorchIndex> AvailableTorchIndices =>
-        [TorchIndex.Cpu, TorchIndex.Cuda, TorchIndex.Rocm, TorchIndex.Mps];
+        [TorchIndex.Cpu, TorchIndex.Cuda, TorchIndex.Ipex, TorchIndex.Rocm, TorchIndex.Mps];
 
     public override PyVersion RecommendedPythonVersion => Python.PyInstallationManager.Python_3_12_10;
 
@@ -244,6 +244,7 @@ public class InvokeAI(
             TorchIndex.Cuda when isLegacyNvidiaGpu => "https://download.pytorch.org/whl/cu126",
             TorchIndex.Cuda => "https://download.pytorch.org/whl/cu128",
             TorchIndex.Rocm when Compat.IsLinux => "https://download.pytorch.org/whl/rocm7.2",
+            TorchIndex.Ipex when Compat.IsLinux || Compat.IsWindows => "https://download.pytorch.org/whl/xpu",
             _ => string.Empty,
         };
 
@@ -264,9 +265,10 @@ public class InvokeAI(
             Compat.IsWindows ? "win32"
             : Compat.IsMacOS ? "darwin"
             : "linux";
-        var index = pins?["torchIndexUrl"]?[platform]?[
-            torchVersion.ToString().ToLowerInvariant()
-        ]?.GetValue<string>();
+        // InvokeAI's pins.json calls the Intel Arc PyTorch index "xpu"; TorchIndex names it Ipex.
+        var torchIndexKey =
+            torchVersion == TorchIndex.Ipex ? "xpu" : torchVersion.ToString().ToLowerInvariant();
+        var index = pins?["torchIndexUrl"]?[platform]?[torchIndexKey]?.GetValue<string>();
 
         if (isSupportedWindowsRocmInstall)
         {

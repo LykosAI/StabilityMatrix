@@ -116,7 +116,7 @@ IPEX is the Intel Extension for PyTorch, targeting Intel's discrete and integrat
   - Recommends IPEX when an Intel Arc GPU is detected and the package supports it.
   - For SD.Next, the Intel path runs the package's own `--use-ipex` install/launch flow.
 - **Caveats:** Because detection keys off the "Arc" name, older non-Arc Intel integrated graphics are not recognized as IPEX-capable.
-- **Packages:** ComfyUI and SD.Next list IPEX support.
+- **Packages:** ComfyUI, InvokeAI and SD.Next list IPEX support.
 
 ## Apple Silicon (MPS)
 

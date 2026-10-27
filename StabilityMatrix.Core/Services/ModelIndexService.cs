@@ -778,8 +778,8 @@ public partial class ModelIndexService : IModelIndexService
 
     /// <summary>
     /// Decides whether a newer installable version of a model exists on CivitAI. Prefers hash
-    /// evidence (any of the latest version's files already installed somewhere in the library);
-    /// falls back to version-id position when the latest version publishes no hashable files.
+    /// evidence (any main model variant of the latest version installed in the library);
+    /// falls back to version-id position when the latest version publishes no hashable main files.
     /// Indeterminate cases resolve to false so we never show an update badge we can't substantiate.
     /// Multi-architecture models publish parallel version tracks in one list (v7_Illustrious,
     /// v1_Anima, v4_Pony, ...), so comparisons stay within the installed file's base-model track —
@@ -803,15 +803,15 @@ public partial class ModelIndexService : IModelIndexService
         if (installedVersionId != null && installedVersionId == latestVersion.Id)
             return false;
 
-        var latestHashes = (latestVersion.Files ?? [])
-            .Where(f => f.Type.IsDownloadableModelFile())
+        var latestHashes = latestVersion
+            .GetMainModelFiles(remoteModel.Type)
             .Select(f => f.Hashes?.BLAKE3)
-            .Where(hash => !string.IsNullOrEmpty(hash))
+            .Where(hash => !string.IsNullOrWhiteSpace(hash))
             .ToList();
 
         if (latestHashes.Count > 0)
         {
-            return !latestHashes.Any(hash => installedHashes.Contains(hash!));
+            return !latestVersion.IsInstalled(remoteModel.Type, installedHashes);
         }
 
         // No hash evidence — flag only when the installed version verifiably sits below the

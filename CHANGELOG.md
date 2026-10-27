@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Security
 - Package installs now check HTTPS certificates against your operating system's certificate store instead of uv's built-in list, so certificates your OS has revoked are rejected. To opt out, set `UV_SYSTEM_CERTS` to `0` in Settings → Environment Variables
 ### Fixed
+- Fixed shared encoders and VAEs making missing models appear installed in the CivitAI Model Browser. Any installed main model variant now counts, while supporting files keep their individual installed status ([#1785](https://github.com/LykosAI/StabilityMatrix/issues/1785))
 - Fixed **Delete** and **Rename** in a category's right-click menu doing nothing
 - Fixed the **Categories** sidebar hiding model counts behind its scrollbar
 - Fixed package version lists and update checks showing an old release as the newest, because startup update checks ran into GitHub's rate limit

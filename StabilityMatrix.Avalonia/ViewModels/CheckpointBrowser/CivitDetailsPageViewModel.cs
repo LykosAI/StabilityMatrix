@@ -335,7 +335,11 @@ public partial class CivitDetailsPageViewModel(
             modelVersionCache
                 .Connect()
                 .DeferUntilLoaded()
-                .Transform(modelVersion => new ModelVersionViewModel(modelIndexService, modelVersion))
+                .Transform(modelVersion => new ModelVersionViewModel(
+                    modelIndexService,
+                    modelVersion,
+                    CivitModel.Type
+                ))
                 .DisposeMany()
                 .Filter(earlyAccessPredicate)
                 .SortAndBind(
@@ -917,7 +921,7 @@ public partial class CivitDetailsPageViewModel(
 
         foreach (var file in modelVersion.Files)
         {
-            // Match install detection: hash-based only, so Unknown-typed files are also deleted
+            // Include every indexed file in the confirmation, including supporting components.
             if (file is not { Hashes.BLAKE3: not null })
                 continue;
 

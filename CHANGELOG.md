@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
 ## v2.17.0-pre.3
+> Full technical notes for this release: [docs.lykos.ai/stability-matrix/release-notes/2.17.0-pre.3](https://docs.lykos.ai/stability-matrix/release-notes/2.17.0-pre.3)
 ### Added
 - **Manage Categories** now lets you reorder categories by dragging them, and delete them from the list
 - The category colour picker now has a palette of preset colours, and each new category picks its own colour from it
@@ -24,6 +25,9 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed the start and end steps in the **ControlNet**, **IP-Adapter** and **Skip Layer Guidance** addons accepting a start after the end, which made the addon never apply. Typing one past the other now moves the other with it, and ControlNet's can no longer be typed past 100%
 - Fixed the **Custom** Inference workflow ignoring CFG and the negative prompt for most encoder types, including `sd3`, `chroma`, `qwen_image` and `krea2`. Encoder types that have their own workflow, like **Qwen Image** and **Krea 2**, now sample exactly like it
 - Fixed the **HiDream** workflow ignoring CFG and the negative prompt, which held back HiDream I1 Full. HiDream Dev and Fast are made for CFG 1, so set CFG to 1 when using those
+### Supporters
+#### 🌟 Visionaries
+TODO: supporter shoutout for 2.17.0-pre.3 (names from the release owner)
 
 ## v2.17.0-pre.2
 > Full technical notes for this release: [docs.lykos.ai/stability-matrix/release-notes/2.17.0-pre.2](https://docs.lykos.ai/stability-matrix/release-notes/2.17.0-pre.2)

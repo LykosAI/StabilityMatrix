@@ -46,10 +46,15 @@ public interface IRocmPackageHelper
     );
 
     /// <summary>
-    /// Builds the standard pip install config for a ROCm package, ensuring torch installation stays
-    /// helper-managed.
+    /// Builds the pip install config for a ROCm package whose torch the helper has already installed.
+    /// The torch trio is pinned to what is installed and the ROCm index is added as an extra index, so
+    /// requirements that depend on torch cannot resolve a CUDA build from PyPI.
     /// </summary>
-    PipInstallConfig BuildRocmInstallConfig(RocmPackageProfile profile);
+    Task<PipInstallConfig> BuildRocmInstallConfigAsync(
+        IPyVenvRunner venvRunner,
+        RocmPackageProfile profile,
+        CancellationToken cancellationToken = default
+    );
 
     /// <summary>
     /// Installs the ROCm torch wheel set for a package from the resolved index, selecting device code

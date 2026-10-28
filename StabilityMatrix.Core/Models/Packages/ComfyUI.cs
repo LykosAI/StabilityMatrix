@@ -495,7 +495,21 @@ public class ComfyUI(
 
         if (torchIndex == TorchIndex.Rocm && HasRocmSupport())
         {
-            var config = rocmPackageHelper.BuildRocmInstallConfig(ComfyRocmProfile.Default);
+            // Torch installs first so the requirements below cannot resolve a CUDA build from PyPI.
+            await rocmPackageHelper
+                .InstallRocmTorchAsync(
+                    venvRunner,
+                    installedPackage,
+                    ComfyRocmProfile.Default,
+                    progress,
+                    onConsoleOutput,
+                    cancellationToken
+                )
+                .ConfigureAwait(false);
+
+            var config = await rocmPackageHelper
+                .BuildRocmInstallConfigAsync(venvRunner, ComfyRocmProfile.Default, cancellationToken)
+                .ConfigureAwait(false);
 
             await StandardPipInstallProcessAsync(
                     venvRunner,
@@ -504,17 +518,6 @@ public class ComfyUI(
                     config,
                     onConsoleOutput,
                     progress,
-                    cancellationToken
-                )
-                .ConfigureAwait(false);
-
-            await rocmPackageHelper
-                .InstallRocmTorchAsync(
-                    venvRunner,
-                    installedPackage,
-                    ComfyRocmProfile.Default,
-                    progress,
-                    onConsoleOutput,
                     cancellationToken
                 )
                 .ConfigureAwait(false);

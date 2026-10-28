@@ -125,7 +125,21 @@ public class Reforge(
             .ConfigureAwait(false);
 
         var profile = ReforgeRocmProfile.CreateProfile(GetRequirementsPaths(installLocation));
-        var config = rocmPackageHelper.BuildRocmInstallConfig(profile);
+        // Torch installs first so the requirements below cannot resolve a CUDA build from PyPI.
+        await rocmPackageHelper
+            .InstallRocmTorchAsync(
+                venvRunner,
+                installedPackage,
+                profile,
+                progress,
+                onConsoleOutput,
+                cancellationToken
+            )
+            .ConfigureAwait(false);
+
+        var config = await rocmPackageHelper
+            .BuildRocmInstallConfigAsync(venvRunner, profile, cancellationToken)
+            .ConfigureAwait(false);
 
         await StandardPipInstallProcessAsync(
                 venvRunner,
@@ -134,17 +148,6 @@ public class Reforge(
                 config,
                 onConsoleOutput,
                 progress,
-                cancellationToken
-            )
-            .ConfigureAwait(false);
-
-        await rocmPackageHelper
-            .InstallRocmTorchAsync(
-                venvRunner,
-                installedPackage,
-                profile,
-                progress,
-                onConsoleOutput,
                 cancellationToken
             )
             .ConfigureAwait(false);

@@ -492,7 +492,21 @@ public class Wan2GP(
     {
         if (Compat.IsWindows)
         {
-            var config = rocmPackageHelper.BuildRocmInstallConfig(Wan2GpRocmProfile.Default);
+            // Torch installs first so the requirements below cannot resolve a CUDA build from PyPI.
+            await rocmPackageHelper
+                .InstallRocmTorchAsync(
+                    venvRunner,
+                    installedPackage,
+                    Wan2GpRocmProfile.Default,
+                    progress,
+                    onConsoleOutput,
+                    cancellationToken
+                )
+                .ConfigureAwait(false);
+
+            var config = await rocmPackageHelper
+                .BuildRocmInstallConfigAsync(venvRunner, Wan2GpRocmProfile.Default, cancellationToken)
+                .ConfigureAwait(false);
 
             await StandardPipInstallProcessAsync(
                     venvRunner,
@@ -501,17 +515,6 @@ public class Wan2GP(
                     config,
                     onConsoleOutput,
                     progress,
-                    cancellationToken
-                )
-                .ConfigureAwait(false);
-
-            await rocmPackageHelper
-                .InstallRocmTorchAsync(
-                    venvRunner,
-                    installedPackage,
-                    Wan2GpRocmProfile.Default,
-                    progress,
-                    onConsoleOutput,
                     cancellationToken
                 )
                 .ConfigureAwait(false);

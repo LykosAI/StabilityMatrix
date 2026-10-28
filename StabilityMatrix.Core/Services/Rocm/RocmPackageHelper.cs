@@ -258,9 +258,55 @@ public class RocmPackageHelper : IRocmPackageHelper
     /// <summary>
     /// Builds the standard pip install config for helper-managed ROCm package installs.
     /// </summary>
-    public PipInstallConfig BuildRocmInstallConfig(RocmPackageProfile profile)
+    public async Task<PipInstallConfig> BuildRocmInstallConfigAsync(
+        IPyVenvRunner venvRunner,
+        RocmPackageProfile profile,
+        CancellationToken cancellationToken = default
+    )
     {
-        return profile.InstallConfig with { SkipTorchInstall = true };
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var target = RocmSupport.ResolveTarget(machineState.Value.RuntimeGfxArch, profile.Index);
+        List<(string Name, string Version)> installed = [];
+
+        foreach (var packageName in RocmTorchPackageNames)
+        {
+            var info = await venvRunner.PipShow(packageName).ConfigureAwait(false);
+            if (info is not null)
+            {
+                installed.Add((packageName, info.Version));
+            }
+        }
+
+        return BuildRocmConstrainedInstallConfig(profile, target.IndexUrl, installed);
+    }
+
+    /// <summary>
+    /// Pins the already-installed torch trio into the profile's install config and adds the ROCm index as
+    /// an extra index. The pins carry the local label, which a PyPI wheel of the same public version
+    /// cannot satisfy, so a requirement that depends on torch resolves to the ROCm build instead of
+    /// pulling the CUDA build and its nvidia-* stack.
+    /// </summary>
+    internal static PipInstallConfig BuildRocmConstrainedInstallConfig(
+        RocmPackageProfile profile,
+        string indexUrl,
+        IReadOnlyList<(string Name, string Version)> installedTorchPackages
+    )
+    {
+        var extraArgs = profile.InstallConfig.ExtraPipArgs.ToList();
+
+        if (installedTorchPackages.Count > 0)
+        {
+            extraArgs.Add("--extra-index-url");
+            extraArgs.Add(indexUrl);
+            extraArgs.AddRange(installedTorchPackages.Select(entry => $"{entry.Name}=={entry.Version}"));
+        }
+
+        return profile.InstallConfig with
+        {
+            SkipTorchInstall = true,
+            ExtraPipArgs = extraArgs,
+        };
     }
 
     /// <summary>
@@ -300,6 +346,9 @@ public class RocmPackageHelper : IRocmPackageHelper
         var installConfig = profile.InstallConfig;
         var indexUrl = target.IndexUrl;
         var usesNightlyIndex = target.IndexKind == RocmIndexKind.AmdNightly;
+
+        // A fresh venv has no pip, and version discovery shells out to it.
+        await venvRunner.PipInstall("--upgrade pip wheel", onConsoleOutput).ConfigureAwait(false);
 
         // AMD's torchvision wheels carry no torch constraint, and the matched build may be published only
         // as a pre-release that pip skips. Resolve the newest paired torch/torchvision and pin both.

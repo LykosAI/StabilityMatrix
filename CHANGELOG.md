@@ -27,7 +27,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed the **HiDream** workflow ignoring CFG and the negative prompt, which held back HiDream I1 Full. HiDream Dev and Fast are made for CFG 1, so set CFG to 1 when using those
 ### Supporters
 #### 🌟 Visionaries
-TODO: supporter shoutout for 2.17.0-pre.3 (names from the release owner)
+pre.3 is our release candidate for 2.17, the build that has to prove itself before it goes stable. It brings MOSS Image and a Skip Layer Guidance addon to Inference, lets you drag your model categories into any order you like, gives HiDream and the Custom workflow their CFG back, and carries the same certificate check as 2.16.6. MOSS Image and the category changes both started as requests from supporters, and our Visionaries are the reason we can say yes to asks like those. We ran the usual checks on this list too: every name valid, every signature good, nothing revoked. Thank you **Waterclouds**, **MrMxyzptlk12836**, **japublicspot78364519**, **bluepopsicle**, **jweg79**, **dispenser**, **Droolguy**, **TwistedDragon**, **snotty**, **cusalapapen1481**, **moon_milky2843**, **CC**, **SnooSnooEternal**, **hasezou11013179**, **Akros**, and **jonny90**. Candidate verified. 💛
 
 ## v2.17.0-pre.2
 > Full technical notes for this release: [docs.lykos.ai/stability-matrix/release-notes/2.17.0-pre.2](https://docs.lykos.ai/stability-matrix/release-notes/2.17.0-pre.2)
@@ -274,7 +274,7 @@ This build leans hard into what's next: a live HuggingFace browser and Wan 2.2 v
 #### 🌟 Visionaries
 2.16.6 is a small patch with a security mindset. Package installs now check every HTTPS certificate against your operating system's own trust store, so a certificate that's been revoked gets turned away at the door, and the bundled Node.js picks up this month's security fixes. In a week when half the internet was scrambling to patch, being able to drop everything and ship this the same day is something our Visionaries make possible. Consider this your official certificate of appreciation, signed, verified and never revoked: **Waterclouds**, **MrMxyzptlk12836**, **japublicspot78364519**, **bluepopsicle**, **jweg79**, **dispenser**, **Droolguy**, **TwistedDragon**, **snotty**, **cusalapapen1481**, **moon_milky2843**, **CC**, **SnooSnooEternal**, **hasezou11013179**, **Akros**, and **jonny90**. You're our root of trust. 💛
 #### 🚀 Pioneers
-Our Pioneers complete the handshake: **CommissarGiygas16050**, **Hurbie53**, **Zombop**, **Jisuren**, **SinthCore**, **Silerae**, **Cjloha**, **Alligator1907**, **joshsciascia72**, **cy_hart691842**, **okachako**, and **acleveranagram**. Security patches rarely get the flashiest release notes, but they keep everyone's installs safe, and your support is what lets us treat them as urgent instead of someday. Connection verified, trust established, thank you all. 💛
+Our Pioneers complete the handshake: **CommissarGiygas16050**, **Hurbie53**, **Zombop**, **Jisuren**, **SinthCore**, **Silerae**, **Cjloha**, **Alligator1907**, **joshsciascia72**, **okachako**, and **acleveranagram**. Security patches rarely get the flashiest release notes, but they keep everyone's installs safe, and your support is what lets us treat them as urgent instead of someday. Connection verified, trust established, thank you all. 💛
 
 ## v2.16.5
 > Full technical notes for this release: [docs.lykos.ai/stability-matrix/release-notes/2.16.5](https://docs.lykos.ai/stability-matrix/release-notes/2.16.5)

@@ -1,13 +1,13 @@
-using StabilityMatrix.Core.Models.Packages;
+﻿using StabilityMatrix.Core.Models.Packages;
 
 namespace StabilityMatrix.Core.Models.Rocm;
 
 /// <summary>
-/// Shared Windows ROCm profile for Comfy backends launched either directly by Stability Matrix or indirectly via SwarmUI.
+/// Shared ROCm profile for Comfy backends launched either directly by Stability Matrix or indirectly via SwarmUI.
 /// </summary>
-public class ComfyWindowsRocmProfile : RocmPackageProfile
+public class ComfyRocmProfile : RocmPackageProfile
 {
-    public ComfyWindowsRocmProfile()
+    public ComfyRocmProfile()
     {
         InstallConfig = new PipInstallConfig
         {
@@ -22,10 +22,10 @@ public class ComfyWindowsRocmProfile : RocmPackageProfile
 
     private IReadOnlyDictionary<string, string> BuildEnvironment(RocmRuntimeContext runtimeContext)
     {
-        return WindowsRocmSupport.IsModernArchitecture(runtimeContext.RuntimeGfxArch)
+        return RocmSupport.IsModernArchitecture(runtimeContext.RuntimeGfxArch)
             ? new Dictionary<string, string> { ["COMFYUI_ENABLE_MIOPEN"] = "1" }
             : new Dictionary<string, string>();
     }
 
-    public static RocmPackageProfile Default { get; } = new ComfyWindowsRocmProfile();
+    public static RocmPackageProfile Default { get; } = new ComfyRocmProfile();
 }

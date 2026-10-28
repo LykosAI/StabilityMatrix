@@ -1,9 +1,9 @@
-using StabilityMatrix.Core.Helper.HardwareInfo;
+﻿using StabilityMatrix.Core.Helper.HardwareInfo;
 
 namespace StabilityMatrix.Core.Models.Rocm;
 
 /// <summary>
-/// Captures the canonical Windows ROCm machine state resolved by the helper.
+/// Captures the canonical ROCm machine state resolved by the helper.
 /// </summary>
 public class RocmMachineState
 {
@@ -15,5 +15,9 @@ public class RocmMachineState
 
     public string? RuntimeGfxArch { get; init; }
 
-    public string? MultiArchDeviceExtra { get; init; }
+    /// <summary>Number of AMD GPUs the machine exposes, GPU agents only.</summary>
+    public int AmdDeviceCount { get; init; }
+
+    /// <summary>ROCm device index of the selected GPU, when known.</summary>
+    public int? DeviceIndex { get; init; }
 }

@@ -93,9 +93,27 @@ public class OneTrainer(
 
         if (isWindowsRocm)
         {
-            var config = rocmPackageHelper.BuildWindowsNativeInstallConfig(
-                OneTrainerWindowsRocmProfile.Default
+            var rocmProfile = OneTrainerRocmProfile.CreateInstallProfile(
+                options.PythonOptions.PythonVersion ?? RecommendedPythonVersion
             );
+
+            progress?.Report(new ProgressReport(-1f, "Installing ROCm torch...", isIndeterminate: true));
+
+            // Torch installs first so the requirements below cannot resolve a CUDA build from PyPI.
+            await rocmPackageHelper
+                .InstallRocmTorchAsync(
+                    venvRunner,
+                    installedPackage,
+                    rocmProfile,
+                    progress,
+                    onConsoleOutput,
+                    cancellationToken
+                )
+                .ConfigureAwait(false);
+
+            var config = await rocmPackageHelper
+                .BuildRocmInstallConfigAsync(venvRunner, rocmProfile, cancellationToken)
+                .ConfigureAwait(false);
 
             await StandardPipInstallProcessAsync(
                     venvRunner,
@@ -107,23 +125,6 @@ public class OneTrainer(
                     },
                     onConsoleOutput,
                     progress,
-                    cancellationToken
-                )
-                .ConfigureAwait(false);
-
-            progress?.Report(
-                new ProgressReport(-1f, "Installing Windows ROCm torch...", isIndeterminate: true)
-            );
-
-            await rocmPackageHelper
-                .InstallWindowsNativeTorchAsync(
-                    venvRunner,
-                    installedPackage,
-                    OneTrainerWindowsRocmProfile.CreateInstallProfile(
-                        options.PythonOptions.PythonVersion ?? RecommendedPythonVersion
-                    ),
-                    progress,
-                    onConsoleOutput,
                     cancellationToken
                 )
                 .ConfigureAwait(false);
@@ -174,10 +175,10 @@ public class OneTrainer(
 
         var selectedTorchIndex = installedPackage.PreferredTorchIndex ?? GetRecommendedTorchVersion();
 
-        if (rocmPackageHelper.ShouldApplyWindowsLaunchEnvironment(selectedTorchIndex))
+        if (rocmPackageHelper.ShouldApplyLaunchEnvironment(selectedTorchIndex))
         {
             VenvRunner.UpdateEnvironmentVariables(env =>
-                env.SetItems(rocmPackageHelper.BuildLaunchEnvironment(OneTrainerWindowsRocmProfile.Default))
+                env.SetItems(rocmPackageHelper.BuildLaunchEnvironment(OneTrainerRocmProfile.Default))
             );
         }
 
@@ -197,12 +198,12 @@ public class OneTrainer(
     {
         var selectedTorchIndex = installedPackage.PreferredTorchIndex ?? GetRecommendedTorchVersion();
 
-        if (!rocmPackageHelper.ShouldApplyWindowsLaunchEnvironment(selectedTorchIndex))
+        if (!rocmPackageHelper.ShouldApplyLaunchEnvironment(selectedTorchIndex))
         {
             return [];
         }
 
-        return [.. rocmPackageHelper.GetWindowsLaunchNoticeLines(selectedTorchIndex)];
+        return [.. rocmPackageHelper.GetLaunchNoticeLines(selectedTorchIndex)];
     }
 
     public override List<LaunchOptionDefinition> LaunchOptions => [LaunchOptionDefinition.Extras];

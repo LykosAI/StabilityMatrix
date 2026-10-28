@@ -1,4 +1,4 @@
-using NSubstitute;
+﻿using NSubstitute;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Models.Packages;
@@ -58,7 +58,7 @@ public class ComfyUIInstallConfigTests
 
         CollectionAssert.AreEqual(new[] { "requirements.txt" }, config.RequirementsFilePaths.ToArray());
         Assert.AreEqual(cudaIndex, config.CudaIndex);
-        Assert.AreEqual("rocm7.2", config.RocmIndex);
+        Assert.AreEqual("rocm7.14", config.RocmIndex);
         Assert.AreEqual("xpu", config.XpuIndex);
         Assert.AreEqual(" ", config.TorchaudioVersion);
         Assert.IsTrue(config.UpgradePackages);

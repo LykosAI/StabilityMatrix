@@ -1,4 +1,4 @@
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Injectio.Attributes;
@@ -316,9 +316,7 @@ public class ComfyUI(
                 Name = "Enable DirectML",
                 Type = LaunchOptionType.Bool,
                 InitialValue =
-                    !HasWindowsRocmSupport()
-                    && HardwareHelper.PreferDirectMLOrZluda()
-                    && this is not ComfyZluda,
+                    !HasRocmSupport() && HardwareHelper.PreferDirectMLOrZluda() && this is not ComfyZluda,
                 Options = ["--directml"],
             },
             new()
@@ -415,7 +413,7 @@ public class ComfyUI(
             );
         }
 
-        if (Compat.IsWindows && HasWindowsRocmSupport())
+        if (Compat.IsWindows && HasRocmSupport())
         {
             commands.Add(
                 new ExtraPackageCommand
@@ -430,18 +428,7 @@ public class ComfyUI(
                 {
                     CommandName = "Install Flash Attention (ROCm)",
                     Command = InstallWindowsRocmFlashAttention,
-                    IsVisible = _ =>
-                        WindowsRocmSupport.IsLegacyArchitecture(
-                            GetWindowsRocmCompatibility().ResolvedGfxArch
-                        ),
-                }
-            );
-
-            commands.Add(
-                new ExtraPackageCommand
-                {
-                    CommandName = "Install ROCm Development SDK",
-                    Command = InstallWindowsRocmDevelopmentSdk,
+                    IsVisible = _ => RocmSupport.IsLegacyArchitecture(GetRocmCompatibility().ResolvedGfxArch),
                 }
             );
 
@@ -457,6 +444,17 @@ public class ComfyUI(
 
                         return pyVersion.Major == 3 && pyVersion.Minor == 12;
                     },
+                }
+            );
+        }
+
+        if (HasRocmSupport())
+        {
+            commands.Add(
+                new ExtraPackageCommand
+                {
+                    CommandName = "Install ROCm Development SDK",
+                    Command = InstallRocmDevelopmentSdk,
                 }
             );
         }
@@ -495,9 +493,23 @@ public class ComfyUI(
                 ?? HardwareHelper.HasLegacyNvidiaGpu()
             );
 
-        if (Compat.IsWindows && torchIndex == TorchIndex.Rocm && HasWindowsRocmSupport())
+        if (torchIndex == TorchIndex.Rocm && HasRocmSupport())
         {
-            var config = rocmPackageHelper.BuildWindowsNativeInstallConfig(ComfyWindowsRocmProfile.Default);
+            // Torch installs first so the requirements below cannot resolve a CUDA build from PyPI.
+            await rocmPackageHelper
+                .InstallRocmTorchAsync(
+                    venvRunner,
+                    installedPackage,
+                    ComfyRocmProfile.Default,
+                    progress,
+                    onConsoleOutput,
+                    cancellationToken
+                )
+                .ConfigureAwait(false);
+
+            var config = await rocmPackageHelper
+                .BuildRocmInstallConfigAsync(venvRunner, ComfyRocmProfile.Default, cancellationToken)
+                .ConfigureAwait(false);
 
             await StandardPipInstallProcessAsync(
                     venvRunner,
@@ -506,17 +518,6 @@ public class ComfyUI(
                     config,
                     onConsoleOutput,
                     progress,
-                    cancellationToken
-                )
-                .ConfigureAwait(false);
-
-            await rocmPackageHelper
-                .InstallWindowsNativeTorchAsync(
-                    venvRunner,
-                    installedPackage,
-                    ComfyWindowsRocmProfile.Default,
-                    progress,
-                    onConsoleOutput,
                     cancellationToken
                 )
                 .ConfigureAwait(false);
@@ -574,7 +575,7 @@ public class ComfyUI(
             ExtraPipArgs = pythonVersion < new PyVersion(3, 13, 0) ? ["numpy<2"] : [],
             TorchaudioVersion = " ", // Request torchaudio without a specific version
             CudaIndex = isLegacyNvidia ? "cu126" : "cu130",
-            RocmIndex = "rocm7.2",
+            RocmIndex = "rocm7.14",
             XpuIndex = "xpu",
             UpgradePackages = true,
             PostInstallPipArgs = ["typing-extensions>=4.15.0"],
@@ -649,7 +650,7 @@ public class ComfyUI(
     )
     {
         var torchIndex = installedPackage.PreferredTorchIndex ?? GetRecommendedTorchVersion();
-        foreach (var line in rocmPackageHelper.GetWindowsLaunchNoticeLines(torchIndex))
+        foreach (var line in rocmPackageHelper.GetLaunchNoticeLines(torchIndex))
         {
             onConsoleOutput?.Invoke(ProcessOutput.FromStdOutLine($"{line}{Environment.NewLine}"));
         }
@@ -687,7 +688,7 @@ public class ComfyUI(
     {
         var preferRocm =
             (Compat.IsLinux && (SettingsManager.Settings.PreferredGpu?.IsAmd ?? HardwareHelper.PreferRocm()))
-            || HasWindowsRocmSupport();
+            || HasRocmSupport();
 
         if (AvailableTorchIndices.Contains(TorchIndex.Rocm) && preferRocm)
         {
@@ -697,26 +698,26 @@ public class ComfyUI(
         return base.GetRecommendedTorchVersion();
     }
 
-    /// Uses the shared ROCm helper for Windows ROCm eligibility checks so ComfyUI does not maintain its own support matrix.
-    private bool HasWindowsRocmSupport()
+    /// Uses the shared ROCm helper for ROCm eligibility checks so ComfyUI does not maintain its own support matrix.
+    private bool HasRocmSupport()
     {
-        return HasWindowsRocmSupport(rocmPackageHelper);
+        return HasRocmSupport(rocmPackageHelper);
     }
 
-    private RocmCompatibilityResult GetWindowsRocmCompatibility()
+    private RocmCompatibilityResult GetRocmCompatibility()
     {
-        return GetWindowsRocmCompatibility(rocmPackageHelper);
+        return GetRocmCompatibility(rocmPackageHelper);
     }
 
-    /// Defaults legacy Windows ROCm GPUs to quad cross-attention because PyTorch cross-attention is considerably slower
+    /// Defaults legacy ROCm GPUs to quad cross-attention because PyTorch cross-attention is considerably slower
     /// and not as supported on older AMD architectures.
     private bool DefaultToQuadCrossAttention()
     {
-        var compatibility = GetWindowsRocmCompatibility();
+        var compatibility = GetRocmCompatibility();
         if (!compatibility.IsCompatible)
             return false;
 
-        return WindowsRocmSupport.PreferLegacyAttentionFallback(compatibility.ResolvedGfxArch);
+        return RocmSupport.PreferLegacyAttentionFallback(compatibility.ResolvedGfxArch);
     }
 
     public override IPackageExtensionManager ExtensionManager =>
@@ -973,7 +974,7 @@ public class ComfyUI(
         IProgress<ProgressReport>? progress = null
     )
     {
-        if (Compat.IsWindows && torchIndex == TorchIndex.Rocm && HasWindowsRocmSupport())
+        if (torchIndex == TorchIndex.Rocm && HasRocmSupport())
             return;
 
         try
@@ -1054,9 +1055,9 @@ public class ComfyUI(
 
     private async Task InstallWindowsRocmSageAttention(InstalledPackage? installedPackage)
     {
-        var succeeded = await RunWindowsRocmPackageCommandAsync(
+        var succeeded = await RunRocmPackageCommandAsync(
                 installedPackage,
-                WindowsRocmPackageCommandType.SageAttention,
+                RocmPackageCommandType.SageAttention,
                 "Windows ROCm SageAttention installed successfully",
                 includeEnvironmentVariables: true
             )
@@ -1068,12 +1069,12 @@ public class ComfyUI(
         await EnableSageAttentionAsync(installedPackage).ConfigureAwait(false);
     }
 
-    private async Task InstallWindowsRocmDevelopmentSdk(InstalledPackage? installedPackage)
+    private async Task InstallRocmDevelopmentSdk(InstalledPackage? installedPackage)
     {
-        await RunWindowsRocmPackageCommandAsync(
+        await RunRocmPackageCommandAsync(
                 installedPackage,
-                WindowsRocmPackageCommandType.DevelopmentSdk,
-                "Windows ROCm Development SDK installed successfully",
+                RocmPackageCommandType.DevelopmentSdk,
+                "ROCm Development SDK installed successfully",
                 includeEnvironmentVariables: false
             )
             .ConfigureAwait(false);
@@ -1081,9 +1082,9 @@ public class ComfyUI(
 
     private async Task InstallWindowsRocmBitsAndBytes(InstalledPackage? installedPackage)
     {
-        await RunWindowsRocmPackageCommandAsync(
+        await RunRocmPackageCommandAsync(
                 installedPackage,
-                WindowsRocmPackageCommandType.BitsAndBytes,
+                RocmPackageCommandType.BitsAndBytes,
                 "Windows ROCm bitsandbytes installed successfully",
                 includeEnvironmentVariables: true
             )
@@ -1092,18 +1093,18 @@ public class ComfyUI(
 
     private async Task InstallWindowsRocmFlashAttention(InstalledPackage? installedPackage)
     {
-        await RunWindowsRocmPackageCommandAsync(
+        await RunRocmPackageCommandAsync(
                 installedPackage,
-                WindowsRocmPackageCommandType.FlashAttention,
+                RocmPackageCommandType.FlashAttention,
                 "Windows ROCm Flash Attention installed successfully",
                 includeEnvironmentVariables: true
             )
             .ConfigureAwait(false);
     }
 
-    private async Task<bool> RunWindowsRocmPackageCommandAsync(
+    private async Task<bool> RunRocmPackageCommandAsync(
         InstalledPackage? installedPackage,
-        WindowsRocmPackageCommandType commandType,
+        RocmPackageCommandType commandType,
         string completionMessage,
         bool includeEnvironmentVariables
     )
@@ -1130,7 +1131,7 @@ public class ComfyUI(
         await runner
             .ExecuteSteps(
                 [
-                    new InstallWindowsRocmPackageCommandStep(
+                    new InstallRocmPackageCommandStep(
                         downloadService,
                         pyInstallationManager,
                         prerequisiteHelper,
@@ -1231,8 +1232,6 @@ public class ComfyUI(
         InstalledPackage installedPackage
     )
     {
-        // if we're not on windows or we don't have a windows rocm gpu, return original env
-        var hasRocmGpu = HasWindowsRocmSupport();
         var selectedTorchIndex = installedPackage.PreferredTorchIndex ?? GetRecommendedTorchVersion();
 
         // Add FFmpeg to PATH if it's installed (optional - for video processing)
@@ -1247,10 +1246,10 @@ public class ComfyUI(
             }
         }
 
-        if (!Compat.IsWindows || !hasRocmGpu || selectedTorchIndex != TorchIndex.Rocm)
+        if (!rocmPackageHelper.ShouldApplyLaunchEnvironment(selectedTorchIndex))
             return env;
 
-        var rocmEnvironment = rocmPackageHelper.BuildLaunchEnvironment(ComfyWindowsRocmProfile.Default);
+        var rocmEnvironment = rocmPackageHelper.BuildLaunchEnvironment(ComfyRocmProfile.Default);
 
         return env.SetItems(rocmEnvironment);
     }

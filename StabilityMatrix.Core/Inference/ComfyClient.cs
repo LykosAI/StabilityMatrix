@@ -2,6 +2,7 @@
 using System.Collections.Immutable;
 using System.Net.WebSockets;
 using System.Text.Json;
+using AsyncAwaitBestPractices;
 using NLog;
 using Polly.Contrib.WaitAndRetry;
 using Refit;
@@ -27,18 +28,27 @@ public class ComfyClient : InferenceClientBase
 
     private readonly WebsocketClient webSocketClient;
     private readonly IComfyApi comfyApi;
+    private readonly Timer pendingTaskCheckTimer;
     private bool isDisposed;
 
-    private readonly JsonSerializerOptions jsonSerializerOptions =
-        new()
+    /// <summary>
+    /// How long a prompt can go without any websocket messages before we check
+    /// the server's history to see if it finished without us being notified
+    /// </summary>
+    private static readonly TimeSpan PendingTaskCheckInterval = TimeSpan.FromSeconds(10);
+
+    private long lastMessageReceivedTicks = Environment.TickCount64;
+    private int isCheckingPendingTasks;
+
+    private readonly JsonSerializerOptions jsonSerializerOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicies.SnakeCaseLower,
+        Converters =
         {
-            PropertyNamingPolicy = JsonNamingPolicies.SnakeCaseLower,
-            Converters =
-            {
-                new NodeConnectionBaseJsonConverter(),
-                new OneOfJsonConverter<string, StringNodeConnection>()
-            }
-        };
+            new NodeConnectionBaseJsonConverter(),
+            new OneOfJsonConverter<string, StringNodeConnection>(),
+        },
+    };
 
     // ReSharper disable once MemberCanBePrivate.Global
     public string ClientId { get; } = Guid.NewGuid().ToString();
@@ -111,27 +121,48 @@ public class ComfyClient : InferenceClientBase
         {
             Scheme = "ws",
             Path = "/ws",
-            Query = $"clientId={ClientId}"
+            Query = $"clientId={ClientId}",
         }.Uri;
 
         webSocketClient = new WebsocketClient(wsUri)
         {
             Name = nameof(ComfyClient),
-            ReconnectTimeout = TimeSpan.FromSeconds(30)
+            // ComfyUI sends nothing while idle or during long running nodes, so a "no message" timeout
+            // would reconnect constantly. Each reconnect reuses our clientId, and ComfyUI can drop the new
+            // socket when the old connection's cleanup runs after it registers, silently orphaning us.
+            // Only reconnect when the connection actually fails.
+            ReconnectTimeout = null,
+            ErrorReconnectTimeout = TimeSpan.FromSeconds(5),
         };
 
-        webSocketClient.DisconnectionHappened.Subscribe(
-            info => Logger.Info("Websocket Disconnected, ({Type})", info.Type)
+        webSocketClient.DisconnectionHappened.Subscribe(info =>
+            Logger.Info("Websocket Disconnected, ({Type})", info.Type)
         );
-        webSocketClient.ReconnectionHappened.Subscribe(
-            info => Logger.Info("Websocket Reconnected, ({Type})", info.Type)
-        );
+        webSocketClient.ReconnectionHappened.Subscribe(info =>
+        {
+            Logger.Info("Websocket Reconnected, ({Type})", info.Type);
+
+            // Prompts may have finished while we were disconnected
+            if (info.Type != ReconnectionType.Initial)
+            {
+                CheckPendingTasksAsync().SafeFireAndForget();
+            }
+        });
 
         webSocketClient.MessageReceived.Subscribe(OnMessageReceived);
+
+        pendingTaskCheckTimer = new Timer(
+            _ => OnPendingTaskCheckTimerElapsed(),
+            null,
+            PendingTaskCheckInterval,
+            PendingTaskCheckInterval
+        );
     }
 
     private void OnMessageReceived(ResponseMessage message)
     {
+        Interlocked.Exchange(ref lastMessageReceivedTicks, Environment.TickCount64);
+
         switch (message.MessageType)
         {
             case WebSocketMessageType.Text:
@@ -287,7 +318,115 @@ public class ComfyClient : InferenceClientBase
             Array.Reverse(typeBytes);
         }*/
 
-        PreviewImageReceived?.Invoke(this, new ComfyWebSocketImageData { ImageBytes = data[8..], });
+        PreviewImageReceived?.Invoke(this, new ComfyWebSocketImageData { ImageBytes = data[8..] });
+    }
+
+    private void OnPendingTaskCheckTimerElapsed()
+    {
+        if (PromptTasks.IsEmpty)
+            return;
+
+        var sinceLastMessage = TimeSpan.FromMilliseconds(
+            Environment.TickCount64 - Interlocked.Read(ref lastMessageReceivedTicks)
+        );
+
+        if (sinceLastMessage < PendingTaskCheckInterval)
+            return;
+
+        CheckPendingTasksAsync().SafeFireAndForget();
+    }
+
+    /// <summary>
+    /// Fallback for missed websocket messages: complete any pending prompt tasks
+    /// that the server's history reports as finished.
+    /// </summary>
+    private async Task CheckPendingTasksAsync()
+    {
+        if (Interlocked.Exchange(ref isCheckingPendingTasks, 1) == 1)
+            return;
+
+        try
+        {
+            foreach (var promptId in PromptTasks.Keys)
+            {
+                if (isDisposed)
+                    return;
+
+                Dictionary<string, ComfyHistoryResponse> history;
+                try
+                {
+                    using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+                    history = await comfyApi.GetHistory(promptId, cts.Token).ConfigureAwait(false);
+                }
+                catch (Exception e)
+                {
+                    Logger.Debug(e, "Failed to check history for prompt {PromptId}", promptId);
+                    continue;
+                }
+
+                // Prompts only appear in history once they have finished executing
+                if (!history.TryGetValue(promptId, out var entry))
+                    continue;
+
+                if (!PromptTasks.TryRemove(promptId, out var task))
+                    continue;
+
+                Logger.Warn(
+                    "Prompt {PromptId} finished without a websocket notification, completing from history",
+                    promptId
+                );
+
+                task.RunningNode = null;
+                Interlocked.CompareExchange(ref currentPromptTask, null, task);
+
+                if (GetHistoryExecutionError(entry) is { } errorData)
+                {
+                    task.TrySetException(
+                        new ComfyNodeException
+                        {
+                            ErrorData = errorData,
+                            JsonData = JsonSerializer.Serialize(errorData, jsonSerializerOptions),
+                        }
+                    );
+                }
+                else
+                {
+                    task.TrySetResult();
+                }
+            }
+        }
+        finally
+        {
+            Interlocked.Exchange(ref isCheckingPendingTasks, 0);
+        }
+    }
+
+    private ComfyWebSocketExecutionErrorData? GetHistoryExecutionError(ComfyHistoryResponse entry)
+    {
+        if (entry.Status?.Messages is not { } messages)
+            return null;
+
+        foreach (var message in messages)
+        {
+            if (
+                message.ValueKind == JsonValueKind.Array
+                && message.GetArrayLength() >= 2
+                && message[0].ValueKind == JsonValueKind.String
+                && message[0].GetString() == "execution_error"
+            )
+            {
+                try
+                {
+                    return message[1].Deserialize<ComfyWebSocketExecutionErrorData>(jsonSerializerOptions);
+                }
+                catch (JsonException e)
+                {
+                    Logger.Warn(e, "Failed to parse execution error from history");
+                }
+            }
+        }
+
+        return null;
     }
 
     public override async Task ConnectAsync(CancellationToken cancellationToken = default)
@@ -493,6 +632,7 @@ public class ComfyClient : InferenceClientBase
     {
         if (isDisposed)
             return;
+        pendingTaskCheckTimer.Dispose();
         webSocketClient.Dispose();
         isDisposed = true;
     }

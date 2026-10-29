@@ -50,13 +50,16 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added **Sort** options to the Inference model picker: file name, title, base model, type, size and dates
 - Inference output filename patterns support `{lora_name}` ([#1759](https://github.com/LykosAI/StabilityMatrix/issues/1759))
 - ComfyUI configuration sharing now includes `Models/LatentUpscaleModels` ([#1762](https://github.com/LykosAI/StabilityMatrix/issues/1762)), `Models/FrameInterpolation` for FILM/RIFE and `Models/GeometryEstimation` for MoGe and Depth Anything 3
+- Icon-only buttons on package cards and in the sidebar now have names that screen readers can announce, and a new `--overlay-popups` launch option renders Windows popups inside the main window for screen capture and UI automation
 ### Changed
+- **Windows builds are now code-signed**, so SmartScreen no longer flags Stability Matrix as coming from an unknown publisher
 - The Wan video tabs are now generic **Text to Video** and **Image to Video** tabs that adapt to the model family you pick (Wan or MiniMax H3). Existing projects still open, and the Outputs page's **Image to Video** sends to the new tab
 - The **Prompt Amplifier** now runs on **Spark v2.0**, the more creative model behind the amplifier on lykos.ai. Spark Classic is still in the wand flyout's model picker
 - Refreshed the model card badges in the **Checkpoint Manager** and the **CivitAI / CivArchive browsers**: compact chips, an update badge with the release date, and a distinct style for early-access-only updates
 - **Checkpoint Manager** search is now typo-tolerant, using the Inference picker's fuzzy matching (`#tag` search unchanged)
 - **Triton & SageAttention** installs pick up the latest wheels again, which fix black or noisy outputs on some setups
 ### Fixed
+- Fixed **Generate** not running on its own after you launch ComfyUI from the connection prompt, so you had to press it a second time
 - Fixed the **Custom** Inference workflow ignoring CFG and the negative prompt for most encoder types, including `sd3`, `chroma`, `qwen_image` and `krea2`
 - Fixed the **HiDream** workflow ignoring CFG and the negative prompt, which held back HiDream I1 Full. HiDream Dev and Fast are made for CFG 1, so set CFG to 1 when using those
 - Fixed the **FreeU**, **NRS** and **Discrete Model Sampling** addons making the base model's steps run on the refiner model when a refiner was selected
@@ -73,6 +76,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed downloadable entries in model dropdowns sometimes doing nothing until you clicked another item first
 - Fixed switching model families after a restart keeping the previous family's encoders and slot count
 - Fixed **Qwen Image Edit** accepting an incompatible Krea 2 text encoder
+- Fixed NVIDIA GPU generation detection on Windows and Linux when no preferred GPU is set, which could make package installs pick the wrong PyTorch build for older or RTX 50 series cards
 - Fixed the first-run recommended models dialog looking like it never loaded its images
 - Fixed the app sometimes crashing on exit with an **Inference** tab open, and a crash dialog appearing after the app had already closed
 ### Performance

@@ -6,7 +6,4 @@ public class ComfyHistoryResponse
 {
     [JsonPropertyName("outputs")]
     public required Dictionary<string, ComfyHistoryOutput> Outputs { get; set; }
-
-    [JsonPropertyName("status")]
-    public ComfyHistoryStatus? Status { get; set; }
 }

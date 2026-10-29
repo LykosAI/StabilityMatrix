@@ -190,11 +190,7 @@ public partial class BetterAsyncImage : TemplatedControlBase
         {
             State = AsyncImageState.Failed;
 
-            // Remote thumbnails fail routinely, so only local files are worth a log line
-            if (uri.IsFile)
-            {
-                Logger.Warn(ex, "Failed to load image from {Path}", uri.LocalPath);
-            }
+            // Logger.Warn(ex, "Failed to load image from {Uri} ({Ex})", uri, ex.ToString());
 
             RaiseEvent(new AsyncImageFailedEventArgs(ex));
         }

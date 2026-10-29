@@ -5,6 +5,85 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.17.0
+> Full technical notes for this release: [docs.lykos.ai/stability-matrix/release-notes/2.17.0](https://docs.lykos.ai/stability-matrix/release-notes/2.17.0)
+### Added
+#### New Feature: 🏷️ Model Categories
+- Tag any model in the **Checkpoint Manager** with as many custom categories as you like, e.g. *Character*, *Style* or *Concept*, shown as coloured chips on its card. The most requested item on our feature tracker
+- Filter from the new **Categories** sidebar section or with `@name` in the search box, and assign in bulk from the selection bar, with right-click → **Set Categories**, or by dropping cards onto a category
+- **Manage Categories** reorders categories by dragging and deletes them, and new categories pick their own colour from a palette of presets
+- Categories reach **Inference** too: the model picker gets a **Categories** filter row and shows each model's chips, and typing a category name filters model dropdowns and the `<lora:` autocomplete
+- Categories are stored in the model's `.cm-info.json`, so they survive moves, renames and metadata refreshes
+#### New Feature: 📋 Inference Prompt Queue
+- Queue up generations from any Inference tab with **Add to Queue** next to Generate, and run them one after another ([#1622](https://github.com/LykosAI/StabilityMatrix/issues/1622))
+- Each item keeps the full project state, so **Open in tab** brings it back as a real tab to tweak and re-queue. Cards show live progress, a preview and the finished thumbnail
+- Reorder, remove, cancel and re-queue items freely. **Start** connects to ComfyUI or offers to launch it, and **Pause** finishes the current item first
+- The queue is saved to your library folder and survives restarts
+#### New Feature: 🎬 MiniMax H3 Video in Inference
+- Generate video **with native stereo audio** using **MiniMax H3** in the **Text to Video** and **Image to Video** tabs, up to about 15 seconds at 24 fps (needs ComfyUI 0.33 or newer)
+- Pick an H3 model and the tab sets itself up: ✨ recommended settings, one-click downloads for the official text encoder and video/audio VAEs, and GGUF models work too. Set an **Audio VAE** to get the soundtrack in your mp4
+- Videos generated in Inference now **play inside the app**, in the Inference gallery, the Outputs page and the image viewer. The preview is muted, and *Open in external player* gets you the audio. The outputs strip lists videos too
+- The video model card spots a few-step **Lightning / turbo LoRA** running at a CFG above 1 and offers a one-click switch to matching settings
+#### New Feature: 🎨 New Models in Inference
+- **Qwen Image** (2512), **Krea 2 Turbo** (8-step) and **Krea 2 Raw** workflow profiles, with auto-detection, automatic text encoder and VAE pairing, and one-click recommended sampler settings. Qwen-tagged CivitAI checkpoints now go to the DiffusionModels folder
+- **MOSS Image** (Base and SFT), with one-click downloads for its Qwen3.5 9B text encoder and the Flux.2 VAE
+- **Wan 2.2 14B** mixture-of-experts video models: enable **Dual expert (high / low noise)** from the Wan model card's ⚙️ menu to run the two-pass sampling 14B expects, with a separate **Low-Noise LoRAs** list for per-expert speed LoRAs. Picking one half of a pair offers to load the other
+- All of these need an up-to-date ComfyUI, so update your package if a workflow is rejected
+#### New Feature: ⬇️ One-Click Text Encoder & VAE Downloads
+- When your model needs a text encoder or VAE you don't have, the Model card says what's missing and offers the official download in one click, for Flux, Flux.2 (4B/9B-aware), Z-Image, Anima, HiDream, Qwen Image, Krea 2 and MOSS Image
+- Only official shared components are offered, so any CivitAI fine-tune still works. Finished files select themselves
+#### New Feature: 🤗 Live HuggingFace Model Browser
+- The HuggingFace tab is now a full browser: search HuggingFace by downloads, likes or recent updates, or paste a repository link to browse all of its files. The curated picks are still the default view
+- Browse files as a list or folder tree, pick each file's destination (auto-detected, including text encoders), or send a whole multi-file repository into one folder. See the total size before you start
+- Gated or private repositories work once you add a HuggingFace token in **Settings → Accounts**
+#### New Feature: 🧩 Persistent Inference Layouts
+- Rearranged panes in Inference now stick, one of our most requested features ([#1340](https://github.com/LykosAI/StabilityMatrix/issues/1340)). Layouts are kept per tab type, **saving a project** stores its layout, and **Restore Default Layout** resets the current tab
+- Added **IP-Adapter** to the Inference sampler's **Addons**: guide a generation with a reference image for style, composition or subject, with one-click downloads for the IP-Adapter and CLIP Vision models
+- Added a **Skip Layer Guidance** addon to the Inference sampler. It starts on MOSS Image's recommended settings and also works with other DiT models like SD 3.5
+- Added a **gallery picker** for the Inference **+** button, grouping project types into **Image / Video / Legacy**. Prefer the old dropdown? Turn on **Compact New Tab Menu** in Settings → Inference
+- Added a **What's New** viewer under **Settings → About** to read the release notes for any version, with a one-time heads-up after each update
+- The **Workflows** library groups workflows by folder, shows **Installed** / **Update Available** on Model Browser cards for imported workflows, and adds **Edit Metadata** and **Check Required Nodes** to workflow cards
+- Added **uv cache** management under **Settings → Package Environment**: see the cache size, clear it with progress, and set an optional size limit ([feature request](https://lykos.ai/feature/4dc8ab9d-e35f-436b-9a3f-d3abc2db1800))
+- Downloads in the **Activity** popout show downloaded and total size next to the percentage ([feature request](https://lykos.ai/feature/f571997c-3607-48db-a62f-b315fc733280))
+- Model downloads skip files you already have: a hash match points you at the existing file instead ([feature request](https://lykos.ai/feature/3dc89d55-4859-4484-bde9-5951ad87a48a))
+- Added a **Quick-Hide Hotkey** for shared computers that instantly minimizes or exits. Off by default; bind it in **Settings → System** ([feature request](https://lykos.ai/feature/3dbfa0e1-650a-426a-906d-b81d6f414104))
+- Added **Sort** options to the Inference model picker: file name, title, base model, type, size and dates
+- Inference output filename patterns support `{lora_name}` ([#1759](https://github.com/LykosAI/StabilityMatrix/issues/1759))
+- ComfyUI configuration sharing now includes `Models/LatentUpscaleModels` ([#1762](https://github.com/LykosAI/StabilityMatrix/issues/1762)), `Models/FrameInterpolation` for FILM/RIFE and `Models/GeometryEstimation` for MoGe and Depth Anything 3
+### Changed
+- The Wan video tabs are now generic **Text to Video** and **Image to Video** tabs that adapt to the model family you pick (Wan or MiniMax H3). Existing projects still open, and the Outputs page's **Image to Video** sends to the new tab
+- The **Prompt Amplifier** now runs on **Spark v2.0**, the more creative model behind the amplifier on lykos.ai. Spark Classic is still in the wand flyout's model picker
+- Refreshed the model card badges in the **Checkpoint Manager** and the **CivitAI / CivArchive browsers**: compact chips, an update badge with the release date, and a distinct style for early-access-only updates
+- **Checkpoint Manager** search is now typo-tolerant, using the Inference picker's fuzzy matching (`#tag` search unchanged)
+- **Triton & SageAttention** installs pick up the latest wheels again, which fix black or noisy outputs on some setups
+### Fixed
+- Fixed the **Custom** Inference workflow ignoring CFG and the negative prompt for most encoder types, including `sd3`, `chroma`, `qwen_image` and `krea2`
+- Fixed the **HiDream** workflow ignoring CFG and the negative prompt, which held back HiDream I1 Full. HiDream Dev and Fast are made for CFG 1, so set CFG to 1 when using those
+- Fixed the **FreeU**, **NRS** and **Discrete Model Sampling** addons making the base model's steps run on the refiner model when a refiner was selected
+- Fixed **ControlNet** start and end steps accepting a start after the end, which made it never apply. Typing one past the other now moves the other with it, and the values stop at 100%
+- Fixed **Hide Early Access Models** still showing models whose early access is set by a future deadline
+- Fixed **Find Connected Metadata → Update Existing** wiping tags you added yourself, and hand-edited models dropping out of the scan
+- Fixed metadata scans always reporting success. They now show real counts, tell rate limiting apart from "not on CivitAI", and stop early instead of running into a rate limit
+- Fixed **Update Metadata** skipping models imported from HuggingFace or OpenModelDB, and scans freezing the app on large files
+- Fixed **Organize Models** appearing to do nothing out of the box. The default pattern is now `{base_model}/{file_name}` (saved patterns untouched)
+- Fixed moving a model between folders in the **Checkpoint Manager** leaving its preview behind unless it was a `.jpeg`
+- Fixed model card text being hard to read in light theme
+- Fixed the **Select Model** dialog's toolbar overlapping itself on smaller windows
+- Fixed the Inference **VAE** dropdown listing models in random order, and model dropdowns squeezing names when the selected model has no preview
+- Fixed downloadable entries in model dropdowns sometimes doing nothing until you clicked another item first
+- Fixed switching model families after a restart keeping the previous family's encoders and slot count
+- Fixed **Qwen Image Edit** accepting an incompatible Krea 2 text encoder
+- Fixed the first-run recommended models dialog looking like it never loaded its images
+- Fixed the app sometimes crashing on exit with an **Inference** tab open, and a crash dialog appearing after the app had already closed
+### Performance
+- The **Checkpoint Manager** and **Outputs** grids no longer stutter on large images. Each image gets a small cached thumbnail, while your previews and outputs stay full resolution
+- Model browser cards load lighter images
+### Supporters
+#### 🌟 Visionaries
+2.17 is the biggest update we've put out in a long while: model categories, a prompt queue, video with sound, a stack of new models in Inference, and a HuggingFace browser you can actually search. It grew across months of dev and preview builds, and our Visionaries backed every one of them, including the ones that mostly existed to find what was broken. **Waterclouds**, **MrMxyzptlk12836**, **japublicspot78364519**, **bluepopsicle**, **jweg79**, **dispenser**, **Droolguy**, **TwistedDragon**, **snotty**, **cusalapapen1481**, **moon_milky2843**, **CC**, **SnooSnooEternal**, **hasezou11013179**, **Akros**, and **jonny90**: you gave us the room to build this one properly instead of quickly, and now everyone gets to use it. It's as much yours as ours. 💛
+#### 🚀 Pioneers
+To our Pioneers **CommissarGiygas16050**, **Hurbie53**, **Zombop**, **Jisuren**, **SinthCore**, **Silerae**, **Cjloha**, **Alligator1907**, **joshsciascia72**, **okachako**, and **acleveranagram**: a release this size is really hundreds of small decisions, and your support is what lets us make each of them carefully. Thank you for sticking with Stability Matrix through the whole 2.17 cycle and every patch along the way. 💛
+
 ## v2.17.0-pre.3
 > Full technical notes for this release: [docs.lykos.ai/stability-matrix/release-notes/2.17.0-pre.3](https://docs.lykos.ai/stability-matrix/release-notes/2.17.0-pre.3)
 ### Added

@@ -156,11 +156,11 @@ public partial class BetterAsyncImage : TemplatedControlBase
                     {
                         if (!IsCacheEnabled)
                         {
-                            return decodeWidth > 0
-                                ? LocalThumbnailCache
-                                    .Default.Decode(uri.LocalPath, decodeWidth)
-                                    .ToAvaloniaImage()
-                                : new Bitmap(uri.LocalPath);
+                            return await DecodeLocalFileWithRetryAsync(
+                                uri.LocalPath,
+                                decodeWidth,
+                                newTokenSource.Token
+                            );
                         }
 
                         return await LoadImageAsync(uri, decodeWidth, newTokenSource.Token);
@@ -190,13 +190,47 @@ public partial class BetterAsyncImage : TemplatedControlBase
         {
             State = AsyncImageState.Failed;
 
-            // Logger.Warn(ex, "Failed to load image from {Uri} ({Ex})", uri, ex.ToString());
+            // Remote thumbnails fail routinely, so only local files are worth a log line
+            if (uri.IsFile)
+            {
+                Logger.Warn(ex, "Failed to load image from {Path}", uri.LocalPath);
+            }
 
             RaiseEvent(new AsyncImageFailedEventArgs(ex));
         }
         finally
         {
             newTokenSource.Dispose();
+        }
+    }
+
+    /// <summary>
+    /// Decodes a local image file, retrying briefly on I/O errors. A file that was just written
+    /// (e.g. a new generation output) can be held open for a moment by antivirus or indexing
+    /// services, and a single failed read would otherwise leave the image blank until it is
+    /// re-requested.
+    /// </summary>
+    private static async Task<IImage?> DecodeLocalFileWithRetryAsync(
+        string path,
+        int decodeWidth,
+        CancellationToken cancellationToken
+    )
+    {
+        const int maxAttempts = 4;
+
+        for (var attempt = 1; ; attempt++)
+        {
+            try
+            {
+                return decodeWidth > 0
+                    ? LocalThumbnailCache.Default.Decode(path, decodeWidth).ToAvaloniaImage()
+                    : new Bitmap(path);
+            }
+            catch (IOException ex) when (attempt < maxAttempts)
+            {
+                Logger.Debug(ex, "Retrying image load for {Path} (attempt {Attempt})", path, attempt);
+                await Task.Delay(100 * attempt, cancellationToken);
+            }
         }
     }
 

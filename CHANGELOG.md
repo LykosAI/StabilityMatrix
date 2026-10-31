@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
 ## v2.17.0-pre.3
+> Full technical notes for this release: [docs.lykos.ai/stability-matrix/release-notes/2.17.0-pre.3](https://docs.lykos.ai/stability-matrix/release-notes/2.17.0-pre.3)
 ### Added
 - **Manage Categories** now lets you reorder categories by dragging them, and delete them from the list
 - The category colour picker now has a palette of preset colours, and each new category picks its own colour from it
@@ -25,6 +26,9 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed the start and end steps in the **ControlNet**, **IP-Adapter** and **Skip Layer Guidance** addons accepting a start after the end, which made the addon never apply. Typing one past the other now moves the other with it, and ControlNet's can no longer be typed past 100%
 - Fixed the **Custom** Inference workflow ignoring CFG and the negative prompt for most encoder types, including `sd3`, `chroma`, `qwen_image` and `krea2`. Encoder types that have their own workflow, like **Qwen Image** and **Krea 2**, now sample exactly like it
 - Fixed the **HiDream** workflow ignoring CFG and the negative prompt, which held back HiDream I1 Full. HiDream Dev and Fast are made for CFG 1, so set CFG to 1 when using those
+### Supporters
+#### 🌟 Visionaries
+pre.3 is the release candidate for 2.17, the dress rehearsal before it goes stable for everyone. Rehearsals are where the small stuff gets caught, and this one also posted an usher at the door: package installs now check every ticket against the list your own system keeps, and the bundled Node.js caught up on its security fixes. Our Visionaries are the reason we can take the time for all of it instead of rushing the show. Thank you **Waterclouds**, **MrMxyzptlk12836**, **japublicspot78364519**, **bluepopsicle**, **jweg79**, **dispenser**, **Droolguy**, **TwistedDragon**, **snotty**, **cusalapapen1481**, **moon_milky2843**, **CC**, **SnooSnooEternal**, **hasezou11013179**, **Akros**, and **jonny90** for being there for every run-through. Opening night is close, and your seats are saved right up front. 💛
 
 ## v2.17.0-pre.2
 > Full technical notes for this release: [docs.lykos.ai/stability-matrix/release-notes/2.17.0-pre.2](https://docs.lykos.ai/stability-matrix/release-notes/2.17.0-pre.2)
@@ -262,11 +266,24 @@ The prompt queue has been one of our most requested features ever, and builds li
 #### 🌟 Visionaries
 This build leans hard into what's next: a live HuggingFace browser and Wan 2.2 video generation. None of that exploration happens without our Visionaries giving us the room to chase it. So a huge thank you to **Waterclouds**, **MrMxyzptlk12836**, **Psilocyfer18731**, **bluepopsicle**, **Ibixat**, **Droolguy**, **KalAbaddon**, **LG**, **snotty**, **whudunit**, **cusalapapen1481**, and **moon_milky2843**. You make the experiments possible. And a big hello to **SkynetFuture** and **sn3232323233350**, who join the Visionary crew this time around. We're genuinely glad you're here. 💛
 
+## v2.16.6
+### Changed
+- Updated the bundled Node.js used by AI-Toolkit and InvokeAI to 24.22.1 LTS, which includes the October 2026 Node.js security fixes. Installing or updating AI-Toolkit brings it up to date
+### Security
+- Package installs now check HTTPS certificates against your operating system's certificate store instead of uv's built-in list, so certificates your OS has revoked are rejected. To opt out, set `UV_SYSTEM_CERTS` to `0` in Settings → Environment Variables
+### Supporters
+#### 🌟 Visionaries
+2.16.6 is a small patch with a security mindset. Package installs now check every HTTPS certificate against your operating system's own trust store, so a certificate that's been revoked gets turned away at the door, and the bundled Node.js picks up this month's security fixes. In a week when half the internet was scrambling to patch, being able to drop everything and get this out within days is something our Visionaries make possible. Consider this your official certificate of appreciation, signed, verified and never revoked: **Waterclouds**, **MrMxyzptlk12836**, **japublicspot78364519**, **bluepopsicle**, **jweg79**, **dispenser**, **Droolguy**, **TwistedDragon**, **snotty**, **cusalapapen1481**, **moon_milky2843**, **CC**, **SnooSnooEternal**, **hasezou11013179**, **Akros**, and **jonny90**. You're our root of trust. 💛
+#### 🚀 Pioneers
+Our Pioneers complete the handshake: **CommissarGiygas16050**, **Hurbie53**, **Zombop**, **Jisuren**, **SinthCore**, **Silerae**, **Cjloha**, **Alligator1907**, **joshsciascia72**, **okachako**, and **acleveranagram**. Security patches rarely get the flashiest release notes, but they keep everyone's installs safe, and your support is what lets us treat them as urgent instead of someday. Connection verified, trust established, thank you all. 💛
+
 ## v2.16.5
 > Full technical notes for this release: [docs.lykos.ai/stability-matrix/release-notes/2.16.5](https://docs.lykos.ai/stability-matrix/release-notes/2.16.5)
 ### Added
 - Added **Fizgig**, a LoRA training studio for Flux 2 Klein 9B, Krea 2, MiniMax H3 and Qwen Image 2.1 with dataset prep, training, LoRA repair and extraction in one app ([#1761](https://github.com/LykosAI/StabilityMatrix/pull/1761)) - thanks to @e-nord!
 - Added AMD ROCm support for **Stable Diffusion WebUI Forge - Neo** on Windows and Linux. Forge Neo's developer supports NVIDIA only, so report AMD issues with it to Stability Matrix ([#1770](https://github.com/LykosAI/StabilityMatrix/pull/1770)) - thanks to @NeuralFault!
+### Changed
+- ComfyUI now installs and updates from its current GitHub home, [Comfy-Org/ComfyUI](https://github.com/Comfy-Org/ComfyUI)
 ### Fixed
 - Fixed **Wan2GP** installs on Python 3.11 failing with `sageattention ... has no wheels with a matching Python version tag`. New Wan2GP installs now use Python 3.11 with PyTorch 2.10 and CUDA 13 with matching Triton, SageAttention and Flash Attention, the same setup Wan2GP's own installer uses. CUDA 13 needs NVIDIA driver 580 or newer. GTX 10XX cards stay on Python 3.10
 - Existing **Wan2GP** installs on Python 3.10 keep their PyTorch 2.7 setup when updated. If a newer model such as LTX 2.5 fails with a Triton error, add Wan2GP again as a new install, which now uses Python 3.11, and move your outputs across ([#1756](https://github.com/LykosAI/StabilityMatrix/issues/1756))
@@ -291,11 +308,12 @@ This build leans hard into what's next: a live HuggingFace browser and Wan 2.2 v
 - Fixed cancelling a Gemini generation in Image Lab showing "Generation failed" instead of "Cancelled"
 - Fixed Image Lab not scrolling to a new message when you were already at the bottom of the conversation
 - Fixed a ComfyUI generation in Image Lab not stopping when ComfyUI disconnected, if you had opened a Gemini conversation in the meantime
+- Fixed package version lists and update checks showing an old release as the newest, because startup update checks ran into GitHub's rate limit
 ### Supporters
 #### 🌟 Visionaries
-This patch is a good one for AMD owners: Forge Neo now runs on ROCm on both Windows and Linux, and Windows ROCm installs always get a `torch` and `torchvision` that actually match. It also adds Fizgig, a whole LoRA training studio, to the package list. Most of it arrived as community contributions, and our Visionaries are the reason we have time to review that work properly and say yes to it. Thank you **Waterclouds**, **MrMxyzptlk12836**, **bluepopsicle**, **dispenser**, **Droolguy**, **TwistedDragon**, **snotty**, **cusalapapen1481**, **moon_milky2843**, **sn3232323233350**, **CC**, **hasezou11013179**, and **Akros**. It's great to see **SnooSnooEternal** back with us, and hello to **japublicspot78364519** and **jonny90**, our newest Visionaries; we're so happy you're here. 💛
+This patch is a good one for AMD owners: Forge Neo now runs on ROCm on both Windows and Linux, and Windows ROCm installs always get a `torch` and `torchvision` that actually match. It also adds Fizgig, a whole LoRA training studio, to the package list. Most of it arrived as community contributions, and our Visionaries are the reason we have time to review that work properly and say yes to it. Thank you **Waterclouds**, **MrMxyzptlk12836**, **bluepopsicle**, **dispenser**, **Droolguy**, **TwistedDragon**, **snotty**, **cusalapapen1481**, **moon_milky2843**, **sn3232323233350**, **CC**, **hasezou11013179**, and **Akros**. It's great to see **SnooSnooEternal** back with us and **jweg79** moving up from the Pioneers, and hello to **japublicspot78364519** and **jonny90**, our newest Visionaries; we're so happy you're here. 💛
 #### 🚀 Pioneers
-To our Pioneers **SinthCore**, **Jisuren**, **jweg79**, **Hurbie53**, **Cjloha**, **Alligator1907**, **CommissarGiygas16050**, **Zombop**, **Silerae**, **joshsciascia72**, **cy_hart691842**, and **okachako**: thank you for backing a patch full of fixes that make things work on more machines. And hi **acleveranagram**, our newest Pioneer; we're really glad to have you! 💛
+To our Pioneers **SinthCore**, **Jisuren**, **Hurbie53**, **Cjloha**, **Alligator1907**, **CommissarGiygas16050**, **Zombop**, **Silerae**, **joshsciascia72**, **cy_hart691842**, and **okachako**: thank you for backing a patch full of fixes that make things work on more machines. And hi **acleveranagram**, our newest Pioneer; we're really glad to have you! 💛
 
 ## v2.16.4
 ### Added

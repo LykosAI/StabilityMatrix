@@ -285,8 +285,8 @@ public class DownloadCivitWorkflowStep(
                         new OpenArtThumbnail
                         {
                             Url = new Uri(thumbnailUrl),
-                            Width = thumbnail!.Width,
-                            Height = thumbnail.Height,
+                            Width = thumbnail!.Width ?? 0,
+                            Height = thumbnail.Height ?? 0,
                         },
                     ],
             },

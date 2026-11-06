@@ -2644,6 +2644,24 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Log Level.
+        /// </summary>
+        public static string Label_LogLevel {
+            get {
+                return ResourceManager.GetString("Label_LogLevel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Minimum level of messages written to the log files and console. Lower levels include more detail but produce larger logs.
+        /// </summary>
+        public static string Label_LogLevel_Description {
+            get {
+                return ResourceManager.GetString("Label_LogLevel_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Logs.
         /// </summary>
         public static string Label_Logs {

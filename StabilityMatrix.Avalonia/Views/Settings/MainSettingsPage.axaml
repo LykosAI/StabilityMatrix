@@ -662,6 +662,13 @@
                         </ui:SettingsExpanderItem.Footer>
                     </ui:SettingsExpanderItem>
 
+                    <!--  Log Level  -->
+                    <ui:SettingsExpanderItem Content="{x:Static lang:Resources.Label_LogLevel}" Description="{x:Static lang:Resources.Label_LogLevel_Description}">
+                        <ui:SettingsExpanderItem.Footer>
+                            <ui:FAComboBox ItemsSource="{Binding LogLevels}" SelectedItem="{Binding SelectedLogLevel}" />
+                        </ui:SettingsExpanderItem.Footer>
+                    </ui:SettingsExpanderItem>
+
                     <!--  Windows Long Paths  -->
                     <ui:SettingsExpanderItem
                         Content="{x:Static lang:Resources.Label_EnableLongPaths}"

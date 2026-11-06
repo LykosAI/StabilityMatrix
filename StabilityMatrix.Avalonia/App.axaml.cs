@@ -413,6 +413,14 @@ public sealed class App : Application
 
         var settingsManager = Services.GetRequiredService<ISettingsManager>();
 
+        // Apply the user's log level once settings load, and whenever it changes
+        settingsManager.Loaded += (_, _) =>
+            AppLogLevelApplier.ApplyToActiveConfiguration(settingsManager.Settings.LogLevel);
+        settingsManager.RegisterPropertyChangedHandler(
+            settings => settings.LogLevel,
+            AppLogLevelApplier.ApplyToActiveConfiguration
+        );
+
         if (Program.Args.DataDirectoryOverride is not null)
         {
             var normalizedDataDirPath = Path.GetFullPath(Program.Args.DataDirectoryOverride);

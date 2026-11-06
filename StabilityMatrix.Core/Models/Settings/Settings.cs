@@ -242,7 +242,12 @@ public class Settings
     /// <summary>
     /// Minimum level of messages written to the log file and console
     /// </summary>
-    public AppLogLevel LogLevel { get; set; } = AppLogLevel.Debug;
+    public AppLogLevel LogLevel { get; set; } = DefaultLogLevel;
+
+    /// <summary>
+    /// Log level used until settings are loaded, and for settings files without a <see cref="LogLevel"/>
+    /// </summary>
+    public const AppLogLevel DefaultLogLevel = AppLogLevel.Info;
     public bool IsWorkflowInfiniteScrollEnabled { get; set; } = true;
     public bool IsOutputsTreeViewEnabled { get; set; } = true;
     public CheckpointSortMode CheckpointSortMode { get; set; } = CheckpointSortMode.SharedFolderType;

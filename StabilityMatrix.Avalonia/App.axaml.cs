@@ -1332,12 +1332,14 @@ public sealed class App : Application
 
             // Console logging
             var consoleTarget = new RichConsoleTarget("console") { Theme = RichNLogTheme.Code2 };
-            builder.ForLogger().FilterMinLevel(NLog.LogLevel.Trace).WriteTo(consoleTarget).WithAsync();
+            // Minimum levels for the console and file are replaced by the user's setting once settings load
+            var defaultMinLevel = Settings.DefaultLogLevel.ToNLogLevel();
+            builder.ForLogger().FilterMinLevel(defaultMinLevel).WriteTo(consoleTarget).WithAsync();
 
             // File logging
             // Use Compat.AppDataHome so logs follow --home-dir overrides
             var fileTarget = LogFileTarget.Create(Compat.LogsDir);
-            builder.ForLogger().FilterMinLevel(NLog.LogLevel.Debug).WriteTo(fileTarget).WithAsync();
+            builder.ForLogger().FilterMinLevel(defaultMinLevel).WriteTo(fileTarget).WithAsync();
 
 #if SM_LOG_WINDOW
             // LogViewer target when debug mode

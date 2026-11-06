@@ -4,13 +4,11 @@ using Semver;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Helper;
-using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Python;
-using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
-public partial class PythonPackagesItemViewModel(ISettingsManager settingsManager) : ViewModelBase
+public partial class PythonPackagesItemViewModel : ViewModelBase
 {
     [ObservableProperty]
     private PipPackageInfo package;
@@ -81,9 +79,9 @@ public partial class PythonPackagesItemViewModel(ISettingsManager settingsManage
     /// <summary>
     /// Loads the pip show result if not already loaded
     /// </summary>
-    public async Task LoadExtraInfo(DirectoryPath venvPath, PyBaseInstall pyBaseInstall)
+    public async Task LoadExtraInfo(Func<Task<IPyVenvRunner>> createVenvRunner)
     {
-        if (PipShowResult is not null)
+        if (PipShowResult is not null || IsLoading)
         {
             return;
         }
@@ -98,11 +96,7 @@ public partial class PythonPackagesItemViewModel(ISettingsManager settingsManage
             }
             else
             {
-                await using var venvRunner = await pyBaseInstall.CreateVenvRunnerAsync(
-                    venvPath,
-                    workingDirectory: venvPath.Parent,
-                    environmentVariables: settingsManager.Settings.EnvironmentVariables
-                );
+                await using var venvRunner = await createVenvRunner();
 
                 PipShowResult = await venvRunner.PipShow(Package.Name);
 

@@ -67,7 +67,7 @@ public record GpuInfo
         return WindowsRocmSupport.IsSupportedGpu(this);
     }
 
-    public bool IsAmd => Name?.Contains("amd", StringComparison.OrdinalIgnoreCase) ?? false;
+    public bool IsAmd => Name is not null && (Name.Contains("amd", StringComparison.OrdinalIgnoreCase) || Name.Contains("radeon", StringComparison.OrdinalIgnoreCase);
     public bool IsIntel => Name?.Contains("arc", StringComparison.OrdinalIgnoreCase) ?? false;
 
     public string? GetAmdGfxArch()

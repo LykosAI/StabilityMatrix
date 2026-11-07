@@ -148,7 +148,7 @@ public class ComfyClient : InferenceClientBase
         }
     }
 
-    private void HandleTextMessage(string text)
+    internal void HandleTextMessage(string text)
     {
         ComfyWebSocketResponse? json;
         try
@@ -254,9 +254,23 @@ public class ComfyClient : InferenceClientBase
                 Logger.Warn($"Could not find task for prompt {errorData.PromptId}, skipping");
             }
         }
+        else if (
+            json.Type
+            is ComfyWebSocketResponseType.ExecutionStart
+                or ComfyWebSocketResponseType.ExecutionCached
+                or ComfyWebSocketResponseType.Executed
+                or ComfyWebSocketResponseType.ExecutionSuccess
+                or ComfyWebSocketResponseType.ExecutionInterrupted
+                or ComfyWebSocketResponseType.ProgressState
+        )
+        {
+            // Standard ComfyUI messages this client doesn't use
+        }
         else
         {
-            Logger.Warn($"Unknown message type {json.Type} ({json.Data}), skipping");
+            // Includes custom node broadcasts (e.g. resource monitors) which can arrive every second,
+            // full message content is already logged at Trace above
+            Logger.Trace("Skipping unhandled message type {Type}", json.Type);
         }
     }
 

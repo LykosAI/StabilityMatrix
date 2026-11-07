@@ -29,4 +29,13 @@ public enum ComfyWebSocketResponseType
 
     [EnumMember(Value = "executed")]
     Executed,
+
+    [EnumMember(Value = "execution_success")]
+    ExecutionSuccess,
+
+    [EnumMember(Value = "execution_interrupted")]
+    ExecutionInterrupted,
+
+    [EnumMember(Value = "progress_state")]
+    ProgressState,
 }

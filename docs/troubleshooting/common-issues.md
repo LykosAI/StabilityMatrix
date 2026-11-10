@@ -86,7 +86,7 @@ This means the workload exceeded your available VRAM, not a Stability Matrix bug
 ## Linux and macOS
 
 **The Linux AppImage will not run on some distributions.**
-The AppImage may need runtime support packages such as `libfuse2` (and, depending on the distribution, ICU or related libraries) that are not installed by default. This and the `.desktop` and AUR quirks are covered in [Installation → Linux](../getting-started/installation.md#linux).
+Current releases use a FUSE3 runtime and do not need `libfuse2`. On a minimal system, install `fuse3` (providing `fusermount` or `fusermount3`), or launch with `--appimage-extract-and-run` if FUSE is unavailable. Depending on the distribution, ICU or related libraries may also be required. Desktop-entry and AUR details are in [Installation → Linux](../getting-started/installation.md#linux).
 
 **macOS Gatekeeper blocks the first launch.**
 This is expected for a downloaded app. The steps to allow it are in [Installation → macOS](../getting-started/installation.md#macos).

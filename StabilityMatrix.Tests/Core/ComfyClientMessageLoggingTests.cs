@@ -43,7 +43,6 @@ public class ComfyClientMessageLoggingTests
     [DataRow("""{"type":"execution_cached","data":{"nodes":["1","2"],"prompt_id":"p1"}}""")]
     [DataRow("""{"type":"executed","data":{"node":"9","output":{"images":[]},"prompt_id":"p1"}}""")]
     [DataRow("""{"type":"execution_success","data":{"prompt_id":"p1","timestamp":2}}""")]
-    [DataRow("""{"type":"execution_interrupted","data":{"prompt_id":"p1","node_id":"3"}}""")]
     [DataRow(
         """{"type":"progress_state","data":{"prompt_id":"p1","nodes":{"3":{"value":1,"max":20,"state":"running"}}}}"""
     )]
@@ -64,7 +63,24 @@ public class ComfyClientMessageLoggingTests
 
         var skipped = memory.Logs.Single(l => l.Contains("Skipping unhandled message type"));
         StringAssert.StartsWith(skipped, "Trace|");
+        StringAssert.Contains(skipped, "crystools.monitor");
         Assert.IsFalse(skipped.Contains("cpu_utilization"));
+    }
+
+    [TestMethod]
+    public void HandleTextMessage_ExecutionInterrupted_LogsAtDebug()
+    {
+        CreateClient()
+            .HandleTextMessage(
+                """{"type":"execution_interrupted","data":{"prompt_id":"p1","node_id":"3","node_type":"KSampler"}}"""
+            );
+        LogManager.Flush();
+
+        var logs = LogsAtOrAbove(LogLevel.Debug);
+        Assert.AreEqual(1, logs.Length);
+        StringAssert.StartsWith(logs[0], "Debug|");
+        StringAssert.Contains(logs[0], "p1");
+        StringAssert.Contains(logs[0], "3");
     }
 
     [TestMethod]

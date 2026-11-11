@@ -260,18 +260,44 @@ public class ComfyClient : InferenceClientBase
                 or ComfyWebSocketResponseType.ExecutionCached
                 or ComfyWebSocketResponseType.Executed
                 or ComfyWebSocketResponseType.ExecutionSuccess
-                or ComfyWebSocketResponseType.ExecutionInterrupted
                 or ComfyWebSocketResponseType.ProgressState
         )
         {
             // Standard ComfyUI messages this client doesn't use
         }
-        else
+        else if (json.Type == ComfyWebSocketResponseType.ExecutionInterrupted)
+        {
+            // Kept at Debug to help diagnose reports of generations that stopped
+            Logger.Debug(
+                "Execution interrupted (PromptId = {PromptId}, NodeId = {NodeId})",
+                json.Data["prompt_id"]?.ToString(),
+                json.Data["node_id"]?.ToString()
+            );
+        }
+        else if (Logger.IsTraceEnabled)
         {
             // Includes custom node broadcasts (e.g. resource monitors) which can arrive every second,
             // full message content is already logged at Trace above
-            Logger.Trace("Skipping unhandled message type {Type}", json.Type);
+            Logger.Trace(
+                "Skipping unhandled message type {Type}",
+                GetRawMessageType(text) ?? json.Type.ToString()
+            );
         }
+    }
+
+    /// <summary>
+    /// Returns the "type" string of a websocket message as sent, since types this client
+    /// doesn't know (such as custom node broadcasts) all deserialize to
+    /// <see cref="ComfyWebSocketResponseType.Unknown"/>.
+    /// </summary>
+    private static string? GetRawMessageType(string text)
+    {
+        using var document = JsonDocument.Parse(text);
+        return
+            document.RootElement.TryGetProperty("type", out var type)
+            && type.ValueKind == JsonValueKind.String
+            ? type.GetString()
+            : null;
     }
 
     /// <summary>

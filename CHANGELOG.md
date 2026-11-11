@@ -5,6 +5,10 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.17.0
+### Fixed
+- Fixed Inference clearing the chosen diffusion model, text encoder, LoRA, ControlNet or upscaler when ComfyUI had that model but Stability Matrix's model folders didn't, for example after switching back to the Inference tab
+
 ## v2.17.0-pre.3
 > Full technical notes for this release: [docs.lykos.ai/stability-matrix/release-notes/2.17.0-pre.3](https://docs.lykos.ai/stability-matrix/release-notes/2.17.0-pre.3)
 ### Added

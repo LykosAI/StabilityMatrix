@@ -292,6 +292,8 @@ public class Fooocus(
             // Pip version 24.1 deprecated numpy requirement spec used by torchsde 0.2.5
             PrePipInstallArgs = ["pip==23.3.2"],
             RequirementsFilePaths = ["requirements_versions.txt"],
+            // Gradio 3.41.2 leaves its web stack unpinned; current FastAPI/Starlette break its templates
+            ExtraPipArgs = ["fastapi==0.104.1", "pydantic==1.10.19"],
             TorchVersion = isBlackwell ? "" : "==2.1.0",
             TorchvisionVersion = isBlackwell ? "" : "==0.16.0",
             CudaIndex = isBlackwell ? "cu128" : "cu121",

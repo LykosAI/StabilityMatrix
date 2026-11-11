@@ -9,7 +9,6 @@ public class CivitImageTests
     [TestMethod]
     public void TestDeserialize_CivitImageWithNullDimensions_ShouldBeNull()
     {
-        // CivitAI sends null width/height for some images (observed live 2026-11-06, issue #1792)
         const string json = """
             {
                 "url": "https://image.civitai.com/example.jpeg",

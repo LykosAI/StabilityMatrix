@@ -192,6 +192,12 @@
                             <TextBlock Text="{Binding PipShowResult.License}" TextWrapping="WrapWithOverflow" />
                             <HyperlinkButton NavigateUri="{Binding PipShowResult.HomePage}" />
                             <TextBlock Text="{Binding PipShowResult.Summary}" TextWrapping="WrapWithOverflow" />
+                            <TextBlock
+                                Foreground="{DynamicResource ThemeRedColor}"
+                                IsVisible="{Binding HasLoadError}"
+                                Text="{x:Static lang:Resources.Error_PythonPackageDetailsLoadFailed}"
+                                TextWrapping="WrapWithOverflow"
+                                ToolTip.Tip="{Binding LoadErrorMessage}" />
                         </StackPanel>
 
                         <!--  Loading indicator  -->

@@ -894,6 +894,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Could not load details for this package. Select it again to retry..
+        /// </summary>
+        public static string Error_PythonPackageDetailsLoadFailed {
+            get {
+                return ResourceManager.GetString("Error_PythonPackageDetailsLoadFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Please select a download location..
         /// </summary>
         public static string Error_PleaseSelectDownloadLocation {

@@ -4,13 +4,11 @@ using Semver;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Helper;
-using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Python;
-using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
-public partial class PythonPackagesItemViewModel(ISettingsManager settingsManager) : ViewModelBase
+public partial class PythonPackagesItemViewModel : ViewModelBase
 {
     [ObservableProperty]
     private PipPackageInfo package;
@@ -26,6 +24,15 @@ public partial class PythonPackagesItemViewModel(ISettingsManager settingsManage
 
     [ObservableProperty]
     private bool isLoading;
+
+    /// <summary>
+    /// Message of the last failed attempt to load <see cref="PipShowResult"/>, shown in the details pane
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasLoadError))]
+    public partial string? LoadErrorMessage { get; set; }
+
+    public bool HasLoadError => LoadErrorMessage is not null;
 
     /// <summary>
     /// True if selected version is newer than the installed version
@@ -79,16 +86,18 @@ public partial class PythonPackagesItemViewModel(ISettingsManager settingsManage
     }
 
     /// <summary>
-    /// Loads the pip show result if not already loaded
+    /// Loads the pip show result if not already loaded or loading. A failed load can be retried
+    /// by calling this again; errors other than <see cref="ProcessException"/> are rethrown.
     /// </summary>
-    public async Task LoadExtraInfo(DirectoryPath venvPath, PyBaseInstall pyBaseInstall)
+    public async Task LoadExtraInfo(Func<Task<IPyVenvRunner>> createVenvRunner)
     {
-        if (PipShowResult is not null)
+        if (PipShowResult is not null || IsLoading)
         {
             return;
         }
 
         IsLoading = true;
+        LoadErrorMessage = null;
 
         try
         {
@@ -98,11 +107,7 @@ public partial class PythonPackagesItemViewModel(ISettingsManager settingsManage
             }
             else
             {
-                await using var venvRunner = await pyBaseInstall.CreateVenvRunnerAsync(
-                    venvPath,
-                    workingDirectory: venvPath.Parent,
-                    environmentVariables: settingsManager.Settings.EnvironmentVariables
-                );
+                await using var venvRunner = await createVenvRunner();
 
                 PipShowResult = await venvRunner.PipShow(Package.Name);
 
@@ -116,9 +121,14 @@ public partial class PythonPackagesItemViewModel(ISettingsManager settingsManage
                 }
             }
         }
-        catch (ProcessException)
+        catch (Exception e) when (e is not OperationCanceledException)
         {
-            // Ignore
+            LoadErrorMessage = e.Message;
+
+            if (e is not ProcessException)
+            {
+                throw;
+            }
         }
         finally
         {

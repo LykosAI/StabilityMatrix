@@ -44,6 +44,20 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
     private readonly IPrerequisiteHelper prerequisiteHelper;
     private PyBaseInstall? pyBaseInstall;
 
+    /// <summary>
+    /// Lets only one package's details load at a time. Typing in the search box moves the
+    /// selection on almost every keystroke, which would otherwise start overlapping pip
+    /// processes against the same venv (each one rewriting its pyvenv.cfg).
+    /// </summary>
+    private readonly SemaphoreSlim extraInfoLock = new(1, 1);
+
+    private CancellationTokenSource? extraInfoCts;
+
+    /// <summary>
+    /// Replaces how venv runners are created, so tests can run without a real Python install.
+    /// </summary>
+    internal Func<Task<IPyVenvRunner>>? VenvRunnerFactory { get; set; }
+
     public DirectoryPath? VenvPath { get; set; }
 
     public PyVersion? PythonVersion { get; set; }
@@ -85,7 +99,7 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
             .Connect()
             .DeferUntilLoaded()
             .Filter(searchPredicate)
-            .Transform(p => new PythonPackagesItemViewModel(settingsManager) { Package = p })
+            .Transform(p => new PythonPackagesItemViewModel { Package = p })
             .SortBy(vm => vm.Package.Name)
             .ObserveOn(SynchronizationContext.Current!)
             .Bind(Packages)
@@ -107,17 +121,7 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
             }
             else
             {
-                pyBaseInstall ??= new PyBaseInstall(
-                    await pyInstallationManager.GetInstallationAsync(
-                        PythonVersion ?? PyInstallationManager.Python_3_10_11
-                    )
-                );
-
-                await using var venvRunner = await pyBaseInstall.CreateVenvRunnerAsync(
-                    VenvPath,
-                    workingDirectory: VenvPath.Parent,
-                    environmentVariables: settingsManager.Settings.EnvironmentVariables
-                );
+                await using var venvRunner = await CreateVenvRunnerAsync();
 
                 var packages = await venvRunner.PipList();
 
@@ -143,16 +147,7 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
         if (VenvPath is null)
             return;
 
-        pyBaseInstall ??= new PyBaseInstall(
-            await pyInstallationManager.GetInstallationAsync(
-                PythonVersion ?? PyInstallationManager.Python_3_10_11
-            )
-        );
-        await using var venvRunner = await pyBaseInstall.CreateVenvRunnerAsync(
-            VenvPath,
-            workingDirectory: VenvPath.Parent,
-            environmentVariables: settingsManager.Settings.EnvironmentVariables
-        );
+        await using var venvRunner = await CreateVenvRunnerAsync();
 
         var packages = await venvRunner.PipList();
 
@@ -169,20 +164,117 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
         });
     }
 
+    private async Task<IPyVenvRunner> CreateVenvRunnerAsync()
+    {
+        if (VenvRunnerFactory is not null)
+        {
+            return await VenvRunnerFactory();
+        }
+
+        ArgumentNullException.ThrowIfNull(VenvPath);
+
+        pyBaseInstall ??= new PyBaseInstall(
+            await pyInstallationManager.GetInstallationAsync(
+                PythonVersion ?? PyInstallationManager.Python_3_10_11
+            )
+        );
+
+        return await pyBaseInstall.CreateVenvRunnerAsync(
+            VenvPath,
+            workingDirectory: VenvPath.Parent,
+            environmentVariables: settingsManager.Settings.EnvironmentVariables
+        );
+    }
+
     /// <summary>
     /// Load the selected package's show info if not already loaded
     /// </summary>
     partial void OnSelectedPackageChanged(PythonPackagesItemViewModel? value)
     {
-        if (value is null)
+        // A load still waiting for its turn is no longer wanted once the selection moves on
+        extraInfoCts?.Cancel();
+        extraInfoCts?.Dispose();
+        extraInfoCts = null;
+
+        if (value is null || (VenvPath is null && !Design.IsDesignMode))
         {
             return;
         }
 
-        if (value.PipShowResult is null)
+        var cts = new CancellationTokenSource();
+        extraInfoCts = cts;
+
+        LoadExtraInfoAsync(value, cts.Token)
+            .SafeFireAndForget(ex =>
+                logger.LogWarning(ex, "Failed to load details for Python package {Name}", value.Package.Name)
+            );
+    }
+
+    private async Task LoadExtraInfoAsync(
+        PythonPackagesItemViewModel item,
+        CancellationToken cancellationToken
+    )
+    {
+        try
         {
-            value.LoadExtraInfo(VenvPath!, pyBaseInstall!).SafeFireAndForget();
+            await extraInfoLock.WaitAsync(cancellationToken);
         }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+
+        try
+        {
+            // Skip if the selection moved on while waiting; the item itself skips if already loaded
+            if (!ReferenceEquals(SelectedPackage, item))
+            {
+                return;
+            }
+
+            await item.LoadExtraInfo(CreateVenvRunnerAsync);
+        }
+        finally
+        {
+            ReleaseExtraInfoLock();
+        }
+    }
+
+    private void ReleaseExtraInfoLock()
+    {
+        try
+        {
+            extraInfoLock.Release();
+        }
+        catch (ObjectDisposedException)
+        {
+            // The dialog was closed and disposed while a load was still running
+        }
+    }
+
+    /// <inheritdoc />
+    public override void OnUnloaded()
+    {
+        base.OnUnloaded();
+
+        // Drop any load still waiting for its turn once the dialog closes
+        extraInfoCts?.Cancel();
+        extraInfoCts?.Dispose();
+        extraInfoCts = null;
+    }
+
+    /// <inheritdoc />
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            extraInfoCts?.Cancel();
+            extraInfoCts?.Dispose();
+            extraInfoCts = null;
+            extraInfoLock.Dispose();
+        }
+
+        base.Dispose(disposing);
     }
 
     /// <inheritdoc />

@@ -37,12 +37,15 @@ public record PipShowResult
         var indexOfLicense = GetIndexBySubstring(lines, "License:");
         var indexOfLocation = GetIndexBySubstring(lines, "Location:");
 
-        var licenseText =
-            indexOfLicense == -1 ? null : string.Join('\n', lines[indexOfLicense..indexOfLocation]);
+        // A multi-line license runs up to the "Location:" line. If that line is missing or comes
+        // first, only take the "License:" line itself.
+        var licenseEnd = indexOfLocation > indexOfLicense ? indexOfLocation : indexOfLicense + 1;
+
+        var licenseText = indexOfLicense == -1 ? null : string.Join('\n', lines[indexOfLicense..licenseEnd]);
 
         if (indexOfLicense != -1)
         {
-            lines.RemoveRange(indexOfLicense, indexOfLocation - indexOfLicense);
+            lines.RemoveRange(indexOfLicense, licenseEnd - indexOfLicense);
         }
 
         var linesDict = new Dictionary<string, string>();

@@ -238,6 +238,16 @@ public class Settings
     [Obsolete("Use OutputsPageResizeFactor instead")]
     public Size OutputsImageSize { get; set; } = new(300, 300);
     public HolidayMode HolidayModeSetting { get; set; } = HolidayMode.Automatic;
+
+    /// <summary>
+    /// Minimum level of messages written to the log file and console
+    /// </summary>
+    public AppLogLevel LogLevel { get; set; } = DefaultLogLevel;
+
+    /// <summary>
+    /// Log level used until settings are loaded, and for settings files without a <see cref="LogLevel"/>
+    /// </summary>
+    public const AppLogLevel DefaultLogLevel = AppLogLevel.Debug;
     public bool IsWorkflowInfiniteScrollEnabled { get; set; } = true;
     public bool IsOutputsTreeViewEnabled { get; set; } = true;
     public CheckpointSortMode CheckpointSortMode { get; set; } = CheckpointSortMode.SharedFolderType;

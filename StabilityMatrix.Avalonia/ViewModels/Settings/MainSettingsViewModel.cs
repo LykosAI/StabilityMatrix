@@ -126,6 +126,11 @@ public partial class MainSettingsViewModel : PageViewModelBase
 
     public IReadOnlyList<HolidayMode> HolidayModes { get; } = Enum.GetValues<HolidayMode>().ToList();
 
+    public IReadOnlyList<AppLogLevel> LogLevels { get; } = Enum.GetValues<AppLogLevel>().ToList();
+
+    [ObservableProperty]
+    public partial AppLogLevel SelectedLogLevel { get; set; }
+
     [ObservableProperty]
     private float selectedAnimationScale;
 
@@ -309,6 +314,13 @@ public partial class MainSettingsViewModel : PageViewModelBase
             this,
             vm => vm.SelectedNumberFormatMode,
             settings => settings.NumberFormatMode,
+            true
+        );
+
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.SelectedLogLevel,
+            settings => settings.LogLevel,
             true
         );
 

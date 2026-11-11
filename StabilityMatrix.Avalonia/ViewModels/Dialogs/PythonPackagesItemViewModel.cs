@@ -26,6 +26,15 @@ public partial class PythonPackagesItemViewModel : ViewModelBase
     private bool isLoading;
 
     /// <summary>
+    /// Message of the last failed attempt to load <see cref="PipShowResult"/>, shown in the details pane
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasLoadError))]
+    public partial string? LoadErrorMessage { get; set; }
+
+    public bool HasLoadError => LoadErrorMessage is not null;
+
+    /// <summary>
     /// True if selected version is newer than the installed version
     /// </summary>
     [ObservableProperty]
@@ -77,7 +86,8 @@ public partial class PythonPackagesItemViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// Loads the pip show result if not already loaded
+    /// Loads the pip show result if not already loaded or loading. A failed load can be retried
+    /// by calling this again; errors other than <see cref="ProcessException"/> are rethrown.
     /// </summary>
     public async Task LoadExtraInfo(Func<Task<IPyVenvRunner>> createVenvRunner)
     {
@@ -87,6 +97,7 @@ public partial class PythonPackagesItemViewModel : ViewModelBase
         }
 
         IsLoading = true;
+        LoadErrorMessage = null;
 
         try
         {
@@ -110,9 +121,14 @@ public partial class PythonPackagesItemViewModel : ViewModelBase
                 }
             }
         }
-        catch (ProcessException)
+        catch (Exception e) when (e is not OperationCanceledException)
         {
-            // Ignore
+            LoadErrorMessage = e.Message;
+
+            if (e is not ProcessException)
+            {
+                throw;
+            }
         }
         finally
         {

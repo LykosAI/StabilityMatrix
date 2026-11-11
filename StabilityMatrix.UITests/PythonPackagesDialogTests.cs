@@ -3,6 +3,7 @@ using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
+using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Helper;
@@ -61,6 +62,52 @@ public class PythonPackagesDialogTests
         Assert.Equal("jax", dialog.Vm.SelectedPackage?.Package.Name);
         Assert.All(dialog.Vm.Packages, p => Assert.False(p.IsLoading));
         dialog.Close();
+    }
+
+    [AvaloniaFact]
+    public async Task FailedDetailsLoad_ShowsErrorAndRetriesWhenSelectedAgain()
+    {
+        var fail = true;
+        var dialog = await PackagesDialog.OpenAsync(pipShow: name =>
+            fail && name == "jax"
+                ? throw new FileNotFoundException("uv not found")
+                : Task.FromResult<PipShowResult?>(new PipShowResult { Name = name, Version = "1.0.0" })
+        );
+
+        await dialog.TypeSearchAsync("jax");
+        var jax = dialog.Vm.SelectedPackage;
+        Assert.Equal("jax", jax?.Package.Name);
+        Assert.True(jax!.HasLoadError);
+        Assert.Equal("uv not found", jax.LoadErrorMessage);
+        Assert.True(dialog.IsTextVisible(Resources.Error_PythonPackageDetailsLoadFailed));
+
+        fail = false;
+        dialog.Vm.SelectedPackage = dialog.Vm.Packages.Single(p => p.Package.Name == "jaxlib");
+        await dialog.SettleAsync();
+        dialog.Vm.SelectedPackage = jax;
+        await dialog.SettleAsync();
+
+        Assert.False(jax.HasLoadError);
+        Assert.NotNull(jax.PipShowResult);
+        dialog.Close();
+    }
+
+    [AvaloniaFact]
+    public async Task ClosingDialog_WithLoadInProgress_DoesNotThrow()
+    {
+        var release = new TaskCompletionSource();
+        var dialog = await PackagesDialog.OpenAsync(pipShow: async name =>
+        {
+            await release.Task;
+            return new PipShowResult { Name = name, Version = "1.0.0" };
+        });
+
+        await dialog.TypeSearchAsync("j", "jax");
+        dialog.Close();
+        dialog.Vm.Dispose();
+
+        release.SetResult();
+        await dialog.SettleAsync();
     }
 
     [AvaloniaFact]
@@ -154,6 +201,12 @@ public class PythonPackagesDialogTests
                 Dispatcher.UIThread.RunJobs();
             }
         }
+
+        public bool IsTextVisible(string text) =>
+            window
+                .GetVisualDescendants()
+                .OfType<TextBlock>()
+                .Any(t => t.Text == text && t.IsEffectivelyVisible);
 
         public void Close() => window.Close();
     }

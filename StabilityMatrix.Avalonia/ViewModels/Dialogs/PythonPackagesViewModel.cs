@@ -201,11 +201,6 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
             return;
         }
 
-        if (value.PipShowResult is not null || value.IsLoading)
-        {
-            return;
-        }
-
         var cts = new CancellationTokenSource();
         extraInfoCts = cts;
 
@@ -231,7 +226,8 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
 
         try
         {
-            if (!ReferenceEquals(SelectedPackage, item) || item.PipShowResult is not null)
+            // Skip if the selection moved on while waiting; the item itself skips if already loaded
+            if (!ReferenceEquals(SelectedPackage, item))
             {
                 return;
             }
@@ -240,8 +236,45 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
         }
         finally
         {
+            ReleaseExtraInfoLock();
+        }
+    }
+
+    private void ReleaseExtraInfoLock()
+    {
+        try
+        {
             extraInfoLock.Release();
         }
+        catch (ObjectDisposedException)
+        {
+            // The dialog was closed and disposed while a load was still running
+        }
+    }
+
+    /// <inheritdoc />
+    public override void OnUnloaded()
+    {
+        base.OnUnloaded();
+
+        // Drop any load still waiting for its turn once the dialog closes
+        extraInfoCts?.Cancel();
+        extraInfoCts?.Dispose();
+        extraInfoCts = null;
+    }
+
+    /// <inheritdoc />
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            extraInfoCts?.Cancel();
+            extraInfoCts?.Dispose();
+            extraInfoCts = null;
+            extraInfoLock.Dispose();
+        }
+
+        base.Dispose(disposing);
     }
 
     /// <inheritdoc />

@@ -1883,4 +1883,7 @@ Account tokens will not be viewable after saving, please make a note of them if 
   <data name="Error_DocumentationPageLoadFailed" xml:space="preserve">
     <value>Could not load this page. Check your connection and try again.</value>
   </data>
+  <data name="Error_PythonPackageDetailsLoadFailed" xml:space="preserve">
+    <value>Could not load details for this package. Select it again to retry.</value>
+  </data>
 </root>

@@ -247,7 +247,7 @@ public class Settings
     /// <summary>
     /// Log level used until settings are loaded, and for settings files without a <see cref="LogLevel"/>
     /// </summary>
-    public const AppLogLevel DefaultLogLevel = AppLogLevel.Info;
+    public const AppLogLevel DefaultLogLevel = AppLogLevel.Debug;
     public bool IsWorkflowInfiniteScrollEnabled { get; set; } = true;
     public bool IsOutputsTreeViewEnabled { get; set; } = true;
     public CheckpointSortMode CheckpointSortMode { get; set; } = CheckpointSortMode.SharedFolderType;

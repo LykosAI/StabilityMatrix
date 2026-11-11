@@ -129,7 +129,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
     public IReadOnlyList<AppLogLevel> LogLevels { get; } = Enum.GetValues<AppLogLevel>().ToList();
 
     [ObservableProperty]
-    private AppLogLevel selectedLogLevel;
+    public partial AppLogLevel SelectedLogLevel { get; set; }
 
     [ObservableProperty]
     private float selectedAnimationScale;

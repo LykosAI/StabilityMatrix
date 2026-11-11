@@ -80,4 +80,17 @@ public class AppLogLevelApplierTests
     {
         Assert.AreEqual(0, AppLogLevelApplier.Apply(null, AppLogLevel.Info));
     }
+
+    [TestMethod]
+    public void ToNLogLevel_UndefinedValue_UsesDefaultLogLevel()
+    {
+        Assert.AreEqual(Settings.DefaultLogLevel.ToNLogLevel(), ((AppLogLevel)99).ToNLogLevel());
+    }
+
+    [TestMethod]
+    public void DefaultLogLevel_IsDebug()
+    {
+        Assert.AreEqual(AppLogLevel.Debug, Settings.DefaultLogLevel);
+        Assert.AreEqual(AppLogLevel.Debug, new Settings().LogLevel);
+    }
 }

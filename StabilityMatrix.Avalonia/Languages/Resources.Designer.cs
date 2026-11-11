@@ -2653,7 +2653,7 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Minimum level of messages written to the log files and console. Lower levels include more detail but produce larger logs.
+        ///   Looks up a localized string similar to Minimum level of messages written to the log files and console.
         /// </summary>
         public static string Label_LogLevel_Description {
             get {

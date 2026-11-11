@@ -11,6 +11,10 @@ namespace StabilityMatrix.Avalonia.Logging;
 /// </summary>
 public static class AppLogLevelApplier
 {
+    /// <summary>
+    /// Maps <paramref name="level"/> to its NLog level. Values outside the enum (such as an
+    /// out-of-range number in a hand-edited settings file) map to <see cref="Settings.DefaultLogLevel"/>.
+    /// </summary>
     public static LogLevel ToNLogLevel(this AppLogLevel level) =>
         level switch
         {
@@ -19,7 +23,7 @@ public static class AppLogLevelApplier
             AppLogLevel.Info => LogLevel.Info,
             AppLogLevel.Warn => LogLevel.Warn,
             AppLogLevel.Error => LogLevel.Error,
-            _ => LogLevel.Debug,
+            _ => Settings.DefaultLogLevel.ToNLogLevel(),
         };
 
     /// <summary>

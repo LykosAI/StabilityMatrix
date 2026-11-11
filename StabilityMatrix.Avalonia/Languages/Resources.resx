@@ -1887,6 +1887,6 @@ Account tokens will not be viewable after saving, please make a note of them if 
     <value>Log Level</value>
   </data>
   <data name="Label_LogLevel_Description" xml:space="preserve">
-    <value>Minimum level of messages written to the log files and console. Lower levels include more detail but produce larger logs.</value>
+    <value>Minimum level of messages written to the log files and console.</value>
   </data>
 </root>

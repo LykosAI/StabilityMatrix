@@ -12,6 +12,7 @@ This page collects the problems that come up most often in Stability Matrix, org
 - [GPU and Backend Problems](#gpu-and-backend-problems)
 - [Linux and macOS](#linux-and-macos)
 - [Model Browser and CivitAI](#model-browser-and-civitai)
+- [Model Downloads in Packages](#model-downloads-in-packages)
 - [Inference Connection and Workflow Errors](#inference-connection-and-workflow-errors)
 - [Finding Logs and Reporting Bugs](#finding-logs-and-reporting-bugs)
 - [What's Next](#whats-next)
@@ -98,6 +99,37 @@ This is a known ecosystem issue rather than a fault in Stability Matrix. The Civ
 
 **Selecting a model card feels laggy.**
 Large browse results with many previews can make selection feel slow. Narrowing your search or letting the current page finish loading generally helps.
+
+## Model Downloads in Packages
+
+**InvokeAI fails to download from HuggingFace with an `UnsafeDownloadURLException` while a fake-IP DNS proxy is active.**
+InvokeAI's downloader resolves the host and refuses addresses outside the public range. A fake-IP DNS proxy (Clash Verge / mihomo TUN, Surge, and similar tools) resolves `huggingface.co` into its fake-IP range, usually `198.18.0.0/15`, so InvokeAI rejects the download even though the proxy would route it correctly. The console shows a message like:
+
+```text
+UnsafeDownloadURLException: Refusing to download from 'huggingface.co': it resolves to a non-public address.
+Set `allow_private_download_urls` in invokeai.yaml to permit downloads from loopback and private-network addresses.
+```
+
+There are two workarounds:
+
+1. **Keep InvokeAI's SSRF protection** and let the proxy resolve HuggingFace normally. Add these domains to the proxy's fake-IP filter and reload the proxy profile:
+
+   ```yaml
+   fake-ip-filter:
+     - huggingface.co
+     - +.huggingface.co
+     - +.hf.co
+   ```
+
+2. **Allow private addresses for InvokeAI.** Add this to the package's `invokeai-root/invokeai.yaml` and restart the package:
+
+   ```yaml
+   allow_private_download_urls: true
+   ```
+
+   This also lets the downloader reach loopback and private-network URLs, so enable it only when you trust the download sources.
+
+This affects downloads made by InvokeAI itself, not the Stability Matrix Model Browser.
 
 ## Inference Connection and Workflow Errors
 

@@ -894,7 +894,7 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Could not load details for this package. Select it again to retry..
+        ///   Looks up a localized string similar to Could not load details for this package. Reselect to retry..
         /// </summary>
         public static string Error_PythonPackageDetailsLoadFailed {
             get {

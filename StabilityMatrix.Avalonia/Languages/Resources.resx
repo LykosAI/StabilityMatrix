@@ -1883,4 +1883,10 @@ Account tokens will not be viewable after saving, please make a note of them if 
   <data name="Error_DocumentationPageLoadFailed" xml:space="preserve">
     <value>Could not load this page. Check your connection and try again.</value>
   </data>
+  <data name="Label_LogLevel" xml:space="preserve">
+    <value>Log Level</value>
+  </data>
+  <data name="Label_LogLevel_Description" xml:space="preserve">
+    <value>Minimum level of messages written to the log files and console.</value>
+  </data>
 </root>

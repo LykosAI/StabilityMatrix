@@ -109,12 +109,16 @@ public partial class PythonPackagesItemViewModel : ViewModelBase
             {
                 await using var venvRunner = await createVenvRunner();
 
-                PipShowResult = await venvRunner.PipShow(Package.Name);
+                var pipShowResult = await venvRunner.PipShow(Package.Name);
 
                 // Attempt to get known index url
                 var indexUrl = GetKnownIndexUrl(Package.Name, Package.Version);
+                var pipIndexResult = await venvRunner.PipIndex(Package.Name, indexUrl);
 
-                if (await venvRunner.PipIndex(Package.Name, indexUrl) is { } pipIndexResult)
+                // Only mark as loaded once both calls succeed, so a failed index lookup is retried
+                PipShowResult = pipShowResult;
+
+                if (pipIndexResult is not null)
                 {
                     AvailableVersions = pipIndexResult.AvailableVersions;
                     SelectedVersion = Package.Version;

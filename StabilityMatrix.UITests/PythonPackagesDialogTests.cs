@@ -6,6 +6,7 @@ using NSubstitute;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.Views.Dialogs;
+using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Python;
@@ -93,6 +94,37 @@ public class PythonPackagesDialogTests
     }
 
     [AvaloniaFact]
+    public async Task FailedIndexLookup_RetriesWhenSelectedAgain()
+    {
+        var fail = true;
+        var dialog = await PackagesDialog.OpenAsync(
+            pipShow: name =>
+                Task.FromResult<PipShowResult?>(new PipShowResult { Name = name, Version = "1.0.0" }),
+            pipIndex: name =>
+                fail && name == "jax"
+                    ? throw new ProcessException("index unavailable")
+                    : Task.FromResult<PipIndexResult?>(new PipIndexResult { AvailableVersions = ["1.0.0"] })
+        );
+
+        await dialog.TypeSearchAsync("jax");
+        var jax = dialog.Vm.SelectedPackage;
+        Assert.Equal("jax", jax?.Package.Name);
+        Assert.True(jax!.HasLoadError);
+        Assert.Null(jax.PipShowResult);
+
+        fail = false;
+        dialog.Vm.SelectedPackage = dialog.Vm.Packages.Single(p => p.Package.Name == "jaxlib");
+        await dialog.SettleAsync();
+        dialog.Vm.SelectedPackage = jax;
+        await dialog.SettleAsync();
+
+        Assert.False(jax.HasLoadError);
+        Assert.NotNull(jax.PipShowResult);
+        Assert.NotNull(jax.AvailableVersions);
+        dialog.Close();
+    }
+
+    [AvaloniaFact]
     public async Task ClosingDialog_WithLoadInProgress_DoesNotThrow()
     {
         var release = new TaskCompletionSource();
@@ -145,14 +177,20 @@ public class PythonPackagesDialogTests
             this.searchBox = searchBox;
         }
 
-        public static async Task<PackagesDialog> OpenAsync(Func<string, Task<PipShowResult?>> pipShow)
+        public static async Task<PackagesDialog> OpenAsync(
+            Func<string, Task<PipShowResult?>> pipShow,
+            Func<string, Task<PipIndexResult?>>? pipIndex = null
+        )
         {
+            pipIndex ??= _ =>
+                Task.FromResult<PipIndexResult?>(new PipIndexResult { AvailableVersions = ["1.0.0"] });
+
             var runner = Substitute.For<IPyVenvRunner>();
             runner.PipList().Returns(PackageNames.Select(n => new PipPackageInfo(n, "1.0.0")).ToList());
             runner.PipShow(Arg.Any<string>()).Returns(call => pipShow(call.Arg<string>()));
             runner
                 .PipIndex(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<bool>())
-                .Returns(new PipIndexResult { AvailableVersions = ["1.0.0"] });
+                .Returns(call => pipIndex(call.ArgAt<string>(0)));
 
             var vm = new PythonPackagesViewModel(
                 NullLogger<PythonPackagesViewModel>.Instance,

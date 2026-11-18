@@ -128,10 +128,11 @@
                 VerticalAlignment="Top"
                 icons:Attached.Icon="fa-solid fa-info"
                 Classes="transparent-full"
-                Tapped="InfoButton_OnTapped">
+                Tapped="InfoButton_OnTapped"
+                ToolTip.Tip="{Binding LocalGenerationDataText}">
                 <Button.IsEnabled>
                     <MultiBinding Converter="{x:Static BoolConverters.Or}">
-                        <Binding Path="HasLocalGenerationParameters" />
+                        <Binding Path="HasLocalImageFile" />
                         <Binding Path="HasCivitImageMetadata" />
                     </MultiBinding>
                 </Button.IsEnabled>
@@ -326,43 +327,52 @@
 
                 <StackPanel
                     Margin="4,0"
-                    DataContext="{Binding LocalImageFile.GenerationParameters}"
-                    IsVisible="{Binding $parent[Grid].((vmDialogs:ImageViewerViewModel)DataContext).HasLocalGenerationParameters}"
+                    IsVisible="{Binding HasLocalImageFile}"
                     Spacing="8">
                     <Grid RowDefinitions="Auto,*">
-                        <TextBlock Text="{x:Static lang:Resources.Label_Prompt}" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
-                        <SelectableTextBlock Grid.Row="1" Text="{Binding PositivePrompt}" />
+                        <TextBlock Text="{x:Static lang:Resources.Label_GeneratedWith}" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+                        <SelectableTextBlock Grid.Row="1" Text="{Binding LocalGenerationDataText}" />
                     </Grid>
 
-                    <Grid RowDefinitions="Auto,*">
-                        <TextBlock Text="{x:Static lang:Resources.Label_NegativePrompt}" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
-                        <SelectableTextBlock Grid.Row="1" Text="{Binding NegativePrompt}" />
-                    </Grid>
+                    <StackPanel
+                        DataContext="{Binding LocalImageFile.GenerationParameters}"
+                        IsVisible="{Binding $parent[Grid].((vmDialogs:ImageViewerViewModel)DataContext).HasLocalGenerationParameters}"
+                        Spacing="8">
+                        <Grid RowDefinitions="Auto,*">
+                            <TextBlock Text="{x:Static lang:Resources.Label_Prompt}" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+                            <SelectableTextBlock Grid.Row="1" Text="{Binding PositivePrompt}" />
+                        </Grid>
 
-                    <Grid RowDefinitions="Auto,*">
-                        <TextBlock Text="{x:Static lang:Resources.Label_Model}" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
-                        <SelectableTextBlock Grid.Row="1" Text="{Binding ModelName}" />
-                    </Grid>
+                        <Grid RowDefinitions="Auto,*">
+                            <TextBlock Text="{x:Static lang:Resources.Label_NegativePrompt}" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+                            <SelectableTextBlock Grid.Row="1" Text="{Binding NegativePrompt}" />
+                        </Grid>
 
-                    <Grid RowDefinitions="Auto,*">
-                        <TextBlock Text="{x:Static lang:Resources.Label_Sampler}" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
-                        <SelectableTextBlock Grid.Row="1" Text="{Binding Sampler}" />
-                    </Grid>
+                        <Grid RowDefinitions="Auto,*">
+                            <TextBlock Text="{x:Static lang:Resources.Label_Model}" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+                            <SelectableTextBlock Grid.Row="1" Text="{Binding ModelName}" />
+                        </Grid>
 
-                    <Grid RowDefinitions="Auto,*">
-                        <TextBlock Text="{x:Static lang:Resources.Label_Steps}" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
-                        <SelectableTextBlock Grid.Row="1" Text="{Binding Steps}" />
-                    </Grid>
+                        <Grid RowDefinitions="Auto,*">
+                            <TextBlock Text="{x:Static lang:Resources.Label_Sampler}" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+                            <SelectableTextBlock Grid.Row="1" Text="{Binding Sampler}" />
+                        </Grid>
 
-                    <Grid RowDefinitions="Auto,*">
-                        <TextBlock Text="{x:Static lang:Resources.Label_CFGScale}" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
-                        <SelectableTextBlock Grid.Row="1" Text="{Binding CfgScale}" />
-                    </Grid>
+                        <Grid RowDefinitions="Auto,*">
+                            <TextBlock Text="{x:Static lang:Resources.Label_Steps}" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+                            <SelectableTextBlock Grid.Row="1" Text="{Binding Steps}" />
+                        </Grid>
 
-                    <Grid RowDefinitions="Auto,*">
-                        <TextBlock Text="{x:Static lang:Resources.Label_Seed}" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
-                        <SelectableTextBlock Grid.Row="1" Text="{Binding Seed}" />
-                    </Grid>
+                        <Grid RowDefinitions="Auto,*">
+                            <TextBlock Text="{x:Static lang:Resources.Label_CFGScale}" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+                            <SelectableTextBlock Grid.Row="1" Text="{Binding CfgScale}" />
+                        </Grid>
+
+                        <Grid RowDefinitions="Auto,*">
+                            <TextBlock Text="{x:Static lang:Resources.Label_Seed}" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+                            <SelectableTextBlock Grid.Row="1" Text="{Binding Seed}" />
+                        </Grid>
+                    </StackPanel>
                 </StackPanel>
             </Grid>
 

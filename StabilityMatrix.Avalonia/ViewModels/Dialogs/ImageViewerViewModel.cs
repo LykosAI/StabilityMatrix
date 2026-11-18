@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Helpers;
+using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.Views;
@@ -39,6 +40,8 @@ public partial class ImageViewerViewModel(
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasLocalGenerationParameters))]
+    [NotifyPropertyChangedFor(nameof(HasLocalImageFile))]
+    [NotifyPropertyChangedFor(nameof(LocalGenerationDataText))]
     private LocalImageFile? localImageFile;
 
     [ObservableProperty]
@@ -61,6 +64,19 @@ public partial class ImageViewerViewModel(
     /// Whether local generation parameters are available.
     /// </summary>
     public bool HasLocalGenerationParameters => LocalImageFile?.GenerationParameters is not null;
+
+    /// <summary>
+    /// Whether a local file is shown, which always gets the info button to tell where it came from.
+    /// </summary>
+    public bool HasLocalImageFile => LocalImageFile is not null;
+
+    /// <summary>
+    /// The tool or format of the local file's generation data, or that none was found.
+    /// </summary>
+    public string? LocalGenerationDataText =>
+        LocalImageFile is null
+            ? null
+            : LocalImageFile.GenerationDataLabel ?? Resources.Text_NoGenerationDataDetected;
 
     /// <summary>
     /// Whether Civitai image metadata is available.

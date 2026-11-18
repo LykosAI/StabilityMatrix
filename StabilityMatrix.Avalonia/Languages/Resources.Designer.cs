@@ -5167,5 +5167,32 @@ namespace StabilityMatrix.Avalonia.Languages {
                 return ResourceManager.GetString("Error_DocumentationPageLoadFailed", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Generated with.
+        /// </summary>
+        public static string Label_GeneratedWith {
+            get {
+                return ResourceManager.GetString("Label_GeneratedWith", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No generation data detected.
+        /// </summary>
+        public static string Text_NoGenerationDataDetected {
+            get {
+                return ResourceManager.GetString("Text_NoGenerationDataDetected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} generation data was found, but its prompt and settings can&apos;t be loaded.
+        /// </summary>
+        public static string Text_GenerationDataNotLoadable {
+            get {
+                return ResourceManager.GetString("Text_GenerationDataNotLoadable", resourceCulture);
+            }
+        }
     }
 }

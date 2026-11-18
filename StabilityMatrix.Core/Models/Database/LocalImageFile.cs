@@ -4,6 +4,7 @@ using MetadataExtractor.Formats.Exif;
 using SkiaSharp;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.GenerationData;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 using Size = System.Drawing.Size;
 
@@ -35,6 +36,21 @@ public record LocalImageFile
     /// Generation parameters metadata of the file.
     /// </summary>
     public GenerationParameters? GenerationParameters { get; init; }
+
+    /// <summary>
+    /// Format of the generation data embedded in the file, if any was found.
+    /// </summary>
+    public GenerationDataSource? GenerationDataSource { get; init; }
+
+    /// <summary>
+    /// The tool that made the file, when it can be told apart from the format of its generation data.
+    /// </summary>
+    public string? GenerationSoftware { get; init; }
+
+    /// <summary>
+    /// Name of the tool or format the generation data came from, or null when none was found.
+    /// </summary>
+    public string? GenerationDataLabel => GenerationSoftware ?? GenerationDataSource?.GetDisplayName();
 
     /// <summary>
     /// Dimensions of the image
@@ -99,6 +115,23 @@ public record LocalImageFile
     }
 
     public static LocalImageFile FromPath(FilePath filePath)
+    {
+        var imageFile = FromPathWithoutGenerationData(filePath);
+        var generationData = GenerationDataParser.TryRead(filePath);
+        if (generationData is null)
+        {
+            return imageFile;
+        }
+
+        return imageFile with
+        {
+            GenerationDataSource = generationData.Source,
+            GenerationSoftware = generationData.Software,
+            GenerationParameters = imageFile.GenerationParameters ?? generationData.Parameters,
+        };
+    }
+
+    private static LocalImageFile FromPathWithoutGenerationData(FilePath filePath)
     {
         // TODO: Support other types
         const LocalImageFileType imageType = LocalImageFileType.Inference | LocalImageFileType.TextToImage;

@@ -98,6 +98,11 @@ public class ImageMetadata
         {
             var file = ImageFile.FromFile(filePath.Info.FullName);
             var userComment = file.Properties.Get(ExifTag.UserComment);
+            if (userComment is null)
+            {
+                return (null, null, null, null, null);
+            }
+
             var bytes = userComment.Interoperability.Data.Skip(8).ToArray();
             var userCommentString = Encoding.BigEndianUnicode.GetString(bytes);
 

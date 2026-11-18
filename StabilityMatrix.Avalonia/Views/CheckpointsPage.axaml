@@ -735,9 +735,9 @@
                                                 Foreground="{DynamicResource TextFillColorTertiaryBrush}"
                                                 IsVisible="{Binding CanShowTriggerWords}"
                                                 TextWrapping="NoWrap"
-                                                ToolTip.Tip="{Binding CheckpointFile.ConnectedModelInfo.TrainedWordsString}">
+                                                ToolTip.Tip="{Binding CheckpointFile.DisplayTrainedWordsString}">
                                                 <Run Text="Trigger words:" />
-                                                <Run Text="{Binding CheckpointFile.ConnectedModelInfo.TrainedWordsString}" />
+                                                <Run Text="{Binding CheckpointFile.DisplayTrainedWordsString}" />
                                             </TextBlock>
                                         </StackPanel>
                                     </Border>

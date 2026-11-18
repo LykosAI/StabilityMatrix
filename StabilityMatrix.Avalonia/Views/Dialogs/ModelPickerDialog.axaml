@@ -354,10 +354,10 @@
                                             MinHeight="0"
                                             Padding="8,2"
                                             Classes="Circle LightBlue"
-                                            Content="{Binding Local.ConnectedModelInfo.BaseModel, FallbackValue=''}"
+                                            Content="{Binding Local.DisplayBaseModel, FallbackValue=''}"
                                             FontSize="11"
                                             FontWeight="SemiBold"
-                                            IsVisible="{Binding Local.ConnectedModelInfo.BaseModel, Converter={x:Static StringConverters.IsNotNullOrEmpty}, FallbackValue=False}"
+                                            IsVisible="{Binding Local.DisplayBaseModel, Converter={x:Static StringConverters.IsNotNullOrEmpty}, FallbackValue=False}"
                                             Theme="{StaticResource TagLabel}" />
                                     </StackPanel>
                                 </sg:SpacedGrid>
@@ -486,10 +486,10 @@
                                                     MinHeight="0"
                                                     Padding="8,2"
                                                     Classes="Circle LightBlue"
-                                                    Content="{Binding Local.ConnectedModelInfo.BaseModel, FallbackValue=''}"
+                                                    Content="{Binding Local.DisplayBaseModel, FallbackValue=''}"
                                                     FontSize="11"
                                                     FontWeight="SemiBold"
-                                                    IsVisible="{Binding Local.ConnectedModelInfo.BaseModel, Converter={x:Static StringConverters.IsNotNullOrEmpty}, FallbackValue=False}"
+                                                    IsVisible="{Binding Local.DisplayBaseModel, Converter={x:Static StringConverters.IsNotNullOrEmpty}, FallbackValue=False}"
                                                     Theme="{StaticResource TagLabel}" />
                                             </StackPanel>
 

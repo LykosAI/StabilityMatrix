@@ -106,9 +106,6 @@ internal static partial class GenerationDataJson
         return GetDouble(value) is { } number and >= 0 and < 1.8e19 ? (ulong)number : 0;
     }
 
-    /// <summary>
-    /// Get a property of a node that may not be an object
-    /// </summary>
     public static JsonNode? Get(JsonNode? node, string key) => node is JsonObject obj ? obj[key] : null;
 
     [GeneratedRegex(@"(?<=[:\[,]\s*)-?(?:NaN|Infinity)(?=\s*[,\]}])")]

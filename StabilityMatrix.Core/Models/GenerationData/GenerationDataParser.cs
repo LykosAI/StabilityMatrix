@@ -47,9 +47,6 @@ public static partial class GenerationDataParser
         "compositeSynthetic",
     ];
 
-    /// <summary>
-    /// Read the generation data of a file. Returns null when none is found or the file can't be read.
-    /// </summary>
     public static GenerationDataInfo? TryRead(string path)
     {
         try
@@ -554,7 +551,6 @@ public static partial class GenerationDataParser
 
     private static GenerationDataInfo? ParseInvokeAI(MetadataEntries entries)
     {
-        // legacy "sd-metadata" format
         if (entries["sd-metadata"] is { } sdMetadata)
         {
             if (GenerationDataJson.ParseObject(sdMetadata) is not { } metadata)

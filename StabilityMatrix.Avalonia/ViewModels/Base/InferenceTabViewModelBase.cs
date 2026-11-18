@@ -319,7 +319,6 @@ public abstract partial class InferenceTabViewModelBase
             return;
         }
 
-        // Other generators: ComfyUI, SwarmUI, Fooocus, InvokeAI, NovelAI, ...
         var generationData = GenerationDataParser.TryRead(imageFilePath);
         if (generationData?.Parameters is { PositivePrompt: not null } generationParameters)
         {

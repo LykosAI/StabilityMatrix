@@ -13,15 +13,9 @@ public record GenerationDataInfo
     /// </summary>
     public string? Software { get; init; }
 
-    /// <summary>
-    /// Prompt and settings, when they could be read.
-    /// </summary>
     public GenerationParameters? Parameters { get; init; }
 
     public string DisplayName => Software ?? Source.GetDisplayName();
 
-    /// <summary>
-    /// Whether the file is only labelled as AI made, without any generation settings.
-    /// </summary>
     public bool IsProvenanceOnly => Source is GenerationDataSource.C2pa or GenerationDataSource.Iptc;
 }

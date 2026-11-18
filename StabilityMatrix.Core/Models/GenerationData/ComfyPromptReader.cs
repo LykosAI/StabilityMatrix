@@ -32,9 +32,6 @@ internal class ComfyPromptReader
     private static readonly string[] PositiveKeys = [.. TextKeys, "positive"];
     private static readonly string[] NegativeKeys = [.. TextKeys, "negative"];
 
-    /// <summary>
-    /// Value inputs of primitive, seed and number nodes
-    /// </summary>
     private static readonly string[] ValueKeys =
     [
         "value",
@@ -59,9 +56,6 @@ internal class ComfyPromptReader
         }
     }
 
-    /// <summary>
-    /// Whether the JSON object is a ComfyUI prompt, i.e. holds at least one node.
-    /// </summary>
     public static bool IsPrompt(JsonObject? prompt) =>
         prompt is not null
         && prompt.Any(n =>
@@ -225,9 +219,6 @@ internal class ComfyPromptReader
         return !found;
     }
 
-    /// <summary>
-    /// Depth first traversal backwards through the links of the prompt, skipping CLIP links.
-    /// </summary>
     private IEnumerable<(string Id, JsonObject Node)> Traverse(
         string startId,
         Func<JsonObject, bool> descend,
@@ -261,7 +252,6 @@ internal class ComfyPromptReader
                 )
                     targets.Add(target);
             }
-            // keep the input order when popping
             for (var i = targets.Count - 1; i >= 0; i--)
                 stack.Push(targets[i]);
         }

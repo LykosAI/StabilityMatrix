@@ -84,14 +84,8 @@ public partial class MetadataEntries
 
     public Dictionary<string, string> Entries { get; } = new(StringComparer.Ordinal);
 
-    /// <summary>
-    /// The XMP packet, if any.
-    /// </summary>
     public string? Xmp { get; private set; }
 
-    /// <summary>
-    /// The raw C2PA manifest store (JUMBF), if any.
-    /// </summary>
     public byte[]? C2pa { get; private set; }
 
     public string? this[string key] => Entries.GetValueOrDefault(key);
@@ -193,7 +187,6 @@ public partial class MetadataEntries
                 stream.Seek(length, SeekOrigin.Current);
             }
 
-            // crc
             stream.Seek(4, SeekOrigin.Current);
         }
 
@@ -418,9 +411,6 @@ public partial class MetadataEntries
         }
     }
 
-    /// <summary>
-    /// Read the text tags of an EXIF block (TIFF structure, with or without the Exif header)
-    /// </summary>
     public static Dictionary<string, string> ReadExifEntries(byte[] exif)
     {
         var entries = new Dictionary<string, string>(StringComparer.Ordinal);

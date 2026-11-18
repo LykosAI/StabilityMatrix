@@ -616,7 +616,7 @@ public partial class PromptCardViewModel
 
         var negativePrompt = GetNegativePrompt();
         var selectedModel = tabContext.SelectedModel;
-        var modelTags = selectedModel?.Local?.ConnectedModelInfo?.BaseModel?.ToLower() switch
+        var modelTags = selectedModel?.Local?.DisplayBaseModel?.ToLower() switch
         {
             { } baseModel when baseModel.Contains("flux") => new List<ModelTags> { ModelTags.Flux },
             { } baseModel when baseModel.Contains("sdxl") => [ModelTags.Sdxl],

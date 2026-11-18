@@ -1,6 +1,5 @@
 using System.Buffers.Binary;
 using System.Text;
-using System.Text.Json;
 using StabilityMatrix.Core.Models;
 
 namespace StabilityMatrix.Tests.Models;
@@ -40,121 +39,23 @@ public class SafetensorMetadataTests
         );
     }
 
-    private static readonly byte[] CoverJpegBytes = [0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0xFF, 0xD9];
-    private static readonly byte[] GalleryJpegBytes = [0xFF, 0xD8, 0x01, 0x02, 0x03, 0xFF, 0xD9];
-
     [TestMethod]
-    public async Task ReadEmbeddedCoverAsync_ReturnsFirstCover()
+    public void FromDictionary_ShowsEmbeddedImagesAsPlaceholders()
     {
-        var path = WriteSafetensorFile(
+        var metadata = SafetensorMetadata.FromDictionary(
             new Dictionary<string, string>
             {
-                ["ss_network_module"] = "networks.lora",
+                ["cover_count"] = "1",
+                ["cover_1"] = new string('A', 4096),
+                ["modelspec.thumbnail"] = "data:image/jpeg;base64," + new string('A', 4096),
                 ["cover_format"] = "1",
-                ["cover_count"] = "2",
-                ["cover_1"] = Convert.ToBase64String(CoverJpegBytes),
-                ["cover_2"] = Convert.ToBase64String(GalleryJpegBytes),
             }
         );
 
-        try
-        {
-            var cover = await SafetensorMetadata.ReadEmbeddedCoverAsync(path);
-
-            CollectionAssert.AreEqual(CoverJpegBytes, cover);
-        }
-        finally
-        {
-            File.Delete(path);
-        }
-    }
-
-    [TestMethod]
-    public async Task ReadEmbeddedCoverAsync_ReturnsNull_WhenFileHasNoMetadata()
-    {
-        var path = WriteSafetensorFile(null);
-
-        try
-        {
-            Assert.IsNull(await SafetensorMetadata.ReadEmbeddedCoverAsync(path));
-        }
-        finally
-        {
-            File.Delete(path);
-        }
-    }
-
-    [TestMethod]
-    public void GetEmbeddedCover_ReturnsGalleryCover()
-    {
-        var metadata = new Dictionary<string, string>
-        {
-            ["cover_count"] = "2",
-            ["cover_1"] = Convert.ToBase64String(CoverJpegBytes),
-            ["cover_2"] = Convert.ToBase64String(GalleryJpegBytes),
-        };
-
-        CollectionAssert.AreEqual(GalleryJpegBytes, SafetensorMetadata.GetEmbeddedCover(metadata, 2));
-        Assert.IsNull(SafetensorMetadata.GetEmbeddedCover(metadata, 3));
-    }
-
-    [TestMethod]
-    public void GetEmbeddedCover_AcceptsDataUriPrefix()
-    {
-        var metadata = new Dictionary<string, string>
-        {
-            ["cover_count"] = "1",
-            ["cover_1"] = "data:image/jpeg;base64," + Convert.ToBase64String(CoverJpegBytes),
-        };
-
-        CollectionAssert.AreEqual(CoverJpegBytes, SafetensorMetadata.GetEmbeddedCover(metadata));
-    }
-
-    [TestMethod]
-    public void GetEmbeddedCover_ReturnsNull_WhenCoverCountIsMissing()
-    {
-        var metadata = new Dictionary<string, string>
-        {
-            ["cover_1"] = Convert.ToBase64String(CoverJpegBytes),
-        };
-
-        Assert.IsNull(SafetensorMetadata.GetEmbeddedCover(metadata));
-    }
-
-    [TestMethod]
-    public void GetEmbeddedCover_ReturnsNull_WhenCoverIsNotBase64()
-    {
-        var metadata = new Dictionary<string, string> { ["cover_count"] = "1", ["cover_1"] = "not base64!" };
-
-        Assert.IsNull(SafetensorMetadata.GetEmbeddedCover(metadata));
-    }
-
-    private static string WriteSafetensorFile(Dictionary<string, string>? metadata)
-    {
-        var header = new Dictionary<string, object>
-        {
-            ["weight"] = new
-            {
-                dtype = "F32",
-                shape = new[] { 1 },
-                data_offsets = new[] { 0, 4 },
-            },
-        };
-        if (metadata is not null)
-        {
-            header["__metadata__"] = metadata;
-        }
-
-        var headerBytes = JsonSerializer.SerializeToUtf8Bytes(header);
-        var path = Path.GetTempFileName();
-
-        using var stream = File.Create(path);
-        Span<byte> lengthBuffer = stackalloc byte[8];
-        BinaryPrimitives.WriteUInt64LittleEndian(lengthBuffer, (ulong)headerBytes.Length);
-        stream.Write(lengthBuffer);
-        stream.Write(headerBytes);
-        stream.Write(new byte[4]);
-
-        return path;
+        var values = metadata.OtherMetadata.ToDictionary(x => x.Name, x => x.Value);
+        Assert.AreEqual("1", values["cover_count"]);
+        Assert.AreEqual("1", values["cover_format"]);
+        StringAssert.StartsWith(values["cover_1"], "(embedded image");
+        StringAssert.StartsWith(values["modelspec.thumbnail"], "(embedded image");
     }
 }

@@ -227,10 +227,10 @@ public partial class CheckpointsPageViewModel(
                         || file.DisplayModelName.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase)
                         || file.DisplayModelVersion.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase)
                         || (
-                            file.ConnectedModelInfo?.TrainedWordsString.Contains(
+                            file.DisplayTrainedWordsString.Contains(
                                 SearchQuery,
                                 StringComparison.OrdinalIgnoreCase
-                            ) ?? false
+                            )
                         )
                 )
             )
@@ -281,12 +281,8 @@ public partial class CheckpointsPageViewModel(
                     case CheckpointSortMode.BaseModel:
                         comparer =
                             SelectedSortDirection == ListSortDirection.Ascending
-                                ? comparer.ThenByAscending(vm =>
-                                    vm.CheckpointFile.ConnectedModelInfo?.BaseModel
-                                )
-                                : comparer.ThenByDescending(vm =>
-                                    vm.CheckpointFile.ConnectedModelInfo?.BaseModel
-                                );
+                                ? comparer.ThenByAscending(vm => vm.CheckpointFile.DisplayBaseModel)
+                                : comparer.ThenByDescending(vm => vm.CheckpointFile.DisplayBaseModel);
 
                         comparer = comparer.ThenByAscending(vm => vm.CheckpointFile.DisplayModelName);
                         break;
@@ -1299,10 +1295,8 @@ public partial class CheckpointsPageViewModel(
             return false;
 
         if (SelectedCategory?.Path is null || SelectedCategory?.Path == settingsManager.ModelsDirectory)
-            return file.HasConnectedModel
-                ? SelectedBaseModels.Count == 0
-                    || SelectedBaseModels.Contains(file.ConnectedModelInfo.BaseModel ?? "Other")
-                : SelectedBaseModels.Count == 0 || SelectedBaseModels.Contains("Other");
+            return SelectedBaseModels.Count == 0
+                || SelectedBaseModels.Contains(file.DisplayBaseModel ?? "Other");
 
         var categoryRelativePath = SelectedCategory
             ?.Path.Replace(settingsManager.ModelsDirectory, string.Empty)
@@ -1311,15 +1305,7 @@ public partial class CheckpointsPageViewModel(
         if (categoryRelativePath == null || folderPath == null)
             return false;
 
-        if (
-            (
-                file.HasConnectedModel
-                    ? SelectedBaseModels.Count == 0
-                        || SelectedBaseModels.Contains(file.ConnectedModelInfo?.BaseModel ?? "Other")
-                    : SelectedBaseModels.Count == 0 || SelectedBaseModels.Contains("Other")
-            )
-            is false
-        )
+        if (SelectedBaseModels.Count != 0 && !SelectedBaseModels.Contains(file.DisplayBaseModel ?? "Other"))
             return false;
 
         // If not showing nested models, just check if the file is directly in this folder

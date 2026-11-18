@@ -129,6 +129,50 @@ public class MetadataImportServiceTests
         }
     }
 
+    [TestMethod]
+    public async Task GetMetadataForFile_FallsBackToOriginalHashFromSafetensorsHeader()
+    {
+        const string originalSha256 = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+        var tempRoot = CreateTempDirectory();
+
+        try
+        {
+            var modelPath = Path.Combine(tempRoot, "model.safetensors");
+            var header = System.Text.Encoding.UTF8.GetBytes(
+                $$$"""{"__metadata__":{"model_sha256_original":"{{{originalSha256}}}"}}"""
+            );
+            await using (var stream = File.Create(modelPath))
+            {
+                var length = new byte[8];
+                System.Buffers.Binary.BinaryPrimitives.WriteUInt64LittleEndian(length, (ulong)header.Length);
+                stream.Write(length);
+                stream.Write(header);
+            }
+
+            var blake3 = await FileHash.GetBlake3Async(new FilePath(modelPath));
+            var service = CreateMetadataImportService();
+            service
+                .Api.GetModelVersionByHash(blake3)
+                .Returns<CivitModelVersionResponse>(_ => throw new TaskCanceledException());
+            ConfigureCivitLookup(
+                service.Api,
+                "remote-blake3",
+                sha256: originalSha256,
+                lookupHash: originalSha256
+            );
+
+            var result = await service.Instance.GetMetadataForFile(new FilePath(modelPath));
+
+            Assert.IsNotNull(result);
+            Assert.AreEqual(123, result.ModelId);
+            Assert.IsTrue(File.Exists(Path.Combine(tempRoot, "model.cm-info.json")));
+        }
+        finally
+        {
+            Directory.Delete(tempRoot, true);
+        }
+    }
+
     private static string CreateTempDirectory()
     {
         var path = Path.Combine(Path.GetTempPath(), $"sm-metadata-tests-{Guid.NewGuid():N}");
@@ -136,7 +180,13 @@ public class MetadataImportServiceTests
         return path;
     }
 
-    private static void ConfigureCivitLookup(ICivitApi api, string hash, bool includeImage = false)
+    private static void ConfigureCivitLookup(
+        ICivitApi api,
+        string hash,
+        bool includeImage = false,
+        string sha256 = "sha256",
+        string? lookupHash = null
+    )
     {
         var file = new CivitFile
         {
@@ -145,7 +195,7 @@ public class MetadataImportServiceTests
             DownloadUrl = "https://example.invalid/model",
             Type = CivitFileType.Model,
             Metadata = new CivitFileMetadata { Size = "pruned" },
-            Hashes = new CivitFileHashes { BLAKE3 = hash, SHA256 = "sha256" },
+            Hashes = new CivitFileHashes { BLAKE3 = hash, SHA256 = sha256 },
         };
         var version = new CivitModelVersion
         {
@@ -169,7 +219,7 @@ public class MetadataImportServiceTests
             Stats = new CivitModelStats(),
         };
 
-        api.GetModelVersionByHash(hash)
+        api.GetModelVersionByHash(lookupHash ?? hash)
             .Returns(
                 Task.FromResult(
                     new CivitModelVersionResponse(

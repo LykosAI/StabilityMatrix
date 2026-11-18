@@ -92,6 +92,18 @@ public record LocalModelFile
     public string? EmbeddedPreviewImageFullPath { get; set; }
 
     /// <summary>
+    /// Optional base model declared in the model file's metadata.
+    /// Only used when <see cref="ConnectedModelInfo"/> has no base model.
+    /// </summary>
+    public string? EmbeddedBaseModel { get; set; }
+
+    /// <summary>
+    /// Optional trigger words declared in the model file's metadata.
+    /// Only used when <see cref="ConnectedModelInfo"/> has no trigger words.
+    /// </summary>
+    public string[]? EmbeddedTrainedWords { get; set; }
+
+    /// <summary>
     /// Optional full path to the model's configuration (.yaml) file.
     /// </summary>
     public string? ConfigFullPath { get; set; }
@@ -153,6 +165,22 @@ public record LocalModelFile
     [BsonIgnore]
     public Uri? PreviewImageUriGlobal =>
         PreviewImageFullPathGlobal == null ? null : new Uri(PreviewImageFullPathGlobal);
+
+    [BsonIgnore]
+    public string? DisplayBaseModel =>
+        string.IsNullOrWhiteSpace(ConnectedModelInfo?.BaseModel)
+            ? EmbeddedBaseModel
+            : ConnectedModelInfo.BaseModel;
+
+    [BsonIgnore]
+    public string[]? DisplayTrainedWords =>
+        ConnectedModelInfo?.TrainedWords is { Length: > 0 } trainedWords
+            ? trainedWords
+            : EmbeddedTrainedWords;
+
+    [BsonIgnore]
+    public string DisplayTrainedWordsString =>
+        DisplayTrainedWords is { } trainedWords ? string.Join(", ", trainedWords) : string.Empty;
 
     [BsonIgnore]
     public string DisplayModelName => ConnectedModelInfo?.ModelName ?? FileNameWithoutExtension;

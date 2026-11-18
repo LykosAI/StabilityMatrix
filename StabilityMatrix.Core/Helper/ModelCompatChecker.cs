@@ -11,22 +11,16 @@ public class ModelCompatChecker
 
     public bool? IsLoraCompatibleWithBaseModel(HybridModelFile? lora, HybridModelFile? baseModel)
     {
-        // Require connected info for both
+        // Require a known base model for both
         if (
-            lora?.Local?.ConnectedModelInfo is not { } loraInfo
-            || baseModel?.Local?.ConnectedModelInfo is not { } baseModelInfo
+            lora?.Local?.DisplayBaseModel is not { } loraBaseModel
+            || !baseModelNamesToTypes.TryGetValue(loraBaseModel, out var loraBaseModelType)
         )
             return null;
 
         if (
-            loraInfo.BaseModel is null
-            || !baseModelNamesToTypes.TryGetValue(loraInfo.BaseModel, out var loraBaseModelType)
-        )
-            return null;
-
-        if (
-            baseModelInfo.BaseModel is null
-            || !baseModelNamesToTypes.TryGetValue(baseModelInfo.BaseModel, out var baseModelType)
+            baseModel?.Local?.DisplayBaseModel is not { } baseModelName
+            || !baseModelNamesToTypes.TryGetValue(baseModelName, out var baseModelType)
         )
             return null;
 

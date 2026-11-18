@@ -1,6 +1,5 @@
 using System.Buffers;
 using System.Buffers.Binary;
-using System.Globalization;
 using System.Text.Json;
 
 namespace StabilityMatrix.Core.Models;
@@ -37,81 +36,10 @@ public record SafetensorMetadata
     }
 
     /// <summary>
-    /// Reads the cover image embedded in the metadata of a SafeTensor file, in the
-    /// LoRA-Container format (<c>cover_count</c> and <c>cover_1</c> ... <c>cover_N</c> keys).
-    /// </summary>
-    /// <param name="safetensorPath">Path to the SafeTensor file.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The JPEG bytes of the cover, or <see langword="null"/> if the file has no embedded cover.</returns>
-    public static async Task<byte[]?> ReadEmbeddedCoverAsync(
-        string safetensorPath,
-        CancellationToken cancellationToken = default
-    )
-    {
-        await using var stream = new FileStream(
-            safetensorPath,
-            FileMode.Open,
-            FileAccess.Read,
-            FileShare.Read
-        );
-        var metadataDict = await ReadMetadataDictionaryAsync(stream, cancellationToken).ConfigureAwait(false);
-        return metadataDict is null ? null : GetEmbeddedCover(metadataDict);
-    }
-
-    /// <summary>
-    /// Gets an embedded cover image from LoRA-Container metadata.
-    /// <c>cover_1</c> is the preview image, <c>cover_2</c> onwards are gallery images.
-    /// </summary>
-    /// <param name="metadataDict">The <c>__metadata__</c> entries of a SafeTensor file.</param>
-    /// <param name="coverNumber">1-based number of the cover to read.</param>
-    /// <returns>The JPEG bytes of the cover, or <see langword="null"/> if it is missing or invalid.</returns>
-    internal static byte[]? GetEmbeddedCover(
-        IReadOnlyDictionary<string, string> metadataDict,
-        int coverNumber = 1
-    )
-    {
-        if (
-            coverNumber < 1
-            || !metadataDict.TryGetValue("cover_count", out var coverCountText)
-            || !int.TryParse(
-                coverCountText,
-                NumberStyles.None,
-                CultureInfo.InvariantCulture,
-                out var coverCount
-            )
-            || coverNumber > coverCount
-            || !metadataDict.TryGetValue($"cover_{coverNumber}", out var coverValue)
-        )
-        {
-            return null;
-        }
-
-        const string DataUriPrefix = "data:image/jpeg;base64,";
-        var base64 = coverValue.AsSpan().Trim();
-        if (base64.StartsWith(DataUriPrefix, StringComparison.OrdinalIgnoreCase))
-        {
-            base64 = base64[DataUriPrefix.Length..];
-        }
-
-        if (base64.IsEmpty)
-        {
-            return null;
-        }
-
-        var buffer = new byte[base64.Length * 3 / 4];
-        if (!Convert.TryFromBase64Chars(base64, buffer, out var bytesWritten) || bytesWritten == 0)
-        {
-            return null;
-        }
-
-        return bytesWritten == buffer.Length ? buffer : buffer[..bytesWritten];
-    }
-
-    /// <summary>
     /// Reads the raw <c>__metadata__</c> entries from a SafeTensor file.
     /// </summary>
     /// <returns>The metadata entries, or <see langword="null"/> if the file does not contain metadata.</returns>
-    private static async Task<Dictionary<string, string>?> ReadMetadataDictionaryAsync(
+    internal static async Task<Dictionary<string, string>?> ReadMetadataDictionaryAsync(
         Stream safetensorStream,
         CancellationToken cancellationToken = default
     )
@@ -223,6 +151,14 @@ public record SafetensorMetadata
         {
             if (MetadataKeys.Contains(kv.Key))
             {
+                continue;
+            }
+
+            if (SafetensorEmbeddedInfo.IsImageKey(kv.Key))
+            {
+                otherMetadata.Add(
+                    new Metadata(kv.Key, $"(embedded image, {kv.Value.Length * 3 / 4 / 1024:N0} KB)")
+                );
                 continue;
             }
 

@@ -38,7 +38,7 @@ public class ModelFinder
         return new ModelSearchResult(model, version, file);
     }
 
-    // Finds a model using Civit API using file hash
+    // Finds a model using Civit API using file hash (BLAKE3 or SHA256)
     public async Task<ModelSearchResult?> RemoteFindModel(string hashBlake3)
     {
         Logger.Info("Searching Civit API for model version using hash {Hash}", hashBlake3);
@@ -58,6 +58,7 @@ public class ModelFinder
 
             var file = versionResponse.Files.FirstOrDefault(file =>
                 hashBlake3.Equals(file.Hashes.BLAKE3, StringComparison.OrdinalIgnoreCase)
+                || hashBlake3.Equals(file.Hashes.SHA256, StringComparison.OrdinalIgnoreCase)
             );
 
             // Archived models do not have files

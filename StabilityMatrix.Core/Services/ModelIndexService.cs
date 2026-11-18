@@ -34,7 +34,7 @@ public partial class ModelIndexService : IModelIndexService
 
     private DateTimeOffset lastUpdateCheck = DateTimeOffset.MinValue;
 
-    private readonly ConcurrentDictionary<string, EmbeddedCoverCacheEntry> embeddedCoverCache = new();
+    private readonly ConcurrentDictionary<string, EmbeddedInfoCacheEntry> embeddedInfoCache = new();
 
     private Dictionary<SharedFolderType, List<LocalModelFile>> _modelIndex = new();
 
@@ -526,20 +526,9 @@ public partial class ModelIndexService : IModelIndexService
                             ConnectedModelInfoSerializerContext.Default.ConnectedModelInfo
                         );
 
-                        // Seems there is a limitation of LiteDB datetime resolution, so drop nanoseconds on load
-                        // Otherwise new loaded models with ns will cause mismatching equality with models loaded from db with no ns
-                        if (connectedModelInfo?.ImportedAt is { } importedAt && importedAt.Nanosecond != 0)
+                        if (connectedModelInfo is not null)
                         {
-                            connectedModelInfo.ImportedAt = new DateTimeOffset(
-                                importedAt.Year,
-                                importedAt.Month,
-                                importedAt.Day,
-                                importedAt.Hour,
-                                importedAt.Minute,
-                                importedAt.Second,
-                                importedAt.Millisecond,
-                                importedAt.Offset
-                            );
+                            TruncateImportedAt(connectedModelInfo);
                         }
 
                         localModel.ConnectedModelInfo = connectedModelInfo;
@@ -580,7 +569,7 @@ public partial class ModelIndexService : IModelIndexService
 
         var newIndexComplete = newIndexFlat.ToArray();
 
-        await LoadEmbeddedCoversAsync(newIndexComplete, modelsDir).ConfigureAwait(false);
+        await LoadEmbeddedInfoAsync(newIndexComplete, modelsDir).ConfigureAwait(false);
 
         var modelsDict = ModelIndex
             .Values.SelectMany(x => x)
@@ -670,17 +659,22 @@ public partial class ModelIndexService : IModelIndexService
             });
     }
 
+    private static ReadOnlySpan<byte> PngSignature => [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
+
     private static DirectoryPath EmbeddedCoversCacheDirectory =>
         new(Path.GetTempPath(), "StabilityMatrix", "Cache", "EmbeddedCovers");
 
     /// <summary>
-    /// Sets <see cref="LocalModelFile.EmbeddedPreviewImageFullPath"/> for safetensors models
-    /// that have no preview image file but carry a cover image in their header.
+    /// Fills in what safetensors models without a preview image or connected model info file
+    /// carry in their header: the cover image, connected model info, base model and trigger words.
     /// </summary>
-    private async Task LoadEmbeddedCoversAsync(IEnumerable<LocalModelFile> models, DirectoryPath modelsDir)
+    private async Task LoadEmbeddedInfoAsync(IEnumerable<LocalModelFile> models, DirectoryPath modelsDir)
     {
         var candidates = models
-            .Where(model => model.IsSafetensorFile && model.PreviewImageRelativePath is null)
+            .Where(model =>
+                model.IsSafetensorFile
+                && (model.PreviewImageRelativePath is null || model.ConnectedModelInfo is null)
+            )
             .ToList();
 
         if (candidates.Count == 0)
@@ -693,17 +687,35 @@ public partial class ModelIndexService : IModelIndexService
                 candidates,
                 async (model, cancellationToken) =>
                 {
-                    model.EmbeddedPreviewImageFullPath = await GetEmbeddedCoverPathAsync(
-                            model.GetFullPath(modelsDir),
-                            cancellationToken
-                        )
+                    var embedded = await GetEmbeddedInfoAsync(model.GetFullPath(modelsDir), cancellationToken)
                         .ConfigureAwait(false);
+
+                    if (embedded is null)
+                    {
+                        return;
+                    }
+
+                    if (model.PreviewImageRelativePath is null)
+                    {
+                        model.EmbeddedPreviewImageFullPath = embedded.CoverPath;
+                    }
+
+                    if (model.ConnectedModelInfo is null && embedded.ConnectedModelInfo is not null)
+                    {
+                        model.ConnectedModelInfo = JsonSerializer.Deserialize(
+                            embedded.ConnectedModelInfo,
+                            ConnectedModelInfoSerializerContext.Default.ConnectedModelInfo
+                        );
+                    }
+
+                    model.EmbeddedBaseModel = embedded.BaseModel;
+                    model.EmbeddedTrainedWords = embedded.TrainedWords;
                 }
             )
             .ConfigureAwait(false);
     }
 
-    private async Task<string?> GetEmbeddedCoverPathAsync(
+    private async Task<EmbeddedInfoCacheEntry?> GetEmbeddedInfoAsync(
         string modelPath,
         CancellationToken cancellationToken
     )
@@ -715,62 +727,113 @@ public partial class ModelIndexService : IModelIndexService
         }
 
         if (
-            embeddedCoverCache.TryGetValue(modelPath, out var cached)
+            embeddedInfoCache.TryGetValue(modelPath, out var cached)
             && cached.Length == fileInfo.Length
             && cached.LastWriteTimeUtc == fileInfo.LastWriteTimeUtc
             && (cached.CoverPath is null || File.Exists(cached.CoverPath))
         )
         {
-            return cached.CoverPath;
+            return cached;
         }
 
-        string? coverPath = null;
+        var entry = new EmbeddedInfoCacheEntry(fileInfo.Length, fileInfo.LastWriteTimeUtc);
         try
         {
-            var coverBytes = await SafetensorMetadata
-                .ReadEmbeddedCoverAsync(modelPath, cancellationToken)
+            var embedded = await SafetensorEmbeddedInfo
+                .ReadAsync(modelPath, cancellationToken)
                 .ConfigureAwait(false);
 
-            if (coverBytes is not null)
+            if (embedded is not null)
             {
-                var coversDir = EmbeddedCoversCacheDirectory;
-                var coverFile = coversDir.JoinFile(
-                    $"{Convert.ToHexStringLower(SHA256.HashData(coverBytes))}.jpeg"
-                );
-
-                if (!coverFile.Exists)
+                if (embedded.ConnectedModelInfo is { } cmInfo)
                 {
-                    coversDir.Create();
-
-                    var tempFile = coversDir.JoinFile($"{coverFile.Name}.{Guid.NewGuid():N}.tmp");
-                    await File.WriteAllBytesAsync(tempFile, coverBytes, cancellationToken)
-                        .ConfigureAwait(false);
-                    File.Move(tempFile, coverFile, overwrite: true);
+                    TruncateImportedAt(cmInfo);
                 }
 
-                coverPath = coverFile.FullPath;
+                entry = entry with
+                {
+                    CoverPath = embedded.Cover is { } cover
+                        ? await SaveEmbeddedCoverAsync(cover, cancellationToken).ConfigureAwait(false)
+                        : null,
+                    ConnectedModelInfo = embedded.ConnectedModelInfo is { } info
+                        ? JsonSerializer.Serialize(
+                            info,
+                            ConnectedModelInfoSerializerContext.Default.ConnectedModelInfo
+                        )
+                        : null,
+                    BaseModel = embedded.BaseModel,
+                    TrainedWords = embedded.TrainedWords,
+                };
             }
         }
         catch (Exception e)
             when (e is IOException or UnauthorizedAccessException or InvalidDataException or JsonException)
         {
-            logger.LogDebug(e, "Failed to read embedded cover image from {Path}", modelPath);
+            logger.LogDebug(e, "Failed to read embedded model info from {Path}", modelPath);
         }
 
-        embeddedCoverCache[modelPath] = new EmbeddedCoverCacheEntry(
-            fileInfo.Length,
-            fileInfo.LastWriteTimeUtc,
-            coverPath
-        );
+        embeddedInfoCache[modelPath] = entry;
 
-        return coverPath;
+        return entry;
     }
 
-    private readonly record struct EmbeddedCoverCacheEntry(
-        long Length,
-        DateTime LastWriteTimeUtc,
-        string? CoverPath
-    );
+    private static async Task<string> SaveEmbeddedCoverAsync(
+        byte[] cover,
+        CancellationToken cancellationToken
+    )
+    {
+        var extension = cover.AsSpan().StartsWith(PngSignature) ? ".png" : ".jpeg";
+
+        var coversDir = EmbeddedCoversCacheDirectory;
+        var coverFile = coversDir.JoinFile($"{Convert.ToHexStringLower(SHA256.HashData(cover))}{extension}");
+
+        if (!coverFile.Exists)
+        {
+            coversDir.Create();
+
+            var tempFile = coversDir.JoinFile($"{coverFile.Name}.{Guid.NewGuid():N}.tmp");
+            await File.WriteAllBytesAsync(tempFile, cover, cancellationToken).ConfigureAwait(false);
+            File.Move(tempFile, coverFile, overwrite: true);
+        }
+
+        return coverFile.FullPath;
+    }
+
+    /// <summary>
+    /// Drops nanoseconds from <see cref="ConnectedModelInfo.ImportedAt"/>. LiteDB stores datetimes
+    /// at a lower resolution, so models loaded from the database would otherwise not equal newly
+    /// indexed ones.
+    /// </summary>
+    private static void TruncateImportedAt(ConnectedModelInfo connectedModelInfo)
+    {
+        var importedAt = connectedModelInfo.ImportedAt;
+        if (importedAt.Nanosecond != 0)
+        {
+            connectedModelInfo.ImportedAt = new DateTimeOffset(
+                importedAt.Year,
+                importedAt.Month,
+                importedAt.Day,
+                importedAt.Hour,
+                importedAt.Minute,
+                importedAt.Second,
+                importedAt.Millisecond,
+                importedAt.Offset
+            );
+        }
+    }
+
+    private sealed record EmbeddedInfoCacheEntry(long Length, DateTime LastWriteTimeUtc)
+    {
+        public string? CoverPath { get; init; }
+
+        /// <summary>
+        /// Embedded connected model info as JSON, so that every index refresh gets its own copy.
+        /// </summary>
+        public string? ConnectedModelInfo { get; init; }
+
+        public string? BaseModel { get; init; }
+        public string[]? TrainedWords { get; init; }
+    }
 
     /// <inheritdoc />
     public async Task<bool> RemoveModelAsync(LocalModelFile model)

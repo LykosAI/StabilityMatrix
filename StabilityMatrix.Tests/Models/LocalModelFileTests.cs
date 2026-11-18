@@ -66,6 +66,35 @@ public class LocalModelFileTests
         Assert.AreEqual(embeddedCoverPath, model.GetDisplayPreviewImageFullPath(Path.GetTempPath()));
     }
 
+    [TestMethod]
+    public void DisplayBaseModelAndTrainedWords_PreferConnectedModelInfo()
+    {
+        var model = CreateLocalModelFile(hasEarlyAccessUpdateOnly: false) with
+        {
+            EmbeddedBaseModel = "SDXL 1.0",
+            EmbeddedTrainedWords = ["embedded"],
+        };
+        model.ConnectedModelInfo!.BaseModel = "Illustrious";
+        model.ConnectedModelInfo.TrainedWords = ["connected"];
+
+        Assert.AreEqual("Illustrious", model.DisplayBaseModel);
+        Assert.AreEqual("connected", model.DisplayTrainedWordsString);
+    }
+
+    [TestMethod]
+    public void DisplayBaseModelAndTrainedWords_FallBackToEmbeddedMetadata()
+    {
+        var model = CreateLocalModelFile(hasEarlyAccessUpdateOnly: false) with
+        {
+            ConnectedModelInfo = null,
+            EmbeddedBaseModel = "SDXL 1.0",
+            EmbeddedTrainedWords = ["mychar", "red jacket"],
+        };
+
+        Assert.AreEqual("SDXL 1.0", model.DisplayBaseModel);
+        Assert.AreEqual("mychar, red jacket", model.DisplayTrainedWordsString);
+    }
+
     private static LocalModelFile CreateLocalModelFile(bool hasEarlyAccessUpdateOnly)
     {
         return new LocalModelFile

@@ -19,6 +19,7 @@ using Microsoft.Extensions.DependencyInjection;
 using NLog;
 using StabilityMatrix.Avalonia.Animations;
 using StabilityMatrix.Avalonia.Extensions;
+using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
@@ -27,6 +28,7 @@ using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.GenerationData;
 
 #pragma warning disable CS0657 // Not a valid attribute location for this declaration
 
@@ -317,7 +319,44 @@ public abstract partial class InferenceTabViewModelBase
             return;
         }
 
-        throw new ApplicationException("File does not contain SMProject or Parameters Metadata");
+        // Other generators: ComfyUI, SwarmUI, Fooocus, InvokeAI, NovelAI, ...
+        var generationData = GenerationDataParser.TryRead(imageFilePath);
+        if (generationData?.Parameters is { PositivePrompt: not null } generationParameters)
+        {
+            Logger.Info("Loading Parameters from {Source} metadata", generationData.DisplayName);
+
+            if (this is IParametersLoadableState paramsLoadableVm)
+            {
+                Dispatcher.UIThread.Invoke(() =>
+                    paramsLoadableVm.LoadStateFromParameters(generationParameters)
+                );
+            }
+            else
+            {
+                Logger.Warn(
+                    "Load parameters target {Type} does not implement IParametersLoadableState, skipping",
+                    GetType().Name
+                );
+            }
+
+            if (this is IImageGalleryComponent imageGalleryComponent)
+            {
+                Dispatcher.UIThread.Invoke(() =>
+                    imageGalleryComponent.LoadImagesToGallery(new ImageSource(imageFilePath))
+                );
+            }
+
+            return;
+        }
+
+        if (generationData is not null)
+        {
+            throw new ApplicationException(
+                string.Format(Resources.Text_GenerationDataNotLoadable, generationData.DisplayName)
+            );
+        }
+
+        throw new ApplicationException(Resources.Text_NoGenerationDataDetected);
     }
 
     /// <inheritdoc />

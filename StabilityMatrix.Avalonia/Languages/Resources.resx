@@ -1883,4 +1883,13 @@ Account tokens will not be viewable after saving, please make a note of them if 
   <data name="Error_DocumentationPageLoadFailed" xml:space="preserve">
     <value>Could not load this page. Check your connection and try again.</value>
   </data>
+  <data name="Label_GeneratedWith" xml:space="preserve">
+    <value>Generated with</value>
+  </data>
+  <data name="Text_NoGenerationDataDetected" xml:space="preserve">
+    <value>No generation data detected</value>
+  </data>
+  <data name="Text_GenerationDataNotLoadable" xml:space="preserve">
+    <value>{0} generation data was found, but its prompt and settings can't be loaded</value>
+  </data>
 </root>

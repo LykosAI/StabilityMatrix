@@ -86,6 +86,12 @@ public record LocalModelFile
     public string? PreviewImageFullPath { get; set; }
 
     /// <summary>
+    /// Optional full path to a cached copy of the cover image embedded in the model file.
+    /// Only used when there is no preview image file.
+    /// </summary>
+    public string? EmbeddedPreviewImageFullPath { get; set; }
+
+    /// <summary>
     /// Optional full path to the model's configuration (.yaml) file.
     /// </summary>
     public string? ConfigFullPath { get; set; }
@@ -142,7 +148,7 @@ public record LocalModelFile
 
     [BsonIgnore]
     public string? PreviewImageFullPathGlobal =>
-        PreviewImageFullPath ?? GetPreviewImageFullPath(GlobalConfig.ModelsDir);
+        PreviewImageFullPath ?? GetDisplayPreviewImageFullPath(GlobalConfig.ModelsDir);
 
     [BsonIgnore]
     public Uri? PreviewImageUriGlobal =>
@@ -194,6 +200,15 @@ public record LocalModelFile
         return PreviewImageRelativePath == null
             ? null
             : Path.Combine(rootModelDirectory, PreviewImageRelativePath);
+    }
+
+    /// <summary>
+    /// Gets the image to show for this model: the preview image file if there is one,
+    /// otherwise the cover image embedded in the model file.
+    /// </summary>
+    public string? GetDisplayPreviewImageFullPath(string rootModelDirectory)
+    {
+        return GetPreviewImageFullPath(rootModelDirectory) ?? EmbeddedPreviewImageFullPath;
     }
 
     public string GetConnectedModelInfoFullPath(string rootModelDirectory)

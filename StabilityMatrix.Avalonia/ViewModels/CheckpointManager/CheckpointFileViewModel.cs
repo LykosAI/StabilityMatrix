@@ -203,7 +203,7 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
                 CheckpointFile.ConnectedModelInfo = cmInfo;
 
                 var uri =
-                    CheckpointFile.GetPreviewImageFullPath(settingsManager.ModelsDirectory)
+                    CheckpointFile.GetDisplayPreviewImageFullPath(settingsManager.ModelsDirectory)
                     ?? cmInfo.ThumbnailImageUrl;
                 if (string.IsNullOrWhiteSpace(uri))
                 {
@@ -638,7 +638,7 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
         else
         {
             var previewPath = settingsManager.IsLibraryDirSet
-                ? CheckpointFile.GetPreviewImageFullPath(settingsManager.ModelsDirectory)
+                ? CheckpointFile.GetDisplayPreviewImageFullPath(settingsManager.ModelsDirectory)
                     ?? CheckpointFile.ConnectedModelInfo?.ThumbnailImageUrl
                 : null;
 

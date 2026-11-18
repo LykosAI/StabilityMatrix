@@ -1,5 +1,6 @@
 using System.Buffers;
 using System.Buffers.Binary;
+using System.Globalization;
 using System.Text.Json;
 
 namespace StabilityMatrix.Core.Models;
@@ -31,10 +32,94 @@ public record SafetensorMetadata
     /// <returns>The parsed metadata. Can be <see langword="null"/> if the file does not contain metadata.</returns>
     public static async Task<SafetensorMetadata?> ParseAsync(Stream safetensorStream)
     {
+        var metadataDict = await ReadMetadataDictionaryAsync(safetensorStream).ConfigureAwait(false);
+        return metadataDict is null ? null : FromDictionary(metadataDict);
+    }
+
+    /// <summary>
+    /// Reads the cover image embedded in the metadata of a SafeTensor file, in the
+    /// LoRA-Container format (<c>cover_count</c> and <c>cover_1</c> ... <c>cover_N</c> keys).
+    /// </summary>
+    /// <param name="safetensorPath">Path to the SafeTensor file.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The JPEG bytes of the cover, or <see langword="null"/> if the file has no embedded cover.</returns>
+    public static async Task<byte[]?> ReadEmbeddedCoverAsync(
+        string safetensorPath,
+        CancellationToken cancellationToken = default
+    )
+    {
+        await using var stream = new FileStream(
+            safetensorPath,
+            FileMode.Open,
+            FileAccess.Read,
+            FileShare.Read
+        );
+        var metadataDict = await ReadMetadataDictionaryAsync(stream, cancellationToken).ConfigureAwait(false);
+        return metadataDict is null ? null : GetEmbeddedCover(metadataDict);
+    }
+
+    /// <summary>
+    /// Gets an embedded cover image from LoRA-Container metadata.
+    /// <c>cover_1</c> is the preview image, <c>cover_2</c> onwards are gallery images.
+    /// </summary>
+    /// <param name="metadataDict">The <c>__metadata__</c> entries of a SafeTensor file.</param>
+    /// <param name="coverNumber">1-based number of the cover to read.</param>
+    /// <returns>The JPEG bytes of the cover, or <see langword="null"/> if it is missing or invalid.</returns>
+    internal static byte[]? GetEmbeddedCover(
+        IReadOnlyDictionary<string, string> metadataDict,
+        int coverNumber = 1
+    )
+    {
+        if (
+            coverNumber < 1
+            || !metadataDict.TryGetValue("cover_count", out var coverCountText)
+            || !int.TryParse(
+                coverCountText,
+                NumberStyles.None,
+                CultureInfo.InvariantCulture,
+                out var coverCount
+            )
+            || coverNumber > coverCount
+            || !metadataDict.TryGetValue($"cover_{coverNumber}", out var coverValue)
+        )
+        {
+            return null;
+        }
+
+        const string DataUriPrefix = "data:image/jpeg;base64,";
+        var base64 = coverValue.AsSpan().Trim();
+        if (base64.StartsWith(DataUriPrefix, StringComparison.OrdinalIgnoreCase))
+        {
+            base64 = base64[DataUriPrefix.Length..];
+        }
+
+        if (base64.IsEmpty)
+        {
+            return null;
+        }
+
+        var buffer = new byte[base64.Length * 3 / 4];
+        if (!Convert.TryFromBase64Chars(base64, buffer, out var bytesWritten) || bytesWritten == 0)
+        {
+            return null;
+        }
+
+        return bytesWritten == buffer.Length ? buffer : buffer[..bytesWritten];
+    }
+
+    /// <summary>
+    /// Reads the raw <c>__metadata__</c> entries from a SafeTensor file.
+    /// </summary>
+    /// <returns>The metadata entries, or <see langword="null"/> if the file does not contain metadata.</returns>
+    private static async Task<Dictionary<string, string>?> ReadMetadataDictionaryAsync(
+        Stream safetensorStream,
+        CancellationToken cancellationToken = default
+    )
+    {
         // 8 bytes unsigned little-endian 64-bit integer
         // 1 byte start of JSON object '{'
         Memory<byte> buffer = new byte[9];
-        await safetensorStream.ReadExactlyAsync(buffer).ConfigureAwait(false);
+        await safetensorStream.ReadExactlyAsync(buffer, cancellationToken).ConfigureAwait(false);
         var span = buffer.Span;
 
         const ulong MAX_ALLOWED_JSON_LENGTH = 100 * 1024 * 1024; // 100 MB
@@ -60,7 +145,7 @@ public record SafetensorMetadata
             // we already read {, so start from index 1
             jsonBytes[0] = (byte)'{';
             await safetensorStream
-                .ReadExactlyAsync(jsonBytes, 1, (int)(jsonLength - 1))
+                .ReadExactlyAsync(jsonBytes.AsMemory(1, (int)(jsonLength - 1)), cancellationToken)
                 .ConfigureAwait(false);
 
             // read the JSON with Utf8JsonReader, then only deserialize what we need
@@ -97,7 +182,7 @@ public record SafetensorMetadata
                 {
                     if (JsonSerializer.Deserialize<Dictionary<string, string>>(ref reader) is { } dict)
                     {
-                        return FromDictionary(dict);
+                        return dict;
                     }
 
                     // got null from Deserialize

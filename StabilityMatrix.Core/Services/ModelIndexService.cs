@@ -2,6 +2,7 @@
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Globalization;
+using System.Security.Cryptography;
 using System.Text;
 using AsyncAwaitBestPractices;
 using AutoCtor;
@@ -17,6 +18,7 @@ using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using JsonException = System.Text.Json.JsonException;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace StabilityMatrix.Core.Services;
@@ -31,6 +33,8 @@ public partial class ModelIndexService : IModelIndexService
     private readonly ModelFinder modelFinder;
 
     private DateTimeOffset lastUpdateCheck = DateTimeOffset.MinValue;
+
+    private readonly ConcurrentDictionary<string, EmbeddedCoverCacheEntry> embeddedCoverCache = new();
 
     private Dictionary<SharedFolderType, List<LocalModelFile>> _modelIndex = new();
 
@@ -576,6 +580,8 @@ public partial class ModelIndexService : IModelIndexService
 
         var newIndexComplete = newIndexFlat.ToArray();
 
+        await LoadEmbeddedCoversAsync(newIndexComplete, modelsDir).ConfigureAwait(false);
+
         var modelsDict = ModelIndex
             .Values.SelectMany(x => x)
             .DistinctBy(f => f.RelativePath)
@@ -663,6 +669,108 @@ public partial class ModelIndexService : IModelIndexService
                 logger.LogError(ex, "Error in background model indexing");
             });
     }
+
+    private static DirectoryPath EmbeddedCoversCacheDirectory =>
+        new(Path.GetTempPath(), "StabilityMatrix", "Cache", "EmbeddedCovers");
+
+    /// <summary>
+    /// Sets <see cref="LocalModelFile.EmbeddedPreviewImageFullPath"/> for safetensors models
+    /// that have no preview image file but carry a cover image in their header.
+    /// </summary>
+    private async Task LoadEmbeddedCoversAsync(IEnumerable<LocalModelFile> models, DirectoryPath modelsDir)
+    {
+        var candidates = models
+            .Where(model => model.IsSafetensorFile && model.PreviewImageRelativePath is null)
+            .ToList();
+
+        if (candidates.Count == 0)
+        {
+            return;
+        }
+
+        await Parallel
+            .ForEachAsync(
+                candidates,
+                async (model, cancellationToken) =>
+                {
+                    model.EmbeddedPreviewImageFullPath = await GetEmbeddedCoverPathAsync(
+                            model.GetFullPath(modelsDir),
+                            cancellationToken
+                        )
+                        .ConfigureAwait(false);
+                }
+            )
+            .ConfigureAwait(false);
+    }
+
+    private async Task<string?> GetEmbeddedCoverPathAsync(
+        string modelPath,
+        CancellationToken cancellationToken
+    )
+    {
+        var fileInfo = new FileInfo(modelPath);
+        if (!fileInfo.Exists)
+        {
+            return null;
+        }
+
+        if (
+            embeddedCoverCache.TryGetValue(modelPath, out var cached)
+            && cached.Length == fileInfo.Length
+            && cached.LastWriteTimeUtc == fileInfo.LastWriteTimeUtc
+            && (cached.CoverPath is null || File.Exists(cached.CoverPath))
+        )
+        {
+            return cached.CoverPath;
+        }
+
+        string? coverPath = null;
+        try
+        {
+            var coverBytes = await SafetensorMetadata
+                .ReadEmbeddedCoverAsync(modelPath, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (coverBytes is not null)
+            {
+                var coversDir = EmbeddedCoversCacheDirectory;
+                var coverFile = coversDir.JoinFile(
+                    $"{Convert.ToHexStringLower(SHA256.HashData(coverBytes))}.jpeg"
+                );
+
+                if (!coverFile.Exists)
+                {
+                    coversDir.Create();
+
+                    var tempFile = coversDir.JoinFile($"{coverFile.Name}.{Guid.NewGuid():N}.tmp");
+                    await File.WriteAllBytesAsync(tempFile, coverBytes, cancellationToken)
+                        .ConfigureAwait(false);
+                    File.Move(tempFile, coverFile, overwrite: true);
+                }
+
+                coverPath = coverFile.FullPath;
+            }
+        }
+        catch (Exception e)
+            when (e is IOException or UnauthorizedAccessException or InvalidDataException or JsonException)
+        {
+            logger.LogDebug(e, "Failed to read embedded cover image from {Path}", modelPath);
+        }
+
+        embeddedCoverCache[modelPath] = new EmbeddedCoverCacheEntry(
+            fileInfo.Length,
+            fileInfo.LastWriteTimeUtc,
+            coverPath
+        );
+
+        return coverPath;
+    }
+
+    private readonly record struct EmbeddedCoverCacheEntry(
+        long Length,
+        DateTime LastWriteTimeUtc,
+        string? CoverPath
+    );
 
     /// <inheritdoc />
     public async Task<bool> RemoveModelAsync(LocalModelFile model)

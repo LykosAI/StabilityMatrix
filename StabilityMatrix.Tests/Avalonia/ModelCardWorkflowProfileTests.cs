@@ -125,6 +125,26 @@ public class ModelCardWorkflowProfileTests
     }
 
     [TestMethod]
+    public void CustomProfile_OffersCurrentComfySingleClipTypes()
+    {
+        var vm = CreateViewModel();
+
+        CollectionAssert.Contains(vm.ClipTypes, "lumina2");
+        CollectionAssert.Contains(vm.ClipTypes, "krea2");
+        CollectionAssert.Contains(vm.ClipTypes, "ovis");
+        CollectionAssert.Contains(vm.ClipTypes, "longcat_image");
+        CollectionAssert.AllItemsAreUnique(vm.ClipTypes);
+    }
+
+    [TestMethod]
+    public void WeightDTypes_IncludeFp8E4m3fnFast()
+    {
+        var vm = CreateViewModel();
+
+        CollectionAssert.Contains(vm.WeightDTypes, "fp8_e4m3fn_fast");
+    }
+
+    [TestMethod]
     public void AnimaProfile_WithCheckpointFolderModel_KeepsLoaderAndWarns()
     {
         // Anima is UNet-only (separate qwen_3_06b encoder + Qwen Image VAE) — there is no

@@ -41,7 +41,7 @@ public partial class UnetModelCardViewModel(IInferenceClientManager clientManage
     [ObservableProperty]
     private string selectedDType = "default";
 
-    public List<string> WeightDTypes { get; set; } = ["default", "fp8_e4m3fn", "fp8_e5m2"];
+    public List<string> WeightDTypes { get; set; } = ["default", "fp8_e4m3fn", "fp8_e4m3fn_fast", "fp8_e5m2"];
 
     public IInferenceClientManager ClientManager { get; } = clientManager;
 

@@ -595,14 +595,11 @@ public static partial class GenerationDataParser
             return Result(GenerationDataSource.InvokeAI, parameters);
         }
 
-        if (entries["invokeai_metadata"] is { } invokeMetadata)
+        if (
+            GenerationDataJson.ParseObject(entries["invokeai_metadata"]) is { } json
+            && json.ContainsKey("scheduler")
+        )
         {
-            if (
-                GenerationDataJson.ParseObject(invokeMetadata) is not { } json
-                || !json.ContainsKey("scheduler")
-            )
-                return null;
-
             var parameters = FromJson(
                 json,
                 "positive_prompt",
@@ -620,6 +617,15 @@ public static partial class GenerationDataParser
                     ?? GenerationDataJson.GetString(model["name"]);
             }
             return Result(GenerationDataSource.InvokeAI, parameters);
+        }
+
+        // Some tools only keep the workflow graph
+        if (
+            InvokeGraphReader.Read(GenerationDataJson.ParseObject(entries["invokeai_graph"])) is
+            { } graphParameters
+        )
+        {
+            return Result(GenerationDataSource.InvokeAI, graphParameters);
         }
 
         return null;

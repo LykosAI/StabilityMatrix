@@ -140,6 +140,62 @@ public class GenerationDataParserTests
         Assert.AreEqual("juggernaut", info?.Parameters?.ModelName);
     }
 
+    private const string InvokeGraph = """
+        {
+          "id": "graph",
+          "nodes": {
+            "loader": {"id": "loader", "type": "sdxl_model_loader", "model": {"name": "juggernautXL", "base": "sdxl"}},
+            "positive_prompt": {"id": "positive_prompt", "type": "string", "value": "a fox in the snow"},
+            "pos_cond": {"id": "pos_cond", "type": "sdxl_compel_prompt", "prompt": "", "style": ""},
+            "pos_collect": {"id": "pos_collect", "type": "collect", "collection": []},
+            "neg_cond": {"id": "neg_cond", "type": "sdxl_compel_prompt", "prompt": "blurry", "style": "blurry"},
+            "seed": {"id": "seed", "type": "integer", "value": 3951921344},
+            "noise": {"id": "noise", "type": "noise", "seed": 0, "width": 832, "height": 1216},
+            "denoise": {"id": "denoise", "type": "denoise_latents", "positive_conditioning": null,
+                        "negative_conditioning": null, "steps": 24, "cfg_scale": 6.0, "scheduler": "euler_a"}
+            CORE_METADATA
+          },
+          "edges": [
+            {"source": {"node_id": "loader", "field": "clip"}, "destination": {"node_id": "pos_cond", "field": "clip"}},
+            {"source": {"node_id": "positive_prompt", "field": "value"}, "destination": {"node_id": "pos_cond", "field": "prompt"}},
+            {"source": {"node_id": "pos_cond", "field": "conditioning"}, "destination": {"node_id": "pos_collect", "field": "item"}},
+            {"source": {"node_id": "pos_collect", "field": "collection"}, "destination": {"node_id": "denoise", "field": "positive_conditioning"}},
+            {"source": {"node_id": "neg_cond", "field": "conditioning"}, "destination": {"node_id": "denoise", "field": "negative_conditioning"}},
+            {"source": {"node_id": "seed", "field": "value"}, "destination": {"node_id": "noise", "field": "seed"}},
+            {"source": {"node_id": "noise", "field": "noise"}, "destination": {"node_id": "denoise", "field": "noise"}},
+            {"source": {"node_id": "seed", "field": "value"}, "destination": {"node_id": "core_metadata", "field": "seed"}},
+            {"source": {"node_id": "positive_prompt", "field": "value"}, "destination": {"node_id": "core_metadata", "field": "positive_prompt"}}
+          ]
+        }
+        """;
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void Png_InvokeAIGraphOnly_ReadsPromptAndSettings(bool withCoreMetadata)
+    {
+        var coreMetadata = withCoreMetadata
+            ? """
+                ,"core_metadata": {"id": "core_metadata", "type": "core_metadata", "positive_prompt": null,
+                  "negative_prompt": "blurry", "seed": null, "steps": 24, "cfg_scale": 6.0, "scheduler": "euler_a",
+                  "width": 832, "height": 1216, "model": {"name": "juggernautXL"}}
+                """
+            : "";
+
+        var info = ParsePng(TextChunk("invokeai_graph", InvokeGraph.Replace("CORE_METADATA", coreMetadata)));
+
+        Assert.IsNotNull(info);
+        Assert.AreEqual(GenerationDataSource.InvokeAI, info.Source);
+        Assert.AreEqual("a fox in the snow", info.Parameters?.PositivePrompt);
+        Assert.AreEqual("blurry", info.Parameters?.NegativePrompt);
+        Assert.AreEqual("juggernautXL", info.Parameters?.ModelName);
+        Assert.AreEqual(3951921344UL, info.Parameters?.Seed);
+        Assert.AreEqual(24, info.Parameters?.Steps);
+        Assert.AreEqual(6.0, info.Parameters?.CfgScale);
+        Assert.AreEqual("euler_a", info.Parameters?.Sampler);
+        Assert.AreEqual(832, info.Parameters?.Width);
+    }
+
     [TestMethod]
     public void Png_NovelAI_ReadsDescriptionAndComment()
     {

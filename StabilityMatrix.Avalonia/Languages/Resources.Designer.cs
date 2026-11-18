@@ -3049,6 +3049,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Only shared components (VAE, text encoder, etc.) are installed.
+        /// </summary>
+        public static string Label_OnlySharedComponentsInstalled {
+            get {
+                return ResourceManager.GetString("Label_OnlySharedComponentsInstalled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to OpenArt Browser.
         /// </summary>
         public static string Label_OpenArtBrowser {

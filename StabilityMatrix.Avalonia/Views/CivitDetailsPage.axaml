@@ -285,6 +285,15 @@
                                 VerticalAlignment="Center"
                                 IsVisible="{Binding IsInstalled}"
                                 Value="fa-solid fa-check" />
+                            <avalonia:Icon
+                                Grid.Column="2"
+                                Margin="8,2,0,0"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Center"
+                                IsVisible="{Binding IsComponentsOnlyInstalled}"
+                                Opacity="0.6"
+                                ToolTip.Tip="{x:Static lang:Resources.Label_OnlySharedComponentsInstalled}"
+                                Value="fa-solid fa-puzzle-piece" />
                         </Grid>
                     </DataTemplate>
                 </ListBox.ItemTemplate>

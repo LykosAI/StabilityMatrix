@@ -56,6 +56,25 @@ public static class CivitFileTypeExtensions
                 or CivitFileType.UNet;
 
     /// <summary>
+    /// True for companion files (VAEs, encoders, configs, etc) that ship alongside a version's main
+    /// weights. These are often shared between versions and models, so having one installed does
+    /// not mean the version itself is installed.
+    /// </summary>
+    public static bool IsSupportingComponent(this CivitFileType type) =>
+        type
+            is CivitFileType.VAE
+                or CivitFileType.TextEncoder
+                or CivitFileType.VisionEncoder
+                or CivitFileType.CLIPVision
+                or CivitFileType.Config
+                or CivitFileType.TrainingData
+                or CivitFileType.Negative
+                or CivitFileType.ControlNet
+                or CivitFileType.Upscaler
+                or CivitFileType.EnhancementLora
+                or CivitFileType.Workflow;
+
+    /// <summary>
     /// True for file types worth listing as downloadable files in the model browser —
     /// model weights plus companion components (VAE, text/vision encoders, etc).
     /// </summary>

@@ -498,6 +498,9 @@
   <data name="Label_OnlyAvailableOnWindows" xml:space="preserve">
     <value>Only available on Windows</value>
   </data>
+  <data name="Label_OnlySharedComponentsInstalled" xml:space="preserve">
+    <value>Only shared components (VAE, text encoder, etc.) are installed</value>
+  </data>
   <data name="Action_AddForCurrentUser" xml:space="preserve">
     <value>Add for Current User</value>
   </data>

@@ -2,6 +2,7 @@
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Globalization;
+using System.Security.Cryptography;
 using System.Text;
 using AsyncAwaitBestPractices;
 using AutoCtor;
@@ -17,6 +18,7 @@ using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using JsonException = System.Text.Json.JsonException;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace StabilityMatrix.Core.Services;
@@ -31,6 +33,8 @@ public partial class ModelIndexService : IModelIndexService
     private readonly ModelFinder modelFinder;
 
     private DateTimeOffset lastUpdateCheck = DateTimeOffset.MinValue;
+
+    private readonly ConcurrentDictionary<string, EmbeddedInfoCacheEntry> embeddedInfoCache = new();
 
     private Dictionary<SharedFolderType, List<LocalModelFile>> _modelIndex = new();
 
@@ -522,20 +526,9 @@ public partial class ModelIndexService : IModelIndexService
                             ConnectedModelInfoSerializerContext.Default.ConnectedModelInfo
                         );
 
-                        // Seems there is a limitation of LiteDB datetime resolution, so drop nanoseconds on load
-                        // Otherwise new loaded models with ns will cause mismatching equality with models loaded from db with no ns
-                        if (connectedModelInfo?.ImportedAt is { } importedAt && importedAt.Nanosecond != 0)
+                        if (connectedModelInfo is not null)
                         {
-                            connectedModelInfo.ImportedAt = new DateTimeOffset(
-                                importedAt.Year,
-                                importedAt.Month,
-                                importedAt.Day,
-                                importedAt.Hour,
-                                importedAt.Minute,
-                                importedAt.Second,
-                                importedAt.Millisecond,
-                                importedAt.Offset
-                            );
+                            TruncateImportedAt(connectedModelInfo);
                         }
 
                         localModel.ConnectedModelInfo = connectedModelInfo;
@@ -575,6 +568,8 @@ public partial class ModelIndexService : IModelIndexService
         );
 
         var newIndexComplete = newIndexFlat.ToArray();
+
+        await LoadEmbeddedInfoAsync(newIndexComplete, modelsDir).ConfigureAwait(false);
 
         var modelsDict = ModelIndex
             .Values.SelectMany(x => x)
@@ -662,6 +657,182 @@ public partial class ModelIndexService : IModelIndexService
             {
                 logger.LogError(ex, "Error in background model indexing");
             });
+    }
+
+    private static ReadOnlySpan<byte> PngSignature => [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
+
+    private static DirectoryPath EmbeddedCoversCacheDirectory =>
+        new(Path.GetTempPath(), "StabilityMatrix", "Cache", "EmbeddedCovers");
+
+    /// <summary>
+    /// Fills in what safetensors models without a preview image or connected model info file
+    /// carry in their header: the cover image, connected model info, base model and trigger words.
+    /// </summary>
+    private async Task LoadEmbeddedInfoAsync(IEnumerable<LocalModelFile> models, DirectoryPath modelsDir)
+    {
+        var candidates = models
+            .Where(model =>
+                model.IsSafetensorFile
+                && (model.PreviewImageRelativePath is null || model.ConnectedModelInfo is null)
+            )
+            .ToList();
+
+        if (candidates.Count == 0)
+        {
+            return;
+        }
+
+        await Parallel
+            .ForEachAsync(
+                candidates,
+                async (model, cancellationToken) =>
+                {
+                    var embedded = await GetEmbeddedInfoAsync(model.GetFullPath(modelsDir), cancellationToken)
+                        .ConfigureAwait(false);
+
+                    if (embedded is null)
+                    {
+                        return;
+                    }
+
+                    if (model.PreviewImageRelativePath is null)
+                    {
+                        model.EmbeddedPreviewImageFullPath = embedded.CoverPath;
+                    }
+
+                    if (model.ConnectedModelInfo is null && embedded.ConnectedModelInfo is not null)
+                    {
+                        model.ConnectedModelInfo = JsonSerializer.Deserialize(
+                            embedded.ConnectedModelInfo,
+                            ConnectedModelInfoSerializerContext.Default.ConnectedModelInfo
+                        );
+                    }
+
+                    model.EmbeddedBaseModel = embedded.BaseModel;
+                    model.EmbeddedTrainedWords = embedded.TrainedWords;
+                }
+            )
+            .ConfigureAwait(false);
+    }
+
+    private async Task<EmbeddedInfoCacheEntry?> GetEmbeddedInfoAsync(
+        string modelPath,
+        CancellationToken cancellationToken
+    )
+    {
+        var fileInfo = new FileInfo(modelPath);
+        if (!fileInfo.Exists)
+        {
+            return null;
+        }
+
+        if (
+            embeddedInfoCache.TryGetValue(modelPath, out var cached)
+            && cached.Length == fileInfo.Length
+            && cached.LastWriteTimeUtc == fileInfo.LastWriteTimeUtc
+            && (cached.CoverPath is null || File.Exists(cached.CoverPath))
+        )
+        {
+            return cached;
+        }
+
+        var entry = new EmbeddedInfoCacheEntry(fileInfo.Length, fileInfo.LastWriteTimeUtc);
+        try
+        {
+            var embedded = await SafetensorEmbeddedInfo
+                .ReadAsync(modelPath, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (embedded is not null)
+            {
+                if (embedded.ConnectedModelInfo is { } cmInfo)
+                {
+                    TruncateImportedAt(cmInfo);
+                }
+
+                entry = entry with
+                {
+                    CoverPath = embedded.Cover is { } cover
+                        ? await SaveEmbeddedCoverAsync(cover, cancellationToken).ConfigureAwait(false)
+                        : null,
+                    ConnectedModelInfo = embedded.ConnectedModelInfo is { } info
+                        ? JsonSerializer.Serialize(
+                            info,
+                            ConnectedModelInfoSerializerContext.Default.ConnectedModelInfo
+                        )
+                        : null,
+                    BaseModel = embedded.BaseModel,
+                    TrainedWords = embedded.TrainedWords,
+                };
+            }
+        }
+        catch (Exception e)
+            when (e is IOException or UnauthorizedAccessException or InvalidDataException or JsonException)
+        {
+            logger.LogDebug(e, "Failed to read embedded model info from {Path}", modelPath);
+        }
+
+        embeddedInfoCache[modelPath] = entry;
+
+        return entry;
+    }
+
+    private static async Task<string> SaveEmbeddedCoverAsync(
+        byte[] cover,
+        CancellationToken cancellationToken
+    )
+    {
+        var extension = cover.AsSpan().StartsWith(PngSignature) ? ".png" : ".jpeg";
+
+        var coversDir = EmbeddedCoversCacheDirectory;
+        var coverFile = coversDir.JoinFile($"{Convert.ToHexStringLower(SHA256.HashData(cover))}{extension}");
+
+        if (!coverFile.Exists)
+        {
+            coversDir.Create();
+
+            var tempFile = coversDir.JoinFile($"{coverFile.Name}.{Guid.NewGuid():N}.tmp");
+            await File.WriteAllBytesAsync(tempFile, cover, cancellationToken).ConfigureAwait(false);
+            File.Move(tempFile, coverFile, overwrite: true);
+        }
+
+        return coverFile.FullPath;
+    }
+
+    /// <summary>
+    /// Drops nanoseconds from <see cref="ConnectedModelInfo.ImportedAt"/>. LiteDB stores datetimes
+    /// at a lower resolution, so models loaded from the database would otherwise not equal newly
+    /// indexed ones.
+    /// </summary>
+    private static void TruncateImportedAt(ConnectedModelInfo connectedModelInfo)
+    {
+        var importedAt = connectedModelInfo.ImportedAt;
+        if (importedAt.Nanosecond != 0)
+        {
+            connectedModelInfo.ImportedAt = new DateTimeOffset(
+                importedAt.Year,
+                importedAt.Month,
+                importedAt.Day,
+                importedAt.Hour,
+                importedAt.Minute,
+                importedAt.Second,
+                importedAt.Millisecond,
+                importedAt.Offset
+            );
+        }
+    }
+
+    private sealed record EmbeddedInfoCacheEntry(long Length, DateTime LastWriteTimeUtc)
+    {
+        public string? CoverPath { get; init; }
+
+        /// <summary>
+        /// Embedded connected model info as JSON, so that every index refresh gets its own copy.
+        /// </summary>
+        public string? ConnectedModelInfo { get; init; }
+
+        public string? BaseModel { get; init; }
+        public string[]? TrainedWords { get; init; }
     }
 
     /// <inheritdoc />

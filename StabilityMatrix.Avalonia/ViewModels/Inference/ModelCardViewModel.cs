@@ -404,7 +404,7 @@ public partial class ModelCardViewModel(
         {
             // Respect explicit metadata: an SDXL-tagged checkpoint that merely contains
             // "anima" or "flux2" in its filename is not a misplaced standalone model.
-            var taggedBase = local.ConnectedModelInfo?.BaseModel;
+            var taggedBase = local.DisplayBaseModel;
             if (!string.IsNullOrWhiteSpace(taggedBase) && IsKnownCheckpointBaseModelTag(taggedBase))
                 return null;
 
@@ -901,7 +901,7 @@ public partial class ModelCardViewModel(
         if (!isUnetModel)
             return InferenceWorkflowProfile.DefaultCheckpoint;
 
-        var baseModel = model?.Local?.ConnectedModelInfo?.BaseModel;
+        var baseModel = model?.Local?.DisplayBaseModel;
 
         if (!string.IsNullOrWhiteSpace(baseModel))
         {

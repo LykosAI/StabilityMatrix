@@ -86,6 +86,24 @@ public record LocalModelFile
     public string? PreviewImageFullPath { get; set; }
 
     /// <summary>
+    /// Optional full path to a cached copy of the cover image embedded in the model file.
+    /// Only used when there is no preview image file.
+    /// </summary>
+    public string? EmbeddedPreviewImageFullPath { get; set; }
+
+    /// <summary>
+    /// Optional base model declared in the model file's metadata.
+    /// Only used when <see cref="ConnectedModelInfo"/> has no base model.
+    /// </summary>
+    public string? EmbeddedBaseModel { get; set; }
+
+    /// <summary>
+    /// Optional trigger words declared in the model file's metadata.
+    /// Only used when <see cref="ConnectedModelInfo"/> has no trigger words.
+    /// </summary>
+    public string[]? EmbeddedTrainedWords { get; set; }
+
+    /// <summary>
     /// Optional full path to the model's configuration (.yaml) file.
     /// </summary>
     public string? ConfigFullPath { get; set; }
@@ -142,11 +160,27 @@ public record LocalModelFile
 
     [BsonIgnore]
     public string? PreviewImageFullPathGlobal =>
-        PreviewImageFullPath ?? GetPreviewImageFullPath(GlobalConfig.ModelsDir);
+        PreviewImageFullPath ?? GetDisplayPreviewImageFullPath(GlobalConfig.ModelsDir);
 
     [BsonIgnore]
     public Uri? PreviewImageUriGlobal =>
         PreviewImageFullPathGlobal == null ? null : new Uri(PreviewImageFullPathGlobal);
+
+    [BsonIgnore]
+    public string? DisplayBaseModel =>
+        string.IsNullOrWhiteSpace(ConnectedModelInfo?.BaseModel)
+            ? EmbeddedBaseModel
+            : ConnectedModelInfo.BaseModel;
+
+    [BsonIgnore]
+    public string[]? DisplayTrainedWords =>
+        ConnectedModelInfo?.TrainedWords is { Length: > 0 } trainedWords
+            ? trainedWords
+            : EmbeddedTrainedWords;
+
+    [BsonIgnore]
+    public string DisplayTrainedWordsString =>
+        DisplayTrainedWords is { } trainedWords ? string.Join(", ", trainedWords) : string.Empty;
 
     [BsonIgnore]
     public string DisplayModelName => ConnectedModelInfo?.ModelName ?? FileNameWithoutExtension;
@@ -194,6 +228,15 @@ public record LocalModelFile
         return PreviewImageRelativePath == null
             ? null
             : Path.Combine(rootModelDirectory, PreviewImageRelativePath);
+    }
+
+    /// <summary>
+    /// Gets the image to show for this model: the preview image file if there is one,
+    /// otherwise the cover image embedded in the model file.
+    /// </summary>
+    public string? GetDisplayPreviewImageFullPath(string rootModelDirectory)
+    {
+        return GetPreviewImageFullPath(rootModelDirectory) ?? EmbeddedPreviewImageFullPath;
     }
 
     public string GetConnectedModelInfoFullPath(string rootModelDirectory)

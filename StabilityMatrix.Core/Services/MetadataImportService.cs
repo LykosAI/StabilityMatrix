@@ -87,7 +87,7 @@ public class MetadataImportService(
                     continue;
                 }
 
-                var modelInfo = await modelFinder.RemoteFindModel(blake3).ConfigureAwait(false);
+                var modelInfo = await RemoteFindModel(checkpointFilePath, blake3).ConfigureAwait(false);
                 if (modelInfo == null)
                 {
                     logger.LogWarning($"Could not find model for {blake3}");
@@ -244,7 +244,7 @@ public class MetadataImportService(
             return null;
         }
 
-        var modelInfo = await modelFinder.RemoteFindModel(blake3).ConfigureAwait(false);
+        var modelInfo = await RemoteFindModel(filePath, blake3).ConfigureAwait(false);
         if (modelInfo == null)
         {
             logger.LogWarning($"Could not find model for {blake3}");
@@ -263,6 +263,46 @@ public class MetadataImportService(
             .ConfigureAwait(false);
 
         return updatedCmInfo;
+    }
+
+    /// <summary>
+    /// Finds a model on CivitAI by its file hash. For safetensors files whose header was edited
+    /// after release (e.g. to embed a cover image), falls back to the original file hash
+    /// recorded in the header.
+    /// </summary>
+    private async Task<ModelSearchResult?> RemoteFindModel(FilePath filePath, string blake3)
+    {
+        var modelInfo = await modelFinder.RemoteFindModel(blake3).ConfigureAwait(false);
+        if (modelInfo != null || filePath.Extension != ".safetensors")
+        {
+            return modelInfo;
+        }
+
+        string? originalSha256;
+        try
+        {
+            originalSha256 = (
+                await SafetensorEmbeddedInfo.ReadAsync(filePath).ConfigureAwait(false)
+            )?.OriginalSha256;
+        }
+        catch (Exception e)
+            when (e is IOException or UnauthorizedAccessException or InvalidDataException or JsonException)
+        {
+            logger.LogDebug(e, "Failed to read safetensors metadata from {Path}", filePath);
+            return null;
+        }
+
+        if (originalSha256 is null)
+        {
+            return null;
+        }
+
+        logger.LogInformation(
+            "Searching for {Path} using its original hash {Hash} from the file metadata",
+            filePath,
+            originalSha256
+        );
+        return await modelFinder.RemoteFindModel(originalSha256).ConfigureAwait(false);
     }
 
     private async Task<ConnectedModelInfo> BuildConnectedModelInfoAsync(

@@ -38,4 +38,24 @@ public class SafetensorMetadataTests
             metadata.TagFrequency
         );
     }
+
+    [TestMethod]
+    public void FromDictionary_ShowsEmbeddedImagesAsPlaceholders()
+    {
+        var metadata = SafetensorMetadata.FromDictionary(
+            new Dictionary<string, string>
+            {
+                ["cover_count"] = "1",
+                ["cover_1"] = new string('A', 4096),
+                ["modelspec.thumbnail"] = "data:image/jpeg;base64," + new string('A', 4096),
+                ["cover_format"] = "1",
+            }
+        );
+
+        var values = metadata.OtherMetadata.ToDictionary(x => x.Name, x => x.Value);
+        Assert.AreEqual("1", values["cover_count"]);
+        Assert.AreEqual("1", values["cover_format"]);
+        StringAssert.StartsWith(values["cover_1"], "(embedded image");
+        StringAssert.StartsWith(values["modelspec.thumbnail"], "(embedded image");
+    }
 }

@@ -17,30 +17,25 @@ public partial class ModelVersionViewModel : DisposableViewModelBase
     [ObservableProperty]
     public partial bool IsInstalled { get; set; }
 
+    [ObservableProperty]
+    public partial bool IsComponentsOnlyInstalled { get; set; }
+
     public ModelVersionViewModel(IModelIndexService modelIndexService, CivitModelVersion modelVersion)
     {
         this.modelIndexService = modelIndexService;
 
         ModelVersion = modelVersion;
 
-        // Install detection is purely hash-based: a file whose hash is in the local model index is
-        // on disk, regardless of the type Civitai reports (which may be Unknown for new types)
-        IsInstalled =
-            ModelVersion.Files?.Any(file =>
-                file is { Hashes.BLAKE3: not null }
-                && modelIndexService.ModelIndexBlake3Hashes.Contains(file.Hashes.BLAKE3)
-            ) ?? false;
+        RefreshInstallStatus();
 
         EventManager.Instance.ModelIndexChanged += ModelIndexChanged;
     }
 
     public void RefreshInstallStatus()
     {
-        IsInstalled =
-            ModelVersion.Files?.Any(file =>
-                file is { Hashes.BLAKE3: not null }
-                && modelIndexService.ModelIndexBlake3Hashes.Contains(file.Hashes.BLAKE3)
-            ) ?? false;
+        var installState = ModelVersion.GetInstallState(modelIndexService.ModelIndexBlake3Hashes);
+        IsInstalled = installState is CivitModelVersionInstallState.Installed;
+        IsComponentsOnlyInstalled = installState is CivitModelVersionInstallState.ComponentsOnly;
     }
 
     private void ModelIndexChanged(object? sender, EventArgs e)

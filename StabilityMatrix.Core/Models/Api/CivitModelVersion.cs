@@ -50,4 +50,37 @@ public class CivitModelVersion
     public bool IsEarlyAccess =>
         (Availability?.Equals("EarlyAccess", StringComparison.OrdinalIgnoreCase) ?? false)
         || EarlyAccessDeadline > DateTimeOffset.UtcNow;
+
+    /// <summary>
+    /// Determines how much of this version is present locally, by BLAKE3 hash. Any one installed
+    /// main model file (any format or precision) makes the version installed; installed supporting
+    /// components alone do not, since they are frequently shared with other versions.
+    /// Files of unknown type count as main files so newly added Civitai types are still detected.
+    /// </summary>
+    public CivitModelVersionInstallState GetInstallState(IReadOnlySet<string> installedBlake3Hashes)
+    {
+        if (Files is not { Count: > 0 } || installedBlake3Hashes.Count == 0)
+        {
+            return CivitModelVersionInstallState.NotInstalled;
+        }
+
+        var installedFiles = Files
+            .Where(file =>
+                file is { Hashes.BLAKE3: not null } && installedBlake3Hashes.Contains(file.Hashes.BLAKE3)
+            )
+            .ToList();
+
+        if (installedFiles.Count == 0)
+        {
+            return CivitModelVersionInstallState.NotInstalled;
+        }
+
+        var hasMainFiles = Files.Any(file => !file.Type.IsSupportingComponent());
+        if (!hasMainFiles || installedFiles.Any(file => !file.Type.IsSupportingComponent()))
+        {
+            return CivitModelVersionInstallState.Installed;
+        }
+
+        return CivitModelVersionInstallState.ComponentsOnly;
+    }
 }

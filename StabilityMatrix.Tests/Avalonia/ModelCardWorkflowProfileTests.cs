@@ -125,6 +125,20 @@ public class ModelCardWorkflowProfileTests
     }
 
     [TestMethod]
+    public void Krea2ClipType_IsOfferedAndUsesSingleEncoderSlot()
+    {
+        var vm = CreateViewModel();
+        CollectionAssert.Contains(vm.ClipTypes, "krea2");
+
+        // "flux" needs an encoder pair; "krea2" is a single Qwen3-VL CLIPLoader type
+        vm.SelectedClipType = "flux";
+        Assert.AreEqual(2, vm.TextEncoders.Count);
+
+        vm.SelectedClipType = "krea2";
+        Assert.AreEqual(1, vm.TextEncoders.Count);
+    }
+
+    [TestMethod]
     public void AnimaProfile_WithCheckpointFolderModel_KeepsLoaderAndWarns()
     {
         // Anima is UNet-only (separate qwen_3_06b encoder + Qwen Image VAE) — there is no
@@ -478,5 +492,17 @@ public class ModelCardWorkflowProfileTests
         vm.SelectedUnifiedModel = LocalModel("flux-2-klein-9b.safetensors", SharedFolderType.DiffusionModels);
 
         Assert.AreEqual(customEncoder, vm.TextEncoders[0].SelectedModel);
+    }
+
+    [TestMethod]
+    public void SingleEncoderClipType_RejectsTwoSelectedEncoders()
+    {
+        Assert.ThrowsException<System.ComponentModel.DataAnnotations.ValidationException>(() =>
+            ModelCardViewModel.ValidateEncoderCountForClipType("krea2", selectedEncoderCount: 2)
+        );
+
+        // Edges that must keep working: one encoder for krea2, pairs for dual types.
+        ModelCardViewModel.ValidateEncoderCountForClipType("krea2", selectedEncoderCount: 1);
+        ModelCardViewModel.ValidateEncoderCountForClipType("flux", selectedEncoderCount: 2);
     }
 }

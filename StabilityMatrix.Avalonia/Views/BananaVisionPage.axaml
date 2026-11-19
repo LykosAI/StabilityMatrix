@@ -1188,6 +1188,309 @@
                         </Grid>
                     </Expander>
                 </Border>
+
+                <!--  Krea 2 Settings Panel (collapsible, under header)  -->
+                <Border
+                    Padding="16,8"
+                    Background="#1E1E2E"
+                    BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="0,0,0,1"
+                    IsVisible="{Binding ShowKreaSettings}">
+                    <Expander
+                        Padding="0"
+                        Header="Model &amp; LoRA Settings"
+                        IsExpanded="{Binding IsKreaSettingsExpanded}">
+                        <Grid
+                            x:Name="KreaSettingsLayout"
+                            Margin="0,8,0,0"
+                            Classes.compact="{Binding #KreaSettingsLayout.Bounds.Width, Converter={x:Static converters:WidthLessThanConverter.Instance}, ConverterParameter=720}"
+                            ColumnDefinitions="*, *"
+                            ColumnSpacing="24"
+                            RowDefinitions="Auto, Auto, Auto">
+                            <Grid.Styles>
+                                <!--
+                                    Compact (narrow) layout: each top-level item spans both columns
+                                    and stacks vertically (model → sampling → LoRA). ColumnDefinitions
+                                    stays "*,*" (not styleable) but spanning makes items behave as
+                                    if there's only one column.
+                                -->
+                                <Style Selector="Grid#KreaSettingsLayout.compact &gt; StackPanel.krea-model-col">
+                                    <Setter Property="Grid.ColumnSpan" Value="2" />
+                                </Style>
+                                <Style Selector="Grid#KreaSettingsLayout.compact &gt; StackPanel.krea-sampling-col">
+                                    <Setter Property="Grid.Column" Value="0" />
+                                    <Setter Property="Grid.ColumnSpan" Value="2" />
+                                    <Setter Property="Grid.Row" Value="1" />
+                                    <Setter Property="Margin" Value="0,16,0,0" />
+                                </Style>
+                                <Style Selector="Grid#KreaSettingsLayout.compact &gt; Border.krea-lora-card">
+                                    <Setter Property="Grid.Row" Value="2" />
+                                </Style>
+                            </Grid.Styles>
+
+                            <!--  Model Selection (Left Column in wide; Row 0 in compact)  -->
+                            <StackPanel
+                                Grid.Row="0"
+                                Grid.Column="0"
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Top"
+                                Classes="krea-model-col"
+                                Spacing="4">
+                                <TextBlock
+                                    FontSize="12"
+                                    Opacity="0.7"
+                                    Text="Krea 2 Model" />
+                                <controls:BetterComboBox
+                                    Padding="8,6,4,6"
+                                    HorizontalAlignment="Stretch"
+                                    ItemsSource="{Binding AvailableKreaModels}"
+                                    SelectedItem="{Binding SelectedKreaModel}"
+                                    Theme="{StaticResource BetterComboBoxHybridModelTheme}" />
+                            </StackPanel>
+
+                            <!--  Sampling Params (Right Column in wide; Row 1 in compact)  -->
+                            <StackPanel
+                                Grid.Row="0"
+                                Grid.Column="1"
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Top"
+                                Classes="krea-sampling-col"
+                                Spacing="4">
+                                <!--  Steps + CFG (slider + numeric pair, Turbo defaults 8/1)  -->
+                                <Grid
+                                    ColumnDefinitions="Auto, *, Auto"
+                                    RowDefinitions="Auto, Auto"
+                                    RowSpacing="6">
+                                    <TextBlock
+                                        Grid.Row="0"
+                                        Grid.Column="0"
+                                        Margin="0,0,12,0"
+                                        VerticalAlignment="Center"
+                                        FontSize="11"
+                                        Opacity="0.7"
+                                        Text="Steps" />
+                                    <Slider
+                                        Grid.Row="0"
+                                        Grid.Column="1"
+                                        VerticalAlignment="Center"
+                                        IsSnapToTickEnabled="True"
+                                        Maximum="50"
+                                        Minimum="1"
+                                        TickFrequency="1"
+                                        Value="{Binding KreaSteps}" />
+                                    <NumericUpDown
+                                        Grid.Row="0"
+                                        Grid.Column="2"
+                                        Width="70"
+                                        MinHeight="0"
+                                        Margin="8,0,0,0"
+                                        Padding="6,4"
+                                        VerticalAlignment="Center"
+                                        VerticalContentAlignment="Center"
+                                        FontSize="13"
+                                        FormatString="F0"
+                                        Increment="1"
+                                        Maximum="100"
+                                        Minimum="1"
+                                        ShowButtonSpinner="False"
+                                        Value="{Binding KreaSteps}" />
+
+                                    <TextBlock
+                                        Grid.Row="1"
+                                        Grid.Column="0"
+                                        Margin="0,0,12,0"
+                                        VerticalAlignment="Center"
+                                        FontSize="11"
+                                        Opacity="0.7"
+                                        Text="CFG" />
+                                    <Slider
+                                        Grid.Row="1"
+                                        Grid.Column="1"
+                                        VerticalAlignment="Center"
+                                        IsSnapToTickEnabled="True"
+                                        Maximum="15"
+                                        Minimum="1"
+                                        TickFrequency="0.5"
+                                        Value="{Binding KreaCfg}" />
+                                    <NumericUpDown
+                                        Grid.Row="1"
+                                        Grid.Column="2"
+                                        Width="70"
+                                        MinHeight="0"
+                                        Margin="8,0,0,0"
+                                        Padding="6,4"
+                                        VerticalAlignment="Center"
+                                        VerticalContentAlignment="Center"
+                                        FontSize="13"
+                                        FormatString="F1"
+                                        Increment="0.5"
+                                        Maximum="20"
+                                        Minimum="1"
+                                        ShowButtonSpinner="False"
+                                        Value="{Binding KreaCfg}" />
+                                </Grid>
+                                <TextBlock
+                                    Margin="0,6,0,0"
+                                    FontSize="10"
+                                    Opacity="0.5"
+                                    Text="Krea 2 Turbo defaults: 8 steps + CFG 1. Raise steps / CFG only for non-distilled models."
+                                    TextWrapping="Wrap" />
+                            </StackPanel>
+
+                            <!--  LoRA Card (full-width below in wide; Row 2 in compact)  -->
+                            <Border
+                                Grid.Row="1"
+                                Grid.Column="0"
+                                Grid.ColumnSpan="2"
+                                Margin="0,16,0,0"
+                                Padding="14,10"
+                                HorizontalAlignment="Stretch"
+                                Background="#16161E"
+                                BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                                BorderThickness="1"
+                                Classes="krea-lora-card"
+                                CornerRadius="6">
+                                <StackPanel HorizontalAlignment="Stretch" Spacing="8">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <avalonia:Icon
+                                            VerticalAlignment="Center"
+                                            FontSize="12"
+                                            Opacity="0.6"
+                                            Value="fa-solid fa-layer-group" />
+                                        <TextBlock
+                                            VerticalAlignment="Center"
+                                            FontSize="12"
+                                            Opacity="0.7"
+                                            Text="LoRAs" />
+                                        <Button
+                                            Padding="6,2"
+                                            Background="#2D2D4A"
+                                            Command="{Binding AddLoraCommand}"
+                                            CornerRadius="4">
+                                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                                <avalonia:Icon FontSize="10" Value="fa-solid fa-plus" />
+                                                <TextBlock FontSize="11" Text="Add LoRA" />
+                                            </StackPanel>
+                                        </Button>
+                                    </StackPanel>
+
+                                    <!--  Empty State  -->
+                                    <TextBlock
+                                        FontSize="11"
+                                        IsVisible="{Binding !SelectedLoras.Count}"
+                                        Opacity="0.5"
+                                        Text="No LoRAs selected — click Add to stack character / style LoRAs on top of the Krea 2 model."
+                                        TextWrapping="Wrap" />
+
+                                    <!--  Selected LoRA list (inline inside the card)  -->
+                                    <ItemsControl IsVisible="{Binding SelectedLoras.Count}" ItemsSource="{Binding SelectedLoras}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate DataType="bananaVision1:SelectedLora">
+                                                <Border
+                                                    Margin="0,4"
+                                                    Padding="12,10"
+                                                    Background="#2A2A3E"
+                                                    CornerRadius="8">
+                                                    <Grid ColumnDefinitions="*, Auto, Auto, Auto">
+                                                        <!--  LoRA Name  -->
+                                                        <TextBlock
+                                                            Grid.Column="0"
+                                                            VerticalAlignment="Center"
+                                                            FontWeight="Medium"
+                                                            Text="{Binding DisplayName}"
+                                                            TextTrimming="CharacterEllipsis" />
+
+                                                        <!--  Model Weight  -->
+                                                        <StackPanel
+                                                            Grid.Column="1"
+                                                            Margin="16,0"
+                                                            Orientation="Horizontal"
+                                                            Spacing="6">
+                                                            <TextBlock
+                                                                VerticalAlignment="Center"
+                                                                FontSize="11"
+                                                                Opacity="0.7"
+                                                                Text="Model:" />
+                                                            <Slider
+                                                                Width="100"
+                                                                VerticalAlignment="Center"
+                                                                IsSnapToTickEnabled="True"
+                                                                Maximum="2"
+                                                                Minimum="0"
+                                                                TickFrequency="0.05"
+                                                                Value="{Binding ModelWeight}" />
+                                                            <NumericUpDown
+                                                                Width="65"
+                                                                MinHeight="0"
+                                                                Padding="6,4"
+                                                                VerticalAlignment="Center"
+                                                                VerticalContentAlignment="Center"
+                                                                FontSize="13"
+                                                                FormatString="F2"
+                                                                Increment="0.05"
+                                                                Maximum="2"
+                                                                Minimum="0"
+                                                                ShowButtonSpinner="False"
+                                                                Value="{Binding ModelWeight}" />
+                                                        </StackPanel>
+
+                                                        <!--  CLIP Weight  -->
+                                                        <StackPanel
+                                                            Grid.Column="2"
+                                                            Margin="0,0,12,0"
+                                                            Orientation="Horizontal"
+                                                            Spacing="6">
+                                                            <TextBlock
+                                                                VerticalAlignment="Center"
+                                                                FontSize="11"
+                                                                Opacity="0.7"
+                                                                Text="CLIP:" />
+                                                            <Slider
+                                                                Width="100"
+                                                                VerticalAlignment="Center"
+                                                                IsSnapToTickEnabled="True"
+                                                                Maximum="2"
+                                                                Minimum="0"
+                                                                TickFrequency="0.05"
+                                                                Value="{Binding ClipWeight}" />
+                                                            <NumericUpDown
+                                                                Width="65"
+                                                                MinHeight="0"
+                                                                Padding="6,4"
+                                                                VerticalAlignment="Center"
+                                                                VerticalContentAlignment="Center"
+                                                                FontSize="13"
+                                                                FormatString="F2"
+                                                                Increment="0.05"
+                                                                Maximum="2"
+                                                                Minimum="0"
+                                                                ShowButtonSpinner="False"
+                                                                Value="{Binding ClipWeight}" />
+                                                        </StackPanel>
+
+                                                        <!--  Remove Button  -->
+                                                        <Button
+                                                            Grid.Column="3"
+                                                            Padding="6"
+                                                            Background="Transparent"
+                                                            Command="{Binding $parent[ItemsControl].((vm:BananaVisionPageViewModel)DataContext).RemoveLoraCommand}"
+                                                            CommandParameter="{Binding}"
+                                                            ToolTip.Tip="Remove LoRA">
+                                                            <avalonia:Icon
+                                                                FontSize="12"
+                                                                Foreground="#FF6B6B"
+                                                                Value="fa-solid fa-times" />
+                                                        </Button>
+                                                    </Grid>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </Expander>
+                </Border>
             </StackPanel>
 
             <!--  Message List (Row 2)  -->

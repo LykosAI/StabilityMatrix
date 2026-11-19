@@ -332,6 +332,11 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
     public bool ShowKleinSettings => SelectedProviderId == BananaVisionProviderIds.Flux2Klein;
 
     /// <summary>
+    /// Whether to show the Krea 2 settings panel
+    /// </summary>
+    public bool ShowKreaSettings => SelectedProviderId == BananaVisionProviderIds.Krea2;
+
+    /// <summary>
     /// Whether the Flux settings panel is expanded
     /// </summary>
     [ObservableProperty]
@@ -348,6 +353,12 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
     /// </summary>
     [ObservableProperty]
     public partial bool IsKleinSettingsExpanded { get; set; } = true;
+
+    /// <summary>
+    /// Whether the Krea 2 settings panel is expanded
+    /// </summary>
+    [ObservableProperty]
+    public partial bool IsKreaSettingsExpanded { get; set; } = true;
 
     /// <summary>
     /// Selected Flux Kontext model
@@ -382,6 +393,24 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
     public partial double KleinCfg { get; set; } = 1.0;
 
     /// <summary>
+    /// Selected Krea 2 diffusion model
+    /// </summary>
+    [ObservableProperty]
+    public partial HybridModelFile? SelectedKreaModel { get; set; }
+
+    /// <summary>
+    /// Sampling steps for Krea 2 (8 matches the Turbo variant); adjustable in the Krea 2 panel.
+    /// </summary>
+    [ObservableProperty]
+    public partial int KreaSteps { get; set; } = 8;
+
+    /// <summary>
+    /// CFG scale for Krea 2 (1 matches the Turbo variant); adjustable in the Krea 2 panel.
+    /// </summary>
+    [ObservableProperty]
+    public partial double KreaCfg { get; set; } = 1.0;
+
+    /// <summary>
     /// Available Flux Kontext models (filtered by BaseModel metadata or untagged)
     /// </summary>
     public ObservableCollection<HybridModelFile> AvailableFluxModels { get; } = [];
@@ -397,6 +426,11 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
     public ObservableCollection<HybridModelFile> AvailableKleinModels { get; } = [];
 
     /// <summary>
+    /// Available Krea 2 models (filtered by BaseModel metadata or filename)
+    /// </summary>
+    public ObservableCollection<HybridModelFile> AvailableKreaModels { get; } = [];
+
+    /// <summary>
     /// Available LoRA models for Flux Kontext
     /// </summary>
     public ObservableCollection<HybridModelFile> AvailableFluxLoras { get; } = [];
@@ -410,6 +444,11 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
     /// Available LoRA models for Flux.2 Klein
     /// </summary>
     public ObservableCollection<HybridModelFile> AvailableKleinLoras { get; } = [];
+
+    /// <summary>
+    /// Available LoRA models for Krea 2
+    /// </summary>
+    public ObservableCollection<HybridModelFile> AvailableKreaLoras { get; } = [];
 
     /// <summary>
     /// Selected LoRAs with weights
@@ -1565,6 +1604,17 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
             providerOptions["CfgScale"] = KleinCfg;
         }
 
+        if (SelectedProviderId == BananaVisionProviderIds.Krea2)
+        {
+            providerOptions ??= new();
+            if (SelectedKreaModel != null)
+                providerOptions["CustomUnetModel"] = SelectedKreaModel;
+            if (SelectedLoras.Count > 0)
+                providerOptions["SelectedLoras"] = SelectedLoras.ToList();
+            providerOptions["Steps"] = KreaSteps;
+            providerOptions["CfgScale"] = KreaCfg;
+        }
+
         providerOptions ??= new();
 
         if (UseCustomResolution)
@@ -2028,6 +2078,7 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
         OnPropertyChanged(nameof(ShowFluxSettings));
         OnPropertyChanged(nameof(ShowQwenSettings));
         OnPropertyChanged(nameof(ShowKleinSettings));
+        OnPropertyChanged(nameof(ShowKreaSettings));
 
         // Load available Flux models when switching to Flux Kontext
         if (value == BananaVisionProviderIds.FluxKontext)
@@ -2065,6 +2116,19 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
                 .SafeFireAndForget(ex =>
                 {
                     logger.LogError(ex, "Failed to check for missing Klein models");
+                });
+        }
+
+        // Load available Krea 2 models when switching to Krea 2
+        if (value == BananaVisionProviderIds.Krea2)
+        {
+            LoadAvailableKreaModels();
+
+            // Auto-show missing models dialog if connected and models are missing
+            CheckAndShowMissingModelsDialogAsync()
+                .SafeFireAndForget(ex =>
+                {
+                    logger.LogError(ex, "Failed to check for missing Krea 2 models");
                 });
         }
     }

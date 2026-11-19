@@ -37,10 +37,15 @@ public static class BananaVisionProviderIds
     public const string Flux2Klein = "flux2-klein";
 
     /// <summary>
+    /// Krea 2 local text-to-image provider (requires ComfyUI)
+    /// </summary>
+    public const string Krea2 = "krea2";
+
+    /// <summary>
     /// Check if a provider ID is a local provider that requires ComfyUI backend
     /// </summary>
     public static bool IsLocalProvider(string? providerId) =>
-        providerId is FluxKontext or QwenImageEdit or Flux2Klein;
+        providerId is FluxKontext or QwenImageEdit or Flux2Klein or Krea2;
 
     /// <summary>
     /// Check if a provider ID is a cloud/API provider (Gemini)

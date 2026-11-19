@@ -287,7 +287,12 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
         || (
             ResolvedWorkflowProfile is InferenceWorkflowProfile.Custom
             && IsUnetLoader
-            && ModelCardViewModel.SelectedClipType is not "stable_diffusion" and not "lumina2" and not "flux2"
+            && ModelCardViewModel.SelectedClipType
+                is not "stable_diffusion"
+                    and not "lumina2"
+                    and not "flux2"
+                    // Krea 2 uses plain CFG (no FluxGuidance) with a single Qwen3-VL CLIPLoader
+                    and not "krea2"
         );
 
     protected void ApplyModelSamplingForCurrentWorkflow(ModuleApplyStepEventArgs applyArgs)

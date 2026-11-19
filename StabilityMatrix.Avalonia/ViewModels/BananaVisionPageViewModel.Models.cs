@@ -282,6 +282,44 @@ public partial class BananaVisionPageViewModel
         );
     }
 
+    private static readonly string[] Krea2Terms = ["krea2", "krea-2", "krea_2", "Krea 2"];
+
+    /// <summary>
+    /// Loads available Krea 2 models and LoRAs from the local model index. Only models that
+    /// identify as Krea 2 (filename or CivitAI base model) are listed — a wrong-architecture
+    /// UNET would only fail at sampling time.
+    /// </summary>
+    private void LoadAvailableKreaModels()
+    {
+        var (kreaModels, _, _) = CategorizeModelsByTerms(SharedFolderType.DiffusionModels, Krea2Terms);
+
+        PopulateModelCollection(AvailableKreaModels, kreaModels);
+
+        if (SelectedKreaModel == null || !AvailableKreaModels.Contains(SelectedKreaModel))
+        {
+            SelectedKreaModel = AvailableKreaModels.FirstOrDefault();
+        }
+
+        var (kreaLoras, _, untaggedLoras) = CategorizeModelsByTerms(
+            SharedFolderType.Lora | SharedFolderType.LyCORIS,
+            Krea2Terms
+        );
+
+        PopulateModelCollection(AvailableKreaLoras, kreaLoras, untaggedLoras);
+
+        logger.LogInformation(
+            "Loaded {ModelCount} Krea 2 models and {LoraCount} LoRAs from local index",
+            AvailableKreaModels.Count,
+            AvailableKreaLoras.Count
+        );
+    }
+
+    [RelayCommand]
+    private void ToggleKreaSettings()
+    {
+        IsKreaSettingsExpanded = !IsKreaSettingsExpanded;
+    }
+
     [RelayCommand]
     private async Task AddLoraAsync()
     {
@@ -290,6 +328,7 @@ public partial class BananaVisionPageViewModel
         {
             BananaVisionProviderIds.QwenImageEdit => AvailableQwenLoras,
             BananaVisionProviderIds.Flux2Klein => AvailableKleinLoras,
+            BananaVisionProviderIds.Krea2 => AvailableKreaLoras,
             _ => AvailableFluxLoras,
         };
 

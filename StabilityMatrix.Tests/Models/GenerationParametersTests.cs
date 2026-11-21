@@ -1,4 +1,6 @@
-﻿using StabilityMatrix.Core.Models;
+﻿using System.Globalization;
+
+using StabilityMatrix.Core.Models;
 
 namespace StabilityMatrix.Tests.Models;
 
@@ -48,6 +50,31 @@ public class GenerationParametersTests
         Assert.AreEqual(1028, result.Height);
         Assert.AreEqual("9aa0c3e54d", result.ModelHash);
         Assert.AreEqual("nightvisionXL_v0770_BakedVAE", result.ModelName);
+    }
+
+    [TestMethod]
+    public void TestParse_DecimalCfgScale_IndependentOfCurrentCulture()
+    {
+        const string data = """
+                            test123
+                            Steps: 8, Sampler: Euler, CFG scale: 3.5, Seed: 1234567890, Size: 1280x720
+                            """;
+
+        var originalCulture = CultureInfo.CurrentCulture;
+        try
+        {
+            // de-DE parses "3.5" as 35 (dot = thousands separator) with the current culture
+            CultureInfo.CurrentCulture = new CultureInfo("de-DE");
+
+            Assert.IsTrue(GenerationParameters.TryParse(data, out var result));
+            Assert.AreEqual(3.5, result.CfgScale);
+            Assert.AreEqual(1280, result.Width);
+            Assert.AreEqual(720, result.Height);
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = originalCulture;
+        }
     }
 
     [TestMethod]

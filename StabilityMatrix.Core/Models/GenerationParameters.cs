@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using StabilityMatrix.Core.Models.Api.Comfy;
@@ -101,10 +102,19 @@ public record GenerationParameters
         {
             PositivePrompt = positivePrompt,
             NegativePrompt = negativePrompt,
-            Steps = int.Parse(lineFields.GetValueOrDefault("Steps", "0")),
+            Steps = int.Parse(
+                lineFields.GetValueOrDefault("Steps", "0"),
+                CultureInfo.InvariantCulture
+            ),
             Sampler = lineFields.GetValueOrDefault("Sampler"),
-            CfgScale = double.Parse(lineFields.GetValueOrDefault("CFG scale", "0")),
-            Seed = ulong.Parse(lineFields.GetValueOrDefault("Seed", "0")),
+            CfgScale = double.Parse(
+                lineFields.GetValueOrDefault("CFG scale", "0"),
+                CultureInfo.InvariantCulture
+            ),
+            Seed = ulong.Parse(
+                lineFields.GetValueOrDefault("Seed", "0"),
+                CultureInfo.InvariantCulture
+            ),
             ModelHash = lineFields.GetValueOrDefault("Model hash"),
             ModelName = lineFields.GetValueOrDefault("Model"),
         };
@@ -144,8 +154,8 @@ public record GenerationParameters
             {
                 generationParameters = generationParameters with
                 {
-                    Width = int.Parse(split[0]),
-                    Height = int.Parse(split[1]),
+                    Width = int.Parse(split[0], CultureInfo.InvariantCulture),
+                    Height = int.Parse(split[1], CultureInfo.InvariantCulture),
                 };
             }
         }

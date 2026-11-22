@@ -29,16 +29,15 @@ public class ComfyClient : InferenceClientBase
     private readonly IComfyApi comfyApi;
     private bool isDisposed;
 
-    private readonly JsonSerializerOptions jsonSerializerOptions =
-        new()
+    private readonly JsonSerializerOptions jsonSerializerOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicies.SnakeCaseLower,
+        Converters =
         {
-            PropertyNamingPolicy = JsonNamingPolicies.SnakeCaseLower,
-            Converters =
-            {
-                new NodeConnectionBaseJsonConverter(),
-                new OneOfJsonConverter<string, StringNodeConnection>()
-            }
-        };
+            new NodeConnectionBaseJsonConverter(),
+            new OneOfJsonConverter<string, StringNodeConnection>(),
+        },
+    };
 
     // ReSharper disable once MemberCanBePrivate.Global
     public string ClientId { get; } = Guid.NewGuid().ToString();
@@ -111,20 +110,20 @@ public class ComfyClient : InferenceClientBase
         {
             Scheme = "ws",
             Path = "/ws",
-            Query = $"clientId={ClientId}"
+            Query = $"clientId={ClientId}",
         }.Uri;
 
         webSocketClient = new WebsocketClient(wsUri)
         {
             Name = nameof(ComfyClient),
-            ReconnectTimeout = TimeSpan.FromSeconds(30)
+            ReconnectTimeout = TimeSpan.FromSeconds(30),
         };
 
-        webSocketClient.DisconnectionHappened.Subscribe(
-            info => Logger.Info("Websocket Disconnected, ({Type})", info.Type)
+        webSocketClient.DisconnectionHappened.Subscribe(info =>
+            Logger.Info(info.Exception, "Websocket Disconnected, ({Type})", info.Type)
         );
-        webSocketClient.ReconnectionHappened.Subscribe(
-            info => Logger.Info("Websocket Reconnected, ({Type})", info.Type)
+        webSocketClient.ReconnectionHappened.Subscribe(info =>
+            Logger.Info("Websocket Reconnected, ({Type})", info.Type)
         );
 
         webSocketClient.MessageReceived.Subscribe(OnMessageReceived);
@@ -132,19 +131,33 @@ public class ComfyClient : InferenceClientBase
 
     private void OnMessageReceived(ResponseMessage message)
     {
-        switch (message.MessageType)
+        // An exception escaping this handler ends the MessageReceived subscription for good,
+        // so one unexpected message would stop all further progress and results from arriving.
+        try
         {
-            case WebSocketMessageType.Text:
-                HandleTextMessage(message.Text);
-                break;
-            case WebSocketMessageType.Binary:
-                HandleBinaryMessage(message.Binary);
-                break;
-            case WebSocketMessageType.Close:
-                Logger.Trace("Received ws close message: {Text}", message.Text);
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(message));
+            switch (message.MessageType)
+            {
+                case WebSocketMessageType.Text:
+                    HandleTextMessage(message.Text);
+                    break;
+                case WebSocketMessageType.Binary:
+                    HandleBinaryMessage(message.Binary);
+                    break;
+                case WebSocketMessageType.Close:
+                    Logger.Trace("Received ws close message: {Text}", message.Text);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(message));
+            }
+        }
+        catch (Exception e)
+        {
+            Logger.Error(
+                e,
+                "Failed to handle websocket message ({Type}): {Text}",
+                message.MessageType,
+                message.Text
+            );
         }
     }
 
@@ -287,7 +300,7 @@ public class ComfyClient : InferenceClientBase
             Array.Reverse(typeBytes);
         }*/
 
-        PreviewImageReceived?.Invoke(this, new ComfyWebSocketImageData { ImageBytes = data[8..], });
+        PreviewImageReceived?.Invoke(this, new ComfyWebSocketImageData { ImageBytes = data[8..] });
     }
 
     public override async Task ConnectAsync(CancellationToken cancellationToken = default)

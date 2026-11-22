@@ -230,7 +230,7 @@ public partial class ModelCardViewModel(
     [ObservableProperty]
     private bool isTextEncodersExpanded = true;
 
-    public List<string> WeightDTypes { get; set; } = ["default", "fp8_e4m3fn", "fp8_e5m2"];
+    public List<string> WeightDTypes { get; set; } = ["default", "fp8_e4m3fn", "fp8_e4m3fn_fast", "fp8_e5m2"];
     public List<string> ClipTypes { get; set; } =
         [
             "sdxl",
@@ -251,6 +251,22 @@ public partial class ModelCardViewModel(
             "qwen_image",
             "wan",
             "omnigen2",
+            "ovis",
+            "longcat_image",
+            "cogvideox",
+            "lens",
+            "pixeldit",
+            "ideogram4",
+            "boogu",
+            "krea2",
+            "joyimage",
+            "mage",
+            "minimax",
+            "yue2",
+            "flux3",
+            "moss_image",
+            "fibo2",
+            "pan2",
             "mochi",
             "pixart",
             "cosmos",

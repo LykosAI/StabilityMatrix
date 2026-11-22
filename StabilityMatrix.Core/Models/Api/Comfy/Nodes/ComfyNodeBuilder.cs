@@ -447,7 +447,7 @@ public class ComfyNodeBuilder
         public required string UnetName { get; init; }
 
         /// <summary>
-        /// possible values: "default", "fp8_e4m3fn", "fp8_e5m2"
+        /// possible values: "default", "fp8_e4m3fn", "fp8_e4m3fn_fast", "fp8_e5m2"
         /// </summary>
         public required string WeightDtype { get; init; }
     }

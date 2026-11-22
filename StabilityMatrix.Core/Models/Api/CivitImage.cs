@@ -11,10 +11,10 @@ public class CivitImage
     public int? NsfwLevel { get; set; }
 
     [JsonPropertyName("width")]
-    public int Width { get; set; }
+    public int? Width { get; set; }
 
     [JsonPropertyName("height")]
-    public int Height { get; set; }
+    public int? Height { get; set; }
 
     [JsonPropertyName("hash")]
     public string Hash { get; set; }

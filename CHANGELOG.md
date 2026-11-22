@@ -73,6 +73,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed ControlNet **Reference Only** failing with `Inference_Core_ReferenceOnlySimple not found` when another part of Inference Core Nodes could not load. Inference offers to update Inference Core Nodes, which now loads the rest of its nodes when one part fails ([#1784](https://github.com/LykosAI/StabilityMatrix/issues/1784))
 - Fixed Inference sometimes showing no progress or result while ComfyUI finished the image, and staying stuck that way until the app was restarted
 - Fixed new images in the Inference image grid sometimes showing as blank tiles until you scrolled, after the grid had been in a collapsed pane
+- Fixed Inference clearing the chosen diffusion model, text encoder, LoRA, ControlNet or upscaler when ComfyUI had that model but Stability Matrix's model folders didn't, for example after switching back to the Inference tab
 - Fixed **Hide Early Access Models** still showing models whose early access is set by a future deadline
 - Fixed the CivitAI model browser showing "CivitAI can't be reached right now" when a model image has no width or height ([#1793](https://github.com/LykosAI/StabilityMatrix/pull/1793)) - thanks to @deepratna-awale!
 - Fixed **Find Connected Metadata → Update Existing** wiping tags you added yourself, and hand-edited models dropping out of the scan

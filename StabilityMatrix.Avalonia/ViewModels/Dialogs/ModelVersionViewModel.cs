@@ -10,6 +10,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 public partial class ModelVersionViewModel : DisposableViewModelBase
 {
     private readonly IModelIndexService modelIndexService;
+    private readonly CivitModelType modelType;
 
     [ObservableProperty]
     public partial CivitModelVersion ModelVersion { get; set; }
@@ -17,30 +18,25 @@ public partial class ModelVersionViewModel : DisposableViewModelBase
     [ObservableProperty]
     public partial bool IsInstalled { get; set; }
 
-    public ModelVersionViewModel(IModelIndexService modelIndexService, CivitModelVersion modelVersion)
+    public ModelVersionViewModel(
+        IModelIndexService modelIndexService,
+        CivitModelVersion modelVersion,
+        CivitModelType modelType
+    )
     {
         this.modelIndexService = modelIndexService;
+        this.modelType = modelType;
 
         ModelVersion = modelVersion;
 
-        // Install detection is purely hash-based: a file whose hash is in the local model index is
-        // on disk, regardless of the type Civitai reports (which may be Unknown for new types)
-        IsInstalled =
-            ModelVersion.Files?.Any(file =>
-                file is { Hashes.BLAKE3: not null }
-                && modelIndexService.ModelIndexBlake3Hashes.Contains(file.Hashes.BLAKE3)
-            ) ?? false;
+        RefreshInstallStatus();
 
         EventManager.Instance.ModelIndexChanged += ModelIndexChanged;
     }
 
     public void RefreshInstallStatus()
     {
-        IsInstalled =
-            ModelVersion.Files?.Any(file =>
-                file is { Hashes.BLAKE3: not null }
-                && modelIndexService.ModelIndexBlake3Hashes.Contains(file.Hashes.BLAKE3)
-            ) ?? false;
+        IsInstalled = ModelVersion.IsInstalled(modelType, modelIndexService.ModelIndexBlake3Hashes);
     }
 
     private void ModelIndexChanged(object? sender, EventArgs e)

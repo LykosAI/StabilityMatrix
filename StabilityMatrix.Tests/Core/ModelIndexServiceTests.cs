@@ -195,12 +195,33 @@ public class ModelIndexServiceTests
         // Model — these must count as installable evidence, not produce a permanent badge
         var model = CreateLocalModel(installedVersionId: 100, hasUpdate: false);
         var remoteModel = CreateRemoteModel(
-            CreateVersion(id: 100, isEarlyAccess: false, CreateFile(CivitFileType.Negative, "aabbcc"))
+            CreateVersion(id: 200, isEarlyAccess: false, CreateFile(CivitFileType.Negative, "aabbcc")),
+            CreateVersion(id: 100, isEarlyAccess: false, CreateFile(CivitFileType.Negative, "old"))
         );
+        remoteModel.Type = CivitModelType.TextualInversion;
 
         var result = InvokeComputeHasUpdate(model, remoteModel, ["aabbcc"]);
 
         Assert.IsFalse(result);
+    }
+
+    [TestMethod]
+    public void ComputeHasUpdate_SharedVaeDoesNotHideMissingMainModelUpdate()
+    {
+        var model = CreateLocalModel(installedVersionId: 100, hasUpdate: false);
+        var remoteModel = CreateRemoteModel(
+            CreateVersion(
+                id: 200,
+                isEarlyAccess: false,
+                CreateFile(CivitFileType.Model, "new"),
+                CreateFile(CivitFileType.VAE, "vae")
+            ),
+            CreateVersion(id: 100, isEarlyAccess: false, CreateFile(CivitFileType.Model, "old"))
+        );
+        remoteModel.Type = CivitModelType.Checkpoint;
+
+        Assert.IsTrue(InvokeComputeHasUpdate(model, remoteModel, ["old", "vae"]));
+        Assert.IsFalse(InvokeComputeHasUpdate(model, remoteModel, ["old", "new"]));
     }
 
     [TestMethod]

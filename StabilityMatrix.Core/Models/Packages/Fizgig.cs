@@ -125,6 +125,9 @@ public partial class Fizgig(
                     ? [.. torchSpecs, "--extra-index-url", extraIndexUrl]
                     : [],
             SkipTorchInstall = true,
+            // pywebview finds no window engine inside the venv on Linux, since a distro's GTK bindings
+            // aren't visible there. Mirrors install_linux_window in upstream's install_fizgig.py.
+            PostInstallPipArgs = Compat.IsLinux ? ["pywebview[qt]>=5,<7"] : [],
         };
 
         await StandardPipInstallProcessAsync(
@@ -201,8 +204,8 @@ public partial class Fizgig(
         await SetupVenv(installLocation, pythonVersion: PyVersion.Parse(installedPackage.PythonVersion))
             .ConfigureAwait(false);
 
-        // Desktop Tkinter app - there is no local URL to wait for, so startup is complete
-        // as soon as the process is up.
+        // Fizgig opens the web UI in its own app window, so there is no local URL to wait for and
+        // startup is complete as soon as the process is up.
         VenvRunner.RunDetached(
             [Path.Combine(installLocation, options.Command ?? LaunchCommand), .. options.Arguments],
             onConsoleOutput,

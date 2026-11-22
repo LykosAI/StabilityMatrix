@@ -50,4 +50,41 @@ public class CivitModelVersion
     public bool IsEarlyAccess =>
         (Availability?.Equals("EarlyAccess", StringComparison.OrdinalIgnoreCase) ?? false)
         || EarlyAccessDeadline > DateTimeOffset.UtcNow;
+
+    /// <summary>
+    /// Gets the alternative main model files for this release. Component file types count
+    /// only when they are the artifact published by the parent model type.
+    /// </summary>
+    public IEnumerable<CivitFile> GetMainModelFiles(CivitModelType modelType) =>
+        (Files ?? []).Where(file =>
+            file is not null
+            && (
+                file.Type.IsModelWeights()
+                // File types CivitAI adds after this build deserialize to Unknown; counting them keeps
+                // a new kind of weights from reading as not installed.
+                || file.Type is CivitFileType.Unknown
+                || modelType switch
+                {
+                    CivitModelType.VAE => file.Type is CivitFileType.VAE,
+                    CivitModelType.Upscaler => file.Type is CivitFileType.Upscaler,
+                    CivitModelType.Controlnet => file.Type is CivitFileType.ControlNet,
+                    CivitModelType.TextualInversion => file.Type is CivitFileType.Negative,
+                    CivitModelType.LORA or CivitModelType.LoCon or CivitModelType.DoRA => file.Type
+                        is CivitFileType.EnhancementLora,
+                    _ => false,
+                }
+            )
+        );
+
+    /// <summary>
+    /// Whether at least one main model variant is present in the local hash index.
+    /// This does not indicate whether external dependencies needed to run it are installed.
+    /// </summary>
+    public bool IsInstalled(CivitModelType modelType, IReadOnlySet<string> installedHashes) =>
+        GetMainModelFiles(modelType)
+            .Any(file =>
+                file.Hashes?.BLAKE3 is { } hash
+                && !string.IsNullOrWhiteSpace(hash)
+                && installedHashes.Contains(hash)
+            );
 }

@@ -602,14 +602,21 @@
                                     <LayoutTransformControl.LayoutTransform>
                                         <ScaleTransform ScaleX="{Binding $parent[scroll:BetterScrollViewer].((viewModels:CheckpointsPageViewModel)DataContext).ModelCardBottomResizeFactor, FallbackValue=1, TargetNullValue=1}" ScaleY="{Binding $parent[scroll:BetterScrollViewer].((viewModels:CheckpointsPageViewModel)DataContext).ModelCardBottomResizeFactor, FallbackValue=1, TargetNullValue=1}" />
                                     </LayoutTransformControl.LayoutTransform>
-                                    <WrapPanel IsVisible="{Binding CheckpointFile.HasConnectedModel}" Orientation="Horizontal">
+                                    <WrapPanel Orientation="Horizontal">
+                                        <WrapPanel.IsVisible>
+                                            <MultiBinding Converter="{x:Static BoolConverters.Or}">
+                                                <CompiledBinding Path="CheckpointFile.HasConnectedModel" />
+                                                <CompiledBinding Converter="{x:Static StringConverters.IsNotNullOrEmpty}" Path="BaseModelName" />
+                                            </MultiBinding>
+                                        </WrapPanel.IsVisible>
                                         <controls:Card
                                             Height="24"
                                             Margin="8,8,0,0"
                                             Padding="4"
                                             HorizontalAlignment="Left"
                                             VerticalAlignment="Top"
-                                            Classes="info">
+                                            Classes="info"
+                                            IsVisible="{Binding CheckpointFile.HasConnectedModel}">
 
                                             <TextBlock
                                                 HorizontalAlignment="Center"
@@ -728,9 +735,9 @@
                                                 Foreground="{DynamicResource TextFillColorTertiaryBrush}"
                                                 IsVisible="{Binding CanShowTriggerWords}"
                                                 TextWrapping="NoWrap"
-                                                ToolTip.Tip="{Binding CheckpointFile.ConnectedModelInfo.TrainedWordsString}">
+                                                ToolTip.Tip="{Binding CheckpointFile.DisplayTrainedWordsString}">
                                                 <Run Text="Trigger words:" />
-                                                <Run Text="{Binding CheckpointFile.ConnectedModelInfo.TrainedWordsString}" />
+                                                <Run Text="{Binding CheckpointFile.DisplayTrainedWordsString}" />
                                             </TextBlock>
                                         </StackPanel>
                                     </Border>

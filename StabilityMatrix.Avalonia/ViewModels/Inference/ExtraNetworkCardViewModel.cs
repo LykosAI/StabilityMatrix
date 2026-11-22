@@ -121,8 +121,7 @@ public partial class ExtraNetworkCardViewModel : DisposableLoadableViewModelBase
     public IObservableCollection<HybridModelFile> LoraModels { get; } =
         new ObservableCollectionExtended<HybridModelFile>();
 
-    public string TriggerWords =>
-        SelectedModel?.Local?.ConnectedModelInfo?.TrainedWordsString ?? string.Empty;
+    public string TriggerWords => SelectedModel?.Local?.DisplayTrainedWordsString ?? string.Empty;
     public bool ShowTriggerWords => !string.IsNullOrWhiteSpace(TriggerWords);
 
     public IInferenceClientManager ClientManager { get; }

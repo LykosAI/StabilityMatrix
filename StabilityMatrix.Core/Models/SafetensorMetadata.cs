@@ -31,10 +31,23 @@ public record SafetensorMetadata
     /// <returns>The parsed metadata. Can be <see langword="null"/> if the file does not contain metadata.</returns>
     public static async Task<SafetensorMetadata?> ParseAsync(Stream safetensorStream)
     {
+        var metadataDict = await ReadMetadataDictionaryAsync(safetensorStream).ConfigureAwait(false);
+        return metadataDict is null ? null : FromDictionary(metadataDict);
+    }
+
+    /// <summary>
+    /// Reads the raw <c>__metadata__</c> entries from a SafeTensor file.
+    /// </summary>
+    /// <returns>The metadata entries, or <see langword="null"/> if the file does not contain metadata.</returns>
+    internal static async Task<Dictionary<string, string>?> ReadMetadataDictionaryAsync(
+        Stream safetensorStream,
+        CancellationToken cancellationToken = default
+    )
+    {
         // 8 bytes unsigned little-endian 64-bit integer
         // 1 byte start of JSON object '{'
         Memory<byte> buffer = new byte[9];
-        await safetensorStream.ReadExactlyAsync(buffer).ConfigureAwait(false);
+        await safetensorStream.ReadExactlyAsync(buffer, cancellationToken).ConfigureAwait(false);
         var span = buffer.Span;
 
         const ulong MAX_ALLOWED_JSON_LENGTH = 100 * 1024 * 1024; // 100 MB
@@ -60,7 +73,7 @@ public record SafetensorMetadata
             // we already read {, so start from index 1
             jsonBytes[0] = (byte)'{';
             await safetensorStream
-                .ReadExactlyAsync(jsonBytes, 1, (int)(jsonLength - 1))
+                .ReadExactlyAsync(jsonBytes.AsMemory(1, (int)(jsonLength - 1)), cancellationToken)
                 .ConfigureAwait(false);
 
             // read the JSON with Utf8JsonReader, then only deserialize what we need
@@ -97,7 +110,7 @@ public record SafetensorMetadata
                 {
                     if (JsonSerializer.Deserialize<Dictionary<string, string>>(ref reader) is { } dict)
                     {
-                        return FromDictionary(dict);
+                        return dict;
                     }
 
                     // got null from Deserialize
@@ -138,6 +151,14 @@ public record SafetensorMetadata
         {
             if (MetadataKeys.Contains(kv.Key))
             {
+                continue;
+            }
+
+            if (SafetensorEmbeddedInfo.IsImageKey(kv.Key))
+            {
+                otherMetadata.Add(
+                    new Metadata(kv.Key, $"(embedded image, {kv.Value.Length * 3 / 4 / 1024:N0} KB)")
+                );
                 continue;
             }
 

@@ -37,6 +37,64 @@ public class LocalModelFileTests
         Assert.AreEqual(2, set.Count);
     }
 
+    [TestMethod]
+    public void GetDisplayPreviewImageFullPath_PrefersPreviewImageFile()
+    {
+        var rootModelDirectory = Path.Combine(Path.GetTempPath(), "Models");
+        var model = CreateLocalModelFile(hasEarlyAccessUpdateOnly: false) with
+        {
+            PreviewImageRelativePath = Path.Combine("StableDiffusion", "model-a.preview.jpeg"),
+            EmbeddedPreviewImageFullPath = Path.Combine(Path.GetTempPath(), "cover.jpeg"),
+        };
+
+        Assert.AreEqual(
+            Path.Combine(rootModelDirectory, "StableDiffusion", "model-a.preview.jpeg"),
+            model.GetDisplayPreviewImageFullPath(rootModelDirectory)
+        );
+    }
+
+    [TestMethod]
+    public void GetDisplayPreviewImageFullPath_FallsBackToEmbeddedCover()
+    {
+        var embeddedCoverPath = Path.Combine(Path.GetTempPath(), "cover.jpeg");
+        var model = CreateLocalModelFile(hasEarlyAccessUpdateOnly: false) with
+        {
+            EmbeddedPreviewImageFullPath = embeddedCoverPath,
+        };
+
+        Assert.IsNull(model.GetPreviewImageFullPath(Path.GetTempPath()));
+        Assert.AreEqual(embeddedCoverPath, model.GetDisplayPreviewImageFullPath(Path.GetTempPath()));
+    }
+
+    [TestMethod]
+    public void DisplayBaseModelAndTrainedWords_PreferConnectedModelInfo()
+    {
+        var model = CreateLocalModelFile(hasEarlyAccessUpdateOnly: false) with
+        {
+            EmbeddedBaseModel = "SDXL 1.0",
+            EmbeddedTrainedWords = ["embedded"],
+        };
+        model.ConnectedModelInfo!.BaseModel = "Illustrious";
+        model.ConnectedModelInfo.TrainedWords = ["connected"];
+
+        Assert.AreEqual("Illustrious", model.DisplayBaseModel);
+        Assert.AreEqual("connected", model.DisplayTrainedWordsString);
+    }
+
+    [TestMethod]
+    public void DisplayBaseModelAndTrainedWords_FallBackToEmbeddedMetadata()
+    {
+        var model = CreateLocalModelFile(hasEarlyAccessUpdateOnly: false) with
+        {
+            ConnectedModelInfo = null,
+            EmbeddedBaseModel = "SDXL 1.0",
+            EmbeddedTrainedWords = ["mychar", "red jacket"],
+        };
+
+        Assert.AreEqual("SDXL 1.0", model.DisplayBaseModel);
+        Assert.AreEqual("mychar, red jacket", model.DisplayTrainedWordsString);
+    }
+
     private static LocalModelFile CreateLocalModelFile(bool hasEarlyAccessUpdateOnly)
     {
         return new LocalModelFile

@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Motion Studio</title>
+<style>
+  :root {
+    --bg: #14151a; --panel: #1d1f27; --line: #2c2f3b; --text: #e8e9ee; --muted: #9a9eb0;
+    --accent: #7c6cff; --accent-2: #5b4dd6; --ok: #4fcf8f; --err: #ff6b6b;
+  }
+  @media (prefers-color-scheme: light) {
+    :root { --bg: #f4f5f9; --panel: #fff; --line: #dcdfe8; --text: #1b1d27; --muted: #626779; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 system-ui, sans-serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  .sub { color: var(--muted); margin: 0 0 20px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 700px) { .grid { grid-template-columns: 1fr; } }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px; }
+  .card h2 { font-size: 14px; margin: 0 0 10px; color: var(--muted); font-weight: 600; letter-spacing: .02em; }
+  .drop { position: relative; display: grid; place-items: center; min-height: 260px; border: 2px dashed var(--line);
+          border-radius: 10px; text-align: center; color: var(--muted); cursor: pointer; overflow: hidden; padding: 8px; }
+  .drop.over { border-color: var(--accent); color: var(--text); }
+  .drop input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .drop video, .drop img { max-width: 100%; max-height: 320px; border-radius: 8px; display: block; }
+  .drop .hint { pointer-events: none; }
+  textarea { width: 100%; min-height: 90px; resize: vertical; background: var(--bg); color: var(--text);
+             border: 1px solid var(--line); border-radius: 8px; padding: 10px; font: inherit; }
+  textarea:focus, select:focus { outline: 2px solid var(--accent); }
+  .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: end; margin-top: 12px; }
+  label { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
+  select { background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 8px; font: inherit; }
+  button { border: 0; border-radius: 10px; padding: 11px 20px; font: inherit; font-weight: 600; cursor: pointer;
+           background: var(--accent); color: #fff; }
+  button:hover:not(:disabled) { background: var(--accent-2); }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  button.ghost { background: transparent; color: var(--text); border: 1px solid var(--line); }
+  .status { margin-top: 16px; min-height: 24px; color: var(--muted); }
+  .status.err { color: var(--err); white-space: pre-wrap; }
+  .status.ok { color: var(--ok); }
+  .bar { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; margin-top: 8px; display: none; }
+  .bar i { display: block; height: 100%; width: 40%; background: var(--accent); animation: slide 1.4s infinite ease-in-out; }
+  @keyframes slide { 0% { margin-left: -40%; } 100% { margin-left: 100%; } }
+  .result { margin-top: 16px; display: none; }
+  .result video { width: 100%; max-height: 70vh; border-radius: 10px; background: #000; }
+  .note { color: var(--muted); font-size: 13px; margin-top: 10px; }
+  .pose { display: none; margin-top: 10px; }
+  .pose img { max-width: 100%; max-height: 320px; border-radius: 8px; background: #000; display: block; margin: 0 auto; }
+  input[type=range] { width: 180px; accent-color: var(--accent); }
+  .actions { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+  a.btn { text-decoration: none; display: inline-block; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Motion Studio</h1>
+  <p class="sub">O personagem da imagem repete o movimento do vídeo de referência.</p>
+
+  <div class="grid">
+    <section class="card">
+      <h2>1. VÍDEO DE REFERÊNCIA (o movimento)</h2>
+      <div class="drop" id="dropVideo">
+        <div class="hint" id="hintVideo">Arraste um vídeo aqui<br>ou clique para escolher</div>
+        <input type="file" id="fileVideo" accept="video/*">
+      </div>
+      <div class="actions">
+        <button type="button" class="ghost" id="poseBtn" disabled>Ver pose do vídeo</button>
+      </div>
+      <div class="pose" id="poseBox">
+        <img id="poseImg" alt="Esqueleto extraído do vídeo">
+        <p class="note">É isto que o modelo recebe como movimento. Se faltar quadril e pernas, o personagem de corpo inteiro tende a se deformar: use um vídeo com o corpo inteiro enquadrado.</p>
+      </div>
+    </section>
+    <section class="card">
+      <h2>2. IMAGEM DO PERSONAGEM</h2>
+      <div class="drop" id="dropImage">
+        <div class="hint" id="hintImage">Arraste uma imagem aqui<br>ou clique para escolher</div>
+        <input type="file" id="fileImage" accept="image/*">
+      </div>
+    </section>
+  </div>
+
+  <section class="card" style="margin-top:16px">
+    <h2>3. PROMPT (descreva o cenário)</h2>
+    <textarea id="prompt" placeholder="Ex.: em uma floresta sombria encantada, névoa e luz suave"></textarea>
+    <div class="row">
+      <label>Duração
+        <select id="seconds">
+          <option value="2">2 s</option>
+          <option value="3" selected>3 s</option>
+          <option value="4">4 s</option>
+          <option value="5">5 s</option>
+        </select>
+      </label>
+      <label>Qualidade
+        <select id="quality">
+          <option value="196608">Rápida (menor)</option>
+          <option value="262144" selected>Padrão</option>
+          <option value="522240">Alta (usa quase toda a VRAM)</option>
+        </select>
+      </label>
+      <label>Força do controle: <b id="strengthVal">0.80</b>
+        <input type="range" id="strength" min="0.4" max="1" step="0.05" value="0.8">
+      </label>
+      <button id="go" disabled>Gerar vídeo</button>
+      <button id="stop" class="ghost" style="display:none">Cancelar</button>
+    </div>
+    <div class="status" id="status"></div>
+    <div class="bar" id="bar"><i></i></div>
+    <p class="note">Com a GPU de 8 GB, durações maiores e qualidade Alta podem falhar por falta de memória. Cada geração leva vários minutos.</p>
+  </section>
+
+  <section class="card result" id="result">
+    <h2>RESULTADO</h2>
+    <video id="out" controls loop playsinline></video>
+    <div class="actions"><a class="btn" id="dl" download><button type="button">Baixar vídeo</button></a></div>
+  </section>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const state = { video: null, image: null, imgSize: null, running: null };
+
+function setStatus(text, cls = '') { const s = $('status'); s.textContent = text; s.className = 'status ' + cls; }
+function refresh() {
+  $('go').disabled = !(state.video && state.image) || !!state.running;
+  $('poseBtn').disabled = !state.video || !!state.running;
+}
+
+function bindDrop(dropId, inputId, kind) {
+  const drop = $(dropId), input = $(inputId);
+  ['dragenter', 'dragover'].forEach((e) => drop.addEventListener(e, (ev) => { ev.preventDefault(); drop.classList.add('over'); }));
+  ['dragleave', 'drop'].forEach((e) => drop.addEventListener(e, (ev) => { ev.preventDefault(); drop.classList.remove('over'); }));
+  drop.addEventListener('drop', (ev) => { if (ev.dataTransfer.files[0]) take(kind, ev.dataTransfer.files[0], drop); });
+  input.addEventListener('change', () => { if (input.files[0]) take(kind, input.files[0], drop); });
+}
+
+function take(kind, file, drop) {
+  const url = URL.createObjectURL(file);
+  const hint = drop.querySelector('.hint'); if (hint) hint.style.display = 'none';
+  drop.querySelectorAll('video,img').forEach((n) => n.remove());
+  if (kind === 'video') {
+    if (!file.type.startsWith('video/')) return setStatus('Escolha um arquivo de vídeo.', 'err');
+    const v = document.createElement('video'); v.src = url; v.controls = true; v.muted = true; v.loop = true;
+    drop.appendChild(v); state.video = file; state.videoPath = null; $('poseBox').style.display = 'none';
+  } else {
+    if (!file.type.startsWith('image/')) return setStatus('Escolha um arquivo de imagem.', 'err');
+    const im = document.createElement('img');
+    im.onload = () => { state.imgSize = [im.naturalWidth, im.naturalHeight]; };
+    im.src = url; drop.appendChild(im); state.image = file; state.imagePath = null;
+  }
+  setStatus(''); refresh();
+}
+bindDrop('dropVideo', 'fileVideo', 'video');
+bindDrop('dropImage', 'fileImage', 'image');
+
+async function upload(file) {
+  const ext = (file.name.match(/\.[^.]+$/) || [''])[0].toLowerCase();
+  const name = `ms_${Date.now()}_${Math.random().toString(36).slice(2, 7)}${ext}`;
+  const fd = new FormData();
+  fd.append('image', file, name);
+  fd.append('subfolder', 'motion-studio');
+  fd.append('overwrite', 'true');
+  const r = await fetch('/c/upload/image', { method: 'POST', body: fd });
+  if (!r.ok) throw new Error('Falha no upload: ' + (await r.text()));
+  const j = await r.json();
+  return (j.subfolder ? j.subfolder + '/' : '') + j.name;
+}
+
+async function buildPrompt() {
+  const wf = await (await fetch('/workflow')).json();
+  const [w, h] = state.imgSize || [768, 1344];
+  const scene = $('prompt').value.trim();
+  wf['140'].inputs.image = state.imagePath;
+  wf['160'].inputs.file = state.videoPath;
+  wf['131'].inputs.prompt = 'The character from the image performs exactly the body motion of the control pose video.' + (scene ? ' ' + scene : '');
+  wf['133'].inputs.value = Number($('seconds').value);
+  wf['150'].inputs.value = w;
+  wf['151'].inputs.value = h;
+  wf['154'].inputs.value = Number($('quality').value);
+  wf['170'].inputs.strength = Number($('strength').value);
+  wf['129'].inputs.noise_seed = Math.floor(Math.random() * 1e12);
+  wf['92'].inputs.filename_prefix = 'motion-studio/video';
+  return wf;
+}
+
+function fmt(s) { const m = Math.floor(s / 60); return `${m}:${String(s % 60).padStart(2, '0')}`; }
+
+async function generate() {
+  $('result').style.display = 'none';
+  state.running = true; refresh();
+  $('bar').style.display = 'block'; $('stop').style.display = '';
+  const t0 = Date.now();
+  try {
+    setStatus('Enviando arquivos…');
+    state.videoPath = state.videoPath || await upload(state.video);
+    state.imagePath = state.imagePath || await upload(state.image);
+    const prompt = await buildPrompt();
+    const r = await fetch('/c/prompt', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt, client_id: 'motion-studio' }) });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) {
+      const errs = Object.values(j.node_errors || {}).flatMap((n) => (n.errors || []).map((e) => `${n.class_type}: ${e.message} ${e.extra_info?.input_name || ''}`));
+      throw new Error((j.error?.message || 'Prompt recusado') + (errs.length ? '\n' + errs.join('\n') : ''));
+    }
+    state.running = j.prompt_id;
+    while (true) {
+      await new Promise((res) => setTimeout(res, 2500));
+      const elapsed = fmt(Math.round((Date.now() - t0) / 1000));
+      const hist = await (await fetch('/c/history/' + j.prompt_id)).json();
+      const entry = hist[j.prompt_id];
+      if (entry) {
+        const st = entry.status || {};
+        if (st.status_str === 'error') {
+          const m = (st.messages || []).find((x) => x[0] === 'execution_error');
+          throw new Error((m?.[1]?.exception_message || 'Erro na geração').split('\n')[0]);
+        }
+        const vid = (entry.outputs?.['92']?.images || [])[0];
+        if (!vid) throw new Error('A geração terminou sem vídeo (talvez cancelada).');
+        const url = `/c/view?filename=${encodeURIComponent(vid.filename)}&subfolder=${encodeURIComponent(vid.subfolder)}&type=${vid.type}`;
+        $('out').src = url; $('dl').href = url; $('dl').download = vid.filename;
+        $('result').style.display = 'block'; $('out').play().catch(() => {});
+        setStatus(`Pronto em ${elapsed}.`, 'ok');
+        break;
+      }
+      const q = await (await fetch('/c/queue')).json();
+      const running = (q.queue_running || []).some((x) => x[1] === j.prompt_id);
+      setStatus((running ? 'Gerando… ' : 'Na fila… ') + elapsed);
+    }
+  } catch (e) {
+    setStatus(String(e.message || e), 'err');
+  } finally {
+    state.running = null; refresh();
+    $('bar').style.display = 'none'; $('stop').style.display = 'none';
+  }
+}
+
+$('strength').addEventListener('input', () => { $('strengthVal').textContent = Number($('strength').value).toFixed(2); });
+
+// Prévia: roda só o detector + SDPose (sem gerar o vídeo) e mostra o esqueleto animado.
+async function previewPose() {
+  state.running = true; refresh();
+  $('bar').style.display = 'block'; $('poseBox').style.display = 'none';
+  const t0 = Date.now();
+  try {
+    setStatus('Enviando vídeo…');
+    state.videoPath = state.videoPath || await upload(state.video);
+    const full = await (await fetch('/workflow')).json();
+    const wf = {};
+    for (const k of ['133', '160', '161', '162', '163', '164', '165', '166', '167', '168']) wf[k] = full[k];
+    wf['160'].inputs.file = state.videoPath;
+    wf['133'].inputs.value = Number($('seconds').value);
+    wf['190'] = { class_type: 'SaveAnimatedWEBP', inputs: { images: ['168', 0], filename_prefix: 'motion-studio/pose', fps: 15, lossless: false, quality: 80, method: 'default' } };
+    const r = await fetch('/c/prompt', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: wf, client_id: 'motion-studio' }) });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.error?.message || 'Prompt recusado');
+    while (true) {
+      await new Promise((res) => setTimeout(res, 1500));
+      setStatus('Extraindo a pose… ' + fmt(Math.round((Date.now() - t0) / 1000)));
+      const entry = (await (await fetch('/c/history/' + j.prompt_id)).json())[j.prompt_id];
+      if (!entry) continue;
+      if (entry.status?.status_str === 'error') {
+        const m = (entry.status.messages || []).find((x) => x[0] === 'execution_error');
+        throw new Error((m?.[1]?.exception_message || 'Erro ao extrair a pose').split('\n')[0]);
+      }
+      const im = (entry.outputs?.['190']?.images || [])[0];
+      if (!im) throw new Error('Nenhuma imagem de pose foi gerada.');
+      $('poseImg').src = `/c/view?filename=${encodeURIComponent(im.filename)}&subfolder=${encodeURIComponent(im.subfolder)}&type=${im.type}`;
+      $('poseBox').style.display = 'block';
+      setStatus('Pose extraída em ' + fmt(Math.round((Date.now() - t0) / 1000)) + '.', 'ok');
+      break;
+    }
+  } catch (e) {
+    setStatus(String(e.message || e), 'err');
+  } finally {
+    state.running = null; refresh(); $('bar').style.display = 'none';
+  }
+}
+$('poseBtn').addEventListener('click', previewPose);
+
+$('go').addEventListener('click', generate);
+$('stop').addEventListener('click', async () => {
+  await fetch('/c/interrupt', { method: 'POST' });
+  setStatus('Cancelando…');
+});
+</script>
+</body>
+</html>

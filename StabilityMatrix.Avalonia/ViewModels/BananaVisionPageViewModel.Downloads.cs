@@ -95,6 +95,17 @@ public partial class BananaVisionPageViewModel
 
         var missingModels = GetProviderMissingModels(modelManager).ToList();
 
+        if (missingModels.Count == 0 && !AreProviderModelsAvailable(modelManager))
+        {
+            // Nothing to auto-download (e.g. Krea 2): the user has to add the files themselves.
+            notificationService.Show(
+                "Models Missing",
+                $"Add the following to your model folders: {string.Join(", ", GetProviderMissingModelNames(modelManager))}",
+                NotificationType.Warning
+            );
+            return;
+        }
+
         if (missingModels.Count == 0)
         {
             notificationService.Show(

@@ -249,6 +249,7 @@ public partial class ModelCardViewModel(
             "ace",
             "lumina2",
             "qwen_image",
+            "krea2",
             "wan",
             "omnigen2",
             "mochi",
@@ -1598,6 +1599,22 @@ public partial class ModelCardViewModel(
         };
 
     /// <summary>
+    /// Single-encoder clip types (krea2, qwen_image, lumina2, ...) go through CLIPLoader. Sending two
+    /// encoders to DualCLIPLoader makes ComfyUI reject the prompt ("type 'krea2' not in list"), so fail
+    /// early with an actionable message instead.
+    /// </summary>
+    internal static void ValidateEncoderCountForClipType(string? clipType, int selectedEncoderCount)
+    {
+        if (clipType is not null && DefaultEncoderCountForClipType(clipType) == 1 && selectedEncoderCount > 1)
+        {
+            throw new ValidationException(
+                $"Clip type '{clipType}' uses a single text encoder, but {selectedEncoderCount} are selected. "
+                    + "Remove the extra encoder(s) and keep only one."
+            );
+        }
+    }
+
+    /// <summary>
     /// Adds a new text encoder slot.
     /// </summary>
     [RelayCommand]
@@ -1875,6 +1892,8 @@ public partial class ModelCardViewModel(
             var clipName1 = SelectedClip1?.RelativePath ?? throw new ValidationException("No Clip1 Selected");
             var clipName2 = SelectedClip2?.RelativePath ?? throw new ValidationException("No Clip2 Selected");
             var clipType = SelectedClipType ?? throw new ValidationException("No Clip Type Selected");
+
+            ValidateEncoderCountForClipType(clipType, selectedEncoderCount: 2);
 
             e.Builder.Connections.Base.Clip = AnyClipIsGguf(SelectedClip1, SelectedClip2)
                 ? e

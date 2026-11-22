@@ -1,0 +1,440 @@
+{
+  "92": {
+    "class_type": "SaveVideo",
+    "inputs": {
+      "filename_prefix": "comfyart/video",
+      "format": "auto",
+      "video": [
+        "130",
+        0
+      ],
+      "format.codec": "auto"
+    },
+    "_meta": {
+      "title": "@save"
+    }
+  },
+  "119": {
+    "class_type": "VAELoader",
+    "inputs": {
+      "vae_name": "MinimaxH3/minimax_h3_video_vae_fp16.safetensors"
+    }
+  },
+  "120": {
+    "class_type": "VAELoader",
+    "inputs": {
+      "vae_name": "MinimaxH3/minimax_h3_audio_vae_fp32.safetensors"
+    }
+  },
+  "121": {
+    "class_type": "VAEDecodeAudio",
+    "inputs": {
+      "samples": [
+        "125",
+        0
+      ],
+      "vae": [
+        "120",
+        0
+      ]
+    }
+  },
+  "122": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "samples": [
+        "125",
+        0
+      ],
+      "vae": [
+        "119",
+        0
+      ]
+    }
+  },
+  "123": {
+    "class_type": "KSamplerSelect",
+    "inputs": {
+      "sampler_name": "res_multistep"
+    }
+  },
+  "124": {
+    "class_type": "BasicScheduler",
+    "inputs": {
+      "scheduler": "simple",
+      "denoise": 1,
+      "model": [
+        "170",
+        0
+      ],
+      "steps": 8
+    }
+  },
+  "125": {
+    "class_type": "SamplerCustomAdvanced",
+    "inputs": {
+      "noise": [
+        "129",
+        0
+      ],
+      "guider": [
+        "126",
+        0
+      ],
+      "sampler": [
+        "123",
+        0
+      ],
+      "sigmas": [
+        "124",
+        0
+      ],
+      "latent_image": [
+        "131",
+        1
+      ]
+    }
+  },
+  "126": {
+    "class_type": "BasicGuider",
+    "inputs": {
+      "model": [
+        "170",
+        0
+      ],
+      "conditioning": [
+        "131",
+        0
+      ]
+    }
+  },
+  "127": {
+    "class_type": "UnetLoaderGGUFDynamicVRAM",
+    "inputs": {
+      "unet_name": "minimax_h3_fl2va_pruned_fp8_Q4_0.gguf"
+    },
+    "_meta": {
+      "title": "Load GGUF @unet"
+    }
+  },
+  "128": {
+    "class_type": "CLIPLoaderGGUFDynamicVRAM",
+    "inputs": {
+      "clip_name": "Qwen3-VL-32B-Instruct-MiniMax-H3-L0-49-IQ4_XS.gguf",
+      "type": "minimax"
+    }
+  },
+  "129": {
+    "class_type": "RandomNoise",
+    "inputs": {
+      "noise_seed": 1
+    },
+    "_meta": {
+      "title": "@seed"
+    }
+  },
+  "130": {
+    "class_type": "CreateVideo",
+    "inputs": {
+      "fps": 24,
+      "bit_depth": 8,
+      "color_space": "sRGB",
+      "codec": "none",
+      "images": [
+        "122",
+        0
+      ],
+      "audio": [
+        "121",
+        0
+      ]
+    }
+  },
+  "131": {
+    "class_type": "MiniMaxH3ImageToVideo",
+    "inputs": {
+      "prompt": "",
+      "clip": [
+        "128",
+        0
+      ],
+      "vae": [
+        "119",
+        0
+      ],
+      "width": [
+        "152",
+        1
+      ],
+      "height": [
+        "153",
+        1
+      ],
+      "length": [
+        "132",
+        1
+      ],
+      "first_frame": [
+        "140",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "@prompt"
+    }
+  },
+  "132": {
+    "class_type": "ComfyMathExpression",
+    "inputs": {
+      "expression": "max(5, round(a * 24)) + (5 - (max(5, round(a * 24)) % 17)) % 17",
+      "values.a": [
+        "133",
+        0
+      ]
+    }
+  },
+  "133": {
+    "class_type": "PrimitiveFloat",
+    "inputs": {
+      "value": 2
+    },
+    "_meta": {
+      "title": "@seconds"
+    }
+  },
+  "900": {
+    "class_type": "LoraLoaderModelOnly",
+    "inputs": {
+      "model": [
+        "127",
+        0
+      ],
+      "lora_name": "MinimaxH3/minimax_h3_fl2v_turbo_8step_v1.0_comfyui_bf16.safetensors",
+      "strength_model": 1.0
+    },
+    "_meta": {
+      "title": "Turbo 8 passos"
+    }
+  },
+  "140": {
+    "class_type": "LoadImage",
+    "inputs": {
+      "image": "example.png"
+    },
+    "_meta": {
+      "title": "Primeiro quadro @image"
+    }
+  },
+  "150": {
+    "class_type": "PrimitiveInt",
+    "inputs": {
+      "value": 1344
+    },
+    "_meta": {
+      "title": "Largura pedida @width"
+    }
+  },
+  "151": {
+    "class_type": "PrimitiveInt",
+    "inputs": {
+      "value": 768
+    },
+    "_meta": {
+      "title": "Altura pedida @height"
+    }
+  },
+  "154": {
+    "class_type": "PrimitiveInt",
+    "inputs": {
+      "value": 522240
+    },
+    "_meta": {
+      "title": "Máximo de pixels por quadro (960x544, limite para 8 GB de VRAM)"
+    }
+  },
+  "152": {
+    "class_type": "ComfyMathExpression",
+    "inputs": {
+      "expression": "max(256, round(a * min(1, (c / (a * b)) ** 0.5) / 32) * 32)",
+      "values.a": [
+        "150",
+        0
+      ],
+      "values.b": [
+        "151",
+        0
+      ],
+      "values.c": [
+        "154",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Largura limitada"
+    }
+  },
+  "153": {
+    "class_type": "ComfyMathExpression",
+    "inputs": {
+      "expression": "max(256, round(b * min(1, (c / (a * b)) ** 0.5) / 32) * 32)",
+      "values.a": [
+        "150",
+        0
+      ],
+      "values.b": [
+        "151",
+        0
+      ],
+      "values.c": [
+        "154",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Altura limitada"
+    }
+  },
+  "160": {
+    "class_type": "LoadVideo",
+    "inputs": {
+      "file": "example.mp4"
+    },
+    "_meta": {
+      "title": "Vídeo de movimento @video"
+    }
+  },
+  "161": {
+    "class_type": "Video Slice",
+    "inputs": {
+      "video": [
+        "160",
+        0
+      ],
+      "start_time": 0,
+      "duration": [
+        "133",
+        0
+      ],
+      "strict_duration": false
+    }
+  },
+  "162": {
+    "class_type": "GetVideoComponents",
+    "inputs": {
+      "video": [
+        "161",
+        0
+      ]
+    }
+  },
+  "163": {
+    "class_type": "ResizeImageMaskNode",
+    "inputs": {
+      "input": [
+        "162",
+        0
+      ],
+      "resize_type": "scale longer dimension",
+      "resize_type.longer_size": 768,
+      "scale_method": "lanczos"
+    }
+  },
+  "164": {
+    "class_type": "CheckpointLoaderSimple",
+    "inputs": {
+      "ckpt_name": "sdpose_wholebody_fp16.safetensors"
+    }
+  },
+  "165": {
+    "class_type": "UNETLoader",
+    "inputs": {
+      "unet_name": "rt_detr_v4-x-hgnet_fp16.safetensors",
+      "weight_dtype": "default"
+    }
+  },
+  "166": {
+    "class_type": "RTDETR_detect",
+    "inputs": {
+      "model": [
+        "165",
+        0
+      ],
+      "image": [
+        "163",
+        0
+      ],
+      "threshold": 0.5,
+      "class_name": "person",
+      "max_detections": 2
+    }
+  },
+  "167": {
+    "class_type": "SDPoseKeypointExtractor",
+    "inputs": {
+      "model": [
+        "164",
+        0
+      ],
+      "vae": [
+        "164",
+        2
+      ],
+      "image": [
+        "163",
+        0
+      ],
+      "batch_size": 16,
+      "bboxes": [
+        "166",
+        0
+      ]
+    }
+  },
+  "168": {
+    "class_type": "SDPoseDrawKeypoints",
+    "inputs": {
+      "keypoints": [
+        "167",
+        0
+      ],
+      "draw_body": true,
+      "draw_hands": true,
+      "draw_face": true,
+      "draw_feet": true,
+      "stick_width": 4,
+      "face_point_size": 2,
+      "score_threshold": 0.5,
+      "draw_head": true
+    }
+  },
+  "169": {
+    "class_type": "ModelPatchLoader",
+    "inputs": {
+      "name": "minimax_h3_fun_controlnet_union_pruned_int8_convrot.safetensors"
+    }
+  },
+  "170": {
+    "class_type": "MiniMaxH3FunControlNetApply",
+    "inputs": {
+      "model": [
+        "900",
+        0
+      ],
+      "model_patch": [
+        "169",
+        0
+      ],
+      "vae": [
+        "119",
+        0
+      ],
+      "strength": 1,
+      "start_percent": 0,
+      "end_percent": 1,
+      "control_video": [
+        "168",
+        0
+      ]
+    }
+  }
+}

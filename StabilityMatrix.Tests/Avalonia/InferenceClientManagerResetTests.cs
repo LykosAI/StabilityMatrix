@@ -1,3 +1,5 @@
+using System.Reflection;
+using DynamicData;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using StabilityMatrix.Avalonia.Models.TagCompletion;
@@ -50,6 +52,39 @@ public class InferenceClientManagerResetTests
     }
 
     [TestMethod]
+    public void IndexRefresh_WhileConnected_ReplacesRemoteEntryWithNewlyIndexedFile()
+    {
+        manager.Connected = true;
+        var loras =
+            (SourceCache<HybridModelFile, string>)
+                typeof(InferenceClientManager)
+                    .GetField("loraModelsSource", BindingFlags.Instance | BindingFlags.NonPublic)!
+                    .GetValue(manager)!;
+        loras.AddOrUpdate(HybridModelFile.FromRemote("a.safetensors"));
+
+        SetIndex(SharedFolderType.Lora, "a.safetensors");
+        manager.Reset();
+
+        var entry = manager.LoraModels.Single(m => m.FileName == "a.safetensors");
+        Assert.AreEqual(HybridModelType.Local, entry.Type);
+    }
+
+    [TestMethod]
+    public void IndexRefresh_WhileConnected_RefreshesChangedMetadata()
+    {
+        SetIndex(SharedFolderType.Lora, "a.safetensors");
+        manager.Reset();
+
+        manager.Connected = true;
+        var info = new ConnectedModelInfo { ModelName = "A" };
+        SetIndex(SharedFolderType.Lora, info, "a.safetensors");
+        manager.Reset();
+
+        var entry = manager.LoraModels.Single(m => m.FileName == "a.safetensors");
+        Assert.AreSame(info, entry.Local?.ConnectedModelInfo);
+    }
+
+    [TestMethod]
     public void IndexRefresh_WhileDisconnected_MatchesTheIndex()
     {
         SetIndex(SharedFolderType.DiffusionModels, "a.safetensors");
@@ -75,7 +110,10 @@ public class InferenceClientManagerResetTests
         CollectionAssert.AreEquivalent(new[] { "b.safetensors" }, Names(SharedFolderType.VAE));
     }
 
-    private void SetIndex(SharedFolderType folder, params string[] fileNames)
+    private void SetIndex(SharedFolderType folder, params string[] fileNames) =>
+        SetIndex(folder, null, fileNames);
+
+    private void SetIndex(SharedFolderType folder, ConnectedModelInfo? info, params string[] fileNames)
     {
         modelIndex
             .FindByModelType(Arg.Is<SharedFolderType>(t => t.HasFlag(folder)))
@@ -84,6 +122,7 @@ public class InferenceClientManagerResetTests
                 {
                     RelativePath = $"{folder}/{name}",
                     SharedFolderType = folder,
+                    ConnectedModelInfo = info,
                 })
             );
     }

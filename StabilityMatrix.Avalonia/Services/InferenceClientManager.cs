@@ -627,7 +627,8 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
 
     /// <summary>
     /// Applies the local model index (or built-in defaults) to a list the server also fills.
-    /// While connected, only adds local items the list is missing: <see cref="LoadSharedPropertiesAsync"/>
+    /// While connected, adds new local items and replaces entries whose local version differs (a remote entry
+    /// that is now indexed, or changed metadata), but removes nothing: <see cref="LoadSharedPropertiesAsync"/>
     /// rebuilds the full list from the server, and a local-only diff here would briefly drop server-only
     /// items, clearing any ComboBox selection on one of them.
     /// </summary>
@@ -644,9 +645,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             return;
         }
 
-        source.Edit(updater =>
-            updater.AddOrUpdate(localItems.Where(item => !updater.Lookup(source.KeySelector(item)).HasValue))
-        );
+        source.AddOrUpdate(localItems, comparer);
     }
 
     /// <summary>

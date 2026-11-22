@@ -434,7 +434,7 @@
                                             IsEnabled="{Binding IsAutoCompletionEnabled}"
                                             TokenizerProvider="{Binding TokenizerProvider}" />
                                         <behaviors:TextEditorWeightAdjustmentBehavior TokenizerProvider="{Binding TokenizerProvider}" />
-                                        <behaviors:TextEditorToolTipBehavior IsEnabled="False" TokenizerProvider="{Binding TokenizerProvider}" />
+                                        <behaviors:TextEditorDiagnosticsBehavior DiagnosticsProvider="{Binding PromptDiagnostics}" />
                                     </i:Interaction.Behaviors>
                                 </avaloniaEdit:TextEditor>
 
@@ -479,7 +479,7 @@
                                             IsEnabled="{Binding IsAutoCompletionEnabled}"
                                             TokenizerProvider="{Binding TokenizerProvider}" />
                                         <behaviors:TextEditorWeightAdjustmentBehavior TokenizerProvider="{Binding TokenizerProvider}" />
-                                        <behaviors:TextEditorToolTipBehavior IsEnabled="False" TokenizerProvider="{Binding TokenizerProvider}" />
+                                        <behaviors:TextEditorDiagnosticsBehavior DiagnosticsProvider="{Binding NegativePromptDiagnostics}" />
                                     </i:Interaction.Behaviors>
                                 </avaloniaEdit:TextEditor>
 
@@ -526,7 +526,6 @@
                                             CompletionProvider="{Binding CompletionProvider}"
                                             IsEnabled="{Binding IsAutoCompletionEnabled}"
                                             TokenizerProvider="{Binding TokenizerProvider}" />
-                                        <behaviors:TextEditorToolTipBehavior IsEnabled="False" TokenizerProvider="{Binding TokenizerProvider}" />
                                     </i:Interaction.Behaviors>
                                 </avaloniaEdit:TextEditor>
 

@@ -25,8 +25,11 @@ public sealed partial class InferenceWorkflowProfile
 
     public required string DisplayName { get; init; }
 
-    /// <summary>Numeric value pre-2.17 saved projects stored for this profile.</summary>
-    public required int LegacyValue { get; init; }
+    /// <summary>
+    /// Numeric value pre-2.17 saved projects stored for this profile; null for profiles that
+    /// were only ever persisted by key.
+    /// </summary>
+    public int? LegacyValue { get; init; }
 
     /// <summary>ComfyUI CLIPLoader type; null leaves the user's selection alone.</summary>
     public string? ClipType { get; init; }
@@ -50,7 +53,10 @@ public sealed partial class InferenceWorkflowProfile
     /// <summary>Sampling via CFGGuider + Flux2Scheduler instead of a plain KSampler.</summary>
     public bool UsesFlux2Scheduler { get; init; }
 
-    /// <summary>Sampling via the FluxGuidance custom-sampler path (Flux.1, HiDream).</summary>
+    /// <summary>
+    /// Sampling via FluxGuidance + BasicGuider, which drops CFG and the negative prompt. Only for
+    /// models with a guidance embedding (Flux.1).
+    /// </summary>
     public bool UsesFluxGuidance { get; init; }
 
     /// <summary>Applies ModelSamplingAuraFlow with the card's Shift value (Z-Image, Qwen).</summary>
@@ -75,6 +81,13 @@ public sealed partial class InferenceWorkflowProfile
 
     /// <summary>Whether the profile shows the Shift control.</summary>
     public bool UsesShift => UsesAuraFlowShift || UsesSd3ModelSamplingShift;
+
+    /// <summary>
+    /// The profile whose latent, sampler path and shift node a workflow follows: this profile,
+    /// or for <see cref="Custom"/> the built-in profile that owns <paramref name="clipType"/>.
+    /// </summary>
+    public InferenceWorkflowProfile ForSampling(string? clipType) =>
+        this == Custom ? ForClipType(clipType) ?? Custom : this;
 
     public override string ToString() => DisplayName;
 }

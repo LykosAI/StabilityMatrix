@@ -29,23 +29,20 @@ public class NRSModule : ModuleBase
         // Currently applies to all models
         // TODO: Add option to apply to either base or refiner
 
-        foreach (var modelConnections in e.Builder.Connections.Models.Values.Where(m => m.Model is not null))
-        {
-            var nrsOutput = e
-                .Nodes.AddTypedNode(
-                    new ComfyNodeBuilder.NRS
-                    {
-                        Name = e.Nodes.GetUniqueName($"NRS_{modelConnections.Name}"),
-                        Model = modelConnections.Model!,
-                        Skew = card.Skew,
-                        Stretch = card.Stretch,
-                        Squash = card.Squash,
-                    }
-                )
-                .Output;
-
-            modelConnections.Model = nrsOutput;
-            e.Temp.Base.Model = nrsOutput;
-        }
+        e.PatchModels(
+            (name, model) =>
+                e
+                    .Nodes.AddTypedNode(
+                        new ComfyNodeBuilder.NRS
+                        {
+                            Name = e.Nodes.GetUniqueName($"NRS_{name}"),
+                            Model = model,
+                            Skew = card.Skew,
+                            Stretch = card.Stretch,
+                            Squash = card.Squash,
+                        }
+                    )
+                    .Output
+        );
     }
 }

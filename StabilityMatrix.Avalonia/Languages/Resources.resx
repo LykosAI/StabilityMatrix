@@ -2343,4 +2343,19 @@ Account tokens will not be viewable after saving, please make a note of them if 
   <data name="Label_ListView" xml:space="preserve">
     <value>List view</value>
   </data>
+  <data name="Label_SkipLayerGuidance" xml:space="preserve">
+    <value>Skip Layer Guidance</value>
+  </data>
+  <data name="Label_SingleBlocks" xml:space="preserve">
+    <value>Single Blocks</value>
+  </data>
+  <data name="Label_DoubleBlocks" xml:space="preserve">
+    <value>Double Blocks</value>
+  </data>
+  <data name="Label_ActiveSteps" xml:space="preserve">
+    <value>Active Steps</value>
+  </data>
+  <data name="Label_SkipLayersTooltip" xml:space="preserve">
+    <value>Block numbers to skip on the negative prompt, separated by commas</value>
+  </data>
 </root>

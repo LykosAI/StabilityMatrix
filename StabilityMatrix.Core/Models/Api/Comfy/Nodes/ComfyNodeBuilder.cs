@@ -748,6 +748,19 @@ public class ComfyNodeBuilder
         public required double Multiplier { get; init; }
     }
 
+    /// <summary>
+    /// Skips the given DiT blocks on the negative (uncond) pass within the start/end range.
+    /// Layers are comma-separated block indices; an empty list skips nothing.
+    /// </summary>
+    public record SkipLayerGuidanceDiTSimple : ComfyTypedNodeBase<ModelNodeConnection>
+    {
+        public required ModelNodeConnection Model { get; init; }
+        public required string DoubleLayers { get; init; }
+        public required string SingleLayers { get; init; }
+        public required double StartPercent { get; init; }
+        public required double EndPercent { get; init; }
+    }
+
     public record SetLatentNoiseMask : ComfyTypedNodeBase<LatentNodeConnection>
     {
         public required LatentNodeConnection Samples { get; init; }
@@ -920,7 +933,7 @@ public class ComfyNodeBuilder
 
     [TypedNodeOptions(
         Name = "Inference_Core_ReferenceOnlySimple",
-        RequiredExtensions = ["https://github.com/LykosAI/ComfyUI-Inference-Core-Nodes >= 0.3.0"]
+        RequiredExtensions = ["https://github.com/LykosAI/ComfyUI-Inference-Core-Nodes >= 0.5.3"]
     )]
     public record ReferenceOnlySimple : ComfyTypedNodeBase<ModelNodeConnection, LatentNodeConnection>
     {
@@ -1006,7 +1019,7 @@ public class ComfyNodeBuilder
 
     [TypedNodeOptions(
         Name = "Inference_Core_LayeredDiffusionDecodeRGBA",
-        RequiredExtensions = ["https://github.com/LykosAI/ComfyUI-Inference-Core-Nodes >= 0.5.2"]
+        RequiredExtensions = ["https://github.com/LykosAI/ComfyUI-Inference-Core-Nodes >= 0.5.3"]
     )]
     public record LayeredDiffusionDecodeRgba : ComfyTypedNodeBase<ImageNodeConnection>
     {

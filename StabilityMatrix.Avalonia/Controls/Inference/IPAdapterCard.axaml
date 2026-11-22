@@ -120,9 +120,14 @@
 
                         </sg:SpacedGrid>
                         <sg:SpacedGrid
-                            ColumnDefinitions="*,Auto,Auto"
-                            RowDefinitions="Auto,Auto,Auto,Auto"
+                            Grid.IsSharedSizeScope="True"
+                            RowDefinitions="Auto,Auto,Auto"
                             RowSpacing="0">
+                            <sg:SpacedGrid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" SharedSizeGroup="StepRangeStart" />
+                                <ColumnDefinition Width="Auto" SharedSizeGroup="StepRangeEnd" />
+                            </sg:SpacedGrid.ColumnDefinitions>
                             <!--  Weight  -->
                             <TextBlock
                                 VerticalAlignment="Center"
@@ -151,45 +156,13 @@
                                 TickFrequency="0.01"
                                 Value="{Binding Weight}" />
 
-                            <!--  Start end percent  -->
-                            <TextBlock
+                            <controls:StepRangeEditor
                                 Grid.Row="2"
-                                Grid.Column="0"
-                                VerticalAlignment="Center"
-                                Text="{x:Static lang:Resources.Label_ControlSteps}"
-                                TextAlignment="Left" />
-
-                            <ui:NumberBox
-                                Grid.Row="2"
-                                Grid.Column="1"
-                                HorizontalAlignment="Stretch"
-                                Maximum="1"
-                                Minimum="0"
-                                SimpleNumberFormat="P0"
-                                SmallChange="0.01"
-                                Value="{Binding StartAt}" />
-                            <ui:NumberBox
-                                Grid.Row="2"
-                                Grid.Column="2"
-                                HorizontalAlignment="Stretch"
-                                Maximum="1"
-                                Minimum="0"
-                                SimpleNumberFormat="P0"
-                                SmallChange="0.01"
-                                Value="{Binding EndAt}" />
-
-                            <ui:RangeSlider
-                                Grid.Row="3"
                                 Grid.Column="0"
                                 Grid.ColumnSpan="3"
-                                Margin="0,4,0,0"
-                                Maximum="1"
-                                Minimum="0"
-                                RangeEnd="{Binding EndAt}"
-                                RangeStart="{Binding StartAt}"
-                                ShowValueToolTip="False"
-                                StepFrequency="0.01"
-                                ToolTipStringFormat="P" />
+                                End="{Binding EndAt}"
+                                Header="{x:Static lang:Resources.Label_ControlSteps}"
+                                Start="{Binding StartAt}" />
                         </sg:SpacedGrid>
                     </StackPanel>
                 </controls:Card>

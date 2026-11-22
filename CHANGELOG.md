@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 
 ## v2.17.0
 ### Fixed
+- Fixed Inference clearing the chosen diffusion model, text encoder, LoRA, ControlNet or upscaler when ComfyUI had that model but Stability Matrix's model folders didn't, for example after switching back to the Inference tab
 - Fixed **Layer Diffuse** generations in Inference failing with `'JoinImageWithAlpha' object has no attribute 'join_image_with_alpha'` on current ComfyUI. Inference offers to update Inference Core Nodes to the fixed version ([#1719](https://github.com/LykosAI/StabilityMatrix/issues/1719))
 - Fixed ControlNet **Reference Only** failing with `Inference_Core_ReferenceOnlySimple not found` when another part of Inference Core Nodes could not load. Inference offers to update Inference Core Nodes, which now loads the rest of its nodes when one part fails ([#1784](https://github.com/LykosAI/StabilityMatrix/issues/1784))
 - Fixed **Fooocus** and **Fooocus - mashb1t's 1-Up Edition** failing to open their UI on new installs with `TypeError: unhashable type: 'dict'`. Existing installs pick up the fix on their next update ([#1746](https://github.com/LykosAI/StabilityMatrix/issues/1746))

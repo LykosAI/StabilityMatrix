@@ -89,6 +89,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed **Qwen Image Edit** accepting an incompatible Krea 2 text encoder
 - Fixed NVIDIA GPU generation detection on Windows and Linux when no preferred GPU is set, which could make package installs pick the wrong PyTorch build for older or RTX 50 series cards
 - Fixed AMD GPUs whose name has "Radeon" but not "AMD", like the Radeon Vega Frontier Edition, not being detected as AMD ([#1798](https://github.com/LykosAI/StabilityMatrix/pull/1798)) - thanks to @NeuralFault!
+- Fixed **Fizgig** failing to open its app window on Linux. Updating an existing install fixes it too ([#1783](https://github.com/LykosAI/StabilityMatrix/issues/1783))
 - Fixed **Fooocus** and **Fooocus - mashb1t's 1-Up Edition** failing to open their UI on new installs with `TypeError: unhashable type: 'dict'`. Existing installs pick up the fix on their next update ([#1746](https://github.com/LykosAI/StabilityMatrix/issues/1746))
 - Fixed the first-run recommended models dialog looking like it never loaded its images
 - Fixed the app sometimes crashing on exit with an **Inference** tab open, and a crash dialog appearing after the app had already closed

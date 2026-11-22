@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Text.Json.Serialization;
 using KGySoft.CoreLibraries;
 using OneOf;
+using Semver;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.Api.Comfy.NodeTypes;
@@ -23,8 +24,21 @@ public class NodeDictionary : Dictionary<string, ComfyNode>
     [JsonIgnore]
     public Dictionary<string, ExtensionSpecifier[]> ClassTypeRequiredExtensions { get; } = new();
 
+    /// <summary>
+    /// Extensions the inserted typed nodes need, one per extension. When nodes ask for different
+    /// minimum versions of the same extension, the highest minimum is returned.
+    /// </summary>
     public IEnumerable<ExtensionSpecifier> RequiredExtensions =>
-        ClassTypeRequiredExtensions.Values.SelectMany(x => x);
+        ClassTypeRequiredExtensions
+            .Values.SelectMany(x => x)
+            .GroupBy(ext => ext.Name)
+            .Select(group => group.MaxBy(MinimumVersionOf, SemVersion.PrecedenceComparer)!);
+
+    private static SemVersion? MinimumVersionOf(ExtensionSpecifier specifier) =>
+        specifier.Constraint is ">=" or "=="
+        && SemVersion.TryParse(specifier.Version, SemVersionStyles.Any, out var version)
+            ? version
+            : null;
 
     /// <summary>
     /// Finds a unique node name given a base name, by appending _2, _3, etc.

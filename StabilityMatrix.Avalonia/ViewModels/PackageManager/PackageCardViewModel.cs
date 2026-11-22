@@ -741,7 +741,7 @@ public partial class PackageCardViewModel(
         if (Package is not { FullPath: not null })
             return;
 
-        var vm = vmFactory.Get<PythonPackagesViewModel>(vm =>
+        using var vm = vmFactory.Get<PythonPackagesViewModel>(vm =>
         {
             vm.VenvPath = new DirectoryPath(Package.FullPath, "venv");
             vm.PythonVersion = PyVersion.Parse(Package.PythonVersion);

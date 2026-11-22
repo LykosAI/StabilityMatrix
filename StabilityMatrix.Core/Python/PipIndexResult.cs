@@ -10,14 +10,20 @@ public partial record PipIndexResult
 
     public static PipIndexResult Parse(string output)
     {
-        var match = AvailableVersionsRegex().Matches(output);
-
-        var versions = output
+        var versionsMatch = output
             .SplitLines()
             .Select(line => AvailableVersionsRegex().Match(line))
-            .First(m => m.Success)
-            .Groups["versions"].Value
-            .Split(
+            .FirstOrDefault(m => m.Success);
+
+        // Output without an "Available versions:" line (e.g. only warnings) has no versions to offer
+        if (versionsMatch is null)
+        {
+            return new PipIndexResult { AvailableVersions = [] };
+        }
+
+        var versions = versionsMatch
+            .Groups["versions"]
+            .Value.Split(
                 new[] { ',' },
                 StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries
             )

@@ -60,6 +60,9 @@ public class CivitModelVersion
             file is not null
             && (
                 file.Type.IsModelWeights()
+                // File types CivitAI adds after this build deserialize to Unknown; counting them keeps
+                // a new kind of weights from reading as not installed.
+                || file.Type is CivitFileType.Unknown
                 || modelType switch
                 {
                     CivitModelType.VAE => file.Type is CivitFileType.VAE,

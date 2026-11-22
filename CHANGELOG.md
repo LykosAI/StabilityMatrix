@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 
 ## v2.17.0
 ### Fixed
+- Fixed the CivitAI Model Browser showing a model as installed, or hiding its updates, when you only had its shared text encoder or VAE ([#1785](https://github.com/LykosAI/StabilityMatrix/issues/1785), [#1802](https://github.com/LykosAI/StabilityMatrix/pull/1802)) - thanks to @deepratna-awale!
 - Fixed Inference clearing the chosen diffusion model, text encoder, LoRA, ControlNet or upscaler when ComfyUI had that model but Stability Matrix's model folders didn't, for example after switching back to the Inference tab
 - Fixed **Layer Diffuse** generations in Inference failing with `'JoinImageWithAlpha' object has no attribute 'join_image_with_alpha'` on current ComfyUI. Inference offers to update Inference Core Nodes to the fixed version ([#1719](https://github.com/LykosAI/StabilityMatrix/issues/1719))
 - Fixed ControlNet **Reference Only** failing with `Inference_Core_ReferenceOnlySimple not found` when another part of Inference Core Nodes could not load. Inference offers to update Inference Core Nodes, which now loads the rest of its nodes when one part fails ([#1784](https://github.com/LykosAI/StabilityMatrix/issues/1784))
@@ -25,7 +26,6 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Security
 - Package installs now check HTTPS certificates against your operating system's certificate store instead of uv's built-in list, so certificates your OS has revoked are rejected. To opt out, set `UV_SYSTEM_CERTS` to `0` in Settings → Environment Variables
 ### Fixed
-- Fixed shared encoders and VAEs making missing models appear installed in the CivitAI Model Browser. Any installed main model variant now counts, while supporting files keep their individual installed status ([#1785](https://github.com/LykosAI/StabilityMatrix/issues/1785))
 - Fixed **Delete** and **Rename** in a category's right-click menu doing nothing
 - Fixed the **Categories** sidebar hiding model counts behind its scrollbar
 - Fixed package version lists and update checks showing an old release as the newest, because startup update checks ran into GitHub's rate limit

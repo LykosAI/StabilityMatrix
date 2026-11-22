@@ -31,6 +31,23 @@ public class CivitModelVersionInstallTests
     }
 
     [TestMethod]
+    public void UnrecognizedFileType_CountsAsMainModel()
+    {
+        var version = JsonSerializer.Deserialize<CivitModelVersion>(
+            """
+            {"files":[
+              {"type":"Distilled Model","hashes":{"BLAKE3":"new"}},
+              {"type":"VAE","hashes":{"BLAKE3":"vae"}}
+            ]}
+            """
+        )!;
+
+        Assert.AreEqual(CivitFileType.Unknown, version.Files![0].Type);
+        Assert.IsTrue(version.IsInstalled(CivitModelType.Checkpoint, Hashes("new")));
+        Assert.IsFalse(version.IsInstalled(CivitModelType.Checkpoint, Hashes("vae")));
+    }
+
+    [TestMethod]
     [DataRow(CivitFileType.VAE)]
     [DataRow(CivitFileType.TextEncoder)]
     [DataRow(CivitFileType.VisionEncoder)]
@@ -39,7 +56,6 @@ public class CivitModelVersionInstallTests
     [DataRow(CivitFileType.Upscaler)]
     [DataRow(CivitFileType.Negative)]
     [DataRow(CivitFileType.EnhancementLora)]
-    [DataRow(CivitFileType.Unknown)]
     [DataRow(CivitFileType.Other)]
     [DataRow(CivitFileType.Config)]
     [DataRow(CivitFileType.Archive)]

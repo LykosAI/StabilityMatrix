@@ -1035,7 +1035,8 @@ The gallery images are often inpainted, but you will get something very similar 
             };
             var sampleViewModel = new ModelVersionViewModel(
                 Services.GetRequiredService<IModelIndexService>(),
-                sampleCivitVersions[0]
+                sampleCivitVersions[0],
+                CivitModelType.Checkpoint
             );
 
             // Sample data for dialogs

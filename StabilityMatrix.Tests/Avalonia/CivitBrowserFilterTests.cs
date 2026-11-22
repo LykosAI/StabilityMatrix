@@ -9,6 +9,7 @@ using StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Database;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Api.CivitTRPC;
@@ -125,7 +126,11 @@ public class CivitBrowserFilterTests
 
         Assert.AreEqual(13, vm.SelectedVersion?.ModelVersion.Id);
         Assert.AreEqual(1, vm.ModelVersions.Count);
-        using var installed = new ModelVersionViewModel(modelIndex, Version(14, "Pony"))
+        using var installed = new ModelVersionViewModel(
+            modelIndex,
+            Version(14, "Pony"),
+            CivitModelType.Checkpoint
+        )
         {
             IsInstalled = true,
         };
@@ -219,6 +224,127 @@ public class CivitBrowserFilterTests
         await LoadDetails(details);
         Assert.AreEqual(searchMode == "filtered" ? 1 : 2, details.ModelVersions.Count);
     }
+
+    [TestMethod]
+    public void SharedComponents_DoNotInstallVersionOrCard()
+    {
+        var hashes = new HashSet<string>(["encoder", "vae"]);
+        modelIndex.ModelIndexBlake3Hashes.Returns(hashes);
+        var version = Version(11, "Anima");
+        version.Files =
+        [
+            File(CivitFileType.Model, "bf16"),
+            File(CivitFileType.Model, "fp8"),
+            File(CivitFileType.TextEncoder, "encoder"),
+            File(CivitFileType.VAE, "vae"),
+        ];
+        using var versionVm = new ModelVersionViewModel(modelIndex, version, CivitModelType.Checkpoint);
+        using var card = Card(Model(1, version));
+
+        Assert.IsFalse(versionVm.IsInstalled);
+        Assert.IsFalse(card.ShowUpdateCard);
+        using var encoderVm = new CivitFileViewModel(modelIndex, settings, version.Files[2], factory, null)
+        {
+            InstallLocations = [],
+        };
+        using var mainFileVm = new CivitFileViewModel(modelIndex, settings, version.Files[0], factory, null)
+        {
+            InstallLocations = [],
+        };
+        Assert.IsTrue(encoderVm.IsInstalled);
+        Assert.IsFalse(mainFileVm.IsInstalled);
+
+        hashes.Add("bf16");
+        versionVm.RefreshInstallStatus();
+        card.CivitModel = card.CivitModel;
+        Assert.IsTrue(versionVm.IsInstalled);
+        Assert.AreEqual("Installed", card.UpdateCardText);
+
+        hashes.Remove("bf16");
+        versionVm.RefreshInstallStatus();
+        Assert.IsFalse(versionVm.IsInstalled);
+    }
+
+    [TestMethod]
+    public void SharedComponents_DoNotHideNewerMainModelUpdate()
+    {
+        modelIndex.ModelIndexBlake3Hashes.Returns(new HashSet<string>(["old", "vae"]));
+        var latest = Version(11, "Anima");
+        latest.Files = [File(CivitFileType.Model, "new"), File(CivitFileType.VAE, "vae")];
+        var old = Version(12, "Anima");
+        old.Files = [File(CivitFileType.Model, "old"), File(CivitFileType.VAE, "vae")];
+        using var card = Card(Model(1, latest, old));
+
+        Assert.IsTrue(card.ShowUpdateCard);
+        Assert.AreEqual("Update Available", card.UpdateCardText);
+    }
+
+    [TestMethod]
+    public void MainVariantWithoutCompanions_IsInstalled()
+    {
+        modelIndex.ModelIndexBlake3Hashes.Returns(new HashSet<string>(["bf16"]));
+        var version = Version(11, "Anima");
+        version.Files =
+        [
+            File(CivitFileType.Model, "bf16"),
+            File(CivitFileType.Model, "fp8"),
+            File(CivitFileType.TextEncoder, "encoder"),
+            File(CivitFileType.VAE, "vae"),
+        ];
+        version.Files[1].IsPrimary = true;
+        using var versionVm = new ModelVersionViewModel(modelIndex, version, CivitModelType.Checkpoint);
+        using var card = Card(Model(1, version));
+
+        Assert.IsTrue(versionVm.IsInstalled);
+        Assert.AreEqual("Installed", card.UpdateCardText);
+    }
+
+    [TestMethod]
+    [DataRow(CivitModelType.VAE, CivitFileType.VAE)]
+    [DataRow(CivitModelType.Upscaler, CivitFileType.Upscaler)]
+    [DataRow(CivitModelType.Controlnet, CivitFileType.ControlNet)]
+    [DataRow(CivitModelType.TextualInversion, CivitFileType.Negative)]
+    public async Task StandaloneArtifact_UsesParentTypeInDetailsAndCard(
+        CivitModelType modelType,
+        CivitFileType fileType
+    )
+    {
+        var tempDirectory = Directory.CreateTempSubdirectory("sm-1785-");
+        try
+        {
+            settings.ModelsDirectory.Returns(tempDirectory.FullName);
+            Directory.CreateDirectory(
+                Path.Combine(
+                    tempDirectory.FullName,
+                    fileType.GetSharedFolderType(modelType, null).GetStringValue()
+                )
+            );
+            modelIndex.ModelIndexBlake3Hashes.Returns(new HashSet<string>(["standalone"]));
+            var version = Version(11, "SDXL 1.0");
+            version.Files = [File(fileType, "standalone")];
+            var model = Model(1, version);
+            model.Type = modelType;
+            api.GetModelById(1).Returns(model);
+            using var details = Details(model);
+            await LoadDetails(details);
+            using var card = Card(model);
+
+            Assert.IsTrue(details.ModelVersions.Single().IsInstalled);
+            Assert.AreEqual("Installed", card.UpdateCardText);
+        }
+        finally
+        {
+            tempDirectory.Delete(true);
+        }
+    }
+
+    private static CivitFile File(CivitFileType type, string hash) =>
+        new()
+        {
+            Name = $"{hash}.safetensors",
+            Type = type,
+            Hashes = new CivitFileHashes { BLAKE3 = hash },
+        };
 
     private CivitCompatApiManager CompatApi() =>
         new(

@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Changed
 - Messages from ComfyUI that Stability Matrix doesn't use, like the frequent updates from resource monitor custom nodes, no longer fill the log with warnings ([#1797](https://github.com/LykosAI/StabilityMatrix/pull/1797)) - thanks to @deepratna-awale!
 ### Fixed
+- Fixed the CivitAI Model Browser showing a model as installed, or hiding its updates, when you only had its shared text encoder or VAE ([#1785](https://github.com/LykosAI/StabilityMatrix/issues/1785), [#1802](https://github.com/LykosAI/StabilityMatrix/pull/1802)) - thanks to @deepratna-awale!
 - Fixed **Fizgig** failing to open its app window on Linux. Updating an existing install fixes it too ([#1783](https://github.com/LykosAI/StabilityMatrix/issues/1783))
 - Fixed the **Python Packages** dialog crashing Stability Matrix while typing in its search box. A package whose details fail to load now shows an error, and selecting it again retries ([#1795](https://github.com/LykosAI/StabilityMatrix/pull/1795)) - thanks to @deepratna-awale!
 - Fixed the CivitAI model browser showing "CivitAI can't be reached right now" when a model image has no width or height ([#1793](https://github.com/LykosAI/StabilityMatrix/pull/1793)) - thanks to @deepratna-awale!

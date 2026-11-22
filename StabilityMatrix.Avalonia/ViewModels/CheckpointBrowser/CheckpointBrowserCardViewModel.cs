@@ -175,14 +175,10 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
         if (versions.Count == 0)
             return;
 
-        bool IsVersionInstalled(CivitModelVersion version) =>
-            version.Files?.Any(file =>
-                file is { Hashes.BLAKE3: not null }
-                && file.Type.IsDownloadableModelFile()
-                && installedModels.Contains(file.Hashes.BLAKE3)
-            ) == true;
-
-        var installedVersionIds = versions.Where(IsVersionInstalled).Select(v => v.Id).ToHashSet();
+        var installedVersionIds = versions
+            .Where(v => v.IsInstalled(CivitModel.Type, installedModels))
+            .Select(v => v.Id)
+            .ToHashSet();
         if (installedVersionIds.Count == 0)
             return;
 

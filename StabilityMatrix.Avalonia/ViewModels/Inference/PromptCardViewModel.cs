@@ -67,6 +67,8 @@ public partial class PromptCardViewModel
 
     public ICompletionProvider CompletionProvider { get; }
     public ITokenizerProvider TokenizerProvider { get; }
+    public PromptDiagnosticsProvider PromptDiagnostics { get; }
+    public PromptDiagnosticsProvider NegativePromptDiagnostics { get; }
     public SharedState SharedState { get; }
 
     public TextDocument PromptDocument { get; } = new();
@@ -148,6 +150,8 @@ public partial class PromptCardViewModel
         this.vmFactory = vmFactory;
         CompletionProvider = completionProvider;
         TokenizerProvider = tokenizerProvider;
+        PromptDiagnostics = new PromptDiagnosticsProvider(tokenizerProvider, modelIndexService);
+        NegativePromptDiagnostics = new PromptDiagnosticsProvider(tokenizerProvider);
         SharedState = sharedState;
 
         // Subscribe to tab context state changes

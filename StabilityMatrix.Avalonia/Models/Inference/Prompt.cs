@@ -62,6 +62,27 @@ public record Prompt
     }
 
     /// <summary>
+    /// Collects the errors in this prompt without processing it. Unknown models, invalid weights and
+    /// invalid tokens are all reported; a malformed extra network stops parsing at that error.
+    /// </summary>
+    /// <param name="indexService">When provided, extra networks must exist in the model index.</param>
+    public IReadOnlyList<PromptError> GetDiagnostics(IModelIndexService? indexService = null)
+    {
+        var diagnostics = new List<PromptError>();
+
+        try
+        {
+            GetExtraNetworks(indexService, processWildcards: false, diagnostics);
+        }
+        catch (PromptError e)
+        {
+            diagnostics.Add(e);
+        }
+
+        return diagnostics;
+    }
+
+    /// <summary>
     /// Get ExtraNetworks as local model files and weights.
     /// </summary>
     public IEnumerable<(
@@ -101,9 +122,23 @@ public record Prompt
         return Math.Min(index, RawText.Length);
     }
 
+    /// <summary>
+    /// Throws <paramref name="error"/>, or records it and lets parsing continue when collecting diagnostics.
+    /// </summary>
+    private static void Report(PromptError error, List<PromptError>? diagnostics)
+    {
+        if (diagnostics is null)
+        {
+            throw error;
+        }
+
+        diagnostics.Add(error);
+    }
+
     private (List<PromptExtraNetwork> promptExtraNetworks, string processedText) GetExtraNetworks(
         IModelIndexService? indexService = null,
-        bool processWildcards = true
+        bool processWildcards = true,
+        List<PromptError>? diagnostics = null
     )
     {
         // Parse tokens "meta.structure.network.prompt"
@@ -126,15 +161,20 @@ public record Prompt
         {
             var currentToken = tokens.Current;
 
-            // For any invalid syntax, throw
-            if (currentToken.Scopes.Any(s => s.Contains("invalid.illegal")))
+            if (
+                currentToken.Scopes.Where(s => s.Contains("invalid.illegal")).ToList() is
+                { Count: > 0 } invalid
+            )
             {
-                // Generic
-                throw new PromptSyntaxError(
-                    "Invalid Token",
-                    currentToken.StartIndex,
-                    GetSafeEndIndex(currentToken.EndIndex)
+                Report(
+                    PromptSyntaxError.InvalidToken(
+                        invalid,
+                        currentToken.StartIndex,
+                        GetSafeEndIndex(currentToken.EndIndex)
+                    ),
+                    diagnostics
                 );
+                continue;
             }
 
             // Comments - ignore
@@ -239,11 +279,10 @@ public record Prompt
                 "lora" => PromptExtraNetworkType.Lora,
                 "lyco" => PromptExtraNetworkType.LyCORIS,
                 "embedding" => PromptExtraNetworkType.Embedding,
-                _
-                    => throw PromptValidationError.Network_UnknownType(
-                        currentToken.StartIndex,
-                        GetSafeEndIndex(currentToken.EndIndex)
-                    )
+                _ => throw PromptValidationError.Network_UnknownType(
+                    currentToken.StartIndex,
+                    GetSafeEndIndex(currentToken.EndIndex)
+                ),
             };
 
             // Skip colon token
@@ -288,19 +327,22 @@ public record Prompt
             // If index service provided, validate model name
             if (indexService != null)
             {
-                var localModelList = indexService.ModelIndex.GetOrAdd(
-                    parsedNetworkType.ConvertTo<SharedFolderType>()
-                );
-                var localModel = localModelList.FirstOrDefault(
-                    m => Path.GetFileNameWithoutExtension(m.FileName) == modelName
-                );
-                if (localModel == null)
+                var exists =
+                    indexService.ModelIndex.TryGetValue(
+                        parsedNetworkType.ConvertTo<SharedFolderType>(),
+                        out var localModelList
+                    ) && localModelList.Any(m => Path.GetFileNameWithoutExtension(m.FileName) == modelName);
+
+                if (!exists)
                 {
-                    throw PromptValidationError.Network_UnknownModel(
-                        modelName,
-                        parsedNetworkType,
-                        currentToken.StartIndex,
-                        GetSafeEndIndex(currentToken.EndIndex)
+                    Report(
+                        PromptValidationError.Network_UnknownModel(
+                            modelName,
+                            parsedNetworkType,
+                            currentToken.StartIndex,
+                            GetSafeEndIndex(currentToken.EndIndex)
+                        ),
+                        diagnostics
                     );
                 }
             }
@@ -349,14 +391,20 @@ public record Prompt
                 var modelWeight = RawText[currentToken.StartIndex..GetSafeEndIndex(currentToken.EndIndex)];
 
                 // Convert to double
-                if (!double.TryParse(modelWeight, CultureInfo.InvariantCulture, out var weightValue))
+                if (double.TryParse(modelWeight, CultureInfo.InvariantCulture, out var weightValue))
                 {
-                    throw PromptValidationError.Network_InvalidWeight(
-                        currentToken.StartIndex,
-                        GetSafeEndIndex(currentToken.EndIndex)
+                    weight = weightValue;
+                }
+                else
+                {
+                    Report(
+                        PromptValidationError.Network_InvalidWeight(
+                            currentToken.StartIndex,
+                            GetSafeEndIndex(currentToken.EndIndex)
+                        ),
+                        diagnostics
                     );
                 }
-                weight = weightValue;
 
                 // Expect end
                 if (!tokens.MoveNext())
@@ -403,7 +451,7 @@ public record Prompt
                     {
                         Type = parsedNetworkType,
                         Name = modelName,
-                        ModelWeight = weight
+                        ModelWeight = weight,
                     }
                 );
             }
@@ -428,11 +476,10 @@ public record Prompt
                 ", ",
                 token
                     .Scopes.Where(s => s != "source.prompt")
-                    .Select(
-                        s =>
-                            s.EndsWith(".prompt")
-                                ? s.Remove(s.LastIndexOf(".prompt", StringComparison.Ordinal))
-                                : s
+                    .Select(s =>
+                        s.EndsWith(".prompt")
+                            ? s.Remove(s.LastIndexOf(".prompt", StringComparison.Ordinal))
+                            : s
                     )
             );
 
@@ -453,7 +500,7 @@ public record Prompt
         {
             RawText = text,
             TokenizeResult = result,
-            Tokenizer = tokenizer
+            Tokenizer = tokenizer,
         };
     }
 }

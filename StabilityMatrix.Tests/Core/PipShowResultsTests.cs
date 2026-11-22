@@ -181,4 +181,40 @@ public class PipShowResultsTests
         var input = "";
         Assert.ThrowsException<FormatException>(() => PipShowResult.Parse(input));
     }
+
+    [TestMethod]
+    public void TestLicenseWithoutLocation()
+    {
+        var input = """
+            Name: package-a
+            Version: 1.0.0
+            License: MIT
+            Requires: numpy
+            """;
+
+        var result = PipShowResult.Parse(input);
+
+        Assert.AreEqual("package-a", result.Name);
+        Assert.AreEqual("License: MIT", result.License);
+        Assert.IsNull(result.Location);
+        CollectionAssert.AreEqual(new[] { "numpy" }, result.Requires);
+    }
+
+    [TestMethod]
+    public void TestLocationBeforeLicense()
+    {
+        var input = """
+            Name: package-a
+            Version: 1.0.0
+            Location: /path/to/package
+            License: MIT
+            Requires: numpy
+            """;
+
+        var result = PipShowResult.Parse(input);
+
+        Assert.AreEqual("License: MIT", result.License);
+        Assert.AreEqual("/path/to/package", result.Location);
+        CollectionAssert.AreEqual(new[] { "numpy" }, result.Requires);
+    }
 }

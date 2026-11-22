@@ -72,7 +72,7 @@ chmod +x StabilityMatrix.AppImage
 ./StabilityMatrix.AppImage
 ```
 
-Depending on the distribution, AppImage runtime support packages may still be required. The current repo and docs specifically call out `libfuse2`, and on some systems `libappimage` or `libxcrypt-compat` may also be needed.
+Depending on the distribution, AppImage runtime support packages may still be required. Releases since 2.16.2 use a FUSE3-based runtime and no longer need `libfuse2` (`libfuse.so.2`), which current distributions such as Ubuntu 24.04+ and Fedora 40+ do not ship. On a minimal system, install `fuse3` so `fusermount` or `fusermount3` is available, or start the AppImage with `--appimage-extract-and-run` when FUSE is not installed. Some distributions also need `libxcrypt-compat`. See the [2.16.2 release notes](../release-notes/2.16.2.md#linux-appimage).
 
 Arch-based users can also use the [AUR package](https://aur.archlinux.org/packages/stabilitymatrix), but it comes with a few practical differences from the standalone AppImage release. The AUR build is typically installed under `/opt`, cannot update itself through Stability Matrix's in-app updater, and instead must be updated through the AUR package as part of normal system package maintenance. There can also be a delay between a new Stability Matrix release and the corresponding `PKGBUILD` update in AUR. If that delay is a problem, or if `/opt` ownership and file-permission behavior causes update or launch issues, the standalone AppImage release is the safer option.
 

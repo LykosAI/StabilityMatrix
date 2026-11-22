@@ -912,6 +912,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Could not load details for this package. Reselect to retry..
+        /// </summary>
+        public static string Error_PythonPackageDetailsLoadFailed {
+            get {
+                return ResourceManager.GetString("Error_PythonPackageDetailsLoadFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Please select a download location..
         /// </summary>
         public static string Error_PleaseSelectDownloadLocation {
@@ -3010,6 +3019,24 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_LoginRequiredMessage {
             get {
                 return ResourceManager.GetString("Label_LoginRequiredMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Log Level.
+        /// </summary>
+        public static string Label_LogLevel {
+            get {
+                return ResourceManager.GetString("Label_LogLevel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Minimum level of messages written to the log files and console.
+        /// </summary>
+        public static string Label_LogLevel_Description {
+            get {
+                return ResourceManager.GetString("Label_LogLevel_Description", resourceCulture);
             }
         }
         

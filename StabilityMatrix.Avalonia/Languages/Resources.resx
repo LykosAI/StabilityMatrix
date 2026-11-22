@@ -2358,4 +2358,13 @@ Account tokens will not be viewable after saving, please make a note of them if 
   <data name="Label_SkipLayersTooltip" xml:space="preserve">
     <value>Block numbers to skip on the negative prompt, separated by commas</value>
   </data>
+  <data name="Label_LogLevel" xml:space="preserve">
+    <value>Log Level</value>
+  </data>
+  <data name="Label_LogLevel_Description" xml:space="preserve">
+    <value>Minimum level of messages written to the log files and console.</value>
+  </data>
+  <data name="Error_PythonPackageDetailsLoadFailed" xml:space="preserve">
+    <value>Could not load details for this package. Reselect to retry.</value>
+  </data>
 </root>

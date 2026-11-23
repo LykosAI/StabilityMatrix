@@ -1,0 +1,172 @@
+﻿using StabilityMatrix.Core.Helper.HardwareInfo;
+
+namespace StabilityMatrix.Core.Models.Rocm;
+
+/// <summary>
+/// Centralizes ROCm support and architecture policy so hardware detection, package selection,
+/// installation, and shared launch decisions use the same support map.
+/// </summary>
+public static class RocmSupport
+{
+    public const string StableMultiArchPythonPackageIndexUrl = "https://stable.repo.amd.com/rocm/whl-next/";
+    public const string NightlyMultiArchPythonPackageIndexUrl = "https://nightly.repo.amd.com/rocm/whl-next/";
+
+    // Used to exclude modern gfxarches from AOTriton activation EnVar as AOTriton does not currently support them.
+    // This is a temporary measure until AOTriton adds support for these architectures.
+    private static readonly HashSet<string> AotritonExperimentalExcludedArchitectures =
+    [
+        "gfx1152",
+        "gfx1153",
+    ];
+
+    /// <summary>
+    /// System-level ROCm/HIP SDK variables that conflict with the self-contained pip ROCm SDK the
+    /// helper manages. They are removed from helper-managed child environments so a stale system
+    /// ROCm or HIP SDK install cannot shadow the venv toolchain or its compiled extensions.
+    /// </summary>
+    public static readonly string[] ConflictingRocmEnvironmentVariables =
+    [
+        "ROCM_PATH",
+        "ROCM_HOME",
+        "HIP_PATH",
+        "ROCM_DIR",
+        "HIP_DIR",
+    ];
+
+    public static bool IsSupportedGpu(GpuInfo? gpu)
+    {
+        if (gpu is null || !gpu.IsAmd || string.IsNullOrWhiteSpace(gpu.Name))
+            return false;
+
+        return IsSupportedArchitecture(gpu.GetAmdGfxArch());
+    }
+
+    public static bool IsSupportedArchitecture(string? gfxArch)
+    {
+        return TryGetCanonicalArchitecture(gfxArch) is not null;
+    }
+
+    public static bool IsModernArchitecture(string? gfxArch)
+    {
+        return gfxArch?.StartsWith("gfx110", StringComparison.OrdinalIgnoreCase) == true
+            || gfxArch?.StartsWith("gfx115", StringComparison.OrdinalIgnoreCase) == true
+            || gfxArch?.StartsWith("gfx120", StringComparison.OrdinalIgnoreCase) == true;
+    }
+
+    public static bool SupportsAotritonExperimental(string? gfxArch)
+    {
+        var canonicalArch = TryGetCanonicalArchitecture(gfxArch);
+        return canonicalArch is not null
+            && IsModernArchitecture(canonicalArch)
+            && !AotritonExperimentalExcludedArchitectures.Contains(canonicalArch);
+    }
+
+    public static bool IsLegacyArchitecture(string? gfxArch)
+    {
+        return IsSupportedArchitecture(gfxArch) && !IsModernArchitecture(gfxArch);
+    }
+
+    public static bool PreferLegacyAttentionFallback(string? gfxArch)
+    {
+        return IsLegacyArchitecture(gfxArch);
+    }
+
+    /// <summary>
+    /// True for targets that ship fused SDPA kernels, which on ROCm means the target has an AOTriton
+    /// image: RDNA3, RDNA3.5, RDNA4 and CDNA2 or newer. gfx908 and the GCN/RDNA1/RDNA2 targets have
+    /// no fused kernels and fall back to the math backend.
+    /// </summary>
+    public static bool SupportsFusedSdpa(string? gfxArch)
+    {
+        var canonicalArch = TryGetCanonicalArchitecture(gfxArch);
+        return canonicalArch is not null
+            && (IsModernArchitecture(canonicalArch) || canonicalArch is "gfx90a" or "gfx942" or "gfx950");
+    }
+
+    /// <summary>
+    /// True when the target has no fused SDPA kernels and the math backend has to be forced.
+    /// </summary>
+    public static bool PreferMathSdpaFallback(string? gfxArch) =>
+        IsSupportedArchitecture(gfxArch) && !SupportsFusedSdpa(gfxArch);
+
+    public static bool UsesNightlyMultiArchPythonPackageIndex(string? gfxArch)
+    {
+        var canonicalArch = TryGetCanonicalArchitecture(gfxArch);
+        // TheRock currently publishes Vega multi-arch device packages on the nightly feed but not the stable one.
+        return canonicalArch is "gfx900" or "gfx906";
+    }
+
+    public static string? TryGetCanonicalArchitecture(string? gfxArch)
+    {
+        if (string.IsNullOrWhiteSpace(gfxArch))
+            return null;
+
+        var normalizedArch = gfxArch.ToLowerInvariant();
+
+        return normalizedArch switch
+        {
+            "gfx900"
+            or "gfx906"
+            or "gfx908"
+            or "gfx90a"
+            or "gfx942"
+            or "gfx950"
+            or "gfx1150"
+            or "gfx1151"
+            or "gfx1152"
+            or "gfx1153" => normalizedArch,
+            var s
+                when s.StartsWith("gfx101", StringComparison.Ordinal)
+                    || s.StartsWith("gfx103", StringComparison.Ordinal)
+                    || s.StartsWith("gfx110", StringComparison.Ordinal)
+                    || s.StartsWith("gfx120", StringComparison.Ordinal) => normalizedArch,
+            _ => null,
+        };
+    }
+
+    public static string? TryGetMultiArchDeviceExtra(string? gfxArch)
+    {
+        var canonicalArch = TryGetCanonicalArchitecture(gfxArch);
+        return canonicalArch is null ? null : $"device-{canonicalArch}";
+    }
+
+    /// <summary>URL of the index a target resolves torch from.</summary>
+    public static string GetIndexUrl(RocmIndexKind kind) =>
+        kind switch
+        {
+            RocmIndexKind.AmdStable => StableMultiArchPythonPackageIndexUrl,
+            RocmIndexKind.AmdNightly => NightlyMultiArchPythonPackageIndexUrl,
+            RocmIndexKind.PyTorchRocm72 => "https://download.pytorch.org/whl/rocm7.2",
+            RocmIndexKind.PyTorchRocm714 => "https://download.pytorch.org/whl/rocm7.14",
+            _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Unknown ROCm index kind."),
+        };
+
+    /// <summary>
+    /// Resolves everything an install needs: the index to use, whether per-architecture
+    /// device packages apply, and whether torch has to be paired with torchvision by the helper.
+    /// </summary>
+    public static RocmInstallTarget ResolveTarget(string? gfxArch, RocmIndexKind? indexOverride = null)
+    {
+        // Vega is only published on AMD's nightly feed. Every other target uses stable unless the package
+        // profile pins a specific index.
+        var indexKind =
+            indexOverride
+            ?? (
+                UsesNightlyMultiArchPythonPackageIndex(gfxArch)
+                    ? RocmIndexKind.AmdNightly
+                    : RocmIndexKind.AmdStable
+            );
+        var usesAmdIndex = indexKind is RocmIndexKind.AmdStable or RocmIndexKind.AmdNightly;
+
+        return new RocmInstallTarget
+        {
+            IndexKind = indexKind,
+            IndexUrl = GetIndexUrl(indexKind),
+            // AMD's feeds publish per-architecture device packages for both win_amd64 and linux_x86_64.
+            // The upstream PyTorch includes GPU libraries for all supported device architectures.
+            DeviceExtra = usesAmdIndex ? TryGetMultiArchDeviceExtra(gfxArch) : null,
+            SupportsDeviceExtras = usesAmdIndex,
+            SupportsSdkDevel = usesAmdIndex,
+        };
+    }
+}

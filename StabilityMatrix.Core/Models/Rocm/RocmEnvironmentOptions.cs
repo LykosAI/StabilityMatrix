@@ -1,4 +1,4 @@
-namespace StabilityMatrix.Core.Models.Rocm;
+﻿namespace StabilityMatrix.Core.Models.Rocm;
 
 /// <summary>
 /// Controls how ROCm helper defaults, package-specific variables, and user overrides are layered at launch.
@@ -14,6 +14,13 @@ public class RocmEnvironmentOptions
     /// When true, user-defined Stability Matrix environment variables may override helper/package defaults last.
     /// </summary>
     public bool IncludeUserOverrides { get; init; } = true;
+
+    /// <summary>
+    /// When true, inherited system ROCm/HIP SDK variables are neutralized so a helper-managed,
+    /// self-contained ROCm SDK is used. Disable for installs that intentionally rely on a system
+    /// ROCm or a PyTorch-bundled runtime instead.
+    /// </summary>
+    public bool SanitizeRocmSdkEnvironment { get; init; } = true;
 
     /// <summary>
     /// When set, overrides the default PyTorch allocator tuning string added by the ROCm helper.
@@ -41,7 +48,7 @@ public class RocmEnvironmentOptions
     public string? FlashAttentionTritonAmdEnable { get; init; } = "TRUE";
 
     /// <summary>
-    /// When true, helper-managed defaults will enable ROCm AOTriton on modern Windows ROCm architectures.
+    /// When true, helper-managed defaults will enable ROCm AOTriton on modern ROCm architectures.
     /// </summary>
     public bool ApplyAotritonExperimental { get; init; } = true;
 

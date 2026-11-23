@@ -1,3 +1,5 @@
+﻿using NLog;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
@@ -9,7 +11,7 @@ using StabilityMatrix.Core.Services.Rocm;
 
 namespace StabilityMatrix.Core.Models.PackageModification;
 
-public enum WindowsRocmPackageCommandType
+public enum RocmPackageCommandType
 {
     SageAttention,
     DevelopmentSdk,
@@ -17,13 +19,15 @@ public enum WindowsRocmPackageCommandType
     FlashAttention,
 }
 
-public class InstallWindowsRocmPackageCommandStep(
+public class InstallRocmPackageCommandStep(
     IDownloadService downloadService,
     IPyInstallationManager pyInstallationManager,
     IPrerequisiteHelper prerequisiteHelper,
     IRocmPackageHelper rocmPackageHelper
 ) : IPackageStep
 {
+    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
     private const string BitsAndBytesWheelUrl =
         "https://github.com/0xDELUXA/bitsandbytes_win_rocm/releases/download/0.50.0.dev0-py3.12-rocm7.15-win_amd64_all/bitsandbytes-0.50.0.dev0-cp312-cp312-win_amd64.whl";
     private const string AmdAiterWheelUrl =
@@ -44,26 +48,25 @@ public class InstallWindowsRocmPackageCommandStep(
 
     public required InstalledPackage InstalledPackage { get; init; }
     public required DirectoryPath WorkingDirectory { get; init; }
-    public required WindowsRocmPackageCommandType CommandType { get; init; }
+    public required RocmPackageCommandType CommandType { get; init; }
     public IReadOnlyDictionary<string, string>? EnvironmentVariables { get; init; }
 
     public string ProgressTitle =>
         CommandType switch
         {
-            WindowsRocmPackageCommandType.SageAttention => "Installing Windows ROCm SageAttention",
-            WindowsRocmPackageCommandType.DevelopmentSdk => "Installing Windows ROCm Development SDK",
-            WindowsRocmPackageCommandType.BitsAndBytes => "Installing Windows ROCm bitsandbytes",
-            WindowsRocmPackageCommandType.FlashAttention => "Installing Windows ROCm Flash Attention",
+            RocmPackageCommandType.SageAttention => "Installing Windows ROCm SageAttention",
+            RocmPackageCommandType.DevelopmentSdk => "Installing ROCm Development SDK",
+            RocmPackageCommandType.BitsAndBytes => "Installing Windows ROCm bitsandbytes",
+            RocmPackageCommandType.FlashAttention => "Installing Windows ROCm Flash Attention",
             _ => "Running Windows ROCm package command",
         };
 
     public async Task ExecuteAsync(IProgress<ProgressReport>? progress = null)
     {
-        if (!OperatingSystem.IsWindows())
+        // The development SDK is published for Linux as well; the compiled extras are Windows-only.
+        if (!OperatingSystem.IsWindows() && CommandType != RocmPackageCommandType.DevelopmentSdk)
         {
-            throw new PlatformNotSupportedException(
-                "Windows ROCm package commands are only supported on Windows."
-            );
+            throw new PlatformNotSupportedException($"{CommandType} is only available on Windows.");
         }
 
         if (InstalledPackage.FullPath is null)
@@ -97,16 +100,16 @@ public class InstallWindowsRocmPackageCommandStep(
 
         switch (CommandType)
         {
-            case WindowsRocmPackageCommandType.SageAttention:
+            case RocmPackageCommandType.SageAttention:
                 await ExecuteSageAttentionAsync(venvRunner, progress).ConfigureAwait(false);
                 break;
-            case WindowsRocmPackageCommandType.DevelopmentSdk:
+            case RocmPackageCommandType.DevelopmentSdk:
                 await ExecuteDevelopmentSdkAsync(venvRunner, progress).ConfigureAwait(false);
                 break;
-            case WindowsRocmPackageCommandType.BitsAndBytes:
+            case RocmPackageCommandType.BitsAndBytes:
                 await ExecuteBitsAndBytesAsync(venvRunner, pyVersion, progress).ConfigureAwait(false);
                 break;
-            case WindowsRocmPackageCommandType.FlashAttention:
+            case RocmPackageCommandType.FlashAttention:
                 await ExecuteFlashAttentionAsync(venvRunner, progress).ConfigureAwait(false);
                 break;
             default:
@@ -144,7 +147,70 @@ public class InstallWindowsRocmPackageCommandStep(
     )
     {
         EnsureRocmCompatibility();
-        await rocmPackageHelper.EnsureWindowsSdkDevelAsync(venvRunner, progress).ConfigureAwait(false);
+        await rocmPackageHelper
+            .EnsureRocmSdkDevelAsync(venvRunner, progress, progress.AsProcessOutputHandler())
+            .ConfigureAwait(false);
+        await TryInitializeRocmSdkAsync(venvRunner, progress).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Runs <c>rocm-sdk init</c> so the installed devel tree is expanded eagerly. Failures are logged and
+    /// surfaced as a warning rather than thrown, because the SDK also initialises lazily on first use.
+    /// </summary>
+    private async Task TryInitializeRocmSdkAsync(
+        IPyVenvRunner venvRunner,
+        IProgress<ProgressReport>? progress
+    )
+    {
+        var sdkPath = venvRunner.RootPath.JoinFile(
+            Compat.IsWindows ? Path.Combine("Scripts", "rocm-sdk.exe") : Path.Combine("bin", "rocm-sdk")
+        );
+
+        if (!sdkPath.Exists)
+        {
+            Logger.Warn("rocm-sdk was not found at '{Path}'; skipping initialization.", sdkPath.FullPath);
+            return;
+        }
+
+        var environment = venvRunner.EnvironmentVariables.ToDictionary(
+            pair => pair.Key,
+            pair => pair.Value,
+            StringComparer.OrdinalIgnoreCase
+        );
+
+        // Keep a stale system ROCm or HIP SDK from taking over the venv's toolchain.
+        foreach (var key in RocmSupport.ConflictingRocmEnvironmentVariables)
+        {
+            environment[key] = ProcessRunner.UnsetEnvironmentVariable;
+        }
+
+        progress?.Report(new ProgressReport(-1f, "Initializing ROCm SDK...", isIndeterminate: true));
+
+        using var process = ProcessRunner.StartAnsiProcess(
+            fileName: sdkPath.FullPath,
+            arguments: "init",
+            workingDirectory: venvRunner.RootPath.FullPath,
+            outputDataReceived: progress.AsProcessOutputHandler(),
+            environmentVariables: environment
+        );
+
+        await process.WaitForExitAsync().ConfigureAwait(false);
+        await process.WaitUntilOutputEOF().ConfigureAwait(false);
+
+        if (process.ExitCode == 0)
+        {
+            Logger.Info("rocm-sdk init completed.");
+            return;
+        }
+
+        Logger.Warn("rocm-sdk init exited with {Code}.", process.ExitCode);
+        progress?.Report(
+            new ProgressReport(
+                -1f,
+                "ROCm SDK initialization reported an error; continuing.",
+                isIndeterminate: true
+            )
+        );
     }
 
     private async Task ExecuteSageAttentionAsync(
@@ -154,7 +220,9 @@ public class InstallWindowsRocmPackageCommandStep(
     {
         EnsureRocmCompatibility();
         await EnsureVcBuildToolsAsync(progress).ConfigureAwait(false);
-        await rocmPackageHelper.EnsureWindowsSdkDevelAsync(venvRunner, progress).ConfigureAwait(false);
+        await rocmPackageHelper
+            .EnsureRocmSdkDevelAsync(venvRunner, progress, progress.AsProcessOutputHandler())
+            .ConfigureAwait(false);
 
         progress?.Report(
             new ProgressReport(

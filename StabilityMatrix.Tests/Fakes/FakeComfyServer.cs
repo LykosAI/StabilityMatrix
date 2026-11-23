@@ -92,13 +92,6 @@ public sealed class FakeComfyServer : IAsyncDisposable
         return server;
     }
 
-    /// <summary>Sends a websocket text message to a connected client.</summary>
-    public async Task SendAsync(string clientId, string message)
-    {
-        var socket = await GetSocketAsync(clientId);
-        await socket.SendAsync(message);
-    }
-
     /// <summary>Closes a client's websocket from the server side.</summary>
     public async Task DisconnectAsync(string clientId)
     {

@@ -1,4 +1,4 @@
-<Styles
+﻿<Styles
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
@@ -32,9 +32,7 @@
                                 Grid.Column="0"
                                 VerticalAlignment="Center"
                                 Text="Tile Size" />
-                            <ui:NumberBox
-                                Grid.Column="1"
-                                Value="{Binding TileSize, Mode=TwoWay}" />
+                            <ui:NumberBox Grid.Column="1" Value="{Binding TileSize, Mode=TwoWay}" />
                         </Grid>
 
                         <!--  Overlap  -->
@@ -43,9 +41,7 @@
                                 Grid.Column="0"
                                 VerticalAlignment="Center"
                                 Text="Overlap" />
-                            <ui:NumberBox
-                                Grid.Column="1"
-                                Value="{Binding Overlap, Mode=TwoWay}" />
+                            <ui:NumberBox Grid.Column="1" Value="{Binding Overlap, Mode=TwoWay}" />
                         </Grid>
 
                         <!--  Temporal Size (for Video VAEs)  -->
@@ -54,9 +50,7 @@
                                 Grid.Column="0"
                                 VerticalAlignment="Center"
                                 Text="Temporal Size" />
-                            <ui:NumberBox
-                                Grid.Column="1"
-                                Value="{Binding TemporalSize, Mode=TwoWay}" />
+                            <ui:NumberBox Grid.Column="1" Value="{Binding TemporalSize, Mode=TwoWay}" />
                         </Grid>
 
                         <!--  Temporal Overlap (for Video VAEs)  -->
@@ -67,9 +61,9 @@
                                 Text="Temporal Overlap" />
                             <ui:NumberBox
                                 Grid.Column="1"
-                                Value="{Binding TemporalOverlap, Mode=TwoWay}"
+                                LargeChange="16"
                                 SmallChange="4"
-                                LargeChange="16" />
+                                Value="{Binding TemporalOverlap, Mode=TwoWay}" />
                         </Grid>
                     </StackPanel>
                 </controls:Card>

@@ -1,38 +1,36 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-    <Import Project="..\ConditionalSymbols.props" />
-    <Import Project="..\Runtimes.Default.props" />
-    
-    <PropertyGroup>
-        <OutputType>WinExe</OutputType>
-        <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
-        <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
-        <ApplicationIcon>./Assets/Icon.ico</ApplicationIcon>
-        <Version>2.16.0-dev.999</Version>
-        <InformationalVersion>$(Version)</InformationalVersion>
-        <EnableWindowsTargeting>true</EnableWindowsTargeting>
-        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    </PropertyGroup>
-    
-    <PropertyGroup Condition=" '$(RuntimeIdentifier)' == 'win-x64' ">
-        <ApplicationManifest>app.manifest</ApplicationManifest>
-    </PropertyGroup>
-    
-    <PropertyGroup Condition=" '$(RuntimeIdentifier)' == 'osx-arm64' ">
-        <CFBundleName>Stability Matrix</CFBundleName>
-        <CFBundleIdentifier>ai.lykos.stabilitymatrix</CFBundleIdentifier>
-        <CFBundleIconFile>Assets/AppIcon.icns</CFBundleIconFile>
-        <CFBundlePackageType>APPL</CFBundlePackageType>
-    </PropertyGroup>
+  <Import Project="..\ConditionalSymbols.props" />
+  <Import Project="..\Runtimes.Default.props" />
 
-    <Target Name="EditInfoPlist" AfterTargets="BundleApp" Condition=" '$(RuntimeIdentifier)' == 'osx-arm64' ">
-        <XmlPeek 
-                XmlInputPath="$(PublishDir)/Stability Matrix.app/Contents/Info.plist"
-                Query="//plist/dict">
-            <Output TaskParameter="Result" PropertyName="PlistDictOriginal"/>
-        </XmlPeek>
-        <PropertyGroup>
-            <!-- Trim the dict tags -->
-            <PlistDictOriginalInner>
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <ApplicationIcon>./Assets/Icon.ico</ApplicationIcon>
+    <Version>2.16.0-dev.999</Version>
+    <InformationalVersion>$(Version)</InformationalVersion>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(RuntimeIdentifier)' == 'win-x64' ">
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(RuntimeIdentifier)' == 'osx-arm64' ">
+    <CFBundleName>Stability Matrix</CFBundleName>
+    <CFBundleIdentifier>ai.lykos.stabilitymatrix</CFBundleIdentifier>
+    <CFBundleIconFile>Assets/AppIcon.icns</CFBundleIconFile>
+    <CFBundlePackageType>APPL</CFBundlePackageType>
+  </PropertyGroup>
+
+  <Target Name="EditInfoPlist" AfterTargets="BundleApp" Condition=" '$(RuntimeIdentifier)' == 'osx-arm64' ">
+    <XmlPeek XmlInputPath="$(PublishDir)/Stability Matrix.app/Contents/Info.plist" Query="//plist/dict">
+      <Output TaskParameter="Result" PropertyName="PlistDictOriginal" />
+    </XmlPeek>
+    <PropertyGroup>
+      <!-- Trim the dict tags -->
+      <PlistDictOriginalInner>
                 $(PlistDictOriginal.Substring(6,
                     $([MSBuild]::Subtract(
                         $(PlistDictOriginal.Length),
@@ -40,8 +38,8 @@
                     ))
                 ))
             </PlistDictOriginalInner>
-            <PlistDictAppend>
-                <![CDATA[
+      <PlistDictAppend>
+        <![CDATA[
                     <key>CFBundleURLTypes</key>
                     <array>
                         <dict>
@@ -58,223 +56,239 @@
                         </dict>
                     </array>
                 ]]>
-            </PlistDictAppend>
-        </PropertyGroup>
-        <XmlPoke
-                XmlInputPath="$(PublishDir)/Stability Matrix.app/Contents/Info.plist"
-                Query="//plist/dict" 
-                Value="$(PlistDictOriginalInner)$(PlistDictAppend)"/>
-    </Target>
-    
-    <ItemGroup>
-        <InternalsVisibleTo Include="StabilityMatrix.Tests" />
-        <InternalsVisibleTo Include="StabilityMatrix.UITests" />
-    </ItemGroup>
-    
-    <ItemGroup>
-        <PackageReference Include="AsyncImageLoader.Avalonia" />
-        <PackageReference Include="AutoComplete.Net" />
-        <PackageReference Include="Avalonia.AvaloniaEdit" />
-        <PackageReference Include="Avalonia.Controls.DataGrid" />
-        <PackageReference Include="Avalonia.Controls.ItemsRepeater" />
-        <PackageReference Include="Avalonia.Controls.PanAndZoom" />
-        <PackageReference Include="Avalonia" />
-        <PackageReference Include="Avalonia.Desktop" />
-        <PackageReference Include="Avalonia.Fonts.Inter" />
-        <PackageReference Include="Avalonia.Svg" />
-        <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
-        <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" />
-        <PackageReference Include="Avalonia.HtmlRenderer" />
-        <PackageReference Include="Avalonia.Labs.Controls" />
-        <PackageReference Include="Avalonia.Xaml.Behaviors" />
-        <PackageReference Include="AvaloniaEdit.TextMate" />
-        <PackageReference Include="bodong.Avalonia.PropertyGrid" />
-        <PackageReference Include="bodong.PropertyModels" />
-        <PackageReference Include="CommandLineParser" />
-        <PackageReference Include="CommunityToolkit.Mvvm" />
-        <PackageReference Include="DesktopNotifications" />
-        <PackageReference Include="DesktopNotifications.Avalonia" />
-        <PackageReference Include="DiscordRichPresence" />
-        <PackageReference Include="Dock.Avalonia" />
-        <PackageReference Include="Dock.Model.Avalonia" />
-        <PackageReference Include="Dock.Serializer" />
-        <PackageReference Include="DynamicData" />
-        <PackageReference Include="DotNet.Bundle" />
-        <PackageReference Include="Exceptionless.DateTimeExtensions" />
-        <PackageReference Include="FluentAvalonia.BreadcrumbBar" />
-        <PackageReference Include="FluentAvaloniaUI" />
-        <PackageReference Include="FluentIcons.Avalonia" />
-        <PackageReference Include="FluentIcons.Avalonia.Fluent" />
-        <PackageReference Include="FuzzySharp" />
-        <PackageReference Include="JetBrains.Annotations" />
-        <PackageReference Include="KeyedSemaphores" />
-        <PackageReference Include="Markdig" />
-        <PackageReference Include="Markdown.Avalonia" />
-        <PackageReference Include="MessagePipe" />
-        <PackageReference Include="MessagePipe.Interprocess" />
-        <PackageReference Include="MetadataExtractor" />
-        <PackageReference Include="Microsoft.Extensions.Configuration" />
-        <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" />
-        <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" />
-        <PackageReference Include="Microsoft.Extensions.Configuration.Json" />
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
-        <PackageReference Include="Microsoft.Extensions.Http.Polly" />
-        <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" />
-        <PackageReference Include="Nito.AsyncEx" />
-        <PackageReference Include="NLog" />
-        <PackageReference Include="NLog.Extensions.Logging" />
-        <PackageReference Include="NSubstitute" />
-        <PackageReference Include="OneOf" />
-        <PackageReference Include="OpenIddict.Client" />
-        <PackageReference Include="OpenIddict.Client.SystemNetHttp" />
-        <PackageReference Include="Polly" />
-        <PackageReference Include="Polly.Contrib.WaitAndRetry" />
-        <PackageReference Include="Polly.Extensions.Http" />
-        <PackageReference Include="Projektanker.Icons.Avalonia.FontAwesome" />
-        <PackageReference Include="RockLib.Reflection.Optimized" />
-        <PackageReference Include="Semi.Avalonia"/>
-        <PackageReference Include="Sentry" />
-        <PackageReference Include="Sentry.NLog" />
-        <PackageReference Include="SpacedGrid-Avalonia" />
-        <PackageReference Include="Sylvan.Common" />
-        <PackageReference Include="Sylvan.Data" />
-        <PackageReference Include="Sylvan.Data.Csv" />
-        <PackageReference Include="System.Drawing.Common" />
-        <PackageReference Include="System.IO.Hashing" />
-        <PackageReference Include="TextMateSharp.Grammars" />
-        <PackageReference Include="URISchemeTools" />
-        <PackageReference Include="SkiaSharp.NativeAssets.Linux" Condition="'$(RuntimeIdentifier)' == 'linux-x64'" />
-    </ItemGroup>
+      </PlistDictAppend>
+    </PropertyGroup>
+    <XmlPoke
+      XmlInputPath="$(PublishDir)/Stability Matrix.app/Contents/Info.plist"
+      Query="//plist/dict"
+      Value="$(PlistDictOriginalInner)$(PlistDictAppend)"
+    />
+  </Target>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="StabilityMatrix.Tests" />
+    <InternalsVisibleTo Include="StabilityMatrix.UITests" />
+  </ItemGroup>
 
-    <ItemGroup>
-        <AvaloniaResource Include="Assets\Icon.ico" />
-        <AvaloniaResource Include="Assets\Icon.png" />
-        <AvaloniaResource Include="Assets\hf-packages.json" />
-        <AvaloniaResource Include="Assets\santahat.png" />
-        <AvaloniaResource Include="Assets\markdown.css" />
-        <AvaloniaResource Include="Assets\openai-white-logomark.png" />
-    </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="AsyncImageLoader.Avalonia" />
+    <PackageReference Include="AutoComplete.Net" />
+    <PackageReference Include="Avalonia.AvaloniaEdit" />
+    <PackageReference Include="Avalonia.Controls.DataGrid" />
+    <PackageReference Include="Avalonia.Controls.ItemsRepeater" />
+    <PackageReference Include="Avalonia.Controls.PanAndZoom" />
+    <PackageReference Include="Avalonia" />
+    <PackageReference Include="Avalonia.Desktop" />
+    <PackageReference Include="Avalonia.Fonts.Inter" />
+    <PackageReference Include="Avalonia.Svg" />
+    <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
+    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" />
+    <PackageReference Include="Avalonia.HtmlRenderer" />
+    <PackageReference Include="Avalonia.Labs.Controls" />
+    <PackageReference Include="Avalonia.Xaml.Behaviors" />
+    <PackageReference Include="AvaloniaEdit.TextMate" />
+    <PackageReference Include="bodong.Avalonia.PropertyGrid" />
+    <PackageReference Include="bodong.PropertyModels" />
+    <PackageReference Include="CommandLineParser" />
+    <PackageReference Include="CommunityToolkit.Mvvm" />
+    <PackageReference Include="DesktopNotifications" />
+    <PackageReference Include="DesktopNotifications.Avalonia" />
+    <PackageReference Include="DiscordRichPresence" />
+    <PackageReference Include="Dock.Avalonia" />
+    <PackageReference Include="Dock.Model.Avalonia" />
+    <PackageReference Include="Dock.Serializer" />
+    <PackageReference Include="DynamicData" />
+    <PackageReference Include="DotNet.Bundle" />
+    <PackageReference Include="Exceptionless.DateTimeExtensions" />
+    <PackageReference Include="FluentAvalonia.BreadcrumbBar" />
+    <PackageReference Include="FluentAvaloniaUI" />
+    <PackageReference Include="FluentIcons.Avalonia" />
+    <PackageReference Include="FluentIcons.Avalonia.Fluent" />
+    <PackageReference Include="FuzzySharp" />
+    <PackageReference Include="JetBrains.Annotations" />
+    <PackageReference Include="KeyedSemaphores" />
+    <PackageReference Include="Markdig" />
+    <PackageReference Include="Markdown.Avalonia" />
+    <PackageReference Include="MessagePipe" />
+    <PackageReference Include="MessagePipe.Interprocess" />
+    <PackageReference Include="MetadataExtractor" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="Microsoft.Extensions.Http.Polly" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" />
+    <PackageReference Include="Nito.AsyncEx" />
+    <PackageReference Include="NLog" />
+    <PackageReference Include="NLog.Extensions.Logging" />
+    <PackageReference Include="NSubstitute" />
+    <PackageReference Include="OneOf" />
+    <PackageReference Include="OpenIddict.Client" />
+    <PackageReference Include="OpenIddict.Client.SystemNetHttp" />
+    <PackageReference Include="Polly" />
+    <PackageReference Include="Polly.Contrib.WaitAndRetry" />
+    <PackageReference Include="Polly.Extensions.Http" />
+    <PackageReference Include="Projektanker.Icons.Avalonia.FontAwesome" />
+    <PackageReference Include="RockLib.Reflection.Optimized" />
+    <PackageReference Include="Semi.Avalonia" />
+    <PackageReference Include="Sentry" />
+    <PackageReference Include="Sentry.NLog" />
+    <PackageReference Include="SpacedGrid-Avalonia" />
+    <PackageReference Include="Sylvan.Common" />
+    <PackageReference Include="Sylvan.Data" />
+    <PackageReference Include="Sylvan.Data.Csv" />
+    <PackageReference Include="System.Drawing.Common" />
+    <PackageReference Include="System.IO.Hashing" />
+    <PackageReference Include="TextMateSharp.Grammars" />
+    <PackageReference Include="URISchemeTools" />
+    <PackageReference
+      Include="SkiaSharp.NativeAssets.Linux"
+      Condition="'$(RuntimeIdentifier)' == 'linux-x64'"
+    />
+  </ItemGroup>
 
-    <ItemGroup>
-        <AvaloniaResource Include="Assets\ImagePrompt.tmLanguage.json" />
-        <AvaloniaResource Include="Assets\ThemeMatrixDark.json" />
-    </ItemGroup>
-    
-    <ItemGroup>
-        <ProjectReference Include="..\Avalonia.Gif\Avalonia.Gif.csproj" />
-        <ProjectReference Include="..\StabilityMatrix.Core\StabilityMatrix.Core.csproj" />
-        <ProjectReference Include="..\analyzers\StabilityMatrix.Analyzers\StabilityMatrix.Analyzers.csproj"
-                          PrivateAssets="all"
-                          ReferenceOutputAssembly="false"
-                          OutputItemType="Analyzer" />
-        <ProjectReference Include="..\analyzers\StabilityMatrix.Analyzers.CodeFixes\StabilityMatrix.Analyzers.CodeFixes.csproj"
-                          PrivateAssets="all"
-                          ReferenceOutputAssembly="false"
-                          OutputItemType="Analyzer" />
-    </ItemGroup>
+  <ItemGroup>
+    <AvaloniaResource Include="Assets\Icon.ico" />
+    <AvaloniaResource Include="Assets\Icon.png" />
+    <AvaloniaResource Include="Assets\hf-packages.json" />
+    <AvaloniaResource Include="Assets\santahat.png" />
+    <AvaloniaResource Include="Assets\markdown.css" />
+    <AvaloniaResource Include="Assets\openai-white-logomark.png" />
+  </ItemGroup>
 
-    <ItemGroup Condition="$(SM_IncludeLogWindow) == 'true'">
-        <ProjectReference Include="..\StabilityMatrix.Avalonia.Diagnostics\StabilityMatrix.Avalonia.Diagnostics.csproj" />
-    </ItemGroup>
-    
-    <ItemGroup>
-        <AvaloniaResource Include="Assets\noimage.png" />
-    </ItemGroup>
+  <ItemGroup>
+    <AvaloniaResource Include="Assets\ImagePrompt.tmLanguage.json" />
+    <AvaloniaResource Include="Assets\ThemeMatrixDark.json" />
+  </ItemGroup>
 
-    <ItemGroup>
-        <AvaloniaResource Include="Assets\brands-*.png" />
-        <AvaloniaResource Include="Assets\brands-*.svg" />
-        <AvaloniaResource Include="Assets\guide-*.webp"/>
-    </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Avalonia.Gif\Avalonia.Gif.csproj" />
+    <ProjectReference Include="..\StabilityMatrix.Core\StabilityMatrix.Core.csproj" />
+    <ProjectReference
+      Include="..\analyzers\StabilityMatrix.Analyzers\StabilityMatrix.Analyzers.csproj"
+      PrivateAssets="all"
+      ReferenceOutputAssembly="false"
+      OutputItemType="Analyzer"
+    />
+    <ProjectReference
+      Include="..\analyzers\StabilityMatrix.Analyzers.CodeFixes\StabilityMatrix.Analyzers.CodeFixes.csproj"
+      PrivateAssets="all"
+      ReferenceOutputAssembly="false"
+      OutputItemType="Analyzer"
+    />
+  </ItemGroup>
 
-    <ItemGroup>
-        <AvaloniaResource Include="Assets\licenses.json" />
-    </ItemGroup>
-    
-    <ItemGroup>
-        <AvaloniaResource Include="Assets\sitecustomize.py" />
-    </ItemGroup>
+  <ItemGroup Condition="$(SM_IncludeLogWindow) == 'true'">
+    <ProjectReference Include="..\StabilityMatrix.Avalonia.Diagnostics\StabilityMatrix.Avalonia.Diagnostics.csproj" />
+  </ItemGroup>
 
-    <ItemGroup>
-        <AvaloniaResource Include="Assets\Fonts\**" />
-    </ItemGroup>
-    
-    <ItemGroup>
-      <!-- Only for win-64 -->
-      <AvaloniaResource Include="Assets\win-x64\**" Condition="'$(RuntimeIdentifier)' == 'win-x64'" />
-      <!-- Only for linux-64 -->
-      <AvaloniaResource Include="Assets\linux-x64\**" Condition="'$(RuntimeIdentifier)' == 'linux-x64'" />
-      <!-- Only for osx-arm64 -->
-      <AvaloniaResource Include="Assets\macos-arm64\**" Condition="'$(RuntimeIdentifier)' == 'osx-arm64'" />
-    </ItemGroup>
+  <ItemGroup>
+    <AvaloniaResource Include="Assets\noimage.png" />
+  </ItemGroup>
 
-    <ItemGroup>
-        <None Update="Assets\AppIcon.icns" Condition="'$(RuntimeIdentifier)' == 'osx-arm64'">
-            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-        </None>
-    </ItemGroup>
-    
-    <ItemGroup>
-      <EmbeddedResource Update="Languages\Resources.resx">
-        <Generator>PublicResXFileCodeGenerator</Generator>
-        <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-      </EmbeddedResource>
-    </ItemGroup>
-    
-    <ItemGroup>
-      <Compile Update="Languages\Resources.Designer.cs">
-        <DesignTime>True</DesignTime>
-        <AutoGen>True</AutoGen>
-        <DependentUpon>Resources.resx</DependentUpon>
-      </Compile>
-      <Compile Update="Views\Inference\InferenceImageToVideoView.axaml.cs">
-        <DependentUpon>InferenceImageToVideoView.axaml</DependentUpon>
-        <SubType>Code</SubType>
-      </Compile>
-      <Compile Update="Controls\VideoGenerationSettingsCard.axaml.cs">
-        <DependentUpon>VideoGenerationSettingsCard.axaml</DependentUpon>
-        <SubType>Code</SubType>
-      </Compile>
-      <Compile Update="Controls\VideoOutputSettingsCard.axaml.cs">
-        <DependentUpon>VideoOutputSettingsCard.axaml</DependentUpon>
-        <SubType>Code</SubType>
-      </Compile>
-      <Compile Update="Views\PackageManagerPage.axaml.cs">
-        <DependentUpon>NewPackageManagerPage.axaml</DependentUpon>
-        <SubType>Code</SubType>
-      </Compile>
-      <Compile Update="Views\PackageManager\PackageInstallDetailView.axaml.cs">
-        <DependentUpon>PackageInstallDetailView.axaml</DependentUpon>
-        <SubType>Code</SubType>
-      </Compile>
-      <Compile Update="Views\PackageManager\PackageInstallBrowserView.axaml.cs">
-        <DependentUpon>NewInstallerDialog.axaml</DependentUpon>
-        <SubType>Code</SubType>
-      </Compile>
-      <Compile Update="Models\OpenArtMetadata.cs">
-        <Generator>MSBuild:GenerateCodeFromAttributes</Generator>
-      </Compile>
-      <Compile Update="Views\PackageManager\MainPackageManagerView.axaml.cs">
-        <DependentUpon>MainPackageManagerView.axaml</DependentUpon>
-        <SubType>Code</SubType>
-      </Compile>
-      <Compile Update="Views\Inference\InferenceWanTextToVideoView.axaml.cs">
-        <DependentUpon>InferenceWanTextToVideoView.axaml</DependentUpon>
-        <SubType>Code</SubType>
-      </Compile>
-      <Compile Update="Controls\Inference\NrsCard.axaml.cs">
-        <DependentUpon>NrsCard.axaml</DependentUpon>
-        <SubType>Code</SubType>
-      </Compile>
-      <Compile Update="Views\Dialogs\ImageAnnotationEditorDialog.axaml.cs">
-        <DependentUpon>ImageAnnotationEditorDialog.axaml</DependentUpon>
-      </Compile>
-    </ItemGroup>
+  <ItemGroup>
+    <AvaloniaResource Include="Assets\brands-*.png" />
+    <AvaloniaResource Include="Assets\brands-*.svg" />
+    <AvaloniaResource Include="Assets\guide-*.webp" />
+  </ItemGroup>
 
-    <!-- set HUSKY to 0 to disable, or opt-in during CI by setting HUSKY to 1 -->
-    <Target Name="husky" BeforeTargets="Restore;CollectPackageReferences" Condition="'$(HUSKY)' == 1 Or ('$(HUSKY)' != 0 And '$(CI)' != 'true')">
-        <Exec Command="dotnet tool restore"  StandardOutputImportance="Low" StandardErrorImportance="High"/>
-        <Exec Command="dotnet husky install" StandardOutputImportance="Low" StandardErrorImportance="High" WorkingDirectory="../" />
-    </Target>
+  <ItemGroup>
+    <AvaloniaResource Include="Assets\licenses.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AvaloniaResource Include="Assets\sitecustomize.py" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AvaloniaResource Include="Assets\Fonts\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Only for win-64 -->
+    <AvaloniaResource Include="Assets\win-x64\**" Condition="'$(RuntimeIdentifier)' == 'win-x64'" />
+    <!-- Only for linux-64 -->
+    <AvaloniaResource Include="Assets\linux-x64\**" Condition="'$(RuntimeIdentifier)' == 'linux-x64'" />
+    <!-- Only for osx-arm64 -->
+    <AvaloniaResource Include="Assets\macos-arm64\**" Condition="'$(RuntimeIdentifier)' == 'osx-arm64'" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Assets\AppIcon.icns" Condition="'$(RuntimeIdentifier)' == 'osx-arm64'">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Languages\Resources.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Languages\Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Update="Views\Inference\InferenceImageToVideoView.axaml.cs">
+      <DependentUpon>InferenceImageToVideoView.axaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Controls\VideoGenerationSettingsCard.axaml.cs">
+      <DependentUpon>VideoGenerationSettingsCard.axaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Controls\VideoOutputSettingsCard.axaml.cs">
+      <DependentUpon>VideoOutputSettingsCard.axaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Views\PackageManagerPage.axaml.cs">
+      <DependentUpon>NewPackageManagerPage.axaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Views\PackageManager\PackageInstallDetailView.axaml.cs">
+      <DependentUpon>PackageInstallDetailView.axaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Views\PackageManager\PackageInstallBrowserView.axaml.cs">
+      <DependentUpon>NewInstallerDialog.axaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Models\OpenArtMetadata.cs">
+      <Generator>MSBuild:GenerateCodeFromAttributes</Generator>
+    </Compile>
+    <Compile Update="Views\PackageManager\MainPackageManagerView.axaml.cs">
+      <DependentUpon>MainPackageManagerView.axaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Views\Inference\InferenceWanTextToVideoView.axaml.cs">
+      <DependentUpon>InferenceWanTextToVideoView.axaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Controls\Inference\NrsCard.axaml.cs">
+      <DependentUpon>NrsCard.axaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Views\Dialogs\ImageAnnotationEditorDialog.axaml.cs">
+      <DependentUpon>ImageAnnotationEditorDialog.axaml</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <!-- set HUSKY to 0 to disable, or opt-in during CI by setting HUSKY to 1 -->
+  <Target
+    Name="husky"
+    BeforeTargets="Restore;CollectPackageReferences"
+    Condition="'$(HUSKY)' == 1 Or ('$(HUSKY)' != 0 And '$(CI)' != 'true')"
+  >
+    <Exec Command="dotnet tool restore" StandardOutputImportance="Low" StandardErrorImportance="High" />
+    <Exec
+      Command="dotnet husky install"
+      StandardOutputImportance="Low"
+      StandardErrorImportance="High"
+      WorkingDirectory="../"
+    />
+  </Target>
 </Project>

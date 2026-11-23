@@ -171,21 +171,21 @@ public class Settings
     public HashSet<string> DisabledBaseModelTypes { get; set; } = [];
 
     public HashSet<string> SavedInferenceDimensions { get; set; } =
-        [
-            "1024 x 1024",
-            "1152 x 896",
-            "1216 x 832",
-            "1280 x 720",
-            "1344 x 768",
-            "1536 x 640",
-            "768 x 768",
-            "512 x 512",
-            "640 x 1536",
-            "768 x 1344",
-            "720 x 1280",
-            "832 x 1216",
-            "896 x 1152",
-        ];
+    [
+        "1024 x 1024",
+        "1152 x 896",
+        "1216 x 832",
+        "1280 x 720",
+        "1344 x 768",
+        "1536 x 640",
+        "768 x 768",
+        "512 x 512",
+        "640 x 1536",
+        "768 x 1344",
+        "720 x 1280",
+        "832 x 1216",
+        "896 x 1152",
+    ];
 
     /// <summary>
     /// Size limit in GB for the uv package cache. When set, the cache size is checked at

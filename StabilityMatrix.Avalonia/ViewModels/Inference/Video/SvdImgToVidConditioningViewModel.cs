@@ -71,9 +71,9 @@ public partial class SvdImgToVidConditioningViewModel
             new ComfyNodeBuilder.VideoLinearCFGGuidance
             {
                 Name = e.Nodes.GetUniqueName("LinearCfgGuidance"),
-                Model =
-                    e.Builder.Connections.Base.Model ?? throw new ValidationException("Model not selected"),
-                MinCfg = MinCfg
+                Model = e.Builder.Connections.Base.Model
+                    ?? throw new ValidationException("Model not selected"),
+                MinCfg = MinCfg,
             }
         );
 
@@ -92,7 +92,7 @@ public partial class SvdImgToVidConditioningViewModel
                 VideoFrames = NumFrames,
                 MotionBucketId = MotionBucketId,
                 Fps = Fps,
-                AugmentationLevel = AugmentationLevel
+                AugmentationLevel = AugmentationLevel,
             }
         );
 

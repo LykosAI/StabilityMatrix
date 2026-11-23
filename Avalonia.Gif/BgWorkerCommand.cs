@@ -5,6 +5,6 @@
         Null,
         Play,
         Pause,
-        Dispose
+        Dispose,
     }
 }

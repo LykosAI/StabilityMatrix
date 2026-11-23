@@ -19,11 +19,10 @@ public class CheckerboardBorder : Control
         set => SetValue(GridCellSizeProperty, value);
     }
 
-    public static readonly StyledProperty<ISolidColorBrush> GridColorProperty =
-        AvaloniaProperty.Register<AdvancedImageBox, ISolidColorBrush>(
-            nameof(GridColor),
-            SolidColorBrush.Parse("#181818")
-        );
+    public static readonly StyledProperty<ISolidColorBrush> GridColorProperty = AvaloniaProperty.Register<
+        AdvancedImageBox,
+        ISolidColorBrush
+    >(nameof(GridColor), SolidColorBrush.Parse("#181818"));
 
     /// <summary>
     /// Gets or sets the color used to create the checkerboard style background
@@ -64,13 +63,13 @@ public class CheckerboardBorder : Control
         var square1Drawing = new GeometryDrawing
         {
             Brush = GridColorAlternate,
-            Geometry = new RectangleGeometry(new Rect(0.0, 0.0, size, size))
+            Geometry = new RectangleGeometry(new Rect(0.0, 0.0, size, size)),
         };
 
         var square2Drawing = new GeometryDrawing
         {
             Brush = GridColorAlternate,
-            Geometry = new RectangleGeometry(new Rect(size, size, size, size))
+            Geometry = new RectangleGeometry(new Rect(size, size, size, size)),
         };
 
         var drawingGroup = new DrawingGroup { Children = { square1Drawing, square2Drawing } };

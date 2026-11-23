@@ -31,7 +31,7 @@ public readonly record struct ComfyScheduler(string Name)
             [Beta.Name] = "Beta",
             [AlignYourSteps.Name] = "Align Your Steps",
             [LinearQuadratic.Name] = "Linear Quadratic",
-            [KLOptimal.Name] = "KL Optimal"
+            [KLOptimal.Name] = "KL Optimal",
         };
 
     private static Dictionary<string, string> FaceDetailerConvertDict { get; } =
@@ -40,7 +40,7 @@ public readonly record struct ComfyScheduler(string Name)
             [FaceDetailerAlignYourStepsSD1.Name] = "Align Your Steps SD1",
             [FaceDetailerAlignYourStepsSDXL.Name] = "Align Your Steps SDXL",
             [FaceDetailerGits.Name] = "GITS[coeff=1.2]",
-            [FaceDetailerLtxv.Name] = "LTXV[default]"
+            [FaceDetailerLtxv.Name] = "LTXV[default]",
         };
 
     public static IReadOnlyList<ComfyScheduler> Defaults { get; } =

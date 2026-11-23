@@ -40,11 +40,12 @@ public class SearchCollection<TObject, TKey, TQuery> : AbstractNotifyPropertyCha
     /// </summary>
     private SortExpressionComparer<SearchItem> SearchItemSortComparer =>
         [
-            ..SortComparer
-        .Select(sortExpression => new SortExpression<SearchItem>(
-            item => sortExpression.Expression(item.Item),
-            sortExpression.Direction
-        )).Prepend(new SortExpression<SearchItem>(item => item.Score, SortDirection.Descending))
+            .. SortComparer
+                .Select(sortExpression => new SortExpression<SearchItem>(
+                    item => sortExpression.Expression(item.Item),
+                    sortExpression.Direction
+                ))
+                .Prepend(new SortExpression<SearchItem>(item => item.Score, SortDirection.Descending)),
         ];
 
     public IObservableCollection<TObject> Items { get; } = new ObservableCollectionExtended<TObject>();
@@ -107,7 +108,7 @@ public class SearchCollection<TObject, TKey, TQuery> : AbstractNotifyPropertyCha
                         {
                             Item = obj,
                             IsMatch = isMatch,
-                            Score = score
+                            Score = score,
                         };
                     },
                     forceTransform: queryChanged

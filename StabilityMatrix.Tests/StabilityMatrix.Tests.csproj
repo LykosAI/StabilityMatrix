@@ -1,51 +1,48 @@
 <Project Sdk="Microsoft.NET.Sdk">
-    <Import Project="..\Runtimes.Default.props" />
-    
-    <PropertyGroup>
-        <EnableWindowsTargeting>true</EnableWindowsTargeting>
-        <IsPackable>false</IsPackable>
-        <IsTestProject>true</IsTestProject>
-    </PropertyGroup>
+  <Import Project="..\Runtimes.Default.props" />
 
-    <ItemGroup>
-        <PackageReference Include="DotNet.Bundle" />
-        <PackageReference Include="DotNext" />
-        <PackageReference Include="Microsoft.Extensions.Configuration.Json" />
-        <PackageReference Include="Microsoft.Extensions.Http.Polly" />
-        <PackageReference Include="Microsoft.NET.Test.Sdk" />
-        <PackageReference Include="MSTest.TestAdapter" />
-        <PackageReference Include="MSTest.TestFramework" />
-        <PackageReference Include="coverlet.collector">
-          <PrivateAssets>all</PrivateAssets>
-          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-        </PackageReference>
-        <PackageReference Include="NSubstitute" />
-        <!-- Test agents may lack fontconfig, which the regular Linux libSkiaSharp links against.
+  <PropertyGroup>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="DotNet.Bundle" />
+    <PackageReference Include="DotNext" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" />
+    <PackageReference Include="Microsoft.Extensions.Http.Polly" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="MSTest.TestAdapter" />
+    <PackageReference Include="MSTest.TestFramework" />
+    <PackageReference Include="coverlet.collector">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="NSubstitute" />
+    <!-- Test agents may lack fontconfig, which the regular Linux libSkiaSharp links against.
              Use the self-contained native build for tests and suppress the transitive regular one. -->
-        <PackageReference Include="SkiaSharp.NativeAssets.Linux" ExcludeAssets="all" />
-        <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" />
-        <PackageReference Include="Polly" />
-        <PackageReference Include="Polly.Contrib.WaitAndRetry" />
-    </ItemGroup>
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux" ExcludeAssets="all" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" />
+    <PackageReference Include="Polly" />
+    <PackageReference Include="Polly.Contrib.WaitAndRetry" />
+  </ItemGroup>
 
-    <ItemGroup>
-        <!-- Kestrel for the fake ComfyUI server in Fakes/ -->
-        <FrameworkReference Include="Microsoft.AspNetCore.App" />
-    </ItemGroup>
-    <ItemGroup>
-        <None Include="TestData\**" CopyToOutputDirectory="PreserveNewest" />
-    </ItemGroup>
-    <ItemGroup>
-      <ProjectReference Include="..\StabilityMatrix.Avalonia\StabilityMatrix.Avalonia.csproj" />
-      <ProjectReference Include="..\StabilityMatrix.Core\StabilityMatrix.Core.csproj" />
-      <ProjectReference Include="..\StabilityMatrix.Native\StabilityMatrix.Native.csproj" />
+  <ItemGroup>
+    <!-- Kestrel for the fake ComfyUI server in Fakes/ -->
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="TestData\**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\StabilityMatrix.Avalonia\StabilityMatrix.Avalonia.csproj" />
+    <ProjectReference Include="..\StabilityMatrix.Core\StabilityMatrix.Core.csproj" />
+    <ProjectReference Include="..\StabilityMatrix.Native\StabilityMatrix.Native.csproj" />
+  </ItemGroup>
 
-    </ItemGroup>
-
-    <ItemGroup>
-        <EmbeddedResource Include="..\StabilityMatrix.Avalonia\Assets\ImagePrompt.tmLanguage.json" />
-        <EmbeddedResource Include="..\StabilityMatrix.Avalonia\Assets\ThemeMatrixDark.json" />
-    </ItemGroup>
-
-
+  <ItemGroup>
+    <EmbeddedResource Include="..\StabilityMatrix.Avalonia\Assets\ImagePrompt.tmLanguage.json" />
+    <EmbeddedResource Include="..\StabilityMatrix.Avalonia\Assets\ThemeMatrixDark.json" />
+  </ItemGroup>
 </Project>

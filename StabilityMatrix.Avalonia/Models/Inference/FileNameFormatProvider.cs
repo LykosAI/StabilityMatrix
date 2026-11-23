@@ -235,18 +235,13 @@ public partial class FileNameFormatProvider
         return new FileNameFormatProvider
         {
             GenerationParameters = GenerationParameters.GetSample(),
-            GenerationLoras = GenerationLoraSnapshot.FromNodes(
-                [
-                    new ComfyNode
-                    {
-                        ClassType = "LoraLoader",
-                        Inputs = new Dictionary<string, object?>
-                        {
-                            ["lora_name"] = "sample_lora.safetensors",
-                        },
-                    },
-                ]
-            ),
+            GenerationLoras = GenerationLoraSnapshot.FromNodes([
+                new ComfyNode
+                {
+                    ClassType = "LoraLoader",
+                    Inputs = new Dictionary<string, object?> { ["lora_name"] = "sample_lora.safetensors" },
+                },
+            ]),
             ProjectType = InferenceProjectType.TextToImage,
             ProjectName = "Sample Project",
         };

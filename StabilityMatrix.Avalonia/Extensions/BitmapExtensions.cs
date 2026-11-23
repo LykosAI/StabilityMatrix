@@ -32,7 +32,7 @@ public static class BitmapExtensions
             AlphaFormat.Premul => SKAlphaType.Premul,
             AlphaFormat.Unpremul => SKAlphaType.Unpremul,
             AlphaFormat.Opaque => SKAlphaType.Opaque,
-            _ => SKAlphaType.Premul
+            _ => SKAlphaType.Premul,
         };
 
         var skBitmap = new SKBitmap(

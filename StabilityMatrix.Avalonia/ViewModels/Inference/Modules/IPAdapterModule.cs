@@ -45,8 +45,7 @@ public class IPAdapterModule : ModuleBase
                 new ComfyNodeBuilder.LoadImage
                 {
                     Name = e.Nodes.GetUniqueName("IPAdapter_LoadImage"),
-                    Image =
-                        card.SelectImageCardViewModel.ImageSource?.GetHashGuidFileNameCached("Inference")
+                    Image = card.SelectImageCardViewModel.ImageSource?.GetHashGuidFileNameCached("Inference")
                         ?? throw new ValidationException("No ImageSource"),
                 }
             )
@@ -56,8 +55,8 @@ public class IPAdapterModule : ModuleBase
             new ComfyNodeBuilder.IPAdapterModelLoader
             {
                 Name = e.Nodes.GetUniqueName("IPAdapterModelLoader"),
-                IpadapterFile =
-                    card.SelectedModel?.RelativePath ?? throw new ValidationException("No SelectedModel"),
+                IpadapterFile = card.SelectedModel?.RelativePath
+                    ?? throw new ValidationException("No SelectedModel"),
             }
         );
 
@@ -65,8 +64,7 @@ public class IPAdapterModule : ModuleBase
             new ComfyNodeBuilder.CLIPVisionLoader
             {
                 Name = e.Nodes.GetUniqueName("IPAdapter_CLIPVisionLoader"),
-                ClipName =
-                    card.SelectedClipVisionModel?.RelativePath
+                ClipName = card.SelectedClipVisionModel?.RelativePath
                     ?? throw new ValidationException("No SelectedClipVisionModel"),
             }
         );

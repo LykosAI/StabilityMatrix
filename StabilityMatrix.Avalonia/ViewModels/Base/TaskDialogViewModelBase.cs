@@ -23,7 +23,7 @@ public abstract class TaskDialogViewModelBase : ViewModelBase
             DialogResult = TaskDialogStandardResult.None,
             Command = command,
             IsDefault = true,
-            ClosesOnInvoked = false
+            ClosesOnInvoked = false,
         };
     }
 
@@ -32,7 +32,7 @@ public abstract class TaskDialogViewModelBase : ViewModelBase
         return new TaskDialogButton
         {
             Text = Resources.Action_Close,
-            DialogResult = TaskDialogStandardResult.Close
+            DialogResult = TaskDialogStandardResult.Close,
         };
     }
 
@@ -53,7 +53,7 @@ public abstract class TaskDialogViewModelBase : ViewModelBase
             Header = Title,
             Content = this,
             XamlRoot = App.VisualRoot,
-            Buttons = { GetCloseButton() }
+            Buttons = { GetCloseButton() },
         };
 
         dialog.AttachedToVisualTree += (s, _) =>

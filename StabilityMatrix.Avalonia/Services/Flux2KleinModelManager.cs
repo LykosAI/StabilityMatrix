@@ -141,8 +141,7 @@ public class Flux2KleinModelManager : ILocalProviderModelManager
         HybridModelFile? preferredUnet = null
     )
     {
-        var unet =
-            preferredUnet
+        var unet = preferredUnet
             ?? clientManager.UnetModels.FirstOrDefault(m => m.Local != null && IsKleinUnet(m.FileName));
 
         return unet != null ? GetExpectedEncoderSize(unet) : "4b";
@@ -158,13 +157,11 @@ public class Flux2KleinModelManager : ILocalProviderModelManager
         HybridModelFile? preferredUnet = null
     )
     {
-        var unetModel =
-            preferredUnet
+        var unetModel = preferredUnet
             ?? clientManager.UnetModels.FirstOrDefault(m => m.Local != null && IsKleinUnet(m.FileName))
             ?? throw new InvalidOperationException("Flux.2 Klein UNET model not found");
 
-        var vaeModel =
-            clientManager.VaeModels.FirstOrDefault(m => m.Local != null && IsFlux2Vae(m.FileName))
+        var vaeModel = clientManager.VaeModels.FirstOrDefault(m => m.Local != null && IsFlux2Vae(m.FileName))
             ?? throw new InvalidOperationException("Flux.2 VAE model not found");
 
         // Match the text encoder to the selected UNET variant. The 4B UNET expects
@@ -174,12 +171,11 @@ public class Flux2KleinModelManager : ILocalProviderModelManager
         // message rather than silently substituting the other size.
         var preferredEncoderSize = GetExpectedEncoderSize(unetModel);
 
-        var clipModel =
-            clientManager.ClipModels.FirstOrDefault(m =>
-                m.Local != null
-                && IsKleinTextEncoder(m.FileName)
-                && MatchesEncoderSize(m.FileName, preferredEncoderSize)
-            )
+        var clipModel = clientManager.ClipModels.FirstOrDefault(m =>
+            m.Local != null
+            && IsKleinTextEncoder(m.FileName)
+            && MatchesEncoderSize(m.FileName, preferredEncoderSize)
+        )
             ?? throw new InvalidOperationException(
                 preferredEncoderSize == "8b"
                     ? "Klein 9B requires the qwen_3_8b text encoder, which isn't installed. Download qwen_3_8b_fp8mixed.safetensors (or _fp4mixed / _bf16) from huggingface.co/Comfy-Org/flux2-klein-9B and place it in your TextEncoders folder."

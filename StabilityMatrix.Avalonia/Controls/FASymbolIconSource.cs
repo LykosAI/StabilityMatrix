@@ -76,16 +76,12 @@ public class FASymbolIconSourceConverter : TypeConverter
         return base.CanConvertFrom(context, sourceType);
     }
 
-    public override object? ConvertFrom(
-        ITypeDescriptorContext? context,
-        CultureInfo? culture,
-        object value
-    )
+    public override object? ConvertFrom(ITypeDescriptorContext? context, CultureInfo? culture, object value)
     {
         return value switch
         {
-            string val => new FASymbolIconSource { Symbol = val, },
-            _ => base.ConvertFrom(context, culture, value)
+            string val => new FASymbolIconSource { Symbol = val },
+            _ => base.ConvertFrom(context, culture, value),
         };
     }
 }

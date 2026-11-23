@@ -9,8 +9,8 @@ namespace StabilityMatrix.Avalonia.Controls;
 [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
 public class BetterFlyout : Flyout
 {
-    public static readonly StyledProperty<ScrollBarVisibility> VerticalScrollBarVisibilityProperty = AvaloniaProperty.Register<BetterFlyout, ScrollBarVisibility>(
-        "VerticalScrollBarVisibility");
+    public static readonly StyledProperty<ScrollBarVisibility> VerticalScrollBarVisibilityProperty =
+        AvaloniaProperty.Register<BetterFlyout, ScrollBarVisibility>("VerticalScrollBarVisibility");
 
     public ScrollBarVisibility VerticalScrollBarVisibility
     {
@@ -18,15 +18,15 @@ public class BetterFlyout : Flyout
         set => SetValue(VerticalScrollBarVisibilityProperty, value);
     }
 
-    public static readonly StyledProperty<ScrollBarVisibility> HorizontalScrollBarVisibilityProperty = AvaloniaProperty.Register<BetterFlyout, ScrollBarVisibility>(
-        "HorizontalScrollBarVisibility");
+    public static readonly StyledProperty<ScrollBarVisibility> HorizontalScrollBarVisibilityProperty =
+        AvaloniaProperty.Register<BetterFlyout, ScrollBarVisibility>("HorizontalScrollBarVisibility");
 
     public ScrollBarVisibility HorizontalScrollBarVisibility
     {
         get => GetValue(HorizontalScrollBarVisibilityProperty);
         set => SetValue(HorizontalScrollBarVisibilityProperty, value);
     }
-    
+
     protected override void OnOpened()
     {
         base.OnOpened();

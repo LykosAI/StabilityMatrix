@@ -1,50 +1,49 @@
-﻿<controls:UserControlBase xmlns="https://github.com/avaloniaui"
-                          xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                          xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-                          xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-                          xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
-                          xmlns:ui="using:FluentAvalonia.UI.Controls"
-                          xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
-                          xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
-                          xmlns:system="clr-namespace:System;assembly=System.Runtime"
-                          xmlns:vmDialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
-                          xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
-                          xmlns:processes="clr-namespace:StabilityMatrix.Core.Processes;assembly=StabilityMatrix.Core"
-                          d:DataContext="{x:Static mocks:DesignData.DownloadResourceViewModel}"
-                          x:DataType="vmDialogs:DownloadResourceViewModel"
-                          mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="450"
-                          x:Class="StabilityMatrix.Avalonia.Views.Dialogs.DownloadResourceDialog">
-    
-    <Grid RowDefinitions="*,*" Margin="8,4">
+﻿<controls:UserControlBase
+    x:Class="StabilityMatrix.Avalonia.Views.Dialogs.DownloadResourceDialog"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:processes="clr-namespace:StabilityMatrix.Core.Processes;assembly=StabilityMatrix.Core"
+    xmlns:system="clr-namespace:System;assembly=System.Runtime"
+    xmlns:ui="using:FluentAvalonia.UI.Controls"
+    xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
+    xmlns:vmDialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
+    d:DataContext="{x:Static mocks:DesignData.DownloadResourceViewModel}"
+    d:DesignHeight="450"
+    d:DesignWidth="500"
+    x:DataType="vmDialogs:DownloadResourceViewModel"
+    mc:Ignorable="d">
+
+    <Grid Margin="8,4" RowDefinitions="*,*">
         <StackPanel>
-            <ui:SettingsExpander 
+            <ui:SettingsExpander
                 Command="{Binding OpenInfoUrlCommand}"
-                Header="{Binding FileNameWithHash}" 
                 Description="{Binding Resource.Author, StringFormat={}by {0}}"
-                Footer="{Binding FileSizeText}">
-            </ui:SettingsExpander>
-            
-            <ui:SettingsExpander 
-                Header="{x:Static lang:Resources.Label_License}" >
+                Footer="{Binding FileSizeText}"
+                Header="{Binding FileNameWithHash}" />
+
+            <ui:SettingsExpander Header="{x:Static lang:Resources.Label_License}">
                 <ui:SettingsExpander.Footer>
-                    <Button 
-                        Tapped="LicenseButton_OnTapped"
-                        Classes="transparent-full" 
-                        Foreground="{DynamicResource HyperlinkButtonForeground}">
+                    <Button
+                        Classes="transparent-full"
+                        Foreground="{DynamicResource HyperlinkButtonForeground}"
+                        Tapped="LicenseButton_OnTapped">
                         <StackPanel Orientation="Horizontal">
-                            <ui:SymbolIcon 
-                                Symbol="Link" 
+                            <ui:SymbolIcon
+                                Margin="0,1,4,0"
                                 FontSize="15"
                                 Foreground="{DynamicResource HyperlinkButtonForeground}"
-                                Margin="0,1,4,0"/>
-                            <TextBlock 
-                                Foreground="{DynamicResource HyperlinkButtonForeground}"
-                                Text="{Binding Resource.LicenseType}"/>
+                                Symbol="Link" />
+                            <TextBlock Foreground="{DynamicResource HyperlinkButtonForeground}" Text="{Binding Resource.LicenseType}" />
                         </StackPanel>
                     </Button>
                 </ui:SettingsExpander.Footer>
             </ui:SettingsExpander>
-            
+
         </StackPanel>
     </Grid>
 </controls:UserControlBase>

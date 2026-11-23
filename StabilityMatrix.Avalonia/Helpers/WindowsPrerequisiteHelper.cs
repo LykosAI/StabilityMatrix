@@ -1062,8 +1062,7 @@ public class WindowsPrerequisiteHelper(
 
     public string? GetGfxArchFromAmdGpuName(GpuInfo? gpu = null)
     {
-        gpu ??=
-            settingsManager.Settings.PreferredGpu
+        gpu ??= settingsManager.Settings.PreferredGpu
             ?? HardwareHelper.IterGpuInfo().FirstOrDefault(x => x is { Name: not null, IsAmd: true });
 
         if (gpu?.Name is null || !gpu.IsAmd)
@@ -1126,8 +1125,7 @@ public class WindowsPrerequisiteHelper(
 
     private async Task PatchHipSdkIfNecessary(IProgress<ProgressReport>? progress)
     {
-        var theGpu =
-            settingsManager.Settings.PreferredGpu
+        var theGpu = settingsManager.Settings.PreferredGpu
             ?? HardwareHelper.IterGpuInfo().FirstOrDefault(x => x.Name != null && x.Name.Contains("AMD"));
 
         if (theGpu?.Name is null)

@@ -149,8 +149,7 @@ public class ModelDownloadLinkHandler(
         {
             // Resolve directly by file id. Fall back to scanning other versions in case the
             // supplied modelVersionId doesn't line up with where the file actually lives.
-            selectedFile =
-                modelVersion.Files?.FirstOrDefault(x => x.Id == fileId!.Value)
+            selectedFile = modelVersion.Files?.FirstOrDefault(x => x.Id == fileId!.Value)
                 ?? model
                     .ModelVersions?.SelectMany(v => v.Files ?? Enumerable.Empty<CivitFile>())
                     .FirstOrDefault(f => f.Id == fileId!.Value);
@@ -158,10 +157,10 @@ public class ModelDownloadLinkHandler(
             // Re-align modelVersion if the file actually belongs to a different version.
             if (selectedFile is not null && modelVersion.Files?.Any(f => f.Id == selectedFile.Id) != true)
             {
-                modelVersion =
-                    model.ModelVersions?.FirstOrDefault(v =>
-                        v.Files?.Any(f => f.Id == selectedFile.Id) == true
-                    ) ?? modelVersion;
+                modelVersion = model.ModelVersions?.FirstOrDefault(v =>
+                    v.Files?.Any(f => f.Id == selectedFile.Id) == true
+                )
+                    ?? modelVersion;
             }
         }
         else

@@ -16,20 +16,20 @@ namespace StabilityMatrix.ViewModels;
 public partial class RefreshBadgeViewModel : ObservableObject
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-    
+
     public string WorkingToolTipText = "Loading...";
     public string SuccessToolTipText = "Success";
     public string InactiveToolTipText = "";
     public string FailToolTipText = "Failed";
-    
+
     public SymbolIcon InactiveIcon = new(SymbolRegular.Circle12);
     public SymbolIcon SuccessIcon = new(SymbolRegular.CheckmarkCircle12, true);
     public SymbolIcon FailIcon = new(SymbolRegular.ErrorCircle12);
-    
+
     public SolidColorBrush SuccessColorBrush = AppBrushes.SuccessGreen;
     public SolidColorBrush InactiveColorBrush = AppBrushes.WarningYellow;
     public SolidColorBrush FailColorBrush = AppBrushes.FailedRed;
-    
+
     public Func<Task<bool>>? RefreshFunc { get; set; }
 
     [ObservableProperty]
@@ -39,40 +39,44 @@ public partial class RefreshBadgeViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(CurrentToolTip))]
     [NotifyPropertyChangedFor(nameof(Icon))]
     private ProgressState state;
-    
+
     public bool IsWorking => State == ProgressState.Working;
 
-    public ControlAppearance Appearance => State switch
-    {
-        ProgressState.Working => ControlAppearance.Info,
-        ProgressState.Success => ControlAppearance.Success,
-        ProgressState.Failed => ControlAppearance.Danger,
-        _ => ControlAppearance.Secondary,
-    };
-    
-    public SolidColorBrush ColorBrush => State switch
-    {
-        ProgressState.Success => SuccessColorBrush,
-        ProgressState.Inactive => InactiveColorBrush,
-        ProgressState.Failed => FailColorBrush,
-        _ => Brushes.Gray,
-    };
+    public ControlAppearance Appearance =>
+        State switch
+        {
+            ProgressState.Working => ControlAppearance.Info,
+            ProgressState.Success => ControlAppearance.Success,
+            ProgressState.Failed => ControlAppearance.Danger,
+            _ => ControlAppearance.Secondary,
+        };
 
-    public string CurrentToolTip => State switch
-    {
-        ProgressState.Working => WorkingToolTipText,
-        ProgressState.Success => SuccessToolTipText,
-        ProgressState.Inactive => InactiveToolTipText,
-        ProgressState.Failed => FailToolTipText,
-        _ => ""
-    };
-    
-    public SymbolIcon Icon => State switch
-    {
-        ProgressState.Success => SuccessIcon,
-        ProgressState.Failed => FailIcon,
-        _ => InactiveIcon
-    };
+    public SolidColorBrush ColorBrush =>
+        State switch
+        {
+            ProgressState.Success => SuccessColorBrush,
+            ProgressState.Inactive => InactiveColorBrush,
+            ProgressState.Failed => FailColorBrush,
+            _ => Brushes.Gray,
+        };
+
+    public string CurrentToolTip =>
+        State switch
+        {
+            ProgressState.Working => WorkingToolTipText,
+            ProgressState.Success => SuccessToolTipText,
+            ProgressState.Inactive => InactiveToolTipText,
+            ProgressState.Failed => FailToolTipText,
+            _ => "",
+        };
+
+    public SymbolIcon Icon =>
+        State switch
+        {
+            ProgressState.Success => SuccessIcon,
+            ProgressState.Failed => FailIcon,
+            _ => InactiveIcon,
+        };
 
     public RefreshBadgeViewModel()
     {
@@ -83,8 +87,9 @@ public partial class RefreshBadgeViewModel : ObservableObject
     private async Task Refresh()
     {
         Logger.Info("Running refresh command...");
-        if (RefreshFunc == null) return;
-        
+        if (RefreshFunc == null)
+            return;
+
         State = ProgressState.Working;
         try
         {

@@ -5,6 +5,6 @@ namespace Avalonia.Gif.Decoding
         Unknown = 0,
         Leave = 1,
         Background = 2,
-        Restore = 3
+        Restore = 3,
     }
 }

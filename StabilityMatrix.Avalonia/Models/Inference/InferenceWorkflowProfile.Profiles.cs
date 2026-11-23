@@ -352,21 +352,21 @@ public sealed partial class InferenceWorkflowProfile
 
     /// <summary>Display order for the profile dropdown — Custom deliberately last.</summary>
     public static IReadOnlyList<InferenceWorkflowProfile> All { get; } =
-        [
-            Auto,
-            DefaultCheckpoint,
-            Flux,
-            Flux2,
-            ZImageBase,
-            ZImageTurbo,
-            Anima,
-            HiDream,
-            QwenImage,
-            Krea2Turbo,
-            Krea2Raw,
-            MossImage,
-            Custom,
-        ];
+    [
+        Auto,
+        DefaultCheckpoint,
+        Flux,
+        Flux2,
+        ZImageBase,
+        ZImageTurbo,
+        Anima,
+        HiDream,
+        QwenImage,
+        Krea2Turbo,
+        Krea2Raw,
+        MossImage,
+        Custom,
+    ];
 
     public static InferenceWorkflowProfile FromKey(string? key) =>
         All.FirstOrDefault(p => string.Equals(p.Key, key, StringComparison.OrdinalIgnoreCase)) ?? Auto;

@@ -13,8 +13,8 @@ public partial class LaunchOptionsDialog : ContentDialog
 
     public List<LaunchOption> AsLaunchArgs() => viewModel.AsLaunchArgs();
 
-    public LaunchOptionsDialog(IContentDialogService dialogService, LaunchOptionsDialogViewModel viewModel) : base(
-        dialogService.GetContentPresenter())
+    public LaunchOptionsDialog(IContentDialogService dialogService, LaunchOptionsDialogViewModel viewModel)
+        : base(dialogService.GetContentPresenter())
     {
         this.viewModel = viewModel;
         InitializeComponent();
@@ -23,6 +23,6 @@ public partial class LaunchOptionsDialog : ContentDialog
 
     private void LaunchOptionsDialog_OnLoaded(object sender, RoutedEventArgs e)
     {
-        viewModel.OnLoad(); 
+        viewModel.OnLoad();
     }
 }

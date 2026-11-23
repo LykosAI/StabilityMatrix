@@ -391,9 +391,10 @@ public partial class PackageInstallDetailViewModel(
         var commits = await SelectedPackage.GetAllCommits(branchName);
         if (commits != null)
         {
-            AvailableCommits = new ObservableCollection<GitCommit>(
-                [.. commits, new GitCommit { Sha = "Custom " }]
-            );
+            AvailableCommits = new ObservableCollection<GitCommit>([
+                .. commits,
+                new GitCommit { Sha = "Custom " },
+            ]);
         }
         else
         {

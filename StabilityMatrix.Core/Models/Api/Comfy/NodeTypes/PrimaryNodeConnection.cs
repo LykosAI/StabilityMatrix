@@ -6,5 +6,4 @@ namespace StabilityMatrix.Core.Models.Api.Comfy.NodeTypes;
 /// Union for the primary Image or Latent node connection
 /// </summary>
 [GenerateOneOf]
-public partial class PrimaryNodeConnection
-    : OneOfBase<LatentNodeConnection, ImageNodeConnection> { }
+public partial class PrimaryNodeConnection : OneOfBase<LatentNodeConnection, ImageNodeConnection> { }

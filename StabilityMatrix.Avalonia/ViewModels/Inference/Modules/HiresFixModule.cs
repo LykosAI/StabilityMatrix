@@ -90,19 +90,17 @@ public partial class HiresFixModule : ModuleBase
             e.Temp = e.CreateTempFromBuilder();
         }
 
-        var samplerName =
-            (
-                samplerCard.IsSamplerSelectionEnabled
-                    ? samplerCard.SelectedSampler?.Name
-                    : e.Builder.Connections.PrimarySampler?.Name
-            ) ?? throw new ArgumentException("No PrimarySampler");
+        var samplerName = (
+            samplerCard.IsSamplerSelectionEnabled
+                ? samplerCard.SelectedSampler?.Name
+                : e.Builder.Connections.PrimarySampler?.Name
+        ) ?? throw new ArgumentException("No PrimarySampler");
 
-        var schedulerName =
-            (
-                samplerCard.IsSchedulerSelectionEnabled
-                    ? samplerCard.SelectedScheduler?.Name
-                    : e.Builder.Connections.PrimaryScheduler?.Name
-            ) ?? throw new ArgumentException("No PrimaryScheduler");
+        var schedulerName = (
+            samplerCard.IsSchedulerSelectionEnabled
+                ? samplerCard.SelectedScheduler?.Name
+                : e.Builder.Connections.PrimaryScheduler?.Name
+        ) ?? throw new ArgumentException("No PrimaryScheduler");
 
         var cfg = samplerCard.IsCfgScaleEnabled
             ? samplerCard.CfgScale
@@ -114,7 +112,7 @@ public partial class HiresFixModule : ModuleBase
                 new ComfyNodeBuilder.KSamplerSelect
                 {
                     Name = builder.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.KSamplerSelect)),
-                    SamplerName = samplerName
+                    SamplerName = samplerName,
                 }
             );
 
@@ -124,7 +122,7 @@ public partial class HiresFixModule : ModuleBase
                     Name = builder.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.AlignYourStepsScheduler)),
                     ModelType = samplerCard.SelectedModelType,
                     Denoise = samplerCard.DenoiseStrength,
-                    Steps = samplerCard.Steps
+                    Steps = samplerCard.Steps,
                 }
             );
 
@@ -161,7 +159,7 @@ public partial class HiresFixModule : ModuleBase
                     Positive = e.Temp.GetRefinerOrBaseConditioning().Positive,
                     Negative = e.Temp.GetRefinerOrBaseConditioning().Negative,
                     LatentImage = builder.GetPrimaryAsLatent(),
-                    Denoise = samplerCard.DenoiseStrength
+                    Denoise = samplerCard.DenoiseStrength,
                 }
             );
 

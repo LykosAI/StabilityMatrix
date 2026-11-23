@@ -1,23 +1,21 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
 
-    <PropertyGroup>
-        <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
-        <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
-        <EnableWindowsTargeting>true</EnableWindowsTargeting>
-        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="StabilityMatrix.Tests" />
+    <InternalsVisibleTo Include="StabilityMatrix.UITests" />
+  </ItemGroup>
 
-    <ItemGroup>
-        <InternalsVisibleTo Include="StabilityMatrix.Tests" />
-        <InternalsVisibleTo Include="StabilityMatrix.UITests" />
-    </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\StabilityMatrix.Native.Abstractions\StabilityMatrix.Native.Abstractions.csproj" />
+  </ItemGroup>
 
-    <ItemGroup>
-      <ProjectReference Include="..\StabilityMatrix.Native.Abstractions\StabilityMatrix.Native.Abstractions.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <PackageReference Include="JetBrains.Annotations" PrivateAssets="all" />
-    </ItemGroup>
-
+  <ItemGroup>
+    <PackageReference Include="JetBrains.Annotations" PrivateAssets="all" />
+  </ItemGroup>
 </Project>

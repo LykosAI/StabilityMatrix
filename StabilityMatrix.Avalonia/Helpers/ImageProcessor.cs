@@ -45,9 +45,7 @@ public static class ImageProcessor
         // Draw images
         using var canvas = new SKCanvas(output);
 
-        foreach (
-            var (row, column) in Enumerable.Range(0, rows).Product(Enumerable.Range(0, columns))
-        )
+        foreach (var (row, column) in Enumerable.Range(0, rows).Product(Enumerable.Range(0, columns)))
         {
             // Stop if we have drawn all images
             var index = row * columns + column;

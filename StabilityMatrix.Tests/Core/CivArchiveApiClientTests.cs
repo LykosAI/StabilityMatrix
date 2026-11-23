@@ -90,18 +90,16 @@ public class CivArchiveApiClientTests
     public async Task SearchAsync_RefreshesBuildIdAfter404()
     {
         var requests = new List<string>();
-        var responses = new Queue<HttpResponseMessage>(
-            [
-                CreateJsonResponse("""<html><script>{"buildId":"old-build"}</script></html>""", "text/html"),
-                new HttpResponseMessage(HttpStatusCode.NotFound),
-                CreateJsonResponse("""<html><script>{"buildId":"new-build"}</script></html>""", "text/html"),
-                CreateJsonResponse(
-                    ListResponseJson(
-                        """{"id":"v1","name":"Model","kind":"version","url":"/models/1?modelVersionId=2"}"""
-                    )
-                ),
-            ]
-        );
+        var responses = new Queue<HttpResponseMessage>([
+            CreateJsonResponse("""<html><script>{"buildId":"old-build"}</script></html>""", "text/html"),
+            new HttpResponseMessage(HttpStatusCode.NotFound),
+            CreateJsonResponse("""<html><script>{"buildId":"new-build"}</script></html>""", "text/html"),
+            CreateJsonResponse(
+                ListResponseJson(
+                    """{"id":"v1","name":"Model","kind":"version","url":"/models/1?modelVersionId=2"}"""
+                )
+            ),
+        ]);
 
         var client = CreateClient(
             new RecordingHandler(
@@ -130,12 +128,10 @@ public class CivArchiveApiClientTests
             """
         );
 
-        var responses = new Queue<HttpResponseMessage>(
-            [
-                CreateJsonResponse("""<html><script>{"buildId":"test-build"}</script></html>""", "text/html"),
-                CreateJsonResponse(listJson),
-            ]
-        );
+        var responses = new Queue<HttpResponseMessage>([
+            CreateJsonResponse("""<html><script>{"buildId":"test-build"}</script></html>""", "text/html"),
+            CreateJsonResponse(listJson),
+        ]);
 
         var client = CreateClient(new RecordingHandler((_, _) => responses.Dequeue()));
         var response = await client.SearchAsync(new CivArchiveSearchFilters());
@@ -161,12 +157,10 @@ public class CivArchiveApiClientTests
             """{"id":"v1","name":"Cached","kind":"version","url":"/models/1?modelVersionId=2"}"""
         );
 
-        var responses = new Queue<HttpResponseMessage>(
-            [
-                CreateJsonResponse("""<html><script>{"buildId":"test-build"}</script></html>""", "text/html"),
-                CreateJsonResponse(listJson),
-            ]
-        );
+        var responses = new Queue<HttpResponseMessage>([
+            CreateJsonResponse("""<html><script>{"buildId":"test-build"}</script></html>""", "text/html"),
+            CreateJsonResponse(listJson),
+        ]);
 
         var client = CreateClient(
             new RecordingHandler(
@@ -199,12 +193,10 @@ public class CivArchiveApiClientTests
             + "\"baseModels\":[\"Flux.1 D\",\"Illustrious\",\"SDXL 1.0\"],"
             + "\"modelTypes\":[\"Checkpoint\",\"LORA\",\"VAE\"]}}}";
 
-        var responses = new Queue<HttpResponseMessage>(
-            [
-                CreateJsonResponse("""<html><script>{"buildId":"test-build"}</script></html>""", "text/html"),
-                CreateJsonResponse(filterOptionsJson),
-            ]
-        );
+        var responses = new Queue<HttpResponseMessage>([
+            CreateJsonResponse("""<html><script>{"buildId":"test-build"}</script></html>""", "text/html"),
+            CreateJsonResponse(filterOptionsJson),
+        ]);
 
         var client = CreateClient(
             new RecordingHandler(
@@ -243,12 +235,10 @@ public class CivArchiveApiClientTests
             + "\"tags\":\"\",\"username\":\"\",\"period\":\"all\",\"page\":1},"
             + "\"filterOptions\":{\"baseModels\":[],\"modelTypes\":[]}}}";
 
-        var responses = new Queue<HttpResponseMessage>(
-            [
-                CreateJsonResponse("""<html><script>{"buildId":"test-build"}</script></html>""", "text/html"),
-                CreateJsonResponse(listJson),
-            ]
-        );
+        var responses = new Queue<HttpResponseMessage>([
+            CreateJsonResponse("""<html><script>{"buildId":"test-build"}</script></html>""", "text/html"),
+            CreateJsonResponse(listJson),
+        ]);
 
         var client = CreateClient(new RecordingHandler((_, _) => responses.Dequeue()));
         var response = await client.SearchAsync(
@@ -266,12 +256,10 @@ public class CivArchiveApiClientTests
             {"pageProps":{"model":{"id":153568,"name":"Real Dream","type":"Checkpoint","download_count":4923593,"favorite_count":12,"rating":4.5,"rating_count":8,"created_at":"2026-04-17T23:30:06Z","creator_username":"sinatra","platform":"civitai","platform_name":"CivitAI","version":{"id":2053273,"name":"SDXL 7","base_model":"SDXL 1.0","description":"<p>Version description</p>","download_count":12345,"created_at":"2026-04-17T23:30:06Z","files":[{"id":1950275,"name":"realDream_sdxl7.safetensors","type":"Model","size_kb":6775783.6,"download_url":"https://civitai.com/api/download/models/2053273","sha256":"63b1db60611f52c4fbb2cade67dbdf4029c6620c5b22f2a4ddb27a47d7601953","is_primary":true,"created_at":"2026-04-17T23:30:06Z","mirrors":[{"filename":"realDream_sdxl7.safetensors","url":"https://civitai.com/api/download/models/2053273","source":"civitai","is_gated":false,"is_paid":false}]}],"images":[{"id":1,"url":"https://example.org/image.webp","link":"https://example.org/image.webp","type":"image"}],"mirrors":[{"platform":"tungsten","platform_url":"https://tungsten.run/model/kZ7yDBQjZP?model_version=L2KrgferKS","version_name":"SDXL 7"}]}}}}
             """;
 
-        var responses = new Queue<HttpResponseMessage>(
-            [
-                CreateJsonResponse("""<html><script>{"buildId":"test-build"}</script></html>""", "text/html"),
-                CreateJsonResponse(detailJson),
-            ]
-        );
+        var responses = new Queue<HttpResponseMessage>([
+            CreateJsonResponse("""<html><script>{"buildId":"test-build"}</script></html>""", "text/html"),
+            CreateJsonResponse(detailJson),
+        ]);
 
         var client = CreateClient(new RecordingHandler((_, _) => responses.Dequeue()));
         var response = await client.GetModelDetailsAsync("/models/153568?modelVersionId=2053273");
@@ -316,13 +304,11 @@ public class CivArchiveApiClientTests
             """;
 
         var requestedUrls = new List<string>();
-        var responses = new Queue<HttpResponseMessage>(
-            [
-                CreateJsonResponse("""<html><script>{"buildId":"test-build"}</script></html>""", "text/html"),
-                CreateJsonResponse(redirectJson),
-                CreateJsonResponse(detailJson),
-            ]
-        );
+        var responses = new Queue<HttpResponseMessage>([
+            CreateJsonResponse("""<html><script>{"buildId":"test-build"}</script></html>""", "text/html"),
+            CreateJsonResponse(redirectJson),
+            CreateJsonResponse(detailJson),
+        ]);
 
         var client = CreateClient(
             new RecordingHandler(
@@ -358,12 +344,10 @@ public class CivArchiveApiClientTests
             {"pageProps":{"id":"file-1","models":[{"id":878387,"name":"Stable Diffusion 3.5 Large","type":"Checkpoint","versions":[{"id":983602,"name":"Workflow","href":"/models/878387?modelVersionId=983602"}],"version":{"id":983309,"name":"Large","base_model":"SD 3.5 Large","href":"/models/878387?modelVersionId=983309"}}]}}
             """;
 
-        var responses = new Queue<HttpResponseMessage>(
-            [
-                CreateJsonResponse("""<html><script>{"buildId":"test-build"}</script></html>""", "text/html"),
-                CreateJsonResponse(sha256Json),
-            ]
-        );
+        var responses = new Queue<HttpResponseMessage>([
+            CreateJsonResponse("""<html><script>{"buildId":"test-build"}</script></html>""", "text/html"),
+            CreateJsonResponse(sha256Json),
+        ]);
 
         var client = CreateClient(new RecordingHandler((_, _) => responses.Dequeue()));
         var resolved = await client.ResolveFileAsync(
@@ -384,12 +368,10 @@ public class CivArchiveApiClientTests
             {"pageProps":{"id":"file-1","models":[{"id":"1271498","name":"Ramlethal Anima","type":"LORA","versions":[{"id":"3099932","name":"Ramlethal Anima","url":"/models/1271498?modelVersionId=3099932"}],"version":{"id":"3099932","name":"Ramlethal Anima","url":"/models/1271498?modelVersionId=3099932","images":[{"id":"1","url":"https://example.org/video.mp4","type":"video"},{"id":"2","url":"https://example.org/cover.webp","type":"image"}]}}]}}
             """;
 
-        var responses = new Queue<HttpResponseMessage>(
-            [
-                CreateJsonResponse("""<html><script>{"buildId":"test-build"}</script></html>""", "text/html"),
-                CreateJsonResponse(sha256Json),
-            ]
-        );
+        var responses = new Queue<HttpResponseMessage>([
+            CreateJsonResponse("""<html><script>{"buildId":"test-build"}</script></html>""", "text/html"),
+            CreateJsonResponse(sha256Json),
+        ]);
 
         var client = CreateClient(new RecordingHandler((_, _) => responses.Dequeue()));
         var resolved = await client.ResolveFileAsync("/sha256/abc123");
@@ -407,12 +389,10 @@ public class CivArchiveApiClientTests
         // fall back to opening the URL externally instead of navigating to a dead page.
         const string sha256Json = """{"pageProps":{"id":"file-2","models":[]}}""";
 
-        var responses = new Queue<HttpResponseMessage>(
-            [
-                CreateJsonResponse("""<html><script>{"buildId":"test-build"}</script></html>""", "text/html"),
-                CreateJsonResponse(sha256Json),
-            ]
-        );
+        var responses = new Queue<HttpResponseMessage>([
+            CreateJsonResponse("""<html><script>{"buildId":"test-build"}</script></html>""", "text/html"),
+            CreateJsonResponse(sha256Json),
+        ]);
 
         var client = CreateClient(new RecordingHandler((_, _) => responses.Dequeue()));
         var resolved = await client.ResolveFileAsync("/sha256/abc");

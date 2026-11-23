@@ -19,8 +19,9 @@ public partial class PaintCanvasViewModel
         var model = SaveState();
 
         return JsonSerializer
-                .SerializeToNode(model, PaintCanvasModelSerializerContext.Default.Options)
-                ?.AsObject() ?? throw new InvalidOperationException();
+            .SerializeToNode(model, PaintCanvasModelSerializerContext.Default.Options)
+            ?.AsObject()
+            ?? throw new InvalidOperationException();
     }
 
     /// <inheritdoc />

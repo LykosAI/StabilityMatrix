@@ -218,8 +218,7 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
             {
                 CheckpointFile.ConnectedModelInfo = cmInfo;
 
-                var uri =
-                    CheckpointFile.GetPreviewImageFullPath(settingsManager.ModelsDirectory)
+                var uri = CheckpointFile.GetPreviewImageFullPath(settingsManager.ModelsDirectory)
                     ?? cmInfo.ThumbnailImageUrl;
                 if (string.IsNullOrWhiteSpace(uri))
                 {
@@ -322,8 +321,7 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
             var modelFilePath = new FilePath(
                 Path.Combine(settingsManager.ModelsDirectory, CheckpointFile.RelativePath)
             );
-            var modelFolder =
-                modelFilePath.Directory
+            var modelFolder = modelFilePath.Directory
                 ?? Path.Combine(settingsManager.ModelsDirectory, CheckpointFile.SharedFolderType.ToString());
 
             await cmInfo.SaveJsonToDirectory(modelFolder, modelFilePath.NameWithoutExtension);
@@ -393,8 +391,9 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
     private async Task RenameAsync()
     {
         // Parent folder path
-        var parentPath =
-            Path.GetDirectoryName((string?)CheckpointFile.GetFullPath(settingsManager.ModelsDirectory)) ?? "";
+        var parentPath = Path.GetDirectoryName(
+            (string?)CheckpointFile.GetFullPath(settingsManager.ModelsDirectory)
+        ) ?? "";
 
         var textFields = new TextBoxField[]
         {
@@ -582,8 +581,7 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
             }
 
             var modelFileName = modelFilePath.NameWithoutExtension;
-            var modelFolder =
-                modelFilePath.Directory
+            var modelFolder = modelFilePath.Directory
                 ?? Path.Combine(settingsManager.ModelsDirectory, CheckpointFile.SharedFolderType.ToString());
 
             await cmInfo.SaveJsonToDirectory(modelFolder, modelFileName);

@@ -17,10 +17,8 @@ public abstract class InferenceClientBase : IDisposable
     {
         return Task.CompletedTask;
     }
-    
-    protected virtual void Dispose(bool disposing)
-    {
-    }
+
+    protected virtual void Dispose(bool disposing) { }
 
     public void Dispose()
     {

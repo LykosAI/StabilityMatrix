@@ -70,8 +70,7 @@ public class InferenceImageToVideoViewModel : InferenceTextToVideoViewModel
             new ComfyNodeBuilder.LoadImage
             {
                 Name = builder.Nodes.GetUniqueName("ControlNet_LoadImage"),
-                Image =
-                    SelectImageCardViewModel.ImageSource?.GetHashGuidFileNameCached("Inference")
+                Image = SelectImageCardViewModel.ImageSource?.GetHashGuidFileNameCached("Inference")
                     ?? throw new ValidationException(),
             }
         );

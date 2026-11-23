@@ -112,7 +112,7 @@ public record ComfyAuxPreprocessor(string Value) : StringValue(Value)
             [SemSegPreprocessor] = "SemSeg Preprocessor",
             [UnimatchOptFlowPreprocessor] = "Unimatch OptFlow Preprocessor",
             [MaskOptFlow] = "Mask OptFlow",
-            [ZoeDepthMapPreprocessor] = "Zoe DepthMap Preprocessor"
+            [ZoeDepthMapPreprocessor] = "Zoe DepthMap Preprocessor",
         };
 
     public static IEnumerable<ComfyAuxPreprocessor> Defaults => DisplayNamesMapping.Keys;

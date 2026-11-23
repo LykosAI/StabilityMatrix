@@ -89,7 +89,7 @@ public class LoadableViewModelBaseTests
     public void TestSaveStateToJsonObject_Observable()
     {
         // Mvvm ObservableProperty should be serialized.
-        var vm = new TestLoadableViewModelObservable { Title = "abc", Id = 123, };
+        var vm = new TestLoadableViewModelObservable { Title = "abc", Id = 123 };
         var state = vm.SaveStateToJsonObject();
 
         // Title should be ignored since it has [JsonIgnore]
@@ -189,10 +189,7 @@ public class LoadableViewModelBaseTests
         var state = vm.SaveStateToJsonObject();
 
         // Create a new instance with existing NestedState
-        var vm2 = new TestLoadableViewModelNestedInterface
-        {
-            NestedState = new TestLoadableViewModel()
-        };
+        var vm2 = new TestLoadableViewModelNestedInterface { NestedState = new TestLoadableViewModel() };
         vm2.LoadStateFromJsonObject(state);
 
         // Check nested state was loaded
@@ -225,18 +222,12 @@ public class LoadableViewModelBaseTests
     [TestMethod]
     public void TestLoadStateFromJsonObject_ReadOnlyLoadable()
     {
-        var vm = new TestLoadableViewModelReadOnlyLoadable
-        {
-            ReadOnlyLoadable = { Included = "abc-123" }
-        };
+        var vm = new TestLoadableViewModelReadOnlyLoadable { ReadOnlyLoadable = { Included = "abc-123" } };
 
         var state = vm.SaveStateToJsonObject();
 
         // Check readonly loadable property was serialized
         Assert.AreEqual(1, state.Count);
-        Assert.AreEqual(
-            "abc-123",
-            state["ReadOnlyLoadable"].Deserialize<TestLoadableViewModel>()!.Included
-        );
+        Assert.AreEqual("abc-123", state["ReadOnlyLoadable"].Deserialize<TestLoadableViewModel>()!.Included);
     }
 }

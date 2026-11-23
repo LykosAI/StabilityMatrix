@@ -9,8 +9,8 @@ public partial class OneClickInstallDialog : ContentDialog
 {
     private readonly OneClickInstallViewModel viewModel;
 
-    public OneClickInstallDialog(IContentDialogService dialogService, OneClickInstallViewModel viewModel) : base(
-        dialogService.GetContentPresenter())
+    public OneClickInstallDialog(IContentDialogService dialogService, OneClickInstallViewModel viewModel)
+        : base(dialogService.GetContentPresenter())
     {
         this.viewModel = viewModel;
         InitializeComponent();
@@ -19,6 +19,6 @@ public partial class OneClickInstallDialog : ContentDialog
 
     private void OneClickInstallDialog_OnLoaded(object sender, RoutedEventArgs e)
     {
-        //viewModel.OnLoad(); 
+        //viewModel.OnLoad();
     }
 }

@@ -144,9 +144,7 @@ internal sealed class AsyncStreamReader : IDisposable
                 var remaining = _sb.ToString();
                 _messageQueue.Enqueue(remaining);
                 _sb.Length = 0;
-                Debug.WriteLine(
-                    $"AsyncStreamReader - Reached EOF, sent remaining buffer: {remaining}"
-                );
+                Debug.WriteLine($"AsyncStreamReader - Reached EOF, sent remaining buffer: {remaining}");
             }
             _messageQueue.Enqueue(null);
         }
@@ -296,13 +294,8 @@ internal sealed class AsyncStreamReader : IDisposable
                         // lineStart = searchIndex + 1;
                         currentIndex = searchIndex;
                         var remainingStart = currentIndex + 1;
-                        var remainingStr = _sb.ToString(
-                            remainingStart,
-                            _sb.Length - remainingStart
-                        );
-                        Debug.WriteLine(
-                            $"AsyncStreamReader - Sending remaining buffer: '{remainingStr}'"
-                        );
+                        var remainingStr = _sb.ToString(remainingStart, _sb.Length - remainingStart);
+                        Debug.WriteLine($"AsyncStreamReader - Sending remaining buffer: '{remainingStr}'");
                         // Send the rest of the buffer immediately
                         SendRemainingBuffer(currentIndex + 1);
                         return;

@@ -9,8 +9,10 @@ namespace StabilityMatrix.Core.Extensions;
 // ReSharper disable once InconsistentNaming
 public static class LiteDBExtensions
 {
-    private static readonly ConcurrentDictionary<Type, (Type PropertyType, string MemberName, bool IsList)> Mapper =
-        new();
+    private static readonly ConcurrentDictionary<
+        Type,
+        (Type PropertyType, string MemberName, bool IsList)
+    > Mapper = new();
 
     public static void Register<T, TU>(Expression<Func<T, List<TU>?>> exp, string? collection = null)
     {
@@ -48,7 +50,9 @@ public static class LiteDBExtensions
             flag = false;
         }
 
-        return stringList.Aggregate(col, (current, keySelector) => current.Include((BsonExpression)keySelector));
+        return stringList.Aggregate(col, (current, keySelector) =>
+            current.Include((BsonExpression)keySelector)
+        );
     }
 
     public static ILiteCollectionAsync<T> IncludeAll<T>(this ILiteCollectionAsync<T> col)
@@ -69,6 +73,8 @@ public static class LiteDBExtensions
             flag = false;
         }
 
-        return stringList.Aggregate(col, (current, keySelector) => current.Include((BsonExpression)keySelector));
+        return stringList.Aggregate(col, (current, keySelector) =>
+            current.Include((BsonExpression)keySelector)
+        );
     }
 }

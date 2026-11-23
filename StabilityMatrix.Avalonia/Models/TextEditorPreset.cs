@@ -4,5 +4,5 @@ public enum TextEditorPreset
 {
     None,
     Prompt,
-    Console
+    Console,
 }

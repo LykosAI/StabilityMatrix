@@ -16,11 +16,12 @@ public class BooleanToHiddenVisibleConverter : IValueConverter
         }
         else if (value is bool)
         {
-            var tmp = (bool?) value;
+            var tmp = (bool?)value;
             bValue = tmp.Value;
         }
         return bValue ? Visibility.Visible : Visibility.Hidden;
     }
+
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
     {
         if (value is Visibility visibility)

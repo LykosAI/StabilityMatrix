@@ -65,14 +65,14 @@ public class SharedFoldersConfigHelperTests
                 new SharedFolderLayoutRule
                 {
                     SourceTypes = [SharedFolderType.StableDiffusion],
-                    ConfigDocumentPaths = ["ckpt_dir"]
+                    ConfigDocumentPaths = ["ckpt_dir"],
                 },
                 new SharedFolderLayoutRule
                 {
                     SourceTypes = [SharedFolderType.Lora, SharedFolderType.LyCORIS],
-                    ConfigDocumentPaths = ["lora_dirs"]
+                    ConfigDocumentPaths = ["lora_dirs"],
                 } // Test multiple sources -> array
-            )
+            ),
         };
 
         // Act
@@ -113,15 +113,15 @@ public class SharedFoldersConfigHelperTests
                 {
                     SourceTypes = [SharedFolderType.StableDiffusion],
                     TargetRelativePaths = ["models/checkpoints"],
-                    ConfigDocumentPaths = ["ckpt_dir"]
+                    ConfigDocumentPaths = ["ckpt_dir"],
                 },
                 new SharedFolderLayoutRule
                 {
                     SourceTypes = [SharedFolderType.Lora],
                     TargetRelativePaths = ["models/loras"],
-                    ConfigDocumentPaths = ["lora_dirs"]
+                    ConfigDocumentPaths = ["lora_dirs"],
                 } // Assume single default path
-            )
+            ),
         };
         var expectedCkptPath = Path.Combine(MockPackageRoot, "models", "checkpoints").Replace('\\', '/');
         var expectedLoraPath = Path.Combine(MockPackageRoot, "models", "loras").Replace('\\', '/');
@@ -155,9 +155,9 @@ public class SharedFoldersConfigHelperTests
                 new SharedFolderLayoutRule
                 {
                     SourceTypes = [SharedFolderType.VAE],
-                    ConfigDocumentPaths = ["paths.models.vae"]
+                    ConfigDocumentPaths = ["paths.models.vae"],
                 }
-            )
+            ),
         };
         var expectedVaePath = Path.Combine(MockSharedModelsRoot, "VAE").Replace('\\', '/');
 
@@ -190,14 +190,14 @@ public class SharedFoldersConfigHelperTests
                 new SharedFolderLayoutRule
                 {
                     SourceTypes = [SharedFolderType.VAE],
-                    ConfigDocumentPaths = ["vae"]
+                    ConfigDocumentPaths = ["vae"],
                 },
                 new SharedFolderLayoutRule
                 {
                     SourceTypes = [SharedFolderType.Lora, SharedFolderType.LyCORIS],
-                    ConfigDocumentPaths = ["loras"]
+                    ConfigDocumentPaths = ["loras"],
                 }
-            )
+            ),
         };
         var expectedVaePath = Path.Combine(MockSharedModelsRoot, "VAE").Replace('\\', '/');
         var expectedLoraPath = Path.Combine(MockSharedModelsRoot, "Lora").Replace('\\', '/');
@@ -250,16 +250,16 @@ public class SharedFoldersConfigHelperTests
     {
         // Arrange
         var initialYamlContent = """
-                                 # Existing content
-                                 some_other_key: value
-                                 stability_matrix:
-                                   vae:
-                                   - C:\SM\Models/VAE
-                                   loras:
-                                   - C:\SM\Models/Lora
-                                   - C:\SM\Models/LyCORIS
-                                 another_key: 123
-                                 """;
+            # Existing content
+            some_other_key: value
+            stability_matrix:
+              vae:
+              - C:\SM\Models/VAE
+              loras:
+              - C:\SM\Models/Lora
+              - C:\SM\Models/LyCORIS
+            another_key: 123
+            """;
         var layout = new SharedFolderLayout
         {
             RelativeConfigPath = "extra_paths.yaml",
@@ -267,22 +267,22 @@ public class SharedFoldersConfigHelperTests
             ConfigSharingOptions = ConfigSharingOptions.Default with
             {
                 RootKey = "stability_matrix",
-                ConfigDefaultType = ConfigDefaultType.TargetRelativePaths // Configure relative paths
+                ConfigDefaultType = ConfigDefaultType.TargetRelativePaths, // Configure relative paths
             },
             Rules = ImmutableList.Create( // Define rules so helper knows which keys to clear under RootKey
                 new SharedFolderLayoutRule
                 {
                     SourceTypes = [SharedFolderType.VAE],
                     TargetRelativePaths = ["models/vae"],
-                    ConfigDocumentPaths = ["vae"]
+                    ConfigDocumentPaths = ["vae"],
                 },
                 new SharedFolderLayoutRule
                 {
                     SourceTypes = [SharedFolderType.Lora, SharedFolderType.LyCORIS],
                     TargetRelativePaths = ["models/loras"],
-                    ConfigDocumentPaths = ["loras"]
+                    ConfigDocumentPaths = ["loras"],
                 }
-            )
+            ),
         };
 
         // Act - Write initial content, then run Default Mode
@@ -319,16 +319,16 @@ public class SharedFoldersConfigHelperTests
     {
         // Arrange
         var initialYamlContent = """
-                                 # Existing content
-                                 some_other_key: value
-                                 stability_matrix:
-                                   vae:
-                                   - C:\SM\Models/VAE
-                                   loras:
-                                   - C:\SM\Models/Lora
-                                   - C:\SM\Models/LyCORIS
-                                 another_key: 123
-                                 """;
+            # Existing content
+            some_other_key: value
+            stability_matrix:
+              vae:
+              - C:\SM\Models/VAE
+              loras:
+              - C:\SM\Models/Lora
+              - C:\SM\Models/LyCORIS
+            another_key: 123
+            """;
         var layout = new SharedFolderLayout
         {
             RelativeConfigPath = "extra_paths.yaml",
@@ -336,22 +336,22 @@ public class SharedFoldersConfigHelperTests
             ConfigSharingOptions = ConfigSharingOptions.Default with
             {
                 RootKey = "stability_matrix",
-                ConfigDefaultType = ConfigDefaultType.ClearRoot // Configure clearing of RootKey
+                ConfigDefaultType = ConfigDefaultType.ClearRoot, // Configure clearing of RootKey
             },
             Rules = ImmutableList.Create( // Define rules so helper knows which keys to clear under RootKey
                 new SharedFolderLayoutRule
                 {
                     SourceTypes = [SharedFolderType.VAE],
                     TargetRelativePaths = ["models/vae"],
-                    ConfigDocumentPaths = ["vae"]
+                    ConfigDocumentPaths = ["vae"],
                 },
                 new SharedFolderLayoutRule
                 {
                     SourceTypes = [SharedFolderType.Lora, SharedFolderType.LyCORIS],
                     TargetRelativePaths = ["models/loras"],
-                    ConfigDocumentPaths = ["loras"]
+                    ConfigDocumentPaths = ["loras"],
                 }
-            )
+            ),
         };
 
         // Act - Write initial content, then run Default Mode
@@ -399,9 +399,9 @@ public class SharedFoldersConfigHelperTests
                 new SharedFolderLayoutRule
                 {
                     SourceTypes = [SharedFolderType.StableDiffusion],
-                    ConfigDocumentPaths = ["SDModelFolder"]
+                    ConfigDocumentPaths = ["SDModelFolder"],
                 }
-            )
+            ),
         };
         var expectedModelRoot = MockSharedModelsRoot.Replace('/', Path.DirectorySeparatorChar);
         var expectedSdModelFolder = Path.Combine(MockSharedModelsRoot, "StableDiffusion")
@@ -441,9 +441,9 @@ public class SharedFoldersConfigHelperTests
                 {
                     SourceTypes = [SharedFolderType.StableDiffusion],
                     TargetRelativePaths = ["Models/Stable-Diffusion"],
-                    ConfigDocumentPaths = ["SDModelFolder"]
+                    ConfigDocumentPaths = ["SDModelFolder"],
                 }
-            )
+            ),
         };
         var expectedSdModelFolder = Path.Combine(MockPackageRoot, "Models", "Stable-Diffusion")
             .Replace('/', Path.DirectorySeparatorChar);
@@ -491,19 +491,19 @@ public class SharedFoldersConfigHelperTests
                 new SharedFolderLayoutRule
                 {
                     SourceTypes = [SharedFolderType.IpAdapter],
-                    ConfigDocumentPaths = ["paths.models.ipadapter"]
+                    ConfigDocumentPaths = ["paths.models.ipadapter"],
                 },
                 new SharedFolderLayoutRule
                 {
                     SourceTypes = [SharedFolderType.IpAdapters15],
-                    ConfigDocumentPaths = ["paths.models.ipadapter"]
+                    ConfigDocumentPaths = ["paths.models.ipadapter"],
                 },
                 new SharedFolderLayoutRule
                 {
                     SourceTypes = [SharedFolderType.IpAdaptersXl],
-                    ConfigDocumentPaths = ["paths.models.ipadapter"]
+                    ConfigDocumentPaths = ["paths.models.ipadapter"],
                 }
-            )
+            ),
         };
         var expectedIpBasePath = Path.Combine(MockSharedModelsRoot, "IpAdapter").Replace('\\', '/');
         var expectedIp15Path = Path.Combine(MockSharedModelsRoot, "IpAdapters15").Replace('\\', '/'); // SM SourceTypes map like this

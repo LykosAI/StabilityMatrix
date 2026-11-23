@@ -29,14 +29,13 @@ public partial class FirstLaunchSetupViewModel : DisposableViewModelBase
     private string gpuInfoText = string.Empty;
 
     [ObservableProperty]
-    private RefreshBadgeViewModel checkHardwareBadge =
-        new()
-        {
-            WorkingToolTipText = Resources.Label_CheckingHardware,
-            SuccessToolTipText = Resources.Label_EverythingLooksGood,
-            FailToolTipText = Resources.Label_NvidiaGpuRecommended,
-            FailColorBrush = ThemeColors.ThemeYellow,
-        };
+    private RefreshBadgeViewModel checkHardwareBadge = new()
+    {
+        WorkingToolTipText = Resources.Label_CheckingHardware,
+        SuccessToolTipText = Resources.Label_EverythingLooksGood,
+        FailToolTipText = Resources.Label_NvidiaGpuRecommended,
+        FailColorBrush = ThemeColors.ThemeYellow,
+    };
 
     [ObservableProperty]
     private bool selectDifferentGpu;
@@ -79,8 +78,8 @@ public partial class FirstLaunchSetupViewModel : DisposableViewModelBase
         }
 
         // First Nvidia GPU
-        var activeGpu = gpuInfo.FirstOrDefault(
-            gpu => gpu.Name?.Contains("nvidia", StringComparison.InvariantCultureIgnoreCase) ?? false
+        var activeGpu = gpuInfo.FirstOrDefault(gpu =>
+            gpu.Name?.Contains("nvidia", StringComparison.InvariantCultureIgnoreCase) ?? false
         );
         var isNvidia = activeGpu is not null;
 

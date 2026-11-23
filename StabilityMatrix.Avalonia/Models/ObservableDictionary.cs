@@ -6,13 +6,17 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace StabilityMatrix.Avalonia.Models;
 
-public class ObservableDictionary<TKey, TValue> : IDictionary<TKey, TValue>,
-    INotifyCollectionChanged, INotifyPropertyChanged where TKey : notnull
+public class ObservableDictionary<TKey, TValue>
+    : IDictionary<TKey, TValue>,
+        INotifyCollectionChanged,
+        INotifyPropertyChanged
+    where TKey : notnull
 {
     private readonly IDictionary<TKey, TValue> dictionary;
 
     public event NotifyCollectionChangedEventHandler? CollectionChanged;
     public event PropertyChangedEventHandler? PropertyChanged;
+
     public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator() => dictionary.GetEnumerator();
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
@@ -30,8 +34,10 @@ public class ObservableDictionary<TKey, TValue> : IDictionary<TKey, TValue>,
     public void Add(KeyValuePair<TKey, TValue> item)
     {
         dictionary.Add(item);
-        CollectionChanged?.Invoke(this,
-            new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, item));
+        CollectionChanged?.Invoke(
+            this,
+            new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, item)
+        );
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Count)));
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Keys)));
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Values)));
@@ -40,8 +46,10 @@ public class ObservableDictionary<TKey, TValue> : IDictionary<TKey, TValue>,
     public void Clear()
     {
         dictionary.Clear();
-        CollectionChanged?.Invoke(this,
-            new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+        CollectionChanged?.Invoke(
+            this,
+            new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset)
+        );
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Count)));
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Keys)));
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Values)));
@@ -57,10 +65,13 @@ public class ObservableDictionary<TKey, TValue> : IDictionary<TKey, TValue>,
     public bool Remove(KeyValuePair<TKey, TValue> item)
     {
         var success = dictionary.Remove(item);
-        if (!success) return false;
+        if (!success)
+            return false;
 
-        CollectionChanged?.Invoke(this,
-            new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, item));
+        CollectionChanged?.Invoke(
+            this,
+            new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, item)
+        );
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Count)));
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Keys)));
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Values)));
@@ -74,9 +85,13 @@ public class ObservableDictionary<TKey, TValue> : IDictionary<TKey, TValue>,
     public void Add(TKey key, TValue value)
     {
         dictionary.Add(key, value);
-        CollectionChanged?.Invoke(this,
-            new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add,
-                new KeyValuePair<TKey, TValue>(key, value)));
+        CollectionChanged?.Invoke(
+            this,
+            new NotifyCollectionChangedEventArgs(
+                NotifyCollectionChangedAction.Add,
+                new KeyValuePair<TKey, TValue>(key, value)
+            )
+        );
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Count)));
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Keys)));
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Values)));
@@ -87,11 +102,16 @@ public class ObservableDictionary<TKey, TValue> : IDictionary<TKey, TValue>,
     public bool Remove(TKey key)
     {
         var success = dictionary.TryGetValue(key, out var value) && dictionary.Remove(key);
-        if (!success) return false;
+        if (!success)
+            return false;
 
-        CollectionChanged?.Invoke(this,
-            new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove,
-                new KeyValuePair<TKey, TValue>(key, value!)));
+        CollectionChanged?.Invoke(
+            this,
+            new NotifyCollectionChangedEventArgs(
+                NotifyCollectionChangedAction.Remove,
+                new KeyValuePair<TKey, TValue>(key, value!)
+            )
+        );
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Count)));
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Keys)));
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Values)));
@@ -99,8 +119,8 @@ public class ObservableDictionary<TKey, TValue> : IDictionary<TKey, TValue>,
         return success;
     }
 
-    public bool TryGetValue([NotNull] TKey key, [MaybeNullWhen(false)] out TValue value) 
-        => dictionary.TryGetValue(key, out value);
+    public bool TryGetValue([NotNull] TKey key, [MaybeNullWhen(false)] out TValue value) =>
+        dictionary.TryGetValue(key, out value);
 
     public TValue this[TKey key]
     {
@@ -108,12 +128,9 @@ public class ObservableDictionary<TKey, TValue> : IDictionary<TKey, TValue>,
         set
         {
             var exists = dictionary.ContainsKey(key);
-            var action = exists
-                ? NotifyCollectionChangedAction.Replace
-                : NotifyCollectionChangedAction.Add;
+            var action = exists ? NotifyCollectionChangedAction.Replace : NotifyCollectionChangedAction.Add;
             dictionary[key] = value;
-            CollectionChanged?.Invoke(this,
-                new NotifyCollectionChangedEventArgs(action, dictionary[key]));
+            CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(action, dictionary[key]));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Count)));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Keys)));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Values)));

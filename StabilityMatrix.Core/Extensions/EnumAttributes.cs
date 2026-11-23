@@ -11,6 +11,7 @@ public static class EnumAttributeExtensions
         // Return the first if there was a match.
         return attribs?.Length > 0 ? attribs[0] : default;
     }
+
     /// <summary>
     /// Gets the StringValue field attribute on a given enum value.
     /// If not found, returns the enum value itself as a string.
@@ -22,6 +23,7 @@ public static class EnumAttributeExtensions
         var attr = GetAttributeValue<StringValueAttribute>(value)?.StringValue;
         return attr ?? Enum.GetName(value.GetType(), value)!;
     }
+
     /// <summary>
     /// Gets the Description field attribute on a given enum value.
     /// </summary>
@@ -37,7 +39,9 @@ public static class EnumAttributeExtensions
 public sealed class StringValueAttribute : Attribute
 {
     public string StringValue { get; }
-    public StringValueAttribute(string value) {
+
+    public StringValueAttribute(string value)
+    {
         StringValue = value;
     }
 }
@@ -46,7 +50,9 @@ public sealed class StringValueAttribute : Attribute
 public sealed class DescriptionAttribute : Attribute
 {
     public string Description { get; }
-    public DescriptionAttribute(string value) {
+
+    public DescriptionAttribute(string value)
+    {
         Description = value;
     }
 }

@@ -9,5 +9,5 @@ public enum CivitPeriod
     Year,
     Month,
     Week,
-    Day
+    Day,
 }

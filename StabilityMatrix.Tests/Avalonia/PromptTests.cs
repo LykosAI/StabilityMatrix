@@ -182,7 +182,8 @@ public class PromptTests
     {
         var prompt = Prompt.FromRawText("<lora:missing:1>", tokenizerProvider);
 
-        Assert.ThrowsException<PromptUnknownModelError>(() => prompt.ValidateExtraNetworks(CreateModelIndex())
+        Assert.ThrowsException<PromptUnknownModelError>(() =>
+            prompt.ValidateExtraNetworks(CreateModelIndex())
         );
     }
 

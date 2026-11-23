@@ -21,17 +21,16 @@ public class RemoteModelsTests
         var resources = typeof(RemoteModels)
             .GetProperties(BindingFlags.Public | BindingFlags.Static)
             .Select(property => property.GetValue(null))
-            .SelectMany(
-                value =>
-                    value switch
-                    {
-                        IEnumerable<RemoteResource> remoteResources => remoteResources,
-                        IEnumerable<HybridModelFile> hybridModels => hybridModels
-                            .Where(model => model.DownloadableResource.HasValue)
-                            .Select(model => model.DownloadableResource!.Value),
-                        HybridModelFile { DownloadableResource: { } resource } => [resource],
-                        _ => [],
-                    }
+            .SelectMany(value =>
+                value switch
+                {
+                    IEnumerable<RemoteResource> remoteResources => remoteResources,
+                    IEnumerable<HybridModelFile> hybridModels => hybridModels
+                        .Where(model => model.DownloadableResource.HasValue)
+                        .Select(model => model.DownloadableResource!.Value),
+                    HybridModelFile { DownloadableResource: { } resource } => [resource],
+                    _ => [],
+                }
             );
 
         var unpinnedModels = resources

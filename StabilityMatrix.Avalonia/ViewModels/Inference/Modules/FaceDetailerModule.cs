@@ -57,23 +57,21 @@ public partial class FaceDetailerModule : ModuleBase, IValidatableModule
         var bboxLoader = new ComfyNodeBuilder.UltralyticsDetectorProvider
         {
             Name = e.Builder.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.UltralyticsDetectorProvider)),
-            ModelName =
-                GetModelName(faceDetailerCard.BboxModel) ?? throw new ArgumentException("No BboxModel"),
+            ModelName = GetModelName(faceDetailerCard.BboxModel)
+                ?? throw new ArgumentException("No BboxModel"),
         };
 
-        var samplerName =
-            (
-                faceDetailerCard.IsSamplerSelectionEnabled
-                    ? faceDetailerCard.Sampler?.Name
-                    : e.Builder.Connections.PrimarySampler?.Name
-            ) ?? throw new ArgumentException("No PrimarySampler");
+        var samplerName = (
+            faceDetailerCard.IsSamplerSelectionEnabled
+                ? faceDetailerCard.Sampler?.Name
+                : e.Builder.Connections.PrimarySampler?.Name
+        ) ?? throw new ArgumentException("No PrimarySampler");
 
-        var schedulerName =
-            (
-                faceDetailerCard.IsSchedulerSelectionEnabled
-                    ? faceDetailerCard.Scheduler?.Name
-                    : e.Builder.Connections.PrimaryScheduler?.Name
-            ) ?? throw new ArgumentException("No PrimaryScheduler");
+        var schedulerName = (
+            faceDetailerCard.IsSchedulerSelectionEnabled
+                ? faceDetailerCard.Scheduler?.Name
+                : e.Builder.Connections.PrimaryScheduler?.Name
+        ) ?? throw new ArgumentException("No PrimaryScheduler");
 
         if (schedulerName == "align_your_steps")
         {

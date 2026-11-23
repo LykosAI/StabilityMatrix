@@ -91,7 +91,7 @@ public class DefaultUnknownEnumConverterTests
     {
         Unknown,
         Value1,
-        Value2
+        Value2,
     }
 
     [JsonConverter(typeof(DefaultUnknownEnumConverter<UnknownEnum>))]
@@ -101,7 +101,7 @@ public class DefaultUnknownEnumConverterTests
         Value1,
 
         [EnumMember(Value = "Value 2")]
-        Value2
+        Value2,
     }
 
     [JsonConverter(typeof(DefaultUnknownEnumConverter<DefaultEnum>))]
@@ -109,6 +109,6 @@ public class DefaultUnknownEnumConverterTests
     {
         CustomDefault,
         Value1,
-        Value2
+        Value2,
     }
 }

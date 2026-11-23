@@ -73,25 +73,22 @@ public class ImageIndexService : IImageIndexService
                     )
                     .Where(file => !file.FullPath.Contains(".sm-thumbs")); // Exclude video thumbnail directories
 
-                Parallel.ForEach(
-                    files,
-                    f =>
+                Parallel.ForEach(files, f =>
+                {
+                    try
                     {
-                        try
-                        {
-                            toAdd.Add(CreateIndexedFile(f));
-                        }
-                        catch (Exception e)
-                        {
-                            Interlocked.Increment(ref errors);
-                            logger.LogWarning(
-                                e,
-                                "Failed to add indexed image file at {Path}, skipping",
-                                f.FullPath
-                            );
-                        }
+                        toAdd.Add(CreateIndexedFile(f));
                     }
-                );
+                    catch (Exception e)
+                    {
+                        Interlocked.Increment(ref errors);
+                        logger.LogWarning(
+                            e,
+                            "Failed to add indexed image file at {Path}, skipping",
+                            f.FullPath
+                        );
+                    }
+                });
             })
             .ConfigureAwait(false);
 

@@ -31,10 +31,8 @@ public class StepRangeEditor : TemplatedControl
     public static readonly StyledProperty<double> StartProperty = AvaloniaProperty.Register<
         StepRangeEditor,
         double
-    >(
-        nameof(Start),
-        defaultBindingMode: BindingMode.TwoWay,
-        coerce: (o, value) => ((StepRangeEditor)o).CoerceFraction(StartProperty, value)
+    >(nameof(Start), defaultBindingMode: BindingMode.TwoWay, coerce: (o, value) =>
+        ((StepRangeEditor)o).CoerceFraction(StartProperty, value)
     );
 
     /// <summary>Fraction of steps where the range starts, at most <see cref="End"/>.</summary>
@@ -47,11 +45,8 @@ public class StepRangeEditor : TemplatedControl
     public static readonly StyledProperty<double> EndProperty = AvaloniaProperty.Register<
         StepRangeEditor,
         double
-    >(
-        nameof(End),
-        1d,
-        defaultBindingMode: BindingMode.TwoWay,
-        coerce: (o, value) => ((StepRangeEditor)o).CoerceFraction(EndProperty, value)
+    >(nameof(End), 1d, defaultBindingMode: BindingMode.TwoWay, coerce: (o, value) =>
+        ((StepRangeEditor)o).CoerceFraction(EndProperty, value)
     );
 
     /// <summary>Fraction of steps where the range ends, at least <see cref="Start"/>.</summary>

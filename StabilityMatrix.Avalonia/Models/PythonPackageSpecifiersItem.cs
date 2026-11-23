@@ -20,7 +20,7 @@ public class PythonPackageSpecifiersItem
             Name = specifier.Name,
             Constraint = specifier.Constraint,
             Version = specifier.Version,
-            Action = specifier.Action
+            Action = specifier.Action,
         };
     }
 
@@ -31,7 +31,7 @@ public class PythonPackageSpecifiersItem
             Name = Name,
             Constraint = Constraint,
             Version = Version,
-            Action = Action
+            Action = Action,
         };
     }
 }

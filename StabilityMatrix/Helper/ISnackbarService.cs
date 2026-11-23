@@ -12,7 +12,7 @@ public interface ISnackbarService
     /// Default timeout for snackbar messages.
     /// </summary>
     public TimeSpan DefaultTimeout { get; }
-    
+
     /// <summary>
     /// Shows a generic error snackbar with the given message.
     /// </summary>
@@ -22,11 +22,12 @@ public interface ISnackbarService
     /// <param name="icon">The icon to show in the snackbar.</param>
     /// <param name="timeout">Snackbar timeout, defaults to class DefaultTimeout</param>
     public Task ShowSnackbarAsync(
-        string title, 
+        string title,
         string message,
-        ControlAppearance appearance = ControlAppearance.Danger, 
+        ControlAppearance appearance = ControlAppearance.Danger,
         SymbolRegular icon = SymbolRegular.ErrorCircle24,
-        TimeSpan? timeout = null);
+        TimeSpan? timeout = null
+    );
 
     /// <summary>
     /// Attempt to run the given task, showing a generic error snackbar if it fails.
@@ -43,7 +44,8 @@ public interface ISnackbarService
         string? message = null,
         ControlAppearance appearance = ControlAppearance.Danger,
         SymbolRegular icon = SymbolRegular.ErrorCircle24,
-        TimeSpan? timeout = null);
+        TimeSpan? timeout = null
+    );
 
     /// <summary>
     /// Attempt to run the given void task, showing a generic error snackbar if it fails.
@@ -61,5 +63,6 @@ public interface ISnackbarService
         string? message = null,
         ControlAppearance appearance = ControlAppearance.Danger,
         SymbolRegular icon = SymbolRegular.ErrorCircle24,
-        TimeSpan? timeout = null);
+        TimeSpan? timeout = null
+    );
 }

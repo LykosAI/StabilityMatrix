@@ -138,8 +138,8 @@ public class InferenceTextToVideoViewModel : InferenceGenerationViewModelBase, I
             new ComfyNodeBuilder.MiniMaxH3ImageToVideo
             {
                 Name = builder.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.MiniMaxH3ImageToVideo)),
-                Clip =
-                    builder.Connections.Base.Clip ?? throw new ValidationException("No text encoder loaded"),
+                Clip = builder.Connections.Base.Clip
+                    ?? throw new ValidationException("No text encoder loaded"),
                 Vae = builder.Connections.GetDefaultVAE(),
                 FirstFrame = firstFrame,
                 Prompt = PromptCardViewModel.PromptDocument.Text,

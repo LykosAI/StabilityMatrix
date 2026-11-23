@@ -55,12 +55,11 @@ public partial class PackageManagerPage : UserControlBase, IHandleNavigation
         if (!hasLoaded)
         {
             // Initial load, navigate to first page
-            Dispatcher.UIThread.Post(
-                () =>
-                    packageNavigationService.NavigateTo(
-                        ViewModel.SubPages[0],
-                        new SuppressNavigationTransitionInfo()
-                    )
+            Dispatcher.UIThread.Post(() =>
+                packageNavigationService.NavigateTo(
+                    ViewModel.SubPages[0],
+                    new SuppressNavigationTransitionInfo()
+                )
             );
 
             hasLoaded = true;
@@ -94,8 +93,7 @@ public partial class PackageManagerPage : UserControlBase, IHandleNavigation
 
     private void NavigationService_OnTypedNavigation(object? sender, TypedNavigationEventArgs e)
     {
-        ViewModel.CurrentPage =
-            ViewModel.SubPages.FirstOrDefault(x => x.GetType() == e.ViewModelType)
+        ViewModel.CurrentPage = ViewModel.SubPages.FirstOrDefault(x => x.GetType() == e.ViewModelType)
             ?? e.ViewModel as PageViewModelBase;
     }
 

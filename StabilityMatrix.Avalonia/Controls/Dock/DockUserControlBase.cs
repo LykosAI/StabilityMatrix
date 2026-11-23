@@ -52,8 +52,7 @@ public abstract class DockUserControlBase : DropTargetUserControlBase
     {
         base.OnApplyTemplate(e);
 
-        baseDock =
-            this.FindControl<DockControl>("Dock")
+        baseDock = this.FindControl<DockControl>("Dock")
             ?? throw new NullReferenceException("DockControl not found");
 
         if (baseDock.Layout is { } layout)

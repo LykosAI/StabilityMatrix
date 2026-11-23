@@ -4,5 +4,5 @@ public enum UvPackageSpecifierOverrideAction
 {
     None,
     Update,
-    Remove
+    Remove,
 }

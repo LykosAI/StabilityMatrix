@@ -679,25 +679,23 @@ public static class RemoteModels
     /// All required models for Flux Kontext image editing
     /// </summary>
     public static IReadOnlyList<RemoteResource> FluxKontextModels { get; } =
-        [
-            // Flux Kontext UNET model (~11.9 GB)
-            new()
-            {
-                Url = new Uri(
-                    "https://huggingface.co/Comfy-Org/flux1-kontext-dev_ComfyUI/resolve/main/split_files/diffusion_models/flux1-dev-kontext_fp8_scaled.safetensors"
-                ),
-                InfoUrl = new Uri("https://huggingface.co/Comfy-Org/flux1-kontext-dev_ComfyUI"),
-                Author = "Black Forest Labs",
-                LicenseType = "FLUX.1 [dev] Non-Commercial",
-                LicenseUrl = new Uri(
-                    "https://huggingface.co/black-forest-labs/FLUX.1-dev/blob/main/LICENSE.md"
-                ),
-                ContextType = SharedFolderType.DiffusionModels,
-            },
-            FluxVae,
-            ClipLTextEncoder,
-            T5XxlFp8ScaledTextEncoder,
-        ];
+    [
+        // Flux Kontext UNET model (~11.9 GB)
+        new()
+        {
+            Url = new Uri(
+                "https://huggingface.co/Comfy-Org/flux1-kontext-dev_ComfyUI/resolve/main/split_files/diffusion_models/flux1-dev-kontext_fp8_scaled.safetensors"
+            ),
+            InfoUrl = new Uri("https://huggingface.co/Comfy-Org/flux1-kontext-dev_ComfyUI"),
+            Author = "Black Forest Labs",
+            LicenseType = "FLUX.1 [dev] Non-Commercial",
+            LicenseUrl = new Uri("https://huggingface.co/black-forest-labs/FLUX.1-dev/blob/main/LICENSE.md"),
+            ContextType = SharedFolderType.DiffusionModels,
+        },
+        FluxVae,
+        ClipLTextEncoder,
+        T5XxlFp8ScaledTextEncoder,
+    ];
 
     #endregion
 
@@ -707,21 +705,21 @@ public static class RemoteModels
     /// All required models for Qwen Image Edit
     /// </summary>
     public static IReadOnlyList<RemoteResource> QwenImageEditModels { get; } =
-        [
-            // Qwen Image Edit UNET model (fp8 quantized, 2511 build)
-            new()
-            {
-                Url = new Uri(
-                    "https://huggingface.co/Comfy-Org/Qwen-Image-Edit_ComfyUI/resolve/main/split_files/diffusion_models/qwen_image_edit_2511_fp8mixed.safetensors"
-                ),
-                InfoUrl = new Uri("https://huggingface.co/Comfy-Org/Qwen-Image-Edit_ComfyUI"),
-                Author = "Alibaba Qwen",
-                LicenseType = "Qwen License",
-                ContextType = SharedFolderType.DiffusionModels,
-            },
-            QwenImageVae,
-            Qwen25Vl7bTextEncoder,
-        ];
+    [
+        // Qwen Image Edit UNET model (fp8 quantized, 2511 build)
+        new()
+        {
+            Url = new Uri(
+                "https://huggingface.co/Comfy-Org/Qwen-Image-Edit_ComfyUI/resolve/main/split_files/diffusion_models/qwen_image_edit_2511_fp8mixed.safetensors"
+            ),
+            InfoUrl = new Uri("https://huggingface.co/Comfy-Org/Qwen-Image-Edit_ComfyUI"),
+            Author = "Alibaba Qwen",
+            LicenseType = "Qwen License",
+            ContextType = SharedFolderType.DiffusionModels,
+        },
+        QwenImageVae,
+        Qwen25Vl7bTextEncoder,
+    ];
 
     #endregion
 
@@ -734,26 +732,26 @@ public static class RemoteModels
     /// manager substring-matches loosely enough to pick up either variant.
     /// </summary>
     public static IReadOnlyList<RemoteResource> Flux2KleinModels { get; } =
-        [
-            // Flux.2 Klein 4B UNET (distilled, ~7.75 GB, Apache 2.0)
-            new()
-            {
-                Url = new Uri(
-                    "https://huggingface.co/Comfy-Org/flux2-klein-4B/resolve/main/split_files/diffusion_models/flux-2-klein-4b.safetensors"
-                ),
-                InfoUrl = new Uri("https://huggingface.co/Comfy-Org/flux2-klein-4B"),
-                Author = "Black Forest Labs",
-                LicenseType = "Apache 2.0",
-                LicenseUrl = new Uri(
-                    "https://huggingface.co/black-forest-labs/FLUX.2-klein-4B/blob/main/LICENSE.md"
-                ),
-                ContextType = SharedFolderType.DiffusionModels,
-            },
-            // Flux.2 VAE (~336 MB, shared between all Flux.2 variants) + Qwen3 4B text
-            // encoder (~8 GB, paired with Klein 4B)
-            Flux2Vae,
-            Qwen3_4bTextEncoder,
-        ];
+    [
+        // Flux.2 Klein 4B UNET (distilled, ~7.75 GB, Apache 2.0)
+        new()
+        {
+            Url = new Uri(
+                "https://huggingface.co/Comfy-Org/flux2-klein-4B/resolve/main/split_files/diffusion_models/flux-2-klein-4b.safetensors"
+            ),
+            InfoUrl = new Uri("https://huggingface.co/Comfy-Org/flux2-klein-4B"),
+            Author = "Black Forest Labs",
+            LicenseType = "Apache 2.0",
+            LicenseUrl = new Uri(
+                "https://huggingface.co/black-forest-labs/FLUX.2-klein-4B/blob/main/LICENSE.md"
+            ),
+            ContextType = SharedFolderType.DiffusionModels,
+        },
+        // Flux.2 VAE (~336 MB, shared between all Flux.2 variants) + Qwen3 4B text
+        // encoder (~8 GB, paired with Klein 4B)
+        Flux2Vae,
+        Qwen3_4bTextEncoder,
+    ];
 
     #endregion
 
@@ -768,12 +766,12 @@ public static class RemoteModels
     /// than the 4B one from <see cref="Flux2KleinModels"/>.
     /// </summary>
     public static IReadOnlyList<RemoteResource> Flux2Klein9BModels { get; } =
-        [
-            // Flux.2 VAE (~336 MB, shared between all Flux.2 variants) + Qwen3 8B text
-            // encoder (~16.4 GB, paired with Klein 9B)
-            Flux2Vae,
-            Qwen3_8bTextEncoder,
-        ];
+    [
+        // Flux.2 VAE (~336 MB, shared between all Flux.2 variants) + Qwen3 8B text
+        // encoder (~16.4 GB, paired with Klein 9B)
+        Flux2Vae,
+        Qwen3_8bTextEncoder,
+    ];
 
     #endregion
 }

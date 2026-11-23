@@ -12,5 +12,5 @@ public enum PromptExtraNetworkType
     LyCORIS = 1 << 1,
 
     [ConvertTo<SharedFolderType>(SharedFolderType.Embeddings)]
-    Embedding = 1 << 2
+    Embedding = 1 << 2,
 }

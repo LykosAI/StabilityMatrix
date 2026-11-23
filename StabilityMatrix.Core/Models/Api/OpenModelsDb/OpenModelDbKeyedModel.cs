@@ -20,7 +20,7 @@ public record OpenModelDbKeyedModel : OpenModelDbModel
         return Architecture?.ToLowerInvariant() switch
         {
             "swinir" => SharedFolderType.SwinIR,
-            _ => SharedFolderType.ESRGAN
+            _ => SharedFolderType.ESRGAN,
         };
     }
 }

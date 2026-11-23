@@ -13,6 +13,6 @@ namespace StabilityMatrix.Native.Windows.Interop
         SIGDN_PARENTRELATIVEEDITING = 0x80031001,
         SIGDN_DESKTOPABSOLUTEEDITING = 0x8004c000,
         SIGDN_FILESYSPATH = 0x80058000,
-        SIGDN_URL = 0x80068000
+        SIGDN_URL = 0x80068000,
     }
 }

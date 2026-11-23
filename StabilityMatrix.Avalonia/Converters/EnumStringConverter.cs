@@ -17,12 +17,7 @@ public class EnumStringConverter : IValueConverter
     }
 
     /// <inheritdoc />
-    public object? ConvertBack(
-        object? value,
-        Type targetType,
-        object? parameter,
-        CultureInfo culture
-    )
+    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         if (value is not string stringValue)
             return null;

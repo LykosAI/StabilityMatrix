@@ -108,10 +108,9 @@ public class FramePack(
             )
             .ConfigureAwait(false);
 
-        var isLegacyNvidia =
-            SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu() ?? HardwareHelper.HasLegacyNvidiaGpu();
-        var isNewerNvidia =
-            SettingsManager.Settings.PreferredGpu?.IsAmpereOrNewerGpu()
+        var isLegacyNvidia = SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu()
+            ?? HardwareHelper.HasLegacyNvidiaGpu();
+        var isNewerNvidia = SettingsManager.Settings.PreferredGpu?.IsAmpereOrNewerGpu()
             ?? HardwareHelper.HasAmpereOrNewerGpu();
 
         var extraArgs = new List<string>();
@@ -259,32 +258,27 @@ public class FramePack(
         EventManager.Instance.OnPackageInstallProgressAdded(runner);
 
         await runner
-            .ExecuteSteps(
-                [
-                    new ActionPackageStep(
-                        async progress =>
-                        {
-                            await using var venvRunner = await SetupVenvPure(
-                                    installedPackage.FullPath,
-                                    pythonVersion: PyVersion.Parse(installedPackage.PythonVersion)
-                                )
-                                .ConfigureAwait(false);
+            .ExecuteSteps([
+                new ActionPackageStep(
+                    async progress =>
+                    {
+                        await using var venvRunner = await SetupVenvPure(
+                                installedPackage.FullPath,
+                                pythonVersion: PyVersion.Parse(installedPackage.PythonVersion)
+                            )
+                            .ConfigureAwait(false);
 
-                            var gpuInfo =
-                                SettingsManager.Settings.PreferredGpu
-                                ?? HardwareHelper.IterGpuInfo().FirstOrDefault(x => x.IsNvidia);
+                        var gpuInfo = SettingsManager.Settings.PreferredGpu
+                            ?? HardwareHelper.IterGpuInfo().FirstOrDefault(x => x.IsNvidia);
 
-                            await PipWheelService
-                                .InstallTritonAsync(venvRunner, progress)
-                                .ConfigureAwait(false);
-                            await PipWheelService
-                                .InstallSageAttentionAsync(venvRunner, gpuInfo, progress)
-                                .ConfigureAwait(false);
-                        },
-                        "Installing Triton and SageAttention"
-                    ),
-                ]
-            )
+                        await PipWheelService.InstallTritonAsync(venvRunner, progress).ConfigureAwait(false);
+                        await PipWheelService
+                            .InstallSageAttentionAsync(venvRunner, gpuInfo, progress)
+                            .ConfigureAwait(false);
+                    },
+                    "Installing Triton and SageAttention"
+                ),
+            ])
             .ConfigureAwait(false);
     }
 }

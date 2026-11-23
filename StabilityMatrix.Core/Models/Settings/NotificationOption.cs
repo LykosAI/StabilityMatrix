@@ -11,5 +11,5 @@ public enum NotificationOption
     AppToast,
 
     [Display(Name = "Desktop", Description = "Native desktop push notification")]
-    NativePush
+    NativePush,
 }

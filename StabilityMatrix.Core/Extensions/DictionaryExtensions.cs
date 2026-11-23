@@ -18,13 +18,11 @@ public static class DictionaryExtensions
             source[item.Key] = item.Value;
         }
     }
-    
+
     /// <summary>
     /// Formats a dictionary as a string for debug/logging purposes.
     /// </summary>
-    public static string ToRepr<TKey, TValue>(
-        this IDictionary<TKey, TValue> source
-    )
+    public static string ToRepr<TKey, TValue>(this IDictionary<TKey, TValue> source)
         where TKey : notnull
     {
         var sb = new StringBuilder();
@@ -40,7 +38,7 @@ public static class DictionaryExtensions
             {
                 sb.Append($"{key}=");
             }
-            
+
             if (value is string valueString)
             {
                 sb.Append($"{valueString.ToRepr()}, ");
@@ -53,11 +51,11 @@ public static class DictionaryExtensions
         sb.Append('}');
         return sb.ToString();
     }
-    
+
     /// <summary>
     /// Get or add a value to a dictionary.
     /// </summary>
-    public static TValue GetOrAdd<TKey, TValue>(this IDictionary<TKey, TValue> dict, TKey key) 
+    public static TValue GetOrAdd<TKey, TValue>(this IDictionary<TKey, TValue> dict, TKey key)
         where TValue : new()
     {
         if (!dict.TryGetValue(key, out var val))

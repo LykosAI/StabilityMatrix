@@ -27,14 +27,14 @@ public class JsonConfigSharingStrategy : IConfigSharingStrategy
             try
             {
                 // Ensure we read from the current position, respecting potential BOMs etc.
-                jsonNode =
-                    await JsonSerializer
-                        .DeserializeAsync<JsonObject>(
-                            configStream,
-                            options.JsonSerializerOptions,
-                            cancellationToken
-                        )
-                        .ConfigureAwait(false) ?? new JsonObject();
+                jsonNode = await JsonSerializer
+                    .DeserializeAsync<JsonObject>(
+                        configStream,
+                        options.JsonSerializerOptions,
+                        cancellationToken
+                    )
+                    .ConfigureAwait(false)
+                    ?? new JsonObject();
             }
             catch (JsonException ex)
             {

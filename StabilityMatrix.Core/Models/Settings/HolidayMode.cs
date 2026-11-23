@@ -7,5 +7,5 @@ public enum HolidayMode
 {
     Automatic,
     Enabled,
-    Disabled
+    Disabled,
 }

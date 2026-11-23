@@ -761,8 +761,8 @@ public class ImageGenerationChatService(
 
         // Create assistant message - capture thought signature for multi-turn continuity
         // The thought signature comes from either the image part or the response level
-        var thoughtSignature =
-            response.Images?.FirstOrDefault()?.ThoughtSignature ?? response.ThoughtSignature;
+        var thoughtSignature = response.Images?.FirstOrDefault()?.ThoughtSignature
+            ?? response.ThoughtSignature;
 
         var primarySavedImagePath = savedImagePaths?.FirstOrDefault();
         var assistantMessage = new ImageGenerationMessage
@@ -785,11 +785,7 @@ public class ImageGenerationChatService(
         await database.Messages.InsertAsync(assistantMessage).ConfigureAwait(false);
 
         // Update conversation title if this is the first exchange, and always update timestamp
-        var completionUpdate = conversation with
-        {
-            ProviderId = providerId,
-            UpdatedAt = DateTime.UtcNow,
-        };
+        var completionUpdate = conversation with { ProviderId = providerId, UpdatedAt = DateTime.UtcNow };
 
         await database.Conversations.UpdateAsync(completionUpdate).ConfigureAwait(false);
 
@@ -947,8 +943,7 @@ public class ImageGenerationChatService(
             );
         }
 
-        var retryImagePaths =
-            lastUserMessage.ImagePaths?.Where(p => !string.IsNullOrWhiteSpace(p)).ToList()
+        var retryImagePaths = lastUserMessage.ImagePaths?.Where(p => !string.IsNullOrWhiteSpace(p)).ToList()
             ?? (!string.IsNullOrEmpty(lastUserMessage.ImagePath) ? [lastUserMessage.ImagePath] : []);
 
         retryImagePaths = retryImagePaths.Where(File.Exists).ToList();
@@ -1055,8 +1050,8 @@ public class ImageGenerationChatService(
         }
 
         // Create assistant message - capture thought signature for multi-turn continuity
-        var thoughtSignature =
-            response.Images?.FirstOrDefault()?.ThoughtSignature ?? response.ThoughtSignature;
+        var thoughtSignature = response.Images?.FirstOrDefault()?.ThoughtSignature
+            ?? response.ThoughtSignature;
 
         var assistantMessage = new ImageGenerationMessage
         {

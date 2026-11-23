@@ -21,8 +21,9 @@ public static partial class FfmpegProbe
     /// <exception cref="InvalidDataException">No video stream with a readable resolution was found.</exception>
     public static VideoStreamInfo Parse(string ffmpegStdErr)
     {
-        var videoLine =
-            ffmpegStdErr.Split('\n').FirstOrDefault(line => line.Contains("Video:", StringComparison.Ordinal))
+        var videoLine = ffmpegStdErr
+            .Split('\n')
+            .FirstOrDefault(line => line.Contains("Video:", StringComparison.Ordinal))
             ?? throw new InvalidDataException("ffmpeg reported no video stream.");
 
         var sizeMatch = ResolutionRegex().Match(videoLine);

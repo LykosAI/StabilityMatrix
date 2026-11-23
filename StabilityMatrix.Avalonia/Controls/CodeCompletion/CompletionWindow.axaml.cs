@@ -131,7 +131,7 @@ public class CompletionWindow : CompletionWindowBase
             _toolTipContent.Content = new TextBlock
             {
                 Text = descriptionText,
-                TextWrapping = TextWrapping.Wrap
+                TextWrapping = TextWrapping.Wrap,
             };
 
             _toolTip.IsOpen = false; // Popup needs to be closed to change position
@@ -217,12 +217,7 @@ public class CompletionWindow : CompletionWindowBase
 
     private void TextArea_PreviewTextInput(object? sender, TextInputEventArgs e)
     {
-        e.Handled = RaiseEventPair(
-            this,
-            null,
-            TextInputEvent,
-            new TextInputEventArgs { Text = e.Text }
-        );
+        e.Handled = RaiseEventPair(this, null, TextInputEvent, new TextInputEventArgs { Text = e.Text });
     }
 
     private void TextArea_MouseWheel(object? sender, PointerWheelEventArgs e)

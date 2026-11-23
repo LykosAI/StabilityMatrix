@@ -110,8 +110,8 @@ public partial class WorkflowNodesDialogViewModel(
 
         isInitialized = true;
 
-        SelectedPackage =
-            settingsManager.Settings.PreferredWorkflowPackage ?? AvailablePackages.FirstOrDefault();
+        SelectedPackage = settingsManager.Settings.PreferredWorkflowPackage
+            ?? AvailablePackages.FirstOrDefault();
 
         await AnalyzeAsync();
     }

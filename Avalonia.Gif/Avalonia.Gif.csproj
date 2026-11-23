@@ -1,22 +1,21 @@
 <Project Sdk="Microsoft.NET.Sdk">
-	<Import Project="..\Runtimes.Default.props" />
-	
-	<PropertyGroup>
-		<LangVersion>latest</LangVersion> 
-		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-		<BuiltInComInteropSupport>true</BuiltInComInteropSupport>
-		<EnableWindowsTargeting>true</EnableWindowsTargeting>
+  <Import Project="..\Runtimes.Default.props" />
+
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
   </PropertyGroup>
-	
-	<PropertyGroup>
-		<!-- Ignore nullable / unused warnings since this was vendored -->
-		<NoWarn>$(NoWarn);CS8765;CS8618;CS8625;CS0169</NoWarn>
-	</PropertyGroup>
-	
+
+  <PropertyGroup>
+    <!-- Ignore nullable / unused warnings since this was vendored -->
+    <NoWarn>$(NoWarn);CS8765;CS8618;CS8625;CS0169</NoWarn>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Avalonia" />
     <PackageReference Include="SkiaSharp" />
-	<PackageReference Include="DotNet.Bundle" />
+    <PackageReference Include="DotNet.Bundle" />
   </ItemGroup>
-
 </Project>

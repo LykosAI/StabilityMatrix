@@ -22,7 +22,6 @@
 
 // from https://raw.githubusercontent.com/Stability-AI/StableSwarmUI/master/src/Core/Settings.cs
 
-
 using FreneticUtilities.FreneticDataSyntax;
 
 namespace StabilityMatrix.Core.Models.FDS;
@@ -271,7 +270,7 @@ public class StableSwarmSettings : AutoConfiguration
         {
             BUTTON,
             HOVER,
-            NONE
+            NONE,
         }
 
         [ConfigComment("The format for parameter hints to display as.\nDefault is 'BUTTON'.")]

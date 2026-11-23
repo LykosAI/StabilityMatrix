@@ -33,7 +33,7 @@ namespace Avalonia.Gif
                     Stream s => s,
                     Uri u => GetStreamFromUri(u),
                     string str => GetStreamFromString(str),
-                    _ => throw new InvalidDataException("Unsupported source object")
+                    _ => throw new InvalidDataException("Unsupported source object"),
                 }
             ) { }
 
@@ -67,10 +67,9 @@ namespace Avalonia.Gif
             {
                 SKColorType.Bgra8888 => PixelFormat.Bgra8888,
                 SKColorType.Rgba8888 => PixelFormat.Rgba8888,
-                _
-                    => throw new NotSupportedException(
-                        $"Unsupported color type: {SKImageInfo.PlatformColorType}"
-                    )
+                _ => throw new NotSupportedException(
+                    $"Unsupported color type: {SKImageInfo.PlatformColorType}"
+                ),
             };
 
             _targetBitmap = new WriteableBitmap(pixSize, new Vector(96, 96), format, AlphaFormat.Opaque);

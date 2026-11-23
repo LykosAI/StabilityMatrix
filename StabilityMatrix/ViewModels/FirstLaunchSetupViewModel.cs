@@ -22,8 +22,9 @@ public partial class FirstLaunchSetupViewModel : ObservableObject
     {
         WorkingToolTipText = "We're checking some hardware specifications to determine compatibility.",
         SuccessToolTipText = "Everything looks good!",
-        FailToolTipText = "We recommend a GPU with CUDA support for the best experience. " +
-                          "You can continue without one, but some packages may not work, and inference may be slower.",
+        FailToolTipText =
+            "We recommend a GPU with CUDA support for the best experience. "
+            + "You can continue without one, but some packages may not work, and inference may be slower.",
         FailColorBrush = AppBrushes.WarningYellow,
     };
 
@@ -41,14 +42,16 @@ public partial class FirstLaunchSetupViewModel : ObservableObject
             gpuInfo = await Task.Run(() => HardwareHelper.IterGpuInfo().ToArray());
         }
         // First Nvidia GPU
-        var activeGpu = gpuInfo.FirstOrDefault(gpu => gpu.Name?.ToLowerInvariant().Contains("nvidia") ?? false);
+        var activeGpu = gpuInfo.FirstOrDefault(gpu =>
+            gpu.Name?.ToLowerInvariant().Contains("nvidia") ?? false
+        );
         var isNvidia = activeGpu is not null;
         // Otherwise first GPU
         activeGpu ??= gpuInfo.FirstOrDefault();
         GpuInfoText = activeGpu is null
             ? "No GPU detected"
             : $"{activeGpu.Name} ({Size.FormatBytes(activeGpu.MemoryBytes)})";
-        
+
         return isNvidia;
     }
 
@@ -62,6 +65,4 @@ public partial class FirstLaunchSetupViewModel : ObservableObject
     {
         ProcessRunner.OpenUrl("https://lykos.ai/matrix/license");
     }
-
-
 }

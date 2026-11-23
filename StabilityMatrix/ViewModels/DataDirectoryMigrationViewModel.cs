@@ -22,47 +22,60 @@ public partial class DataDirectoryMigrationViewModel : ObservableObject
     private readonly ISharedFolders sharedFolders;
     private readonly IPackageFactory packageFactory;
 
-    [ObservableProperty] 
+    [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(AutoMigrateText))]
     [NotifyPropertyChangedFor(nameof(MigrateProgressText))]
     private int autoMigrateCount;
-    
-    [ObservableProperty] 
+
+    [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(NeedsMoveMigrateText))]
     [NotifyPropertyChangedFor(nameof(MigrateProgressText))]
     private int needsMoveMigrateCount;
-    
-    [ObservableProperty] 
+
+    [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(MigrateProgressText))]
     private int migrateProgressCount;
-    
-    [ObservableProperty] private bool isMigrating;
-    [ObservableProperty] private bool canShowNoThanksButton;
-    
-    [ObservableProperty] 
+
+    [ObservableProperty]
+    private bool isMigrating;
+
+    [ObservableProperty]
+    private bool canShowNoThanksButton;
+
+    [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(NeedsMoveMigrateText))]
     [NotifyPropertyChangedFor(nameof(MigrateProgressText))]
     private bool hasFreeSpaceError;
 
-    public string AutoMigrateText => AutoMigrateCount == 0 ? string.Empty :
-        $"{AutoMigrateCount} Packages will be automatically migrated to the new format";
+    public string AutoMigrateText =>
+        AutoMigrateCount == 0
+            ? string.Empty
+            : $"{AutoMigrateCount} Packages will be automatically migrated to the new format";
 
-    public string NeedsMoveMigrateText => NeedsMoveMigrateCount == 0 || HasFreeSpaceError
-        ? string.Empty
-        : $"{NeedsMoveMigrateCount} Package{(NeedsMoveMigrateCount > 1 ? "s" : "")} {(NeedsMoveMigrateCount > 1 ? "are" : "is")} " +
-          "not relative to the Data Directory and will be moved, this may take a few minutes";
+    public string NeedsMoveMigrateText =>
+        NeedsMoveMigrateCount == 0 || HasFreeSpaceError
+            ? string.Empty
+            : $"{NeedsMoveMigrateCount} Package{(NeedsMoveMigrateCount > 1 ? "s" : "")} {(NeedsMoveMigrateCount > 1 ? "are" : "is")} "
+                + "not relative to the Data Directory and will be moved, this may take a few minutes";
 
     [ObservableProperty]
     private string migrateProgressText = "";
 
     partial void OnMigrateProgressCountChanged(int value)
     {
-        MigrateProgressText = value > 0 ? $"Migrating {value} of {AutoMigrateCount + NeedsMoveMigrateCount} Packages" : string.Empty;
+        MigrateProgressText =
+            value > 0
+                ? $"Migrating {value} of {AutoMigrateCount + NeedsMoveMigrateCount} Packages"
+                : string.Empty;
     }
 
-    public DataDirectoryMigrationViewModel(ISettingsManager settingsManager,
-        IPrerequisiteHelper prerequisiteHelper, IPyRunner pyRunner, ISharedFolders sharedFolders,
-        IPackageFactory packageFactory)
+    public DataDirectoryMigrationViewModel(
+        ISettingsManager settingsManager,
+        IPrerequisiteHelper prerequisiteHelper,
+        IPyRunner pyRunner,
+        ISharedFolders sharedFolders,
+        IPackageFactory packageFactory
+    )
     {
         this.settingsManager = settingsManager;
         this.prerequisiteHelper = prerequisiteHelper;
@@ -76,7 +89,7 @@ public partial class DataDirectoryMigrationViewModel : ObservableObject
         AutoMigrateCount = 0;
         NeedsMoveMigrateCount = 0;
         HasFreeSpaceError = false;
-        
+
         // Get all old packages
         var oldPackages = settingsManager.GetOldInstalledPackages().ToArray();
         // Attempt to migrate with pure, and count successful migrations
@@ -84,11 +97,11 @@ public partial class DataDirectoryMigrationViewModel : ObservableObject
         // Any remaining packages need to be moved
         NeedsMoveMigrateCount = oldPackages.Length - AutoMigrateCount;
 
-        var oldLibraryDir =
-            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                "StabilityMatrix");
+        var oldLibraryDir = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "StabilityMatrix"
+        );
         CanShowNoThanksButton = settingsManager.LibraryDir != oldLibraryDir;
-        
 
         if (settingsManager.LibraryDir != oldLibraryDir)
         {
@@ -102,23 +115,27 @@ public partial class DataDirectoryMigrationViewModel : ObservableObject
             }
         }
     }
-    
+
     public void CleanupOldInstall()
     {
-        var oldLibraryPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "StabilityMatrix");
-        if (settingsManager.LibraryDir == oldLibraryPath) return;
-        
+        var oldLibraryPath = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "StabilityMatrix"
+        );
+        if (settingsManager.LibraryDir == oldLibraryPath)
+            return;
+
         // rename old settings.json to settings.json.old
         var oldSettingsPath = Path.Combine(oldLibraryPath, "settings.json");
         File.Move(oldSettingsPath, oldSettingsPath + ".old", true);
-            
+
         // delete old PortableGit dir
         var oldPortableGitDir = Path.Combine(oldLibraryPath, "PortableGit");
         if (Directory.Exists(oldPortableGitDir))
         {
             Directory.Delete(oldPortableGitDir, true);
         }
-            
+
         // delete old Assets dir
         var oldAssetsDir = Path.Combine(oldLibraryPath, "Assets");
         if (Directory.Exists(oldAssetsDir))
@@ -126,47 +143,52 @@ public partial class DataDirectoryMigrationViewModel : ObservableObject
             Directory.Delete(oldAssetsDir, true);
         }
     }
-    
+
     [RelayCommand]
     private async Task MigrateAsync()
     {
         await using var delay = new MinimumDelay(200, 300);
 
         IsMigrating = true;
-        
+
         // Since we are going to recreate venvs, need python to be installed
         if (!prerequisiteHelper.IsPythonInstalled)
         {
             MigrateProgressText = "Preparing Environment...";
             await prerequisiteHelper.InstallPythonIfNecessary();
         }
-        
+
         if (!PyRunner.PipInstalled)
         {
             await pyRunner.SetupPip();
         }
-            
+
         if (!PyRunner.VenvInstalled)
         {
             await pyRunner.InstallPackage("virtualenv");
         }
 
         var libraryPath = settingsManager.LibraryDir;
-        var oldLibraryPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "StabilityMatrix");
+        var oldLibraryPath = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "StabilityMatrix"
+        );
         var oldPackages = settingsManager.GetOldInstalledPackages().ToArray();
 
         MigrateProgressText = "Migrating Packages...";
-        
+
         await using var st = settingsManager.BeginTransaction();
-        
+
         foreach (var package in oldPackages)
         {
             st.Settings.RemoveInstalledPackageAndUpdateActive(package);
 
 #pragma warning disable CS0618
-            Logger.Info($"Migrating package {MigrateProgressCount} of {oldPackages.Length} at path {package.Path}");
+            Logger.Info(
+                $"Migrating package {MigrateProgressCount} of {oldPackages.Length} at path {package.Path}"
+            );
 #pragma warning restore CS0618
-            
+
             await package.MigratePath();
             MigrateProgressCount++;
             st.Settings.InstalledPackages.Add(package);

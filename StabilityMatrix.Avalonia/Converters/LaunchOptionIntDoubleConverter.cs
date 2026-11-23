@@ -8,7 +8,7 @@ public class LaunchOptionIntDoubleConverter : IValueConverter
 {
     // Convert from int to double
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
-    {   
+    {
         if (targetType == typeof(double?))
         {
             if (value == null)

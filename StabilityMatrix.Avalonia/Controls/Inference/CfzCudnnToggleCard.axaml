@@ -1,9 +1,10 @@
-<Styles xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
-        xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
-        xmlns:vmInference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
-        x:DataType="vmInference:CfzCudnnToggleCardViewModel">
+﻿<Styles
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
+    xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:vmInference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
+    x:DataType="vmInference:CfzCudnnToggleCardViewModel">
     <Design.PreviewWith>
         <controls:CfzCudnnToggleCard Width="400" />
     </Design.PreviewWith>
@@ -13,11 +14,14 @@
             <ControlTemplate>
                 <controls:Card x:Name="PART_Card">
                     <StackPanel Spacing="8">
-                        <TextBlock Text="Disable CUDNN" FontSize="14" FontWeight="Bold" />
+                        <TextBlock
+                            FontSize="14"
+                            FontWeight="Bold"
+                            Text="Disable CUDNN" />
                         <ToggleSwitch
-                            IsChecked="{Binding DisableCudnn}"
                             Margin="8,0,4,0"
-                            HorizontalAlignment="Stretch" />
+                            HorizontalAlignment="Stretch"
+                            IsChecked="{Binding DisableCudnn}" />
                     </StackPanel>
                 </controls:Card>
             </ControlTemplate>

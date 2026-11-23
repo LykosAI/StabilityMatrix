@@ -118,8 +118,8 @@ public class InferenceProjectDocument : ICloneable
 
         var document = (InferenceProjectDocument)Clone();
 
-        var batchSizeCard =
-            document.State!["BatchSize"] ?? throw new InvalidOperationException("BatchSize card is null");
+        var batchSizeCard = document.State!["BatchSize"]
+            ?? throw new InvalidOperationException("BatchSize card is null");
 
         batchSizeCard["BatchSize"] = batchSize;
         batchSizeCard["BatchCount"] = batchCount;

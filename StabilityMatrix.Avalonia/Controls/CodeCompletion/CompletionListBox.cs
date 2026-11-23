@@ -75,10 +75,7 @@ public class CompletionListBox : ListBox
             }
             return Math.Max(
                 3,
-                (int)
-                    Math.Ceiling(
-                        ItemCount * ScrollViewer.Viewport.Height / ScrollViewer.Extent.Height
-                    )
+                (int)Math.Ceiling(ItemCount * ScrollViewer.Viewport.Height / ScrollViewer.Extent.Height)
             );
         }
     }

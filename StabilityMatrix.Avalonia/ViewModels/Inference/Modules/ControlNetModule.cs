@@ -43,15 +43,16 @@ public class ControlNetModule : ModuleBase
     {
         var card = GetCard<ControlNetCardViewModel>();
 
-        var image = e.Nodes.AddTypedNode(
-            new ComfyNodeBuilder.LoadImage
-            {
-                Name = e.Nodes.GetUniqueName("ControlNet_LoadImage"),
-                Image =
-                    card.SelectImageCardViewModel.ImageSource?.GetHashGuidFileNameCached("Inference")
-                    ?? throw new ValidationException("No ImageSource")
-            }
-        ).Output1;
+        var image = e
+            .Nodes.AddTypedNode(
+                new ComfyNodeBuilder.LoadImage
+                {
+                    Name = e.Nodes.GetUniqueName("ControlNet_LoadImage"),
+                    Image = card.SelectImageCardViewModel.ImageSource?.GetHashGuidFileNameCached("Inference")
+                        ?? throw new ValidationException("No ImageSource"),
+                }
+            )
+            .Output1;
 
         if (card.SelectedPreprocessor is { } preprocessor && preprocessor != ComfyAuxPreprocessor.None)
         {
@@ -62,7 +63,7 @@ public class ControlNetModule : ModuleBase
                     Image = image,
                     Preprocessor = preprocessor.ToString(),
                     // Use lower of width and height for resolution
-                    Resolution = Math.Min(card.Width, card.Height)
+                    Resolution = Math.Min(card.Width, card.Height),
                 }
             );
 
@@ -103,7 +104,7 @@ public class ControlNetModule : ModuleBase
                         e.Temp.Primary,
                         e.Builder.Connections.GetDefaultVAE()
                     ),
-                    Model = model
+                    Model = model,
                 }
             );
 
@@ -119,7 +120,7 @@ public class ControlNetModule : ModuleBase
                         Model1 = referenceOnlyModel,
                         Model2 = e.Temp.GetRefinerOrBaseModel(),
                         // Where 0 is full reference only, 1 is full original
-                        Ratio = 1 - card.Strength
+                        Ratio = 1 - card.Strength,
                     }
                 );
 
@@ -151,8 +152,8 @@ public class ControlNetModule : ModuleBase
             new ComfyNodeBuilder.ControlNetLoader
             {
                 Name = e.Nodes.GetUniqueName("ControlNetLoader"),
-                ControlNetName =
-                    card.SelectedModel?.RelativePath ?? throw new ValidationException("No SelectedModel"),
+                ControlNetName = card.SelectedModel?.RelativePath
+                    ?? throw new ValidationException("No SelectedModel"),
             }
         );
 

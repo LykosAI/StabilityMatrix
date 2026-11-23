@@ -3,17 +3,17 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
     xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
+    xmlns:fluentIcons="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
     xmlns:inference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
+    xmlns:input="clr-namespace:FluentAvalonia.UI.Input;assembly=FluentAvalonia"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+    xmlns:local="clr-namespace:StabilityMatrix.Avalonia"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
     xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
     xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
     xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
-    xmlns:input="clr-namespace:FluentAvalonia.UI.Input;assembly=FluentAvalonia"
-    xmlns:fluentIcons="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
-    xmlns:local="clr-namespace:StabilityMatrix.Avalonia"
     x:DataType="inference:PromptExpansionCardViewModel">
-    
+
     <Design.PreviewWith>
         <Panel Width="400" Height="200">
             <StackPanel Width="300" VerticalAlignment="Center">
@@ -42,38 +42,38 @@
                         <controls:FADownloadableComboBox
                             Grid.Row="0"
                             Grid.Column="1"
-                                HorizontalAlignment="Stretch"
-                                ItemContainerTheme="{StaticResource FAComboBoxItemHybridModelTheme}"
-                                ItemsSource="{Binding ClientManager.PromptExpansionModels}"
-                                SelectedItem="{Binding SelectedModel}">
+                            HorizontalAlignment="Stretch"
+                            ItemContainerTheme="{StaticResource FAComboBoxItemHybridModelTheme}"
+                            ItemsSource="{Binding ClientManager.PromptExpansionModels}"
+                            SelectedItem="{Binding SelectedModel}">
 
-                                <ui:FAComboBox.DataTemplates>
-                                    <controls:HybridModelTemplateSelector>
-                                        <DataTemplate x:Key="{x:Static models:HybridModelType.Downloadable}" DataType="models:HybridModelFile">
-                                            <Grid ColumnDefinitions="*,Auto">
-                                                <TextBlock Foreground="{DynamicResource ThemeGreyColor}" Text="{Binding ShortDisplayName}" />
-                                                <Button
-                                                    Grid.Column="1"
-                                                    Margin="8,0,0,0"
-                                                    Padding="0"
-                                                    Classes="transparent-full">
-                                                    <fluentIcons:SymbolIcon
-                                                        VerticalAlignment="Center"
-                                                        FontSize="18"
-                                                        Foreground="{DynamicResource ThemeGreyColor}"
-                                                        IconVariant="Filled"
-                                                        Symbol="CloudArrowDown" />
-                                                </Button>
-                                            </Grid>
-                                        </DataTemplate>
-                                        <DataTemplate x:Key="{x:Static models:HybridModelType.None}" DataType="models:HybridModelFile">
-                                            <TextBlock Text="{Binding ShortDisplayName}" />
-                                        </DataTemplate>
-                                    </controls:HybridModelTemplateSelector>
-                                </ui:FAComboBox.DataTemplates>
+                            <ui:FAComboBox.DataTemplates>
+                                <controls:HybridModelTemplateSelector>
+                                    <DataTemplate x:Key="{x:Static models:HybridModelType.Downloadable}" DataType="models:HybridModelFile">
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <TextBlock Foreground="{DynamicResource ThemeGreyColor}" Text="{Binding ShortDisplayName}" />
+                                            <Button
+                                                Grid.Column="1"
+                                                Margin="8,0,0,0"
+                                                Padding="0"
+                                                Classes="transparent-full">
+                                                <fluentIcons:SymbolIcon
+                                                    VerticalAlignment="Center"
+                                                    FontSize="18"
+                                                    Foreground="{DynamicResource ThemeGreyColor}"
+                                                    IconVariant="Filled"
+                                                    Symbol="CloudArrowDown" />
+                                            </Button>
+                                        </Grid>
+                                    </DataTemplate>
+                                    <DataTemplate x:Key="{x:Static models:HybridModelType.None}" DataType="models:HybridModelFile">
+                                        <TextBlock Text="{Binding ShortDisplayName}" />
+                                    </DataTemplate>
+                                </controls:HybridModelTemplateSelector>
+                            </ui:FAComboBox.DataTemplates>
 
-                            </controls:FADownloadableComboBox>
-                        
+                        </controls:FADownloadableComboBox>
+
                         <!--<controls:BetterComboBox
                             Grid.Row="0"
                             Grid.Column="1"

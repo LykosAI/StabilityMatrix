@@ -39,7 +39,10 @@ public static class FileHash
         }
     }
 
-    public static async Task<string> GetSha256Async(string filePath, IProgress<ProgressReport>? progress = default)
+    public static async Task<string> GetSha256Async(
+        string filePath,
+        IProgress<ProgressReport>? progress = default
+    )
     {
         if (!File.Exists(filePath))
         {
@@ -53,15 +56,12 @@ public static class FileHash
         {
             await using var stream = File.OpenRead(filePath);
 
-            var hash = await GetHashAsync(
-                    SHA256.Create(),
-                    stream,
-                    buffer,
-                    totalBytesRead =>
-                    {
-                        progress?.Report(new ProgressReport(totalBytesRead, totalBytes, type: ProgressType.Hashing));
-                    }
-                )
+            var hash = await GetHashAsync(SHA256.Create(), stream, buffer, totalBytesRead =>
+                {
+                    progress?.Report(
+                        new ProgressReport(totalBytesRead, totalBytes, type: ProgressType.Hashing)
+                    );
+                })
                 .ConfigureAwait(false);
             return hash;
         }
@@ -71,7 +71,10 @@ public static class FileHash
         }
     }
 
-    public static async Task<string> GetBlake3Async(string filePath, IProgress<ProgressReport>? progress = default)
+    public static async Task<string> GetBlake3Async(
+        string filePath,
+        IProgress<ProgressReport>? progress = default
+    )
     {
         if (!File.Exists(filePath))
         {
@@ -105,7 +108,10 @@ public static class FileHash
         }
     }
 
-    public static async Task<Hash> GetBlake3Async(Stream stream, IProgress<ProgressReport>? progress = default)
+    public static async Task<Hash> GetBlake3Async(
+        Stream stream,
+        IProgress<ProgressReport>? progress = default
+    )
     {
         var totalBytes = Convert.ToUInt64(stream.Length);
         var readBytes = 0ul;
@@ -204,6 +210,6 @@ public static class FileHash
             < Size.MiB => 8 * (int)Size.KiB,
             < 500 * Size.MiB => 16 * (int)Size.KiB,
             < Size.GiB => 32 * (int)Size.KiB,
-            _ => 64 * (int)Size.KiB
+            _ => 64 * (int)Size.KiB,
         };
 }

@@ -1,26 +1,13 @@
-using System.Reflection;
-using DynamicData.Binding;
-using Microsoft.Extensions.DependencyInjection;
-using NSubstitute;
-using StabilityMatrix.Avalonia;
-using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.Inference;
-using StabilityMatrix.Avalonia.Models.TagCompletion;
-using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
 using StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 using StabilityMatrix.Core.Models;
-using StabilityMatrix.Core.Models.Api.Comfy;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Inference;
-using StabilityMatrix.Core.Models.Settings;
-using StabilityMatrix.Core.Services;
-using TextMateSharp.Grammars;
-using TextMateSharp.Registry;
 using Size = System.Drawing.Size;
 
 namespace StabilityMatrix.Tests.Avalonia;
@@ -33,12 +20,7 @@ namespace StabilityMatrix.Tests.Avalonia;
 [TestClass]
 public class InferenceWorkflowGraphTests
 {
-    private static ServiceProvider services = null!;
-    private static string inputImagePath = null!;
-
-    // 1x1 transparent PNG
-    private const string InputImagePng =
-        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
+    private static InferenceTestHost host = null!;
 
     private const string FluxGuidanceT2I =
         "BasicGuider,BasicScheduler,CLIPTextEncode,DualCLIPLoader,EmptySD3LatentImage,FluxGuidance,KSamplerSelect,PreviewImage,RandomNoise,SamplerCustomAdvanced,UNETLoader,VAEDecode,VAELoader";
@@ -64,53 +46,10 @@ public class InferenceWorkflowGraphTests
         "CLIPLoader,CLIPTextEncode,ImageScale,KSampler,LoadImage,PreviewImage,UNETLoader,VAEDecode,VAEEncode,VAELoader";
 
     [ClassInitialize]
-    public static void ClassInitialize(TestContext context)
-    {
-        var collection = App.ConfigureServices(disableMessagePipeInterprocess: true);
-
-        var clientManager = Substitute.For<IInferenceClientManager>();
-        clientManager.Samplers.Returns(new ObservableCollectionExtended<ComfySampler>(ComfySampler.Defaults));
-        clientManager.Schedulers.Returns(
-            new ObservableCollectionExtended<ComfyScheduler>(ComfyScheduler.Defaults)
-        );
-        foreach (
-            var property in typeof(IInferenceClientManager)
-                .GetProperties()
-                .Where(p => p.PropertyType == typeof(IObservableCollection<HybridModelFile>))
-        )
-        {
-            property.GetValue(clientManager).Returns(new ObservableCollectionExtended<HybridModelFile>());
-        }
-        collection.AddSingleton(clientManager);
-
-        var settingsManager = Substitute.For<ISettingsManager>();
-        settingsManager.Settings.Returns(new Settings());
-        collection.AddSingleton(settingsManager);
-
-        // Same grammar setup as PromptTests, since the real provider needs Avalonia's asset loader
-        var promptSyntaxFile = Assembly
-            .GetExecutingAssembly()
-            .GetManifestResourceStream("StabilityMatrix.Tests.ImagePrompt.tmLanguage.json")!;
-        var grammar = new Registry(new RegistryOptions(ThemeName.DarkPlus)).LoadGrammarFromStream(
-            promptSyntaxFile
-        );
-        var tokenizerProvider = Substitute.For<ITokenizerProvider>();
-        tokenizerProvider.TokenizeLine(Arg.Any<string>()).Returns(x => grammar.TokenizeLine(x.Arg<string>()));
-        collection.AddSingleton(tokenizerProvider);
-
-        services = collection.BuildServiceProvider();
-
-        inputImagePath = Path.Combine(Path.GetTempPath(), $"sm-graph-test-{Guid.NewGuid():N}.png");
-        File.WriteAllBytes(inputImagePath, Convert.FromBase64String(InputImagePng));
-    }
+    public static void ClassInitialize(TestContext context) => host = new InferenceTestHost();
 
     [ClassCleanup]
-    public static void ClassCleanup()
-    {
-        services?.Dispose();
-        if (inputImagePath is not null)
-            File.Delete(inputImagePath);
-    }
+    public static void ClassCleanup() => host?.Dispose();
 
     [TestInitialize]
     public void TestInitialize()
@@ -155,10 +94,7 @@ public class InferenceWorkflowGraphTests
         string expectedNodes
     )
     {
-        using var scope = services.CreateScope();
-        var vm = scope
-            .ServiceProvider.GetRequiredService<IServiceManager<ViewModelBase>>()
-            .Get<InferenceTextToImageViewModel>();
+        var vm = host.Create<InferenceTextToImageViewModel>();
 
         SelectModels(vm.ModelCardViewModel, profile, clipType, unetFile);
 
@@ -196,12 +132,9 @@ public class InferenceWorkflowGraphTests
         string expectedNodes
     )
     {
-        using var scope = services.CreateScope();
-        var vm = scope
-            .ServiceProvider.GetRequiredService<IServiceManager<ViewModelBase>>()
-            .Get<InferenceImageToImageViewModel>();
+        var vm = host.Create<InferenceImageToImageViewModel>();
 
-        var imageSource = new ImageSource(new FilePath(inputImagePath));
+        var imageSource = new ImageSource(new FilePath(host.InputImagePath));
         // Building the graph reads the image's cached hash
         imageSource.GetBlake3HashAsync().GetAwaiter().GetResult();
         vm.SelectImageCardViewModel.ImageSource = imageSource;
@@ -215,10 +148,7 @@ public class InferenceWorkflowGraphTests
     [TestMethod]
     public void SkipLayerGuidance_PatchesModelBeforeKSampler()
     {
-        using var scope = services.CreateScope();
-        var vm = scope
-            .ServiceProvider.GetRequiredService<IServiceManager<ViewModelBase>>()
-            .Get<InferenceTextToImageViewModel>();
+        var vm = host.Create<InferenceTextToImageViewModel>();
 
         SelectModels(vm.ModelCardViewModel, "MossImage", null, "moss_image_sft.safetensors");
         vm.SamplerCardViewModel.ModulesCardViewModel.AddModule<SkipLayerGuidanceModule>(m =>
@@ -267,21 +197,8 @@ public class InferenceWorkflowGraphTests
         modelCard.SelectedVae = LocalModel("vae.safetensors", SharedFolderType.VAE);
     }
 
-    private static NodeDictionary BuildNodes(InferenceGenerationViewModelBase vm)
-    {
-        var args = new InferenceGenerationViewModelBase.BuildPromptEventArgs();
-        try
-        {
-            vm.GetType()
-                .GetMethod("BuildPrompt", BindingFlags.Instance | BindingFlags.NonPublic)!
-                .Invoke(vm, [args]);
-        }
-        catch (TargetInvocationException e) when (e.InnerException is not null)
-        {
-            throw e.InnerException;
-        }
-        return args.Builder.ToNodeDictionary();
-    }
+    private static NodeDictionary BuildNodes(InferenceGenerationViewModelBase vm) =>
+        InferenceTestHost.BuildNodes(vm);
 
     private static string BuildNodeTypes(InferenceGenerationViewModelBase vm) =>
         string.Join(

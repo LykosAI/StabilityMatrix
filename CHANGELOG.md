@@ -5,6 +5,11 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.17.1
+### Fixed
+- Fixed the **Flux Text to Image** tab losing its model and text encoders when a saved project was opened, including projects Inference reopens at startup
+- Fixed Inference missing the result of a generation that ComfyUI finishes before it confirms the generation was queued, such as one where every step was already cached
+
 ## v2.17.0
 > Full technical notes for this release: [docs.lykos.ai/stability-matrix/release-notes/2.17.0](https://docs.lykos.ai/stability-matrix/release-notes/2.17.0)
 ### Security

@@ -29,15 +29,17 @@ public class ComfyClient : InferenceClientBase
     private readonly IComfyApi comfyApi;
     private bool isDisposed;
 
-    private readonly JsonSerializerOptions jsonSerializerOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicies.SnakeCaseLower,
-        Converters =
+    /// <summary>Options prompts and websocket messages are (de)serialized with.</summary>
+    internal static JsonSerializerOptions SerializerOptions { get; } =
+        new()
         {
-            new NodeConnectionBaseJsonConverter(),
-            new OneOfJsonConverter<string, StringNodeConnection>(),
-        },
-    };
+            PropertyNamingPolicy = JsonNamingPolicies.SnakeCaseLower,
+            Converters =
+            {
+                new NodeConnectionBaseJsonConverter(),
+                new OneOfJsonConverter<string, StringNodeConnection>(),
+            },
+        };
 
     // ReSharper disable once MemberCanBePrivate.Global
     public string ClientId { get; } = Guid.NewGuid().ToString();
@@ -98,10 +100,7 @@ public class ComfyClient : InferenceClientBase
     {
         comfyApi = apiFactory.CreateRefitClient<IComfyApi>(
             baseAddress,
-            new RefitSettings
-            {
-                ContentSerializer = new SystemTextJsonContentSerializer(jsonSerializerOptions),
-            }
+            new RefitSettings { ContentSerializer = new SystemTextJsonContentSerializer(SerializerOptions) }
         );
         BaseAddress = baseAddress;
 
@@ -166,7 +165,7 @@ public class ComfyClient : InferenceClientBase
         ComfyWebSocketResponse? json;
         try
         {
-            json = JsonSerializer.Deserialize<ComfyWebSocketResponse>(text, jsonSerializerOptions);
+            json = JsonSerializer.Deserialize<ComfyWebSocketResponse>(text, SerializerOptions);
         }
         catch (JsonException e)
         {
@@ -184,7 +183,7 @@ public class ComfyClient : InferenceClientBase
 
         if (json.Type == ComfyWebSocketResponseType.Executing)
         {
-            var executingData = json.GetDataAsType<ComfyWebSocketExecutingData>(jsonSerializerOptions);
+            var executingData = json.GetDataAsType<ComfyWebSocketExecutingData>(SerializerOptions);
             if (executingData?.PromptId is null)
             {
                 Logger.Warn($"Could not parse executing data {json.Data}, skipping");
@@ -219,7 +218,7 @@ public class ComfyClient : InferenceClientBase
         }
         else if (json.Type == ComfyWebSocketResponseType.Status)
         {
-            var statusData = json.GetDataAsType<ComfyWebSocketStatusData>(jsonSerializerOptions);
+            var statusData = json.GetDataAsType<ComfyWebSocketStatusData>(SerializerOptions);
             if (statusData is null)
             {
                 Logger.Warn($"Could not parse status data {json.Data}, skipping");
@@ -230,7 +229,7 @@ public class ComfyClient : InferenceClientBase
         }
         else if (json.Type == ComfyWebSocketResponseType.Progress)
         {
-            var progressData = json.GetDataAsType<ComfyWebSocketProgressData>(jsonSerializerOptions);
+            var progressData = json.GetDataAsType<ComfyWebSocketProgressData>(SerializerOptions);
             if (progressData is null)
             {
                 Logger.Warn($"Could not parse progress data {json.Data}, skipping");
@@ -244,10 +243,7 @@ public class ComfyClient : InferenceClientBase
         }
         else if (json.Type == ComfyWebSocketResponseType.ExecutionError)
         {
-            if (
-                json.GetDataAsType<ComfyWebSocketExecutionErrorData>(jsonSerializerOptions)
-                is not { } errorData
-            )
+            if (json.GetDataAsType<ComfyWebSocketExecutionErrorData>(SerializerOptions) is not { } errorData)
             {
                 Logger.Warn($"Could not parse ExecutionError data {json.Data}, skipping");
                 return;

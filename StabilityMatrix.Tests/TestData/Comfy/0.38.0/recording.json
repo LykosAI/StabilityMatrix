@@ -1,0 +1,2350 @@
+{
+  "comfyui_version": "0.38.0",
+  "client_id": "recording-client",
+  "object_info": {
+    "CheckpointLoaderSimple": {
+      "status": 200,
+      "body": {
+        "CheckpointLoaderSimple": {
+          "input": {
+            "required": {
+              "ckpt_name": [
+                [
+                  "broken_checkpoint.safetensors",
+                  "sd_xl_base_1.0.safetensors"
+                ],
+                {
+                  "tooltip": "The name of the checkpoint (model) to load."
+                }
+              ]
+            }
+          },
+          "input_order": {
+            "required": [
+              "ckpt_name"
+            ]
+          },
+          "is_input_list": false,
+          "output": [
+            "MODEL",
+            "CLIP",
+            "VAE"
+          ],
+          "output_is_list": [
+            false,
+            false,
+            false
+          ],
+          "output_name": [
+            "MODEL",
+            "CLIP",
+            "VAE"
+          ],
+          "name": "CheckpointLoaderSimple",
+          "display_name": "Load Checkpoint",
+          "description": "Loads a diffusion model checkpoint, diffusion models are used to denoise latents.",
+          "python_module": "nodes",
+          "category": "model/loaders",
+          "output_node": false,
+          "has_intermediate_output": false,
+          "output_tooltips": [
+            "The model used for denoising latents.",
+            "The CLIP model used for encoding text prompts.",
+            "The VAE model used for encoding and decoding images to and from latent space."
+          ],
+          "search_aliases": [
+            "load model",
+            "checkpoint",
+            "model loader",
+            "load checkpoint",
+            "ckpt",
+            "model"
+          ]
+        }
+      }
+    },
+    "ControlNetLoader": {
+      "status": 200,
+      "body": {
+        "ControlNetLoader": {
+          "input": {
+            "required": {
+              "control_net_name": [
+                [
+                  "control_canny_sdxl.safetensors"
+                ]
+              ]
+            }
+          },
+          "input_order": {
+            "required": [
+              "control_net_name"
+            ]
+          },
+          "is_input_list": false,
+          "output": [
+            "CONTROL_NET"
+          ],
+          "output_is_list": [
+            false
+          ],
+          "output_name": [
+            "CONTROL_NET"
+          ],
+          "name": "ControlNetLoader",
+          "display_name": "Load ControlNet Model",
+          "description": "",
+          "python_module": "nodes",
+          "category": "model/loaders",
+          "output_node": false,
+          "has_intermediate_output": false,
+          "search_aliases": [
+            "controlnet",
+            "control net",
+            "cn",
+            "load controlnet",
+            "controlnet loader"
+          ]
+        }
+      }
+    },
+    "LoraLoader": {
+      "status": 200,
+      "body": {
+        "LoraLoader": {
+          "input": {
+            "required": {
+              "model": [
+                "MODEL",
+                {
+                  "tooltip": "The diffusion model the LoRA will be applied to."
+                }
+              ],
+              "clip": [
+                "CLIP",
+                {
+                  "tooltip": "The CLIP model the LoRA will be applied to."
+                }
+              ],
+              "lora_name": [
+                [
+                  "detail_tweaker_xl.safetensors",
+                  "style\\ink_sketch.safetensors"
+                ],
+                {
+                  "tooltip": "The name of the LoRA."
+                }
+              ],
+              "strength_model": [
+                "FLOAT",
+                {
+                  "default": 1.0,
+                  "min": -100.0,
+                  "max": 100.0,
+                  "step": 0.01,
+                  "tooltip": "How strongly to modify the diffusion model. This value can be negative."
+                }
+              ],
+              "strength_clip": [
+                "FLOAT",
+                {
+                  "default": 1.0,
+                  "min": -100.0,
+                  "max": 100.0,
+                  "step": 0.01,
+                  "tooltip": "How strongly to modify the CLIP model. This value can be negative."
+                }
+              ]
+            }
+          },
+          "input_order": {
+            "required": [
+              "model",
+              "clip",
+              "lora_name",
+              "strength_model",
+              "strength_clip"
+            ]
+          },
+          "is_input_list": false,
+          "output": [
+            "MODEL",
+            "CLIP"
+          ],
+          "output_is_list": [
+            false,
+            false
+          ],
+          "output_name": [
+            "MODEL",
+            "CLIP"
+          ],
+          "name": "LoraLoader",
+          "display_name": "Load LoRA (Model and CLIP)",
+          "description": "This LoRA loader is used to modify both diffusion and CLIP models, altering the way in which latents are denoised such as applying styles. Multiple LoRA nodes can be linked together.",
+          "python_module": "nodes",
+          "category": "model/loaders",
+          "output_node": false,
+          "has_intermediate_output": false,
+          "output_tooltips": [
+            "The modified diffusion model.",
+            "The modified CLIP model."
+          ],
+          "search_aliases": [
+            "lora",
+            "load lora",
+            "apply lora",
+            "lora loader",
+            "lora model"
+          ],
+          "essentials_category": "Image Generation"
+        }
+      }
+    },
+    "UltralyticsDetectorProvider": {
+      "status": 200,
+      "body": {}
+    },
+    "SAMLoader": {
+      "status": 200,
+      "body": {}
+    },
+    "KSampler": {
+      "status": 200,
+      "body": {
+        "KSampler": {
+          "input": {
+            "required": {
+              "model": [
+                "MODEL",
+                {
+                  "tooltip": "The model used for denoising the input latent."
+                }
+              ],
+              "seed": [
+                "INT",
+                {
+                  "default": 0,
+                  "min": 0,
+                  "max": 18446744073709551615,
+                  "control_after_generate": true,
+                  "tooltip": "The random seed used for creating the noise."
+                }
+              ],
+              "steps": [
+                "INT",
+                {
+                  "default": 20,
+                  "min": 1,
+                  "max": 10000,
+                  "tooltip": "The number of steps used in the denoising process."
+                }
+              ],
+              "cfg": [
+                "FLOAT",
+                {
+                  "default": 8.0,
+                  "min": 0.0,
+                  "max": 100.0,
+                  "step": 0.1,
+                  "round": 0.01,
+                  "tooltip": "The Classifier-Free Guidance scale balances creativity and adherence to the prompt. Higher values result in images more closely matching the prompt however too high values will negatively impact quality."
+                }
+              ],
+              "sampler_name": [
+                [
+                  "euler",
+                  "euler_cfg_pp",
+                  "euler_ancestral",
+                  "euler_ancestral_cfg_pp",
+                  "heun",
+                  "heunpp2",
+                  "exp_heun_2_x0",
+                  "exp_heun_2_x0_sde",
+                  "dpm_2",
+                  "dpm_2_ancestral",
+                  "lms",
+                  "dpm_fast",
+                  "dpm_adaptive",
+                  "dpmpp_2s_ancestral",
+                  "dpmpp_2s_ancestral_cfg_pp",
+                  "dpmpp_sde",
+                  "dpmpp_sde_gpu",
+                  "dpmpp_2m",
+                  "dpmpp_2m_cfg_pp",
+                  "dpmpp_2m_sde",
+                  "dpmpp_2m_sde_gpu",
+                  "dpmpp_2m_sde_heun",
+                  "dpmpp_2m_sde_heun_gpu",
+                  "dpmpp_3m_sde",
+                  "dpmpp_3m_sde_gpu",
+                  "ddpm",
+                  "lcm",
+                  "ipndm",
+                  "ipndm_v",
+                  "deis",
+                  "cfgpp_ud10_ab",
+                  "res_multistep",
+                  "res_multistep_cfg_pp",
+                  "res_multistep_ancestral",
+                  "res_multistep_ancestral_cfg_pp",
+                  "gradient_estimation",
+                  "gradient_estimation_cfg_pp",
+                  "er_sde",
+                  "seeds_2",
+                  "seeds_3",
+                  "sa_solver",
+                  "sa_solver_pece",
+                  "ddim",
+                  "uni_pc",
+                  "uni_pc_bh2"
+                ],
+                {
+                  "tooltip": "The algorithm used when sampling, this can affect the quality, speed, and style of the generated output."
+                }
+              ],
+              "scheduler": [
+                [
+                  "simple",
+                  "sgm_uniform",
+                  "karras",
+                  "exponential",
+                  "ddim_uniform",
+                  "beta",
+                  "normal",
+                  "linear_quadratic",
+                  "kl_optimal"
+                ],
+                {
+                  "tooltip": "The scheduler controls how noise is gradually removed to form the image."
+                }
+              ],
+              "positive": [
+                "CONDITIONING",
+                {
+                  "tooltip": "The conditioning describing the attributes you want to include in the image."
+                }
+              ],
+              "negative": [
+                "CONDITIONING",
+                {
+                  "tooltip": "The conditioning describing the attributes you want to exclude from the image."
+                }
+              ],
+              "latent_image": [
+                "LATENT",
+                {
+                  "tooltip": "The latent image to denoise."
+                }
+              ],
+              "denoise": [
+                "FLOAT",
+                {
+                  "default": 1.0,
+                  "min": 0.0,
+                  "max": 1.0,
+                  "step": 0.01,
+                  "tooltip": "The amount of denoising applied, lower values will maintain the structure of the initial image allowing for image to image sampling."
+                }
+              ]
+            }
+          },
+          "input_order": {
+            "required": [
+              "model",
+              "seed",
+              "steps",
+              "cfg",
+              "sampler_name",
+              "scheduler",
+              "positive",
+              "negative",
+              "latent_image",
+              "denoise"
+            ]
+          },
+          "is_input_list": false,
+          "output": [
+            "LATENT"
+          ],
+          "output_is_list": [
+            false
+          ],
+          "output_name": [
+            "LATENT"
+          ],
+          "name": "KSampler",
+          "display_name": "KSampler",
+          "description": "Uses the provided model, positive and negative conditioning to denoise the latent image.",
+          "python_module": "nodes",
+          "category": "model/sampling",
+          "output_node": false,
+          "has_intermediate_output": false,
+          "output_tooltips": [
+            "The denoised latent."
+          ],
+          "search_aliases": [
+            "sampler",
+            "sample",
+            "generate",
+            "denoise",
+            "diffuse",
+            "txt2img",
+            "img2img"
+          ]
+        }
+      }
+    },
+    "LatentUpscale": {
+      "status": 200,
+      "body": {
+        "LatentUpscale": {
+          "input": {
+            "required": {
+              "samples": [
+                "LATENT"
+              ],
+              "upscale_method": [
+                [
+                  "nearest-exact",
+                  "bilinear",
+                  "area",
+                  "bicubic",
+                  "bislerp"
+                ]
+              ],
+              "width": [
+                "INT",
+                {
+                  "default": 512,
+                  "min": 0,
+                  "max": 16384,
+                  "step": 8
+                }
+              ],
+              "height": [
+                "INT",
+                {
+                  "default": 512,
+                  "min": 0,
+                  "max": 16384,
+                  "step": 8
+                }
+              ],
+              "crop": [
+                [
+                  "disabled",
+                  "center"
+                ]
+              ]
+            }
+          },
+          "input_order": {
+            "required": [
+              "samples",
+              "upscale_method",
+              "width",
+              "height",
+              "crop"
+            ]
+          },
+          "is_input_list": false,
+          "output": [
+            "LATENT"
+          ],
+          "output_is_list": [
+            false
+          ],
+          "output_name": [
+            "LATENT"
+          ],
+          "name": "LatentUpscale",
+          "display_name": "Upscale Latent",
+          "description": "",
+          "python_module": "nodes",
+          "category": "model/latent",
+          "output_node": false,
+          "has_intermediate_output": false,
+          "search_aliases": [
+            "enlarge latent",
+            "resize latent"
+          ]
+        }
+      }
+    },
+    "UpscaleModelLoader": {
+      "status": 200,
+      "body": {
+        "UpscaleModelLoader": {
+          "input": {
+            "required": {
+              "model_name": [
+                "COMBO",
+                {
+                  "multiselect": false,
+                  "options": [
+                    "4x-UltraSharp.pth"
+                  ]
+                }
+              ]
+            }
+          },
+          "input_order": {
+            "required": [
+              "model_name"
+            ]
+          },
+          "is_input_list": false,
+          "output": [
+            "UPSCALE_MODEL"
+          ],
+          "output_is_list": [
+            false
+          ],
+          "output_name": [
+            "UPSCALE_MODEL"
+          ],
+          "output_tooltips": [
+            null
+          ],
+          "output_matchtypes": null,
+          "name": "UpscaleModelLoader",
+          "display_name": "Load Upscale Model",
+          "description": "",
+          "python_module": "comfy_extras.nodes_upscale_model",
+          "category": "model/loaders",
+          "output_node": false,
+          "deprecated": false,
+          "experimental": false,
+          "dev_only": false,
+          "api_node": false,
+          "price_badge": null,
+          "search_aliases": null,
+          "essentials_category": null,
+          "has_intermediate_output": false
+        }
+      }
+    },
+    "Inference_Core_AIO_Preprocessor": {
+      "status": 200,
+      "body": {}
+    },
+    "UNETLoader": {
+      "status": 200,
+      "body": {
+        "UNETLoader": {
+          "input": {
+            "required": {
+              "unet_name": [
+                [
+                  "flux1-dev.safetensors"
+                ]
+              ],
+              "weight_dtype": [
+                [
+                  "default",
+                  "fp8_e4m3fn",
+                  "fp8_e4m3fn_fast",
+                  "fp8_e5m2"
+                ],
+                {
+                  "advanced": true
+                }
+              ]
+            }
+          },
+          "input_order": {
+            "required": [
+              "unet_name",
+              "weight_dtype"
+            ]
+          },
+          "is_input_list": false,
+          "output": [
+            "MODEL"
+          ],
+          "output_is_list": [
+            false
+          ],
+          "output_name": [
+            "MODEL"
+          ],
+          "name": "UNETLoader",
+          "display_name": "Load Diffusion Model",
+          "description": "",
+          "python_module": "nodes",
+          "category": "model/loaders",
+          "output_node": false,
+          "has_intermediate_output": false,
+          "search_aliases": []
+        }
+      }
+    },
+    "UnetLoaderGGUF": {
+      "status": 200,
+      "body": {}
+    },
+    "DualCLIPLoader": {
+      "status": 200,
+      "body": {
+        "DualCLIPLoader": {
+          "input": {
+            "required": {
+              "clip_name1": [
+                [
+                  "clip_l.safetensors",
+                  "t5xxl_fp16.safetensors"
+                ]
+              ],
+              "clip_name2": [
+                [
+                  "clip_l.safetensors",
+                  "t5xxl_fp16.safetensors"
+                ]
+              ],
+              "type": [
+                [
+                  "sdxl",
+                  "sd3",
+                  "flux",
+                  "hunyuan_video",
+                  "hidream",
+                  "hunyuan_image",
+                  "hunyuan_video_15",
+                  "kandinsky5",
+                  "kandinsky5_image",
+                  "ltxv",
+                  "newbie",
+                  "ace"
+                ]
+              ]
+            },
+            "optional": {
+              "device": [
+                [
+                  "default",
+                  "cpu"
+                ],
+                {
+                  "advanced": true
+                }
+              ]
+            }
+          },
+          "input_order": {
+            "required": [
+              "clip_name1",
+              "clip_name2",
+              "type"
+            ],
+            "optional": [
+              "device"
+            ]
+          },
+          "is_input_list": false,
+          "output": [
+            "CLIP"
+          ],
+          "output_is_list": [
+            false
+          ],
+          "output_name": [
+            "CLIP"
+          ],
+          "name": "DualCLIPLoader",
+          "display_name": "Load CLIP (Dual)",
+          "description": "Recipes:\nsdxl: clip-l, clip-g\nsd3: clip-l, clip-g / clip-l, t5 / clip-g, t5\nflux: clip-l, t5\nhidream: at least one of t5 or llama, recommended t5 and llama\nhunyuan_image: qwen2.5vl 7b and byt5 small\nnewbie: gemma-3-4b-it, jina clip v2",
+          "python_module": "nodes",
+          "category": "model/loaders",
+          "output_node": false,
+          "has_intermediate_output": false,
+          "search_aliases": []
+        }
+      }
+    },
+    "DualCLIPLoaderGGUF": {
+      "status": 200,
+      "body": {}
+    },
+    "CLIPVisionLoader": {
+      "status": 200,
+      "body": {
+        "CLIPVisionLoader": {
+          "input": {
+            "required": {
+              "clip_name": [
+                [
+                  "clip_vision_h.safetensors"
+                ]
+              ]
+            }
+          },
+          "input_order": {
+            "required": [
+              "clip_name"
+            ]
+          },
+          "is_input_list": false,
+          "output": [
+            "CLIP_VISION"
+          ],
+          "output_is_list": [
+            false
+          ],
+          "output_name": [
+            "CLIP_VISION"
+          ],
+          "name": "CLIPVisionLoader",
+          "display_name": "Load CLIP Vision",
+          "description": "",
+          "python_module": "nodes",
+          "category": "model/loaders",
+          "output_node": false,
+          "has_intermediate_output": false,
+          "search_aliases": []
+        }
+      }
+    },
+    "EmptyImage": {
+      "status": 200,
+      "body": {
+        "EmptyImage": {
+          "input": {
+            "required": {
+              "width": [
+                "INT",
+                {
+                  "default": 512,
+                  "min": 1,
+                  "max": 16384,
+                  "step": 1
+                }
+              ],
+              "height": [
+                "INT",
+                {
+                  "default": 512,
+                  "min": 1,
+                  "max": 16384,
+                  "step": 1
+                }
+              ],
+              "batch_size": [
+                "INT",
+                {
+                  "default": 1,
+                  "min": 1,
+                  "max": 4096
+                }
+              ],
+              "color": [
+                "INT",
+                {
+                  "default": 0,
+                  "min": 0,
+                  "max": 16777215,
+                  "step": 1,
+                  "display": "color"
+                }
+              ]
+            }
+          },
+          "input_order": {
+            "required": [
+              "width",
+              "height",
+              "batch_size",
+              "color"
+            ]
+          },
+          "is_input_list": false,
+          "output": [
+            "IMAGE"
+          ],
+          "output_is_list": [
+            false
+          ],
+          "output_name": [
+            "IMAGE"
+          ],
+          "name": "EmptyImage",
+          "display_name": "Empty Image",
+          "description": "",
+          "python_module": "nodes",
+          "category": "image",
+          "output_node": false,
+          "has_intermediate_output": false,
+          "search_aliases": []
+        }
+      }
+    },
+    "ColorTransfer": {
+      "status": 200,
+      "body": {
+        "ColorTransfer": {
+          "input": {
+            "required": {
+              "image_target": [
+                "IMAGE",
+                {
+                  "tooltip": "Image(s) to apply the color transform to."
+                }
+              ],
+              "image_ref": [
+                "IMAGE",
+                {
+                  "tooltip": "Reference image(s) to match colors to."
+                }
+              ],
+              "method": [
+                "COMBO",
+                {
+                  "multiselect": false,
+                  "options": [
+                    "reinhard_lab",
+                    "mkl_lab",
+                    "histogram"
+                  ]
+                }
+              ],
+              "source_stats": [
+                "COMFY_DYNAMICCOMBO_V3",
+                {
+                  "tooltip": "per_frame: each frame matched to image_ref individually. uniform: pool stats across all source frames as baseline, match to image_ref. target_frame: use one chosen frame as the baseline for the transform to image_ref, applied uniformly to all frames (preserves relative differences)",
+                  "options": [
+                    {
+                      "key": "per_frame",
+                      "inputs": {
+                        "required": {}
+                      }
+                    },
+                    {
+                      "key": "uniform",
+                      "inputs": {
+                        "required": {}
+                      }
+                    },
+                    {
+                      "key": "target_frame",
+                      "inputs": {
+                        "required": {
+                          "target_index": [
+                            "INT",
+                            {
+                              "tooltip": "Frame index used as the source baseline for computing the transform to image_ref",
+                              "default": 0,
+                              "min": 0,
+                              "max": 10000
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                }
+              ],
+              "strength": [
+                "FLOAT",
+                {
+                  "default": 1.0,
+                  "min": 0.0,
+                  "max": 10.0,
+                  "step": 0.01
+                }
+              ]
+            }
+          },
+          "input_order": {
+            "required": [
+              "image_target",
+              "image_ref",
+              "method",
+              "source_stats",
+              "strength"
+            ]
+          },
+          "is_input_list": false,
+          "output": [
+            "IMAGE"
+          ],
+          "output_is_list": [
+            false
+          ],
+          "output_name": [
+            "image"
+          ],
+          "output_tooltips": [
+            null
+          ],
+          "output_matchtypes": null,
+          "name": "ColorTransfer",
+          "display_name": "Transfer Color",
+          "description": "Match the colors of one image to another using various algorithms.",
+          "python_module": "comfy_extras.nodes_post_processing",
+          "category": "image/filters",
+          "output_node": false,
+          "deprecated": false,
+          "experimental": false,
+          "dev_only": false,
+          "api_node": false,
+          "price_badge": null,
+          "search_aliases": [
+            "color match",
+            "color grading",
+            "color correction",
+            "match colors",
+            "color transform",
+            "mkl",
+            "reinhard",
+            "histogram"
+          ],
+          "essentials_category": null,
+          "has_intermediate_output": false
+        }
+      }
+    },
+    "SaveImage": {
+      "status": 200,
+      "body": {
+        "SaveImage": {
+          "input": {
+            "required": {
+              "images": [
+                "IMAGE",
+                {
+                  "tooltip": "The images to save."
+                }
+              ],
+              "filename_prefix": [
+                "STRING",
+                {
+                  "default": "ComfyUI",
+                  "tooltip": "The prefix for the file to save. This may include formatting information such as %date:yyyy-MM-dd% or %Empty Latent Image.width% to include values from nodes."
+                }
+              ]
+            },
+            "hidden": {
+              "prompt": "PROMPT",
+              "extra_pnginfo": "EXTRA_PNGINFO"
+            }
+          },
+          "input_order": {
+            "required": [
+              "images",
+              "filename_prefix"
+            ],
+            "hidden": [
+              "prompt",
+              "extra_pnginfo"
+            ]
+          },
+          "is_input_list": false,
+          "output": [
+            "IMAGE"
+          ],
+          "output_is_list": [
+            false
+          ],
+          "output_name": [
+            "images"
+          ],
+          "name": "SaveImage",
+          "display_name": "Save Image",
+          "description": "Saves the input images to your ComfyUI output directory.",
+          "python_module": "nodes",
+          "category": "image",
+          "output_node": true,
+          "has_intermediate_output": false,
+          "search_aliases": [
+            "save",
+            "save image",
+            "export image",
+            "output image",
+            "write image",
+            "download"
+          ],
+          "essentials_category": "Basics"
+        }
+      }
+    },
+    "LoadImage": {
+      "status": 200,
+      "body": {
+        "LoadImage": {
+          "input": {
+            "required": {
+              "image": [
+                [
+                  "example.png"
+                ],
+                {
+                  "image_upload": true
+                }
+              ]
+            }
+          },
+          "input_order": {
+            "required": [
+              "image"
+            ]
+          },
+          "is_input_list": false,
+          "output": [
+            "IMAGE",
+            "MASK"
+          ],
+          "output_is_list": [
+            false,
+            false
+          ],
+          "output_name": [
+            "IMAGE",
+            "MASK"
+          ],
+          "name": "LoadImage",
+          "display_name": "Load Image",
+          "description": "",
+          "python_module": "nodes",
+          "category": "image",
+          "output_node": false,
+          "has_intermediate_output": false,
+          "search_aliases": [
+            "load image",
+            "open image",
+            "import image",
+            "image input",
+            "upload image",
+            "read image",
+            "image loader"
+          ],
+          "essentials_category": "Basics"
+        }
+      }
+    }
+  },
+  "prompts": [
+    {
+      "name": "success",
+      "request": {
+        "1": {
+          "class_type": "EmptyImage",
+          "inputs": {
+            "width": 64,
+            "height": 64,
+            "batch_size": 4,
+            "color": 0
+          }
+        },
+        "2": {
+          "class_type": "EmptyImage",
+          "inputs": {
+            "width": 64,
+            "height": 64,
+            "batch_size": 1,
+            "color": 16744448
+          }
+        },
+        "3": {
+          "class_type": "ColorTransfer",
+          "inputs": {
+            "image_target": [
+              "1",
+              0
+            ],
+            "image_ref": [
+              "2",
+              0
+            ],
+            "method": "reinhard_lab",
+            "source_stats": "per_frame",
+            "strength": 1.0
+          }
+        },
+        "4": {
+          "class_type": "SaveImage",
+          "inputs": {
+            "images": [
+              "3",
+              0
+            ],
+            "filename_prefix": "Inference/recording"
+          }
+        }
+      },
+      "status": 200,
+      "response": {
+        "prompt_id": "f1d6d21a-acb6-4073-b4c4-3f0207e2319d",
+        "number": 3,
+        "node_errors": {}
+      },
+      "history": {
+        "f1d6d21a-acb6-4073-b4c4-3f0207e2319d": {
+          "prompt": [
+            3,
+            "f1d6d21a-acb6-4073-b4c4-3f0207e2319d",
+            {
+              "1": {
+                "class_type": "EmptyImage",
+                "inputs": {
+                  "width": 64,
+                  "height": 64,
+                  "batch_size": 4,
+                  "color": 0
+                }
+              },
+              "2": {
+                "class_type": "EmptyImage",
+                "inputs": {
+                  "width": 64,
+                  "height": 64,
+                  "batch_size": 1,
+                  "color": 16744448
+                }
+              },
+              "3": {
+                "class_type": "ColorTransfer",
+                "inputs": {
+                  "image_target": [
+                    "1",
+                    0
+                  ],
+                  "image_ref": [
+                    "2",
+                    0
+                  ],
+                  "method": "reinhard_lab",
+                  "source_stats": "per_frame",
+                  "strength": 1.0
+                }
+              },
+              "4": {
+                "class_type": "SaveImage",
+                "inputs": {
+                  "images": [
+                    "3",
+                    0
+                  ],
+                  "filename_prefix": "Inference/recording"
+                }
+              }
+            },
+            {
+              "client_id": "recording-client",
+              "create_time": 1795430517021
+            },
+            [
+              "4"
+            ]
+          ],
+          "outputs": {
+            "4": {
+              "images": [
+                {
+                  "filename": "recording_00005_.png",
+                  "subfolder": "Inference",
+                  "type": "output"
+                },
+                {
+                  "filename": "recording_00006_.png",
+                  "subfolder": "Inference",
+                  "type": "output"
+                },
+                {
+                  "filename": "recording_00007_.png",
+                  "subfolder": "Inference",
+                  "type": "output"
+                },
+                {
+                  "filename": "recording_00008_.png",
+                  "subfolder": "Inference",
+                  "type": "output"
+                }
+              ]
+            }
+          },
+          "status": {
+            "status_str": "success",
+            "completed": true,
+            "messages": [
+              [
+                "execution_start",
+                {
+                  "prompt_id": "f1d6d21a-acb6-4073-b4c4-3f0207e2319d",
+                  "timestamp": 1795430517023
+                }
+              ],
+              [
+                "execution_cached",
+                {
+                  "nodes": [],
+                  "prompt_id": "f1d6d21a-acb6-4073-b4c4-3f0207e2319d",
+                  "timestamp": 1795430517024
+                }
+              ],
+              [
+                "execution_success",
+                {
+                  "prompt_id": "f1d6d21a-acb6-4073-b4c4-3f0207e2319d",
+                  "timestamp": 1795430517034
+                }
+              ]
+            ]
+          },
+          "meta": {
+            "4": {
+              "node_id": "4",
+              "display_node": "4",
+              "parent_node": null,
+              "real_node_id": "4"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "runtime_error",
+      "request": {
+        "1": {
+          "class_type": "CheckpointLoaderSimple",
+          "inputs": {
+            "ckpt_name": "broken_checkpoint.safetensors"
+          }
+        },
+        "2": {
+          "class_type": "EmptyImage",
+          "inputs": {
+            "width": 8,
+            "height": 8,
+            "batch_size": 1,
+            "color": 0
+          }
+        },
+        "3": {
+          "class_type": "SaveImage",
+          "inputs": {
+            "images": [
+              "2",
+              0
+            ],
+            "filename_prefix": "Inference/err"
+          }
+        },
+        "4": {
+          "class_type": "VAEDecode",
+          "inputs": {
+            "samples": [
+              "5",
+              0
+            ],
+            "vae": [
+              "1",
+              2
+            ]
+          }
+        },
+        "5": {
+          "class_type": "EmptyLatentImage",
+          "inputs": {
+            "width": 64,
+            "height": 64,
+            "batch_size": 1
+          }
+        },
+        "6": {
+          "class_type": "SaveImage",
+          "inputs": {
+            "images": [
+              "4",
+              0
+            ],
+            "filename_prefix": "Inference/err2"
+          }
+        }
+      },
+      "status": 200,
+      "response": {
+        "prompt_id": "686f8efa-7bc3-4907-bef9-b91b37613e68",
+        "number": 4,
+        "node_errors": {}
+      },
+      "history": {
+        "686f8efa-7bc3-4907-bef9-b91b37613e68": {
+          "prompt": [
+            4,
+            "686f8efa-7bc3-4907-bef9-b91b37613e68",
+            {
+              "1": {
+                "class_type": "CheckpointLoaderSimple",
+                "inputs": {
+                  "ckpt_name": "broken_checkpoint.safetensors"
+                }
+              },
+              "2": {
+                "class_type": "EmptyImage",
+                "inputs": {
+                  "width": 8,
+                  "height": 8,
+                  "batch_size": 1,
+                  "color": 0
+                }
+              },
+              "3": {
+                "class_type": "SaveImage",
+                "inputs": {
+                  "images": [
+                    "2",
+                    0
+                  ],
+                  "filename_prefix": "Inference/err"
+                }
+              },
+              "4": {
+                "class_type": "VAEDecode",
+                "inputs": {
+                  "samples": [
+                    "5",
+                    0
+                  ],
+                  "vae": [
+                    "1",
+                    2
+                  ]
+                }
+              },
+              "5": {
+                "class_type": "EmptyLatentImage",
+                "inputs": {
+                  "width": 64,
+                  "height": 64,
+                  "batch_size": 1
+                }
+              },
+              "6": {
+                "class_type": "SaveImage",
+                "inputs": {
+                  "images": [
+                    "4",
+                    0
+                  ],
+                  "filename_prefix": "Inference/err2"
+                }
+              }
+            },
+            {
+              "client_id": "recording-client",
+              "create_time": 1795430517630
+            },
+            [
+              "3",
+              "6"
+            ]
+          ],
+          "outputs": {
+            "3": {
+              "images": [
+                {
+                  "filename": "err_00002_.png",
+                  "subfolder": "Inference",
+                  "type": "output"
+                }
+              ]
+            }
+          },
+          "status": {
+            "status_str": "error",
+            "completed": false,
+            "messages": [
+              [
+                "execution_start",
+                {
+                  "prompt_id": "686f8efa-7bc3-4907-bef9-b91b37613e68",
+                  "timestamp": 1795430517631
+                }
+              ],
+              [
+                "execution_cached",
+                {
+                  "nodes": [],
+                  "prompt_id": "686f8efa-7bc3-4907-bef9-b91b37613e68",
+                  "timestamp": 1795430517632
+                }
+              ],
+              [
+                "execution_error",
+                {
+                  "prompt_id": "686f8efa-7bc3-4907-bef9-b91b37613e68",
+                  "node_id": "1",
+                  "node_type": "CheckpointLoaderSimple",
+                  "executed": [
+                    "3",
+                    "2"
+                  ],
+                  "exception_message": "Error while deserializing header: header too small\n",
+                  "exception_type": "safetensors._safetensors_rust.SafetensorError",
+                  "traceback": [
+                    "  File \"ComfyUI\\execution.py\", line 547, in execute\n    output_data, output_ui, has_subgraph, has_pending_tasks = await get_output_data(prompt_id, unique_id, obj, input_data_all, execution_block_cb=execution_block_cb, pre_execute_cb=pre_execute_cb, v3_data=v3_data)\n                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n",
+                    "  File \"ComfyUI\\execution.py\", line 352, in get_output_data\n    return_values = await _async_map_node_over_list(prompt_id, unique_id, obj, input_data_all, obj.FUNCTION, allow_interrupt=True, execution_block_cb=execution_block_cb, pre_execute_cb=pre_execute_cb, v3_data=v3_data)\n                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n",
+                    "  File \"ComfyUI\\execution.py\", line 326, in _async_map_node_over_list\n    await process_inputs(input_dict, i)\n",
+                    "  File \"ComfyUI\\execution.py\", line 314, in process_inputs\n    result = f(**inputs)\n             ^^^^^^^^^^^\n",
+                    "  File \"ComfyUI\\nodes.py\", line 640, in load_checkpoint\n    out = comfy.sd.load_checkpoint_guess_config(ckpt_path, output_vae=True, output_clip=True, embedding_directory=folder_paths.get_folder_paths(\"embeddings\"))\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n",
+                    "  File \"ComfyUI\\comfy\\sd.py\", line 2160, in load_checkpoint_guess_config\n    sd, metadata = comfy.utils.load_torch_file(ckpt_path, return_metadata=True)\n                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n",
+                    "  File \"ComfyUI\\comfy\\utils.py\", line 186, in load_torch_file\n    raise e\n",
+                    "  File \"ComfyUI\\comfy\\utils.py\", line 170, in load_torch_file\n    with safetensors.safe_open(ckpt, framework=\"pt\", device=device.type) as f:\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"
+                  ],
+                  "current_inputs": {
+                    "ckpt_name": [
+                      "broken_checkpoint.safetensors"
+                    ]
+                  },
+                  "current_outputs": [
+                    "1",
+                    "3",
+                    "4",
+                    "2",
+                    "5",
+                    "6"
+                  ],
+                  "timestamp": 1795430517636
+                }
+              ]
+            ]
+          },
+          "meta": {
+            "3": {
+              "node_id": "3",
+              "display_node": "3",
+              "parent_node": null,
+              "real_node_id": "3"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "validation_error",
+      "request": {
+        "1": {
+          "class_type": "LoadImage",
+          "inputs": {
+            "image": "does-not-exist.png"
+          }
+        },
+        "2": {
+          "class_type": "SaveImage",
+          "inputs": {
+            "images": [
+              "1",
+              0
+            ],
+            "filename_prefix": "Inference/val"
+          }
+        }
+      },
+      "status": 400,
+      "response": {
+        "error": {
+          "type": "prompt_outputs_failed_validation",
+          "message": "Prompt outputs failed validation",
+          "details": "",
+          "extra_info": {}
+        },
+        "node_errors": {
+          "1": {
+            "errors": [
+              {
+                "type": "custom_validation_failed",
+                "message": "Custom validation failed for node",
+                "details": "image - Invalid image file: does-not-exist.png",
+                "extra_info": {
+                  "input_name": "image"
+                }
+              }
+            ],
+            "dependent_outputs": [
+              "2"
+            ],
+            "class_type": "LoadImage"
+          }
+        }
+      }
+    }
+  ],
+  "websocket": [
+    {
+      "at": 0.016,
+      "text": {
+        "type": "status",
+        "data": {
+          "status": {
+            "exec_info": {
+              "queue_remaining": 0
+            }
+          },
+          "sid": "recording-client"
+        }
+      }
+    },
+    {
+      "at": 0.016,
+      "text": {
+        "type": "status",
+        "data": {
+          "status": {
+            "exec_info": {
+              "queue_remaining": 1
+            }
+          }
+        }
+      }
+    },
+    {
+      "at": 0.016,
+      "text": {
+        "type": "status",
+        "data": {
+          "status": {
+            "exec_info": {
+              "queue_remaining": 1
+            }
+          }
+        }
+      }
+    },
+    {
+      "at": 0.016,
+      "text": {
+        "type": "execution_start",
+        "data": {
+          "prompt_id": "f1d6d21a-acb6-4073-b4c4-3f0207e2319d",
+          "timestamp": 1795430517023
+        }
+      }
+    },
+    {
+      "at": 0.016,
+      "text": {
+        "type": "execution_cached",
+        "data": {
+          "nodes": [],
+          "prompt_id": "f1d6d21a-acb6-4073-b4c4-3f0207e2319d",
+          "timestamp": 1795430517024
+        }
+      }
+    },
+    {
+      "at": 0.016,
+      "text": {
+        "type": "progress_state",
+        "data": {
+          "prompt_id": "f1d6d21a-acb6-4073-b4c4-3f0207e2319d",
+          "nodes": {
+            "2": {
+              "value": 0.0,
+              "max": 1.0,
+              "state": "running",
+              "node_id": "2",
+              "prompt_id": "f1d6d21a-acb6-4073-b4c4-3f0207e2319d",
+              "display_node_id": "2",
+              "parent_node_id": null,
+              "real_node_id": "2"
+            }
+          }
+        }
+      }
+    },
+    {
+      "at": 0.016,
+      "text": {
+        "type": "executing",
+        "data": {
+          "node": "2",
+          "display_node": "2",
+          "prompt_id": "f1d6d21a-acb6-4073-b4c4-3f0207e2319d"
+        }
+      }
+    },
+    {
+      "at": 0.016,
+      "text": {
+        "type": "progress_state",
+        "data": {
+          "prompt_id": "f1d6d21a-acb6-4073-b4c4-3f0207e2319d",
+          "nodes": {
+            "2": {
+              "value": 1.0,
+              "max": 1.0,
+              "state": "finished",
+              "node_id": "2",
+              "prompt_id": "f1d6d21a-acb6-4073-b4c4-3f0207e2319d",
+              "display_node_id": "2",
+              "parent_node_id": null,
+              "real_node_id": "2"
+            }
+          }
+        }
+      }
+    },
+    {
+      "at": 0.016,
+      "text": {
+        "type": "progress_state",
+        "data": {
+          "prompt_id": "f1d6d21a-acb6-4073-b4c4-3f0207e2319d",
+          "nodes": {
+            "2": {
+              "value": 1.0,
+              "max": 1.0,
+              "state": "finished",
+              "node_id": "2",
+              "prompt_id": "f1d6d21a-acb6-4073-b4c4-3f0207e2319d",
+              "display_node_id": "2",
+              "parent_node_id": null,
+              "real_node_id": "2"
+            },
+            "1": {
+              "value": 0.0,
+              "max": 1.0,
+              "state": "running",
+              "node_id": "1",
+              "prompt_id": "f1d6d21a-acb6-4073-b4c4-3f0207e2319d",
+              "display_node_id": "1",
+              "parent_node_id": null,
+              "real_node_id": "1"
+            }
+          }
+        }
+      }
+    },
+    {
+      "at": 0.016,
+      "text": {
+        "type": "executing",
+        "data": {
+          "node": "1",
+          "display_node": "1",
+          "prompt_id": "f1d6d21a-acb6-4073-b4c4-3f0207e2319d"
+        }
+      }
+    },
+    {
+      "at": 0.016,
+      "text": {
+        "type": "progress_state",
+        "data": {
+          "prompt_id": "f1d6d21a-acb6-4073-b4c4-3f0207e2319d",
+          "nodes": {
+            "2": {
+              "value": 1.0,
+              "max": 1.0,
+              "state": "finished",
+              "node_id": "2",
+              "prompt_id": "f1d6d21a-acb6-4073-b4c4-3f0207e2319d",
+              "display_node_id": "2",
+              "parent_node_id": null,
+              "real_node_id": "2"
+            },
+            "1": {
+              "value": 1.0,
+              "max": 1.0,
+              "state": "finished",
+              "node_id": "1",
+              "prompt_id": "f1d6d21a-acb6-4073-b4c4-3f0207e2319d",
+              "display_node_id": "1",
+              "parent_node_id": null,
+              "real_node_id": "1"
+            }
+          }
+        }
+      }
+    },
+    {
+      "at": 0.016,
+      "text": {
+        "type": "progress_state",
+        "data": {
+          "prompt_id": "f1d6d21a-acb6-4073-b4c4-3f0207e2319d",
+          "nodes": {
+            "2": {
+              "value": 1.0,
+              "max": 1.0,
+              "state": "finished",
+              "node_id": "2",
+              "prompt_id": "f1d6d21a-acb6-4073-b4c4-3f0207e2319d",
+              "display_node_id": "2",
+              "parent_node_id": null,
+              "real_node_id": "2"
+            },
+            "1": {
+              "value": 1.0,
+              "max": 1.0,
+              "state": "finished",
+              "node_id": "1",
+              "prompt_id": "f1d6d21a-acb6-4073-b4c4-3f0207e2319d",
+              "display_node_id": "1",
+              "parent_node_id": null,
+              "real_node_id": "1"
+            },
+            "3": {
+              "value": 0.0,
+              "max": 1.0,
+              "state": "running",
+              "node_id": "3",
+              "prompt_id": "f1d6d21a-acb6-4073-b4c4-3f0207e2319d",
+              "display_node_id": "3",
+              "parent_node_id": null,
+              "real_node_id": "3"
+            }
+          }
+        }
+      }
+    },
+    {
+      "at": 0.016,
+      "text": {
+        "type": "executing",
+        "data": {
+          "node": "3",
+          "display_node": "3",
+          "prompt_id": "f1d6d21a-acb6-4073-b4c4-3f0207e2319d"
+        }
+      }
+    },
+    {
+      "at": 0.016,
+      "text": {
+        "type": "progress_state",
+        "data": {
+          "prompt_id": "f1d6d21a-acb6-4073-b4c4-3f0207e2319d",
+          "nodes": {
+            "2": {
+              "value": 1.0,
+              "max": 1.0,
+              "state": "finished",
+              "node_id": "2",
+              "prompt_id": "f1d6d21a-acb6-4073-b4c4-3f0207e2319d",
+              "display_node_id": "2",
+              "parent_node_id": null,
+              "real_node_id": "2"
+            },
+            "1": {
+              "value": 1.0,
+              "max": 1.0,
+              "state": "finished",
+              "node_id": "1",
+              "prompt_id": "f1d6d21a-acb6-4073-b4c4-3f0207e2319d",
+              "display_node_id": "1",
+              "parent_node_id": null,
+              "real_node_id": "1"
+            },
+            "3": {
+              "value": 1,
+              "max": 4,
+              "state": "running",
+              "node_id": "3",
+              "prompt_id": "f1d6d21a-acb6-4073-b4c4-3f0207e2319d",
+              "display_node_id": "3",
+              "parent_node_id": null,
+              "real_node_id": "3"
+            }
+          }
+        }
+      }
+    },
+    {
+      "at": 0.016,
+      "text": {
+        "type": "progress",
+        "data": {
+          "value": 1,
+          "max": 4,
+          "prompt_id": "f1d6d21a-acb6-4073-b4c4-3f0207e2319d",
+          "node": "3"
+        }
+      }
+    },
+    {
+      "at": 0.016,
+      "text": {
+        "type": "progress_state",
+        "data": {
+          "prompt_id": "f1d6d21a-acb6-4073-b4c4-3f0207e2319d",
+          "nodes": {
+            "2": {
+              "value": 1.0,
+              "max": 1.0,
+              "state": "finished",
+              "node_id": "2",
+              "prompt_id": "f1d6d21a-acb6-4073-b4c4-3f0207e2319d",
+              "display_node_id": "2",
+              "parent_node_id": null,
+              "real_node_id": "2"
+            },
+            "1": {
+              "value": 1.0,
+              "max": 1.0,
+              "state": "finished",
+              "node_id": "1",
+              "prompt_id": "f1d6d21a-acb6-4073-b4c4-3f0207e2319d",
+              "display_node_id": "1",
+              "parent_node_id": null,
+              "real_node_id": "1"
+            },
+            "3": {
+              "value": 4,
+              "max": 4,
+              "state": "running",
+              "node_id": "3",
+              "prompt_id": "f1d6d21a-acb6-4073-b4c4-3f0207e2319d",
+              "display_node_id": "3",
+              "parent_node_id": null,
+              "real_node_id": "3"
+            }
+          }
+        }
+      }
+    },
+    {
+      "at": 0.016,
+      "text": {
+        "type": "progress",
+        "data": {
+          "value": 4,
+          "max": 4,
+          "prompt_id": "f1d6d21a-acb6-4073-b4c4-3f0207e2319d",
+          "node": "3"
+        }
+      }
+    },
+    {
+      "at": 0.016,
+      "text": {
+        "type": "progress_state",
+        "data": {
+          "prompt_id": "f1d6d21a-acb6-4073-b4c4-3f0207e2319d",
+          "nodes": {
+            "2": {
+              "value": 1.0,
+              "max": 1.0,
+              "state": "finished",
+              "node_id": "2",
+              "prompt_id": "f1d6d21a-acb6-4073-b4c4-3f0207e2319d",
+              "display_node_id": "2",
+              "parent_node_id": null,
+              "real_node_id": "2"
+            },
+            "1": {
+              "value": 1.0,
+              "max": 1.0,
+              "state": "finished",
+              "node_id": "1",
+              "prompt_id": "f1d6d21a-acb6-4073-b4c4-3f0207e2319d",
+              "display_node_id": "1",
+              "parent_node_id": null,
+              "real_node_id": "1"
+            },
+            "3": {
+              "value": 4,
+              "max": 4,
+              "state": "finished",
+              "node_id": "3",
+              "prompt_id": "f1d6d21a-acb6-4073-b4c4-3f0207e2319d",
+              "display_node_id": "3",
+              "parent_node_id": null,
+              "real_node_id": "3"
+            }
+          }
+        }
+      }
+    },
+    {
+      "at": 0.016,
+      "text": {
+        "type": "progress_state",
+        "data": {
+          "prompt_id": "f1d6d21a-acb6-4073-b4c4-3f0207e2319d",
+          "nodes": {
+            "2": {
+              "value": 1.0,
+              "max": 1.0,
+              "state": "finished",
+              "node_id": "2",
+              "prompt_id": "f1d6d21a-acb6-4073-b4c4-3f0207e2319d",
+              "display_node_id": "2",
+              "parent_node_id": null,
+              "real_node_id": "2"
+            },
+            "1": {
+              "value": 1.0,
+              "max": 1.0,
+              "state": "finished",
+              "node_id": "1",
+              "prompt_id": "f1d6d21a-acb6-4073-b4c4-3f0207e2319d",
+              "display_node_id": "1",
+              "parent_node_id": null,
+              "real_node_id": "1"
+            },
+            "3": {
+              "value": 4,
+              "max": 4,
+              "state": "finished",
+              "node_id": "3",
+              "prompt_id": "f1d6d21a-acb6-4073-b4c4-3f0207e2319d",
+              "display_node_id": "3",
+              "parent_node_id": null,
+              "real_node_id": "3"
+            },
+            "4": {
+              "value": 0.0,
+              "max": 1.0,
+              "state": "running",
+              "node_id": "4",
+              "prompt_id": "f1d6d21a-acb6-4073-b4c4-3f0207e2319d",
+              "display_node_id": "4",
+              "parent_node_id": null,
+              "real_node_id": "4"
+            }
+          }
+        }
+      }
+    },
+    {
+      "at": 0.016,
+      "text": {
+        "type": "executing",
+        "data": {
+          "node": "4",
+          "display_node": "4",
+          "prompt_id": "f1d6d21a-acb6-4073-b4c4-3f0207e2319d"
+        }
+      }
+    },
+    {
+      "at": 0.032,
+      "text": {
+        "type": "executed",
+        "data": {
+          "node": "4",
+          "display_node": "4",
+          "output": {
+            "images": [
+              {
+                "filename": "recording_00005_.png",
+                "subfolder": "Inference",
+                "type": "output"
+              },
+              {
+                "filename": "recording_00006_.png",
+                "subfolder": "Inference",
+                "type": "output"
+              },
+              {
+                "filename": "recording_00007_.png",
+                "subfolder": "Inference",
+                "type": "output"
+              },
+              {
+                "filename": "recording_00008_.png",
+                "subfolder": "Inference",
+                "type": "output"
+              }
+            ]
+          },
+          "prompt_id": "f1d6d21a-acb6-4073-b4c4-3f0207e2319d"
+        }
+      }
+    },
+    {
+      "at": 0.032,
+      "text": {
+        "type": "progress_state",
+        "data": {
+          "prompt_id": "f1d6d21a-acb6-4073-b4c4-3f0207e2319d",
+          "nodes": {
+            "2": {
+              "value": 1.0,
+              "max": 1.0,
+              "state": "finished",
+              "node_id": "2",
+              "prompt_id": "f1d6d21a-acb6-4073-b4c4-3f0207e2319d",
+              "display_node_id": "2",
+              "parent_node_id": null,
+              "real_node_id": "2"
+            },
+            "1": {
+              "value": 1.0,
+              "max": 1.0,
+              "state": "finished",
+              "node_id": "1",
+              "prompt_id": "f1d6d21a-acb6-4073-b4c4-3f0207e2319d",
+              "display_node_id": "1",
+              "parent_node_id": null,
+              "real_node_id": "1"
+            },
+            "3": {
+              "value": 4,
+              "max": 4,
+              "state": "finished",
+              "node_id": "3",
+              "prompt_id": "f1d6d21a-acb6-4073-b4c4-3f0207e2319d",
+              "display_node_id": "3",
+              "parent_node_id": null,
+              "real_node_id": "3"
+            },
+            "4": {
+              "value": 1.0,
+              "max": 1.0,
+              "state": "finished",
+              "node_id": "4",
+              "prompt_id": "f1d6d21a-acb6-4073-b4c4-3f0207e2319d",
+              "display_node_id": "4",
+              "parent_node_id": null,
+              "real_node_id": "4"
+            }
+          }
+        }
+      }
+    },
+    {
+      "at": 0.032,
+      "text": {
+        "type": "execution_success",
+        "data": {
+          "prompt_id": "f1d6d21a-acb6-4073-b4c4-3f0207e2319d",
+          "timestamp": 1795430517034
+        }
+      }
+    },
+    {
+      "at": 0.032,
+      "text": {
+        "type": "status",
+        "data": {
+          "status": {
+            "exec_info": {
+              "queue_remaining": 0
+            }
+          }
+        }
+      }
+    },
+    {
+      "at": 0.032,
+      "text": {
+        "type": "executing",
+        "data": {
+          "node": null,
+          "prompt_id": "f1d6d21a-acb6-4073-b4c4-3f0207e2319d"
+        }
+      }
+    },
+    {
+      "at": 0.625,
+      "text": {
+        "type": "status",
+        "data": {
+          "status": {
+            "exec_info": {
+              "queue_remaining": 1
+            }
+          }
+        }
+      }
+    },
+    {
+      "at": 0.625,
+      "text": {
+        "type": "status",
+        "data": {
+          "status": {
+            "exec_info": {
+              "queue_remaining": 1
+            }
+          }
+        }
+      }
+    },
+    {
+      "at": 0.625,
+      "text": {
+        "type": "execution_start",
+        "data": {
+          "prompt_id": "686f8efa-7bc3-4907-bef9-b91b37613e68",
+          "timestamp": 1795430517631
+        }
+      }
+    },
+    {
+      "at": 0.625,
+      "text": {
+        "type": "execution_cached",
+        "data": {
+          "nodes": [],
+          "prompt_id": "686f8efa-7bc3-4907-bef9-b91b37613e68",
+          "timestamp": 1795430517632
+        }
+      }
+    },
+    {
+      "at": 0.625,
+      "text": {
+        "type": "progress_state",
+        "data": {
+          "prompt_id": "686f8efa-7bc3-4907-bef9-b91b37613e68",
+          "nodes": {
+            "2": {
+              "value": 0.0,
+              "max": 1.0,
+              "state": "running",
+              "node_id": "2",
+              "prompt_id": "686f8efa-7bc3-4907-bef9-b91b37613e68",
+              "display_node_id": "2",
+              "parent_node_id": null,
+              "real_node_id": "2"
+            }
+          }
+        }
+      }
+    },
+    {
+      "at": 0.625,
+      "text": {
+        "type": "executing",
+        "data": {
+          "node": "2",
+          "display_node": "2",
+          "prompt_id": "686f8efa-7bc3-4907-bef9-b91b37613e68"
+        }
+      }
+    },
+    {
+      "at": 0.625,
+      "text": {
+        "type": "progress_state",
+        "data": {
+          "prompt_id": "686f8efa-7bc3-4907-bef9-b91b37613e68",
+          "nodes": {
+            "2": {
+              "value": 1.0,
+              "max": 1.0,
+              "state": "finished",
+              "node_id": "2",
+              "prompt_id": "686f8efa-7bc3-4907-bef9-b91b37613e68",
+              "display_node_id": "2",
+              "parent_node_id": null,
+              "real_node_id": "2"
+            }
+          }
+        }
+      }
+    },
+    {
+      "at": 0.625,
+      "text": {
+        "type": "progress_state",
+        "data": {
+          "prompt_id": "686f8efa-7bc3-4907-bef9-b91b37613e68",
+          "nodes": {
+            "2": {
+              "value": 1.0,
+              "max": 1.0,
+              "state": "finished",
+              "node_id": "2",
+              "prompt_id": "686f8efa-7bc3-4907-bef9-b91b37613e68",
+              "display_node_id": "2",
+              "parent_node_id": null,
+              "real_node_id": "2"
+            },
+            "3": {
+              "value": 0.0,
+              "max": 1.0,
+              "state": "running",
+              "node_id": "3",
+              "prompt_id": "686f8efa-7bc3-4907-bef9-b91b37613e68",
+              "display_node_id": "3",
+              "parent_node_id": null,
+              "real_node_id": "3"
+            }
+          }
+        }
+      }
+    },
+    {
+      "at": 0.625,
+      "text": {
+        "type": "executing",
+        "data": {
+          "node": "3",
+          "display_node": "3",
+          "prompt_id": "686f8efa-7bc3-4907-bef9-b91b37613e68"
+        }
+      }
+    },
+    {
+      "at": 0.625,
+      "text": {
+        "type": "executed",
+        "data": {
+          "node": "3",
+          "display_node": "3",
+          "output": {
+            "images": [
+              {
+                "filename": "err_00002_.png",
+                "subfolder": "Inference",
+                "type": "output"
+              }
+            ]
+          },
+          "prompt_id": "686f8efa-7bc3-4907-bef9-b91b37613e68"
+        }
+      }
+    },
+    {
+      "at": 0.625,
+      "text": {
+        "type": "progress_state",
+        "data": {
+          "prompt_id": "686f8efa-7bc3-4907-bef9-b91b37613e68",
+          "nodes": {
+            "2": {
+              "value": 1.0,
+              "max": 1.0,
+              "state": "finished",
+              "node_id": "2",
+              "prompt_id": "686f8efa-7bc3-4907-bef9-b91b37613e68",
+              "display_node_id": "2",
+              "parent_node_id": null,
+              "real_node_id": "2"
+            },
+            "3": {
+              "value": 1.0,
+              "max": 1.0,
+              "state": "finished",
+              "node_id": "3",
+              "prompt_id": "686f8efa-7bc3-4907-bef9-b91b37613e68",
+              "display_node_id": "3",
+              "parent_node_id": null,
+              "real_node_id": "3"
+            }
+          }
+        }
+      }
+    },
+    {
+      "at": 0.625,
+      "text": {
+        "type": "progress_state",
+        "data": {
+          "prompt_id": "686f8efa-7bc3-4907-bef9-b91b37613e68",
+          "nodes": {
+            "2": {
+              "value": 1.0,
+              "max": 1.0,
+              "state": "finished",
+              "node_id": "2",
+              "prompt_id": "686f8efa-7bc3-4907-bef9-b91b37613e68",
+              "display_node_id": "2",
+              "parent_node_id": null,
+              "real_node_id": "2"
+            },
+            "3": {
+              "value": 1.0,
+              "max": 1.0,
+              "state": "finished",
+              "node_id": "3",
+              "prompt_id": "686f8efa-7bc3-4907-bef9-b91b37613e68",
+              "display_node_id": "3",
+              "parent_node_id": null,
+              "real_node_id": "3"
+            },
+            "1": {
+              "value": 0.0,
+              "max": 1.0,
+              "state": "running",
+              "node_id": "1",
+              "prompt_id": "686f8efa-7bc3-4907-bef9-b91b37613e68",
+              "display_node_id": "1",
+              "parent_node_id": null,
+              "real_node_id": "1"
+            }
+          }
+        }
+      }
+    },
+    {
+      "at": 0.625,
+      "text": {
+        "type": "executing",
+        "data": {
+          "node": "1",
+          "display_node": "1",
+          "prompt_id": "686f8efa-7bc3-4907-bef9-b91b37613e68"
+        }
+      }
+    },
+    {
+      "at": 0.625,
+      "text": {
+        "type": "execution_error",
+        "data": {
+          "prompt_id": "686f8efa-7bc3-4907-bef9-b91b37613e68",
+          "node_id": "1",
+          "node_type": "CheckpointLoaderSimple",
+          "executed": [
+            "3",
+            "2"
+          ],
+          "exception_message": "Error while deserializing header: header too small\n",
+          "exception_type": "safetensors._safetensors_rust.SafetensorError",
+          "traceback": [
+            "  File \"ComfyUI\\execution.py\", line 547, in execute\n    output_data, output_ui, has_subgraph, has_pending_tasks = await get_output_data(prompt_id, unique_id, obj, input_data_all, execution_block_cb=execution_block_cb, pre_execute_cb=pre_execute_cb, v3_data=v3_data)\n                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n",
+            "  File \"ComfyUI\\execution.py\", line 352, in get_output_data\n    return_values = await _async_map_node_over_list(prompt_id, unique_id, obj, input_data_all, obj.FUNCTION, allow_interrupt=True, execution_block_cb=execution_block_cb, pre_execute_cb=pre_execute_cb, v3_data=v3_data)\n                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n",
+            "  File \"ComfyUI\\execution.py\", line 326, in _async_map_node_over_list\n    await process_inputs(input_dict, i)\n",
+            "  File \"ComfyUI\\execution.py\", line 314, in process_inputs\n    result = f(**inputs)\n             ^^^^^^^^^^^\n",
+            "  File \"ComfyUI\\nodes.py\", line 640, in load_checkpoint\n    out = comfy.sd.load_checkpoint_guess_config(ckpt_path, output_vae=True, output_clip=True, embedding_directory=folder_paths.get_folder_paths(\"embeddings\"))\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n",
+            "  File \"ComfyUI\\comfy\\sd.py\", line 2160, in load_checkpoint_guess_config\n    sd, metadata = comfy.utils.load_torch_file(ckpt_path, return_metadata=True)\n                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n",
+            "  File \"ComfyUI\\comfy\\utils.py\", line 186, in load_torch_file\n    raise e\n",
+            "  File \"ComfyUI\\comfy\\utils.py\", line 170, in load_torch_file\n    with safetensors.safe_open(ckpt, framework=\"pt\", device=device.type) as f:\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"
+          ],
+          "current_inputs": {
+            "ckpt_name": [
+              "broken_checkpoint.safetensors"
+            ]
+          },
+          "current_outputs": [
+            "1",
+            "3",
+            "4",
+            "2",
+            "5",
+            "6"
+          ],
+          "timestamp": 1795430517636
+        }
+      }
+    },
+    {
+      "at": 0.625,
+      "text": {
+        "type": "status",
+        "data": {
+          "status": {
+            "exec_info": {
+              "queue_remaining": 0
+            }
+          }
+        }
+      }
+    },
+    {
+      "at": 0.625,
+      "text": {
+        "type": "executing",
+        "data": {
+          "node": null,
+          "prompt_id": "686f8efa-7bc3-4907-bef9-b91b37613e68"
+        }
+      }
+    }
+  ]
+}

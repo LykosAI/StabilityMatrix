@@ -29,6 +29,13 @@
     </ItemGroup>
 
     <ItemGroup>
+        <!-- Kestrel for the fake ComfyUI server in Fakes/ -->
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    </ItemGroup>
+    <ItemGroup>
+        <None Include="TestData\**" CopyToOutputDirectory="PreserveNewest" />
+    </ItemGroup>
+    <ItemGroup>
       <ProjectReference Include="..\StabilityMatrix.Avalonia\StabilityMatrix.Avalonia.csproj" />
       <ProjectReference Include="..\StabilityMatrix.Core\StabilityMatrix.Core.csproj" />
       <ProjectReference Include="..\StabilityMatrix.Native\StabilityMatrix.Native.csproj" />

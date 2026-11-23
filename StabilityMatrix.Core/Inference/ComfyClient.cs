@@ -384,15 +384,53 @@ public class ComfyClient : InferenceClientBase
         CancellationToken cancellationToken = default
     )
     {
-        var request = new ComfyPromptRequest { ClientId = ClientId, Prompt = nodes };
-        var result = await comfyApi.PostPrompt(request, cancellationToken).ConfigureAwait(false);
+        // Registered before posting, since ComfyUI can send this prompt's websocket messages
+        // before the /prompt response arrives, such as when every node is cached.
+        var request = new ComfyPromptRequest
+        {
+            ClientId = ClientId,
+            PromptId = Guid.NewGuid().ToString(),
+            Prompt = nodes,
+        };
+        var task = RegisterPromptTask(request.PromptId);
 
-        // Add task to dictionary and set it as the current task
-        var task = new ComfyTask(result.PromptId);
-        PromptTasks.TryAdd(result.PromptId, task);
+        ComfyPromptResponse result;
+        try
+        {
+            result = await comfyApi.PostPrompt(request, cancellationToken).ConfigureAwait(false);
+        }
+        catch
+        {
+            UnregisterPromptTask(task);
+            throw;
+        }
+
+        if (result.PromptId == task.Id)
+        {
+            return task;
+        }
+
+        // The server assigned its own id
+        UnregisterPromptTask(task);
+        return RegisterPromptTask(result.PromptId);
+    }
+
+    private ComfyTask RegisterPromptTask(string promptId)
+    {
+        var task = new ComfyTask(promptId);
+        PromptTasks[promptId] = task;
         currentPromptTask = task;
-
         return task;
+    }
+
+    private void UnregisterPromptTask(ComfyTask task)
+    {
+        PromptTasks.TryRemove(task.Id, out _);
+        if (currentPromptTask == task)
+        {
+            currentPromptTask = null;
+        }
+        task.Dispose();
     }
 
     public async Task InterruptPromptAsync(CancellationToken cancellationToken = default)

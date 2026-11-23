@@ -94,7 +94,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed **Fooocus** and **Fooocus - mashb1t's 1-Up Edition** failing to open their UI on new installs with `TypeError: unhashable type: 'dict'`. Existing installs pick up the fix on their next update ([#1746](https://github.com/LykosAI/StabilityMatrix/issues/1746))
 - Fixed the first-run recommended models dialog looking like it never loaded its images
 - Fixed the app sometimes crashing on exit with an **Inference** tab open, and a crash dialog appearing after the app had already closed
-- Fixed the **Python Packages** dialog crashing Stability Matrix while typing in its search box. A package whose details fail to load now shows an error, and selecting it again retries ([#1795](https://github.com/LykosAI/StabilityMatrix/pull/1795)) - thanks to @deepratna-awale!
+- Fixed installing ComfyUI extensions from Inference failing with "Access is denied" while ComfyUI was running. ComfyUI now stops for the install and starts again after
+- Fixed the **Python Packages** dialog crashing Stability Matrix while typing in its search box ([#1795](https://github.com/LykosAI/StabilityMatrix/pull/1795)) - thanks to @deepratna-awale!
 ### Performance
 - The **Checkpoint Manager** and **Outputs** grids no longer stutter on large images. Each image gets a small cached thumbnail, while your previews and outputs stay full resolution
 - Model browser cards load lighter images

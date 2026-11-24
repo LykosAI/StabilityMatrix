@@ -115,8 +115,8 @@ public class FluxGym(
             )
             .ConfigureAwait(false);
 
-        var isLegacyNvidiaGpu =
-            SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu() ?? HardwareHelper.HasLegacyNvidiaGpu();
+        var isLegacyNvidiaGpu = SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu()
+            ?? HardwareHelper.HasLegacyNvidiaGpu();
 
         var config = new PipInstallConfig
         {

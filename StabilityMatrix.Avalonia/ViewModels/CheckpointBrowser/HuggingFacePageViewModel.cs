@@ -263,11 +263,10 @@ public partial class HuggingFacePageViewModel : TabViewModelBase, IHandleNavigat
             return;
 
         using var reader = new StreamReader(Assets.HfPackagesJson.Open());
-        var packages =
-            JsonSerializer.Deserialize<IReadOnlyList<HuggingfaceItem>>(
-                reader.ReadToEnd(),
-                new JsonSerializerOptions { Converters = { new JsonStringEnumConverter() } }
-            ) ?? throw new InvalidOperationException("Failed to read hf-packages.json");
+        var packages = JsonSerializer.Deserialize<IReadOnlyList<HuggingfaceItem>>(
+            reader.ReadToEnd(),
+            new JsonSerializerOptions { Converters = { new JsonStringEnumConverter() } }
+        ) ?? throw new InvalidOperationException("Failed to read hf-packages.json");
 
         ItemsCache.EditDiff(packages, (a, b) => a.RepositoryPath == b.RepositoryPath);
     }

@@ -7,10 +7,7 @@ public partial class FilePath
     /// </summary>
     public FilePath WithName(string fileName)
     {
-        if (
-            Path.GetDirectoryName(FullPath) is { } directory
-            && !string.IsNullOrWhiteSpace(directory)
-        )
+        if (Path.GetDirectoryName(FullPath) is { } directory && !string.IsNullOrWhiteSpace(directory))
         {
             return new FilePath(directory, fileName);
         }

@@ -50,8 +50,7 @@ public abstract record ComfyTypedNodeBase
             if (property.GetCustomAttribute<JsonIgnoreAttribute>() is not null)
                 continue;
 
-            var key =
-                property.GetCustomAttribute<JsonPropertyNameAttribute>()?.Name
+            var key = property.GetCustomAttribute<JsonPropertyNameAttribute>()?.Name
                 ?? namingPolicy.ConvertName(property.Name);
 
             // If theres a BoolStringMember attribute, convert to one of the strings

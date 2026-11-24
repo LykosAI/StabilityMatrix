@@ -53,7 +53,9 @@ namespace Avalonia.Gif.Extensions
 
                 // Guard against infinite loop.
                 if (stream.Position >= stream.Length)
-                    throw new InvalidGifStreamException("Reach the end of the filestream without trailer block.");
+                    throw new InvalidGifStreamException(
+                        "Reach the end of the filestream without trailer block."
+                    );
             } while (blockLength > 0);
         }
 

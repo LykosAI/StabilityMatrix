@@ -496,13 +496,12 @@ public partial class CivitDetailsPageViewModel(
                         CivitModel.BaseModelType,
                         viewModel.CivitFile.Name
                     );
-                    effectiveLocationKeyForPreference =
-                        viewModel.InstallLocations.FirstOrDefault(loc =>
-                            loc != "Custom..."
-                            && finalDestinationDir
-                                .ToString()
-                                .Contains(loc.Replace("Models\\", "").Replace("Models/", ""))
-                        ) ?? viewModel.InstallLocations.First();
+                    effectiveLocationKeyForPreference = viewModel.InstallLocations.FirstOrDefault(loc =>
+                        loc != "Custom..."
+                        && finalDestinationDir
+                            .ToString()
+                            .Contains(loc.Replace("Models\\", "").Replace("Models/", ""))
+                    ) ?? viewModel.InstallLocations.First();
                 }
 
                 break;

@@ -61,7 +61,7 @@ public partial class RefreshBadgeViewModel : ViewModelBase
             ProgressState.Success => SuccessColorBrush,
             ProgressState.Inactive => InactiveColorBrush,
             ProgressState.Failed => FailColorBrush,
-            _ => Brushes.Gray
+            _ => Brushes.Gray,
         };
 
     public string CurrentToolTip =>
@@ -71,7 +71,7 @@ public partial class RefreshBadgeViewModel : ViewModelBase
             ProgressState.Success => SuccessToolTipText,
             ProgressState.Inactive => InactiveToolTipText,
             ProgressState.Failed => FailToolTipText,
-            _ => ""
+            _ => "",
         };
 
     public Symbol Icon =>
@@ -79,7 +79,7 @@ public partial class RefreshBadgeViewModel : ViewModelBase
         {
             ProgressState.Success => SuccessIcon,
             ProgressState.Failed => FailIcon,
-            _ => InactiveIcon
+            _ => InactiveIcon,
         };
 
     [RelayCommand]

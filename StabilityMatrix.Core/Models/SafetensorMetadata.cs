@@ -149,7 +149,7 @@ public record SafetensorMetadata
         {
             // NetworkModule = metadataDict.GetValueOrDefault("ss_network_module"),
             // ModelSpecArchitecture = metadataDict.GetValueOrDefault("modelspec.architecture"),
-            OtherMetadata = otherMetadata
+            OtherMetadata = otherMetadata,
         };
 
         if (metadataDict.TryGetValue("ss_tag_frequency", out var tagFrequencyJson))

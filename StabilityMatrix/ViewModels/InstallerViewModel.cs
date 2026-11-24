@@ -44,66 +44,72 @@ public partial class InstallerViewModel : ObservableObject
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ProgressBarVisibility))]
     private int progressValue;
-    
+
     [ObservableProperty]
     private BasePackage selectedPackage;
-    
+
     [ObservableProperty]
     private string progressText;
 
-    [ObservableProperty] 
+    [ObservableProperty]
     private string secondaryProgressText;
-    
+
     [ObservableProperty]
     private bool isIndeterminate;
-    
+
     [ObservableProperty]
     private Visibility packageInstalledVisibility;
-    
+
     [ObservableProperty]
     private string installButtonText;
 
-    [ObservableProperty] 
+    [ObservableProperty]
     private string installName;
-    
+
     [ObservableProperty]
     private ObservableCollection<PackageVersion> availableVersions;
 
-    [ObservableProperty] 
+    [ObservableProperty]
     private PackageVersion selectedVersion;
 
-    [ObservableProperty] 
+    [ObservableProperty]
     private ObservableCollection<BasePackage> availablePackages;
-    
+
     [ObservableProperty]
     private ObservableCollection<GitHubCommit> availableCommits;
-    
+
     [ObservableProperty]
     private GitHubCommit selectedCommit;
 
-    [ObservableProperty] 
+    [ObservableProperty]
     private string releaseNotes;
 
     [ObservableProperty]
     private bool isReleaseMode;
 
-    [ObservableProperty] 
+    [ObservableProperty]
     private bool isReleaseModeEnabled;
 
     [ObservableProperty]
     private bool showDuplicateWarning;
 
-
-    public Visibility ProgressBarVisibility => ProgressValue > 0 || IsIndeterminate ? Visibility.Visible : Visibility.Collapsed;
+    public Visibility ProgressBarVisibility =>
+        ProgressValue > 0 || IsIndeterminate ? Visibility.Visible : Visibility.Collapsed;
 
     public string ReleaseLabelText => IsReleaseMode ? "Version" : "Branch";
 
     internal event EventHandler? PackageInstalled;
 
-
-    public InstallerViewModel(ISettingsManager settingsManager, ILogger<InstallerViewModel> logger, IPyRunner pyRunner,
-        IPackageFactory packageFactory, ISnackbarService snackbarService, ISharedFolders sharedFolders,
-        IPrerequisiteHelper prerequisiteHelper, InstallerWindowDialogService contentDialogService)
+    public InstallerViewModel(
+        ISettingsManager settingsManager,
+        ILogger<InstallerViewModel> logger,
+        IPyRunner pyRunner,
+        IPackageFactory packageFactory,
+        ISnackbarService snackbarService,
+        ISharedFolders sharedFolders,
+        IPrerequisiteHelper prerequisiteHelper,
+        InstallerWindowDialogService contentDialogService
+    )
     {
         this.settingsManager = settingsManager;
         this.logger = logger;
@@ -121,7 +127,8 @@ public partial class InstallerViewModel : ObservableObject
         IsReleaseModeEnabled = true;
 
         AvailablePackages = new ObservableCollection<BasePackage>(packageFactory.GetAllAvailablePackages());
-        if (!AvailablePackages.Any()) return;
+        if (!AvailablePackages.Any())
+            return;
 
         SelectedPackage = AvailablePackages[0];
         InstallName = SelectedPackage.DisplayName;
@@ -131,7 +138,7 @@ public partial class InstallerViewModel : ObservableObject
     {
         if (SelectedPackage == null)
             return;
-        
+
         if (SelectedPackage.ShouldIgnoreReleases)
         {
             IsReleaseMode = false;
@@ -148,27 +155,35 @@ public partial class InstallerViewModel : ObservableObject
         else
         {
             var branches = (await SelectedPackage.GetAllBranches()).ToList();
-            AvailableVersions = new ObservableCollection<PackageVersion>(branches.Select(b => new PackageVersion
-            {
-                TagName = b.Name,
-                ReleaseNotesMarkdown = b.Commit.Label
-            }));
-            SelectedVersion = AvailableVersions.FirstOrDefault(x => x.TagName == "master") ?? AvailableVersions[0];
+            AvailableVersions = new ObservableCollection<PackageVersion>(
+                branches.Select(b => new PackageVersion
+                {
+                    TagName = b.Name,
+                    ReleaseNotesMarkdown = b.Commit.Label,
+                })
+            );
+            SelectedVersion = AvailableVersions.FirstOrDefault(x => x.TagName == "master")
+                ?? AvailableVersions[0];
         }
 
         ReleaseNotes = SelectedVersion.ReleaseNotesMarkdown;
-        
-        ShowDuplicateWarning =
-            settingsManager.Settings.InstalledPackages.Any(p =>
-                p.LibraryPath.Equals($"Packages\\{InstallName}"));
+
+        ShowDuplicateWarning = settingsManager.Settings.InstalledPackages.Any(p =>
+            p.LibraryPath.Equals($"Packages\\{InstallName}")
+        );
     }
-    
+
     [RelayCommand]
     private async Task Install()
     {
         await ActuallyInstall();
-        snackbarService.ShowSnackbarAsync($"Package {SelectedPackage.Name} installed successfully!",
-            "Success", ControlAppearance.Success).SafeFireAndForget();
+        snackbarService
+            .ShowSnackbarAsync(
+                $"Package {SelectedPackage.Name} installed successfully!",
+                "Success",
+                ControlAppearance.Success
+            )
+            .SafeFireAndForget();
         OnPackageInstalled();
     }
 
@@ -179,28 +194,31 @@ public partial class InstallerViewModel : ObservableObject
         var dialog = contentDialogService.CreateDialog();
         dialog.Content = new Image
         {
-            Source = bitmap, 
-            Stretch = Stretch.Uniform, 
+            Source = bitmap,
+            Stretch = Stretch.Uniform,
             MaxHeight = 500,
-            HorizontalAlignment = HorizontalAlignment.Center
+            HorizontalAlignment = HorizontalAlignment.Center,
         };
         dialog.PrimaryButtonText = "Open in Browser";
-        
+
         var result = await dialog.ShowAsync();
         if (result == ContentDialogResult.Primary)
         {
-            Process.Start(new ProcessStartInfo
-            {
-                FileName = SelectedPackage.PreviewImageUri.ToString(),
-                UseShellExecute = true
-            });
+            Process.Start(
+                new ProcessStartInfo
+                {
+                    FileName = SelectedPackage.PreviewImageUri.ToString(),
+                    UseShellExecute = true,
+                }
+            );
         }
     }
 
     partial void OnSelectedPackageChanged(BasePackage? value)
     {
-        if (value == null) return;
-        
+        if (value == null)
+            return;
+
         InstallName = value.DisplayName;
         ReleaseNotes = string.Empty;
         AvailableVersions?.Clear();
@@ -220,9 +238,12 @@ public partial class InstallerViewModel : ObservableObject
             }
             else
             {
-                Application.Current.Dispatcher.Invoke(() => { IsReleaseModeEnabled = true; });
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    IsReleaseModeEnabled = true;
+                });
             }
-            
+
             var versions = (await value.GetAllVersions(IsReleaseMode)).ToList();
             if (!versions.Any())
                 return;
@@ -233,7 +254,7 @@ public partial class InstallerViewModel : ObservableObject
                 SelectedVersion = AvailableVersions[0];
                 ReleaseNotes = versions.First().ReleaseNotesMarkdown;
             });
-            
+
             if (!IsReleaseMode)
             {
                 var commits = await value.GetAllCommits(SelectedVersion.TagName);
@@ -245,7 +266,6 @@ public partial class InstallerViewModel : ObservableObject
                 });
             }
         });
-
     }
 
     partial void OnIsReleaseModeChanged(bool oldValue, bool newValue)
@@ -255,19 +275,20 @@ public partial class InstallerViewModel : ObservableObject
 
     partial void OnInstallNameChanged(string? oldValue, string newValue)
     {
-        ShowDuplicateWarning =
-            settingsManager.Settings.InstalledPackages.Any(p =>
-                p.LibraryPath.Equals($"Packages\\{newValue}"));
+        ShowDuplicateWarning = settingsManager.Settings.InstalledPackages.Any(p =>
+            p.LibraryPath.Equals($"Packages\\{newValue}")
+        );
     }
 
     partial void OnSelectedVersionChanged(PackageVersion? value)
     {
         ReleaseNotes = value?.ReleaseNotesMarkdown ?? string.Empty;
-        if (value == null) return;
-        
+        if (value == null)
+            return;
+
         SelectedCommit = null;
         AvailableCommits?.Clear();
-        
+
         if (!IsReleaseMode)
         {
             Task.Run(async () =>
@@ -293,7 +314,7 @@ public partial class InstallerViewModel : ObservableObject
     private async Task ActuallyInstall()
     {
         var isCurrentlyReleaseMode = IsReleaseMode;
-        
+
         await InstallGitIfNecessary();
 
         SelectedPackage.InstallLocation = $"{settingsManager.LibraryDir}\\Packages\\{InstallName}";
@@ -316,12 +337,12 @@ public partial class InstallerViewModel : ObservableObject
         var version = isCurrentlyReleaseMode
             ? await DownloadPackage(SelectedVersion.TagName, false)
             : await DownloadPackage(SelectedCommit.Sha, true);
-        
+
         await InstallPackage();
 
         ProgressText = "Setting up shared folder links...";
         sharedFolders.SetupLinksForPackage(SelectedPackage, SelectedPackage.InstallLocation);
-        
+
         ProgressText = "Done";
         IsIndeterminate = false;
         ProgressValue = 100;
@@ -339,12 +360,12 @@ public partial class InstallerViewModel : ObservableObject
             DisplayVersion = GetDisplayVersion(version, branch),
             InstalledBranch = branch,
             LaunchCommand = SelectedPackage.LaunchCommand,
-            LastUpdateCheck = DateTimeOffset.Now
+            LastUpdateCheck = DateTimeOffset.Now,
         };
         await using var st = settingsManager.BeginTransaction();
         st.Settings.InstalledPackages.Add(package);
         st.Settings.ActiveInstalledPackageId = package.Id;
-        
+
         ProgressValue = 0;
     }
 
@@ -352,18 +373,18 @@ public partial class InstallerViewModel : ObservableObject
     {
         return branch == null ? version : $"{branch}@{version[..7]}";
     }
-    
+
     private Task<string?> DownloadPackage(string version, bool isCommitHash)
     {
         ProgressText = "Downloading package...";
-        
+
         var progress = new Progress<ProgressReport>(progress =>
         {
             IsIndeterminate = progress.IsIndeterminate;
             ProgressValue = Convert.ToInt32(progress.Percentage);
             EventManager.Instance.OnGlobalProgressChanged(ProgressValue);
         });
-        
+
         return SelectedPackage.DownloadPackage(version, isCommitHash, progress);
     }
 
@@ -371,14 +392,14 @@ public partial class InstallerViewModel : ObservableObject
     {
         SelectedPackage.ConsoleOutput += SelectedPackageOnConsoleOutput;
         ProgressText = "Installing package...";
-        
+
         var progress = new Progress<ProgressReport>(progress =>
         {
             IsIndeterminate = progress.IsIndeterminate;
             ProgressValue = Convert.ToInt32(progress.Percentage);
             EventManager.Instance.OnGlobalProgressChanged(ProgressValue);
         });
-        
+
         await SelectedPackage.InstallPackage(progress);
     }
 
@@ -416,5 +437,4 @@ public partial class InstallerViewModel : ObservableObject
     }
 
     private void OnPackageInstalled() => PackageInstalled?.Invoke(this, EventArgs.Empty);
-
 }

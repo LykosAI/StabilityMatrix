@@ -4,5 +4,5 @@ public enum ConfigFileType
 {
     Json,
     Yaml,
-    Fds // Frenetic Data Syntax
+    Fds, // Frenetic Data Syntax
 }

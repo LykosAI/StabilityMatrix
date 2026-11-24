@@ -8,18 +8,15 @@ public record A1111ExtensionManifest
 
     public IEnumerable<PackageExtension> GetPackageExtensions()
     {
-        return Extensions.Select(
-            x =>
-                new PackageExtension
-                {
-                    Author = x.FullName?.Split('/').FirstOrDefault() ?? "Unknown",
-                    Title = x.Name,
-                    Reference = x.Url,
-                    Files = [x.Url],
-                    Description = x.Description,
-                    InstallType = "git-clone"
-                }
-        );
+        return Extensions.Select(x => new PackageExtension
+        {
+            Author = x.FullName?.Split('/').FirstOrDefault() ?? "Unknown",
+            Title = x.Name,
+            Reference = x.Url,
+            Files = [x.Url],
+            Description = x.Description,
+            InstallType = "git-clone",
+        });
     }
 
     public record ManifestEntry

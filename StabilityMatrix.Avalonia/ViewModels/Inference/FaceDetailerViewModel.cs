@@ -164,17 +164,17 @@ public partial class FaceDetailerViewModel : LoadableViewModelBase
     public PromptCardViewModel WildcardViewModel { get; }
 
     public ObservableCollection<string> SamDetectionHints { get; set; } =
-        [
-            "center-1",
-            "horizontal-2",
-            "vertical-2",
-            "rect-4",
-            "diamond-4",
-            "mask-area",
-            "mask-points",
-            "mask-point-bbox",
-            "none",
-        ];
+    [
+        "center-1",
+        "horizontal-2",
+        "vertical-2",
+        "rect-4",
+        "diamond-4",
+        "mask-area",
+        "mask-points",
+        "mask-point-bbox",
+        "none",
+    ];
 
     public ObservableCollection<string> SamMaskHintUseNegatives { get; set; } = ["False", "Small", "Outter"];
 

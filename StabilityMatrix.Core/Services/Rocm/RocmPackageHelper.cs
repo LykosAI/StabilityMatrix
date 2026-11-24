@@ -89,8 +89,8 @@ public class RocmPackageHelper : IRocmPackageHelper
             return new Dictionary<string, string>();
 
         var helperEnvironment = BuildHelperLaunchEnvironment(runtimeContext, profile);
-        var packageEnvironment =
-            profile.ExtraEnvironmentFactory?.Invoke(runtimeContext) ?? new Dictionary<string, string>();
+        var packageEnvironment = profile.ExtraEnvironmentFactory?.Invoke(runtimeContext)
+            ?? new Dictionary<string, string>();
 
         var mergedEnvironment = MergeLaunchEnvironment(
             helperEnvironment,
@@ -539,11 +539,9 @@ public class RocmPackageHelper : IRocmPackageHelper
             };
         }
 
-        var selectedGpu =
-            TryResolvePreferredAmdGpu(supportedAmdGpus, settingsManager.Settings.PreferredGpu)
+        var selectedGpu = TryResolvePreferredAmdGpu(supportedAmdGpus, settingsManager.Settings.PreferredGpu)
             ?? supportedAmdGpus.First();
-        var runtimeGfxArch =
-            WindowsRocmSupport.TryGetCanonicalArchitecture(selectedGpu.GetAmdGfxArch())
+        var runtimeGfxArch = WindowsRocmSupport.TryGetCanonicalArchitecture(selectedGpu.GetAmdGfxArch())
             ?? GetSupportedFallbackGfxArch(supportedAmdGpus);
         var isCompatible = !string.IsNullOrWhiteSpace(runtimeGfxArch);
 

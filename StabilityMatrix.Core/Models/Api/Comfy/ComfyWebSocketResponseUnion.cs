@@ -8,5 +8,3 @@ public record ComfyWebSocketResponseUnion
     public ComfyWebSocketResponse? Json { get; set; }
     public byte[]? Bytes { get; set; }
 };
-
-

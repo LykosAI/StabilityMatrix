@@ -28,24 +28,24 @@ internal sealed class InferenceTestHost : IDisposable
 {
     /// <summary>The local models every list on <see cref="ClientManager"/> starts with.</summary>
     public static IReadOnlyList<(SharedFolderType Folder, string File)> ModelCatalog { get; } =
-        [
-            (SharedFolderType.StableDiffusion, "sd_xl_base_1.0.safetensors"),
-            (SharedFolderType.StableDiffusion, "svd_xt_1_1.safetensors"),
-            (SharedFolderType.DiffusionModels, "flux1-dev.safetensors"),
-            (SharedFolderType.DiffusionModels, "custom_unet_v3.safetensors"),
-            (SharedFolderType.DiffusionModels, "wan2.1_t2v_1.3B_fp16.safetensors"),
-            (SharedFolderType.DiffusionModels, "wan2.1_i2v_480p_14B_fp16.safetensors"),
-            (SharedFolderType.TextEncoders, "clip_l.safetensors"),
-            (SharedFolderType.TextEncoders, "t5xxl_fp16.safetensors"),
-            (SharedFolderType.TextEncoders, "mistral_3_small_flux2_fp8.safetensors"),
-            (SharedFolderType.TextEncoders, "umt5_xxl_fp8_e4m3fn_scaled.safetensors"),
-            (SharedFolderType.VAE, "sdxl_vae.safetensors"),
-            (SharedFolderType.VAE, "ae.safetensors"),
-            (SharedFolderType.VAE, "flux2-vae.safetensors"),
-            (SharedFolderType.VAE, "wan_2.1_vae.safetensors"),
-            (SharedFolderType.Lora, "detail_tweaker_xl.safetensors"),
-            (SharedFolderType.ClipVision, "clip_vision_h.safetensors"),
-        ];
+    [
+        (SharedFolderType.StableDiffusion, "sd_xl_base_1.0.safetensors"),
+        (SharedFolderType.StableDiffusion, "svd_xt_1_1.safetensors"),
+        (SharedFolderType.DiffusionModels, "flux1-dev.safetensors"),
+        (SharedFolderType.DiffusionModels, "custom_unet_v3.safetensors"),
+        (SharedFolderType.DiffusionModels, "wan2.1_t2v_1.3B_fp16.safetensors"),
+        (SharedFolderType.DiffusionModels, "wan2.1_i2v_480p_14B_fp16.safetensors"),
+        (SharedFolderType.TextEncoders, "clip_l.safetensors"),
+        (SharedFolderType.TextEncoders, "t5xxl_fp16.safetensors"),
+        (SharedFolderType.TextEncoders, "mistral_3_small_flux2_fp8.safetensors"),
+        (SharedFolderType.TextEncoders, "umt5_xxl_fp8_e4m3fn_scaled.safetensors"),
+        (SharedFolderType.VAE, "sdxl_vae.safetensors"),
+        (SharedFolderType.VAE, "ae.safetensors"),
+        (SharedFolderType.VAE, "flux2-vae.safetensors"),
+        (SharedFolderType.VAE, "wan_2.1_vae.safetensors"),
+        (SharedFolderType.Lora, "detail_tweaker_xl.safetensors"),
+        (SharedFolderType.ClipVision, "clip_vision_h.safetensors"),
+    ];
 
     // 1x1 transparent PNG
     private const string InputImagePng =

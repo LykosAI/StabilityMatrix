@@ -255,16 +255,15 @@ public partial class InstalledWorkflowsViewModel(
 
         var previousFilter = SelectedCategory?.FilterPath;
         Categories = new ObservableCollection<WorkflowCategory>(entries);
-        SelectedCategory =
-            (
-                previousFilter is null
-                    ? null
-                    : entries
-                        .SelectMany(Flatten)
-                        .FirstOrDefault(c =>
-                            string.Equals(c.FilterPath, previousFilter, StringComparison.OrdinalIgnoreCase)
-                        )
-            ) ?? allNode;
+        SelectedCategory = (
+            previousFilter is null
+                ? null
+                : entries
+                    .SelectMany(Flatten)
+                    .FirstOrDefault(c =>
+                        string.Equals(c.FilterPath, previousFilter, StringComparison.OrdinalIgnoreCase)
+                    )
+        ) ?? allNode;
 
         static IEnumerable<WorkflowCategory> Flatten(WorkflowCategory node) =>
             new[] { node }.Concat(node.SubDirectories.SelectMany(Flatten));

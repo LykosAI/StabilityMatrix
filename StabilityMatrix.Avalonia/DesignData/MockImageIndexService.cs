@@ -15,7 +15,7 @@ public class MockImageIndexService : IImageIndexService
     {
         InferenceImages = new IndexCollection<LocalImageFile, string>(this, file => file.AbsolutePath)
         {
-            RelativePath = "Inference"
+            RelativePath = "Inference",
         };
     }
 
@@ -31,7 +31,7 @@ public class MockImageIndexService : IImageIndexService
         {
             AbsolutePath = url,
             GenerationParameters = GenerationParameters.GetSample(),
-            ImageSize = new System.Drawing.Size(1024, 1024)
+            ImageSize = new System.Drawing.Size(1024, 1024),
         };
     }
 
@@ -45,7 +45,7 @@ public class MockImageIndexService : IImageIndexService
             ),
             GetSampleImage(
                 "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/16588c94-6595-4be9-8806-d7e6e22d198c/width=1152"
-            )
+            ),
         };
 
         indexCollection.ItemsSource.EditDiff(toAdd);

@@ -1,0 +1,3 @@
+# XamlStyler formats XAML (see .husky/task-runner.json)
+**/*.axaml
+**/*.xaml

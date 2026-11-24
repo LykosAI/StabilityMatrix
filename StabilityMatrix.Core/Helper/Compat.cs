@@ -137,8 +137,8 @@ public static class Compat
 
             // For AppImage builds, the path is in `$APPIMAGE`
             var appPath = Environment.GetEnvironmentVariable("APPIMAGE") ?? AppContext.BaseDirectory;
-            AppCurrentDir =
-                Path.GetDirectoryName(appPath) ?? throw new Exception("Could not find application directory");
+            AppCurrentDir = Path.GetDirectoryName(appPath)
+                ?? throw new Exception("Could not find application directory");
             ExeExtension = "";
             DllExtension = ".so";
         }

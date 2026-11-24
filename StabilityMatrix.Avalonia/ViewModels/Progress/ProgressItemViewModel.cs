@@ -14,7 +14,7 @@ public class ProgressItemViewModel : ProgressItemViewModelBase
         Failed = progressItem.Failed;
         Progress.Text = GetProgressText(progressItem.Progress);
         Progress.IsIndeterminate = progressItem.Progress.IsIndeterminate;
-        
+
         EventManager.Instance.ProgressChanged += OnProgressChanged;
     }
 
@@ -22,7 +22,7 @@ public class ProgressItemViewModel : ProgressItemViewModelBase
     {
         if (e.ProgressId != Id)
             return;
-        
+
         Progress.Value = e.Progress.Percentage;
         Failed = e.Failed;
         Progress.Text = GetProgressText(e.Progress);
@@ -49,8 +49,8 @@ public class ProgressItemViewModel : ProgressItemViewModelBase
         }
 
         return string.IsNullOrWhiteSpace(report.Message)
-            ? string.IsNullOrWhiteSpace(report.Title) 
-                ? string.Empty 
+            ? string.IsNullOrWhiteSpace(report.Title)
+                ? string.Empty
                 : report.Title
             : report.Message;
     }

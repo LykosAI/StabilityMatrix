@@ -60,11 +60,14 @@ namespace StabilityMatrix
         private ServiceProvider? serviceProvider;
 
         // ReSharper disable once MemberCanBePrivate.Global
-        public static bool IsSentryEnabled => !Debugger.IsAttached || Environment
-            .GetEnvironmentVariable("DEBUG_SENTRY")?.ToLowerInvariant() == "true";
+        public static bool IsSentryEnabled =>
+            !Debugger.IsAttached
+            || Environment.GetEnvironmentVariable("DEBUG_SENTRY")?.ToLowerInvariant() == "true";
+
         // ReSharper disable once MemberCanBePrivate.Global
-        public static bool IsExceptionWindowEnabled => !Debugger.IsAttached || Environment
-            .GetEnvironmentVariable("DEBUG_EXCEPTION_WINDOW")?.ToLowerInvariant() == "true";
+        public static bool IsExceptionWindowEnabled =>
+            !Debugger.IsAttached
+            || Environment.GetEnvironmentVariable("DEBUG_EXCEPTION_WINDOW")?.ToLowerInvariant() == "true";
 
         public static IConfiguration Config { get; set; } = null!;
 
@@ -91,7 +94,8 @@ namespace StabilityMatrix
             {
                 SentrySdk.Init(o =>
                 {
-                    o.Dsn = "https://eac7a5ea065d44cf9a8565e0f1817da2@o4505314753380352.ingest.sentry.io/4505314756067328";
+                    o.Dsn =
+                        "https://eac7a5ea065d44cf9a8565e0f1817da2@o4505314753380352.ingest.sentry.io/4505314756067328";
                     o.StackTraceMode = StackTraceMode.Enhanced;
                     o.TracesSampleRate = 1.0;
                     o.IsGlobalModeEnabled = true;
@@ -121,7 +125,7 @@ namespace StabilityMatrix
                 FileName = "${specialfolder:folder=ApplicationData}/StabilityMatrix/app.log",
                 ArchiveFileName = "${specialfolder:folder=ApplicationData}/StabilityMatrix/app.{#}.log",
                 ArchiveNumbering = ArchiveNumberingMode.Rolling,
-                MaxArchiveFiles = 2
+                MaxArchiveFiles = 2,
             };
             var debugTarget = new DebuggerTarget("debugger") { Layout = "${message}" };
             logConfig.AddRule(NLog.LogLevel.Debug, NLog.LogLevel.Fatal, fileTarget);
@@ -147,27 +151,28 @@ namespace StabilityMatrix
             return logConfig;
         }
 
-
-
         private void App_OnStartup(object sender, StartupEventArgs e)
         {
             if (AppDomain.CurrentDomain.BaseDirectory.EndsWith("Update\\"))
             {
                 var delays = Backoff.DecorrelatedJitterBackoffV2(
-                    TimeSpan.FromMilliseconds(150), retryCount: 3);
-                foreach (var dlay in delays) 
+                    TimeSpan.FromMilliseconds(150),
+                    retryCount: 3
+                );
+                foreach (var dlay in delays)
                 {
                     try
                     {
                         File.Copy(
-                            Path.Combine(AppDomain.CurrentDomain.BaseDirectory,
-                                "StabilityMatrix.exe"),
-                            Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..",
-                                "StabilityMatrix.exe"), true);
-                        
-                        Process.Start(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..",
-                            "StabilityMatrix.exe"));
-                        
+                            Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "StabilityMatrix.exe"),
+                            Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "StabilityMatrix.exe"),
+                            true
+                        );
+
+                        Process.Start(
+                            Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "StabilityMatrix.exe")
+                        );
+
                         Current.Shutdown();
                     }
                     catch (Exception)
@@ -196,7 +201,10 @@ namespace StabilityMatrix
             serviceCollection.AddSingleton<IContentDialogService, ContentDialogService>();
             serviceCollection.AddSingleton<PageContentDialogService>();
             serviceCollection.AddSingleton<InstallerWindowDialogService>();
-            serviceCollection.AddSingleton<Wpf.Ui.Contracts.ISnackbarService, Wpf.Ui.Services.SnackbarService>();
+            serviceCollection.AddSingleton<
+                Wpf.Ui.Contracts.ISnackbarService,
+                Wpf.Ui.Services.SnackbarService
+            >();
             serviceCollection.AddSingleton<IPackageFactory, PackageFactory>();
             serviceCollection.AddSingleton<IPyRunner, PyRunner>();
             serviceCollection.AddSingleton<ISharedFolders, SharedFolders>();
@@ -236,7 +244,10 @@ namespace StabilityMatrix
             serviceCollection.AddSingleton<BasePackage, A3WebUI>();
             serviceCollection.AddSingleton<BasePackage, VladAutomatic>();
             serviceCollection.AddSingleton<BasePackage, ComfyUI>();
-            serviceCollection.AddSingleton<Wpf.Ui.Contracts.ISnackbarService, Wpf.Ui.Services.SnackbarService>();
+            serviceCollection.AddSingleton<
+                Wpf.Ui.Contracts.ISnackbarService,
+                Wpf.Ui.Services.SnackbarService
+            >();
             serviceCollection.AddSingleton<IPrerequisiteHelper, PrerequisiteHelper>();
             serviceCollection.AddSingleton<ISnackbarService, SnackbarService>();
             serviceCollection.AddSingleton<INotificationBarService, NotificationBarService>();
@@ -267,30 +278,34 @@ namespace StabilityMatrix
 
             var defaultRefitSettings = new RefitSettings
             {
-                ContentSerializer =
-                    new SystemTextJsonContentSerializer(defaultSystemTextJsonSettings),
+                ContentSerializer = new SystemTextJsonContentSerializer(defaultSystemTextJsonSettings),
             };
 
             // HTTP Policies
-            var retryStatusCodes = new[] {
+            var retryStatusCodes = new[]
+            {
                 HttpStatusCode.RequestTimeout, // 408
                 HttpStatusCode.InternalServerError, // 500
                 HttpStatusCode.BadGateway, // 502
                 HttpStatusCode.ServiceUnavailable, // 503
-                HttpStatusCode.GatewayTimeout // 504
+                HttpStatusCode.GatewayTimeout, // 504
             };
-            var delay = Backoff
-                .DecorrelatedJitterBackoffV2(medianFirstRetryDelay: TimeSpan.FromMilliseconds(80), retryCount: 5);
+            var delay = Backoff.DecorrelatedJitterBackoffV2(
+                medianFirstRetryDelay: TimeSpan.FromMilliseconds(80),
+                retryCount: 5
+            );
             var retryPolicy = HttpPolicyExtensions
                 .HandleTransientHttpError()
                 .Or<TimeoutRejectedException>()
                 .OrResult(r => retryStatusCodes.Contains(r.StatusCode))
                 .WaitAndRetryAsync(delay);
-            
+
             // Shorter timeout for local requests
             var localTimeout = Policy.TimeoutAsync<HttpResponseMessage>(TimeSpan.FromSeconds(3));
-            var localDelay = Backoff
-                .DecorrelatedJitterBackoffV2(medianFirstRetryDelay: TimeSpan.FromMilliseconds(50), retryCount: 3);
+            var localDelay = Backoff.DecorrelatedJitterBackoffV2(
+                medianFirstRetryDelay: TimeSpan.FromMilliseconds(50),
+                retryCount: 3
+            );
             var localRetryPolicy = HttpPolicyExtensions
                 .HandleTransientHttpError()
                 .Or<TimeoutRejectedException>()
@@ -300,13 +315,13 @@ namespace StabilityMatrix
                     Debug.WriteLine("Retrying local request...");
                     return Task.CompletedTask;
                 });
-            
+
             // named client for update
-            serviceCollection.AddHttpClient("UpdateClient")
-                .AddPolicyHandler(retryPolicy);
+            serviceCollection.AddHttpClient("UpdateClient").AddPolicyHandler(retryPolicy);
 
             // Add Refit clients
-            serviceCollection.AddRefitClient<ICivitApi>(defaultRefitSettings)
+            serviceCollection
+                .AddRefitClient<ICivitApi>(defaultRefitSettings)
                 .ConfigureHttpClient(c =>
                 {
                     c.BaseAddress = new Uri("https://civitai.com");
@@ -315,23 +330,26 @@ namespace StabilityMatrix
                 .AddPolicyHandler(retryPolicy);
 
             // Add Refit client managers
-            serviceCollection.AddHttpClient("A3Client")
+            serviceCollection
+                .AddHttpClient("A3Client")
                 .AddPolicyHandler(localTimeout.WrapAsync(localRetryPolicy));
-            
-            serviceCollection.AddSingleton<IA3WebApiManager>(services =>
-                new A3WebApiManager(services.GetRequiredService<ISettingsManager>(),
-                    services.GetRequiredService<IHttpClientFactory>())
-                {
-                    RefitSettings = defaultRefitSettings,
-                });
+
+            serviceCollection.AddSingleton<IA3WebApiManager>(services => new A3WebApiManager(
+                services.GetRequiredService<ISettingsManager>(),
+                services.GetRequiredService<IHttpClientFactory>()
+            )
+            {
+                RefitSettings = defaultRefitSettings,
+            });
 
             // Add logging
             serviceCollection.AddLogging(builder =>
             {
                 builder.ClearProviders();
-                builder.AddFilter("Microsoft.Extensions.Http", LogLevel.Warning)
-                       .AddFilter("Microsoft", LogLevel.Warning)
-                       .AddFilter("System", LogLevel.Warning);
+                builder
+                    .AddFilter("Microsoft.Extensions.Http", LogLevel.Warning)
+                    .AddFilter("Microsoft", LogLevel.Warning)
+                    .AddFilter("System", LogLevel.Warning);
                 builder.SetMinimumLevel(LogLevel.Debug);
                 builder.AddNLog(logConfig);
             });
@@ -375,21 +393,25 @@ namespace StabilityMatrix
             var settingsManager = serviceProvider?.GetRequiredService<ISettingsManager>();
 
             // Skip remaining steps if no library is set
-            if (!(settingsManager?.TryFindLibrary() ?? false)) return;
-            
+            if (!(settingsManager?.TryFindLibrary() ?? false))
+                return;
+
             // If RemoveFolderLinksOnShutdown is set, delete all package junctions
             if (settingsManager.Settings.RemoveFolderLinksOnShutdown)
             {
                 var sharedFolders = serviceProvider?.GetRequiredService<ISharedFolders>();
                 sharedFolders?.RemoveLinksForAllPackages();
             }
-            
+
             // Dispose of database
             serviceProvider?.GetRequiredService<ILiteDbContext>().Dispose();
         }
 
         [DoesNotReturn]
-        private void App_DispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
+        private void App_DispatcherUnhandledException(
+            object sender,
+            System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e
+        )
         {
             if (SentrySdk.IsEnabled)
             {
@@ -401,14 +423,8 @@ namespace StabilityMatrix
 
             if (IsExceptionWindowEnabled)
             {
-                var vm = new ExceptionWindowViewModel
-                {
-                    Exception = e.Exception
-                };
-                var exceptionWindow = new ExceptionWindow
-                {
-                    DataContext = vm
-                };
+                var vm = new ExceptionWindowViewModel { Exception = e.Exception };
+                var exceptionWindow = new ExceptionWindow { DataContext = vm };
 
                 if (MainWindow?.IsActive ?? false)
                 {
@@ -422,4 +438,3 @@ namespace StabilityMatrix
         }
     }
 }
-

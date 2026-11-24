@@ -32,7 +32,7 @@ public class ModelCompletionData : CompletionData
             ImageSubtitle = localModel.ConnectedModelInfo?.VersionName,
             ImageSource = localModel.PreviewImageFullPathGlobal is { } img
                 ? new ImageSource(new FilePath(img))
-                : null
+                : null,
         };
     }
 }

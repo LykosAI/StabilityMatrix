@@ -15,10 +15,10 @@ namespace StabilityMatrix.Core.Processes;
 [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
 internal static class ApcParser
 {
-    public const char ApcEscape = (char) 0x9F;
+    public const char ApcEscape = (char)0x9F;
     public const string IdPrefix = "[SM;";
-    public const char StEscape = (char) 0x9C;
-    
+    public const char StEscape = (char)0x9C;
+
     /// <summary>
     /// Attempts to extract an APC message from the given text
     /// </summary>
@@ -27,19 +27,22 @@ internal static class ApcParser
     {
         message = null;
         var startIndex = text.IndexOf(ApcEscape);
-        if (startIndex == -1) return false;
-        
+        if (startIndex == -1)
+            return false;
+
         // Check the IdPrefix follows the ApcEscape
         var idIndex = text.IndexOf(IdPrefix, startIndex + 1, StringComparison.Ordinal);
-        if (idIndex == -1) return false;
-        
+        if (idIndex == -1)
+            return false;
+
         // Get the end index (ST escape)
         var stIndex = text.IndexOf(StEscape, idIndex + IdPrefix.Length);
-        if (stIndex == -1) return false;
+        if (stIndex == -1)
+            return false;
 
         // Extract the json string (between idIndex and stIndex)
         var json = text.Substring(idIndex + IdPrefix.Length, stIndex - idIndex - IdPrefix.Length);
-        
+
         try
         {
             message = JsonSerializer.Deserialize<ApcMessage>(json);

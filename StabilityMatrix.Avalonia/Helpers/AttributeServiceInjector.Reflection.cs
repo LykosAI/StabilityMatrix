@@ -31,9 +31,11 @@ internal static partial class AttributeServiceInjector
         var exportedTypes = assemblies.SelectMany(a => a.GetExportedTypes()).ToArray();
 
         var transientTypes = exportedTypes
-            .Select(
-                t => new { t, attributes = t.GetCustomAttributes(typeof(RegisterTransientAttribute), false) }
-            )
+            .Select(t => new
+            {
+                t,
+                attributes = t.GetCustomAttributes(typeof(RegisterTransientAttribute), false),
+            })
             .Where(t1 => t1.attributes is { Length: > 0 })
             .Select(t1 => new { Type = t1.t, Attribute = (RegisterTransientAttribute)t1.attributes[0] })
             .ToArray();
@@ -58,22 +60,20 @@ internal static partial class AttributeServiceInjector
         }
 
         var singletonTypes = exportedTypes
-            .Select(
-                t => new { t, attributes = t.GetCustomAttributes(typeof(RegisterSingletonAttribute), false) }
+            .Select(t => new
+            {
+                t,
+                attributes = t.GetCustomAttributes(typeof(RegisterSingletonAttribute), false),
+            })
+            .Where(t1 =>
+                t1.attributes is { Length: > 0 }
+                && !t1.t.Name.Contains("Mock", StringComparison.OrdinalIgnoreCase)
             )
-            .Where(
-                t1 =>
-                    t1.attributes is { Length: > 0 }
-                    && !t1.t.Name.Contains("Mock", StringComparison.OrdinalIgnoreCase)
-            )
-            .Select(
-                t1 =>
-                    new
-                    {
-                        Type = t1.t,
-                        Attributes = t1.attributes.Cast<RegisterSingletonAttribute>().ToArray()
-                    }
-            )
+            .Select(t1 => new
+            {
+                Type = t1.t,
+                Attributes = t1.attributes.Cast<RegisterSingletonAttribute>().ToArray(),
+            })
             .ToArray();
 
         foreach (var typePair in singletonTypes)
@@ -115,10 +115,9 @@ internal static partial class AttributeServiceInjector
 
         var transientTypes = exportedTypes
             .Select(t => new { t, attributes = t.GetCustomAttributes(typeof(TransientAttribute), false) })
-            .Where(
-                t1 =>
-                    t1.attributes is { Length: > 0 }
-                    && !t1.t.Name.Contains("Mock", StringComparison.OrdinalIgnoreCase)
+            .Where(t1 =>
+                t1.attributes is { Length: > 0 }
+                && !t1.t.Name.Contains("Mock", StringComparison.OrdinalIgnoreCase)
             )
             .Select(t1 => new { Type = t1.t, Attribute = (TransientAttribute)t1.attributes[0] });
 
@@ -136,14 +135,15 @@ internal static partial class AttributeServiceInjector
 
         var singletonTypes = exportedTypes
             .Select(t => new { t, attributes = t.GetCustomAttributes(typeof(SingletonAttribute), false) })
-            .Where(
-                t1 =>
-                    t1.attributes is { Length: > 0 }
-                    && !t1.t.Name.Contains("Mock", StringComparison.OrdinalIgnoreCase)
+            .Where(t1 =>
+                t1.attributes is { Length: > 0 }
+                && !t1.t.Name.Contains("Mock", StringComparison.OrdinalIgnoreCase)
             )
-            .Select(
-                t1 => new { Type = t1.t, Attributes = t1.attributes.Cast<SingletonAttribute>().ToArray() }
-            );
+            .Select(t1 => new
+            {
+                Type = t1.t,
+                Attributes = t1.attributes.Cast<SingletonAttribute>().ToArray(),
+            });
 
         foreach (var typePair in singletonTypes)
         {
@@ -173,16 +173,16 @@ internal static partial class AttributeServiceInjector
                 if (typePair.Type.IsAssignableTo(typeof(IDisposable)))
                 {
                     Debug.WriteLine("Registering IDisposable: {Name}", typePair.Type.Name);
-                    services.AddSingleton<IDisposable>(
-                        provider => (IDisposable)provider.GetRequiredService(serviceType)
+                    services.AddSingleton<IDisposable>(provider =>
+                        (IDisposable)provider.GetRequiredService(serviceType)
                     );
                 }
 
                 if (typePair.Type.IsAssignableTo(typeof(IAsyncDisposable)))
                 {
                     Debug.WriteLine("Registering IAsyncDisposable: {Name}", typePair.Type.Name);
-                    services.AddSingleton<IAsyncDisposable>(
-                        provider => (IAsyncDisposable)provider.GetRequiredService(serviceType)
+                    services.AddSingleton<IAsyncDisposable>(provider =>
+                        (IAsyncDisposable)provider.GetRequiredService(serviceType)
                     );
                 }
             }

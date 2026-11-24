@@ -270,8 +270,7 @@ public class DownloadService : IDownloadService
                 existingFileSize = 0;
             }
 
-            originalContentLength =
-                response.Content.Headers.ContentRange?.Length.GetValueOrDefault()
+            originalContentLength = response.Content.Headers.ContentRange?.Length.GetValueOrDefault()
                 ?? (existingFileSize + remainingContentLength);
 
             if (remainingContentLength > 0)

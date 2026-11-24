@@ -194,17 +194,14 @@ public static class DocumentationPathResolver
         if (string.IsNullOrEmpty(markdown))
             return markdown;
 
-        return ImageRegex.Replace(
-            markdown,
-            match =>
-            {
-                var alt = match.Groups["alt"].Value;
-                var src = match.Groups["src"].Value;
-                var rest = match.Groups["rest"].Value;
-                var resolved = ResolveImageUrl(currentPagePath, src);
-                return $"![{alt}]({resolved}{rest})";
-            }
-        );
+        return ImageRegex.Replace(markdown, match =>
+        {
+            var alt = match.Groups["alt"].Value;
+            var src = match.Groups["src"].Value;
+            var rest = match.Groups["rest"].Value;
+            var resolved = ResolveImageUrl(currentPagePath, src);
+            return $"![{alt}]({resolved}{rest})";
+        });
     }
 
     // Matches a (non-image) markdown link whose text contains inline code, e.g. [`Home`](../README.md)
@@ -246,14 +243,11 @@ public static class DocumentationPathResolver
             if (inFence)
                 continue;
 
-            lines[i] = CodeSpanLinkRegex.Replace(
-                lines[i],
-                match =>
-                {
-                    var text = match.Groups["text"].Value.Replace("`", string.Empty);
-                    return $"[{text}]({match.Groups["url"].Value})";
-                }
-            );
+            lines[i] = CodeSpanLinkRegex.Replace(lines[i], match =>
+            {
+                var text = match.Groups["text"].Value.Replace("`", string.Empty);
+                return $"[{text}]({match.Groups["url"].Value})";
+            });
         }
 
         return string.Join('\n', lines);

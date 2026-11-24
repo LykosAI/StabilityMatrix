@@ -8,5 +8,5 @@ public enum ProgressState
     Working,
     Success,
     Failed,
-    Cancelled
+    Cancelled,
 }

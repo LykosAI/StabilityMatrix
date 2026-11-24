@@ -177,10 +177,9 @@ public partial class BananaVisionPageViewModel
         // Auto-select first Kontext model if available
         if (SelectedFluxModel == null && AvailableFluxModels.Count > 0)
         {
-            SelectedFluxModel =
-                AvailableFluxModels.FirstOrDefault(m =>
-                    m.FileName.Contains("kontext", StringComparison.OrdinalIgnoreCase)
-                ) ?? AvailableFluxModels.First();
+            SelectedFluxModel = AvailableFluxModels.FirstOrDefault(m =>
+                m.FileName.Contains("kontext", StringComparison.OrdinalIgnoreCase)
+            ) ?? AvailableFluxModels.First();
         }
 
         // Load LoRA models - prioritize Kontext, then Flux, then untagged
@@ -215,10 +214,9 @@ public partial class BananaVisionPageViewModel
         // Auto-select first Qwen model if available
         if (SelectedQwenModel == null && AvailableQwenModels.Count > 0)
         {
-            SelectedQwenModel =
-                AvailableQwenModels.FirstOrDefault(m =>
-                    m.FileName.Contains("qwen", StringComparison.OrdinalIgnoreCase)
-                ) ?? AvailableQwenModels.First();
+            SelectedQwenModel = AvailableQwenModels.FirstOrDefault(m =>
+                m.FileName.Contains("qwen", StringComparison.OrdinalIgnoreCase)
+            ) ?? AvailableQwenModels.First();
         }
 
         // Load LoRA models - prioritize Qwen, then untagged
@@ -255,11 +253,10 @@ public partial class BananaVisionPageViewModel
         // Apache 2.0 default, then any other Klein variant the user has dropped in
         if (SelectedKleinModel == null && AvailableKleinModels.Count > 0)
         {
-            SelectedKleinModel =
-                AvailableKleinModels.FirstOrDefault(m =>
-                    m.FileName.Contains("klein-4b", StringComparison.OrdinalIgnoreCase)
-                    || m.FileName.Contains("klein_4b", StringComparison.OrdinalIgnoreCase)
-                )
+            SelectedKleinModel = AvailableKleinModels.FirstOrDefault(m =>
+                m.FileName.Contains("klein-4b", StringComparison.OrdinalIgnoreCase)
+                || m.FileName.Contains("klein_4b", StringComparison.OrdinalIgnoreCase)
+            )
                 ?? AvailableKleinModels.FirstOrDefault(m =>
                     m.FileName.Contains("klein", StringComparison.OrdinalIgnoreCase)
                 )

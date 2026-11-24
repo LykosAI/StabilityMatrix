@@ -1,46 +1,45 @@
-﻿<controls:UserControlBase xmlns="https://github.com/avaloniaui"
-                          xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                          xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-                          xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-                          xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
-                          xmlns:ui="using:FluentAvalonia.UI.Controls"
-                          xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
-                          xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
-                          xmlns:system="clr-namespace:System;assembly=System.Runtime"
-                          xmlns:vmDialog="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
-                          xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
-                          d:DataContext="{x:Static mocks:DesignData.InferenceConnectionHelpViewModel}"
-                          x:DataType="vmDialog:InferenceConnectionHelpViewModel"
-                          mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="350"
-                          x:Class="StabilityMatrix.Avalonia.Views.Dialogs.InferenceConnectionHelpDialog">
+﻿<controls:UserControlBase
+    x:Class="StabilityMatrix.Avalonia.Views.Dialogs.InferenceConnectionHelpDialog"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
+    xmlns:system="clr-namespace:System;assembly=System.Runtime"
+    xmlns:ui="using:FluentAvalonia.UI.Controls"
+    xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
+    xmlns:vmDialog="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
+    d:DataContext="{x:Static mocks:DesignData.InferenceConnectionHelpViewModel}"
+    d:DesignHeight="350"
+    d:DesignWidth="500"
+    x:DataType="vmDialog:InferenceConnectionHelpViewModel"
+    mc:Ignorable="d">
     <Grid RowDefinitions="*">
         <StackPanel Spacing="8">
-            <TextBlock 
-                Theme="{DynamicResource SubtitleTextBlockStyle}"
-                Text="Welcome to Inference"/>
-            
-            <TextBlock 
-                Theme="{DynamicResource BodyTextBlockStyle}"
-                Text="ComfyUI must be running to use Inference"/>
-            
+            <TextBlock Text="Welcome to Inference" Theme="{DynamicResource SubtitleTextBlockStyle}" />
+
+            <TextBlock Text="ComfyUI must be running to use Inference" Theme="{DynamicResource BodyTextBlockStyle}" />
+
             <ui:InfoBar
-                Severity="Informational"
+                Title="Would you like to install ComfyUI now?"
+                Margin="0,4"
                 VerticalAlignment="Center"
                 IsClosable="False"
                 IsOpen="{Binding IsInstallMode}"
                 IsVisible="{Binding IsInstallMode}"
-                Margin="0,4"
-                Title="Would you like to install ComfyUI now?"/>
-            
+                Severity="Informational" />
+
             <ui:InfoBar
-                Severity="Informational"
+                Title="Would you like to launch ComfyUI now?"
+                Margin="0,4"
                 VerticalAlignment="Center"
                 IsClosable="False"
                 IsOpen="{Binding IsLaunchMode}"
                 IsVisible="{Binding IsLaunchMode}"
-                Margin="0,4"
-                Title="Would you like to launch ComfyUI now?"/>
-            
+                Severity="Informational" />
+
             <ComboBox
                 HorizontalAlignment="Stretch"
                 IsVisible="{Binding IsLaunchMode}"

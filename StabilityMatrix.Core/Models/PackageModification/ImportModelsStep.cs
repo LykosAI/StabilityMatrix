@@ -161,7 +161,7 @@ public class ImportModelsStep(
                     IsIndeterminate = true,
                     Progress = -1f,
                     Message = "Checking connected model information",
-                    PrintToConsole = true
+                    PrintToConsole = true,
                 }
             );
 
@@ -175,10 +175,10 @@ public class ImportModelsStep(
             var progressText = successCount switch
             {
                 0 when failCount > 0 => "Import complete. No connected data found.",
-                > 0 when failCount > 0
-                    => $"Import complete. Found connected data for {successCount} of {totalCount} models.",
+                > 0 when failCount > 0 =>
+                    $"Import complete. Found connected data for {successCount} of {totalCount} models.",
                 1 when failCount == 0 => "Import complete. Found connected data for 1 model.",
-                _ => $"Import complete. Found connected data for all {totalCount} models."
+                _ => $"Import complete. Found connected data for all {totalCount} models.",
             };
 
             progress?.Report(new ProgressReport(1f, message: progressText));

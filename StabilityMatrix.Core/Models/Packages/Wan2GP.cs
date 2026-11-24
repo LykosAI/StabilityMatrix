@@ -299,8 +299,7 @@ public class Wan2GP(
     )
     {
         var isLegacyNvidia = IsLegacyNvidia;
-        var isNewerNvidia =
-            SettingsManager.Settings.PreferredGpu?.IsAmpereOrNewerGpu()
+        var isNewerNvidia = SettingsManager.Settings.PreferredGpu?.IsAmpereOrNewerGpu()
             ?? HardwareHelper.HasAmpereOrNewerGpu();
 
         progress?.Report(new ProgressReport(-1f, "Upgrading pip...", isIndeterminate: true));
@@ -587,8 +586,9 @@ public class Wan2GP(
             if (string.IsNullOrEmpty(ffmpegDir))
                 return env;
 
-            var currentPath =
-                env.GetValueOrDefault("PATH") ?? Environment.GetEnvironmentVariable("PATH") ?? "";
+            var currentPath = env.GetValueOrDefault("PATH")
+                ?? Environment.GetEnvironmentVariable("PATH")
+                ?? "";
             env = env.SetItem("PATH", Compat.GetEnvPathWithExtensions(ffmpegDir, currentPath));
 
             return env;

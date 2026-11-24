@@ -234,34 +234,34 @@ public partial class ModelCardViewModel(
 
     public List<string> WeightDTypes { get; set; } = ["default", "fp8_e4m3fn", "fp8_e5m2"];
     public List<string> ClipTypes { get; set; } =
-        [
-            "sdxl",
-            "sd3",
-            "flux",
-            "flux2",
-            "chroma",
-            "hunyuan_video",
-            "hidream",
-            "hunyuan_image",
-            "hunyuan_video_15",
-            "kandinsky5",
-            "kandinsky5_image",
-            "ltxv",
-            "newbie",
-            "ace",
-            "krea2",
-            "lumina2",
-            "moss_image",
-            "qwen_image",
-            "wan",
-            "omnigen2",
-            "mochi",
-            "pixart",
-            "cosmos",
-            "stable_cascade",
-            "stable_audio",
-            "stable_diffusion",
-        ];
+    [
+        "sdxl",
+        "sd3",
+        "flux",
+        "flux2",
+        "chroma",
+        "hunyuan_video",
+        "hidream",
+        "hunyuan_image",
+        "hunyuan_video_15",
+        "kandinsky5",
+        "kandinsky5_image",
+        "ltxv",
+        "newbie",
+        "ace",
+        "krea2",
+        "lumina2",
+        "moss_image",
+        "qwen_image",
+        "wan",
+        "omnigen2",
+        "mochi",
+        "pixart",
+        "cosmos",
+        "stable_cascade",
+        "stable_audio",
+        "stable_diffusion",
+    ];
 
     public List<InferenceWorkflowProfile> WorkflowProfiles { get; set; } =
         InferenceWorkflowProfile.All.ToList();
@@ -1725,8 +1725,7 @@ public partial class ModelCardViewModel(
                 new ComfyNodeBuilder.UnetLoaderGGUF
                 {
                     Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.UNETLoader)),
-                    UnetName =
-                        SelectedUnetModel?.RelativePath
+                    UnetName = SelectedUnetModel?.RelativePath
                         ?? throw new ValidationException("Model not selected"),
                 }
             );
@@ -1738,8 +1737,7 @@ public partial class ModelCardViewModel(
                 new ComfyNodeBuilder.UNETLoader
                 {
                     Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.UNETLoader)),
-                    UnetName =
-                        SelectedUnetModel?.RelativePath
+                    UnetName = SelectedUnetModel?.RelativePath
                         ?? throw new ValidationException("Model not selected"),
                     WeightDtype = SelectedDType ?? "default",
                 }
@@ -1820,8 +1818,8 @@ public partial class ModelCardViewModel(
                 : new ComfyNodeBuilder.CheckpointLoaderNF4
                 {
                     Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.CheckpointLoaderNF4)),
-                    CkptName =
-                        SelectedModel?.RelativePath ?? throw new ValidationException("Model not selected"),
+                    CkptName = SelectedModel?.RelativePath
+                        ?? throw new ValidationException("Model not selected"),
                 };
 
         var baseLoader = e.Nodes.AddTypedNode(loaderNode);
@@ -1865,8 +1863,7 @@ public partial class ModelCardViewModel(
                 new ComfyNodeBuilder.VAELoader
                 {
                     Name = "VAELoader",
-                    VaeName =
-                        SelectedVae?.RelativePath
+                    VaeName = SelectedVae?.RelativePath
                         ?? throw new ValidationException("VAE enabled but not selected"),
                 }
             );

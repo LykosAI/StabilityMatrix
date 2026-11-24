@@ -132,7 +132,7 @@ public partial class OAuthConnectViewModel : ContentDialogViewModelBase
         {
             Title = Title,
             Content = this,
-            CloseButtonText = Resources.Action_Close
+            CloseButtonText = Resources.Action_Close,
         };
     }
 }

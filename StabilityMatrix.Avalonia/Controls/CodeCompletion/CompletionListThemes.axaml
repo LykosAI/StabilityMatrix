@@ -16,9 +16,7 @@
 
     </Design.PreviewWith>
 
-    <models:IconData 
-        x:Key="PlaceHolderIcon" 
-        FAIcon="fa-solid fa-question"/>
+    <models:IconData x:Key="PlaceHolderIcon" FAIcon="fa-solid fa-question" />
 
     <!--  ReSharper disable once Xaml.StaticResourceNotResolved  -->
     <ControlTheme
@@ -184,8 +182,8 @@
                                             Grid.Column="1"
                                             VerticalAlignment="Center"
                                             FontFamily="Cascadia Code,Consolas,Menlo,Monospace,DejaVu Sans Mono,monospace"
-                                            Inlines="{Binding TextInlines}"
-                                            FontSize="13"/>
+                                            FontSize="13"
+                                            Inlines="{Binding TextInlines}" />
 
                                         <!--  Description Text  -->
                                         <TextBlock

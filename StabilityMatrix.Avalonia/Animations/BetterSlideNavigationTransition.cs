@@ -68,9 +68,9 @@ public class BetterSlideNavigationTransition : BaseTransitionInfo
                             isVertical ? TranslateTransform.YProperty : TranslateTransform.XProperty,
                             length
                         ),
-                        new Setter(Visual.OpacityProperty, 0d)
+                        new Setter(Visual.OpacityProperty, 0d),
                     },
-                    Cue = new Cue(0d)
+                    Cue = new Cue(0d),
                 },
                 new KeyFrame { Setters = { new Setter(Visual.OpacityProperty, 1d) }, Cue = new Cue(0.05d) },
                 new KeyFrame
@@ -81,13 +81,13 @@ public class BetterSlideNavigationTransition : BaseTransitionInfo
                         new Setter(
                             isVertical ? TranslateTransform.YProperty : TranslateTransform.XProperty,
                             0.0
-                        )
+                        ),
                     },
-                    Cue = new Cue(1d)
-                }
+                    Cue = new Cue(1d),
+                },
             },
             Duration = Duration,
-            FillMode = FillMode.Forward
+            FillMode = FillMode.Forward,
         };
 
         await animation.RunAsync(ctrl, cancellationToken);
@@ -104,7 +104,7 @@ public class BetterSlideNavigationTransition : BaseTransitionInfo
             Duration = TimeSpan.FromMilliseconds(300),
             Effect = SlideNavigationTransitionEffect.FromLeft,
             FromHorizontalOffset = 150,
-            Easing = new SplineEasing(0.6, 0.4, 0.1, 0.1)
+            Easing = new SplineEasing(0.6, 0.4, 0.1, 0.1),
         };
 
     public static BetterSlideNavigationTransition PageSlideFromRight =>
@@ -113,6 +113,6 @@ public class BetterSlideNavigationTransition : BaseTransitionInfo
             Duration = TimeSpan.FromMilliseconds(300),
             Effect = SlideNavigationTransitionEffect.FromRight,
             FromHorizontalOffset = 150,
-            Easing = new SplineEasing(0.6, 0.4, 0.1, 0.1)
+            Easing = new SplineEasing(0.6, 0.4, 0.1, 0.1),
         };
 }

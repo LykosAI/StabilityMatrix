@@ -2,7 +2,6 @@
 
 namespace StabilityMatrix.Core.Models;
 
-
 /// <summary>
 /// Pair of InstalledPackage and BasePackage
 /// </summary>

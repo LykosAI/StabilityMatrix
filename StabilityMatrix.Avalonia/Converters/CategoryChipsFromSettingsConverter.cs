@@ -24,8 +24,7 @@ public class CategoryChipsFromSettingsConverter : IValueConverter
             return Array.Empty<CategoryChip>();
         }
 
-        var registry =
-            App.Services?.GetService<ISettingsManager>()?.Settings.ModelCategories
+        var registry = App.Services?.GetService<ISettingsManager>()?.Settings.ModelCategories
             ?? (IReadOnlyList<ModelCategory>)[];
 
         return ModelCategoryStyle.ChipsFor(categories, registry);

@@ -1,10 +1,13 @@
-﻿<ResourceDictionary xmlns="https://github.com/avaloniaui"
-                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:scroll="clr-namespace:StabilityMatrix.Avalonia.Controls.Scroll">
+﻿<ResourceDictionary
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:scroll="clr-namespace:StabilityMatrix.Avalonia.Controls.Scroll">
     <Design.PreviewWith>
-        <scroll:BetterScrollViewer Width="200" Height="200"
-                                   HorizontalScrollBarVisibility="Auto">
-            <StackPanel Spacing="20" Width="210">
+        <scroll:BetterScrollViewer
+            Width="200"
+            Height="200"
+            HorizontalScrollBarVisibility="Auto">
+            <StackPanel Width="210" Spacing="20">
                 <TextBlock>Item 1</TextBlock>
                 <TextBlock>Item 2</TextBlock>
                 <TextBlock>Item 3</TextBlock>
@@ -20,22 +23,23 @@
 
     <ControlTheme x:Key="{x:Type scroll:BetterScrollViewer}" TargetType="scroll:BetterScrollViewer">
         <Setter Property="Background" Value="Transparent" />
-        <Setter Property="BringIntoViewOnFocusChange" Value="False"/>
+        <Setter Property="BringIntoViewOnFocusChange" Value="False" />
         <Setter Property="Template">
             <ControlTemplate>
                 <Grid ColumnDefinitions="*,Auto" RowDefinitions="*,Auto">
-                    <scroll:BetterScrollContentPresenter x:Name="PART_ContentPresenter"
-                                                         Grid.Row="0"
-                                                         Grid.Column="0"
-                                                         Grid.RowSpan="2"
-                                                         Grid.ColumnSpan="2"
-                                                         Background="{TemplateBinding Background}"
-                                                         HorizontalSnapPointsType="{TemplateBinding HorizontalSnapPointsType}"
-                                                         VerticalSnapPointsType="{TemplateBinding VerticalSnapPointsType}"
-                                                         HorizontalSnapPointsAlignment="{TemplateBinding HorizontalSnapPointsAlignment}"
-                                                         VerticalSnapPointsAlignment="{TemplateBinding VerticalSnapPointsAlignment}"
-                                                         Padding="{TemplateBinding Padding}"
-                                                         ScrollViewer.IsScrollInertiaEnabled="{TemplateBinding IsScrollInertiaEnabled}">
+                    <scroll:BetterScrollContentPresenter
+                        x:Name="PART_ContentPresenter"
+                        Grid.Row="0"
+                        Grid.RowSpan="2"
+                        Grid.Column="0"
+                        Grid.ColumnSpan="2"
+                        Padding="{TemplateBinding Padding}"
+                        Background="{TemplateBinding Background}"
+                        HorizontalSnapPointsAlignment="{TemplateBinding HorizontalSnapPointsAlignment}"
+                        HorizontalSnapPointsType="{TemplateBinding HorizontalSnapPointsType}"
+                        ScrollViewer.IsScrollInertiaEnabled="{TemplateBinding IsScrollInertiaEnabled}"
+                        VerticalSnapPointsAlignment="{TemplateBinding VerticalSnapPointsAlignment}"
+                        VerticalSnapPointsType="{TemplateBinding VerticalSnapPointsType}">
                         <scroll:BetterScrollContentPresenter.GestureRecognizers>
                             <ScrollGestureRecognizer
                                 CanHorizontallyScroll="{Binding CanHorizontallyScroll, ElementName=PART_ContentPresenter}"
@@ -43,17 +47,20 @@
                                 IsScrollInertiaEnabled="{Binding (ScrollViewer.IsScrollInertiaEnabled), ElementName=PART_ContentPresenter}" />
                         </scroll:BetterScrollContentPresenter.GestureRecognizers>
                     </scroll:BetterScrollContentPresenter>
-                    <ScrollBar Name="PART_HorizontalScrollBar"
-                               Orientation="Horizontal"
-                               Grid.Row="1" />
-                    <ScrollBar Name="PART_VerticalScrollBar"
-                               Orientation="Vertical"
-                               Grid.Column="1" />
-                    <Panel x:Name="PART_ScrollBarsSeparator"
-                           Grid.Row="1"
-                           Grid.Column="1"
-                           Background="{DynamicResource ScrollViewerScrollBarsSeparatorBackground}"
-                           Opacity="0">
+                    <ScrollBar
+                        Name="PART_HorizontalScrollBar"
+                        Grid.Row="1"
+                        Orientation="Horizontal" />
+                    <ScrollBar
+                        Name="PART_VerticalScrollBar"
+                        Grid.Column="1"
+                        Orientation="Vertical" />
+                    <Panel
+                        x:Name="PART_ScrollBarsSeparator"
+                        Grid.Row="1"
+                        Grid.Column="1"
+                        Background="{DynamicResource ScrollViewerScrollBarsSeparatorBackground}"
+                        Opacity="0">
                         <Panel.Transitions>
                             <Transitions>
                                 <DoubleTransition Property="Opacity" Duration="0:0:0.1" />

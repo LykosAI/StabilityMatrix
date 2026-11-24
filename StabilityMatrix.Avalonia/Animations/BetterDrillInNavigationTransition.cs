@@ -30,9 +30,9 @@ public class BetterDrillInNavigationTransition : BaseTransitionInfo
                     {
                         new Setter(Visual.OpacityProperty, 0.0),
                         new Setter(ScaleTransform.ScaleXProperty, IsReversed ? 1.5 : 0.0),
-                        new Setter(ScaleTransform.ScaleYProperty, IsReversed ? 1.5 : 0.0)
+                        new Setter(ScaleTransform.ScaleYProperty, IsReversed ? 1.5 : 0.0),
                     },
-                    Cue = new Cue(0d)
+                    Cue = new Cue(0d),
                 },
                 new KeyFrame
                 {
@@ -40,13 +40,13 @@ public class BetterDrillInNavigationTransition : BaseTransitionInfo
                     {
                         new Setter(Visual.OpacityProperty, 1.0),
                         new Setter(ScaleTransform.ScaleXProperty, IsReversed ? 1.0 : 1.0),
-                        new Setter(ScaleTransform.ScaleYProperty, IsReversed ? 1.0 : 1.0)
+                        new Setter(ScaleTransform.ScaleYProperty, IsReversed ? 1.0 : 1.0),
                     },
-                    Cue = new Cue(1d)
-                }
+                    Cue = new Cue(1d),
+                },
             },
             Duration = Duration,
-            FillMode = FillMode.Forward
+            FillMode = FillMode.Forward,
         };
 
         await animation.RunAsync(ctrl, cancellationToken);

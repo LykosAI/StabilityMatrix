@@ -13,7 +13,9 @@ public static class ViewModelSerializer
         return GetJsonDerivedTypeAttributes(baseType).ToDictionary(x => x.typeDiscriminator, x => x.subType);
     }
 
-    public static IEnumerable<(Type subType, string typeDiscriminator)> GetJsonDerivedTypeAttributes(Type type)
+    public static IEnumerable<(Type subType, string typeDiscriminator)> GetJsonDerivedTypeAttributes(
+        Type type
+    )
     {
         return type.GetCustomAttributes<JsonDerivedTypeAttribute>()
             .Select(x => (x.DerivedType, x.TypeDiscriminator as string ?? x.DerivedType.Name));

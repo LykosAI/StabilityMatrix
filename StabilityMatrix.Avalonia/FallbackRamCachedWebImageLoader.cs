@@ -56,8 +56,7 @@ public class FallbackRamCachedWebImageLoader : RamCachedWebImageLoader
             }
         }
 
-        var internalOrCachedBitmap =
-            await LoadFromInternalAsync(url).ConfigureAwait(false)
+        var internalOrCachedBitmap = await LoadFromInternalAsync(url).ConfigureAwait(false)
             ?? await LoadFromGlobalCache(url).ConfigureAwait(false);
 
         if (internalOrCachedBitmap != null)
@@ -94,8 +93,7 @@ public class FallbackRamCachedWebImageLoader : RamCachedWebImageLoader
 
     public async Task<Bitmap?> LoadExternalAsync(string url)
     {
-        var internalOrCachedBitmap =
-            await LoadFromInternalAsync(url).ConfigureAwait(false)
+        var internalOrCachedBitmap = await LoadFromInternalAsync(url).ConfigureAwait(false)
             ?? await LoadFromGlobalCache(url).ConfigureAwait(false);
 
         if (internalOrCachedBitmap != null)
@@ -120,8 +118,7 @@ public class FallbackRamCachedWebImageLoader : RamCachedWebImageLoader
 
     public void RemovePathFromCache(string filePath)
     {
-        var cache =
-            this.GetPrivateField<ConcurrentDictionary<string, Task<Bitmap?>>>("_memoryCache")
+        var cache = this.GetPrivateField<ConcurrentDictionary<string, Task<Bitmap?>>>("_memoryCache")
             ?? throw new NullReferenceException("Memory cache not found");
 
         cache.TryRemove(filePath, out _);
@@ -129,8 +126,7 @@ public class FallbackRamCachedWebImageLoader : RamCachedWebImageLoader
 
     public void RemoveAllNamesFromCache(string fileName)
     {
-        var cache =
-            this.GetPrivateField<ConcurrentDictionary<string, Task<Bitmap?>>>("_memoryCache")
+        var cache = this.GetPrivateField<ConcurrentDictionary<string, Task<Bitmap?>>>("_memoryCache")
             ?? throw new NullReferenceException("Memory cache not found");
 
         foreach (var (key, _) in cache)
@@ -144,8 +140,7 @@ public class FallbackRamCachedWebImageLoader : RamCachedWebImageLoader
 
     public void ClearCache()
     {
-        var cache =
-            this.GetPrivateField<ConcurrentDictionary<string, Task<Bitmap?>>>("_memoryCache")
+        var cache = this.GetPrivateField<ConcurrentDictionary<string, Task<Bitmap?>>>("_memoryCache")
             ?? throw new NullReferenceException("Memory cache not found");
 
         cache.Clear();

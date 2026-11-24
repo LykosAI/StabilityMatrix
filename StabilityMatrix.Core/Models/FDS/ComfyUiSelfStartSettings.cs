@@ -22,7 +22,6 @@
 
 // from https://github.com/Stability-AI/StableSwarmUI/blob/master/src/BuiltinExtensions/ComfyUIBackend/ComfyUISelfStartBackend.cs
 
-
 using FreneticUtilities.FreneticDataSyntax;
 
 namespace StabilityMatrix.Core.Models.FDS;

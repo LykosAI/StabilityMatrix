@@ -7,14 +7,13 @@ namespace StabilityMatrix.Core.Helper;
 public static class SharedFoldersConfigHelper
 {
     // Cache strategies to avoid repeated instantiation
-    private static readonly Dictionary<ConfigFileType, IConfigSharingStrategy> Strategies =
-        new()
-        {
-            { ConfigFileType.Json, new JsonConfigSharingStrategy() },
-            { ConfigFileType.Yaml, new YamlConfigSharingStrategy() },
-            { ConfigFileType.Fds, new FdsConfigSharingStrategy() }
-            // Add more strategies here as needed
-        };
+    private static readonly Dictionary<ConfigFileType, IConfigSharingStrategy> Strategies = new()
+    {
+        { ConfigFileType.Json, new JsonConfigSharingStrategy() },
+        { ConfigFileType.Yaml, new YamlConfigSharingStrategy() },
+        { ConfigFileType.Fds, new FdsConfigSharingStrategy() },
+        // Add more strategies here as needed
+    };
 
     /// <summary>
     /// Updates a config file with shared folder layout rules, using the SourceTypes,
@@ -83,7 +82,8 @@ public static class SharedFoldersConfigHelper
                         return [sharedModelsDirectory];
                     }
 
-                    var paths = rule.SourceTypes.Select(type => type.GetStringValue()) // Get the enum string value (e.g., "StableDiffusion")
+                    var paths = rule
+                        .SourceTypes.Select(type => type.GetStringValue()) // Get the enum string value (e.g., "StableDiffusion")
                         .Where(folderName => !string.IsNullOrEmpty(folderName)) // Filter out potentially empty mappings
                         .Select(folderName => Path.Combine(sharedModelsDirectory, folderName)); // Combine with base models dir
 
@@ -162,8 +162,8 @@ public static class SharedFoldersConfigHelper
                 stream,
                 layout,
                 rule =>
-                    rule.TargetRelativePaths.Select(
-                        path => Path.Combine(packageRootDirectory, NormalizePathSlashes(path))
+                    rule.TargetRelativePaths.Select(path =>
+                        Path.Combine(packageRootDirectory, NormalizePathSlashes(path))
                     ), // Combine relative with package root
                 clearPaths,
                 options,

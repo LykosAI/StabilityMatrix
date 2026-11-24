@@ -1,49 +1,52 @@
-﻿<Styles xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:controls="using:StabilityMatrix.Avalonia.Controls">
+﻿<Styles
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:StabilityMatrix.Avalonia.Controls">
     <Design.PreviewWith>
-        <StackPanel Width="400" Height="400" Spacing="4">
+        <StackPanel
+            Width="400"
+            Height="400"
+            Spacing="4">
             <StackPanel.Styles>
                 <Style Selector="controls|Card">
-                    <Setter Property="Padding" Value="6,4"/>
-                    <Setter Property="HorizontalAlignment" Value="Left"/>
+                    <Setter Property="Padding" Value="6,4" />
+                    <Setter Property="HorizontalAlignment" Value="Left" />
                 </Style>
             </StackPanel.Styles>
-            
+
             <controls:Card>
                 <controls:StarsRating Value="1" />
             </controls:Card>
-            
+
             <controls:Card Classes="transparent">
                 <controls:StarsRating Value="2" />
             </controls:Card>
-            
+
             <controls:Card Classes="transparent">
                 <controls:StarsRating Value="2.5" />
             </controls:Card>
-            
+
         </StackPanel>
     </Design.PreviewWith>
-    
+
     <!--<Styles.Resources>
-        <icons:SymbolIcon 
+        <icons:SymbolIcon
             x:Key="StarFilledIcon"
             FontSize="15"
             Margin="8,0"
             VerticalAlignment="Center"
-            Symbol="Star" 
+            Symbol="Star"
             IconVariant="Filled"/>
     </Styles.Resources>-->
 
     <Style Selector="controls|StarsRating">
-        <!-- Set Defaults -->
+        <!--  Set Defaults  -->
         <Setter Property="Template">
             <ControlTemplate>
-                <ItemsControl
-                    x:Name="PART_StarsItemsControl">
+                <ItemsControl x:Name="PART_StarsItemsControl">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
-                            <StackPanel Spacing="2" Orientation="Horizontal" />
+                            <StackPanel Orientation="Horizontal" Spacing="2" />
                         </ItemsPanelTemplate>
                     </ItemsControl.ItemsPanel>
                 </ItemsControl>

@@ -1,35 +1,34 @@
 <Project Sdk="Microsoft.NET.Sdk">
-    <Import Project="..\ConditionalSymbols.props" />
-    <Import Project="..\Runtimes.Default.props" />
-    
-    <PropertyGroup>
-        <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
-        <EnableWindowsTargeting>true</EnableWindowsTargeting>
-    </PropertyGroup>
-    
-    <ItemGroup>
-        <InternalsVisibleTo Include="StabilityMatrix.Tests" />
-    </ItemGroup>
-    
-    <ItemGroup>
-      <Folder Include="LogViewer\Core\" />
-      <Folder Include="Views\" />
-    </ItemGroup>
+  <Import Project="..\ConditionalSymbols.props" />
+  <Import Project="..\Runtimes.Default.props" />
 
-    <ItemGroup>
-      <PackageReference Include="Avalonia" />
-      <PackageReference Include="Avalonia.Controls.DataGrid" />
-      <PackageReference Include="DotNet.Bundle" />
-      <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
-      <PackageReference Include="Microsoft.Extensions.Hosting" />
-      <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
-      <PackageReference Include="NLog" />
-    </ItemGroup>
+  <PropertyGroup>
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+  </PropertyGroup>
 
-    <ItemGroup>
-      <Compile Update="Views\LogWindow.axaml.cs">
-        <DependentUpon>LogWindow.axaml</DependentUpon>
-      </Compile>
-    </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="StabilityMatrix.Tests" />
+  </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="LogViewer\Core\" />
+    <Folder Include="Views\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" />
+    <PackageReference Include="Avalonia.Controls.DataGrid" />
+    <PackageReference Include="DotNet.Bundle" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+    <PackageReference Include="NLog" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Views\LogWindow.axaml.cs">
+      <DependentUpon>LogWindow.axaml</DependentUpon>
+    </Compile>
+  </ItemGroup>
 </Project>

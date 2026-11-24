@@ -87,7 +87,7 @@ public class NativeRecycleBinProvider : INativeRecycleBinProvider
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
-            CreateNoWindow = true
+            CreateNoWindow = true,
         };
 
         process.Start();

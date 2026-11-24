@@ -35,7 +35,7 @@ public class PyPiCache(ILiteDbContext dbContext, IPyPiApi pyPiApi, ILogger<PyPiC
             var newCacheEntry = new PyPiCacheEntry
             {
                 CacheKey = cacheKey,
-                Versions = packageInfo.Releases.Select(x => new CustomVersion(x.Key)).ToList()
+                Versions = packageInfo.Releases.Select(x => new CustomVersion(x.Key)).ToList(),
             };
 
             await dbContext.UpsertPyPiCacheEntry(newCacheEntry).ConfigureAwait(false);

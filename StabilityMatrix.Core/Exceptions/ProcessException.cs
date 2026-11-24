@@ -41,7 +41,7 @@ public class ProcessException : Exception
             {
                 ProcessName = process.StartInfo.FileName,
                 ExitCode = process.ExitCode,
-                StandardOutput = output
+                StandardOutput = output,
             }
         );
     }
@@ -56,7 +56,7 @@ public class ProcessException : Exception
             {
                 ProcessName = process.StartInfo.FileName,
                 ExitCode = process.ExitCode,
-                StandardOutput = outputBuilder.ToString()
+                StandardOutput = outputBuilder.ToString(),
             }
         );
     }
@@ -72,7 +72,7 @@ public class ProcessException : Exception
                 ProcessName = process.StartInfo.FileName,
                 ExitCode = process.ExitCode,
                 StandardOutput = stdOut,
-                StandardError = stdErr
+                StandardError = stdErr,
             }
         );
     }

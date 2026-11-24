@@ -3,8 +3,8 @@ using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
-using JetBrains.Annotations;
 using CommunityToolkit.Mvvm.Input;
+using JetBrains.Annotations;
 using StabilityMatrix.Avalonia.Models;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Base;

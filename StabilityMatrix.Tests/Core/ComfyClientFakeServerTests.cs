@@ -129,7 +129,8 @@ public class ComfyClientFakeServerTests
     {
         server.PromptScript = "validation_error";
 
-        var exception = await Assert.ThrowsExceptionAsync<ApiException>(() => client.QueuePromptAsync(Graph())
+        var exception = await Assert.ThrowsExceptionAsync<ApiException>(() =>
+            client.QueuePromptAsync(Graph())
         );
 
         Assert.AreEqual(400, (int)exception.StatusCode);

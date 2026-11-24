@@ -50,9 +50,6 @@ public record UpdateInfo
     /// </summary>
     private static string FormatDateTimeOffsetInvariant(DateTimeOffset dateTimeOffset)
     {
-        return dateTimeOffset.ToString(
-            @"yyyy-MM-ddTHH\:mm\:ss.ffffffzzz",
-            CultureInfo.InvariantCulture
-        );
+        return dateTimeOffset.ToString(@"yyyy-MM-ddTHH\:mm\:ss.ffffffzzz", CultureInfo.InvariantCulture);
     }
 }

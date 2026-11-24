@@ -5,5 +5,5 @@ public enum MemoryLevel
     Unknown,
     Low,
     Medium,
-    High
+    High,
 }

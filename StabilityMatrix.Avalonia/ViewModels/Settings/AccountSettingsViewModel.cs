@@ -476,8 +476,8 @@ public partial class AccountSettingsViewModel : PageViewModelBase
         IsPatreonConnected = overridePatreonConnected ?? args.IsPatreonConnected;
         IsActiveSubscriber = args.IsActiveSupporter;
         MembershipTier = args.HighestTier;
-        ShowPatreonMigrationPrompt =
-            overrideMigrationPrompt ?? (args.IsPatreonConnected && !args.HasStripeSubscription);
+        ShowPatreonMigrationPrompt = overrideMigrationPrompt
+            ?? (args.IsPatreonConnected && !args.HasStripeSubscription);
         IsContributorWithoutSubscription =
             !args.IsActiveSupporter && args.User?.Roles.Any(r => ContributorRoles.Contains(r)) == true;
         MembershipDescription = GetMembershipDescription(args);

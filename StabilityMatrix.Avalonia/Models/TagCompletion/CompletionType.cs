@@ -11,5 +11,5 @@ public enum CompletionType
     None = 0,
     Tag = 1 << 1,
     ExtraNetwork = 1 << 2,
-    ExtraNetworkType = 1 << 3
+    ExtraNetworkType = 1 << 3,
 }

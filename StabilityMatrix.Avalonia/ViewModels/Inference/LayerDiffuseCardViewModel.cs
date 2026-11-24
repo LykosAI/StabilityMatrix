@@ -42,17 +42,17 @@ public partial class LayerDiffuseCardViewModel : LoadableViewModelBase, IComfySt
             LayerDiffuseMode.GenerateForegroundWithTransparencySD15 => "SD15",
             LayerDiffuseMode.GenerateForegroundWithTransparencySDXL => "SDXL",
             LayerDiffuseMode.None => throw new ArgumentOutOfRangeException(),
-            _ => throw new ArgumentOutOfRangeException()
+            _ => throw new ArgumentOutOfRangeException(),
         };
 
         // Choose config based on mode
         var config = SelectedMode switch
         {
-            LayerDiffuseMode.GenerateForegroundWithTransparencySD15
-                => "SD15, Attention Injection, attn_sharing",
+            LayerDiffuseMode.GenerateForegroundWithTransparencySD15 =>
+                "SD15, Attention Injection, attn_sharing",
             LayerDiffuseMode.GenerateForegroundWithTransparencySDXL => "SDXL, Conv Injection",
             LayerDiffuseMode.None => throw new ArgumentOutOfRangeException(),
-            _ => throw new ArgumentOutOfRangeException()
+            _ => throw new ArgumentOutOfRangeException(),
         };
 
         foreach (var modelConnections in e.Temp.Models.Values)
@@ -74,8 +74,7 @@ public partial class LayerDiffuseCardViewModel : LoadableViewModelBase, IComfySt
         e.PreOutputActions.Add(applyArgs =>
         {
             // Use last latent for decode
-            var latent =
-                applyArgs.Builder.Connections.LastPrimaryLatent
+            var latent = applyArgs.Builder.Connections.LastPrimaryLatent
                 ?? throw new InvalidOperationException("Connections.LastPrimaryLatent not set");
 
             // Convert primary to image if not already
@@ -89,7 +88,7 @@ public partial class LayerDiffuseCardViewModel : LoadableViewModelBase, IComfySt
                     Name = applyArgs.Nodes.GetUniqueName("LayerDiffuseDecode"),
                     Samples = latent,
                     Images = primaryImage,
-                    SdVersion = sdType
+                    SdVersion = sdType,
                 }
             );
 

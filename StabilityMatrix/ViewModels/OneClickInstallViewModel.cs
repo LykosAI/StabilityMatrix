@@ -24,24 +24,37 @@ public partial class OneClickInstallViewModel : ObservableObject
     private readonly IPyRunner pyRunner;
     private readonly ISharedFolders sharedFolders;
     private const string DefaultPackageName = "stable-diffusion-webui";
-    
-    [ObservableProperty] private string headerText;
-    [ObservableProperty] private string subHeaderText;
-    [ObservableProperty] private string subSubHeaderText;
-    [ObservableProperty] private bool showInstallButton;
-    [ObservableProperty] private bool isIndeterminate;
-    
+
+    [ObservableProperty]
+    private string headerText;
+
+    [ObservableProperty]
+    private string subHeaderText;
+
+    [ObservableProperty]
+    private string subSubHeaderText;
+
+    [ObservableProperty]
+    private bool showInstallButton;
+
+    [ObservableProperty]
+    private bool isIndeterminate;
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ProgressBarVisibility))]
     private int oneClickInstallProgress;
 
-
     public Visibility ProgressBarVisibility =>
         OneClickInstallProgress > 0 || IsIndeterminate ? Visibility.Visible : Visibility.Collapsed;
 
-    public OneClickInstallViewModel(ISettingsManager settingsManager, IPackageFactory packageFactory,
-        IPrerequisiteHelper prerequisiteHelper, ILogger<MainWindowViewModel> logger, IPyRunner pyRunner,
-        ISharedFolders sharedFolders)
+    public OneClickInstallViewModel(
+        ISettingsManager settingsManager,
+        IPackageFactory packageFactory,
+        IPrerequisiteHelper prerequisiteHelper,
+        ILogger<MainWindowViewModel> logger,
+        IPyRunner pyRunner,
+        ISharedFolders sharedFolders
+    )
     {
         this.settingsManager = settingsManager;
         this.packageFactory = packageFactory;
@@ -52,9 +65,9 @@ public partial class OneClickInstallViewModel : ObservableObject
 
         HeaderText = "Welcome to Stability Matrix!";
         SubHeaderText =
-            "Click the Install button below to get started!\n" +
-            "This will install the latest version of Stable Diffusion WebUI by Automatic1111.\n" +
-            "If you don't know what this means, don't worry, you'll be generating images soon!";
+            "Click the Install button below to get started!\n"
+            + "This will install the latest version of Stable Diffusion WebUI by Automatic1111.\n"
+            + "If you don't know what this means, don't worry, you'll be generating images soon!";
         ShowInstallButton = true;
     }
 
@@ -72,7 +85,7 @@ public partial class OneClickInstallViewModel : ObservableObject
         EventManager.Instance.OnOneClickInstallFinished(true);
         return Task.CompletedTask;
     }
-    
+
     private async Task DoInstall()
     {
         var a1111 = packageFactory.FindPackageByName(DefaultPackageName)!;
@@ -96,11 +109,11 @@ public partial class OneClickInstallViewModel : ObservableObject
             {
                 SubHeaderText = progress.Message;
             }
-            
+
             IsIndeterminate = progress.IsIndeterminate;
             OneClickInstallProgress = Convert.ToInt32(progress.Percentage);
         });
-        
+
         await prerequisiteHelper.InstallAllIfNecessary(progressHandler);
 
         SubHeaderText = "Installing prerequisites...";
@@ -121,13 +134,13 @@ public partial class OneClickInstallViewModel : ObservableObject
         var latestVersion = await a1111.GetLatestVersion();
         a1111.InstallLocation = $"{settingsManager.LibraryDir}\\Packages\\stable-diffusion-webui";
         a1111.ConsoleOutput += (_, output) => SubSubHeaderText = output.Text;
-        
+
         await DownloadPackage(a1111, latestVersion);
         await InstallPackage(a1111);
 
         SubHeaderText = "Setting up shared folder links...";
         sharedFolders.SetupLinksForPackage(a1111, a1111.InstallLocation);
-        
+
         var package = new InstalledPackage
         {
             DisplayName = a1111.DisplayName,
@@ -137,13 +150,13 @@ public partial class OneClickInstallViewModel : ObservableObject
             PackageVersion = latestVersion,
             DisplayVersion = latestVersion,
             LaunchCommand = a1111.LaunchCommand,
-            LastUpdateCheck = DateTimeOffset.Now
+            LastUpdateCheck = DateTimeOffset.Now,
         };
         await using var st = settingsManager.BeginTransaction();
         st.Settings.InstalledPackages.Add(package);
         st.Settings.ActiveInstalledPackageId = package.Id;
         EventManager.Instance.OnInstalledPackagesChanged();
-        
+
         HeaderText = "Installation complete!";
         OneClickInstallProgress = 100;
         SubHeaderText = "Proceeding to Launch page in 3 seconds...";
@@ -152,7 +165,7 @@ public partial class OneClickInstallViewModel : ObservableObject
         await Task.Delay(1000);
         SubHeaderText = "Proceeding to Launch page in 1 second...";
         await Task.Delay(1000);
-        
+
         // should close dialog
         EventManager.Instance.OnOneClickInstallFinished(false);
     }
@@ -160,14 +173,14 @@ public partial class OneClickInstallViewModel : ObservableObject
     private async Task DownloadPackage(BasePackage selectedPackage, string version)
     {
         SubHeaderText = "Downloading package...";
-        
+
         var progress = new Progress<ProgressReport>(progress =>
         {
             IsIndeterminate = progress.IsIndeterminate;
             OneClickInstallProgress = Convert.ToInt32(progress.Percentage);
             EventManager.Instance.OnGlobalProgressChanged(OneClickInstallProgress);
         });
-        
+
         await selectedPackage.DownloadPackage(version, false, progress);
         SubHeaderText = "Download Complete";
         OneClickInstallProgress = 100;
@@ -177,14 +190,14 @@ public partial class OneClickInstallViewModel : ObservableObject
     {
         selectedPackage.ConsoleOutput += (_, output) => SubSubHeaderText = output.Text;
         SubHeaderText = "Downloading and installing package requirements...";
-        
+
         var progress = new Progress<ProgressReport>(progress =>
         {
             IsIndeterminate = progress.IsIndeterminate;
             OneClickInstallProgress = Convert.ToInt32(progress.Percentage);
             EventManager.Instance.OnGlobalProgressChanged(OneClickInstallProgress);
         });
-        
+
         await selectedPackage.InstallPackage(progress);
     }
 }

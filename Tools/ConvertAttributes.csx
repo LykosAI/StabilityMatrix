@@ -9,8 +9,9 @@ using Ignore;
 // Options:
 // Only checks files if --write is not provided
 var checkOnly = !Args.Contains("--write");
-// 
-    
+
+//
+
 var projectDirectory = Directory.GetCurrentDirectory();
 var gitIgnoreFile = Path.Combine(projectDirectory, ".gitignore");
 
@@ -24,7 +25,12 @@ if (File.Exists(gitIgnoreFile))
 var csFiles = new List<string>();
 foreach (var file in Directory.GetFiles(projectDirectory, "*.cs", SearchOption.AllDirectories))
 {
-    if (ignore.IsIgnored(file) || file.EndsWith(".Designer.cs") || file.EndsWith(".g.cs") || file.EndsWith(".generated.cs"))
+    if (
+        ignore.IsIgnored(file)
+        || file.EndsWith(".Designer.cs")
+        || file.EndsWith(".g.cs")
+        || file.EndsWith(".generated.cs")
+    )
     {
         continue;
     }
@@ -45,9 +51,9 @@ foreach (var file in csFiles)
 {
     var content = File.ReadAllText(file);
     var updatedContent = content;
-    
+
     var attributeMatches = attributePattern.Matches(content);
-    
+
     // Get Singleton and Transient attributes
     var singletonMatch = attributeMatches.FirstOrDefault(m => m.Groups["AttributeName"].Value == "Singleton");
     var transientMatch = attributeMatches.FirstOrDefault(m => m.Groups["AttributeName"].Value == "Transient");
@@ -64,18 +70,18 @@ foreach (var file in csFiles)
     {
         var interfaceTypeName = singletonMatch.Groups["TypeName"].Value;
         var isMulti = interfaceTypeName == "BasePackage";
-        
+
         var replacement = string.IsNullOrWhiteSpace(interfaceTypeName)
             ? $"[RegisterSingleton<{targetTypeName}>"
             : $"[RegisterSingleton<{interfaceTypeName}, {targetTypeName}>";
-        
+
         if (isMulti)
         {
             replacement += "(Duplicate = DuplicateStrategy.Append)";
         }
-        
+
         // replacement += "]";
-        
+
         // Replace
         Console.WriteLine($"Replacing {singletonMatch.Value} with {replacement}");
         updatedContent = updatedContent.Remove(singletonMatch.Index, singletonMatch.Length);
@@ -85,18 +91,18 @@ foreach (var file in csFiles)
     {
         var interfaceTypeName = transientMatch.Groups["TypeName"].Value;
         var isMulti = interfaceTypeName == "BasePackage";
-                
+
         var replacement = string.IsNullOrWhiteSpace(interfaceTypeName)
             ? $"[RegisterTransient<{targetTypeName}>"
             : $"[RegisterTransient<{interfaceTypeName}, {targetTypeName}>";
-        
+
         if (isMulti)
         {
             replacement += "(Duplicate = DuplicateStrategy.Append)";
         }
-        
+
         // replacement += "]";
-        
+
         // Replace
         Console.WriteLine($"Replacing {transientMatch.Value} with {replacement}");
         updatedContent = updatedContent.Remove(transientMatch.Index, transientMatch.Length);
@@ -108,19 +114,26 @@ foreach (var file in csFiles)
         // No changes
         continue;
     }
-    
+
     // If file not containing `[ManagedService]` / `[..., ManagedService] replace using
     if (!updatedContent.Contains("ManagedService]"))
     {
-        updatedContent = Regex.Replace(updatedContent, @"using StabilityMatrix\.Core\.Attributes;", "using Injectio.Attributes;");
+        updatedContent = Regex.Replace(
+            updatedContent,
+            @"using StabilityMatrix\.Core\.Attributes;",
+            "using Injectio.Attributes;"
+        );
     }
     else
     {
         // Otherwise just add after
         var originalUsing = Regex.Match(updatedContent, @"using StabilityMatrix\.Core\.Attributes;");
-        updatedContent = updatedContent.Insert(originalUsing.Index + originalUsing.Length, $"{Environment.NewLine}using Injectio.Attributes;");
+        updatedContent = updatedContent.Insert(
+            originalUsing.Index + originalUsing.Length,
+            $"{Environment.NewLine}using Injectio.Attributes;"
+        );
     }
-    
+
     if (checkOnly)
     {
         Console.WriteLine($"Would modify: {file}");
@@ -139,7 +152,7 @@ foreach (var file in csFiles)
         {
             File.WriteAllText(file, updatedContent);
         }
-        
+
         Console.WriteLine($"Updated file: {file}");
     }
     totalFiles++;

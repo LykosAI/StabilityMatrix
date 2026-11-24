@@ -10,5 +10,5 @@ public enum LocalImageFileType : ulong
 
     // Generation Type
     TextToImage = 1 << 10,
-    ImageToImage = 1 << 11
+    ImageToImage = 1 << 11,
 }

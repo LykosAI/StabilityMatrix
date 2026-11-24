@@ -107,33 +107,27 @@ public sealed class FakeComfyServer : IAsyncDisposable
 
         app.Map("/ws", HandleWebSocketAsync);
 
-        app.MapGet(
-            "/object_info/{node}",
-            (string node) =>
-                Results.Text(
-                    ObjectInfo.TryGetValue(node, out var info) ? info.ToJsonString() : "{}",
-                    "application/json"
-                )
+        app.MapGet("/object_info/{node}", (string node) =>
+            Results.Text(
+                ObjectInfo.TryGetValue(node, out var info) ? info.ToJsonString() : "{}",
+                "application/json"
+            )
         );
 
         app.MapPost("/prompt", HandlePromptAsync);
 
-        app.MapGet(
-            "/history/{promptId}",
-            (string promptId) => Results.Text(histories.GetValueOrDefault(promptId, "{}"), "application/json")
+        app.MapGet("/history/{promptId}", (string promptId) =>
+            Results.Text(histories.GetValueOrDefault(promptId, "{}"), "application/json")
         );
 
         // A missing filename query is a 400, as in ComfyUI
         app.MapGet("/view", (string filename) => Results.Bytes(Recording.ViewImage, "image/png"));
 
-        app.MapPost(
-            "/interrupt",
-            () =>
-            {
-                Interlocked.Increment(ref interruptCount);
-                return Results.Ok();
-            }
-        );
+        app.MapPost("/interrupt", () =>
+        {
+            Interlocked.Increment(ref interruptCount);
+            return Results.Ok();
+        });
     }
 
     private async Task HandlePromptAsync(HttpContext context)

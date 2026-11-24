@@ -98,10 +98,7 @@ public class JunctionTest
     }
 
     [TestMethod]
-    [ExpectedException(
-        typeof(IOException),
-        "Directory already exists and overwrite parameter is false."
-    )]
+    [ExpectedException(typeof(IOException), "Directory already exists and overwrite parameter is false.")]
     public void Create_ThrowsIfOverwriteNotSpecifiedAndDirectoryExists()
     {
         var targetFolder = Path.Combine(tempFolder, "ADirectory");

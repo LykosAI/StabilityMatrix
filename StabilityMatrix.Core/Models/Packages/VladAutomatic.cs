@@ -495,14 +495,15 @@ public class VladAutomatic(
                 );
 
                 return jsonManifest?.Select(entry => new PackageExtension
-                    {
-                        Title = entry.Name,
-                        Author = entry.Long?.Split('/').FirstOrDefault() ?? "Unknown",
-                        Reference = entry.Url,
-                        Files = [entry.Url],
-                        Description = entry.Description,
-                        InstallType = "git-clone",
-                    }) ?? Enumerable.Empty<PackageExtension>();
+                {
+                    Title = entry.Name,
+                    Author = entry.Long?.Split('/').FirstOrDefault() ?? "Unknown",
+                    Reference = entry.Url,
+                    Files = [entry.Url],
+                    Description = entry.Description,
+                    InstallType = "git-clone",
+                })
+                    ?? Enumerable.Empty<PackageExtension>();
             }
             catch (Exception e)
             {

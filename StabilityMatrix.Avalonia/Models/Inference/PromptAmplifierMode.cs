@@ -4,5 +4,5 @@ public enum PromptAmplifierMode
 {
     Focused,
     Balanced,
-    Imaginative
+    Imaginative,
 }

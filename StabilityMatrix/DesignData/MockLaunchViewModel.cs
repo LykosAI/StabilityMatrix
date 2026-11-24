@@ -6,10 +6,8 @@ namespace StabilityMatrix.DesignData;
 [DesignOnly(true)]
 public class MockLaunchViewModel : LaunchViewModel
 {
-    public MockLaunchViewModel() : base(
-        null!, null!, null!, 
-        null!, null!, null!,
-        null!, null!, null!)
+    public MockLaunchViewModel()
+        : base(null!, null!, null!, null!, null!, null!, null!, null!, null!)
     {
         InstalledPackages = new()
         {
@@ -21,7 +19,7 @@ public class MockLaunchViewModel : LaunchViewModel
                 DisplayVersion = "1.0.0",
                 InstalledBranch = "main",
                 LibraryPath = @"Packages\mock-package",
-            }
+            },
         };
         SelectedPackage = InstalledPackages[0];
     }

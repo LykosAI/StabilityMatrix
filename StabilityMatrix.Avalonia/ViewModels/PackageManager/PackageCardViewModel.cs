@@ -159,10 +159,12 @@ public partial class PackageCardViewModel(
             var basePackage = packageFactory[value.PackageName!];
             CardImageSource = basePackage?.PreviewImageUri ?? Assets.NoImage;
             InstalledVersion = value.Version?.DisplayVersion ?? "Unknown";
-            CanUseConfigMethod =
-                basePackage?.AvailableSharedFolderMethods.Contains(SharedFolderMethod.Configuration) ?? false;
-            CanUseSymlinkMethod =
-                basePackage?.AvailableSharedFolderMethods.Contains(SharedFolderMethod.Symlink) ?? false;
+            CanUseConfigMethod = basePackage?.AvailableSharedFolderMethods.Contains(
+                SharedFolderMethod.Configuration
+            ) ?? false;
+            CanUseSymlinkMethod = basePackage?.AvailableSharedFolderMethods.Contains(
+                SharedFolderMethod.Symlink
+            ) ?? false;
             UseSharedOutput = Package?.UseSharedOutputFolder ?? false;
             CanUseSharedOutput = basePackage?.SharedOutputFolders != null;
             CanUseExtensions = basePackage?.SupportsExtensions ?? false;

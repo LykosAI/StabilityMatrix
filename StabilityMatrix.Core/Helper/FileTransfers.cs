@@ -76,32 +76,28 @@ public static class FileTransfers
             completedFiles++;
             var currentCompletedFiles = completedFiles;
 
-            await CopyStream(
-                    inStream,
-                    outStream,
-                    fileReadBytes =>
-                    {
-                        var lastRead = totalReadForFile;
-                        totalReadForFile = Convert.ToUInt64(fileReadBytes);
-                        totalRead += totalReadForFile - lastRead;
-                        fileProgress?.Report(
-                            new ProgressReport(
-                                totalReadForFile,
-                                fileSize,
-                                fileName,
-                                $"{currentCompletedFiles}/{totalFiles}"
-                            )
-                        );
-                        totalProgress?.Report(
-                            new ProgressReport(
-                                totalRead,
-                                totalSize,
-                                fileName,
-                                $"{currentCompletedFiles}/{totalFiles}"
-                            )
-                        );
-                    }
-                )
+            await CopyStream(inStream, outStream, fileReadBytes =>
+                {
+                    var lastRead = totalReadForFile;
+                    totalReadForFile = Convert.ToUInt64(fileReadBytes);
+                    totalRead += totalReadForFile - lastRead;
+                    fileProgress?.Report(
+                        new ProgressReport(
+                            totalReadForFile,
+                            fileSize,
+                            fileName,
+                            $"{currentCompletedFiles}/{totalFiles}"
+                        )
+                    );
+                    totalProgress?.Report(
+                        new ProgressReport(
+                            totalRead,
+                            totalSize,
+                            fileName,
+                            $"{currentCompletedFiles}/{totalFiles}"
+                        )
+                    );
+                })
                 .ConfigureAwait(false);
         }
     }

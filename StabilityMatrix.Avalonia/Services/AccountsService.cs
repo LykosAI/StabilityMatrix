@@ -170,8 +170,7 @@ public class AccountsService : IAccountsService
 
         // Get id first using the api token
         var userAccount = await civitTRPCApi.GetUserAccount(bearerToken: apiToken);
-        var id =
-            userAccount.InnerJson?.Id
+        var id = userAccount.InnerJson?.Id
             ?? throw new InvalidOperationException("GetUserAccount did not contain an id");
 
         // Then get the username using the id

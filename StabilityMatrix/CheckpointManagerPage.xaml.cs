@@ -8,6 +8,7 @@ namespace StabilityMatrix;
 public partial class CheckpointManagerPage : Page
 {
     private readonly CheckpointManagerViewModel viewModel;
+
     public CheckpointManagerPage(CheckpointManagerViewModel viewModel)
     {
         this.viewModel = viewModel;
@@ -27,13 +28,14 @@ public partial class CheckpointManagerPage : Page
     /// <param name="e"></param>
     private void VirtualizingGridView_OnPreviewMouseWheel(object sender, MouseWheelEventArgs e)
     {
-        if (e.Handled) return;
-        
+        if (e.Handled)
+            return;
+
         e.Handled = true;
         var eventArg = new MouseWheelEventArgs(e.MouseDevice, e.Timestamp, e.Delta)
         {
             RoutedEvent = MouseWheelEvent,
-            Source = sender
+            Source = sender,
         };
         if (((Control)sender).Parent is UIElement parent)
         {

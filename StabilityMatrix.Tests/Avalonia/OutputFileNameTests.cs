@@ -12,20 +12,18 @@ public class OutputFileNameTests
             "{lora_name}",
             new FileNameFormatProvider
             {
-                GenerationLoras = GenerationLoraSnapshot.FromNodes(
-                    [
-                        new ComfyNode
-                        {
-                            ClassType = "LoraLoader",
-                            Inputs = new() { ["lora_name"] = $"styles/{firstStem}.safetensors" },
-                        },
-                        new ComfyNode
-                        {
-                            ClassType = "LoraLoader",
-                            Inputs = new() { ["lora_name"] = $"characters/{secondStem}.safetensors" },
-                        },
-                    ]
-                ),
+                GenerationLoras = GenerationLoraSnapshot.FromNodes([
+                    new ComfyNode
+                    {
+                        ClassType = "LoraLoader",
+                        Inputs = new() { ["lora_name"] = $"styles/{firstStem}.safetensors" },
+                    },
+                    new ComfyNode
+                    {
+                        ClassType = "LoraLoader",
+                        Inputs = new() { ["lora_name"] = $"characters/{secondStem}.safetensors" },
+                    },
+                ]),
             }
         );
 

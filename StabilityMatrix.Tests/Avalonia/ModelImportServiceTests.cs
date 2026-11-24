@@ -209,15 +209,13 @@ public class ModelImportServiceTests
             settingsManager.ModelsDirectory.Returns(tempDir.FullName);
             modelIndexService
                 .FindByHashAsync("test-blake3")
-                .Returns(
-                    [
-                        new LocalModelFile
-                        {
-                            RelativePath = installedRelativePath,
-                            SharedFolderType = SharedFolderType.StableDiffusion,
-                        },
-                    ]
-                );
+                .Returns([
+                    new LocalModelFile
+                    {
+                        RelativePath = installedRelativePath,
+                        SharedFolderType = SharedFolderType.StableDiffusion,
+                    },
+                ]);
 
             var canceledInvoked = false;
 
@@ -344,15 +342,13 @@ public class ModelImportServiceTests
             settingsManager.ModelsDirectory.Returns(tempDir.FullName);
             modelIndexService
                 .FindByHashAsync("test-blake3")
-                .Returns(
-                    [
-                        new LocalModelFile
-                        {
-                            RelativePath = installedRelativePath,
-                            SharedFolderType = SharedFolderType.StableDiffusion,
-                        },
-                    ]
-                );
+                .Returns([
+                    new LocalModelFile
+                    {
+                        RelativePath = installedRelativePath,
+                        SharedFolderType = SharedFolderType.StableDiffusion,
+                    },
+                ]);
 
             trackedDownloadService
                 .NewDownload(Arg.Any<string>(), Arg.Any<FilePath>())
@@ -411,15 +407,13 @@ public class ModelImportServiceTests
             settingsManager.ModelsDirectory.Returns(tempDir.FullName);
             modelIndexService
                 .FindByHashAsync("test-blake3")
-                .Returns(
-                    [
-                        new LocalModelFile
-                        {
-                            RelativePath = Path.Combine("StableDiffusion", "deleted.safetensors"),
-                            SharedFolderType = SharedFolderType.StableDiffusion,
-                        },
-                    ]
-                );
+                .Returns([
+                    new LocalModelFile
+                    {
+                        RelativePath = Path.Combine("StableDiffusion", "deleted.safetensors"),
+                        SharedFolderType = SharedFolderType.StableDiffusion,
+                    },
+                ]);
 
             // NSubstitute intercepts the default-interface string overload too, so stub it directly
             trackedDownloadService

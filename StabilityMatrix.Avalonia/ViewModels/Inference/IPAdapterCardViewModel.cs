@@ -51,23 +51,23 @@ public partial class IPAdapterCardViewModel : LoadableViewModelBase
     /// </summary>
     [Localizable(false)]
     public IReadOnlyList<string> WeightTypes { get; } =
-        [
-            "linear",
-            "ease in",
-            "ease out",
-            "ease in-out",
-            "reverse in-out",
-            "weak input",
-            "weak output",
-            "weak middle",
-            "strong middle",
-            "style transfer",
-            "composition",
-            "strong style transfer",
-            "style and composition",
-            "style transfer precise",
-            "composition precise",
-        ];
+    [
+        "linear",
+        "ease in",
+        "ease out",
+        "ease in-out",
+        "reverse in-out",
+        "weak input",
+        "weak output",
+        "weak middle",
+        "strong middle",
+        "style transfer",
+        "composition",
+        "strong style transfer",
+        "style and composition",
+        "style transfer precise",
+        "composition precise",
+    ];
 
     public SelectImageCardViewModel SelectImageCardViewModel { get; }
 

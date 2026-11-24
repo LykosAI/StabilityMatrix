@@ -9,5 +9,5 @@ public enum TorchIndex
     Mps,
     Zluda,
     Ipex,
-    None
+    None,
 }

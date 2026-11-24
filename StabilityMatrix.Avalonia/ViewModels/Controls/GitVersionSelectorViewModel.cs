@@ -39,10 +39,13 @@ public partial class GitVersionSelectorViewModel : ObservableObject
         {
             return SelectedVersionType switch
             {
-                GitVersionSelectorVersionType.BranchCommit
-                    => new GitVersion { Branch = SelectedBranch, CommitSha = SelectedCommit },
+                GitVersionSelectorVersionType.BranchCommit => new GitVersion
+                {
+                    Branch = SelectedBranch,
+                    CommitSha = SelectedCommit,
+                },
                 GitVersionSelectorVersionType.Tag => new GitVersion { Tag = SelectedTag },
-                _ => throw new InvalidOperationException()
+                _ => throw new InvalidOperationException(),
             };
         }
         set
@@ -52,7 +55,7 @@ public partial class GitVersionSelectorViewModel : ObservableObject
                 { Tag: not null } => GitVersionSelectorVersionType.Tag,
                 { Branch: not null, CommitSha: not null } => GitVersionSelectorVersionType.BranchCommit,
                 // Default to branch commit
-                _ => GitVersionSelectorVersionType.BranchCommit
+                _ => GitVersionSelectorVersionType.BranchCommit,
             };
 
             SelectedBranch = value.Branch;
@@ -74,7 +77,7 @@ public partial class GitVersionSelectorViewModel : ObservableObject
             [!GitVersionSelector.SelectedVersionTypeProperty] = new Binding(nameof(SelectedVersionType)),
             [!GitVersionSelector.SelectedBranchProperty] = new Binding(nameof(SelectedBranch)),
             [!GitVersionSelector.SelectedCommitProperty] = new Binding(nameof(SelectedCommit)),
-            [!GitVersionSelector.SelectedTagProperty] = new Binding(nameof(SelectedTag))
+            [!GitVersionSelector.SelectedTagProperty] = new Binding(nameof(SelectedTag)),
         };
 
         var dialog = new BetterContentDialog
@@ -85,7 +88,7 @@ public partial class GitVersionSelectorViewModel : ObservableObject
             PrimaryButtonText = Resources.Action_Save,
             CloseButtonText = Resources.Action_Cancel,
             DefaultButton = ContentDialogButton.Primary,
-            MinDialogWidth = 400
+            MinDialogWidth = 400,
         };
 
         return dialog;

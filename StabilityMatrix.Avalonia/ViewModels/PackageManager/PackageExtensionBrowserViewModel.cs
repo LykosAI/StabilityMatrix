@@ -175,37 +175,30 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
                 SelectableItem<PackageExtension>,
                 string,
                 string
-            >(
-                availableItemsChangeSet,
-                query =>
-                    string.IsNullOrWhiteSpace(query)
-                        ? _ => true
-                        : x => x.Item.Title.Contains(query, StringComparison.OrdinalIgnoreCase)
+            >(availableItemsChangeSet, query =>
+                string.IsNullOrWhiteSpace(query)
+                    ? _ => true
+                    : x => x.Item.Title.Contains(query, StringComparison.OrdinalIgnoreCase)
             ),
             availableItemsChangeSet.Connect(),
             InstalledItemsSearchCollection = new SearchCollection<
                 SelectableItem<InstalledPackageExtension>,
                 string,
                 string
-            >(
-                installedItemsChangeSet,
-                query =>
-                    string.IsNullOrWhiteSpace(query)
-                        ? _ => true
-                        : x => x.Item.Title.Contains(query, StringComparison.OrdinalIgnoreCase)
+            >(installedItemsChangeSet, query =>
+                string.IsNullOrWhiteSpace(query)
+                    ? _ => true
+                    : x => x.Item.Title.Contains(query, StringComparison.OrdinalIgnoreCase)
             ),
             installedItemsChangeSet.Connect(),
             ExtensionPackExtensionsSearchCollection = new SearchCollection<
                 SelectableItem<SavedPackageExtension>,
                 string,
                 string
-            >(
-                extensionPackExtensionsChangeSet,
-                query =>
-                    string.IsNullOrWhiteSpace(query)
-                        ? _ => true
-                        : x =>
-                            x.Item.PackageExtension.Title.Contains(query, StringComparison.OrdinalIgnoreCase)
+            >(extensionPackExtensionsChangeSet, query =>
+                string.IsNullOrWhiteSpace(query)
+                    ? _ => true
+                    : x => x.Item.PackageExtension.Title.Contains(query, StringComparison.OrdinalIgnoreCase)
             ),
             extensionPackExtensionsChangeSet.Connect()
         );

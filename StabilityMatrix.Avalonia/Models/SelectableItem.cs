@@ -20,8 +20,8 @@ public class SelectableItem<T>(T item) : AbstractNotifyPropertyChanged, IEquatab
         set => SetAndRaise(ref _isSelected, value);
     }
 
-    public ICommand ToggleSelectedCommand => new RelayCommand(() => IsSelected = !IsSelected); 
-    
+    public ICommand ToggleSelectedCommand => new RelayCommand(() => IsSelected = !IsSelected);
+
     /// <inheritdoc />
     public bool Equals(SelectableItem<T>? other)
     {

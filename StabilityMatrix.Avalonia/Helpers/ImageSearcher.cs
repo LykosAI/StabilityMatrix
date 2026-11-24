@@ -27,8 +27,7 @@ public class ImageSearcher
 
             if (
                 SearchOptions.HasFlag(ImageSearchOptions.FileName)
-                && Fuzz.WeightedRatio(searchQuery, file.FileName, PreprocessMode.Full)
-                    > MinimumFuzzScore
+                && Fuzz.WeightedRatio(searchQuery, file.FileName, PreprocessMode.Full) > MinimumFuzzScore
             )
             {
                 return true;
@@ -53,22 +52,18 @@ public class ImageSearcher
                             ) ?? false
                         )
                     || SearchOptions.HasFlag(ImageSearchOptions.Seed)
-                        && parameters.Seed
-                            .ToString()
+                        && parameters
+                            .Seed.ToString()
                             .StartsWith(searchQuery, StringComparison.OrdinalIgnoreCase)
                     || SearchOptions.HasFlag(ImageSearchOptions.Sampler)
                         && (
-                            parameters.Sampler?.StartsWith(
-                                searchQuery,
-                                StringComparison.OrdinalIgnoreCase
-                            ) ?? false
+                            parameters.Sampler?.StartsWith(searchQuery, StringComparison.OrdinalIgnoreCase)
+                            ?? false
                         )
                     || SearchOptions.HasFlag(ImageSearchOptions.ModelName)
                         && (
-                            parameters.ModelName?.StartsWith(
-                                searchQuery,
-                                StringComparison.OrdinalIgnoreCase
-                            ) ?? false
+                            parameters.ModelName?.StartsWith(searchQuery, StringComparison.OrdinalIgnoreCase)
+                            ?? false
                         )
                 )
                 {
@@ -90,6 +85,6 @@ public class ImageSearcher
         Seed = 1 << 3,
         Sampler = 1 << 4,
         ModelName = 1 << 5,
-        All = int.MaxValue
+        All = int.MaxValue,
     }
 }

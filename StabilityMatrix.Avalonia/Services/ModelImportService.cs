@@ -427,9 +427,10 @@ public class ModelImportService(
         modelFileName = pathSegments[^1];
         if (pathSegments.Length > 1)
         {
-            downloadFolder = new DirectoryPath(
-                [downloadFolder.FullPath, .. pathSegments.Take(pathSegments.Length - 1)]
-            );
+            downloadFolder = new DirectoryPath([
+                downloadFolder.FullPath,
+                .. pathSegments.Take(pathSegments.Length - 1),
+            ]);
         }
 
         // Folders might be missing if user didn't install any packages yet

@@ -86,7 +86,6 @@ public class AutoGrid : Grid
     /// Gets or sets the fixed column width
     /// </summary>
     [Category("Layout"), Description("Presets the width of all columns set using the ColumnCount property")]
-
     public GridLength ColumnWidth
     {
         get => (GridLength)GetValue(ColumnWidthProperty)!;
@@ -112,7 +111,12 @@ public class AutoGrid : Grid
     /// <remarks>The default is Vertical.</remarks>
     /// </summary>
     /// <value>The orientation.</value>
-    [Category("Layout"), Description("Defines the directionality of the autolayout. Use vertical for a column first layout, horizontal for a row first layout.")]
+    [
+        Category("Layout"),
+        Description(
+            "Defines the directionality of the autolayout. Use vertical for a column first layout, horizontal for a row first layout."
+        )
+    ]
     public Orientation Orientation
     {
         get => (Orientation)GetValue(OrientationProperty)!;
@@ -138,7 +142,7 @@ public class AutoGrid : Grid
         get => (GridLength)GetValue(RowHeightProperty)!;
         set => SetValue(RowHeightProperty, value);
     }
-        
+
     /// <summary>
     /// Handles the column count changed event
     /// </summary>
@@ -149,7 +153,6 @@ public class AutoGrid : Grid
 
         var grid = (AutoGrid)e.Sender;
 
-            
         // look for an existing column definition for the height
         var width = grid.ColumnWidth;
         if (!grid.IsSet(ColumnWidthProperty) && grid.ColumnDefinitions.Count > 0)
@@ -158,8 +161,7 @@ public class AutoGrid : Grid
         // clear and rebuild
         grid.ColumnDefinitions.Clear();
         for (var i = 0; i < (int)e.NewValue; i++)
-            grid.ColumnDefinitions.Add(
-                new ColumnDefinition() { Width = width });
+            grid.ColumnDefinitions.Add(new ColumnDefinition() { Width = width });
     }
 
     /// <summary>
@@ -212,8 +214,7 @@ public class AutoGrid : Grid
         // clear and rebuild
         grid.RowDefinitions.Clear();
         for (var i = 0; i < (int)e.NewValue; i++)
-            grid.RowDefinitions.Add(
-                new RowDefinition() { Height = height });
+            grid.RowDefinitions.Add(new RowDefinition() { Height = height });
     }
 
     /// <summary>
@@ -224,8 +225,10 @@ public class AutoGrid : Grid
         var grid = (AutoGrid)e.Sender;
         foreach (var child in grid.Children)
         {
-            child.SetValue(HorizontalAlignmentProperty,
-                grid.ChildHorizontalAlignment ?? AvaloniaProperty.UnsetValue);
+            child.SetValue(
+                HorizontalAlignmentProperty,
+                grid.ChildHorizontalAlignment ?? AvaloniaProperty.UnsetValue
+            );
         }
     }
 
@@ -249,7 +252,10 @@ public class AutoGrid : Grid
         var grid = (AutoGrid)e.Sender;
         foreach (var child in grid.Children)
         {
-            child.SetValue(VerticalAlignmentProperty, grid.ChildVerticalAlignment ?? AvaloniaProperty.UnsetValue);
+            child.SetValue(
+                VerticalAlignmentProperty,
+                grid.ChildVerticalAlignment ?? AvaloniaProperty.UnsetValue
+            );
         }
     }
 
@@ -264,7 +270,11 @@ public class AutoGrid : Grid
         }
         if (ChildHorizontalAlignment != null)
         {
-            child.SetValue(HorizontalAlignmentProperty, ChildHorizontalAlignment.Value, BindingPriority.Template);
+            child.SetValue(
+                HorizontalAlignmentProperty,
+                ChildHorizontalAlignment.Value,
+                BindingPriority.Template
+            );
         }
         if (ChildVerticalAlignment != null)
         {
@@ -350,36 +360,59 @@ public class AutoGrid : Grid
     public static readonly AvaloniaProperty<HorizontalAlignment?> ChildHorizontalAlignmentProperty =
         AvaloniaProperty.Register<AutoGrid, HorizontalAlignment?>("ChildHorizontalAlignment");
 
-    public static readonly AvaloniaProperty<Thickness?> ChildMarginProperty =
-        AvaloniaProperty.Register<AutoGrid, Thickness?>("ChildMargin");
+    public static readonly AvaloniaProperty<Thickness?> ChildMarginProperty = AvaloniaProperty.Register<
+        AutoGrid,
+        Thickness?
+    >("ChildMargin");
 
     public static readonly AvaloniaProperty<VerticalAlignment?> ChildVerticalAlignmentProperty =
         AvaloniaProperty.Register<AutoGrid, VerticalAlignment?>("ChildVerticalAlignment");
 
-    public static readonly AvaloniaProperty<int> ColumnCountProperty =
-        AvaloniaProperty.RegisterAttached<Control, int>("ColumnCount", typeof(AutoGrid), 1);
+    public static readonly AvaloniaProperty<int> ColumnCountProperty = AvaloniaProperty.RegisterAttached<
+        Control,
+        int
+    >("ColumnCount", typeof(AutoGrid), 1);
 
     public static readonly AvaloniaProperty<GridLength> ColumnWidthProperty =
-        AvaloniaProperty.RegisterAttached<Control, GridLength>("ColumnWidth", typeof(AutoGrid), GridLength.Auto);
+        AvaloniaProperty.RegisterAttached<Control, GridLength>(
+            "ColumnWidth",
+            typeof(AutoGrid),
+            GridLength.Auto
+        );
 
-    public static readonly AvaloniaProperty<bool> IsAutoIndexingProperty =
-        AvaloniaProperty.Register<AutoGrid, bool>("IsAutoIndexing", true);
+    public static readonly AvaloniaProperty<bool> IsAutoIndexingProperty = AvaloniaProperty.Register<
+        AutoGrid,
+        bool
+    >("IsAutoIndexing", true);
 
-    public static readonly AvaloniaProperty<Orientation> OrientationProperty =
-        AvaloniaProperty.Register<AutoGrid, Orientation>("Orientation", Orientation.Vertical);
+    public static readonly AvaloniaProperty<Orientation> OrientationProperty = AvaloniaProperty.Register<
+        AutoGrid,
+        Orientation
+    >("Orientation", Orientation.Vertical);
 
-    public static readonly AvaloniaProperty<int> RowCountProperty =
-        AvaloniaProperty.RegisterAttached<Control, int>("RowCount", typeof(AutoGrid), 1);
+    public static readonly AvaloniaProperty<int> RowCountProperty = AvaloniaProperty.RegisterAttached<
+        Control,
+        int
+    >("RowCount", typeof(AutoGrid), 1);
 
-    public static readonly AvaloniaProperty<GridLength> RowHeightProperty =
-        AvaloniaProperty.RegisterAttached<Control, GridLength>("RowHeight", typeof(AutoGrid), GridLength.Auto);
+    public static readonly AvaloniaProperty<GridLength> RowHeightProperty = AvaloniaProperty.RegisterAttached<
+        Control,
+        GridLength
+    >("RowHeight", typeof(AutoGrid), GridLength.Auto);
 
     static AutoGrid()
     {
-        AffectsMeasure<AutoGrid>(ChildHorizontalAlignmentProperty, ChildMarginProperty,
-            ChildVerticalAlignmentProperty, ColumnCountProperty, ColumnWidthProperty, IsAutoIndexingProperty, OrientationProperty,
-            RowHeightProperty);
-            
+        AffectsMeasure<AutoGrid>(
+            ChildHorizontalAlignmentProperty,
+            ChildMarginProperty,
+            ChildVerticalAlignmentProperty,
+            ColumnCountProperty,
+            ColumnWidthProperty,
+            IsAutoIndexingProperty,
+            OrientationProperty,
+            RowHeightProperty
+        );
+
         ChildHorizontalAlignmentProperty.Changed.Subscribe(OnChildHorizontalAlignmentChanged);
         ChildMarginProperty.Changed.Subscribe(OnChildMarginChanged);
         ChildVerticalAlignmentProperty.Changed.Subscribe(OnChildVerticalAlignmentChanged);
@@ -388,7 +421,7 @@ public class AutoGrid : Grid
         ColumnWidthProperty.Changed.Subscribe(FixedColumnWidthChanged);
         RowHeightProperty.Changed.Subscribe(FixedRowHeightChanged);
     }
-    
+
     #region Overrides
 
     /// <summary>
@@ -403,6 +436,6 @@ public class AutoGrid : Grid
         PerformLayout();
         return base.MeasureOverride(constraint);
     }
-        
+
     #endregion Overrides
 }

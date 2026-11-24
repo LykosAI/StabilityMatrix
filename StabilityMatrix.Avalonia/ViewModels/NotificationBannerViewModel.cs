@@ -134,8 +134,9 @@ public partial class NotificationBannerViewModel(IAppNotificationService appNoti
                         if (primaryButton is null)
                         {
                             primaryButton = btn;
-                            dialog.PrimaryButtonText =
-                                appNotificationService.ResolveLocalizedString(btn.Label) ?? "";
+                            dialog.PrimaryButtonText = appNotificationService.ResolveLocalizedString(
+                                btn.Label
+                            ) ?? "";
                             dialog.IsPrimaryButtonEnabled = true;
                         }
                         break;
@@ -147,8 +148,8 @@ public partial class NotificationBannerViewModel(IAppNotificationService appNoti
                         if (btn.Style == AppNotificationButtonStyle.Close || closeButton is null)
                         {
                             closeButton = btn;
-                            dialog.CloseButtonText =
-                                appNotificationService.ResolveLocalizedString(btn.Label) ?? "";
+                            dialog.CloseButtonText = appNotificationService.ResolveLocalizedString(btn.Label)
+                                ?? "";
                         }
                         break;
 
@@ -157,15 +158,16 @@ public partial class NotificationBannerViewModel(IAppNotificationService appNoti
                         if (primaryButton is null)
                         {
                             primaryButton = btn;
-                            dialog.PrimaryButtonText =
-                                appNotificationService.ResolveLocalizedString(btn.Label) ?? "";
+                            dialog.PrimaryButtonText = appNotificationService.ResolveLocalizedString(
+                                btn.Label
+                            ) ?? "";
                             dialog.IsPrimaryButtonEnabled = true;
                         }
                         else if (closeButton is null)
                         {
                             closeButton = btn;
-                            dialog.CloseButtonText =
-                                appNotificationService.ResolveLocalizedString(btn.Label) ?? "";
+                            dialog.CloseButtonText = appNotificationService.ResolveLocalizedString(btn.Label)
+                                ?? "";
                         }
                         break;
                 }

@@ -70,7 +70,7 @@ public partial record UvPackageSpecifier
         {
             Name = match.Groups["package_name"].Value,
             Constraint = match.Groups["version_constraint"].Value, // Will be empty string if no constraint
-            Version = match.Groups["version"].Value // Will be empty string if no version
+            Version = match.Groups["version"].Value, // Will be empty string if no version
         };
 
         // Ensure Constraint and Version are null if they were empty strings from regex.

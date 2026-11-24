@@ -15,10 +15,7 @@ public class UriStringConverter : IValueConverter
         if (value is Uri uri)
         {
             return (
-                uri.Host
-                + (uri.IsDefaultPort ? "" : $":{uri.Port}")
-                + uri.PathAndQuery
-                + uri.Fragment
+                uri.Host + (uri.IsDefaultPort ? "" : $":{uri.Port}") + uri.PathAndQuery + uri.Fragment
             ).TrimEnd('/');
         }
 
@@ -26,12 +23,7 @@ public class UriStringConverter : IValueConverter
     }
 
     /// <inheritdoc />
-    public object ConvertBack(
-        object? value,
-        Type targetType,
-        object? parameter,
-        CultureInfo culture
-    )
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         throw new NotImplementedException();
     }

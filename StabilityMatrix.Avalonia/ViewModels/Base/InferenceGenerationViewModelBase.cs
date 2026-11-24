@@ -506,16 +506,13 @@ public abstract partial class InferenceGenerationViewModelBase
                 project = (InferenceProjectDocument)project.Clone();
 
                 // Set batch size indexes
-                project.TryUpdateModel(
-                    "BatchSize",
-                    node =>
-                    {
-                        node[nameof(BatchSizeCardViewModel.BatchCount)] = 1;
-                        node[nameof(BatchSizeCardViewModel.IsBatchIndexEnabled)] = true;
-                        node[nameof(BatchSizeCardViewModel.BatchIndex)] = i + 1;
-                        return node;
-                    }
-                );
+                project.TryUpdateModel("BatchSize", node =>
+                {
+                    node[nameof(BatchSizeCardViewModel.BatchCount)] = 1;
+                    node[nameof(BatchSizeCardViewModel.IsBatchIndexEnabled)] = true;
+                    node[nameof(BatchSizeCardViewModel.BatchIndex)] = i + 1;
+                    return node;
+                });
             }
 
             if (comfyImage.FileName.EndsWith(".png"))

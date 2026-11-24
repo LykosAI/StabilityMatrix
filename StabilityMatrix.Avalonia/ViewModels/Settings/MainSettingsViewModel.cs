@@ -503,10 +503,9 @@ public partial class MainSettingsViewModel : PageViewModelBase
 
         var gpuInfos = HardwareHelper.IterGpuInfo();
         GpuInfoCollection = new ObservableCollection<GpuInfo>(gpuInfos);
-        PreferredGpu ??=
-            GpuInfos.FirstOrDefault(gpu =>
-                gpu.Name?.Contains("nvidia", StringComparison.InvariantCultureIgnoreCase) ?? false
-            ) ?? GpuInfos.FirstOrDefault();
+        PreferredGpu ??= GpuInfos.FirstOrDefault(gpu =>
+            gpu.Name?.Contains("nvidia", StringComparison.InvariantCultureIgnoreCase) ?? false
+        ) ?? GpuInfos.FirstOrDefault();
 
         if (Design.IsDesignMode)
             return;
@@ -533,8 +532,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
     {
         try
         {
-            using var fsKey =
-                Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Control\FileSystem")
+            using var fsKey = Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Control\FileSystem")
                 ?? throw new InvalidOperationException(
                     "Could not open registry key 'SYSTEM\\CurrentControlSet\\Control\\FileSystem'"
                 );
@@ -716,8 +714,8 @@ public partial class MainSettingsViewModel : PageViewModelBase
         }
         else
         {
-            var current =
-                settingsManager.Settings.UserEnvironmentVariables ?? new Dictionary<string, string>();
+            var current = settingsManager.Settings.UserEnvironmentVariables
+                ?? new Dictionary<string, string>();
             viewModel.EnvVars = new ObservableCollection<EnvVarKeyPair>(
                 current.Select(kvp => new EnvVarKeyPair(kvp.Key, kvp.Value))
             );
@@ -1880,8 +1878,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
     {
         // Read licenses.json
         using var reader = new StreamReader(Assets.LicensesJson.Open());
-        var licenses =
-            JsonSerializer.Deserialize<IReadOnlyList<LicenseInfo>>(reader.ReadToEnd())
+        var licenses = JsonSerializer.Deserialize<IReadOnlyList<LicenseInfo>>(reader.ReadToEnd())
             ?? throw new InvalidOperationException("Failed to read licenses.json");
 
         // Generate markdown

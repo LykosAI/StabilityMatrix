@@ -9,13 +9,13 @@ public readonly record struct TaskResult<T>
 
     [MemberNotNullWhen(true, nameof(Result))]
     public bool IsSuccessful => Exception is null && Result != null;
-    
+
     public TaskResult(T? result, Exception? exception)
     {
         Result = result;
         Exception = exception;
     }
-    
+
     public TaskResult(T result)
     {
         Result = result;

@@ -103,8 +103,7 @@ public class RuinedFooocus(
 
             progress?.Report(new ProgressReport(-1f, "Installing requirements...", isIndeterminate: true));
 
-            var isLegacyNvidia =
-                SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu()
+            var isLegacyNvidia = SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu()
                 ?? HardwareHelper.HasLegacyNvidiaGpu();
             var torchExtraIndex = isLegacyNvidia ? "cu126" : "cu128";
 

@@ -15,10 +15,8 @@ public class InstalledPackageVersion
     [JsonIgnore]
     public string DisplayVersion =>
         (
-            IsReleaseMode
-                ? InstalledReleaseVersion
-                : string.IsNullOrWhiteSpace(InstalledCommitSha)
-                    ? InstalledBranch
-                    : $"{InstalledBranch}@{InstalledCommitSha[..7]}"
+            IsReleaseMode ? InstalledReleaseVersion
+            : string.IsNullOrWhiteSpace(InstalledCommitSha) ? InstalledBranch
+            : $"{InstalledBranch}@{InstalledCommitSha[..7]}"
         ) ?? string.Empty;
 }

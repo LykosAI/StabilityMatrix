@@ -14,11 +14,9 @@ namespace StabilityMatrix.Avalonia.Controls;
 public class AppWindowBase : AppWindow
 {
     public CancellationTokenSource? ShowAsyncCts { get; set; }
-    
-    protected AppWindowBase()
-    {
-    }
-    
+
+    protected AppWindowBase() { }
+
     public void ShowWithCts(CancellationTokenSource cts)
     {
         ShowAsyncCts?.Cancel();
@@ -30,18 +28,21 @@ public class AppWindowBase : AppWindow
     {
         ShowAsyncCts?.Cancel();
         ShowAsyncCts = new CancellationTokenSource();
-        
+
         var tcs = new TaskCompletionSource<bool>();
-        ShowAsyncCts.Token.Register(s =>
-        {
-            ((TaskCompletionSource<bool>) s!).SetResult(true);
-        }, tcs);
-        
+        ShowAsyncCts.Token.Register(
+            s =>
+            {
+                ((TaskCompletionSource<bool>)s!).SetResult(true);
+            },
+            tcs
+        );
+
         Show();
-        
+
         return tcs.Task;
     }
-    
+
     protected override void OnClosed(EventArgs e)
     {
         base.OnClosed(e);
@@ -52,38 +53,42 @@ public class AppWindowBase : AppWindow
             ShowAsyncCts = null;
         }
     }
-    
+
     protected override void OnLoaded(RoutedEventArgs e)
     {
         base.OnLoaded(e);
-        
+
         if (DataContext is ViewModelBase viewModel)
         {
             // Run synchronous load then async load
             viewModel.OnLoaded();
-        
+
             // Can't block here so we'll run as async on UI thread
-            Dispatcher.UIThread.InvokeAsync(async () =>
-            {
-                await viewModel.OnLoadedAsync();
-            }).SafeFireAndForget();
+            Dispatcher
+                .UIThread.InvokeAsync(async () =>
+                {
+                    await viewModel.OnLoadedAsync();
+                })
+                .SafeFireAndForget();
         }
     }
 
     protected override void OnUnloaded(RoutedEventArgs e)
     {
         base.OnUnloaded(e);
-        
+
         if (DataContext is not ViewModelBase viewModel)
             return;
-        
+
         // Run synchronous load then async unload
         viewModel.OnUnloaded();
-        
+
         // Can't block here so we'll run as async on UI thread
-        Dispatcher.UIThread.InvokeAsync(async () =>
-        {
-            await viewModel.OnUnloadedAsync();
-        }).SafeFireAndForget();
+        Dispatcher
+            .UIThread.InvokeAsync(async () =>
+            {
+                await viewModel.OnUnloadedAsync();
+            })
+            .SafeFireAndForget();
     }
 }

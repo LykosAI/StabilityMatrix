@@ -24,13 +24,10 @@ public static class CivitaiUrlHelper
 
         url = url.Replace("original=true", $"width={maxWidth}", StringComparison.OrdinalIgnoreCase);
 
-        return System.Text.RegularExpressions.Regex.Replace(
-            url,
-            @"width=(\d+)",
-            match =>
-                int.TryParse(match.Groups[1].Value, out var width) && width > maxWidth
-                    ? $"width={maxWidth}"
-                    : match.Value
+        return System.Text.RegularExpressions.Regex.Replace(url, @"width=(\d+)", match =>
+            int.TryParse(match.Groups[1].Value, out var width) && width > maxWidth
+                ? $"width={maxWidth}"
+                : match.Value
         );
     }
 

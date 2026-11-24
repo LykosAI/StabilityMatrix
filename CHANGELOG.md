@@ -96,8 +96,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed the first-run recommended models dialog looking like it never loaded its images
 - Fixed the app sometimes crashing on exit with an **Inference** tab open, and a crash dialog appearing after the app had already closed
 - Fixed the **Flux Text to Image** tab losing its model and text encoders when opening a saved project
-- Fixed the **Python Packages** dialog crashing Stability Matrix while typing in its search box. A package whose details fail to load now shows an error, and selecting it again retries ([#1795](https://github.com/LykosAI/StabilityMatrix/pull/1795)) - thanks to @deepratna-awale!
-- Fixed installing ComfyUI extensions from Inference failing with "Access is denied" while ComfyUI was running. ComfyUI now stops for the install and starts again after
+- Fixed installing ComfyUI extensions from Inference failing with "Access is denied" while ComfyUI was running
 - Fixed the **Python Packages** dialog crashing Stability Matrix while typing in its search box ([#1795](https://github.com/LykosAI/StabilityMatrix/pull/1795)) - thanks to @deepratna-awale!
 ### Performance
 - The **Checkpoint Manager** and **Outputs** grids no longer stutter on large images. Each image gets a small cached thumbnail, while your previews and outputs stay full resolution

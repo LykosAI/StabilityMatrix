@@ -86,6 +86,5 @@ public record CivitUserProfileResponse
 
     public string? ImageUrl => Result["data"]?["json"]?["image"]?.GetValue<string>();
 
-    public DateTimeOffset? CreatedAt =>
-        Result["data"]?["json"]?["createdAt"]?.GetValue<DateTimeOffset>();
+    public DateTimeOffset? CreatedAt => Result["data"]?["json"]?["createdAt"]?.GetValue<DateTimeOffset>();
 }

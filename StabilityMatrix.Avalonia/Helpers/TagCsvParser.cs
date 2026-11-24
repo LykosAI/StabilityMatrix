@@ -2,8 +2,8 @@
 using System.IO;
 using System.Threading.Tasks;
 using StabilityMatrix.Avalonia.Models.TagCompletion;
-using Sylvan.Data.Csv;
 using Sylvan;
+using Sylvan.Data.Csv;
 
 namespace StabilityMatrix.Avalonia.Helpers;
 
@@ -19,11 +19,7 @@ public class TagCsvParser
     public async IAsyncEnumerable<TagCsvEntry> ParseAsync()
     {
         var pool = new StringPool();
-        var options = new CsvDataReaderOptions
-        {
-            StringFactory = pool.GetString,
-            HasHeaders = false,
-        };
+        var options = new CsvDataReaderOptions { StringFactory = pool.GetString, HasHeaders = false };
 
         using var textReader = new StreamReader(stream);
         await using var dataReader = await CsvDataReader.CreateAsync(textReader, options);

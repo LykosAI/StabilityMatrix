@@ -36,8 +36,9 @@ public partial class PythonPackageSpecifiersViewModel : ContentDialogViewModelBa
     private string? helpLinkLabel = Resources.Label_DependencySpecifiers;
 
     [ObservableProperty]
-    private Uri? helpLinkUri =
-        new("https://packaging.python.org/en/latest/specifications/dependency-specifiers");
+    private Uri? helpLinkUri = new(
+        "https://packaging.python.org/en/latest/specifications/dependency-specifiers"
+    );
 
     protected ObservableCollection<PythonPackageSpecifiersItem> Specifiers { get; } = [];
 
@@ -78,7 +79,7 @@ public partial class PythonPackageSpecifiersViewModel : ContentDialogViewModelBa
                 new PipPackageSpecifierOverride
                 {
                     Action = PipPackageSpecifierOverrideAction.Update,
-                    Constraint = "=="
+                    Constraint = "==",
                 }
             )
         );

@@ -2,13 +2,13 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
+    xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
     xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
-    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
-    xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters">
+    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages">
     <Design.PreviewWith>
-        <controls:Paginator TotalPages="5" CurrentPageNumber="1" />
+        <controls:Paginator CurrentPageNumber="1" TotalPages="5" />
     </Design.PreviewWith>
-    
+
     <Style Selector="controls|Paginator">
         <Setter Property="Template">
             <ControlTemplate>
@@ -25,30 +25,30 @@
                     <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
                         <Button
                             Margin="0,0,8,0"
-                            IsEnabled="{TemplateBinding CanNavBack}"
                             Command="{TemplateBinding FirstPageCommand}"
+                            IsEnabled="{TemplateBinding CanNavBack}"
                             ToolTip.ShowDelay="1000"
                             ToolTip.Tip="{x:Static lang:Resources.Label_FirstPage}">
                             <icons:Icon Value="fa-solid fa-backward-fast" />
                         </Button>
                         <Button
                             Margin="0,0,8,0"
-                            IsEnabled="{TemplateBinding CanNavBack}"
                             Command="{TemplateBinding PreviousPageCommand}"
+                            IsEnabled="{TemplateBinding CanNavBack}"
                             ToolTip.ShowDelay="1000"
                             ToolTip.Tip="{x:Static lang:Resources.Label_PreviousPage}">
                             <icons:Icon Value="fa-solid fa-caret-left" />
                         </Button>
                         <Button
                             Margin="0,0,8,0"
-                            IsEnabled="{TemplateBinding CanNavForward}"
                             Command="{TemplateBinding NextPageCommand}"
+                            IsEnabled="{TemplateBinding CanNavForward}"
                             ToolTip.ShowDelay="1000"
                             ToolTip.Tip="{x:Static lang:Resources.Label_NextPage}">
                             <icons:Icon Value="fa-solid fa-caret-right" />
                         </Button>
-                        <Button 
-                            Command="{TemplateBinding LastPageCommand}" 
+                        <Button
+                            Command="{TemplateBinding LastPageCommand}"
                             IsEnabled="{TemplateBinding CanNavForward}"
                             ToolTip.ShowDelay="1000"
                             ToolTip.Tip="{x:Static lang:Resources.Label_LastPage}">

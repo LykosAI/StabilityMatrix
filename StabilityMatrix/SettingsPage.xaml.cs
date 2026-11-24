@@ -16,8 +16,9 @@ namespace StabilityMatrix
             DataContext = ViewModel;
 
             InitializeComponent();
-            
-            var textToFlowDocumentConverter = Resources["TextToFlowDocumentConverter"] as TextToFlowDocumentConverter;
+
+            var textToFlowDocumentConverter =
+                Resources["TextToFlowDocumentConverter"] as TextToFlowDocumentConverter;
             ViewModel.TextToFlowDocumentConverter = textToFlowDocumentConverter;
         }
 

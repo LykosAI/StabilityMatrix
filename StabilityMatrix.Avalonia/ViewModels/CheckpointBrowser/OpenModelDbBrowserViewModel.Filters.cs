@@ -52,20 +52,21 @@ public partial class OpenModelDbBrowserViewModel
     ) =>
         sortOption switch
         {
-            "Latest"
-                => SortExpressionComparer<OpenModelDbBrowserCardViewModel>.Descending(x => x.Model?.Date),
-            "Largest Scale"
-                => SortExpressionComparer<OpenModelDbBrowserCardViewModel>.Descending(x => x.Model?.Scale),
-            "Smallest Scale"
-                => SortExpressionComparer<OpenModelDbBrowserCardViewModel>.Ascending(x => x.Model?.Scale),
-            "Largest Size"
-                => SortExpressionComparer<OpenModelDbBrowserCardViewModel>.Descending(
-                    x => x.Model?.Size?.FirstOrDefault()
-                ),
-            "Smallest Size"
-                => SortExpressionComparer<OpenModelDbBrowserCardViewModel>.Ascending(
-                    x => x.Model?.Size?.FirstOrDefault()
-                ),
-            _ => SortExpressionComparer<OpenModelDbBrowserCardViewModel>.Descending(x => x.Model?.Date)
+            "Latest" => SortExpressionComparer<OpenModelDbBrowserCardViewModel>.Descending(x =>
+                x.Model?.Date
+            ),
+            "Largest Scale" => SortExpressionComparer<OpenModelDbBrowserCardViewModel>.Descending(x =>
+                x.Model?.Scale
+            ),
+            "Smallest Scale" => SortExpressionComparer<OpenModelDbBrowserCardViewModel>.Ascending(x =>
+                x.Model?.Scale
+            ),
+            "Largest Size" => SortExpressionComparer<OpenModelDbBrowserCardViewModel>.Descending(x =>
+                x.Model?.Size?.FirstOrDefault()
+            ),
+            "Smallest Size" => SortExpressionComparer<OpenModelDbBrowserCardViewModel>.Ascending(x =>
+                x.Model?.Size?.FirstOrDefault()
+            ),
+            _ => SortExpressionComparer<OpenModelDbBrowserCardViewModel>.Descending(x => x.Model?.Date),
         };
 }

@@ -23,7 +23,7 @@ namespace StabilityMatrix
             InitializeComponent();
             DataContext = viewModel;
             viewModel.PackageInstalled += (_, _) => Close();
-            
+
             dialogService.SetContentPresenter(InstallerContentDialog);
         }
 

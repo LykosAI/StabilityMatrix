@@ -81,7 +81,7 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
             CloseWhenCaretAtBeginning = true,
             CloseAutomatically = true,
             IsLightDismissEnabled = true,
-            CompletionList = { IsFiltering = true }
+            CompletionList = { IsFiltering = true },
         };
         return window;
     }
@@ -262,7 +262,7 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
         var segment = new TextSegment
         {
             StartOffset = Math.Max(startOffset, line.Offset),
-            EndOffset = Math.Min(endOffset, line.EndOffset)
+            EndOffset = Math.Min(endOffset, line.EndOffset),
         };
 
         // Check if this is an extra network request
@@ -276,13 +276,13 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
                 var offsetSegment = new TextSegment
                 {
                     StartOffset = segment.StartOffset + 1,
-                    EndOffset = segment.EndOffset
+                    EndOffset = segment.EndOffset,
                 };
                 return new EditorCompletionRequest
                 {
                     Text = "",
                     Segment = offsetSegment,
-                    Type = CompletionType.ExtraNetworkType
+                    Type = CompletionType.ExtraNetworkType,
                 };
             }
 
@@ -300,7 +300,7 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
                 {
                     Text = textEditor.Document.GetText(segment),
                     Segment = segment,
-                    Type = CompletionType.ExtraNetworkType
+                    Type = CompletionType.ExtraNetworkType,
                 };
             }
 
@@ -323,7 +323,7 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
                     "lora" => PromptExtraNetworkType.Lora,
                     "lyco" => PromptExtraNetworkType.LyCORIS,
                     "embedding" => PromptExtraNetworkType.Embedding,
-                    _ => null
+                    _ => null,
                 };
 
                 if (networkTypeResult is not { } networkType)
@@ -335,7 +335,7 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
                 var offsetSegment = new TextSegment
                 {
                     StartOffset = segment.StartOffset + 1,
-                    EndOffset = segment.EndOffset
+                    EndOffset = segment.EndOffset,
                 };
 
                 return new EditorCompletionRequest
@@ -367,7 +367,7 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
                     "lora" => PromptExtraNetworkType.Lora,
                     "lyco" => PromptExtraNetworkType.LyCORIS,
                     "embedding" => PromptExtraNetworkType.Embedding,
-                    _ => null
+                    _ => null,
                 };
 
                 if (networkTypeResult is not { } networkType)
@@ -390,7 +390,7 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
         {
             Text = textEditor.Document.GetText(segment),
             Segment = segment,
-            Type = CompletionType.Tag
+            Type = CompletionType.Tag,
         };
     }
 }

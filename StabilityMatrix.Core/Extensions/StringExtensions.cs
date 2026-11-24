@@ -48,7 +48,7 @@ public static class StringExtensions
                     '\t' => "\\t",
                     // Non ascii
                     _ when ch > 127 || ch < 32 => $"\\u{(int)ch:x4}",
-                    _ => ch.ToString()
+                    _ => ch.ToString(),
                 }
             );
         }

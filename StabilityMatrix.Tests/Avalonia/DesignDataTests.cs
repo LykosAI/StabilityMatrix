@@ -12,12 +12,11 @@ public class DesignDataTests
         SynchronizationContext.SetSynchronizationContext(new SynchronizationContext());
         DesignData.Initialize();
     }
-    
+
     // Return all properties
-    public static IEnumerable<object[]> DesignDataProperties => 
-        typeof(DesignData).GetProperties()
-            .Select(p => new object[] { p });
-    
+    public static IEnumerable<object[]> DesignDataProperties =>
+        typeof(DesignData).GetProperties().Select(p => new object[] { p });
+
     [TestMethod]
     [DynamicData(nameof(DesignDataProperties))]
     public void Property_ShouldBeNotNull(PropertyInfo property)

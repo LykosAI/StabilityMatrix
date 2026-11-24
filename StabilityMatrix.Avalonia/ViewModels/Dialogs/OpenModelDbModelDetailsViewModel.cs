@@ -55,9 +55,10 @@ public partial class OpenModelDbModelDetailsViewModel(
             : [Assets.NoImage];
 
     public IEnumerable<ModelResourceViewModel> Resources =>
-        Model
-            ?.Resources
-            ?.Select(resource => new ModelResourceViewModel(modelIndexService) { Resource = resource }) ?? [];
+        Model?.Resources?.Select(resource => new ModelResourceViewModel(modelIndexService)
+        {
+            Resource = resource,
+        }) ?? [];
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanImport))]
@@ -130,11 +131,8 @@ public partial class OpenModelDbModelDetailsViewModel(
             downloadFolder = new DirectoryPath(settingsManager.ModelsDirectory, selectedFolder);
         }
 
-        await modelImportService.DoOpenModelDbImport(
-            Model,
-            resourceVm.Resource,
-            downloadFolder,
-            download => download.ContextAction = new ModelPostDownloadContextAction()
+        await modelImportService.DoOpenModelDbImport(Model, resourceVm.Resource, downloadFolder, download =>
+            download.ContextAction = new ModelPostDownloadContextAction()
         );
 
         OnPrimaryButtonClick();
@@ -240,7 +238,7 @@ public partial class OpenModelDbModelDetailsViewModel(
                         settingsManager.ModelsDirectory,
                         Model.GetSharedFolderType().GetStringValue()
                     )
-                )
+                ),
             }
         );
 

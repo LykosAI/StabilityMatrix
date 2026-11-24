@@ -35,7 +35,7 @@ public static class GlobalEncryptedSerializer
         /// Header: [4C, 4B, 1F, 45, 5C, ??, 00] where ?? is the version byte.
         /// File: [(Header), (SaltSize bytes salt), (Encrypted json data)]
         /// </summary>
-        V2 = 2
+        V2 = 2,
     }
 
     [Serializable]
@@ -125,7 +125,7 @@ public static class GlobalEncryptedSerializer
         {
             KeySize = keyInfo.KeySize,
             SaltSize = keyInfo.SaltSize,
-            Iterations = keyInfo.Iterations
+            Iterations = keyInfo.Iterations,
         };
         var headerBytes = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref header, 1));
         Debug.Assert(headerBytes.Length == headerSize);
@@ -181,29 +181,25 @@ public static class GlobalEncryptedSerializer
     {
         return version switch
         {
-            FormatVersion.V1
-                => new DeviceIdBuilder()
-                    .AddMachineName()
-                    .AddOsVersion()
-                    .OnWindows(
-                        windows =>
-                            windows.AddProcessorId().AddMotherboardSerialNumber().AddSystemDriveSerialNumber()
-                    )
-                    .OnLinux(linux => linux.AddMotherboardSerialNumber().AddSystemDriveSerialNumber())
-                    .OnMac(mac => mac.AddSystemDriveSerialNumber().AddPlatformSerialNumber())
-                    .ToString(),
+            FormatVersion.V1 => new DeviceIdBuilder()
+                .AddMachineName()
+                .AddOsVersion()
+                .OnWindows(windows =>
+                    windows.AddProcessorId().AddMotherboardSerialNumber().AddSystemDriveSerialNumber()
+                )
+                .OnLinux(linux => linux.AddMotherboardSerialNumber().AddSystemDriveSerialNumber())
+                .OnMac(mac => mac.AddSystemDriveSerialNumber().AddPlatformSerialNumber())
+                .ToString(),
             // v2: Removed OsVersion since it's updated often on macOS
-            FormatVersion.V2
-                => new DeviceIdBuilder()
-                    .AddMachineName()
-                    .OnWindows(
-                        windows =>
-                            windows.AddProcessorId().AddMotherboardSerialNumber().AddSystemDriveSerialNumber()
-                    )
-                    .OnLinux(linux => linux.AddMotherboardSerialNumber().AddSystemDriveSerialNumber())
-                    .OnMac(mac => mac.AddSystemDriveSerialNumber().AddPlatformSerialNumber())
-                    .ToString(),
-            _ => throw new ArgumentOutOfRangeException(nameof(version))
+            FormatVersion.V2 => new DeviceIdBuilder()
+                .AddMachineName()
+                .OnWindows(windows =>
+                    windows.AddProcessorId().AddMotherboardSerialNumber().AddSystemDriveSerialNumber()
+                )
+                .OnLinux(linux => linux.AddMotherboardSerialNumber().AddSystemDriveSerialNumber())
+                .OnMac(mac => mac.AddSystemDriveSerialNumber().AddPlatformSerialNumber())
+                .ToString(),
+            _ => throw new ArgumentOutOfRangeException(nameof(version)),
         };
     }
 

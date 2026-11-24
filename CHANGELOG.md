@@ -73,6 +73,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed ControlNet **Reference Only** failing with `Inference_Core_ReferenceOnlySimple not found` when another part of Inference Core Nodes could not load. Inference offers to update Inference Core Nodes, which now loads the rest of its nodes when one part fails ([#1784](https://github.com/LykosAI/StabilityMatrix/issues/1784))
 - Fixed Inference sometimes showing no progress or result while ComfyUI finished the image, and staying stuck that way until the app was restarted
 - Fixed new images in the Inference image grid sometimes showing as blank tiles until you scrolled, after the grid had been in a collapsed pane
+- Fixed Inference sometimes never showing the result when ComfyUI finished a generation very quickly, such as one where every step was cached
 - Fixed Inference clearing the chosen diffusion model, text encoder, LoRA, ControlNet or upscaler when ComfyUI had that model but Stability Matrix's model folders didn't, for example after switching back to the Inference tab
 - Fixed **Hide Early Access Models** still showing models whose early access is set by a future deadline
 - Fixed the CivitAI Model Browser showing a model as installed, or hiding its updates, when you only had its shared text encoder or VAE ([#1785](https://github.com/LykosAI/StabilityMatrix/issues/1785), [#1802](https://github.com/LykosAI/StabilityMatrix/pull/1802)) - thanks to @deepratna-awale!
@@ -94,7 +95,10 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed **Fooocus** and **Fooocus - mashb1t's 1-Up Edition** failing to open their UI on new installs with `TypeError: unhashable type: 'dict'`. Existing installs pick up the fix on their next update ([#1746](https://github.com/LykosAI/StabilityMatrix/issues/1746))
 - Fixed the first-run recommended models dialog looking like it never loaded its images
 - Fixed the app sometimes crashing on exit with an **Inference** tab open, and a crash dialog appearing after the app had already closed
+- Fixed the **Flux Text to Image** tab losing its model and text encoders when opening a saved project
 - Fixed the **Python Packages** dialog crashing Stability Matrix while typing in its search box. A package whose details fail to load now shows an error, and selecting it again retries ([#1795](https://github.com/LykosAI/StabilityMatrix/pull/1795)) - thanks to @deepratna-awale!
+- Fixed installing ComfyUI extensions from Inference failing with "Access is denied" while ComfyUI was running. ComfyUI now stops for the install and starts again after
+- Fixed the **Python Packages** dialog crashing Stability Matrix while typing in its search box ([#1795](https://github.com/LykosAI/StabilityMatrix/pull/1795)) - thanks to @deepratna-awale!
 ### Performance
 - The **Checkpoint Manager** and **Outputs** grids no longer stutter on large images. Each image gets a small cached thumbnail, while your previews and outputs stay full resolution
 - Model browser cards load lighter images

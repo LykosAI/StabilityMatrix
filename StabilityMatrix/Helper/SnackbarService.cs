@@ -1,5 +1,5 @@
-﻿using System.Threading.Tasks;
-using System;
+﻿using System;
+using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.ViewModels;
@@ -18,24 +18,28 @@ public class SnackbarService : ISnackbarService
     private readonly SnackbarViewModel snackbarViewModel;
     public TimeSpan DefaultTimeout { get; } = TimeSpan.FromSeconds(5);
 
-    public SnackbarService(Wpf.Ui.Contracts.ISnackbarService snackbarService, SnackbarViewModel snackbarViewModel)
+    public SnackbarService(
+        Wpf.Ui.Contracts.ISnackbarService snackbarService,
+        SnackbarViewModel snackbarViewModel
+    )
     {
         this.snackbarService = snackbarService;
         this.snackbarViewModel = snackbarViewModel;
     }
-    
+
     /// <inheritdoc />
     public async Task ShowSnackbarAsync(
-        string title, 
+        string title,
         string message,
-        ControlAppearance appearance = ControlAppearance.Danger, 
+        ControlAppearance appearance = ControlAppearance.Danger,
         SymbolRegular icon = SymbolRegular.ErrorCircle24,
-        TimeSpan? timeout = null)
+        TimeSpan? timeout = null
+    )
     {
-        snackbarService.Timeout = (int) (timeout ?? DefaultTimeout).TotalMilliseconds;
+        snackbarService.Timeout = (int)(timeout ?? DefaultTimeout).TotalMilliseconds;
         await snackbarService.ShowAsync(title, message, new SymbolIcon(icon), appearance);
     }
-    
+
     /// <inheritdoc />
     public async Task<TaskResult<T>> TryAsync<T>(
         Task<T> task,
@@ -43,7 +47,8 @@ public class SnackbarService : ISnackbarService
         string? message = null,
         ControlAppearance appearance = ControlAppearance.Danger,
         SymbolRegular icon = SymbolRegular.ErrorCircle24,
-        TimeSpan? timeout = null)
+        TimeSpan? timeout = null
+    )
     {
         try
         {
@@ -55,7 +60,7 @@ public class SnackbarService : ISnackbarService
             return TaskResult<T>.FromException(e);
         }
     }
-    
+
     /// <inheritdoc />
     public async Task<TaskResult<bool>> TryAsync(
         Task task,
@@ -63,7 +68,8 @@ public class SnackbarService : ISnackbarService
         string? message = null,
         ControlAppearance appearance = ControlAppearance.Danger,
         SymbolRegular icon = SymbolRegular.ErrorCircle24,
-        TimeSpan? timeout = null)
+        TimeSpan? timeout = null
+    )
     {
         try
         {

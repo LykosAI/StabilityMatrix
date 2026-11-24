@@ -50,45 +50,49 @@ public partial class SettingsViewModel : ObservableObject
     private static string LicensesPath => "pack://application:,,,/Assets/licenses.json";
     public TextToFlowDocumentConverter? TextToFlowDocumentConverter { get; set; }
 
-    public ObservableCollection<string> AvailableThemes => new()
-    {
-        "Light",
-        "Dark",
-        "System",
-    };
+    public ObservableCollection<string> AvailableThemes => new() { "Light", "Dark", "System" };
 
-    public ObservableCollection<WindowBackdropType> AvailableBackdrops => new()
-    {
-        WindowBackdropType.Mica,
-        WindowBackdropType.Tabbed
-    };
+    public ObservableCollection<WindowBackdropType> AvailableBackdrops =>
+        new() { WindowBackdropType.Mica, WindowBackdropType.Tabbed };
     private readonly IContentDialogService contentDialogService;
     private readonly IA3WebApiManager a3WebApiManager;
 
-    [ObservableProperty] private bool isFileSearchFlyoutOpen;
-    [ObservableProperty] private double fileSearchProgress;
+    [ObservableProperty]
+    private bool isFileSearchFlyoutOpen;
 
-    [ObservableProperty] private bool isPythonInstalling;
+    [ObservableProperty]
+    private double fileSearchProgress;
 
-    [ObservableProperty] private string? webApiHost;
-    [ObservableProperty] private string? webApiPort;
-    [ObservableProperty] private string? webApiActivePackageHost;
-    [ObservableProperty] private string? webApiActivePackagePort;
-    
+    [ObservableProperty]
+    private bool isPythonInstalling;
+
+    [ObservableProperty]
+    private string? webApiHost;
+
+    [ObservableProperty]
+    private string? webApiPort;
+
+    [ObservableProperty]
+    private string? webApiActivePackageHost;
+
+    [ObservableProperty]
+    private string? webApiActivePackagePort;
+
     partial void OnWebApiHostChanged(string? value)
     {
         settingsManager.Transaction(s => s.WebApiHost = value);
         a3WebApiManager.ResetClient();
     }
-    
+
     partial void OnWebApiPortChanged(string? value)
     {
         settingsManager.Transaction(s => s.WebApiPort = value);
         a3WebApiManager.ResetClient();
     }
-    
-    [ObservableProperty] private bool keepFolderLinksOnShutdown;
-    
+
+    [ObservableProperty]
+    private bool keepFolderLinksOnShutdown;
+
     partial void OnKeepFolderLinksOnShutdownChanged(bool value)
     {
         if (value != settingsManager.Settings.RemoveFolderLinksOnShutdown)
@@ -97,24 +101,26 @@ public partial class SettingsViewModel : ObservableObject
         }
     }
 
-    public RefreshBadgeViewModel Text2ImageRefreshBadge { get; } = new()
-    {
-        SuccessToolTipText = "Connected",
-        WorkingToolTipText = "Trying to connect...",
-        FailToolTipText = "Failed to connect",
-    };
+    public RefreshBadgeViewModel Text2ImageRefreshBadge { get; } =
+        new()
+        {
+            SuccessToolTipText = "Connected",
+            WorkingToolTipText = "Trying to connect...",
+            FailToolTipText = "Failed to connect",
+        };
 
     public SettingsViewModel(
-        ISettingsManager settingsManager, 
+        ISettingsManager settingsManager,
         IContentDialogService contentDialogService,
         IDialogFactory dialogFactory,
-        IA3WebApiManager a3WebApiManager, 
-        IPyRunner pyRunner, 
-        ISnackbarService snackbarService, 
-        ILogger<SettingsViewModel> logger, 
+        IA3WebApiManager a3WebApiManager,
+        IPyRunner pyRunner,
+        ISnackbarService snackbarService,
+        ILogger<SettingsViewModel> logger,
         IPackageFactory packageFactory,
         ILiteDbContext liteDbContext,
-        IPrerequisiteHelper prerequisiteHelper)
+        IPrerequisiteHelper prerequisiteHelper
+    )
     {
         this.logger = logger;
         this.settingsManager = settingsManager;
@@ -132,8 +138,10 @@ public partial class SettingsViewModel : ObservableObject
 
     [ObservableProperty]
     private bool isDebugModeEnabled;
-    partial void OnIsDebugModeEnabledChanged(bool value) => EventManager.Instance.OnDevModeSettingChanged(value);
-    
+
+    partial void OnIsDebugModeEnabledChanged(bool value) =>
+        EventManager.Instance.OnDevModeSettingChanged(value);
+
     [ObservableProperty]
     private string selectedTheme;
 
@@ -149,17 +157,20 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     private string gpuInfo = $"{HardwareHelper.IterGpuInfo().FirstOrDefault()}";
 
-    [ObservableProperty] private string? testProperty;
+    [ObservableProperty]
+    private string? testProperty;
 
-    [ObservableProperty] private bool isVersionFlyoutOpen;
+    [ObservableProperty]
+    private bool isVersionFlyoutOpen;
 
     private const int AppVersionClickCountThreshold = 7;
-    
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(VersionFlyoutText))]
     private int appVersionClickCount;
-    
-    public string VersionFlyoutText => $"You are {AppVersionClickCountThreshold - AppVersionClickCount} clicks away from enabling Debug options.";
+
+    public string VersionFlyoutText =>
+        $"You are {AppVersionClickCountThreshold - AppVersionClickCount} clicks away from enabling Debug options.";
 
     partial void OnIsVersionFlyoutOpenChanged(bool value)
     {
@@ -170,68 +181,70 @@ public partial class SettingsViewModel : ObservableObject
         }
     }
 
-    public AsyncRelayCommand PythonVersionCommand => new(async () =>
-    {
-        // Ensure python installed
-        if (!prerequisiteHelper.IsPythonInstalled)
+    public AsyncRelayCommand PythonVersionCommand =>
+        new(async () =>
         {
-            IsPythonInstalling = true;
-            // Need 7z as well for site packages repack
-            await prerequisiteHelper.UnpackResourcesIfNecessary();
-            await prerequisiteHelper.InstallPythonIfNecessary();
-            IsPythonInstalling = false;
-        }
+            // Ensure python installed
+            if (!prerequisiteHelper.IsPythonInstalled)
+            {
+                IsPythonInstalling = true;
+                // Need 7z as well for site packages repack
+                await prerequisiteHelper.UnpackResourcesIfNecessary();
+                await prerequisiteHelper.InstallPythonIfNecessary();
+                IsPythonInstalling = false;
+            }
 
-        // Get python version
-        await pyRunner.Initialize();
-        var result = await pyRunner.GetVersionInfo();
-        // Show dialog box
-        var dialog = contentDialogService.CreateDialog();
-        dialog.Title = "Python version info";
-        dialog.Content = result;
-        dialog.PrimaryButtonText = "Ok";
-        await dialog.ShowAsync();
-    });
+            // Get python version
+            await pyRunner.Initialize();
+            var result = await pyRunner.GetVersionInfo();
+            // Show dialog box
+            var dialog = contentDialogService.CreateDialog();
+            dialog.Title = "Python version info";
+            dialog.Content = result;
+            dialog.PrimaryButtonText = "Ok";
+            await dialog.ShowAsync();
+        });
 
     // Debug card commands
-    public RelayCommand AddInstallationCommand => new(() =>
-    {
-        // Show dialog box to choose a folder
-        var dialog = new VistaFolderBrowserDialog
+    public RelayCommand AddInstallationCommand =>
+        new(() =>
         {
-            Description = "Select a folder",
-            UseDescriptionForTitle = true
-        };
-        if (dialog.ShowDialog() != true) return;
-        var path = dialog.SelectedPath;
-        if (path == null) return;
+            // Show dialog box to choose a folder
+            var dialog = new VistaFolderBrowserDialog
+            {
+                Description = "Select a folder",
+                UseDescriptionForTitle = true,
+            };
+            if (dialog.ShowDialog() != true)
+                return;
+            var path = dialog.SelectedPath;
+            if (path == null)
+                return;
 
-        // Create package
-        var package = new InstalledPackage
-        {
-            Id = Guid.NewGuid(),
-            DisplayName = Path.GetFileName(path),
+            // Create package
+            var package = new InstalledPackage
+            {
+                Id = Guid.NewGuid(),
+                DisplayName = Path.GetFileName(path),
 #pragma warning disable CS0618 // Type or member is obsolete
-            Path = path,
+                Path = path,
 #pragma warning restore CS0618 // Type or member is obsolete
-            PackageName = "dank-diffusion",
-            PackageVersion = "v1.0.0",
-        };
+                PackageName = "dank-diffusion",
+                PackageVersion = "v1.0.0",
+            };
 
-        // Add package to settings
-        settingsManager.Transaction(s => s.InstalledPackages.Add(package));
-    });
+            // Add package to settings
+            settingsManager.Transaction(s => s.InstalledPackages.Add(package));
+        });
 
     // Debug card commands
     [RelayCommand]
     private async Task ModelFileSearchAsync()
     {
         // Show dialog box to choose a file
-        var fileDialog = new VistaOpenFileDialog
-        {
-            CheckFileExists = true,
-        };
-        if (fileDialog.ShowDialog() != true) return;
+        var fileDialog = new VistaOpenFileDialog { CheckFileExists = true };
+        if (fileDialog.ShowDialog() != true)
+            return;
         var path = fileDialog.FileName;
         // Hash file
         var timer = Stopwatch.StartNew();
@@ -243,16 +256,15 @@ public partial class SettingsViewModel : ObservableObject
 
         // Search for file
         timer.Restart();
-        var (model, version) = 
-            await liteDbContext.FindCivitModelFromFileHashAsync(fileHash);
-        
+        var (model, version) = await liteDbContext.FindCivitModelFromFileHashAsync(fileHash);
+
         timer.Stop();
         var timeTakenSearch = timer.Elapsed.TotalMilliseconds;
 
         var generalText =
-            $"Time taken to hash: {timeTakenHash:F2} s\n" +
-            $"Time taken to search: {timeTakenSearch:F1} ms\n";
-        
+            $"Time taken to hash: {timeTakenHash:F2} s\n"
+            + $"Time taken to search: {timeTakenSearch:F1} ms\n";
+
         // Not found
         if (model == null)
         {
@@ -266,9 +278,11 @@ public partial class SettingsViewModel : ObservableObject
             // Found
             var dialog = contentDialogService.CreateDialog();
             dialog.Title = "Model found!";
-            dialog.Content = $"File found in database. Hash: {fileHash}\n" +
-                             $"Model: {model.Name}\n" +
-                             $"Version: {version!.Name}\n" + generalText; 
+            dialog.Content =
+                $"File found in database. Hash: {fileHash}\n"
+                + $"Model: {model.Name}\n"
+                + $"Version: {version!.Name}\n"
+                + generalText;
             await dialog.ShowAsync();
         }
     }
@@ -276,12 +290,13 @@ public partial class SettingsViewModel : ObservableObject
     [RelayCommand]
     private async Task WebViewDemo()
     {
-        var enterUri = await dialogFactory.ShowTextEntryDialog("Enter a URI", 
-            new[] {
-                ("Enter URI", "https://lykos.ai")
-        });
-        if (enterUri == null) return;
-        
+        var enterUri = await dialogFactory.ShowTextEntryDialog(
+            "Enter a URI",
+            new[] { ("Enter URI", "https://lykos.ai") }
+        );
+        if (enterUri == null)
+            return;
+
         var uri = new Uri(enterUri.First());
         var dialog = dialogFactory.CreateWebLoginDialog();
         var loginViewModel = dialog.ViewModel;
@@ -294,7 +309,10 @@ public partial class SettingsViewModel : ObservableObject
     [RelayCommand]
     private async Task PingWebApi()
     {
-        var result = await snackbarService.TryAsync(a3WebApiManager.Client.GetPing(), "Failed to ping web api");
+        var result = await snackbarService.TryAsync(
+            a3WebApiManager.Client.GetPing(),
+            "Failed to ping web api"
+        );
 
         if (result.IsSuccessful)
         {
@@ -321,11 +339,15 @@ public partial class SettingsViewModel : ObservableObject
         }
         catch (ApiException ex)
         {
-            logger.LogInformation("Ping failed with status [{StatusCode}]: {Content}", ex.StatusCode, ex.ReasonPhrase);
+            logger.LogInformation(
+                "Ping failed with status [{StatusCode}]: {Content}",
+                ex.StatusCode,
+                ex.ReasonPhrase
+            );
             return false;
         }
     }
-    
+
     [RelayCommand]
     private void OpenAppDataDirectory()
     {
@@ -334,7 +356,7 @@ public partial class SettingsViewModel : ObservableObject
         var appPath = Path.Combine(appDataPath, "StabilityMatrix");
         Process.Start("explorer.exe", appPath);
     }
-    
+
     [RelayCommand]
     private void OpenLibraryDirectory()
     {
@@ -357,25 +379,31 @@ public partial class SettingsViewModel : ObservableObject
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to read licenses");
-            snackbarService.ShowSnackbarAsync(
-                "An embedded resource could not be read. Please try reinstalling the application.", 
-                "Failed to read 'licenses.json'").SafeFireAndForget();
+            snackbarService
+                .ShowSnackbarAsync(
+                    "An embedded resource could not be read. Please try reinstalling the application.",
+                    "Failed to read 'licenses.json'"
+                )
+                .SafeFireAndForget();
             return;
         }
 
-        var flowViewer = new FlowDocumentScrollViewer
-        {
-            MaxHeight = 400,
-            MaxWidth = 600,
-        };
+        var flowViewer = new FlowDocumentScrollViewer { MaxHeight = 400, MaxWidth = 600 };
         var markdownText = "";
         foreach (var license in licenses)
         {
-            markdownText += $"## [**{license.PackageName}**]({license.PackageUrl}) by {string.Join(", ", license.Authors)}\n\n";
+            markdownText +=
+                $"## [**{license.PackageName}**]({license.PackageUrl}) by {string.Join(", ", license.Authors)}\n\n";
             markdownText += $"{license.Copyright}\n\n";
             markdownText += $"[{license.LicenseUrl}]({license.LicenseUrl})\n\n";
         }
-        flowViewer.Document = TextToFlowDocumentConverter!.Convert(markdownText, typeof(FlowDocument), null!, CultureInfo.CurrentCulture) as FlowDocument;
+        flowViewer.Document =
+            TextToFlowDocumentConverter!.Convert(
+                markdownText,
+                typeof(FlowDocument),
+                null!,
+                CultureInfo.CurrentCulture
+            ) as FlowDocument;
 
         var dialog = contentDialogService.CreateDialog();
         dialog.Title = "License and Open Source Notices";
@@ -393,7 +421,8 @@ public partial class SettingsViewModel : ObservableObject
     private async Task AppVersionClickAsync()
     {
         // Ignore if already enabled
-        if (IsDebugModeEnabled) return;
+        if (IsDebugModeEnabled)
+            return;
         switch (AppVersionClickCount)
         {
             // Open flyout on 3rd click
@@ -409,9 +438,13 @@ public partial class SettingsViewModel : ObservableObject
                 IsVersionFlyoutOpen = false;
                 // Enable debug options
                 IsDebugModeEnabled = true;
-                const string msg = "Warning: Improper use may corrupt application state or cause loss of data.";
-                var dialog = snackbarService.ShowSnackbarAsync(msg, "Debug options enabled",
-                    ControlAppearance.Info);
+                const string msg =
+                    "Warning: Improper use may corrupt application state or cause loss of data.";
+                var dialog = snackbarService.ShowSnackbarAsync(
+                    msg,
+                    "Debug options enabled",
+                    ControlAppearance.Info
+                );
                 await dialog;
                 break;
             }
@@ -452,19 +485,28 @@ public partial class SettingsViewModel : ObservableObject
         WebApiActivePackageHost = settingsManager.GetActivePackageHost();
         WebApiActivePackagePort = settingsManager.GetActivePackagePort();
         // Okay if both not empty
-        if (!string.IsNullOrWhiteSpace(WebApiActivePackageHost) && 
-            !string.IsNullOrWhiteSpace(WebApiActivePackagePort)) return;
-        
+        if (
+            !string.IsNullOrWhiteSpace(WebApiActivePackageHost)
+            && !string.IsNullOrWhiteSpace(WebApiActivePackagePort)
+        )
+            return;
+
         // Also check default values
         var currentInstall = settingsManager.Settings.GetActiveInstalledPackage();
-        if (currentInstall?.PackageName == null) return;
+        if (currentInstall?.PackageName == null)
+            return;
         var currentPackage = packageFactory.FindPackageByName(currentInstall.PackageName);
-        if (currentPackage == null) return;
+        if (currentPackage == null)
+            return;
         // Set default port and host
-        WebApiActivePackageHost ??= currentPackage.LaunchOptions
-            .FirstOrDefault(x => x.Name.ToLowerInvariant() == "host")?.DefaultValue as string;
-        WebApiActivePackagePort ??= currentPackage.LaunchOptions
-            .FirstOrDefault(x => x.Name.ToLowerInvariant() == "port")?.DefaultValue as string;
+        WebApiActivePackageHost ??=
+            currentPackage
+                .LaunchOptions.FirstOrDefault(x => x.Name.ToLowerInvariant() == "host")
+                ?.DefaultValue as string;
+        WebApiActivePackagePort ??=
+            currentPackage
+                .LaunchOptions.FirstOrDefault(x => x.Name.ToLowerInvariant() == "port")
+                ?.DefaultValue as string;
     }
 
     public void OnLoaded()
@@ -474,7 +516,7 @@ public partial class SettingsViewModel : ObservableObject
             : settingsManager.Settings.Theme;
 
         TestProperty = $"{SystemParameters.PrimaryScreenHeight} x {SystemParameters.PrimaryScreenWidth}";
-        
+
         // Set defaults
         SetWebApiDefaults();
         // Refresh text2image connection badge

@@ -124,30 +124,27 @@ public class QwenImageEditModelManager : ILocalProviderModelManager
     /// </summary>
     internal SelectedModels SelectModels(IInferenceClientManager clientManager)
     {
-        var unetModel =
-            clientManager.UnetModels.FirstOrDefault(m =>
-                m.Local != null
-                && (
-                    m.FileName.Contains("qwen_image_edit", StringComparison.OrdinalIgnoreCase)
-                    || m.FileName.Contains("qwen-image-edit", StringComparison.OrdinalIgnoreCase)
-                )
-            ) ?? throw new InvalidOperationException("Qwen Image Edit UNET model not found");
+        var unetModel = clientManager.UnetModels.FirstOrDefault(m =>
+            m.Local != null
+            && (
+                m.FileName.Contains("qwen_image_edit", StringComparison.OrdinalIgnoreCase)
+                || m.FileName.Contains("qwen-image-edit", StringComparison.OrdinalIgnoreCase)
+            )
+        ) ?? throw new InvalidOperationException("Qwen Image Edit UNET model not found");
 
-        var vaeModel =
-            clientManager.VaeModels.FirstOrDefault(m =>
-                m.Local != null && m.FileName.Contains("qwen_image_vae", StringComparison.OrdinalIgnoreCase)
-            ) ?? throw new InvalidOperationException("Qwen Image VAE model not found");
+        var vaeModel = clientManager.VaeModels.FirstOrDefault(m =>
+            m.Local != null && m.FileName.Contains("qwen_image_vae", StringComparison.OrdinalIgnoreCase)
+        ) ?? throw new InvalidOperationException("Qwen Image VAE model not found");
 
         // Prefer an explicit 7B match, then any VL encoder without a size hint (could be a
         // renamed 7B). Smaller VL encoders (e.g. the 3B, hidden size 2048) load fine but die
         // mid-sampling with "expected input with shape [*, 3584]", so fail fast with a clear
         // message instead of silently picking one.
-        var clipModel =
-            clientManager.ClipModels.FirstOrDefault(m =>
-                m.Local != null
-                && IsQwenVlEncoder(m.FileName)
-                && m.FileName.Contains("7b", StringComparison.OrdinalIgnoreCase)
-            )
+        var clipModel = clientManager.ClipModels.FirstOrDefault(m =>
+            m.Local != null
+            && IsQwenVlEncoder(m.FileName)
+            && m.FileName.Contains("7b", StringComparison.OrdinalIgnoreCase)
+        )
             ?? clientManager.ClipModels.FirstOrDefault(m =>
                 m.Local != null && IsUsableQwenVlEncoder(m.FileName)
             )

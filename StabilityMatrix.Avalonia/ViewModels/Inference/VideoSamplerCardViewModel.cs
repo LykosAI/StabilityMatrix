@@ -150,8 +150,7 @@ public class VideoSamplerCardViewModel : SamplerCardViewModel
                 new ComfyNodeBuilder.CLIPVisionEncode
                 {
                     Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.CLIPVisionEncode)),
-                    ClipVision =
-                        e.Builder.Connections.BaseClipVision
+                    ClipVision = e.Builder.Connections.BaseClipVision
                         ?? throw new ValidationException("BaseClipVision not set"),
                     Image = e.Builder.GetPrimaryAsImage(),
                     Crop = "none",

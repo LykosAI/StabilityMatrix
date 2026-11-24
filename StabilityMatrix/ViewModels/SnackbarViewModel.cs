@@ -26,6 +26,11 @@ public partial class SnackbarViewModel : ObservableObject
     private void OnOpenSnackbar(object sender)
     {
         snackbarService.Timeout = SnackbarTimeout;
-        snackbarService.Show("Some title.", "Some message.", new SymbolIcon(SymbolRegular.Fluent24), SnackbarAppearance);
+        snackbarService.Show(
+            "Some title.",
+            "Some message.",
+            new SymbolIcon(SymbolRegular.Fluent24),
+            SnackbarAppearance
+        );
     }
 }

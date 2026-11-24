@@ -502,8 +502,8 @@ public abstract class BaseGitPackage : BasePackage
                 .ConfigureAwait(false);
         }
 
-        var sharedFolderMethodToUse =
-            installedPackage.PreferredSharedFolderMethod ?? RecommendedSharedFolderMethod;
+        var sharedFolderMethodToUse = installedPackage.PreferredSharedFolderMethod
+            ?? RecommendedSharedFolderMethod;
         // Temporarily remove symlinks if using Symlink method
         if (sharedFolderMethodToUse == SharedFolderMethod.Symlink)
         {
@@ -891,8 +891,8 @@ public abstract class BaseGitPackage : BasePackage
     )
     {
         var isNvidia = SettingsManager.Settings.PreferredGpu?.IsNvidia ?? HardwareHelper.HasNvidiaGpu();
-        var isLegacyNvidia =
-            SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu() ?? HardwareHelper.HasLegacyNvidiaGpu();
+        var isLegacyNvidia = SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu()
+            ?? HardwareHelper.HasLegacyNvidiaGpu();
 
         if (!isNvidia || isLegacyNvidia)
         {

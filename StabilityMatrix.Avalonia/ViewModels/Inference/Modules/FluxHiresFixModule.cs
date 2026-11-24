@@ -58,7 +58,7 @@ public class FluxHiresFixModule(IServiceManager<ViewModelBase> vmFactory) : Hire
                 Noise = builder.Connections.PrimaryNoise,
                 Sampler = builder.Connections.PrimarySamplerNode,
                 Sigmas = builder.Connections.PrimarySigmas,
-                LatentImage = builder.GetPrimaryAsLatent()
+                LatentImage = builder.GetPrimaryAsLatent(),
             }
         );
 

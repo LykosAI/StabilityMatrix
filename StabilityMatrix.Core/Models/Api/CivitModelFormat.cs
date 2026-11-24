@@ -11,5 +11,5 @@ public enum CivitModelFormat
     PickleTensor,
     Diffusers,
     GGUF,
-    Other
+    Other,
 }

@@ -107,14 +107,12 @@ public class GithubApiCache(
         {
             // Newest page only: paging the whole history costs several unauthenticated
             // requests per repo and exhausts the 60/hour rate limit during startup update checks
-            var allReleases = await RequestOnce(
-                    cacheKey,
-                    () =>
-                        githubApi.Repository.Release.GetAll(
-                            username,
-                            repository,
-                            new ApiOptions { PageSize = 100, PageCount = 1 }
-                        )
+            var allReleases = await RequestOnce(cacheKey, () =>
+                    githubApi.Repository.Release.GetAll(
+                        username,
+                        repository,
+                        new ApiOptions { PageSize = 100, PageCount = 1 }
+                    )
                 )
                 .ConfigureAwait(false);
             if (allReleases == null)
@@ -167,9 +165,8 @@ public class GithubApiCache(
 
         try
         {
-            var branches = await RequestOnce(
-                    cacheKey,
-                    () => githubApi.Repository.Branch.GetAll(username, repository)
+            var branches = await RequestOnce(cacheKey, () =>
+                    githubApi.Repository.Branch.GetAll(username, repository)
                 )
                 .ConfigureAwait(false);
             if (branches == null)
@@ -224,20 +221,18 @@ public class GithubApiCache(
 
         try
         {
-            var commits = await RequestOnce(
-                    cacheKey,
-                    () =>
-                        githubApi.Repository.Commit.GetAll(
-                            username,
-                            repository,
-                            new CommitRequest { Sha = branch },
-                            new ApiOptions
-                            {
-                                PageCount = page,
-                                PageSize = perPage,
-                                StartPage = page,
-                            }
-                        )
+            var commits = await RequestOnce(cacheKey, () =>
+                    githubApi.Repository.Commit.GetAll(
+                        username,
+                        repository,
+                        new CommitRequest { Sha = branch },
+                        new ApiOptions
+                        {
+                            PageCount = page,
+                            PageSize = perPage,
+                            StartPage = page,
+                        }
+                    )
                 )
                 .ConfigureAwait(false);
 

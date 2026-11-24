@@ -3,5 +3,5 @@
 public enum GitVersionSelectorVersionType
 {
     BranchCommit,
-    Tag
+    Tag,
 }

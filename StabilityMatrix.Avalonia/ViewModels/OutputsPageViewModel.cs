@@ -690,9 +690,8 @@ public partial class OutputsPageViewModel : PageViewModelBase
                     return;
                 }
 
-                OutputsCache.EditDiff(
-                    files,
-                    (oldItem, newItem) => oldItem.AbsolutePath == newItem.AbsolutePath
+                OutputsCache.EditDiff(files, (oldItem, newItem) =>
+                    oldItem.AbsolutePath == newItem.AbsolutePath
                 );
 
                 IsLoading = false;
@@ -748,8 +747,8 @@ public partial class OutputsPageViewModel : PageViewModelBase
             FindAndExpandPathToCategory(Categories, previouslySelectedCategory.Path);
         }
 
-        SelectedCategory =
-            FindCategoryByPath(Categories, previouslySelectedCategory?.Path) ?? Categories.FirstOrDefault();
+        SelectedCategory = FindCategoryByPath(Categories, previouslySelectedCategory?.Path)
+            ?? Categories.FirstOrDefault();
     }
 
     private ObservableCollection<TreeViewDirectory> GetSubfolders(string strPath)

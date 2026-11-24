@@ -22,9 +22,7 @@ public class SetupModelFoldersStep : IPackageStep
 
     public async Task ExecuteAsync(IProgress<ProgressReport>? progress = null)
     {
-        progress?.Report(
-            new ProgressReport(-1f, "Setting up shared folder links...", isIndeterminate: true)
-        );
+        progress?.Report(new ProgressReport(-1f, "Setting up shared folder links...", isIndeterminate: true));
         await package.SetupModelFolders(installPath, sharedFolderMethod).ConfigureAwait(false);
     }
 

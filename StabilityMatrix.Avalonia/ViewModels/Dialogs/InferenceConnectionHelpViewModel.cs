@@ -69,9 +69,10 @@ public partial class InferenceConnectionHelpViewModel : ContentDialogViewModelBa
         this.runningPackageService = runningPackageService;
 
         // Get comfy type installed packages
-        var comfyPackages = this.settingsManager.Settings.InstalledPackages.Where(
-            p => p.PackageName is "ComfyUI" or "ComfyUI-Zluda"
-        )
+        var comfyPackages = this
+            .settingsManager.Settings.InstalledPackages.Where(p =>
+                p.PackageName is "ComfyUI" or "ComfyUI-Zluda"
+            )
             .ToImmutableArray();
 
         InstalledPackages = comfyPackages;
@@ -115,7 +116,7 @@ public partial class InferenceConnectionHelpViewModel : ContentDialogViewModelBa
                     InstallerSelectedPackage = packageFactory
                         .GetAllAvailablePackages()
                         .OfType<ComfyUI>()
-                        .First()
+                        .First(),
                 }
             );
         });
@@ -144,7 +145,7 @@ public partial class InferenceConnectionHelpViewModel : ContentDialogViewModelBa
             PrimaryButtonCommand = IsInstallMode ? NavigateToInstallCommand : LaunchSelectedPackageCommand,
             PrimaryButtonText = IsInstallMode ? Resources.Action_Install : Resources.Action_Launch,
             CloseButtonText = Resources.Action_Close,
-            DefaultButton = ContentDialogButton.Primary
+            DefaultButton = ContentDialogButton.Primary,
         };
 
         return dialog;

@@ -79,9 +79,8 @@ public class BetterAdvancedImage : AdvancedImage
                 HorizontalAlignment.Center => (int)(viewPort.Width - scaledSize.Width) / 2,
                 HorizontalAlignment.Right => (int)(viewPort.Width - scaledSize.Width),
                 // Stretch is default, use center
-                HorizontalAlignment.Stretch
-                    => (int)(viewPort.Width - scaledSize.Width) / 2,
-                _ => throw new ArgumentException(nameof(HorizontalContentAlignment))
+                HorizontalAlignment.Stretch => (int)(viewPort.Width - scaledSize.Width) / 2,
+                _ => throw new ArgumentException(nameof(HorizontalContentAlignment)),
             };
             var destY = VerticalContentAlignment switch
             {
@@ -89,10 +88,14 @@ public class BetterAdvancedImage : AdvancedImage
                 VerticalAlignment.Center => (int)(viewPort.Height - scaledSize.Height) / 2,
                 VerticalAlignment.Bottom => (int)(viewPort.Height - scaledSize.Height),
                 VerticalAlignment.Stretch => 0, // Stretch is default, use top
-                _ => throw new ArgumentException(nameof(VerticalContentAlignment))
+                _ => throw new ArgumentException(nameof(VerticalContentAlignment)),
             };
 
-            var destRect = viewPort.CenterRect(new Rect(scaledSize)).WithX(destX).WithY(destY).Intersect(viewPort);
+            var destRect = viewPort
+                .CenterRect(new Rect(scaledSize))
+                .WithX(destX)
+                .WithY(destY)
+                .Intersect(viewPort);
             var destRectUnscaledSize = destRect.Size / scale;
 
             // Calculate starting points for source
@@ -102,9 +105,8 @@ public class BetterAdvancedImage : AdvancedImage
                 HorizontalAlignment.Center => (int)(sourceSize - destRectUnscaledSize).Width / 2,
                 HorizontalAlignment.Right => (int)(sourceSize - destRectUnscaledSize).Width,
                 // Stretch is default, use center
-                HorizontalAlignment.Stretch
-                    => (int)(sourceSize - destRectUnscaledSize).Width / 2,
-                _ => throw new ArgumentException(nameof(HorizontalContentAlignment))
+                HorizontalAlignment.Stretch => (int)(sourceSize - destRectUnscaledSize).Width / 2,
+                _ => throw new ArgumentException(nameof(HorizontalContentAlignment)),
             };
             var sourceY = VerticalContentAlignment switch
             {
@@ -112,7 +114,7 @@ public class BetterAdvancedImage : AdvancedImage
                 VerticalAlignment.Center => (int)(sourceSize - destRectUnscaledSize).Height / 2,
                 VerticalAlignment.Bottom => (int)(sourceSize - destRectUnscaledSize).Height,
                 VerticalAlignment.Stretch => 0, // Stretch is default, use top
-                _ => throw new ArgumentException(nameof(VerticalContentAlignment))
+                _ => throw new ArgumentException(nameof(VerticalContentAlignment)),
             };
 
             var sourceRect = new Rect(sourceSize)

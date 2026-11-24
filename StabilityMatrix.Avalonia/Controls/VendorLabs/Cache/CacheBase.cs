@@ -358,15 +358,12 @@ internal abstract class CacheBase<T>
         }
 
         // Atomically get or add
-        var request = _concurrentTasks.GetOrAdd(
-            fileName,
-            key =>
-            {
-                return new ConcurrentRequest(() =>
-                    GetFromCacheOrDownloadAsync(uri, key, preCacheOnly, cancellationToken)
-                );
-            }
-        );
+        var request = _concurrentTasks.GetOrAdd(fileName, key =>
+        {
+            return new ConcurrentRequest(() =>
+                GetFromCacheOrDownloadAsync(uri, key, preCacheOnly, cancellationToken)
+            );
+        });
 
         try
         {

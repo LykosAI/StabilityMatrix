@@ -12,7 +12,7 @@ namespace StabilityMatrix.Avalonia.Controls;
 public class LaunchOptionCardTemplateSelector : IDataTemplate
 {
     // public bool SupportsRecycling => false;
-    
+
     // ReSharper disable once CollectionNeverUpdated.Global
     [Content]
     public Dictionary<LaunchOptionType, IDataTemplate> Templates { get; } = new();
@@ -26,7 +26,8 @@ public class LaunchOptionCardTemplateSelector : IDataTemplate
     // Build the DataTemplate here
     public Control Build(object? data)
     {
-        if (data is not LaunchOptionCard card) throw new ArgumentException(null, nameof(data));
+        if (data is not LaunchOptionCard card)
+            throw new ArgumentException(null, nameof(data));
         return Templates[card.Type].Build(card)!;
     }
 }

@@ -9,10 +9,10 @@ public class GenerationParametersTests
     public void TestParse()
     {
         const string data = """
-                            test123
-                            Negative prompt: test, easy negative
-                            Steps: 20, Sampler: Euler a, CFG scale: 7, Seed: 3589107295, Size: 1024x1028, Model hash: 9aa0c3e54d, Model: nightvisionXL_v0770_BakedVAE, VAE hash: 235745af8d, VAE: sdxl_vae.safetensors, Style Selector Enabled: True, Style Selector Randomize: False, Style Selector Style: base, Version: 1.6.0
-                            """;
+            test123
+            Negative prompt: test, easy negative
+            Steps: 20, Sampler: Euler a, CFG scale: 7, Seed: 3589107295, Size: 1024x1028, Model hash: 9aa0c3e54d, Model: nightvisionXL_v0770_BakedVAE, VAE hash: 235745af8d, VAE: sdxl_vae.safetensors, Style Selector Enabled: True, Style Selector Randomize: False, Style Selector Style: base, Version: 1.6.0
+            """;
 
         Assert.IsTrue(GenerationParameters.TryParse(data, out var result));
 
@@ -32,9 +32,9 @@ public class GenerationParametersTests
     public void TestParse_NoNegative()
     {
         const string data = """
-                                test123
-                                Steps: 20, Sampler: Euler a, CFG scale: 7, Seed: 3589107295, Size: 1024x1028, Model hash: 9aa0c3e54d, Model: nightvisionXL_v0770_BakedVAE, VAE hash: 235745af8d, VAE: sdxl_vae.safetensors, Style Selector Enabled: True, Style Selector Randomize: False, Style Selector Style: base, Version: 1.6.0
-                                """;
+            test123
+            Steps: 20, Sampler: Euler a, CFG scale: 7, Seed: 3589107295, Size: 1024x1028, Model hash: 9aa0c3e54d, Model: nightvisionXL_v0770_BakedVAE, VAE hash: 235745af8d, VAE: sdxl_vae.safetensors, Style Selector Enabled: True, Style Selector Randomize: False, Style Selector Style: base, Version: 1.6.0
+            """;
 
         Assert.IsTrue(GenerationParameters.TryParse(data, out var result));
 
@@ -145,7 +145,7 @@ public class GenerationParametersTests
             "Clip skip",
             "Created Date",
             "Civitai resources",
-            "Civitai metadata"
+            "Civitai metadata",
         }
     )]
     // github.com/nkchocoai/ComfyUI-SaveImageWithMetaData
@@ -173,7 +173,7 @@ public class GenerationParametersTests
             "Lora_2 Model hash",
             "Lora_2 Strength model",
             "Lora_2 Strength clip",
-            "Hashes"
+            "Hashes",
         }
     )]
     // asymmetrical bracket

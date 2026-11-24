@@ -8,44 +8,35 @@ namespace StabilityMatrix.Avalonia.Models.Inference;
 
 public record EditableModule : StringValue
 {
-    public static readonly EditableModule FreeU =
-        new(
-            "FreeU",
-            builder =>
-                builder.Get<StackExpanderViewModel>(vm =>
-                {
-                    vm.Title = "FreeU";
-                    vm.AddCards(builder.Get<FreeUCardViewModel>());
-                })
-        );
+    public static readonly EditableModule FreeU = new("FreeU", builder =>
+        builder.Get<StackExpanderViewModel>(vm =>
+        {
+            vm.Title = "FreeU";
+            vm.AddCards(builder.Get<FreeUCardViewModel>());
+        })
+    );
 
-    public static readonly EditableModule HiresFix =
-        new(
-            "HiresFix",
-            builder =>
-                builder.Get<StackExpanderViewModel>(vm =>
+    public static readonly EditableModule HiresFix = new("HiresFix", builder =>
+        builder.Get<StackExpanderViewModel>(vm =>
+        {
+            vm.Title = "HiresFix";
+            vm.AddCards(
+                builder.Get<UpscalerCardViewModel>(),
+                builder.Get<SamplerCardViewModel>(vmSampler =>
                 {
-                    vm.Title = "HiresFix";
-                    vm.AddCards(
-                        builder.Get<UpscalerCardViewModel>(),
-                        builder.Get<SamplerCardViewModel>(vmSampler =>
-                        {
-                            vmSampler.IsDenoiseStrengthEnabled = true;
-                        })
-                    );
+                    vmSampler.IsDenoiseStrengthEnabled = true;
                 })
-        );
+            );
+        })
+    );
 
-    public static readonly EditableModule Upscaler =
-        new(
-            "Upscaler",
-            builder =>
-                builder.Get<StackExpanderViewModel>(vm =>
-                {
-                    vm.Title = "Upscaler";
-                    vm.AddCards(builder.Get<UpscalerCardViewModel>());
-                })
-        );
+    public static readonly EditableModule Upscaler = new("Upscaler", builder =>
+        builder.Get<StackExpanderViewModel>(vm =>
+        {
+            vm.Title = "Upscaler";
+            vm.AddCards(builder.Get<UpscalerCardViewModel>());
+        })
+    );
 
     public Func<IServiceManager<ViewModelBase>, ViewModelBase> Build { get; }
 

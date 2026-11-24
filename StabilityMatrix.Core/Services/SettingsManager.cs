@@ -384,9 +384,12 @@ public class SettingsManager(ILogger<SettingsManager> logger) : ISettingsManager
 
         if (IsLibraryDirSet)
         {
-            directories.AddRange(
-                [PackagesDirectory, WorkflowDirectory, ImagesDirectory, ExtensionPackDirectory]
-            );
+            directories.AddRange([
+                PackagesDirectory,
+                WorkflowDirectory,
+                ImagesDirectory,
+                ExtensionPackDirectory,
+            ]);
 
             // Don't create an override, it may be on a drive that isn't mounted
             if (Settings.ModelDirectoryOverride is null)

@@ -236,8 +236,8 @@ public class InvokeAI(
             Compat.IsWindows
             && torchVersion == TorchIndex.Rocm
             && rocmPackageHelper.GetCompatibility().IsCompatible;
-        var isLegacyNvidiaGpu =
-            SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu() ?? HardwareHelper.HasLegacyNvidiaGpu();
+        var isLegacyNvidiaGpu = SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu()
+            ?? HardwareHelper.HasLegacyNvidiaGpu();
         var fallbackIndex = torchVersion switch
         {
             TorchIndex.Cpu when Compat.IsLinux => "https://download.pytorch.org/whl/cpu",

@@ -23,19 +23,20 @@ public class PromptExpansionModule : ModuleBase
     {
         var promptExpansionCard = GetCard<PromptExpansionCardViewModel>();
 
-        var model =
-            promptExpansionCard.SelectedModel
+        var model = promptExpansionCard.SelectedModel
             ?? throw new InvalidOperationException($"{Title}: Model not selected");
 
-        e.Builder.Connections.PositivePrompt = e.Nodes.AddTypedNode(
-            new ComfyNodeBuilder.PromptExpansion
-            {
-                Name = e.Nodes.GetUniqueName("PromptExpansion_Positive"),
-                ModelName = model.RelativePath,
-                Text = e.Builder.Connections.PositivePrompt,
-                Seed = e.Builder.Connections.Seed,
-                LogPrompt = promptExpansionCard.IsLogOutputEnabled
-            }
-        ).Output;
+        e.Builder.Connections.PositivePrompt = e
+            .Nodes.AddTypedNode(
+                new ComfyNodeBuilder.PromptExpansion
+                {
+                    Name = e.Nodes.GetUniqueName("PromptExpansion_Positive"),
+                    ModelName = model.RelativePath,
+                    Text = e.Builder.Connections.PositivePrompt,
+                    Seed = e.Builder.Connections.Seed,
+                    LogPrompt = promptExpansionCard.IsLogOutputEnabled,
+                }
+            )
+            .Output;
     }
 }

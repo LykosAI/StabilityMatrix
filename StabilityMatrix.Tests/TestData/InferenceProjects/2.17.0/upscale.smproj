@@ -1,0 +1,35 @@
+{
+  "Version": 2,
+  "ProjectType": "Upscale",
+  "State": {
+    "Upscaler": {
+      "Scale": 2,
+      "SelectedUpscaler": {
+        "Name": "4x-UltraSharp.pth",
+        "Type": 2,
+        "DownloadableResource": null,
+        "IsDownloadable": false
+      }
+    },
+    "Sharpen": {
+      "SharpenRadius": 1,
+      "Sigma": 1,
+      "Alpha": 1
+    },
+    "SelectImage": {
+      "IsMaskOverlayEnabled": false,
+      "ImageSource": {
+        "LocalFile": "input.png",
+        "RemoteUrl": null,
+        "Label": null
+      },
+      "CurrentBitmapSize": {
+        "Width": 1,
+        "Height": 1
+      }
+    },
+    "IsUpscaleEnabled": false,
+    "IsSharpenEnabled": false
+  },
+  "DockLayout": null
+}

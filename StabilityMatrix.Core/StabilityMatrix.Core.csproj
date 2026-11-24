@@ -1,99 +1,99 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\ConditionalSymbols.props" />
   <Import Project="..\Runtimes.Default.props" />
-    <PropertyGroup>
-        <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
-        <EnableWindowsTargeting>true</EnableWindowsTargeting>
-        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    </PropertyGroup>
+  <PropertyGroup>
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
 
-    <ItemGroup>
-        <InternalsVisibleTo Include="StabilityMatrix.Tests" />
-        <InternalsVisibleTo Include="StabilityMatrix.UITests" />
-    </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="StabilityMatrix.Tests" />
+    <InternalsVisibleTo Include="StabilityMatrix.UITests" />
+  </ItemGroup>
 
-    <ItemGroup>
-        <ProjectReference Include="..\StabilityMatrix.Native\StabilityMatrix.Native.csproj" />
-    </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\StabilityMatrix.Native\StabilityMatrix.Native.csproj" />
+  </ItemGroup>
 
-    <ItemGroup>
-      <PackageReference Include="Apizr" />
-      <PackageReference Include="Apizr.Extensions.Microsoft.Caching" />
-      <PackageReference Include="Apizr.Extensions.Microsoft.DependencyInjection" />
-      <PackageReference Include="Apizr.Integrations.Fusillade" />
-      <PackageReference Include="AsyncAwaitBestPractices" />
-      <PackageReference Include="AutoCtor" />
-      <PackageReference Include="Blake3" />
-      <PackageReference Include="CompiledExpressions" />
-      <PackageReference Include="Crc32.NET" />
-      <PackageReference Include="CSharpDiscriminatedUnion" />
-      <PackageReference Include="DeviceId" />
-      <PackageReference Include="DeviceId.Linux" />
-      <PackageReference Include="DeviceId.Mac" />
-      <PackageReference Include="DeviceId.Windows" />
-      <PackageReference Include="DeviceId.Windows.Wmi" />
-      <PackageReference Include="DotNet.Bundle" />
-      <PackageReference Include="DynamicData" />
-      <PackageReference Include="ExifLibNet" />
-      <PackageReference Include="FreneticLLC.FreneticUtilities" />
-      <PackageReference Include="Hardware.Info" />
-      <PackageReference Include="Injectio" />
-      <PackageReference Include="JetBrains.Annotations" />
-      <PackageReference Include="KGySoft.Drawing.Core" />
-      <PackageReference Include="KGySoft.Drawing.SkiaSharp" />
-      <PackageReference Include="LiteDB" />
-      <PackageReference Include="LiteDB.Async" />
-      <PackageReference Include="MetadataExtractor" />
-      <PackageReference Include="Microsoft.Extensions.Caching.Memory" />
-      <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
-      <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
-      <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" />
-      <PackageReference Include="NLog" />
-      <PackageReference Include="NLog.Extensions.Logging" />
-      <PackageReference Include="NSec.Cryptography" />
-      <PackageReference Include="Octokit" />
-      <PackageReference Include="OneOf" />
-      <PackageReference Include="OneOf.SourceGenerator" />
-      <PackageReference Include="OpenIddict.Client" />
-      <PackageReference Include="OpenIddict.Client.SystemNetHttp" />
-      <PackageReference Include="Polly" />
-      <PackageReference Include="Polly.Contrib.WaitAndRetry" />
-      <PackageReference Include="pythonnet" />
-      <PackageReference Include="Refit" />
-      <PackageReference Include="Refit.HttpClientFactory" />
-      <PackageReference Include="RockLib.Reflection.Optimized" />
-      <PackageReference Include="Semver" />
-      <PackageReference Include="Sentry.NLog" />
-      <PackageReference Include="SharpCompress" />
-      <PackageReference Include="SkiaSharp" />
-      <PackageReference Include="TextMateSharp.Grammars" />
-      <PackageReference Include="System.Runtime.Serialization.Formatters" />
-      <PackageReference Include="Websocket.Client" />
-      <PackageReference Include="YamlDotNet" />
-      <PackageReference Include="Yoh.Text.Json.NamingPolicies" />
-    </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Apizr" />
+    <PackageReference Include="Apizr.Extensions.Microsoft.Caching" />
+    <PackageReference Include="Apizr.Extensions.Microsoft.DependencyInjection" />
+    <PackageReference Include="Apizr.Integrations.Fusillade" />
+    <PackageReference Include="AsyncAwaitBestPractices" />
+    <PackageReference Include="AutoCtor" />
+    <PackageReference Include="Blake3" />
+    <PackageReference Include="CompiledExpressions" />
+    <PackageReference Include="Crc32.NET" />
+    <PackageReference Include="CSharpDiscriminatedUnion" />
+    <PackageReference Include="DeviceId" />
+    <PackageReference Include="DeviceId.Linux" />
+    <PackageReference Include="DeviceId.Mac" />
+    <PackageReference Include="DeviceId.Windows" />
+    <PackageReference Include="DeviceId.Windows.Wmi" />
+    <PackageReference Include="DotNet.Bundle" />
+    <PackageReference Include="DynamicData" />
+    <PackageReference Include="ExifLibNet" />
+    <PackageReference Include="FreneticLLC.FreneticUtilities" />
+    <PackageReference Include="Hardware.Info" />
+    <PackageReference Include="Injectio" />
+    <PackageReference Include="JetBrains.Annotations" />
+    <PackageReference Include="KGySoft.Drawing.Core" />
+    <PackageReference Include="KGySoft.Drawing.SkiaSharp" />
+    <PackageReference Include="LiteDB" />
+    <PackageReference Include="LiteDB.Async" />
+    <PackageReference Include="MetadataExtractor" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" />
+    <PackageReference Include="NLog" />
+    <PackageReference Include="NLog.Extensions.Logging" />
+    <PackageReference Include="NSec.Cryptography" />
+    <PackageReference Include="Octokit" />
+    <PackageReference Include="OneOf" />
+    <PackageReference Include="OneOf.SourceGenerator" />
+    <PackageReference Include="OpenIddict.Client" />
+    <PackageReference Include="OpenIddict.Client.SystemNetHttp" />
+    <PackageReference Include="Polly" />
+    <PackageReference Include="Polly.Contrib.WaitAndRetry" />
+    <PackageReference Include="pythonnet" />
+    <PackageReference Include="Refit" />
+    <PackageReference Include="Refit.HttpClientFactory" />
+    <PackageReference Include="RockLib.Reflection.Optimized" />
+    <PackageReference Include="Semver" />
+    <PackageReference Include="Sentry.NLog" />
+    <PackageReference Include="SharpCompress" />
+    <PackageReference Include="SkiaSharp" />
+    <PackageReference Include="TextMateSharp.Grammars" />
+    <PackageReference Include="System.Runtime.Serialization.Formatters" />
+    <PackageReference Include="Websocket.Client" />
+    <PackageReference Include="YamlDotNet" />
+    <PackageReference Include="Yoh.Text.Json.NamingPolicies" />
+  </ItemGroup>
 
-    <ItemGroup>
-      <Compile Update="Models\Api\Lykos\Analytics\AnalyticsRequest.cs">
-        <Generator>MSBuild:GenerateCodeFromAttributes</Generator>
-      </Compile>
-      <Compile Update="Models\Api\Lykos\Analytics\PackageInstallAnalyticsRequest.cs">
-        <Generator>MSBuild:GenerateCodeFromAttributes</Generator>
-      </Compile>
-    </ItemGroup>
+  <ItemGroup>
+    <Compile Update="Models\Api\Lykos\Analytics\AnalyticsRequest.cs">
+      <Generator>MSBuild:GenerateCodeFromAttributes</Generator>
+    </Compile>
+    <Compile Update="Models\Api\Lykos\Analytics\PackageInstallAnalyticsRequest.cs">
+      <Generator>MSBuild:GenerateCodeFromAttributes</Generator>
+    </Compile>
+  </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Api\PromptGen\Generated\" />
-    </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Api\PromptGen\Generated\" />
+  </ItemGroup>
 
-    <!--
+  <!--
       Snapshot of the docs tree, used by DocumentationService when the live copy is
       unreachable. Excludes the VitePress site build and its dependencies, whose bundled
       READMEs are several times the size of the documentation itself.
     -->
-    <ItemGroup>
-      <EmbeddedResource Include="..\docs\**\*.md" Exclude="..\docs\node_modules\**;..\docs\.vitepress\**">
-        <LogicalName>BundledDocs/$([System.String]::Copy('%(RecursiveDir)').Replace('\','/'))%(Filename)%(Extension)</LogicalName>
-      </EmbeddedResource>
-    </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="..\docs\**\*.md" Exclude="..\docs\node_modules\**;..\docs\.vitepress\**">
+      <LogicalName>BundledDocs/$([System.String]::Copy('%(RecursiveDir)').Replace('\','/'))%(Filename)%(Extension)</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
 </Project>

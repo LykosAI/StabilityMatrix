@@ -71,10 +71,10 @@ public partial class ChangelogService : IChangelogService
                 if (changelogUrl.EndsWith(".md", StringComparison.OrdinalIgnoreCase))
                 {
                     return FormatChangelog(
-                            changelog,
-                            Compat.AppVersion,
-                            settingsManager.Settings.PreferredUpdateChannel
-                        ) ?? "## Unable to format release notes";
+                        changelog,
+                        Compat.AppVersion,
+                        settingsManager.Settings.PreferredUpdateChannel
+                    ) ?? "## Unable to format release notes";
                 }
 
                 return changelog;

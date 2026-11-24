@@ -98,7 +98,7 @@ public class StarsRating : TemplatedControlBase
                 Symbol = Symbol.Star,
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center,
-                Tag = i
+                Tag = i,
             };
 
             stars.Add(star);

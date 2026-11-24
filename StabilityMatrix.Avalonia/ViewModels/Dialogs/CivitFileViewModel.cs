@@ -67,8 +67,8 @@ public partial class CivitFileViewModel : DisposableViewModelBase
             if (settingsManager.IsLibraryDirSet)
             {
                 var fileSizeBytes = CivitFile.SizeKb * 1024;
-                var freeSizeBytes =
-                    SystemInfo.GetDiskFreeSpaceBytes(settingsManager.ModelsDirectory) ?? long.MaxValue;
+                var freeSizeBytes = SystemInfo.GetDiskFreeSpaceBytes(settingsManager.ModelsDirectory)
+                    ?? long.MaxValue;
                 CanImport = fileSizeBytes < freeSizeBytes;
                 DownloadTooltip = CanImport
                     ? "Free space after download: "

@@ -1094,16 +1094,14 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger)
     public IReadOnlyList<SKColor> GetPaintedColors()
     {
         // Default palette colors to match against
-        return GetPaintedColors(
-            [
-                new SKColor(255, 0, 0), // Red
-                new SKColor(255, 128, 0), // Orange
-                new SKColor(255, 255, 0), // Yellow
-                new SKColor(0, 255, 0), // Green
-                new SKColor(0, 128, 255), // Blue
-                new SKColor(128, 0, 255), // Purple
-            ]
-        );
+        return GetPaintedColors([
+            new SKColor(255, 0, 0), // Red
+            new SKColor(255, 128, 0), // Orange
+            new SKColor(255, 255, 0), // Yellow
+            new SKColor(0, 255, 0), // Green
+            new SKColor(0, 128, 255), // Blue
+            new SKColor(128, 0, 255), // Purple
+        ]);
     }
 
     /// <summary>

@@ -819,11 +819,10 @@ public partial class VideoModelCardViewModel : LoadableViewModelBase, IParameter
             e.Builder.Connections.WanMoeBoundary = MoeBoundary;
         }
 
-        var clipName =
-            SelectedClipModel?.RelativePath ?? throw new ValidationException("No Clip Model Selected");
+        var clipName = SelectedClipModel?.RelativePath
+            ?? throw new ValidationException("No Clip Model Selected");
 
-        var clipType =
-            profile.ClipType
+        var clipType = profile.ClipType
             ?? throw new InvalidOperationException("Resolved workflow profile has no clip type");
 
         // The GGUF loader variant can also load .safetensors encoders
@@ -922,8 +921,7 @@ public partial class VideoModelCardViewModel : LoadableViewModelBase, IParameter
             new ComfyNodeBuilder.CLIPVisionLoader
             {
                 Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.CLIPVisionLoader)),
-                ClipName =
-                    SelectedClipVisionModel?.RelativePath
+                ClipName = SelectedClipVisionModel?.RelativePath
                     ?? throw new ValidationException("No Clip Vision Model Selected"),
             }
         );

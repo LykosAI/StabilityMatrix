@@ -22,9 +22,10 @@ public static class WindowExtensions
             throw new ArgumentException("Target is not part of the same visual tree as the top level");
         }
 
-        var point =
-            target.TranslatePoint(new Point(target.Bounds.Width / 2, target.Bounds.Height / 2), topLevel)
-            ?? throw new NullReferenceException("Point is null");
+        var point = target.TranslatePoint(
+            new Point(target.Bounds.Width / 2, target.Bounds.Height / 2),
+            topLevel
+        ) ?? throw new NullReferenceException("Point is null");
 
         topLevel.MouseMove(point);
         topLevel.MouseDown(point, MouseButton.Left);
@@ -47,9 +48,10 @@ public static class WindowExtensions
             throw new ArgumentException("Target is not part of the same visual tree as the top level");
         }
 
-        var point =
-            target.TranslatePoint(new Point(target.Bounds.Width / 2, target.Bounds.Height / 2), topLevel)
-            ?? throw new NullReferenceException("Point is null");
+        var point = target.TranslatePoint(
+            new Point(target.Bounds.Width / 2, target.Bounds.Height / 2),
+            topLevel
+        ) ?? throw new NullReferenceException("Point is null");
 
         topLevel.MouseMove(point);
         topLevel.MouseDown(point, MouseButton.Left);

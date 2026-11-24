@@ -24,7 +24,7 @@ public class NumberFormatModeSampleConverter : IValueConverter
             NumberFormatMode.Default => sample.ToString("N2", culture),
             NumberFormatMode.CurrentCulture => sample.ToString("N2", culture),
             NumberFormatMode.InvariantCulture => sample.ToString("N2", CultureInfo.InvariantCulture),
-            _ => throw new ArgumentOutOfRangeException()
+            _ => throw new ArgumentOutOfRangeException(),
         };
     }
 

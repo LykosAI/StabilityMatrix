@@ -26,9 +26,14 @@ namespace StabilityMatrix
         private readonly MainWindowViewModel mainWindowViewModel;
         private readonly ISettingsManager settingsManager;
 
-        public MainWindow(IPageService pageService, IContentDialogService contentDialogService,
-            MainWindowViewModel mainWindowViewModel, ISettingsManager settingsManager,
-            ISnackbarService snackbarService, INotificationBarService notificationBarService)
+        public MainWindow(
+            IPageService pageService,
+            IContentDialogService contentDialogService,
+            MainWindowViewModel mainWindowViewModel,
+            ISettingsManager settingsManager,
+            ISnackbarService snackbarService,
+            INotificationBarService notificationBarService
+        )
         {
             InitializeComponent();
 
@@ -86,7 +91,8 @@ namespace StabilityMatrix
             var observableSizeChanges = Observable
                 .FromEventPattern<SizeChangedEventHandler, SizeChangedEventArgs>(
                     h => SizeChanged += h,
-                    h => SizeChanged -= h)
+                    h => SizeChanged -= h
+                )
                 .Select(x => x.EventArgs)
                 .Throttle(TimeSpan.FromMilliseconds(150));
 
@@ -94,8 +100,9 @@ namespace StabilityMatrix
                 .ObserveOn(SynchronizationContext.Current)
                 .Subscribe(args =>
                 {
-                    if (args is {HeightChanged: false, WidthChanged: false}) return;
-                    
+                    if (args is { HeightChanged: false, WidthChanged: false })
+                        return;
+
                     var interopHelper = new WindowInteropHelper(this);
                     var placement = ScreenExtensions.GetPlacement(interopHelper.Handle);
                     settingsManager.Transaction(s => s.Placement = placement.ToString());

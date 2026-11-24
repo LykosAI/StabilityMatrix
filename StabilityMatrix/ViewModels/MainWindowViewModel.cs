@@ -24,7 +24,7 @@ using EventManager = StabilityMatrix.Core.Helper.EventManager;
 
 namespace StabilityMatrix.ViewModels;
 
-public partial class  MainWindowViewModel : ObservableObject
+public partial class MainWindowViewModel : ObservableObject
 {
     private readonly ISettingsManager settingsManager;
     private readonly IDialogFactory dialogFactory;
@@ -36,12 +36,13 @@ public partial class  MainWindowViewModel : ObservableObject
     private UpdateInfo? updateInfo;
 
     public MainWindowViewModel(
-        ISettingsManager settingsManager, 
-        IDialogFactory dialogFactory, 
+        ISettingsManager settingsManager,
+        IDialogFactory dialogFactory,
         INotificationBarService notificationBarService,
         UpdateWindowViewModel updateWindowViewModel,
         IUpdateHelper updateHelper,
-        IOptions<DebugOptions> debugOptions)
+        IOptions<DebugOptions> debugOptions
+    )
     {
         this.settingsManager = settingsManager;
         this.dialogFactory = dialogFactory;
@@ -57,16 +58,16 @@ public partial class  MainWindowViewModel : ObservableObject
     [ObservableProperty]
     private float progressValue;
 
-    [ObservableProperty] 
+    [ObservableProperty]
     private bool isIndeterminate;
 
-    [ObservableProperty]   
+    [ObservableProperty]
     private TaskbarItemProgressState progressState;
 
     [ObservableProperty]
     private bool isTextToImagePageEnabled;
 
-    [ObservableProperty] 
+    [ObservableProperty]
     private bool isUpdateAvailable;
 
     public async Task OnLoaded()
@@ -80,13 +81,13 @@ public partial class  MainWindowViewModel : ObservableObject
         };
 
         updateHelper.StartCheckingForUpdates().SafeFireAndForget();
-        
+
         // show path selection window if no paths are set
         await DoSettingsCheck();
-        
+
         // Insert path extensions
         settingsManager.InsertPathExtensions();
-        
+
         ResizeWindow();
 
         if (debugOptions.ShowOneClickInstall || !settingsManager.Settings.InstalledPackages.Any())
@@ -99,8 +100,9 @@ public partial class  MainWindowViewModel : ObservableObject
             EventManager.Instance.OneClickInstallFinished += (_, skipped) =>
             {
                 dialog.Hide();
-                if (skipped) return;
-                
+                if (skipped)
+                    return;
+
                 EventManager.Instance.OnTeachingTooltipNeeded();
             };
 
@@ -109,13 +111,13 @@ public partial class  MainWindowViewModel : ObservableObject
 
         notificationBarService.ShowStartupNotifications();
     }
-    
+
     [RelayCommand]
     private void OpenLinkPatreon()
     {
         ProcessRunner.OpenUrl("https://www.patreon.com/StabilityMatrix");
     }
-    
+
     [RelayCommand]
     private void OpenLinkDiscord()
     {
@@ -126,27 +128,24 @@ public partial class  MainWindowViewModel : ObservableObject
     private void DoUpdate()
     {
         updateWindowViewModel.UpdateInfo = updateInfo;
-        var updateWindow = new UpdateWindow(updateWindowViewModel)
-        {
-            Owner = Application.Current.MainWindow
-        };
+        var updateWindow = new UpdateWindow(updateWindowViewModel) { Owner = Application.Current.MainWindow };
         updateWindow.ShowDialog();
     }
-    
+
     private async Task DoSettingsCheck()
     {
         // Check if library path is set
         if (!settingsManager.TryFindLibrary())
         {
-            await ShowPathSelectionDialog();            
+            await ShowPathSelectionDialog();
         }
-        
+
         // Try to find library again, should be found now
         if (!settingsManager.TryFindLibrary())
         {
             throw new Exception("Could not find library after setting path");
         }
-        
+
         // Check if there are old packages, if so show migration dialog
         if (settingsManager.GetOldInstalledPackages().Any())
         {
@@ -168,14 +167,14 @@ public partial class  MainWindowViewModel : ObservableObject
             }
         }
     }
-    
+
     private async Task ShowPathSelectionDialog()
     {
         // See if this is an existing user for message variation
         var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
         var settingsPath = Path.Combine(appDataPath, "StabilityMatrix", "settings.json");
         var isExistingUser = File.Exists(settingsPath);
-            
+
         // need to show dialog to choose library location
         var dialog = dialogFactory.CreateInstallLocationsDialog();
         var result = await dialog.ShowAsync();
@@ -227,11 +226,12 @@ public partial class  MainWindowViewModel : ObservableObject
             });
         }
     }
-    
+
     private void ResizeWindow()
     {
-        if (Application.Current.MainWindow == null) return;
-        
+        if (Application.Current.MainWindow == null)
+            return;
+
         var interopHelper = new WindowInteropHelper(Application.Current.MainWindow);
 
         if (string.IsNullOrWhiteSpace(settingsManager.Settings.Placement))
@@ -240,12 +240,16 @@ public partial class  MainWindowViewModel : ObservableObject
         placement.ReadFromBase64String(settingsManager.Settings.Placement);
 
         var primaryMonitorScaling = ScreenExtensions.GetScalingForPoint(new System.Drawing.Point(1, 1));
-        var currentMonitorScaling = ScreenExtensions.GetScalingForPoint(new System.Drawing.Point(placement.rcNormalPosition.left, placement.rcNormalPosition.top));
+        var currentMonitorScaling = ScreenExtensions.GetScalingForPoint(
+            new System.Drawing.Point(placement.rcNormalPosition.left, placement.rcNormalPosition.top)
+        );
         var rescaleFactor = currentMonitorScaling / primaryMonitorScaling;
         double width = placement.rcNormalPosition.right - placement.rcNormalPosition.left;
         double height = placement.rcNormalPosition.bottom - placement.rcNormalPosition.top;
-        placement.rcNormalPosition.right = placement.rcNormalPosition.left + (int)(width / rescaleFactor + 0.5);
-        placement.rcNormalPosition.bottom = placement.rcNormalPosition.top + (int)(height / rescaleFactor + 0.5);
+        placement.rcNormalPosition.right =
+            placement.rcNormalPosition.left + (int)(width / rescaleFactor + 0.5);
+        placement.rcNormalPosition.bottom =
+            placement.rcNormalPosition.top + (int)(height / rescaleFactor + 0.5);
         ScreenExtensions.SetPlacement(interopHelper.Handle, placement);
     }
 

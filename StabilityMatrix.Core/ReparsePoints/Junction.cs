@@ -24,14 +24,21 @@ public static class Junction
         IntPtr lpSecurityAttributes,
         [MarshalAs(UnmanagedType.U4)] Win32CreationDisposition dwCreationDisposition,
         [MarshalAs(UnmanagedType.U4)] Win32FileAttribute dwFlagsAndAttributes,
-        IntPtr hTemplateFile);
+        IntPtr hTemplateFile
+    );
 
     [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
-    private static extern bool DeviceIoControl(SafeFileHandle hDevice, uint dwIoControlCode,
-        [In] IntPtr lpInBuffer, uint nInBufferSize,
-        IntPtr lpOutBuffer, uint nOutBufferSize,
-        [Out] out uint lpBytesReturned, IntPtr lpOverlapped);
-    
+    private static extern bool DeviceIoControl(
+        SafeFileHandle hDevice,
+        uint dwIoControlCode,
+        [In] IntPtr lpInBuffer,
+        uint nInBufferSize,
+        IntPtr lpOutBuffer,
+        uint nOutBufferSize,
+        [Out] out uint lpBytesReturned,
+        IntPtr lpOverlapped
+    );
+
     /// <summary>
     /// Creates a junction point from the specified directory to the specified target directory.
     /// </summary>
@@ -61,17 +68,18 @@ public static class Junction
 
         using var fileHandle = OpenReparsePoint(junctionPoint, Win32FileAccess.GenericWrite);
         var targetDirBytes = Encoding.Unicode.GetBytes(
-            NonInterpretedPathPrefix + Path.GetFullPath(targetDir));
+            NonInterpretedPathPrefix + Path.GetFullPath(targetDir)
+        );
 
         var reparseDataBuffer = new ReparseDataBuffer
         {
-            ReparseTag = (uint) DeviceIoControlCode.ReparseTagMountPoint,
+            ReparseTag = (uint)DeviceIoControlCode.ReparseTagMountPoint,
             ReparseDataLength = Convert.ToUInt16(targetDirBytes.Length + 12),
             SubstituteNameOffset = 0,
             SubstituteNameLength = Convert.ToUInt16(targetDirBytes.Length),
             PrintNameOffset = Convert.ToUInt16(targetDirBytes.Length + 2),
             PrintNameLength = 0,
-            PathBuffer = new byte[0x3ff0]
+            PathBuffer = new byte[0x3ff0],
         };
 
         Array.Copy(targetDirBytes, reparseDataBuffer.PathBuffer, targetDirBytes.Length);
@@ -82,19 +90,23 @@ public static class Junction
         try
         {
             Marshal.StructureToPtr(reparseDataBuffer, inBuffer, false);
-            
+
             var result = DeviceIoControl(
-                fileHandle, (uint) DeviceIoControlCode.SetReparsePoint,
-                inBuffer, Convert.ToUInt32(targetDirBytes.Length + 20), 
-                IntPtr.Zero, 0, 
-                out var bytesReturned, IntPtr.Zero);
-            
+                fileHandle,
+                (uint)DeviceIoControlCode.SetReparsePoint,
+                inBuffer,
+                Convert.ToUInt32(targetDirBytes.Length + 20),
+                IntPtr.Zero,
+                0,
+                out var bytesReturned,
+                IntPtr.Zero
+            );
+
             Debug.WriteLine($"bytesReturned: {bytesReturned}");
 
             if (!result)
             {
-                ThrowLastWin32Error($"Unable to create junction point" +
-                                    $" {junctionPoint} -> {targetDir}");
+                ThrowLastWin32Error($"Unable to create junction point" + $" {junctionPoint} -> {targetDir}");
             }
         }
         finally
@@ -102,7 +114,7 @@ public static class Junction
             Marshal.FreeHGlobal(inBuffer);
         }
     }
-    
+
     /// <summary>
     /// Deletes a junction point at the specified source directory along with the directory itself.
     /// Does nothing if the junction point does not exist.
@@ -119,12 +131,12 @@ public static class Junction
         }
 
         using var fileHandle = OpenReparsePoint(junctionPoint, Win32FileAccess.GenericWrite);
-        
+
         var reparseDataBuffer = new ReparseDataBuffer
         {
-            ReparseTag = (uint) DeviceIoControlCode.ReparseTagMountPoint,
+            ReparseTag = (uint)DeviceIoControlCode.ReparseTagMountPoint,
             ReparseDataLength = 0,
-            PathBuffer = new byte[0x3ff0]
+            PathBuffer = new byte[0x3ff0],
         };
 
         var inBufferSize = Marshal.SizeOf(reparseDataBuffer);
@@ -132,15 +144,20 @@ public static class Junction
         try
         {
             Marshal.StructureToPtr(reparseDataBuffer, inBuffer, false);
-                
-            var result = DeviceIoControl(fileHandle, 
-                (uint) DeviceIoControlCode.DeleteReparsePoint,
-                inBuffer, 8, 
-                IntPtr.Zero, 0, 
-                out var bytesReturned, IntPtr.Zero);
+
+            var result = DeviceIoControl(
+                fileHandle,
+                (uint)DeviceIoControlCode.DeleteReparsePoint,
+                inBuffer,
+                8,
+                IntPtr.Zero,
+                0,
+                out var bytesReturned,
+                IntPtr.Zero
+            );
 
             Debug.WriteLine($"bytesReturned: {bytesReturned}");
-            
+
             if (!result)
             {
                 ThrowLastWin32Error($"Unable to delete junction point {junctionPoint}");
@@ -160,7 +177,7 @@ public static class Junction
             throw new IOException("Unable to delete junction point.", ex);
         }
     }
-    
+
     /// <summary>
     /// Determines whether the specified path exists and refers to a junction point.
     /// </summary>
@@ -170,7 +187,8 @@ public static class Junction
     /// or some other error occurs</exception>
     public static bool Exists(string path)
     {
-        if (!Directory.Exists(path)) return false;
+        if (!Directory.Exists(path))
+            return false;
 
         using var handle = OpenReparsePoint(path, Win32FileAccess.GenericRead);
         var target = InternalGetTarget(handle);
@@ -194,7 +212,7 @@ public static class Junction
         }
         return target;
     }
-    
+
     private static string? InternalGetTarget(SafeFileHandle handle)
     {
         var outBufferSize = Marshal.SizeOf(typeof(ReparseDataBuffer));
@@ -203,22 +221,23 @@ public static class Junction
         try
         {
             var result = DeviceIoControl(
-                handle, 
-                (uint) DeviceIoControlCode.GetReparsePoint,
-                IntPtr.Zero, 
-                0, 
-                outBuffer, 
-                (uint) outBufferSize, 
-                out var bytesReturned, 
-                IntPtr.Zero);
+                handle,
+                (uint)DeviceIoControlCode.GetReparsePoint,
+                IntPtr.Zero,
+                0,
+                outBuffer,
+                (uint)outBufferSize,
+                out var bytesReturned,
+                IntPtr.Zero
+            );
 
             Debug.WriteLine($"bytesReturned: {bytesReturned}");
-            
+
             // Errors
             if (!result)
             {
                 var error = Marshal.GetLastWin32Error();
-                if (error == (int) Win32ErrorCode.NotAReparsePoint)
+                if (error == (int)Win32ErrorCode.NotAReparsePoint)
                 {
                     return null;
                 }
@@ -229,23 +248,29 @@ public static class Junction
             }
 
             // Check output
-            if (outBuffer == IntPtr.Zero) return null;
+            if (outBuffer == IntPtr.Zero)
+                return null;
             // Safe interpret as ReparseDataBuffer type
-            if (Marshal.PtrToStructure(outBuffer, typeof(ReparseDataBuffer))
-                is not ReparseDataBuffer reparseDataBuffer)
+            if (
+                Marshal.PtrToStructure(outBuffer, typeof(ReparseDataBuffer))
+                is not ReparseDataBuffer reparseDataBuffer
+            )
             {
                 return null;
             }
 
             // Check if it's a mount point
-            if (reparseDataBuffer.ReparseTag != (uint) DeviceIoControlCode.ReparseTagMountPoint)
+            if (reparseDataBuffer.ReparseTag != (uint)DeviceIoControlCode.ReparseTagMountPoint)
             {
                 return null;
             }
 
             // Get the target dir string
-            var targetDir = Encoding.Unicode.GetString(reparseDataBuffer.PathBuffer,
-                reparseDataBuffer.SubstituteNameOffset, reparseDataBuffer.SubstituteNameLength);
+            var targetDir = Encoding.Unicode.GetString(
+                reparseDataBuffer.PathBuffer,
+                reparseDataBuffer.SubstituteNameOffset,
+                reparseDataBuffer.SubstituteNameLength
+            );
 
             if (targetDir.StartsWith(NonInterpretedPathPrefix))
             {
@@ -269,7 +294,8 @@ public static class Junction
             IntPtr.Zero,
             Win32CreationDisposition.OpenExisting,
             Win32FileAttribute.FlagBackupSemantics | Win32FileAttribute.FlagOpenReparsePoint,
-            IntPtr.Zero);
+            IntPtr.Zero
+        );
 
         var handle = new SafeFileHandle(filePtr, true);
 
@@ -277,10 +303,10 @@ public static class Junction
         {
             ThrowLastWin32Error($"Unable to open reparse point {reparsePoint}");
         }
-        
+
         return handle;
     }
-    
+
     [DoesNotReturn]
     private static void ThrowLastWin32Error(string message)
     {

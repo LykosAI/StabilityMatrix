@@ -6,13 +6,13 @@ namespace StabilityMatrix.Core.Updater;
 public class SignatureChecker
 {
     private static readonly SignatureAlgorithm Algorithm = SignatureAlgorithm.Ed25519;
-    private const string UpdatePublicKey = 
-        "-----BEGIN PUBLIC KEY-----\n" +
-        "MCowBQYDK2VwAyEAqYXhKG1b0iOMnAZGBSBdFlFEWpFBIbIPQk0TtyE2SfI=\n" +
-        "-----END PUBLIC KEY-----\n";
+    private const string UpdatePublicKey =
+        "-----BEGIN PUBLIC KEY-----\n"
+        + "MCowBQYDK2VwAyEAqYXhKG1b0iOMnAZGBSBdFlFEWpFBIbIPQk0TtyE2SfI=\n"
+        + "-----END PUBLIC KEY-----\n";
 
     private readonly PublicKey publicKey;
-    
+
     /// <summary>
     /// Initializes a new instance of SignatureChecker.
     /// </summary>
@@ -20,11 +20,12 @@ public class SignatureChecker
     public SignatureChecker(string? publicKeyPkix = null)
     {
         publicKey = PublicKey.Import(
-            Algorithm, 
+            Algorithm,
             Encoding.ASCII.GetBytes(publicKeyPkix ?? UpdatePublicKey),
-            KeyBlobFormat.PkixPublicKeyText);
+            KeyBlobFormat.PkixPublicKeyText
+        );
     }
-    
+
     /// <summary>
     /// Verifies the signature of provided data.
     /// </summary>
@@ -36,7 +37,7 @@ public class SignatureChecker
         var signatureBytes = Convert.FromBase64String(signature);
         return Algorithm.Verify(publicKey, Encoding.UTF8.GetBytes(data), signatureBytes);
     }
-    
+
     /// <summary>
     /// Verifies the signature of provided data.
     /// </summary>

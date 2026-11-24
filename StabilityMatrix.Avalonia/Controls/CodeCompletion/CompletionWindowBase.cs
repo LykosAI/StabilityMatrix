@@ -1,14 +1,14 @@
 ﻿// Copyright (c) 2014 AlphaSierraPapa for the SharpDevelop Team
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy of this
 // software and associated documentation files (the "Software"), to deal in the Software
 // without restriction, including without limitation the rights to use, copy, modify, merge,
 // publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons
 // to whom the Software is furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in all copies or
 // substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
 // INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
 // PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
@@ -75,8 +75,9 @@ public class CompletionWindowBase : Popup
     public CompletionWindowBase(TextArea textArea)
     {
         TextArea = textArea ?? throw new ArgumentNullException(nameof(textArea));
-        _parentWindow = textArea.GetVisualRoot() as Window ?? 
-                        throw new InvalidOperationException("CompletionWindow requires a visual root.");
+        _parentWindow =
+            textArea.GetVisualRoot() as Window
+            ?? throw new InvalidOperationException("CompletionWindow requires a visual root.");
 
         AddHandler(PointerReleasedEvent, OnMouseUp, handledEventsToo: true);
 
@@ -214,16 +215,14 @@ public class CompletionWindowBase : Popup
             // prevents crash when typing deadchar while CC window is open
             if (e.Key == Key.DeadCharProcessed)
                 return;
-            e.Handled = RaiseEventPair(Window, null, KeyDownEvent,
-                new KeyEventArgs { Key = e.Key });
+            e.Handled = RaiseEventPair(Window, null, KeyDownEvent, new KeyEventArgs { Key = e.Key });
         }
 
         public override void OnPreviewKeyUp(KeyEventArgs e)
         {
             if (e.Key == Key.DeadCharProcessed)
                 return;
-            e.Handled = RaiseEventPair(Window, null, KeyUpEvent,
-                new KeyEventArgs { Key = e.Key });
+            e.Handled = RaiseEventPair(Window, null, KeyUpEvent, new KeyEventArgs { Key = e.Key });
         }
     }
     #endregion
@@ -231,7 +230,12 @@ public class CompletionWindowBase : Popup
     private void TextViewScrollOffsetChanged(object? sender, EventArgs e)
     {
         ILogicalScrollable textView = TextArea;
-        var visibleRect = new Rect(textView.Offset.X, textView.Offset.Y, textView.Viewport.Width, textView.Viewport.Height);
+        var visibleRect = new Rect(
+            textView.Offset.X,
+            textView.Offset.Y,
+            textView.Viewport.Width,
+            textView.Viewport.Height
+        );
         //close completion window when the user scrolls so far that the anchor position is leaving the visible area
         if (visibleRect.Contains(_visualLocation) || visibleRect.Contains(_visualLocationTop))
         {
@@ -279,7 +283,12 @@ public class CompletionWindowBase : Popup
     /// <param name="event">The bubbling event.</param>
     /// <param name="args">The event args to use.</param>
     /// <returns>The <see cref="RoutedEventArgs.Handled"/> value of the event args.</returns>
-    protected static bool RaiseEventPair(Control target, RoutedEvent? previewEvent, RoutedEvent @event, RoutedEventArgs args)
+    protected static bool RaiseEventPair(
+        Control target,
+        RoutedEvent? previewEvent,
+        RoutedEvent @event,
+        RoutedEventArgs args
+    )
     {
         if (target == null)
             throw new ArgumentNullException(nameof(target));
@@ -313,7 +322,9 @@ public class CompletionWindowBase : Popup
     {
         if (CloseOnFocusLost)
         {
-            Debug.WriteLine("CloseIfFocusLost: this.IsFocues=" + IsFocused + " IsTextAreaFocused=" + IsTextAreaFocused);
+            Debug.WriteLine(
+                "CloseIfFocusLost: this.IsFocues=" + IsFocused + " IsTextAreaFocused=" + IsTextAreaFocused
+            );
             if (!IsFocused && !IsTextAreaFocused)
             {
                 Hide();

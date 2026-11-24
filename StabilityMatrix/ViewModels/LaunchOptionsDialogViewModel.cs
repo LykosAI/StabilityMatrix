@@ -22,12 +22,12 @@ public partial class LaunchOptionsDialogViewModel : ObservableObject
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(FilteredCards))]
     private string searchText = string.Empty;
-    
+
     [ObservableProperty]
     private bool isSearchBoxEnabled = true;
-    
+
     private LRUCache<string, ImmutableList<LaunchOptionCard>> cache = new(100);
-    
+
     /// <summary>
     /// Return cards that match the search text
     /// </summary>
@@ -46,12 +46,8 @@ public partial class LaunchOptionsDialogViewModel : ObservableObject
                 return cachedCards!;
             }
             var searchCard = new LaunchOptionCard(text.ToLowerInvariant());
-            var extracted = FuzzySharp.Process
-                .ExtractTop(searchCard, Cards, c => c.Title.ToLowerInvariant());
-            var results = extracted
-                .Where(r => r.Score > 40)
-                .Select(r => r.Value)
-                .ToImmutableList();
+            var extracted = FuzzySharp.Process.ExtractTop(searchCard, Cards, c => c.Title.ToLowerInvariant());
+            var results = extracted.Where(r => r.Score > 40).Select(r => r.Value).ToImmutableList();
             cache.Add(text, results);
             return results;
         }
@@ -70,7 +66,10 @@ public partial class LaunchOptionsDialogViewModel : ObservableObject
         return launchArgs;
     }
 
-    public void Initialize(IEnumerable<LaunchOptionDefinition> definitions, IEnumerable<LaunchOption> launchArgs)
+    public void Initialize(
+        IEnumerable<LaunchOptionDefinition> definitions,
+        IEnumerable<LaunchOption> launchArgs
+    )
     {
         Clear();
         // During card creation, store dict of options with initial values
@@ -82,8 +81,9 @@ public partial class LaunchOptionsDialogViewModel : ObservableObject
             if (definition.Type != LaunchOptionType.Bool && definition.Options.Count != 1)
             {
                 throw new InvalidOperationException(
-                    $"Definition: '{definition.Name}' has {definition.Options.Count} options," +
-                    $" it must have exactly 1 option for non-bool types");
+                    $"Definition: '{definition.Name}' has {definition.Options.Count} options,"
+                        + $" it must have exactly 1 option for non-bool types"
+                );
             }
             // Store initial values
             if (definition.InitialValue != null)
@@ -99,12 +99,15 @@ public partial class LaunchOptionsDialogViewModel : ObservableObject
                     else
                     {
                         // For single/multiple options (string only)
-                        var option = definition.Options.FirstOrDefault(opt => opt.Equals(definition.InitialValue));
+                        var option = definition.Options.FirstOrDefault(opt =>
+                            opt.Equals(definition.InitialValue)
+                        );
                         if (option == null)
                         {
                             throw new InvalidOperationException(
-                                $"Definition '{definition.Name}' has InitialValue of '{definition.InitialValue}', but it was not found in options:" +
-                                $" '{string.Join(",", definition.Options)}'");
+                                $"Definition '{definition.Name}' has InitialValue of '{definition.InitialValue}', but it was not found in options:"
+                                    + $" '{string.Join(",", definition.Options)}'"
+                            );
                         }
                         initialOptions[option] = true;
                     }
@@ -132,15 +135,18 @@ public partial class LaunchOptionsDialogViewModel : ObservableObject
                     if (initialValue != null)
                     {
                         userValue = initialValue.ToString();
-                        Logger.Info("Using initial value '{InitialValue}' for option '{OptionName}'",
-                            initialValue, option.Name);
+                        Logger.Info(
+                            "Using initial value '{InitialValue}' for option '{OptionName}'",
+                            initialValue,
+                            option.Name
+                        );
                     }
                 }
                 option.SetValueFromString(userValue);
             }
         }
     }
-    
+
     /// <summary>
     /// Clear Cards and cache
     /// </summary>
@@ -149,7 +155,7 @@ public partial class LaunchOptionsDialogViewModel : ObservableObject
         cache = new LRUCache<string, ImmutableList<LaunchOptionCard>>(100);
         Cards.Clear();
     }
-    
+
     public void OnLoad()
     {
         Debug.WriteLine("In LaunchOptions OnLoad");

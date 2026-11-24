@@ -1,129 +1,145 @@
-﻿<Styles xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
-        xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
-        x:CompileBindings="True">
+﻿<Styles
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+    xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
+    x:CompileBindings="True">
 
-  <Design.PreviewWith>
-    <StackPanel>
-      <Border Padding="20">
-        <controls:ProgressRing Value="50" />
-      </Border>
-      <Border Padding="20">
-        <controls:ProgressRing StartAngle="90" EndAngle="450" Value="50" Foreground="Red" StrokeThickness="3" Width="100" Height="100" />
-      </Border>
-      <Border Padding="20">
-        <controls:ProgressRing IsIndeterminate="True" StrokeThickness="10" Width="100" Height="100" />
-      </Border>
-    </StackPanel>
-  </Design.PreviewWith>
+    <Design.PreviewWith>
+        <StackPanel>
+            <Border Padding="20">
+                <controls:ProgressRing Value="50" />
+            </Border>
+            <Border Padding="20">
+                <controls:ProgressRing
+                    Width="100"
+                    Height="100"
+                    EndAngle="450"
+                    Foreground="Red"
+                    StartAngle="90"
+                    StrokeThickness="3"
+                    Value="50" />
+            </Border>
+            <Border Padding="20">
+                <controls:ProgressRing
+                    Width="100"
+                    Height="100"
+                    IsIndeterminate="True"
+                    StrokeThickness="10" />
+            </Border>
+        </StackPanel>
+    </Design.PreviewWith>
 
-  <Styles.Resources>
-    <converters:FitSquarelyWithinAspectRatioConverter x:Key="FitSquarelyWithinAspectRatioConverter"/>
-  </Styles.Resources>
+    <Styles.Resources>
+        <converters:FitSquarelyWithinAspectRatioConverter x:Key="FitSquarelyWithinAspectRatioConverter" />
+    </Styles.Resources>
 
-  <Style Selector="controls|ProgressRing">
-    <Setter Property="Foreground" Value="{DynamicResource SystemAccentColor}"/>
-    <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundBaseLowBrush}" />
-    <Setter Property="StrokeThickness" Value="5" />
-    <Setter Property="MinHeight" Value="16" />
-    <Setter Property="MinWidth" Value="16" />
-    
-    <Setter Property="Transitions">
-      <Transitions>
-        <DoubleTransition 
-          Property="SweepAngle"
-          Duration="0:0:0.267">
-          <DoubleTransition.Easing>
-            <LinearEasing/>
-          </DoubleTransition.Easing>
-        </DoubleTransition>
-      </Transitions>
-    </Setter>
-    
-    <Setter Property="Template">
-      <ControlTemplate>
-        <Panel x:Name="PART_RingRoot">
-          <Ellipse x:Name="PART_Track"
-                   Stroke="{TemplateBinding Background}"
-                   StrokeThickness="{TemplateBinding StrokeThickness}" />
-          <Arc x:Name="PART_Fill"
-               Stroke="{TemplateBinding Foreground}"
-               StrokeThickness="{TemplateBinding StrokeThickness}"
-               StrokeLineCap="Round" />
-        </Panel>
-      </ControlTemplate>
-    </Setter>
-  </Style>
+    <Style Selector="controls|ProgressRing">
+        <Setter Property="Foreground" Value="{DynamicResource SystemAccentColor}" />
+        <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundBaseLowBrush}" />
+        <Setter Property="StrokeThickness" Value="5" />
+        <Setter Property="MinHeight" Value="16" />
+        <Setter Property="MinWidth" Value="16" />
 
-  <Style Selector="controls|ProgressRing:not(:indeterminate) /template/ Arc#PART_Fill">
-    <!--<Setter Property="StartAngle" Value="{Binding StartAngle, RelativeSource={RelativeSource Mode=TemplatedParent}}"/>-->
-    <!--<Setter Property="SweepAngle" Value="{Binding SweepAngle, RelativeSource={RelativeSource Mode=TemplatedParent}}"/>-->
-  </Style>
+        <Setter Property="Transitions">
+            <Transitions>
+                <DoubleTransition Property="SweepAngle" Duration="0:0:0.267">
+                    <DoubleTransition.Easing>
+                        <LinearEasing />
+                    </DoubleTransition.Easing>
+                </DoubleTransition>
+            </Transitions>
+        </Setter>
 
-  <Style Selector="controls|ProgressRing:preserveaspect">
-    <Setter Property="MinWidth" Value="32" />
-    <Setter Property="MinHeight" Value="32" />
-  </Style>
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Panel x:Name="PART_RingRoot">
+                    <Ellipse
+                        x:Name="PART_Track"
+                        Stroke="{TemplateBinding Background}"
+                        StrokeThickness="{TemplateBinding StrokeThickness}" />
+                    <Arc
+                        x:Name="PART_Fill"
+                        Stroke="{TemplateBinding Foreground}"
+                        StrokeLineCap="Round"
+                        StrokeThickness="{TemplateBinding StrokeThickness}" />
+                </Panel>
+            </ControlTemplate>
+        </Setter>
+    </Style>
 
-  <Style Selector="controls|ProgressRing:preserveaspect /template/ Panel#PART_RingRoot">
-    <Setter Property="Width" Value="{TemplateBinding Bounds, Converter={StaticResource FitSquarelyWithinAspectRatioConverter}}"/>
-    <Setter Property="Height" Value="{Binding Width, RelativeSource={RelativeSource Mode=Self}}"/>
-  </Style>
+    <Style Selector="controls|ProgressRing:not(:indeterminate) /template/ Arc#PART_Fill">
+        <!--<Setter Property="StartAngle" Value="{Binding StartAngle, RelativeSource={RelativeSource Mode=TemplatedParent}}"/>-->
+        <!--<Setter Property="SweepAngle" Value="{Binding SweepAngle, RelativeSource={RelativeSource Mode=TemplatedParent}}"/>-->
+    </Style>
 
-  <Style Selector="controls|ProgressRing[IsEnabled=True]:indeterminate /template/ Arc#PART_Fill">
-    <Style.Animations>
-      <Animation Duration="0:0:4.567" Easing="LinearEasing" IterationCount="Infinite" FillMode="Both">
-        <KeyFrame Cue="0%">
-          <Setter Property="StartAngle" Value="-720"/>
-          <Setter Property="SweepAngle" Value="0"/>
-        </KeyFrame>
-        <KeyFrame Cue="12.5%">
-          <Setter Property="StartAngle" Value="-540"/>
-          <Setter Property="SweepAngle" Value="50"/>
-        </KeyFrame>
-        <KeyFrame Cue="25%">
-          <Setter Property="StartAngle" Value="-360"/>
-          <Setter Property="SweepAngle" Value="100"/>
-        </KeyFrame>
-        <KeyFrame Cue="32.5%">
-          <Setter Property="StartAngle" Value="-180"/>
-          <Setter Property="SweepAngle" Value="50"/>
-        </KeyFrame>
-        <KeyFrame Cue="50%">
-          <Setter Property="StartAngle" Value="0"/>
-          <Setter Property="SweepAngle" Value="5"/>
-        </KeyFrame>
-        <KeyFrame Cue="62.5%">
-          <Setter Property="StartAngle" Value="180"/>
-          <Setter Property="SweepAngle" Value="50"/>
-        </KeyFrame>
-        <KeyFrame Cue="75%">
-          <Setter Property="StartAngle" Value="360"/>
-          <Setter Property="SweepAngle" Value="100"/>
-        </KeyFrame>
-        <KeyFrame Cue="87.5%">
-          <Setter Property="StartAngle" Value="540"/>
-          <Setter Property="SweepAngle" Value="50"/>
-        </KeyFrame>
-        <KeyFrame Cue="100%">
-          <Setter Property="StartAngle" Value="720"/>
-          <Setter Property="SweepAngle" Value="0"/>
-        </KeyFrame>
-      </Animation>
-    </Style.Animations>
-  </Style>
+    <Style Selector="controls|ProgressRing:preserveaspect">
+        <Setter Property="MinWidth" Value="32" />
+        <Setter Property="MinHeight" Value="32" />
+    </Style>
 
-  <Style Selector="controls|ProgressRing[IsEnabled=True]:not(:indeterminate) /template/ Ellipse#PART_Track">
-    <Style.Animations>
-      <Animation Duration="0:0:1" IterationCount="INFINITE">
-        <KeyFrame Cue="0%">
-          <Setter Property="Opacity" Value="0.99"/>
-        </KeyFrame>
-        <KeyFrame Cue="100%">
-          <Setter Property="Opacity" Value="1"/>
-        </KeyFrame>
-      </Animation>
-    </Style.Animations>
-  </Style>
+    <Style Selector="controls|ProgressRing:preserveaspect /template/ Panel#PART_RingRoot">
+        <Setter Property="Width" Value="{TemplateBinding Bounds, Converter={StaticResource FitSquarelyWithinAspectRatioConverter}}" />
+        <Setter Property="Height" Value="{Binding Width, RelativeSource={RelativeSource Mode=Self}}" />
+    </Style>
+
+    <Style Selector="controls|ProgressRing[IsEnabled=True]:indeterminate /template/ Arc#PART_Fill">
+        <Style.Animations>
+            <Animation
+                Easing="LinearEasing"
+                FillMode="Both"
+                IterationCount="Infinite"
+                Duration="0:0:4.567">
+                <KeyFrame Cue="0%">
+                    <Setter Property="StartAngle" Value="-720" />
+                    <Setter Property="SweepAngle" Value="0" />
+                </KeyFrame>
+                <KeyFrame Cue="12.5%">
+                    <Setter Property="StartAngle" Value="-540" />
+                    <Setter Property="SweepAngle" Value="50" />
+                </KeyFrame>
+                <KeyFrame Cue="25%">
+                    <Setter Property="StartAngle" Value="-360" />
+                    <Setter Property="SweepAngle" Value="100" />
+                </KeyFrame>
+                <KeyFrame Cue="32.5%">
+                    <Setter Property="StartAngle" Value="-180" />
+                    <Setter Property="SweepAngle" Value="50" />
+                </KeyFrame>
+                <KeyFrame Cue="50%">
+                    <Setter Property="StartAngle" Value="0" />
+                    <Setter Property="SweepAngle" Value="5" />
+                </KeyFrame>
+                <KeyFrame Cue="62.5%">
+                    <Setter Property="StartAngle" Value="180" />
+                    <Setter Property="SweepAngle" Value="50" />
+                </KeyFrame>
+                <KeyFrame Cue="75%">
+                    <Setter Property="StartAngle" Value="360" />
+                    <Setter Property="SweepAngle" Value="100" />
+                </KeyFrame>
+                <KeyFrame Cue="87.5%">
+                    <Setter Property="StartAngle" Value="540" />
+                    <Setter Property="SweepAngle" Value="50" />
+                </KeyFrame>
+                <KeyFrame Cue="100%">
+                    <Setter Property="StartAngle" Value="720" />
+                    <Setter Property="SweepAngle" Value="0" />
+                </KeyFrame>
+            </Animation>
+        </Style.Animations>
+    </Style>
+
+    <Style Selector="controls|ProgressRing[IsEnabled=True]:not(:indeterminate) /template/ Ellipse#PART_Track">
+        <Style.Animations>
+            <Animation IterationCount="INFINITE" Duration="0:0:1">
+                <KeyFrame Cue="0%">
+                    <Setter Property="Opacity" Value="0.99" />
+                </KeyFrame>
+                <KeyFrame Cue="100%">
+                    <Setter Property="Opacity" Value="1" />
+                </KeyFrame>
+            </Animation>
+        </Style.Animations>
+    </Style>
 </Styles>

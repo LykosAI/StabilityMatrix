@@ -239,8 +239,8 @@ public partial class PackageImportViewModel(
 
                 if (!venvDetected)
                 {
-                    SelectedPythonVersion =
-                        GetRecommendedPyVersion() ?? AvailablePythonVersions.FirstOrDefault();
+                    SelectedPythonVersion = GetRecommendedPyVersion()
+                        ?? AvailablePythonVersions.FirstOrDefault();
                 }
             })
             .SafeFireAndForget();
@@ -274,15 +274,15 @@ public partial class PackageImportViewModel(
         var version = new InstalledPackageVersion();
         if (IsReleaseMode)
         {
-            version.InstalledReleaseVersion =
-                SelectedVersion?.TagName ?? throw new NullReferenceException("Selected version is null");
+            version.InstalledReleaseVersion = SelectedVersion?.TagName
+                ?? throw new NullReferenceException("Selected version is null");
         }
         else
         {
-            version.InstalledBranch =
-                SelectedVersion?.TagName ?? throw new NullReferenceException("Selected version is null");
-            version.InstalledCommitSha =
-                SelectedCommit?.Sha ?? throw new NullReferenceException("Selected commit is null");
+            version.InstalledBranch = SelectedVersion?.TagName
+                ?? throw new NullReferenceException("Selected version is null");
+            version.InstalledCommitSha = SelectedCommit?.Sha
+                ?? throw new NullReferenceException("Selected commit is null");
         }
 
         var torchVersion = SelectedBasePackage.GetRecommendedTorchVersion();
@@ -298,8 +298,7 @@ public partial class PackageImportViewModel(
             LastUpdateCheck = DateTimeOffset.Now,
             PreferredTorchIndex = torchVersion,
             PreferredSharedFolderMethod = sharedFolderRecommendation,
-            PythonVersion =
-                SelectedPythonVersion?.Version.StringValue
+            PythonVersion = SelectedPythonVersion?.Version.StringValue
                 ?? PyInstallationManager.Python_3_10_17.StringValue,
         };
 

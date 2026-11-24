@@ -163,33 +163,29 @@ public class FluxKontextModelManager : ILocalProviderModelManager
     /// </summary>
     internal FluxKontextWorkflowBuilder.SelectedModels SelectModels(IInferenceClientManager clientManager)
     {
-        var unetModel =
-            clientManager.UnetModels.FirstOrDefault(m =>
-                m.Local != null
-                && (
-                    m.FileName.Contains("flux1-dev-kontext", StringComparison.OrdinalIgnoreCase)
-                    || m.FileName.Contains("flux-kontext", StringComparison.OrdinalIgnoreCase)
-                )
-            ) ?? throw new InvalidOperationException("Flux Kontext UNET model not found");
+        var unetModel = clientManager.UnetModels.FirstOrDefault(m =>
+            m.Local != null
+            && (
+                m.FileName.Contains("flux1-dev-kontext", StringComparison.OrdinalIgnoreCase)
+                || m.FileName.Contains("flux-kontext", StringComparison.OrdinalIgnoreCase)
+            )
+        ) ?? throw new InvalidOperationException("Flux Kontext UNET model not found");
 
-        var vaeModel =
-            clientManager.VaeModels.FirstOrDefault(m =>
-                m.Local != null && m.FileName.Equals("ae.safetensors", StringComparison.OrdinalIgnoreCase)
-            ) ?? throw new InvalidOperationException("Flux VAE model not found");
+        var vaeModel = clientManager.VaeModels.FirstOrDefault(m =>
+            m.Local != null && m.FileName.Equals("ae.safetensors", StringComparison.OrdinalIgnoreCase)
+        ) ?? throw new InvalidOperationException("Flux VAE model not found");
 
-        var clip1Model =
-            clientManager.ClipModels.FirstOrDefault(m =>
-                m.Local != null && m.FileName.Contains("clip_l", StringComparison.OrdinalIgnoreCase)
-            ) ?? throw new InvalidOperationException("CLIP-L model not found");
+        var clip1Model = clientManager.ClipModels.FirstOrDefault(m =>
+            m.Local != null && m.FileName.Contains("clip_l", StringComparison.OrdinalIgnoreCase)
+        ) ?? throw new InvalidOperationException("CLIP-L model not found");
 
-        var clip2Model =
-            clientManager.ClipModels.FirstOrDefault(m =>
-                m.Local != null
-                && (
-                    m.FileName.Contains("t5xxl", StringComparison.OrdinalIgnoreCase)
-                    || m.FileName.Contains("t5-xxl", StringComparison.OrdinalIgnoreCase)
-                )
-            ) ?? throw new InvalidOperationException("T5-XXL model not found");
+        var clip2Model = clientManager.ClipModels.FirstOrDefault(m =>
+            m.Local != null
+            && (
+                m.FileName.Contains("t5xxl", StringComparison.OrdinalIgnoreCase)
+                || m.FileName.Contains("t5-xxl", StringComparison.OrdinalIgnoreCase)
+            )
+        ) ?? throw new InvalidOperationException("T5-XXL model not found");
 
         return new FluxKontextWorkflowBuilder.SelectedModels(unetModel, vaeModel, clip1Model, clip2Model);
     }

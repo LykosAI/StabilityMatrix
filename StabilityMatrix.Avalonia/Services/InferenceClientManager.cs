@@ -923,7 +923,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
     }
 
     [MemberNotNull(nameof(Client))]
-    private async Task ConnectAsyncImpl(
+    internal async Task ConnectAsyncImpl(
         Uri uri,
         PackagePair? localServerPackage = null,
         CancellationToken cancellationToken = default

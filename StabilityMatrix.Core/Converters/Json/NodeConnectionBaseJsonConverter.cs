@@ -28,8 +28,7 @@ public class NodeConnectionBaseJsonConverter : JsonConverter<NodeConnectionBase>
             throw new JsonException($"Failed to create instance of {typeToConvert}");
         }
 
-        var propertyInfo =
-            typeToConvert.GetProperty("Data", BindingFlags.Public | BindingFlags.Instance)
+        var propertyInfo = typeToConvert.GetProperty("Data", BindingFlags.Public | BindingFlags.Instance)
             ?? throw new JsonException($"Failed to get Data property of {typeToConvert}");
 
         propertyInfo.SetValue(instance, data);

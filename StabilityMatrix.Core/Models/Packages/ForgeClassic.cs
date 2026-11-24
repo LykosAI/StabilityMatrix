@@ -189,8 +189,7 @@ public class ForgeClassic(
         CancellationToken cancellationToken = default
     )
     {
-        var requestedPythonVersion =
-            options.PythonOptions.PythonVersion
+        var requestedPythonVersion = options.PythonOptions.PythonVersion
             ?? (
                 PyVersion.TryParse(installedPackage.PythonVersion, out var parsedVersion)
                     ? parsedVersion
@@ -237,8 +236,7 @@ public class ForgeClassic(
         var launchArgs = new List<string> { "launch.py", "--uv", "--exit" };
 
         // For Ampere or newer GPUs, enable sage attention, flash attention, and nunchaku
-        var isAmpereOrNewer =
-            SettingsManager.Settings.PreferredGpu?.IsAmpereOrNewerGpu()
+        var isAmpereOrNewer = SettingsManager.Settings.PreferredGpu?.IsAmpereOrNewerGpu()
             ?? HardwareHelper.IterGpuInfo().Any(x => x.IsNvidia && x.IsAmpereOrNewerGpu());
 
         if (isAmpereOrNewer)
@@ -366,8 +364,7 @@ public class ForgeClassic(
         }
 
         venvRunner.RunDetached([.. launchArgs], HandleInstallOutput);
-        var process =
-            venvRunner.Process
+        var process = venvRunner.Process
             ?? throw new InvalidOperationException("Failed to start Forge Classic install process");
         await process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
         return process.ExitCode;
@@ -450,34 +447,31 @@ public class ForgeClassic(
         EventManager.Instance.OnPackageInstallProgressAdded(runner);
 
         await runner
-            .ExecuteSteps(
-                [
-                    new ActionPackageStep(
-                        async progress =>
-                        {
-                            await using var venvRunner = await SetupVenvPure(
-                                    installedPackage.FullPath,
-                                    pythonVersion: PyVersion.Parse(installedPackage.PythonVersion)
-                                )
-                                .ConfigureAwait(false);
+            .ExecuteSteps([
+                new ActionPackageStep(
+                    async progress =>
+                    {
+                        await using var venvRunner = await SetupVenvPure(
+                                installedPackage.FullPath,
+                                pythonVersion: PyVersion.Parse(installedPackage.PythonVersion)
+                            )
+                            .ConfigureAwait(false);
 
-                            var gpuInfo =
-                                SettingsManager.Settings.PreferredGpu
-                                ?? HardwareHelper.IterGpuInfo().FirstOrDefault(x => x.IsNvidia);
+                        var gpuInfo = SettingsManager.Settings.PreferredGpu
+                            ?? HardwareHelper.IterGpuInfo().FirstOrDefault(x => x.IsNvidia);
 
-                            var tritonVersion = Compat.IsWindows ? "3.5.1.post22" : "3.5.1";
+                        var tritonVersion = Compat.IsWindows ? "3.5.1.post22" : "3.5.1";
 
-                            await PipWheelService
-                                .InstallTritonAsync(venvRunner, progress, tritonVersion)
-                                .ConfigureAwait(false);
-                            await PipWheelService
-                                .InstallSageAttentionAsync(venvRunner, gpuInfo, progress, "2.2.0")
-                                .ConfigureAwait(false);
-                        },
-                        "Installing Triton and SageAttention"
-                    ),
-                ]
-            )
+                        await PipWheelService
+                            .InstallTritonAsync(venvRunner, progress, tritonVersion)
+                            .ConfigureAwait(false);
+                        await PipWheelService
+                            .InstallSageAttentionAsync(venvRunner, gpuInfo, progress, "2.2.0")
+                            .ConfigureAwait(false);
+                    },
+                    "Installing Triton and SageAttention"
+                ),
+            ])
             .ConfigureAwait(false);
 
         if (runner.Failed)

@@ -12,7 +12,7 @@ public class UpdatePackageOptions
         {
             VersionOptions = VersionOptions,
             PythonOptions = PythonOptions,
-            IsUpdate = true
+            IsUpdate = true,
         };
     }
 }

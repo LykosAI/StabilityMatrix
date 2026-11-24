@@ -5,5 +5,5 @@ public enum HybridModelType
     None,
     Local,
     Remote,
-    Downloadable
+    Downloadable,
 }

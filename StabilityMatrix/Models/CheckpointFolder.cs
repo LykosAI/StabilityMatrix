@@ -61,8 +61,7 @@ public partial class CheckpointFolder : ObservableObject
     private bool isImportInProgress;
 
     public bool IsDragBlurEnabled => IsCurrentDragTarget || IsImportInProgress;
-    public string TitleWithFilesCount =>
-        CheckpointFiles.Any() ? $"{Title} ({CheckpointFiles.Count})" : Title;
+    public string TitleWithFilesCount => CheckpointFiles.Any() ? $"{Title} ({CheckpointFiles.Count})" : Title;
 
     public ProgressViewModel Progress { get; } = new();
 
@@ -173,10 +172,7 @@ public partial class CheckpointFolder : ObservableObject
     {
         Progress.IsIndeterminate = true;
         Progress.IsProgressVisible = true;
-        var copyPaths = files.ToDictionary(
-            k => k,
-            v => Path.Combine(DirectoryPath, Path.GetFileName(v))
-        );
+        var copyPaths = files.ToDictionary(k => k, v => Path.Combine(DirectoryPath, Path.GetFileName(v)));
 
         var progress = new Progress<ProgressReport>(report =>
         {
@@ -239,12 +235,7 @@ public partial class CheckpointFolder : ObservableObject
 
                     // Save connected model info json
                     var modelFileName = Path.GetFileNameWithoutExtension(modelFile.Info.Name);
-                    var modelInfo = new ConnectedModelInfo(
-                        model,
-                        version,
-                        file,
-                        DateTimeOffset.UtcNow
-                    );
+                    var modelInfo = new ConnectedModelInfo(model, version, file, DateTimeOffset.UtcNow);
                     await modelInfo.SaveJsonToDirectory(DirectoryPath, modelFileName);
 
                     // If available, save thumbnail
@@ -283,9 +274,9 @@ public partial class CheckpointFolder : ObservableObject
             Progress.Text = successCount switch
             {
                 0 when failCount > 0 => "Import complete. No connected data found.",
-                > 0 when failCount > 0
-                    => $"Import complete. Found connected data for {successCount} of {totalCount} models.",
-                _ => $"Import complete. Found connected data for all {totalCount} models."
+                > 0 when failCount > 0 =>
+                    $"Import complete. Found connected data for {successCount} of {totalCount} models.",
+                _ => $"Import complete. Found connected data for all {totalCount} models.",
             };
 
             DelayedClearProgress(TimeSpan.FromSeconds(1));
@@ -329,19 +320,13 @@ public partial class CheckpointFolder : ObservableObject
         return await (
             progress switch
             {
-                null
-                    => Task.Run(
-                        () =>
-                            CheckpointFile.FromDirectoryIndex(dialogFactory, DirectoryPath).ToList()
-                    ),
+                null => Task.Run(() =>
+                    CheckpointFile.FromDirectoryIndex(dialogFactory, DirectoryPath).ToList()
+                ),
 
-                _
-                    => Task.Run(
-                        () =>
-                            CheckpointFile
-                                .FromDirectoryIndex(dialogFactory, DirectoryPath, progress)
-                                .ToList()
-                    )
+                _ => Task.Run(() =>
+                    CheckpointFile.FromDirectoryIndex(dialogFactory, DirectoryPath, progress).ToList()
+                ),
             }
         );
     }
@@ -365,7 +350,7 @@ public partial class CheckpointFolder : ObservableObject
             {
                 Title = Path.GetFileName(folder),
                 DirectoryPath = folder,
-                FolderType = FolderType
+                FolderType = FolderType,
             };
 
             await subFolder.IndexAsync(progress);

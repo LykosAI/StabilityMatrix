@@ -10,14 +10,14 @@
       "rollForward": false
     },
     "xamlstyler.console": {
-      "version": "3.2404.2",
+      "version": "3.2501.8",
       "commands": [
         "xstyler"
       ],
       "rollForward": false
     },
     "csharpier": {
-      "version": "1.0.1",
+      "version": "1.4.1",
       "commands": [
         "csharpier"
       ],

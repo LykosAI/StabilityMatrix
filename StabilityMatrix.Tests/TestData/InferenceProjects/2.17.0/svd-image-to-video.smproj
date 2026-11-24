@@ -1,0 +1,112 @@
+{
+  "Version": 2,
+  "ProjectType": "ImageToVideo",
+  "State": {
+    "Model": {
+      "SelectedModelName": "svd_xt_1_1.safetensors",
+      "SelectedRefinerName": "@none",
+      "SelectedVaeName": "@default",
+      "SelectedClip1Name": null,
+      "SelectedClip2Name": null,
+      "SelectedClip3Name": null,
+      "SelectedClip4Name": null,
+      "TextEncoderNames": [],
+      "SelectedClipType": null,
+      "SelectedWorkflowProfile": "Auto",
+      "SelectedDType": null,
+      "Shift": 3,
+      "ModelLoader": 0,
+      "ClipSkip": 1,
+      "IsVaeSelectionEnabled": false,
+      "IsRefinerSelectionEnabled": false,
+      "IsClipSkipEnabled": false,
+      "IsExtraNetworksEnabled": false,
+      "IsModelLoaderSelectionEnabled": false,
+      "IsClipModelSelectionEnabled": false,
+      "ShowRefinerOption": true,
+      "IsAdvancedOptionsExpanded": false,
+      "IsTextEncodersExpanded": true,
+      "ExtraNetworks": {
+        "$values": []
+      }
+    },
+    "Sampler": {
+      "GroupedResolutionsByAspectRatio": {},
+      "DimensionStepChange": 0,
+      "Modules": {
+        "$values": []
+      },
+      "IsRefinerStepsEnabled": false,
+      "Steps": 25,
+      "RefinerSteps": 10,
+      "IsDenoiseStrengthEnabled": true,
+      "DenoiseStrength": 1,
+      "IsCfgScaleEnabled": true,
+      "CfgScale": 2.5,
+      "IsDimensionsEnabled": true,
+      "Width": 1024,
+      "Height": 1024,
+      "IsSamplerSelectionEnabled": true,
+      "SelectedSampler": {
+        "Name": "euler"
+      },
+      "IsSchedulerSelectionEnabled": true,
+      "SelectedScheduler": {
+        "Name": "karras"
+      },
+      "InheritPrimarySamplerAddons": true,
+      "EnableAddons": true,
+      "SelectedModelType": "SDXL",
+      "IsLengthEnabled": false,
+      "Length": 0
+    },
+    "BatchSize": {
+      "BatchSize": 1,
+      "BatchCount": 1,
+      "IsBatchIndexEnabled": false,
+      "BatchIndex": 1
+    },
+    "Seed": {
+      "Seed": "424242",
+      "IsRandomizeEnabled": true
+    },
+    "ImageLoader": {
+      "IsMaskOverlayEnabled": false,
+      "ImageSource": {
+        "LocalFile": "input.png",
+        "RemoteUrl": null,
+        "Label": null
+      },
+      "CurrentBitmapSize": {
+        "Width": 1,
+        "Height": 1
+      }
+    },
+    "Conditioning": {
+      "Width": 1024,
+      "Height": 576,
+      "NumFrames": 14,
+      "MotionBucketId": 150,
+      "Fps": 8,
+      "AugmentationLevel": 0,
+      "MinCfg": 1
+    },
+    "VideoOutput": {
+      "Fps": 6,
+      "Lossless": true,
+      "Quality": 85,
+      "SelectedMethod": "Default",
+      "AvailableMethods": [
+        "Fastest",
+        "Default",
+        "Slowest"
+      ],
+      "SelectedFormat": "WebP",
+      "AvailableFormats": [
+        "WebP",
+        "Mp4"
+      ]
+    }
+  },
+  "DockLayout": null
+}

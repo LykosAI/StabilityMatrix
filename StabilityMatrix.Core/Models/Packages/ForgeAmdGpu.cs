@@ -58,26 +58,24 @@ public class ForgeAmdGpu(
 
     public override List<LaunchOptionDefinition> LaunchOptions =>
         base
-            .LaunchOptions.Concat(
-                [
-                    new LaunchOptionDefinition
-                    {
-                        Name = "Use ZLUDA",
-                        Description = "Use ZLUDA for CUDA acceleration on AMD GPUs",
-                        Type = LaunchOptionType.Bool,
-                        InitialValue = HardwareHelper.PreferDirectMLOrZluda(),
-                        Options = ["--use-zluda"],
-                    },
-                    new LaunchOptionDefinition
-                    {
-                        Name = "Use DirectML",
-                        Description = "Use DirectML for DirectML acceleration on compatible GPUs",
-                        Type = LaunchOptionType.Bool,
-                        InitialValue = false,
-                        Options = ["--use-directml"],
-                    },
-                ]
-            )
+            .LaunchOptions.Concat([
+                new LaunchOptionDefinition
+                {
+                    Name = "Use ZLUDA",
+                    Description = "Use ZLUDA for CUDA acceleration on AMD GPUs",
+                    Type = LaunchOptionType.Bool,
+                    InitialValue = HardwareHelper.PreferDirectMLOrZluda(),
+                    Options = ["--use-zluda"],
+                },
+                new LaunchOptionDefinition
+                {
+                    Name = "Use DirectML",
+                    Description = "Use DirectML for DirectML acceleration on compatible GPUs",
+                    Type = LaunchOptionType.Bool,
+                    InitialValue = false,
+                    Options = ["--use-directml"],
+                },
+            ])
             .ToList();
 
     public override bool InstallRequiresAdmin => true;

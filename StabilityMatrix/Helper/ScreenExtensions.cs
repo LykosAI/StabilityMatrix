@@ -10,30 +10,43 @@ public static class ScreenExtensions
     public const string User32 = "user32.dll";
     public const string Shcore = "Shcore.dll";
 
-    public static void GetDpi(this System.Windows.Forms.Screen screen, DpiType dpiType,
-        out uint dpiX, out uint dpiY)
+    public static void GetDpi(
+        this System.Windows.Forms.Screen screen,
+        DpiType dpiType,
+        out uint dpiX,
+        out uint dpiY
+    )
     {
         var pnt = new System.Drawing.Point(screen.Bounds.Left + 1, screen.Bounds.Top + 1);
-        var mon = MonitorFromPoint(pnt, 2 /*MONITOR_DEFAULTTONEAREST*/);
+        var mon = MonitorFromPoint(
+            pnt,
+            2 /*MONITOR_DEFAULTTONEAREST*/
+        );
         GetDpiForMonitor(mon, dpiType, out dpiX, out dpiY);
     }
 
     public static double GetScalingForPoint(System.Drawing.Point aPoint)
     {
-        var mon = MonitorFromPoint(aPoint, 2 /*MONITOR_DEFAULTTONEAREST*/);
-        uint dpiX, dpiY;
+        var mon = MonitorFromPoint(
+            aPoint,
+            2 /*MONITOR_DEFAULTTONEAREST*/
+        );
+        uint dpiX,
+            dpiY;
         GetDpiForMonitor(mon, DpiType.Effective, out dpiX, out dpiY);
-        return (double) dpiX / 96.0;
+        return (double)dpiX / 96.0;
     }
-
 
     [DllImport(User32)]
     private static extern IntPtr MonitorFromPoint([In] System.Drawing.Point pt, [In] uint dwFlags);
 
-
     [DllImport(Shcore)]
-    private static extern IntPtr GetDpiForMonitor([In] IntPtr hmonitor, [In] DpiType dpiType,
-        [Out] out uint dpiX, [Out] out uint dpiY);
+    private static extern IntPtr GetDpiForMonitor(
+        [In] IntPtr hmonitor,
+        [In] DpiType dpiType,
+        [Out] out uint dpiX,
+        [Out] out uint dpiY
+    );
 
     [DllImport(User32, CharSet = CharSet.Auto)]
     [ResourceExposure(ResourceScope.None)]
@@ -97,10 +110,10 @@ public static class ScreenExtensions
 
         public Rect(System.Windows.Rect r)
         {
-            left = (int) r.Left;
-            top = (int) r.Top;
-            right = (int) r.Right;
-            bottom = (int) r.Bottom;
+            left = (int)r.Left;
+            top = (int)r.Top;
+            right = (int)r.Right;
+            bottom = (int)r.Bottom;
         }
 
         public static Rect FromXywh(int x, int y, int width, int height)
@@ -149,7 +162,7 @@ public static class ScreenExtensions
             var buffer = new byte[Marshal.SizeOf(typeof(T))];
             Buffer.BlockCopy(aSrcBuffer, aOffset, buffer, 0, Marshal.SizeOf(typeof(T)));
             var handle = GCHandle.Alloc(buffer, GCHandleType.Pinned);
-            var temp = (T) Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(T));
+            var temp = (T)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(T));
             handle.Free();
             return temp;
         }
@@ -159,7 +172,7 @@ public static class ScreenExtensions
             var buffer = new byte[Marshal.SizeOf(typeof(T))];
             fs.Read(buffer, 0, Marshal.SizeOf(typeof(T)));
             var handle = GCHandle.Alloc(buffer, GCHandleType.Pinned);
-            var temp = (T) Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(T));
+            var temp = (T)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(T));
             handle.Free();
             return temp;
         }

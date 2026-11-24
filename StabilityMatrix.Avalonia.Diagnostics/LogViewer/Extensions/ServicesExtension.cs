@@ -33,17 +33,13 @@ public static class ServicesExtension
         return services;
     }
 
-    public static ILoggingBuilder AddNLogTargets(
-        this ILoggingBuilder builder,
-        IConfiguration config
-    )
+    public static ILoggingBuilder AddNLogTargets(this ILoggingBuilder builder, IConfiguration config)
     {
         LogManager
             .Setup()
             // Register custom Target
-            .SetupExtensions(
-                extensionBuilder =>
-                    extensionBuilder.RegisterTarget<DataStoreLoggerTarget>("DataStoreLogger")
+            .SetupExtensions(extensionBuilder =>
+                extensionBuilder.RegisterTarget<DataStoreLoggerTarget>("DataStoreLogger")
             );
 
         /*builder

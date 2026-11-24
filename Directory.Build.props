@@ -1,26 +1,26 @@
 ﻿<Project>
-    <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
-        <LangVersion>preview</LangVersion>
-        <Nullable>enable</Nullable>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-        <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
-        <WarningsAsErrors>CS0108</WarningsAsErrors>
-    </PropertyGroup>
-    
-    <PropertyGroup>
-        <AvaloniaVersion>11.3.7</AvaloniaVersion>
-    </PropertyGroup>
-    
-    <PropertyGroup>
-        <!-- AVLN3001: Not using the default Avalonia runtime loader so this doesn't matter -->
-        <NoWarn>$(NoWarn);AVLN3001</NoWarn>
-    </PropertyGroup>
-    
-    <PropertyGroup>
-        <!--Some bug with SDK 8.0.403 
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <LangVersion>preview</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+    <WarningsAsErrors>CS0108</WarningsAsErrors>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <AvaloniaVersion>11.3.7</AvaloniaVersion>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- AVLN3001: Not using the default Avalonia runtime loader so this doesn't matter -->
+    <NoWarn>$(NoWarn);AVLN3001</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!--Some bug with SDK 8.0.403 
         https://github.com/dotnet/sdk/issues/44026-->
-        <NoWarn>$(NoWarn);CsWinRT1028</NoWarn>
-    </PropertyGroup>
+    <NoWarn>$(NoWarn);CsWinRT1028</NoWarn>
+  </PropertyGroup>
 </Project>

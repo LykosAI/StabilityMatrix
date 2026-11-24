@@ -8,12 +8,7 @@ namespace StabilityMatrix.Avalonia.Converters;
 public class BooleanChoiceMultiConverter : IMultiValueConverter
 {
     /// <inheritdoc />
-    public object? Convert(
-        IList<object?> values,
-        Type targetType,
-        object? parameter,
-        CultureInfo culture
-    )
+    public object? Convert(IList<object?> values, Type targetType, object? parameter, CultureInfo culture)
     {
         if (values.Count < 3)
         {

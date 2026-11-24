@@ -45,7 +45,7 @@ public partial class NotificationSettingsViewModel(ISettingsManager settingsMana
             yield return new NotificationSettingsItem(settingsManager)
             {
                 Key = notificationKey,
-                Option = option
+                Option = option,
             };
         }
     }

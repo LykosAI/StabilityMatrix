@@ -1,6 +1,6 @@
 ﻿<ResourceDictionary xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <!-- ListBoxItem theme that removes ListBox visuals (i.e. for using with radiobuttons) -->
+    <!--  ListBoxItem theme that removes ListBox visuals (i.e. for using with radiobuttons)  -->
     <ControlTheme x:Key="ListBoxItemBorderlessTheme" TargetType="ListBoxItem">
         <Setter Property="Template">
             <ControlTemplate>

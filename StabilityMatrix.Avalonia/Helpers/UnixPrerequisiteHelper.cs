@@ -814,8 +814,7 @@ public class UnixPrerequisiteHelper(
 
     public string? GetGfxArchFromAmdGpuName(GpuInfo? gpu = null)
     {
-        gpu ??=
-            settingsManager.Settings.PreferredGpu
+        gpu ??= settingsManager.Settings.PreferredGpu
             ?? HardwareHelper.IterGpuInfo().FirstOrDefault(x => x is { Name: not null, IsAmd: true });
 
         if (gpu?.Name is null || !gpu.IsAmd)

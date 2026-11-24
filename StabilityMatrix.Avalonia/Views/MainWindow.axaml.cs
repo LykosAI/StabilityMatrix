@@ -358,7 +358,8 @@ public partial class MainWindow : AppWindowBase
         this.FindDescendantOfType<DialogHost>()
             ?.GetVisualDescendants()
             .OfType<BetterContentDialog>()
-            .Any(d => d.IsVisible) ?? false;
+            .Any(d => d.IsVisible)
+        ?? false;
 
     protected override void OnClosing(WindowClosingEventArgs e)
     {

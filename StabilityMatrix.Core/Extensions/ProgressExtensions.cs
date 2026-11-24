@@ -26,7 +26,7 @@ public static class ProgressExtensions
                     IsIndeterminate = true,
                     Message = setMessageAsOutput ? output.Text : null,
                     ProcessOutput = output,
-                    PrintToConsole = true
+                    PrintToConsole = true,
                 }
             );
         };

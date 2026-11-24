@@ -67,7 +67,7 @@ public class TernaryExtension : MarkupExtension
         // --- Case 2: At least one input is a binding ---
         var multiBinding = new MultiBinding
         {
-            Converter = TernaryConverter.Instance // Use a shared instance
+            Converter = TernaryConverter.Instance, // Use a shared instance
             // Mode = BindingMode.OneWay // Typically OneWay is sufficient
         };
 

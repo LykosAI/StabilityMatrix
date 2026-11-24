@@ -266,7 +266,8 @@ public partial class CheckpointsPageViewModel(
                                 file.ConnectedModelInfo?.Tags.Contains(
                                     SearchQuery.Substring(1),
                                     StringComparer.OrdinalIgnoreCase
-                                ) ?? false
+                                )
+                                ?? false
                             )
                         )
                         || (
@@ -890,8 +891,8 @@ public partial class CheckpointsPageViewModel(
 
         var newVm = dialogFactory.Get<CivitDetailsPageViewModel>(vm =>
         {
-            vm.CivitModel =
-                model ?? new CivitModel { Id = item.CheckpointFile.ConnectedModelInfo.ModelId.Value };
+            vm.CivitModel = model
+                ?? new CivitModel { Id = item.CheckpointFile.ConnectedModelInfo.ModelId.Value };
             vm.ModelIdList = allModelIds;
             vm.CurrentIndex = index;
             return vm;
@@ -1253,8 +1254,7 @@ public partial class CheckpointsPageViewModel(
 
         RefreshCategoryOptions();
 
-        SelectedCategory =
-            previouslySelectedCategory
+        SelectedCategory = previouslySelectedCategory
             ?? Categories.FirstOrDefault(x => x.Path == previouslySelectedCategory?.Path)
             ?? Categories.FirstOrDefault()
             ?? (categoriesCache.Items.Any() ? categoriesCache.Items[0] : null);
@@ -1274,8 +1274,7 @@ public partial class CheckpointsPageViewModel(
 
         Dispatcher.UIThread.Post(() =>
         {
-            SelectedCategory =
-                previouslySelectedCategory
+            SelectedCategory = previouslySelectedCategory
                 ?? Categories.FirstOrDefault(x => x.Path == previouslySelectedCategory?.Path)
                 ?? Categories.FirstOrDefault()
                 ?? (categoriesCache.Items.Any() ? categoriesCache.Items[0] : null);

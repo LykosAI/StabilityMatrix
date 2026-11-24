@@ -16,14 +16,7 @@ public class PromptValidationError : PromptError
         PromptExtraNetworkType modelType,
         int textOffset,
         int textEndOffset
-    ) =>
-        new(
-            $"Model '{modelName}' was not found locally",
-            textOffset,
-            textEndOffset,
-            modelName,
-            modelType
-        );
+    ) => new($"Model '{modelName}' was not found locally", textOffset, textEndOffset, modelName, modelType);
 
     public static PromptSyntaxError Network_InvalidWeight(int textOffset, int textEndOffset) =>
         new("Invalid network weight, could not be parsed as double", textOffset, textEndOffset);

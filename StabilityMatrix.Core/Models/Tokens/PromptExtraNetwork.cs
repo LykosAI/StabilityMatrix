@@ -2,7 +2,7 @@
 
 /// <summary>
 /// Represents an extra network token in a prompt.
-/// In format 
+/// In format
 /// </summary>
 public record PromptExtraNetwork
 {

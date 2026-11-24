@@ -24,7 +24,7 @@ public partial class CheckpointFile : ObservableObject
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private readonly IDialogFactory dialogFactory;
-    
+
     // Event for when this file is deleted
     public event EventHandler<CheckpointFile>? Deleted;
 
@@ -40,7 +40,7 @@ public partial class CheckpointFile : ObservableObject
     /// </summary>
     [ObservableProperty]
     private string title = string.Empty;
-    
+
     public string? PreviewImagePath { get; set; }
     public BitmapImage? PreviewImage { get; set; }
     public bool IsPreviewImageLoaded => PreviewImage != null;
@@ -49,16 +49,24 @@ public partial class CheckpointFile : ObservableObject
     private ConnectedModelInfo? connectedModel;
     public bool IsConnectedModel => ConnectedModel != null;
 
-    [ObservableProperty] private bool isLoading;
-    
+    [ObservableProperty]
+    private bool isLoading;
+
     public string FileName => Path.GetFileName(FilePath);
 
     public ObservableCollection<string> Badges { get; set; } = new();
 
-    private static readonly string[] SupportedCheckpointExtensions = { ".safetensors", ".pt", ".ckpt", ".pth", "bin" };
+    private static readonly string[] SupportedCheckpointExtensions =
+    {
+        ".safetensors",
+        ".pt",
+        ".ckpt",
+        ".pth",
+        "bin",
+    };
     private static readonly string[] SupportedImageExtensions = { ".png", ".jpg", ".jpeg" };
     private static readonly string[] SupportedMetadataExtensions = { ".json" };
-    
+
     public CheckpointFile(IDialogFactory dialogFactory)
     {
         this.dialogFactory = dialogFactory;
@@ -112,13 +120,14 @@ public partial class CheckpointFile : ObservableObject
     [RelayCommand]
     private async Task RenameAsync()
     {
-        var responses = await dialogFactory.ShowTextEntryDialog("Rename Model", new []
-        {
-            ("File Name", FileName)
-        });
+        var responses = await dialogFactory.ShowTextEntryDialog(
+            "Rename Model",
+            new[] { ("File Name", FileName) }
+        );
         var name = responses?.FirstOrDefault();
-        if (name == null) return;
-        
+        if (name == null)
+            return;
+
         // Rename file in OS
         try
         {
@@ -138,11 +147,12 @@ public partial class CheckpointFile : ObservableObject
     {
         ProcessRunner.OpenUrl($"https://civitai.com/models/{ConnectedModel.ModelId}");
     }
-    
+
     // Loads image from path
     private async Task LoadPreviewImage()
     {
-        if (PreviewImagePath == null) return;
+        if (PreviewImagePath == null)
+            return;
         var bytes = await File.ReadAllBytesAsync(PreviewImagePath);
         await Application.Current.Dispatcher.InvokeAsync(() =>
         {
@@ -163,24 +173,32 @@ public partial class CheckpointFile : ObservableObject
     /// - {filename}.preview.{image-extensions} (preview image)
     /// - {filename}.cm-info.json (connected model info)
     /// </summary>
-    public static IEnumerable<CheckpointFile> FromDirectoryIndex(IDialogFactory dialogFactory, string directory, SearchOption searchOption = SearchOption.TopDirectoryOnly)
+    public static IEnumerable<CheckpointFile> FromDirectoryIndex(
+        IDialogFactory dialogFactory,
+        string directory,
+        SearchOption searchOption = SearchOption.TopDirectoryOnly
+    )
     {
         // Get all files with supported extensions
         var allExtensions = SupportedCheckpointExtensions
             .Concat(SupportedImageExtensions)
             .Concat(SupportedMetadataExtensions);
 
-        var files = allExtensions.AsParallel()
-            .SelectMany(pattern => Directory.EnumerateFiles(directory, $"*{pattern}", searchOption)).ToDictionary<string, string>(Path.GetFileName);
+        var files = allExtensions
+            .AsParallel()
+            .SelectMany(pattern => Directory.EnumerateFiles(directory, $"*{pattern}", searchOption))
+            .ToDictionary<string, string>(Path.GetFileName);
 
-        foreach (var file in files.Keys.Where(k => SupportedCheckpointExtensions.Contains(Path.GetExtension(k))))
+        foreach (
+            var file in files.Keys.Where(k => SupportedCheckpointExtensions.Contains(Path.GetExtension(k)))
+        )
         {
             var checkpointFile = new CheckpointFile(dialogFactory)
             {
                 Title = Path.GetFileNameWithoutExtension(file),
                 FilePath = Path.Combine(directory, file),
             };
-            
+
             // Check for connected model info
             var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(file);
             var cmInfoPath = $"{fileNameWithoutExtension}.cm-info.json";
@@ -198,7 +216,9 @@ public partial class CheckpointFile : ObservableObject
             }
 
             // Check for preview image
-            var previewImage = SupportedImageExtensions.Select(ext => $"{fileNameWithoutExtension}.preview{ext}").FirstOrDefault(files.ContainsKey);
+            var previewImage = SupportedImageExtensions
+                .Select(ext => $"{fileNameWithoutExtension}.preview{ext}")
+                .FirstOrDefault(files.ContainsKey);
             if (previewImage != null)
             {
                 checkpointFile.PreviewImagePath = files[previewImage];
@@ -212,8 +232,12 @@ public partial class CheckpointFile : ObservableObject
     /// <summary>
     /// Index with progress reporting.
     /// </summary>
-    public static IEnumerable<CheckpointFile> FromDirectoryIndex(IDialogFactory dialogFactory, string directory, IProgress<ProgressReport> progress,
-        SearchOption searchOption = SearchOption.TopDirectoryOnly)
+    public static IEnumerable<CheckpointFile> FromDirectoryIndex(
+        IDialogFactory dialogFactory,
+        string directory,
+        IProgress<ProgressReport> progress,
+        SearchOption searchOption = SearchOption.TopDirectoryOnly
+    )
     {
         var current = 0ul;
         foreach (var checkpointFile in FromDirectoryIndex(dialogFactory, directory, searchOption))

@@ -13,18 +13,18 @@ namespace StabilityMatrix.Core.Processes;
 /// </summary>
 public readonly record struct ApcMessage
 {
-    private static readonly Logger Logger = LogManager.GetCurrentClassLogger(); 
-    
-    public const char ApcChar = (char) 0x9F;
-    public const char StChar = (char) 0x9C;
+    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
+    public const char ApcChar = (char)0x9F;
+    public const char StChar = (char)0x9C;
     public const string CustomPrefix = "[SM;";
-    
+
     [JsonPropertyName("type")]
     public required ApcType Type { get; init; }
-    
+
     [JsonPropertyName("data")]
     public required string Data { get; init; }
-    
+
     /// <summary>
     /// Attempts to extract an APC message from the given text
     /// </summary>
@@ -33,19 +33,22 @@ public readonly record struct ApcMessage
     {
         message = null;
         var startIndex = value.IndexOf(ApcChar);
-        if (startIndex == -1) return false;
-        
+        if (startIndex == -1)
+            return false;
+
         // Check the IdPrefix follows the ApcEscape
         var idIndex = value.IndexOf(CustomPrefix, startIndex + 1, StringComparison.Ordinal);
-        if (idIndex == -1) return false;
-        
+        if (idIndex == -1)
+            return false;
+
         // Get the end index (ST escape)
         var stIndex = value.IndexOf(StChar, idIndex + CustomPrefix.Length);
-        if (stIndex == -1) return false;
+        if (stIndex == -1)
+            return false;
 
         // Extract the json string (between idIndex and stIndex)
         var json = value.Substring(idIndex + CustomPrefix.Length, stIndex - idIndex - CustomPrefix.Length);
-        
+
         try
         {
             message = JsonSerializer.Deserialize<ApcMessage>(json);

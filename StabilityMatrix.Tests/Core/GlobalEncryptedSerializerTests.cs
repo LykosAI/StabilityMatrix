@@ -13,7 +13,7 @@ public class GlobalEncryptedSerializerTests
     public void Serialize_ShouldDeserializeToSameObject()
     {
         // Arrange
-        var secrets = new Secrets { LykosAccount = new LykosAccountV1Tokens("123", "456"), };
+        var secrets = new Secrets { LykosAccount = new LykosAccountV1Tokens("123", "456") };
 
         // Act
         var serialized = GlobalEncryptedSerializer.Serialize(secrets);
@@ -27,7 +27,7 @@ public class GlobalEncryptedSerializerTests
     public void SerializeV1_ShouldDeserializeToSameObject()
     {
         // Arrange
-        var secrets = new Secrets { LykosAccount = new LykosAccountV1Tokens("123", "456"), };
+        var secrets = new Secrets { LykosAccount = new LykosAccountV1Tokens("123", "456") };
 
         // Act
         var serialized = GlobalEncryptedSerializer.Serialize(secrets, GlobalEncryptedSerializer.KeyInfoV1);
@@ -41,7 +41,7 @@ public class GlobalEncryptedSerializerTests
     public void SerializeV2_ShouldDeserializeToSameObject()
     {
         // Arrange
-        var secrets = new Secrets { LykosAccount = new LykosAccountV1Tokens("123", "456"), };
+        var secrets = new Secrets { LykosAccount = new LykosAccountV1Tokens("123", "456") };
 
         // Act
         var serialized = GlobalEncryptedSerializer.Serialize(secrets, GlobalEncryptedSerializer.KeyInfoV2);
@@ -55,7 +55,7 @@ public class GlobalEncryptedSerializerTests
     public void SerializeWithNonDefaultKeyInfo_ShouldDeserializeToSameObject()
     {
         // Arrange
-        var secrets = new Secrets { LykosAccount = new LykosAccountV1Tokens("123", "456"), };
+        var secrets = new Secrets { LykosAccount = new LykosAccountV1Tokens("123", "456") };
 
         // Act
         var serialized = GlobalEncryptedSerializer.Serialize(
@@ -100,8 +100,8 @@ public class GlobalEncryptedSerializerTests
         var (encrypted, salt) = GlobalEncryptedSerializer.EncryptBytes(data, encryptPassword, keyInfo);
 
         // Assert
-        Assert.ThrowsException<CryptographicException>(
-            () => GlobalEncryptedSerializer.DecryptBytes(encrypted, salt, decryptPassword, keyInfo)
+        Assert.ThrowsException<CryptographicException>(() =>
+            GlobalEncryptedSerializer.DecryptBytes(encrypted, salt, decryptPassword, keyInfo)
         );
     }
 

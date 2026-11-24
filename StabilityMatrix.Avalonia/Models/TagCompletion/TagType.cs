@@ -14,7 +14,7 @@ public enum TagType
     Character,
     Species,
     Meta,
-    Lore
+    Lore,
 }
 
 public static class TagTypeExtensions
@@ -32,7 +32,7 @@ public static class TagTypeExtensions
             6 => TagType.Invalid,
             7 => TagType.Meta,
             8 => TagType.Lore,
-            _ => TagType.Unknown
+            _ => TagType.Unknown,
         };
     }
 }

@@ -180,64 +180,64 @@ public sealed partial class CivArchiveBrowserViewModel(
     private NamedOption<CivArchiveKindOption>? selectedKind;
 
     public IReadOnlyList<NamedOption<CivArchivePlatformOption>> AllPlatforms { get; } =
-        [
-            new("All Platforms", CivArchivePlatformOption.All),
-            new("CivitAI", CivArchivePlatformOption.Civitai),
-            new("TensorArt", CivArchivePlatformOption.Tensorart),
-            new("TensorHub", CivArchivePlatformOption.Tensorhub),
-            new("SeaArt", CivArchivePlatformOption.Seaart),
-            new("Civision", CivArchivePlatformOption.Civision),
-            new("PixAI", CivArchivePlatformOption.Pixai),
-            new("Tungsten", CivArchivePlatformOption.Tungsten),
-            new("Yodayo", CivArchivePlatformOption.Yodayo),
-            new("Moescape", CivArchivePlatformOption.Moescape),
-            new("Shakker", CivArchivePlatformOption.Shakker),
-            new("HuggingFace", CivArchivePlatformOption.Huggingface),
-            new("ModelScope", CivArchivePlatformOption.Modelscope),
-            new("ModelScope CN", CivArchivePlatformOption.ModelscopeCn),
-        ];
+    [
+        new("All Platforms", CivArchivePlatformOption.All),
+        new("CivitAI", CivArchivePlatformOption.Civitai),
+        new("TensorArt", CivArchivePlatformOption.Tensorart),
+        new("TensorHub", CivArchivePlatformOption.Tensorhub),
+        new("SeaArt", CivArchivePlatformOption.Seaart),
+        new("Civision", CivArchivePlatformOption.Civision),
+        new("PixAI", CivArchivePlatformOption.Pixai),
+        new("Tungsten", CivArchivePlatformOption.Tungsten),
+        new("Yodayo", CivArchivePlatformOption.Yodayo),
+        new("Moescape", CivArchivePlatformOption.Moescape),
+        new("Shakker", CivArchivePlatformOption.Shakker),
+        new("HuggingFace", CivArchivePlatformOption.Huggingface),
+        new("ModelScope", CivArchivePlatformOption.Modelscope),
+        new("ModelScope CN", CivArchivePlatformOption.ModelscopeCn),
+    ];
 
     public IReadOnlyList<NamedOption<CivArchiveSortOption>> AllSorts { get; } =
-        [
-            new("Top", CivArchiveSortOption.Top),
-            new("Newest", CivArchiveSortOption.Newest),
-            new("Oldest", CivArchiveSortOption.Oldest),
-            new("Relevance", CivArchiveSortOption.Relevance),
-            new("Deleted Newest", CivArchiveSortOption.DeletedNewest),
-            new("Deleted Oldest", CivArchiveSortOption.DeletedOldest),
-        ];
+    [
+        new("Top", CivArchiveSortOption.Top),
+        new("Newest", CivArchiveSortOption.Newest),
+        new("Oldest", CivArchiveSortOption.Oldest),
+        new("Relevance", CivArchiveSortOption.Relevance),
+        new("Deleted Newest", CivArchiveSortOption.DeletedNewest),
+        new("Deleted Oldest", CivArchiveSortOption.DeletedOldest),
+    ];
 
     public IReadOnlyList<NamedOption<CivArchivePeriodOption>> AllPeriods { get; } =
-        [
-            new("All", CivArchivePeriodOption.All),
-            new("Week", CivArchivePeriodOption.Week),
-            new("Month", CivArchivePeriodOption.Month),
-            new("Quarter", CivArchivePeriodOption.Quarter),
-            new("Half", CivArchivePeriodOption.Half),
-            new("Year", CivArchivePeriodOption.Year),
-        ];
+    [
+        new("All", CivArchivePeriodOption.All),
+        new("Week", CivArchivePeriodOption.Week),
+        new("Month", CivArchivePeriodOption.Month),
+        new("Quarter", CivArchivePeriodOption.Quarter),
+        new("Half", CivArchivePeriodOption.Half),
+        new("Year", CivArchivePeriodOption.Year),
+    ];
 
     public IReadOnlyList<NamedOption<CivArchiveRatingOption>> AllRatings { get; } =
-        [
-            new("Safe", CivArchiveRatingOption.Safe),
-            new("All", CivArchiveRatingOption.All),
-            new("Explicit", CivArchiveRatingOption.Explicit),
-        ];
+    [
+        new("Safe", CivArchiveRatingOption.Safe),
+        new("All", CivArchiveRatingOption.All),
+        new("Explicit", CivArchiveRatingOption.Explicit),
+    ];
 
     public IReadOnlyList<NamedOption<CivArchivePlatformStatusOption>> AllPlatformStatuses { get; } =
-        [
-            new("All", CivArchivePlatformStatusOption.All),
-            new("Available", CivArchivePlatformStatusOption.Available),
-            new("Deleted", CivArchivePlatformStatusOption.Deleted),
-        ];
+    [
+        new("All", CivArchivePlatformStatusOption.All),
+        new("Available", CivArchivePlatformStatusOption.Available),
+        new("Deleted", CivArchivePlatformStatusOption.Deleted),
+    ];
 
     public IReadOnlyList<NamedOption<CivArchiveKindOption>> AllKinds { get; } =
-        [
-            new("All", CivArchiveKindOption.All),
-            new("Version", CivArchiveKindOption.Version),
-            new("User", CivArchiveKindOption.User),
-            new("File", CivArchiveKindOption.File),
-        ];
+    [
+        new("All", CivArchiveKindOption.All),
+        new("Version", CivArchiveKindOption.Version),
+        new("User", CivArchiveKindOption.User),
+        new("File", CivArchiveKindOption.File),
+    ];
 
     public override string Header => "CivArchive";
 

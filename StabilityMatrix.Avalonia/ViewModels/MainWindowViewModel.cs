@@ -424,8 +424,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
             EventManager.Instance.OnRecommendedModelsDialogClosed();
 
-            var installedPackageNameMaybe =
-                settingsManager.PackageInstallsInProgress.FirstOrDefault()
+            var installedPackageNameMaybe = settingsManager.PackageInstallsInProgress.FirstOrDefault()
                 ?? settingsManager.Settings.InstalledPackages.FirstOrDefault()?.PackageName;
 
             analyticsHelper

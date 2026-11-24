@@ -10,5 +10,5 @@ public enum PackageDifficulty
     Expert = 4,
     Nightmare = 5,
     UltraNightmare = 6,
-    Impossible = 999
+    Impossible = 999,
 }

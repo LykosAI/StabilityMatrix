@@ -26,7 +26,11 @@ public class FileSizeType
             unitIndex++;
         }
 
-        return string.Format("{0} {1}", size.ToString("0.##", CultureInfo.InvariantCulture), sizeUnits[unitIndex]);
+        return string.Format(
+            "{0} {1}",
+            size.ToString("0.##", CultureInfo.InvariantCulture),
+            sizeUnits[unitIndex]
+        );
     }
 
     public override string ToString()

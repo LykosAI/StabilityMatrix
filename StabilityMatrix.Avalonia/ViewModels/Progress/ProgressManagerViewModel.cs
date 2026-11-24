@@ -189,10 +189,23 @@ public partial class ProgressManagerViewModel : PageViewModelBase
     [RelayCommand]
     private void MarkAllNotificationsRead() => notificationHistory.MarkAllRead();
 
+    /// <summary>
+    /// The first-run install starts without a dialog and is shown once the recommended-models
+    /// dialog closes. It registers only after its version lookup, so if the user closes that
+    /// dialog first there is nothing to show yet and the dialog goes to the next install added.
+    /// </summary>
+    private bool showDialogForNextPackageInstall;
+
     private void InstanceOnRecommendedModelsDialogClosed(object? sender, EventArgs e)
     {
         var vm = ProgressItems.OfType<PackageInstallProgressItemViewModel>().FirstOrDefault();
-        vm?.ShowProgressDialog().SafeFireAndForget();
+        if (vm is null)
+        {
+            showDialogForNextPackageInstall = true;
+            return;
+        }
+
+        vm.ShowProgressDialog().SafeFireAndForget();
     }
 
     private void InstanceOnPackageInstallProgressAdded(object? sender, IPackageModificationRunner runner)
@@ -386,7 +399,10 @@ public partial class ProgressManagerViewModel : PageViewModelBase
         var vm = new PackageInstallProgressItemViewModel(packageModificationRunner);
         ProgressItems.Add(vm);
 
-        return packageModificationRunner.ShowDialogOnStart ? vm.ShowProgressDialog() : Task.CompletedTask;
+        var showDialog = packageModificationRunner.ShowDialogOnStart || showDialogForNextPackageInstall;
+        showDialogForNextPackageInstall = false;
+
+        return showDialog ? vm.ShowProgressDialog() : Task.CompletedTask;
     }
 
     private void ShowFailedNotification(string title, string message)

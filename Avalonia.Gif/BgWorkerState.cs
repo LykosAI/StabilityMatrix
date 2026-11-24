@@ -7,6 +7,6 @@
         Running,
         Paused,
         Complete,
-        Dispose
+        Dispose,
     }
 }

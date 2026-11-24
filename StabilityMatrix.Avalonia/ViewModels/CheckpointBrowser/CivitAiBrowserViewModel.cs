@@ -390,7 +390,7 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
         if (
             HideEarlyAccessModels
             && card.CivitModel.ModelVersions != null
-            && card.CivitModel.ModelVersions.All(x => x.Availability == "EarlyAccess")
+            && card.CivitModel.ModelVersions.All(x => x.IsEarlyAccess)
         )
             return false;
 

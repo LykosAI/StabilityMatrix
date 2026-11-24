@@ -60,7 +60,7 @@ public partial class OAuthDeviceAuthViewModel(
         dialog.Buttons =
         [
             GetCommandButton(Resources.Action_CopyAndOpen, CopyCodeAndOpenUrlCommand),
-            GetCloseButton(Resources.Action_Cancel)
+            GetCloseButton(Resources.Action_Cancel),
         ];
         return dialog;
     }
@@ -159,7 +159,7 @@ public partial class OAuthDeviceAuthViewModel(
                     DeviceCode = ChallengeResult.DeviceCode,
                     Interval = ChallengeResult.Interval,
                     Timeout = ChallengeResult.ExpiresIn,
-                    CancellationToken = authenticationCts.Token
+                    CancellationToken = authenticationCts.Token,
                 }
             );
 

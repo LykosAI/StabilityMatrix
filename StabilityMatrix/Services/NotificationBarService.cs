@@ -15,19 +15,22 @@ public class NotificationBarService : SnackbarService, INotificationBarService
     {
         this.settingsManager = settingsManager;
     }
-    
+
     public void ShowStartupNotifications()
     {
-        if (settingsManager.Settings.HasSeenWelcomeNotification) 
+        if (settingsManager.Settings.HasSeenWelcomeNotification)
             return;
-        
+
         Timeout = 10000;
         var linkIcon = new SymbolIcon(SymbolRegular.Link24);
         var snackbar = ShowAsync(
             "Welcome to StabilityMatrix!",
-            "You can join our Discord server for support and feedback.", linkIcon, ControlAppearance.Info);
+            "You can join our Discord server for support and feedback.",
+            linkIcon,
+            ControlAppearance.Info
+        );
         snackbar.SafeFireAndForget();
-        
+
         settingsManager.Transaction(s => s.HasSeenWelcomeNotification = true);
     }
 }

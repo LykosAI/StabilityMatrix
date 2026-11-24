@@ -143,8 +143,8 @@ public partial class SelectModelVersionViewModel(
             LoadInstallLocations();
 
             var fileSizeBytes = value?.CivitFile.SizeKb * 1024;
-            var freeSizeBytes =
-                SystemInfo.GetDiskFreeSpaceBytes(settingsManager.ModelsDirectory) ?? long.MaxValue;
+            var freeSizeBytes = SystemInfo.GetDiskFreeSpaceBytes(settingsManager.ModelsDirectory)
+                ?? long.MaxValue;
             canImport = fileSizeBytes < freeSizeBytes;
             ImportTooltip = canImport
                 ? "Free space after download: "

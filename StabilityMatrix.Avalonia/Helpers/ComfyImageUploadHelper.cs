@@ -18,8 +18,8 @@ public static class ComfyImageUploadHelper
         CancellationToken cancellationToken
     )
     {
-        var client =
-            clientManager.Client ?? throw new InvalidOperationException("Comfy client is not connected");
+        var client = clientManager.Client
+            ?? throw new InvalidOperationException("Comfy client is not connected");
 
         try
         {

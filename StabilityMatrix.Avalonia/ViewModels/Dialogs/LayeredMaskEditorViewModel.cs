@@ -154,6 +154,7 @@ public partial class LayeredMaskEditorViewModel : LoadableViewModelBase, IDispos
         imageIndexService
             .InferenceImages.ItemsSource.Connect()
             .DeferUntilLoaded()
+            .Filter(file => !file.IsVideo) // Only stills can become image layers
             .SortBy(file => file.LastModifiedAt, SortDirection.Descending)
             .Top(50) // Limit to 50 most recent
             .Bind(LocalImages)

@@ -99,8 +99,7 @@ public static class Program
         // on macOS we use activation events so ignore this.
         // Windows registers the scheme handler with --uri, but on Linux the .desktop handler
         // invokes us with the URI as a bare positional argument (%u), so accept that form too.
-        var uriArg =
-            Args.Uri
+        var uriArg = Args.Uri
             ?? args.FirstOrDefault(a =>
                 a.StartsWith($"{UriHandler.Scheme}://", StringComparison.OrdinalIgnoreCase)
             );

@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
@@ -115,7 +115,7 @@ public partial class ModelMetadataEditorDialogViewModel(
         if (firstCheckpoint == null)
             return;
 
-        if (!firstCheckpoint.CheckpointFile.HasConnectedModel)
+        if (!firstCheckpoint.CheckpointFile.HasMetadata)
         {
             ModelName = firstCheckpoint.CheckpointFile.DisplayModelName;
             ThumbnailFilePath = GetImagePath(firstCheckpoint.CheckpointFile);
@@ -153,7 +153,7 @@ public partial class ModelMetadataEditorDialogViewModel(
 
     private string GetImagePath(LocalModelFile checkpointFile)
     {
-        return checkpointFile.HasConnectedModel
+        return checkpointFile.HasMetadata
             ? checkpointFile.GetPreviewImageFullPath(settingsManager.ModelsDirectory)
                 ?? checkpointFile.ConnectedModelInfo?.ThumbnailImageUrl
                 ?? Assets.NoImage.ToString()

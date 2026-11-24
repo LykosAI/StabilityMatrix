@@ -12,6 +12,7 @@ using DynamicData.Binding;
 using Injectio.Attributes;
 using Microsoft.Extensions.Logging;
 using Refit;
+using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Api;
@@ -101,13 +102,12 @@ public partial class RecommendedModelsViewModel : ContentDialogViewModelBase
                 .Select(model =>
                 {
                     // Find the first non-Turbo/Lightning version, or default to the first version if none match
-                    var suitableVersion =
-                        model.ModelVersions?.FirstOrDefault(x =>
-                            !x.BaseModel.Contains("Turbo", StringComparison.OrdinalIgnoreCase)
-                            && !x.BaseModel.Contains("Lightning", StringComparison.OrdinalIgnoreCase)
-                            && x.Files != null
-                            && x.Files.Any(f => f.Type.IsModelWeights()) // Ensure there's a model file
-                        )
+                    var suitableVersion = model.ModelVersions?.FirstOrDefault(x =>
+                        !x.BaseModel.Contains("Turbo", StringComparison.OrdinalIgnoreCase)
+                        && !x.BaseModel.Contains("Lightning", StringComparison.OrdinalIgnoreCase)
+                        && x.Files != null
+                        && x.Files.Any(f => f.Type.IsModelWeights()) // Ensure there's a model file
+                    )
                         ?? model.ModelVersions?.FirstOrDefault(x =>
                             x.Files != null && x.Files.Any(f => f.Type.IsModelWeights())
                         );
@@ -180,10 +180,10 @@ public partial class RecommendedModelsViewModel : ContentDialogViewModelBase
         foreach (var model in selectedModels)
         {
             // Get latest version file that is a Model type and marked primary, or fallback to first model file
-            var modelFile =
-                model.ModelVersion.Files?.FirstOrDefault(f =>
-                    f is { IsPrimary: true } && f.Type.IsModelWeights()
-                ) ?? model.ModelVersion.Files?.FirstOrDefault(f => f is not null && f.Type.IsModelWeights());
+            var modelFile = model.ModelVersion.Files?.FirstOrDefault(f =>
+                f is { IsPrimary: true } && f.Type.IsModelWeights()
+            )
+                ?? model.ModelVersion.Files?.FirstOrDefault(f => f is not null && f.Type.IsModelWeights());
 
             if (modelFile is null)
             {
@@ -203,14 +203,21 @@ public partial class RecommendedModelsViewModel : ContentDialogViewModelBase
                     model.CivitModel.Type.ConvertTo<SharedFolderType>().GetStringValue()
                 );
 
-                await modelImportService.DoImport(
+                var downloadStarted = await modelImportService.DoImport(
                     model.CivitModel,
                     downloadDirectory,
                     model.ModelVersion,
-                    modelFile
+                    modelFile,
+                    // Multi-model batch: skip already-installed files instead of prompting per file
+                    duplicateHandling: DuplicateDownloadHandling.Skip
                 );
-                successCount++;
-                model.IsSelected = false; // De-select after successful import start
+
+                if (downloadStarted)
+                {
+                    successCount++;
+                }
+
+                model.IsSelected = false; // De-select after import start (or already-installed skip)
             }
             catch (Exception ex)
             {

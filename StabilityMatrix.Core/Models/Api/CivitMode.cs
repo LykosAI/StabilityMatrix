@@ -6,5 +6,5 @@ namespace StabilityMatrix.Core.Models.Api;
 public enum CivitMode
 {
     Archived,
-    TakenDown
+    TakenDown,
 }

@@ -38,8 +38,8 @@ public class ItemsRepeaterArrangeAnimation : AvaloniaObject
 
     private static void CreateAnimation(Visual item)
     {
-        var compositionVisual =
-            ElementComposition.GetElementVisual(item) ?? throw new NullReferenceException();
+        var compositionVisual = ElementComposition.GetElementVisual(item)
+            ?? throw new NullReferenceException();
 
         if (compositionVisual.ImplicitAnimations is { } animations && animations.HasKey("Offset"))
         {
@@ -62,24 +62,15 @@ public class ItemsRepeaterArrangeAnimation : AvaloniaObject
 
     private static void OnElementPrepared(object? sender, ItemsRepeaterElementPreparedEventArgs e)
     {
-        if (
-            sender is not ItemsRepeater itemsRepeater
-            || !GetEnableItemsArrangeAnimation(itemsRepeater)
-        )
+        if (sender is not ItemsRepeater itemsRepeater || !GetEnableItemsArrangeAnimation(itemsRepeater))
             return;
 
         CreateAnimation(itemsRepeater);
     }
 
-    private static void OnElementIndexChanged(
-        object? sender,
-        ItemsRepeaterElementIndexChangedEventArgs e
-    )
+    private static void OnElementIndexChanged(object? sender, ItemsRepeaterElementIndexChangedEventArgs e)
     {
-        if (
-            sender is not ItemsRepeater itemsRepeater
-            || !GetEnableItemsArrangeAnimation(itemsRepeater)
-        )
+        if (sender is not ItemsRepeater itemsRepeater || !GetEnableItemsArrangeAnimation(itemsRepeater))
             return;
 
         CreateAnimation(itemsRepeater);

@@ -29,6 +29,7 @@ internal enum Win32FileAttribute : uint
     AttributeUnpinned = 0x100000U,
     AttributeRecallOnDataAccess = 0x400000U,
     FlagOpenNoRecall = 0x100000U,
+
     /// <summary>
     /// Normal reparse point processing will not occur; CreateFile will attempt to open the reparse point. When a file is opened, a file handle is returned,
     /// whether or not the filter that controls the reparse point is operational.
@@ -38,6 +39,7 @@ internal enum Win32FileAttribute : uint
     FlagOpenReparsePoint = 0x200000U,
     FlagSessionAware = 0x800000U,
     FlagPosixSemantics = 0x1000000U,
+
     /// <summary>
     /// You must set this flag to obtain a handle to a directory. A directory handle can be passed to some functions instead of a file handle.
     /// </summary>
@@ -47,5 +49,5 @@ internal enum Win32FileAttribute : uint
     FlagRandomAccess = 0x10000000U,
     FlagNoBuffering = 0x20000000U,
     FlagOverlapped = 0x40000000U,
-    FlagWriteThrough = 0x80000000U
+    FlagWriteThrough = 0x80000000U,
 }

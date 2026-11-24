@@ -26,7 +26,7 @@ public class LaunchOptionConverter : IValueConverter
             }
             return double.TryParse(value.ToString(), out var doubleValue) ? doubleValue : 0;
         }
-        
+
         if (targetType == typeof(int?))
         {
             if (value == null)

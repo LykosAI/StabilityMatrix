@@ -45,6 +45,11 @@ public partial class ImageFolderCardViewModel : DisposableViewModelBase
     private readonly ISettingsManager settingsManager;
     private readonly INotificationService notificationService;
     private readonly IServiceManager<ViewModelBase> vmFactory;
+    private readonly IVideoThumbnailService videoThumbnailService;
+    private readonly IVideoPlaybackService videoPlaybackService;
+
+    // Caps concurrent poster generation so a folder full of clips doesn't fan out into N ffmpeg runs.
+    private static readonly SemaphoreSlim VideoThumbnailLimiter = new(2);
 
     [ObservableProperty]
     private string? searchQuery;
@@ -63,7 +68,9 @@ public partial class ImageFolderCardViewModel : DisposableViewModelBase
         IImageIndexService imageIndexService,
         ISettingsManager settingsManager,
         INotificationService notificationService,
-        IServiceManager<ViewModelBase> vmFactory
+        IServiceManager<ViewModelBase> vmFactory,
+        IVideoThumbnailService videoThumbnailService,
+        IVideoPlaybackService videoPlaybackService
     )
     {
         this.logger = logger;
@@ -71,6 +78,8 @@ public partial class ImageFolderCardViewModel : DisposableViewModelBase
         this.settingsManager = settingsManager;
         this.notificationService = notificationService;
         this.vmFactory = vmFactory;
+        this.videoThumbnailService = videoThumbnailService;
+        this.videoPlaybackService = videoPlaybackService;
 
         var searcher = new ImageSearcher();
 
@@ -89,6 +98,25 @@ public partial class ImageFolderCardViewModel : DisposableViewModelBase
             .Bind(LocalImages)
             .ObserveOn(SynchronizationContext.Current)
             .Subscribe();
+
+        // Videos indexed without a poster frame get one generated in the background and are re-published
+        // so their card picks it up.
+        AddDisposable(
+            imageIndexService
+                .InferenceImages.ItemsSource.Connect()
+                .WhereReasonsAre(ChangeReason.Add)
+                .Filter(file => file.IsVideo && file.ThumbnailPath is null)
+                .Subscribe(changes =>
+                {
+                    foreach (var change in changes)
+                    {
+                        BackfillVideoThumbnailAsync(change.Current)
+                            .SafeFireAndForget(ex =>
+                                logger.LogWarning(ex, "Failed to generate a video thumbnail")
+                            );
+                    }
+                })
+        );
 
         AddDisposable(
             settingsManager.RelayPropertyFor(
@@ -168,6 +196,27 @@ public partial class ImageFolderCardViewModel : DisposableViewModelBase
         return imageFile;
     }
 
+    private async Task BackfillVideoThumbnailAsync(LocalImageFile file)
+    {
+        await VideoThumbnailLimiter.WaitAsync();
+        try
+        {
+            if (!File.Exists(file.AbsolutePath))
+                return;
+
+            if (await videoThumbnailService.GetOrCreateThumbnailAsync(file.AbsolutePath) is { } thumbnailPath)
+            {
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                    imageIndexService.InferenceImages.Add(file with { ThumbnailPath = thumbnailPath })
+                );
+            }
+        }
+        finally
+        {
+            VideoThumbnailLimiter.Release();
+        }
+    }
+
     /// <summary>
     /// Handles image clicks to show preview
     /// </summary>
@@ -176,6 +225,13 @@ public partial class ImageFolderCardViewModel : DisposableViewModelBase
     {
         if (GetImagePathIfExists(item) is not { } imageFile)
         {
+            return;
+        }
+
+        // In-app playback needs ffmpeg; without it the system player is the next best thing.
+        if (item.IsVideo && !await videoPlaybackService.EnsureAvailableAsync())
+        {
+            ProcessRunner.OpenUrl(imageFile.FullPath);
             return;
         }
 

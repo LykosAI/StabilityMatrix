@@ -4,5 +4,6 @@ public enum ImageSourceTemplateType
 {
     Default,
     Image,
-    WebpAnimation
+    WebpAnimation,
+    Video,
 }

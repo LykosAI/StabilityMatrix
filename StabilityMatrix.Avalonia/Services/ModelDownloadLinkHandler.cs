@@ -1,4 +1,5 @@
 ﻿using System.Web;
+using AsyncAwaitBestPractices;
 using Avalonia.Controls.Notifications;
 using Avalonia.Threading;
 using Injectio.Attributes;
@@ -45,6 +46,16 @@ public class ModelDownloadLinkHandler(
     }
 
     private void UriReceivedHandler(Uri receivedUri)
+    {
+        // Async flow so the subscriber thread is never blocked — the duplicate-download
+        // prompt can keep a DoImport pending on user input for arbitrarily long
+        HandleUriReceivedAsync(receivedUri)
+            .SafeFireAndForget(ex =>
+                logger.LogError(ex, "ModelDownloadLinkHandler: Error handling URI {Uri}", receivedUri)
+            );
+    }
+
+    private async Task HandleUriReceivedAsync(Uri receivedUri)
     {
         if (!receivedUri.Host.Equals(DownloadCivitModel, StringComparison.OrdinalIgnoreCase))
             return;
@@ -100,9 +111,7 @@ public class ModelDownloadLinkHandler(
             )
         );
 
-        var modelTask = civitApi.GetModelById(modelId);
-        modelTask.Wait();
-        var model = modelTask.Result;
+        var model = await civitApi.GetModelById(modelId);
 
         var useModelVersion = int.TryParse(modelVersionIdStr, out var modelVersionId);
 
@@ -140,8 +149,7 @@ public class ModelDownloadLinkHandler(
         {
             // Resolve directly by file id. Fall back to scanning other versions in case the
             // supplied modelVersionId doesn't line up with where the file actually lives.
-            selectedFile =
-                modelVersion.Files?.FirstOrDefault(x => x.Id == fileId!.Value)
+            selectedFile = modelVersion.Files?.FirstOrDefault(x => x.Id == fileId!.Value)
                 ?? model
                     .ModelVersions?.SelectMany(v => v.Files ?? Enumerable.Empty<CivitFile>())
                     .FirstOrDefault(f => f.Id == fileId!.Value);
@@ -149,10 +157,10 @@ public class ModelDownloadLinkHandler(
             // Re-align modelVersion if the file actually belongs to a different version.
             if (selectedFile is not null && modelVersion.Files?.Any(f => f.Id == selectedFile.Id) != true)
             {
-                modelVersion =
-                    model.ModelVersions?.FirstOrDefault(v =>
-                        v.Files?.Any(f => f.Id == selectedFile.Id) == true
-                    ) ?? modelVersion;
+                modelVersion = model.ModelVersions?.FirstOrDefault(v =>
+                    v.Files?.Any(f => f.Id == selectedFile.Id) == true
+                )
+                    ?? modelVersion;
             }
         }
         else
@@ -224,16 +232,18 @@ public class ModelDownloadLinkHandler(
                 .GetStringValue()
         );
 
-        var importTask = modelImportService.DoImport(
+        var downloadStarted = await modelImportService.DoImport(
             model,
             downloadDirectory,
             selectedVersion: modelVersion,
             selectedFile: selectedFile
         );
-        importTask.Wait();
 
-        Dispatcher.UIThread.Post(() =>
-            notificationService.Show("Download Started", $"Downloading {selectedFile.Name}")
-        );
+        if (downloadStarted)
+        {
+            Dispatcher.UIThread.Post(() =>
+                notificationService.Show("Download Started", $"Downloading {selectedFile.Name}")
+            );
+        }
     }
 }

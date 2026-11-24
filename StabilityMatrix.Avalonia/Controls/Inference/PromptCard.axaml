@@ -5,6 +5,7 @@
     xmlns:avaloniaEdit="https://github.com/avaloniaui/avaloniaedit"
     xmlns:behaviors="clr-namespace:StabilityMatrix.Avalonia.Behaviors"
     xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
+    xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
     xmlns:fluent="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
     xmlns:i="clr-namespace:Avalonia.Xaml.Interactivity;assembly=Avalonia.Xaml.Interactivity"
     xmlns:iconExt="clr-namespace:FluentIcons.Avalonia.Fluent.MarkupExtensions;assembly=FluentIcons.Avalonia.Fluent"
@@ -152,10 +153,21 @@
                                                     Height="34"
                                                     Margin="0,0,8,0"
                                                     HorizontalAlignment="Stretch"
-                                                    SelectedIndex="0">
-                                                    <controls:BetterComboBox.Items>
-                                                        <ComboBoxItem Content="Spark" />
-                                                    </controls:BetterComboBox.Items>
+                                                    ItemsSource="{Binding AmplifierModels}"
+                                                    SelectedItem="{Binding SelectedAmplifierModel}">
+                                                    <controls:BetterComboBox.Resources>
+                                                        <converters:EnumStringConverter x:Key="EnumStringConverter" />
+                                                    </controls:BetterComboBox.Resources>
+                                                    <controls:BetterComboBox.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <TextBlock Text="{Binding ., Converter={StaticResource EnumStringConverter}}" />
+                                                        </DataTemplate>
+                                                    </controls:BetterComboBox.ItemTemplate>
+                                                    <controls:BetterComboBox.SelectionBoxItemTemplate>
+                                                        <DataTemplate>
+                                                            <TextBlock Text="{Binding ., Converter={StaticResource EnumStringConverter}}" />
+                                                        </DataTemplate>
+                                                    </controls:BetterComboBox.SelectionBoxItemTemplate>
                                                 </controls:BetterComboBox>
 
                                                 <TextBlock
@@ -422,7 +434,7 @@
                                             IsEnabled="{Binding IsAutoCompletionEnabled}"
                                             TokenizerProvider="{Binding TokenizerProvider}" />
                                         <behaviors:TextEditorWeightAdjustmentBehavior TokenizerProvider="{Binding TokenizerProvider}" />
-                                        <behaviors:TextEditorToolTipBehavior IsEnabled="False" TokenizerProvider="{Binding TokenizerProvider}" />
+                                        <behaviors:TextEditorDiagnosticsBehavior DiagnosticsProvider="{Binding PromptDiagnostics}" />
                                     </i:Interaction.Behaviors>
                                 </avaloniaEdit:TextEditor>
 
@@ -467,7 +479,7 @@
                                             IsEnabled="{Binding IsAutoCompletionEnabled}"
                                             TokenizerProvider="{Binding TokenizerProvider}" />
                                         <behaviors:TextEditorWeightAdjustmentBehavior TokenizerProvider="{Binding TokenizerProvider}" />
-                                        <behaviors:TextEditorToolTipBehavior IsEnabled="False" TokenizerProvider="{Binding TokenizerProvider}" />
+                                        <behaviors:TextEditorDiagnosticsBehavior DiagnosticsProvider="{Binding NegativePromptDiagnostics}" />
                                     </i:Interaction.Behaviors>
                                 </avaloniaEdit:TextEditor>
 
@@ -514,7 +526,6 @@
                                             CompletionProvider="{Binding CompletionProvider}"
                                             IsEnabled="{Binding IsAutoCompletionEnabled}"
                                             TokenizerProvider="{Binding TokenizerProvider}" />
-                                        <behaviors:TextEditorToolTipBehavior IsEnabled="False" TokenizerProvider="{Binding TokenizerProvider}" />
                                     </i:Interaction.Behaviors>
                                 </avaloniaEdit:TextEditor>
 

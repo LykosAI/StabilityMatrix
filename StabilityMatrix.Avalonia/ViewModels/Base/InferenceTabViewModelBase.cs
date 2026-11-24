@@ -14,10 +14,7 @@ using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
-using FluentAvalonia.UI.Media.Animation;
-using Microsoft.Extensions.DependencyInjection;
 using NLog;
-using StabilityMatrix.Avalonia.Animations;
 using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.Inference;
@@ -97,20 +94,36 @@ public abstract partial class InferenceTabViewModelBase
 
     protected async Task<ViewState> SaveViewState()
     {
+        return await TrySaveViewStateAsync()
+            ?? throw new InvalidOperationException(
+                "SaveViewStateRequested event handler did not set the StateTask property"
+            );
+    }
+
+    /// <summary>
+    /// Saves the current view state, or returns null when no view is attached to provide one.
+    /// </summary>
+    public async Task<ViewState?> TrySaveViewStateAsync()
+    {
         var eventArgs = new SaveViewStateEventArgs();
         saveViewStateRequestedEventManager?.RaiseEvent(this, eventArgs, nameof(SaveViewStateRequested));
 
         if (eventArgs.StateTask is not { } stateTask)
         {
-            throw new InvalidOperationException(
-                "SaveViewStateRequested event handler did not set the StateTask property"
-            );
+            return null;
         }
 
         return await stateTask;
     }
 
     #endregion
+
+    /// <summary>
+    /// View state loaded from a project file, waiting for a view to attach and consume it.
+    /// Set when opening a project whose file carries a saved dock layout.
+    /// </summary>
+    [JsonIgnore]
+    public ViewState? PendingViewState { get; set; }
 
     protected InferenceTabViewModelBase(INotificationService notificationService)
     {
@@ -120,13 +133,7 @@ public abstract partial class InferenceTabViewModelBase
     [RelayCommand]
     private void RestoreDefaultViewState()
     {
-        // ResetViewState();
-        // TODO: Dock reset not working, using this hack for now to get a new view
-
-        var navService = App.Services.GetRequiredService<INavigationService<MainWindowViewModel>>();
-        navService.NavigateTo<PackageManagerViewModel>(new SuppressNavigationTransitionInfo());
-        ((IPersistentViewProvider)this).AttachedPersistentView = null;
-        navService.NavigateTo<InferenceViewModel>(new BetterEntranceNavigationTransition());
+        ResetViewState();
     }
 
     [RelayCommand]

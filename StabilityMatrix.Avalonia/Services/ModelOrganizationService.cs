@@ -36,7 +36,7 @@ public class ModelOrganizationService
     )
     {
         var effectiveTemplate = string.IsNullOrWhiteSpace(template)
-            ? FileNameFormat.DefaultModelBrowserTemplate
+            ? FileNameFormat.DefaultOrganizationTemplate
             : template.Trim();
 
         var provider = new FileNameFormatProvider();
@@ -265,22 +265,36 @@ public class ModelOrganizationService
         var sourcePath = model.GetFullPath(modelsRoot);
         if (!File.Exists(sourcePath))
         {
-            return CreateSkippedItem(model, sourcePath, "Model file no longer exists.");
+            return CreateSkippedItem(
+                model,
+                sourcePath,
+                "Model file no longer exists.",
+                ModelOrganizationSkipReason.MissingFile
+            );
         }
 
-        if (!model.HasConnectedModel)
+        if (!model.HasMetadata)
         {
             return CreateSkippedItem(
                 model,
                 sourcePath,
-                "Connected metadata is required to organize this file."
+                "Connected metadata is required to organize this file.",
+                ModelOrganizationSkipReason.MissingMetadata
             );
         }
 
         var provider = new FileNameFormatProvider { LocalModelFile = model };
-        if (!TryRenderRelativeTarget(provider, template, out var renderedTarget, out var renderError))
+        if (
+            !TryRenderRelativeTarget(
+                provider,
+                template,
+                out var renderedTarget,
+                out var renderError,
+                out var renderSkipReason
+            )
+        )
         {
-            return CreateSkippedItem(model, sourcePath, renderError);
+            return CreateSkippedItem(model, sourcePath, renderError, renderSkipReason);
         }
 
         if (
@@ -294,7 +308,7 @@ public class ModelOrganizationService
             )
         )
         {
-            return CreateSkippedItem(model, sourcePath, pathError);
+            return CreateSkippedItem(model, sourcePath, pathError, ModelOrganizationSkipReason.InvalidPath);
         }
 
         var fileMoves = BuildFileMoves(sourcePath, targetPath!);
@@ -324,7 +338,8 @@ public class ModelOrganizationService
     private static ModelOrganizationPreviewItem CreateSkippedItem(
         LocalModelFile model,
         string sourcePath,
-        string? reason
+        string? reason,
+        ModelOrganizationSkipReason skipReason
     )
     {
         return new ModelOrganizationPreviewItem
@@ -333,6 +348,7 @@ public class ModelOrganizationService
             SourcePath = sourcePath,
             Status = ModelOrganizationPreviewStatus.Skipped,
             Reason = reason,
+            SkipReason = skipReason,
         };
     }
 
@@ -340,7 +356,8 @@ public class ModelOrganizationService
         FileNameFormatProvider provider,
         string template,
         out string? renderedTarget,
-        out string? error
+        out string? error,
+        out ModelOrganizationSkipReason skipReason
     )
     {
         var builder = new StringBuilder();
@@ -359,6 +376,7 @@ public class ModelOrganizationService
             {
                 renderedTarget = null;
                 error = $"Variable '{variableName}' is not supported for organizing local files.";
+                skipReason = ModelOrganizationSkipReason.UnsupportedVariable;
                 return false;
             }
 
@@ -368,6 +386,8 @@ public class ModelOrganizationService
             )
             {
                 renderedTarget = null;
+                error ??= $"Variable '{variableName}' is not available for this file.";
+                skipReason = ModelOrganizationSkipReason.VariableUnavailable;
                 return false;
             }
 
@@ -384,10 +404,12 @@ public class ModelOrganizationService
         if (string.IsNullOrWhiteSpace(renderedTarget))
         {
             error = "The naming pattern resolved to an empty path.";
+            skipReason = ModelOrganizationSkipReason.InvalidPath;
             return false;
         }
 
         error = null;
+        skipReason = ModelOrganizationSkipReason.None;
         return true;
     }
 

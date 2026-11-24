@@ -29,15 +29,16 @@ public class ComfyClient : InferenceClientBase
     private readonly IComfyApi comfyApi;
     private bool isDisposed;
 
-    private readonly JsonSerializerOptions jsonSerializerOptions =
+    /// <summary>Options prompts and websocket messages are (de)serialized with.</summary>
+    internal static JsonSerializerOptions SerializerOptions { get; } =
         new()
         {
             PropertyNamingPolicy = JsonNamingPolicies.SnakeCaseLower,
             Converters =
             {
                 new NodeConnectionBaseJsonConverter(),
-                new OneOfJsonConverter<string, StringNodeConnection>()
-            }
+                new OneOfJsonConverter<string, StringNodeConnection>(),
+            },
         };
 
     // ReSharper disable once MemberCanBePrivate.Global
@@ -99,10 +100,7 @@ public class ComfyClient : InferenceClientBase
     {
         comfyApi = apiFactory.CreateRefitClient<IComfyApi>(
             baseAddress,
-            new RefitSettings
-            {
-                ContentSerializer = new SystemTextJsonContentSerializer(jsonSerializerOptions),
-            }
+            new RefitSettings { ContentSerializer = new SystemTextJsonContentSerializer(SerializerOptions) }
         );
         BaseAddress = baseAddress;
 
@@ -111,20 +109,20 @@ public class ComfyClient : InferenceClientBase
         {
             Scheme = "ws",
             Path = "/ws",
-            Query = $"clientId={ClientId}"
+            Query = $"clientId={ClientId}",
         }.Uri;
 
         webSocketClient = new WebsocketClient(wsUri)
         {
             Name = nameof(ComfyClient),
-            ReconnectTimeout = TimeSpan.FromSeconds(30)
+            ReconnectTimeout = TimeSpan.FromSeconds(30),
         };
 
-        webSocketClient.DisconnectionHappened.Subscribe(
-            info => Logger.Info("Websocket Disconnected, ({Type})", info.Type)
+        webSocketClient.DisconnectionHappened.Subscribe(info =>
+            Logger.Info(info.Exception, "Websocket Disconnected, ({Type})", info.Type)
         );
-        webSocketClient.ReconnectionHappened.Subscribe(
-            info => Logger.Info("Websocket Reconnected, ({Type})", info.Type)
+        webSocketClient.ReconnectionHappened.Subscribe(info =>
+            Logger.Info("Websocket Reconnected, ({Type})", info.Type)
         );
 
         webSocketClient.MessageReceived.Subscribe(OnMessageReceived);
@@ -132,28 +130,42 @@ public class ComfyClient : InferenceClientBase
 
     private void OnMessageReceived(ResponseMessage message)
     {
-        switch (message.MessageType)
+        // An exception escaping this handler ends the MessageReceived subscription for good,
+        // so one unexpected message would stop all further progress and results from arriving.
+        try
         {
-            case WebSocketMessageType.Text:
-                HandleTextMessage(message.Text);
-                break;
-            case WebSocketMessageType.Binary:
-                HandleBinaryMessage(message.Binary);
-                break;
-            case WebSocketMessageType.Close:
-                Logger.Trace("Received ws close message: {Text}", message.Text);
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(message));
+            switch (message.MessageType)
+            {
+                case WebSocketMessageType.Text:
+                    HandleTextMessage(message.Text);
+                    break;
+                case WebSocketMessageType.Binary:
+                    HandleBinaryMessage(message.Binary);
+                    break;
+                case WebSocketMessageType.Close:
+                    Logger.Trace("Received ws close message: {Text}", message.Text);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(message));
+            }
+        }
+        catch (Exception e)
+        {
+            Logger.Error(
+                e,
+                "Failed to handle websocket message ({Type}): {Text}",
+                message.MessageType,
+                message.Text
+            );
         }
     }
 
-    private void HandleTextMessage(string text)
+    internal void HandleTextMessage(string text)
     {
         ComfyWebSocketResponse? json;
         try
         {
-            json = JsonSerializer.Deserialize<ComfyWebSocketResponse>(text, jsonSerializerOptions);
+            json = JsonSerializer.Deserialize<ComfyWebSocketResponse>(text, SerializerOptions);
         }
         catch (JsonException e)
         {
@@ -171,7 +183,7 @@ public class ComfyClient : InferenceClientBase
 
         if (json.Type == ComfyWebSocketResponseType.Executing)
         {
-            var executingData = json.GetDataAsType<ComfyWebSocketExecutingData>(jsonSerializerOptions);
+            var executingData = json.GetDataAsType<ComfyWebSocketExecutingData>(SerializerOptions);
             if (executingData?.PromptId is null)
             {
                 Logger.Warn($"Could not parse executing data {json.Data}, skipping");
@@ -206,7 +218,7 @@ public class ComfyClient : InferenceClientBase
         }
         else if (json.Type == ComfyWebSocketResponseType.Status)
         {
-            var statusData = json.GetDataAsType<ComfyWebSocketStatusData>(jsonSerializerOptions);
+            var statusData = json.GetDataAsType<ComfyWebSocketStatusData>(SerializerOptions);
             if (statusData is null)
             {
                 Logger.Warn($"Could not parse status data {json.Data}, skipping");
@@ -217,7 +229,7 @@ public class ComfyClient : InferenceClientBase
         }
         else if (json.Type == ComfyWebSocketResponseType.Progress)
         {
-            var progressData = json.GetDataAsType<ComfyWebSocketProgressData>(jsonSerializerOptions);
+            var progressData = json.GetDataAsType<ComfyWebSocketProgressData>(SerializerOptions);
             if (progressData is null)
             {
                 Logger.Warn($"Could not parse progress data {json.Data}, skipping");
@@ -231,10 +243,7 @@ public class ComfyClient : InferenceClientBase
         }
         else if (json.Type == ComfyWebSocketResponseType.ExecutionError)
         {
-            if (
-                json.GetDataAsType<ComfyWebSocketExecutionErrorData>(jsonSerializerOptions)
-                is not { } errorData
-            )
+            if (json.GetDataAsType<ComfyWebSocketExecutionErrorData>(SerializerOptions) is not { } errorData)
             {
                 Logger.Warn($"Could not parse ExecutionError data {json.Data}, skipping");
                 return;
@@ -254,10 +263,50 @@ public class ComfyClient : InferenceClientBase
                 Logger.Warn($"Could not find task for prompt {errorData.PromptId}, skipping");
             }
         }
-        else
+        else if (
+            json.Type
+            is ComfyWebSocketResponseType.ExecutionStart
+                or ComfyWebSocketResponseType.ExecutionCached
+                or ComfyWebSocketResponseType.Executed
+                or ComfyWebSocketResponseType.ExecutionSuccess
+                or ComfyWebSocketResponseType.ProgressState
+        )
         {
-            Logger.Warn($"Unknown message type {json.Type} ({json.Data}), skipping");
+            // Standard ComfyUI messages this client doesn't use
         }
+        else if (json.Type == ComfyWebSocketResponseType.ExecutionInterrupted)
+        {
+            // Kept at Debug to help diagnose reports of generations that stopped
+            Logger.Debug(
+                "Execution interrupted (PromptId = {PromptId}, NodeId = {NodeId})",
+                json.Data["prompt_id"]?.ToString(),
+                json.Data["node_id"]?.ToString()
+            );
+        }
+        else if (Logger.IsTraceEnabled)
+        {
+            // Includes custom node broadcasts (e.g. resource monitors) which can arrive every second,
+            // full message content is already logged at Trace above
+            Logger.Trace(
+                "Skipping unhandled message type {Type}",
+                GetRawMessageType(text) ?? json.Type.ToString()
+            );
+        }
+    }
+
+    /// <summary>
+    /// Returns the "type" string of a websocket message as sent, since types this client
+    /// doesn't know (such as custom node broadcasts) all deserialize to
+    /// <see cref="ComfyWebSocketResponseType.Unknown"/>.
+    /// </summary>
+    private static string? GetRawMessageType(string text)
+    {
+        using var document = JsonDocument.Parse(text);
+        return
+            document.RootElement.TryGetProperty("type", out var type)
+            && type.ValueKind == JsonValueKind.String
+            ? type.GetString()
+            : null;
     }
 
     /// <summary>
@@ -287,7 +336,7 @@ public class ComfyClient : InferenceClientBase
             Array.Reverse(typeBytes);
         }*/
 
-        PreviewImageReceived?.Invoke(this, new ComfyWebSocketImageData { ImageBytes = data[8..], });
+        PreviewImageReceived?.Invoke(this, new ComfyWebSocketImageData { ImageBytes = data[8..] });
     }
 
     public override async Task ConnectAsync(CancellationToken cancellationToken = default)
@@ -331,15 +380,53 @@ public class ComfyClient : InferenceClientBase
         CancellationToken cancellationToken = default
     )
     {
-        var request = new ComfyPromptRequest { ClientId = ClientId, Prompt = nodes };
-        var result = await comfyApi.PostPrompt(request, cancellationToken).ConfigureAwait(false);
+        // Registered before posting, since ComfyUI can send this prompt's websocket messages
+        // before the /prompt response arrives, such as when every node is cached.
+        var request = new ComfyPromptRequest
+        {
+            ClientId = ClientId,
+            PromptId = Guid.NewGuid().ToString(),
+            Prompt = nodes,
+        };
+        var task = RegisterPromptTask(request.PromptId);
 
-        // Add task to dictionary and set it as the current task
-        var task = new ComfyTask(result.PromptId);
-        PromptTasks.TryAdd(result.PromptId, task);
+        ComfyPromptResponse result;
+        try
+        {
+            result = await comfyApi.PostPrompt(request, cancellationToken).ConfigureAwait(false);
+        }
+        catch
+        {
+            UnregisterPromptTask(task);
+            throw;
+        }
+
+        if (result.PromptId == task.Id)
+        {
+            return task;
+        }
+
+        // The server assigned its own id
+        UnregisterPromptTask(task);
+        return RegisterPromptTask(result.PromptId);
+    }
+
+    private ComfyTask RegisterPromptTask(string promptId)
+    {
+        var task = new ComfyTask(promptId);
+        PromptTasks[promptId] = task;
         currentPromptTask = task;
-
         return task;
+    }
+
+    private void UnregisterPromptTask(ComfyTask task)
+    {
+        PromptTasks.TryRemove(task.Id, out _);
+        if (currentPromptTask == task)
+        {
+            currentPromptTask = null;
+        }
+        task.Dispose();
     }
 
     public async Task InterruptPromptAsync(CancellationToken cancellationToken = default)

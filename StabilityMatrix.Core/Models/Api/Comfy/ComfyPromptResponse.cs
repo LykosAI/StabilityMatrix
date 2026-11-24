@@ -10,7 +10,7 @@ public class ComfyPromptResponse
 
     [JsonPropertyName("number")]
     public required int Number { get; set; }
-    
+
     [JsonPropertyName("node_errors")]
     public required Dictionary<string, object?> NodeErrors { get; set; }
 }

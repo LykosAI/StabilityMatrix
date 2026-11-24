@@ -358,15 +358,12 @@ internal abstract class CacheBase<T>
         }
 
         // Atomically get or add
-        var request = _concurrentTasks.GetOrAdd(
-            fileName,
-            key =>
-            {
-                return new ConcurrentRequest(
-                    () => GetFromCacheOrDownloadAsync(uri, key, preCacheOnly, cancellationToken)
-                );
-            }
-        );
+        var request = _concurrentTasks.GetOrAdd(fileName, key =>
+        {
+            return new ConcurrentRequest(() =>
+                GetFromCacheOrDownloadAsync(uri, key, preCacheOnly, cancellationToken)
+            );
+        });
 
         try
         {
@@ -594,7 +591,7 @@ internal abstract class CacheBase<T>
         return instance;
     }
 
-    private async Task<T?> LoadLocalFileAsync(Uri uri, CancellationToken cancellationToken)
+    protected virtual async Task<T?> LoadLocalFileAsync(Uri uri, CancellationToken cancellationToken)
     {
         using var ms = new MemoryStream();
 

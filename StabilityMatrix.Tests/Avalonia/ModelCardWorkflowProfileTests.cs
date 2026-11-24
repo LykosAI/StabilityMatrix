@@ -113,6 +113,33 @@ public class ModelCardWorkflowProfileTests
     }
 
     [TestMethod]
+    [DynamicData(
+        nameof(InferenceWorkflowProfileSamplingTests.ProfilesWithClipType),
+        typeof(InferenceWorkflowProfileSamplingTests)
+    )]
+    public void CustomProfile_WithBuiltInClipType_MatchesTheProfile(string key)
+    {
+        var profile = InferenceWorkflowProfile.FromKey(key);
+
+        var builtIn = CreateViewModel();
+        builtIn.SelectedWorkflowProfile = profile;
+
+        var custom = CreateViewModel();
+        custom.SelectedModelLoader = ModelLoader.Unet;
+        custom.SelectedWorkflowProfile = InferenceWorkflowProfile.Custom;
+        custom.SelectedClipType = profile.ClipType;
+
+        CollectionAssert.Contains(custom.ClipTypes, profile.ClipType, "Custom can't select this clip type");
+        Assert.IsTrue(builtIn.ShowEncoderSection && custom.ShowEncoderSection);
+        Assert.AreEqual(
+            InferenceWorkflowProfileSamplingTests.SamplingFlags(profile),
+            InferenceWorkflowProfileSamplingTests.SamplingFlags(custom.SamplingProfile)
+        );
+        Assert.AreEqual(builtIn.ShowShift, custom.ShowShift);
+        Assert.AreEqual(builtIn.IsHiDreamWorkflow, custom.IsHiDreamWorkflow);
+    }
+
+    [TestMethod]
     public void CustomProfile_OffersCurrentComfyDualClipTypes()
     {
         var vm = CreateViewModel();
@@ -443,6 +470,28 @@ public class ModelCardWorkflowProfileTests
         Assert.AreEqual(1, vm.TextEncoders.Count);
         Assert.AreEqual(qwen4B, vm.TextEncoders[0].SelectedModel, "4B UNET must pair with qwen_3_4b");
         Assert.AreEqual(flux2Vae, vm.SelectedVae);
+    }
+
+    [TestMethod]
+    public void AutoSelect_MossImageUnet_FillsQwen35EncoderAndFlux2Vae()
+    {
+        var qwen8B = LocalModel("qwen_3_8b.safetensors", SharedFolderType.TextEncoders);
+        var qwen35 = LocalModel("qwen3.5_9b_w4a8_gptq.safetensors", SharedFolderType.TextEncoders);
+        var smallVae = LocalModel("flux2-vae_small.safetensors", SharedFolderType.VAE);
+
+        var vm = CreateViewModel(clipModels: [qwen8B, qwen35], vaeModels: [smallVae]);
+
+        vm.SelectedUnifiedModel = LocalModel(
+            "moss_image_sft_int8_convrot.safetensors",
+            SharedFolderType.DiffusionModels
+        );
+
+        Assert.AreEqual(InferenceWorkflowProfile.MossImage, vm.ResolvedWorkflowProfile);
+        Assert.AreEqual("moss_image", vm.SelectedClipType);
+        Assert.AreEqual(1, vm.TextEncoders.Count);
+        Assert.AreEqual(qwen35, vm.TextEncoders[0].SelectedModel);
+        Assert.AreEqual(smallVae, vm.SelectedVae);
+        Assert.IsFalse(vm.ShowShift, "MOSS uses ComfyUI's built-in shift; a card default would override it");
     }
 
     [TestMethod]

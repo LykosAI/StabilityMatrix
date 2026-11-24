@@ -1,4 +1,4 @@
-﻿using System.Collections.Immutable;
+using System.Collections.Immutable;
 using System.ComponentModel;
 using Avalonia.Controls.Notifications;
 using Avalonia.Data;
@@ -7,6 +7,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using Microsoft.Extensions.Logging;
+using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -27,7 +28,20 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasEarlyAccessUpdateOnly))]
     [NotifyPropertyChangedFor(nameof(HasStandardUpdate))]
+    [NotifyPropertyChangedFor(nameof(CategoryChips))]
+    [NotifyPropertyChangedFor(nameof(HasKnownModelType))]
     private LocalModelFile checkpointFile;
+
+    /// <summary>
+    /// Category chips for the card, coloured from the settings registry.
+    /// </summary>
+    public IReadOnlyList<CategoryChip> CategoryChips =>
+        ModelCategoryStyle.ChipsFor(CheckpointFile.Categories, settingsManager.Settings.ModelCategories);
+
+    /// <summary>
+    /// Re-reads chip colours after the category registry changed.
+    /// </summary>
+    public void RefreshCategoryChips() => OnPropertyChanged(nameof(CategoryChips));
 
     [ObservableProperty]
     private string thumbnailUri;
@@ -66,6 +80,7 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
     public bool CanShowTriggerWords => CheckpointFile.ConnectedModelInfo?.TrainedWords?.Length > 0;
     public string BaseModelName => CheckpointFile.ConnectedModelInfo?.BaseModel ?? string.Empty;
     public CivitModelType ModelType => CheckpointFile.ConnectedModelInfo?.ModelType ?? CivitModelType.Unknown;
+    public bool HasKnownModelType => ModelType != CivitModelType.Unknown;
     public bool HasEarlyAccessUpdateOnly => CheckpointFile.HasEarlyAccessUpdateOnly;
     public bool HasStandardUpdate => CheckpointFile.HasUpdate && !CheckpointFile.HasEarlyAccessUpdateOnly;
 
@@ -193,17 +208,17 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
                 Progress = report;
             });
 
-            var cmInfo = await importService.GetMetadataForFile(
+            var fetchResult = await importService.GetMetadataForFile(
                 CheckpointFile.GetFullPath(settingsManager.ModelsDirectory),
                 progressReport,
                 forceReimport
             );
-            if (cmInfo != null)
+
+            if (fetchResult is { Status: MetadataFetchStatus.Found, Metadata: { } cmInfo })
             {
                 CheckpointFile.ConnectedModelInfo = cmInfo;
 
-                var uri =
-                    CheckpointFile.GetPreviewImageFullPath(settingsManager.ModelsDirectory)
+                var uri = CheckpointFile.GetPreviewImageFullPath(settingsManager.ModelsDirectory)
                     ?? cmInfo.ThumbnailImageUrl;
                 if (string.IsNullOrWhiteSpace(uri))
                 {
@@ -217,6 +232,43 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
                 }
 
                 await modelIndexService.RefreshIndex();
+
+                notificationService.Show(
+                    "Metadata Found",
+                    $"Connected to '{cmInfo.ModelName}' on CivitAI.",
+                    NotificationType.Success
+                );
+            }
+            else
+            {
+                var (title, message) = fetchResult.Status switch
+                {
+                    MetadataFetchStatus.NotFound => (
+                        "No Match Found",
+                        "This file's hash is not known to CivitAI."
+                    ),
+                    MetadataFetchStatus.RateLimited => (
+                        "CivitAI Rate Limit",
+                        "CivitAI is rate limiting requests. Try again in a few minutes."
+                    ),
+                    MetadataFetchStatus.Unavailable => (
+                        "CivitAI Unreachable",
+                        "Could not reach CivitAI. Check your connection and try again."
+                    ),
+                    MetadataFetchStatus.HashUnavailable => (
+                        "Could Not Hash File",
+                        "The model file could not be hashed."
+                    ),
+                    _ => ("Metadata Unchanged", "This file already has metadata."),
+                };
+
+                notificationService.Show(
+                    title,
+                    message,
+                    fetchResult.Status == MetadataFetchStatus.NotFound
+                        ? NotificationType.Information
+                        : NotificationType.Warning
+                );
             }
         }
         finally
@@ -262,11 +314,14 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
             // integer ids), so clearing the ids alone wouldn't sever those — null means "custom".
             cmInfo.Source = null;
 
+            // Bulk metadata scans would otherwise re-attach the model on their next run
+            cmInfo.User ??= new UserModelMetadata();
+            cmInfo.User.ExcludeFromMetadataSearch = true;
+
             var modelFilePath = new FilePath(
                 Path.Combine(settingsManager.ModelsDirectory, CheckpointFile.RelativePath)
             );
-            var modelFolder =
-                modelFilePath.Directory
+            var modelFolder = modelFilePath.Directory
                 ?? Path.Combine(settingsManager.ModelsDirectory, CheckpointFile.SharedFolderType.ToString());
 
             await cmInfo.SaveJsonToDirectory(modelFolder, modelFilePath.NameWithoutExtension);
@@ -336,8 +391,9 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
     private async Task RenameAsync()
     {
         // Parent folder path
-        var parentPath =
-            Path.GetDirectoryName((string?)CheckpointFile.GetFullPath(settingsManager.ModelsDirectory)) ?? "";
+        var parentPath = Path.GetDirectoryName(
+            (string?)CheckpointFile.GetFullPath(settingsManager.ModelsDirectory)
+        ) ?? "";
 
         var textFields = new TextBoxField[]
         {
@@ -380,14 +436,17 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
                     File.Move(previewPath, newPreviewImagePath);
                 }
 
-                // If connected model info exists, rename it too (<name>.cm-info.json)
-                if (CheckpointFile.HasConnectedModel)
+                // Rename the metadata sidecar too (<name>.cm-info.json)
+                var cmInfoPath = Path.Combine(
+                    parentPath,
+                    originalNameNoExt + ConnectedModelInfo.FileExtension
+                );
+                if (File.Exists(cmInfoPath))
                 {
-                    var cmInfoPath = Path.Combine(parentPath, $"{originalNameNoExt}.cm-info.json");
-                    if (File.Exists(cmInfoPath))
-                    {
-                        File.Move(cmInfoPath, Path.Combine(parentPath, $"{nameNoExt}.cm-info.json"));
-                    }
+                    File.Move(
+                        cmInfoPath,
+                        Path.Combine(parentPath, nameNoExt + ConnectedModelInfo.FileExtension)
+                    );
                 }
 
                 await modelIndexService.RefreshIndex();
@@ -470,7 +529,7 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
 
         try
         {
-            var hasCmInfoAlready = CheckpointFile.HasConnectedModel;
+            var hasCmInfoAlready = CheckpointFile.HasMetadata;
             var cmInfo = CheckpointFile.ConnectedModelInfo ?? new ConnectedModelInfo();
             var hasThumbnailChanged =
                 vm.ThumbnailFilePath
@@ -522,8 +581,7 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
             }
 
             var modelFileName = modelFilePath.NameWithoutExtension;
-            var modelFolder =
-                modelFilePath.Directory
+            var modelFolder = modelFilePath.Directory
                 ?? Path.Combine(settingsManager.ModelsDirectory, CheckpointFile.SharedFolderType.ToString());
 
             await cmInfo.SaveJsonToDirectory(modelFolder, modelFileName);

@@ -53,8 +53,29 @@ public class ModuleApplyStepEventArgs : EventArgs
                     pair => pair.Key,
                     pair => new ModelConnections(pair.Value)
                 )
-            )
+            ),
         };
+    }
+
+    /// <summary>
+    /// Runs <paramref name="patch"/> on every loaded model (base, and refiner when loaded) and
+    /// replaces that model with the result, in both <see cref="Builder"/>'s connections and
+    /// <see cref="Temp"/>. The patch receives the model's name ("Base" / "Refiner") and its
+    /// current connection.
+    /// </summary>
+    public void PatchModels(Func<string, ModelNodeConnection, ModelNodeConnection> patch)
+    {
+        foreach (var connections in Builder.Connections.LoadedModels)
+        {
+            var patched = patch(connections.Name, connections.Model!);
+
+            connections.Model = patched;
+
+            if (Temp.Models.TryGetValue(connections.Name, out var temp))
+            {
+                temp.Model = patched;
+            }
+        }
     }
 
     public void AddFileTransfer(string sourcePath, string destinationRelativePath)

@@ -58,6 +58,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
     private readonly List<CancellationTokenSource> cancellationTokenSources = [];
     private readonly IServiceManager<ViewModelBase> vmFactory;
     private readonly IVideoThumbnailService videoThumbnailService;
+    private readonly IVideoPlaybackService videoPlaybackService;
 
     private int pendingThumbnails = 0;
 
@@ -135,7 +136,8 @@ public partial class OutputsPageViewModel : PageViewModelBase
         INavigationService<MainWindowViewModel> navigationService,
         ILogger<OutputsPageViewModel> logger,
         IServiceManager<ViewModelBase> vmFactory,
-        IVideoThumbnailService videoThumbnailService
+        IVideoThumbnailService videoThumbnailService,
+        IVideoPlaybackService videoPlaybackService
     )
     {
         this.settingsManager = settingsManager;
@@ -145,6 +147,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
         this.logger = logger;
         this.vmFactory = vmFactory;
         this.videoThumbnailService = videoThumbnailService;
+        this.videoPlaybackService = videoPlaybackService;
 
         var searcher = new ImageSearcher();
 
@@ -298,8 +301,8 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
     public async Task ShowImageDialog(OutputImageViewModel item)
     {
-        // If it's a video file, open with system player
-        if (item.ImageFile.IsVideo)
+        // In-app playback needs ffmpeg; without it the system player is the next best thing.
+        if (item.ImageFile.IsVideo && !await videoPlaybackService.EnsureAvailableAsync())
         {
             ProcessRunner.OpenUrl(item.ImageFile.AbsolutePath);
             return;
@@ -438,7 +441,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
     public void SendToImageToVideo(OutputImageViewModel vm)
     {
         navigationService.NavigateTo<InferenceViewModel>();
-        EventManager.Instance.OnInferenceProjectRequested(vm.ImageFile, InferenceProjectType.ImageToVideo);
+        EventManager.Instance.OnInferenceProjectRequested(vm.ImageFile, InferenceProjectType.WanImageToVideo);
     }
 
     public void ClearSelection()
@@ -687,9 +690,8 @@ public partial class OutputsPageViewModel : PageViewModelBase
                     return;
                 }
 
-                OutputsCache.EditDiff(
-                    files,
-                    (oldItem, newItem) => oldItem.AbsolutePath == newItem.AbsolutePath
+                OutputsCache.EditDiff(files, (oldItem, newItem) =>
+                    oldItem.AbsolutePath == newItem.AbsolutePath
                 );
 
                 IsLoading = false;
@@ -745,8 +747,8 @@ public partial class OutputsPageViewModel : PageViewModelBase
             FindAndExpandPathToCategory(Categories, previouslySelectedCategory.Path);
         }
 
-        SelectedCategory =
-            FindCategoryByPath(Categories, previouslySelectedCategory?.Path) ?? Categories.FirstOrDefault();
+        SelectedCategory = FindCategoryByPath(Categories, previouslySelectedCategory?.Path)
+            ?? Categories.FirstOrDefault();
     }
 
     private ObservableCollection<TreeViewDirectory> GetSubfolders(string strPath)

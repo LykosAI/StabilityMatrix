@@ -351,9 +351,9 @@ public class UvVenvRunner : IPyVenvRunner
         }
 
         return JsonSerializer.Deserialize<List<PipPackageInfo>>(
-                jsonLine,
-                PipPackageInfoSerializerContext.Default.Options
-            ) ?? [];
+            jsonLine,
+            PipPackageInfoSerializerContext.Default.Options
+        ) ?? [];
     }
 
     /// <summary>

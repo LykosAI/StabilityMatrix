@@ -21,8 +21,7 @@ public partial class NewOneClickInstallDialog : UserControlBase
     {
         base.OnLoaded(e);
 
-        var teachingTip =
-            this.FindControl<TeachingTip>("InferenceTeachingTip")
+        var teachingTip = this.FindControl<TeachingTip>("InferenceTeachingTip")
             ?? throw new InvalidOperationException("TeachingTip not found");
 
         teachingTip.ActionButtonClick += (_, _) =>

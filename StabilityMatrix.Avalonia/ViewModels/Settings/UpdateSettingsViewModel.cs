@@ -59,6 +59,9 @@ public partial class UpdateSettingsViewModel : PageViewModelBase
     private bool isAutoCheckUpdatesEnabled = true;
 
     [ObservableProperty]
+    private bool showReleaseNotesAfterUpdate = true;
+
+    [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(SelectedUpdateChannelCard))]
     private UpdateChannel preferredUpdateChannel = UpdateChannel.Stable;
 
@@ -106,6 +109,13 @@ public partial class UpdateSettingsViewModel : PageViewModelBase
             this,
             vm => vm.IsAutoCheckUpdatesEnabled,
             settings => settings.CheckForUpdates,
+            true
+        );
+
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.ShowReleaseNotesAfterUpdate,
+            settings => settings.ShowReleaseNotesAfterUpdate,
             true
         );
 

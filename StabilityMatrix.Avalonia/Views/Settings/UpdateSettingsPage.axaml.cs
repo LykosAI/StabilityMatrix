@@ -31,8 +31,8 @@ public partial class UpdateSettingsPage : UserControlBase
         {
             listBox.Selection.Clear();
 
-            listBox.Selection.SelectedItem = vm.AvailableUpdateChannelCards.First(
-                c => c.UpdateChannel == UpdateChannel.Stable
+            listBox.Selection.SelectedItem = vm.AvailableUpdateChannelCards.First(c =>
+                c.UpdateChannel == UpdateChannel.Stable
             );
 
             vm.ShowLoginRequiredDialog();

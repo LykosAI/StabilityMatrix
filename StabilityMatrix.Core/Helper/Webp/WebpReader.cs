@@ -25,7 +25,7 @@ public class WebpReader(Stream stream) : BinaryReader(stream, Encoding.ASCII, tr
     {
         // RIFF
         var riff = ReadBytes(4);
-        if (!riff.SequenceEqual([.."RIFF"u8]))
+        if (!riff.SequenceEqual([.. "RIFF"u8]))
         {
             throw new InvalidDataException("Invalid RIFF header");
         }
@@ -35,7 +35,7 @@ public class WebpReader(Stream stream) : BinaryReader(stream, Encoding.ASCII, tr
 
         // WEBP
         var webp = ReadBytes(4);
-        if (!webp.SequenceEqual([.."WEBP"u8]))
+        if (!webp.SequenceEqual([.. "WEBP"u8]))
         {
             throw new InvalidDataException("Invalid WEBP header");
         }

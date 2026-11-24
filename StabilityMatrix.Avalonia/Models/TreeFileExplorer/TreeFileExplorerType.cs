@@ -4,5 +4,5 @@ public enum TreeFileExplorerType
 {
     None,
     File,
-    Directory
+    Directory,
 }

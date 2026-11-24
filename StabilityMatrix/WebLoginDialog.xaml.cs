@@ -15,11 +15,11 @@ public partial class WebLoginDialog : ContentDialog
         document.getElementsByTagName('body')[0].appendChild(style)";
 
     private readonly Microsoft.Web.WebView2.Wpf.WebView2 currentWebView;
-    
+
     public WebLoginViewModel ViewModel { get; set; }
-    
-    public WebLoginDialog(IContentDialogService dialogService, WebLoginViewModel viewModel) : base(
-        dialogService.GetContentPresenter())
+
+    public WebLoginDialog(IContentDialogService dialogService, WebLoginViewModel viewModel)
+        : base(dialogService.GetContentPresenter())
     {
         InitializeComponent();
         DataContext = viewModel;
@@ -31,7 +31,10 @@ public partial class WebLoginDialog : ContentDialog
     private void WebLoginDialog_OnLoaded(object sender, RoutedEventArgs e) => ViewModel.OnLoaded();
 
     // On nav complete we run js to hide scrollbar while allowing scrolling
-    private async void LoginWebView_OnNavigationCompleted(object? sender, CoreWebView2NavigationCompletedEventArgs e)
+    private async void LoginWebView_OnNavigationCompleted(
+        object? sender,
+        CoreWebView2NavigationCompletedEventArgs e
+    )
     {
         if (e.IsSuccess)
         {
@@ -40,13 +43,14 @@ public partial class WebLoginDialog : ContentDialog
         // Pass to ViewModel event
         ViewModel.OnNavigationCompleted(currentWebView.Source);
     }
-    
+
     // This happens before OnNavigationCompleted
     private async void LoginWebView_OnSourceChanged(object? sender, CoreWebView2SourceChangedEventArgs e)
     {
         var url = currentWebView.Source;
-        var cookies = url is null ? null :
-            await currentWebView.CoreWebView2.CookieManager.GetCookiesAsync(url.AbsoluteUri);
+        var cookies = url is null
+            ? null
+            : await currentWebView.CoreWebView2.CookieManager.GetCookiesAsync(url.AbsoluteUri);
         ViewModel.OnSourceChanged(currentWebView.Source, cookies);
     }
 }

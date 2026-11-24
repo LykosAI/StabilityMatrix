@@ -27,9 +27,9 @@ public static class ComfyExtensionInstallHelper
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
     /// <summary>
-    /// Shows a confirmation dialog listing the required extensions and, if accepted, installs
-    /// them via the package modification runner and restarts the package. Must be called from
-    /// the UI thread.
+    /// Shows a confirmation dialog listing the required extensions and, if accepted, stops the
+    /// package, installs them via the package modification runner and starts the package again.
+    /// Must be called from the UI thread.
     /// </summary>
     /// <returns>True if the user accepted and the install was started.</returns>
     public static async Task<bool> PromptInstallAndRestartAsync(
@@ -92,6 +92,16 @@ public static class ComfyExtensionInstallHelper
             steps.Add(new UpdateExtensionStep(manager, localPackagePair.InstalledPackage, installed));
         }
 
+        var packageId = localPackagePair.InstalledPackage.Id;
+        var wasRunning = runningPackageService.GetRunningPackageViewModel(packageId) is not null;
+
+        // Stopped first because pip can't replace files a running package has loaded on Windows,
+        // such as onnxruntime's DLLs
+        if (wasRunning)
+        {
+            await runningPackageService.StopPackage(packageId);
+        }
+
         var runner = new PackageModificationRunner
         {
             ShowDialogOnStart = true,
@@ -104,17 +114,15 @@ public static class ComfyExtensionInstallHelper
             .ExecuteSteps(steps)
             .ContinueWith(async _ =>
             {
-                if (runner.Failed)
+                // A failed install still restarts a package that was running before it
+                if (runner.Failed && !wasRunning)
                     return;
 
-                // Restart Package
                 try
                 {
-                    await Dispatcher.UIThread.InvokeAsync(async () =>
-                    {
-                        await runningPackageService.StopPackage(localPackagePair.InstalledPackage.Id);
-                        await runningPackageService.StartPackage(localPackagePair.InstalledPackage);
-                    });
+                    await Dispatcher.UIThread.InvokeAsync(() =>
+                        runningPackageService.StartPackage(localPackagePair.InstalledPackage)
+                    );
                 }
                 catch (Exception e)
                 {

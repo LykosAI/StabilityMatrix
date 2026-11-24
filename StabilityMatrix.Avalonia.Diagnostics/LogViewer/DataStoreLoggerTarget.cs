@@ -60,14 +60,12 @@ public class DataStoreLoggerTarget : TargetWithLayout
                 Timestamp = DateTime.UtcNow,
                 LogLevel = logLevel,
                 // do we override the default EventId if it exists?
-                EventId =
-                    eventId.Id == 0 && (_config?.EventId.Id ?? 0) != 0 ? _config!.EventId : eventId,
+                EventId = eventId.Id == 0 && (_config?.EventId.Id ?? 0) != 0 ? _config!.EventId : eventId,
                 State = message,
                 LoggerName = logEvent.LoggerName,
                 CallerClassName = logEvent.CallerClassName,
                 CallerMemberName = logEvent.CallerMemberName,
-                Exception =
-                    logEvent.Exception?.Message ?? (logLevel == MsLogLevel.Error ? message : ""),
+                Exception = logEvent.Exception?.Message ?? (logLevel == MsLogLevel.Error ? message : ""),
                 Color = _config!.Colors[logLevel],
             }
         );

@@ -1,0 +1,61 @@
+﻿<Styles
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
+    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+    xmlns:vmInference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
+    x:DataType="vmInference:SkipLayerGuidanceCardViewModel">
+    <Design.PreviewWith>
+        <controls:SkipLayerGuidanceCard />
+    </Design.PreviewWith>
+
+    <Style Selector="controls|SkipLayerGuidanceCard">
+        <Setter Property="Template">
+            <ControlTemplate>
+                <controls:Card x:Name="PART_Card">
+                    <controls:Card.Styles>
+                        <Style Selector="TextBox.layers">
+                            <Setter Property="Margin" Value="12,4,0,4" />
+                            <Setter Property="HorizontalAlignment" Value="Stretch" />
+                            <Setter Property="ToolTip.Tip" Value="{x:Static lang:Resources.Label_SkipLayersTooltip}" />
+                        </Style>
+                    </controls:Card.Styles>
+                    <Grid ColumnDefinitions="Auto,*,*" RowDefinitions="*,*,*">
+                        <TextBlock
+                            Grid.Row="0"
+                            Grid.Column="0"
+                            VerticalAlignment="Center"
+                            Text="{x:Static lang:Resources.Label_SingleBlocks}" />
+                        <TextBox
+                            Grid.Row="0"
+                            Grid.Column="1"
+                            Grid.ColumnSpan="2"
+                            Classes="layers"
+                            Text="{Binding SingleLayers}" />
+
+                        <TextBlock
+                            Grid.Row="1"
+                            Grid.Column="0"
+                            VerticalAlignment="Center"
+                            Text="{x:Static lang:Resources.Label_DoubleBlocks}" />
+                        <TextBox
+                            Grid.Row="1"
+                            Grid.Column="1"
+                            Grid.ColumnSpan="2"
+                            Classes="layers"
+                            Text="{Binding DoubleLayers}" />
+
+                        <controls:StepRangeEditor
+                            Grid.Row="2"
+                            Grid.Column="0"
+                            Grid.ColumnSpan="3"
+                            Margin="0,4,0,0"
+                            End="{Binding EndPercent}"
+                            Header="{x:Static lang:Resources.Label_ActiveSteps}"
+                            Start="{Binding StartPercent}" />
+                    </Grid>
+                </controls:Card>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+</Styles>

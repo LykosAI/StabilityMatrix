@@ -16,8 +16,10 @@ namespace StabilityMatrix.Avalonia.Controls;
 [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
 public class FrameCarousel : SelectingItemsControl
 {
-    public static readonly StyledProperty<IDataTemplate?> ContentTemplateProperty = AvaloniaProperty.Register<FrameCarousel, IDataTemplate?>(
-        "ContentTemplate");
+    public static readonly StyledProperty<IDataTemplate?> ContentTemplateProperty = AvaloniaProperty.Register<
+        FrameCarousel,
+        IDataTemplate?
+    >("ContentTemplate");
 
     public IDataTemplate? ContentTemplate
     {
@@ -25,8 +27,10 @@ public class FrameCarousel : SelectingItemsControl
         set => SetValue(ContentTemplateProperty, value);
     }
 
-    public static readonly StyledProperty<Type> SourcePageTypeProperty = AvaloniaProperty.Register<FrameCarousel, Type>(
-        "SourcePageType");
+    public static readonly StyledProperty<Type> SourcePageTypeProperty = AvaloniaProperty.Register<
+        FrameCarousel,
+        Type
+    >("SourcePageType");
 
     public Type SourcePageType
     {
@@ -37,40 +41,36 @@ public class FrameCarousel : SelectingItemsControl
     private Frame? frame;
     private int previousIndex = -1;
 
-    private static readonly FrameNavigationOptions ForwardNavigationOptions
-        = new()
+    private static readonly FrameNavigationOptions ForwardNavigationOptions = new()
+    {
+        TransitionInfoOverride = new BetterSlideNavigationTransition
         {
-            TransitionInfoOverride = new BetterSlideNavigationTransition
-            {
-                Effect = SlideNavigationTransitionEffect.FromRight,
-                FromHorizontalOffset = 200
-            }
-        };
-    
-    private static readonly FrameNavigationOptions BackNavigationOptions
-        = new()
+            Effect = SlideNavigationTransitionEffect.FromRight,
+            FromHorizontalOffset = 200,
+        },
+    };
+
+    private static readonly FrameNavigationOptions BackNavigationOptions = new()
+    {
+        TransitionInfoOverride = new BetterSlideNavigationTransition
         {
-            TransitionInfoOverride = new BetterSlideNavigationTransition
-            {
-                Effect = SlideNavigationTransitionEffect.FromLeft,
-                FromHorizontalOffset = 200
-            }
-        };
-    
-    private static readonly FrameNavigationOptions DirectionlessNavigationOptions
-        = new()
-        {
-            TransitionInfoOverride = new SuppressNavigationTransitionInfo()
-        };
-    
+            Effect = SlideNavigationTransitionEffect.FromLeft,
+            FromHorizontalOffset = 200,
+        },
+    };
+
+    private static readonly FrameNavigationOptions DirectionlessNavigationOptions = new()
+    {
+        TransitionInfoOverride = new SuppressNavigationTransitionInfo(),
+    };
+
     /// <inheritdoc />
     protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
     {
         base.OnApplyTemplate(e);
-        
-        frame = e.NameScope.Find<Frame>("PART_Frame") 
-                ?? throw new NullReferenceException("Frame not found");
-        
+
+        frame = e.NameScope.Find<Frame>("PART_Frame") ?? throw new NullReferenceException("Frame not found");
+
         frame.NavigationPageFactory = new FrameNavigationFactory(SourcePageType);
 
         if (SelectedItem is not null)
@@ -83,12 +83,14 @@ public class FrameCarousel : SelectingItemsControl
     {
         base.OnPropertyChanged(change);
 
-        if (frame is null) return;
-        
+        if (frame is null)
+            return;
+
         if (change.Property == SelectedItemProperty)
         {
-            if (change.GetNewValue<object?>() is not { } value) return;
-            
+            if (change.GetNewValue<object?>() is not { } value)
+                return;
+
             if (SelectedIndex > previousIndex)
             {
                 // Going forward
@@ -103,9 +105,9 @@ public class FrameCarousel : SelectingItemsControl
             {
                 frame.NavigateFromObject(value, DirectionlessNavigationOptions);
             }
-            
+
             previousIndex = SelectedIndex;
-        } 
+        }
         else if (change.Property == ItemCountProperty)
         {
             // On item count change to 0, clear the frame cache
@@ -118,7 +120,7 @@ public class FrameCarousel : SelectingItemsControl
             }
         }
     }
-    
+
     /// <summary>
     /// Moves to the next item in the carousel.
     /// </summary>
@@ -140,20 +142,20 @@ public class FrameCarousel : SelectingItemsControl
             --SelectedIndex;
         }
     }
-    
+
     internal class FrameNavigationFactory : INavigationPageFactory
     {
         private readonly Type _sourcePageType;
-        
+
         public FrameNavigationFactory(Type sourcePageType)
         {
             _sourcePageType = sourcePageType;
         }
-        
+
         /// <inheritdoc />
         public Control GetPage(Type srcType)
         {
-            return (Control) Activator.CreateInstance(srcType)!;
+            return (Control)Activator.CreateInstance(srcType)!;
         }
 
         /// <inheritdoc />

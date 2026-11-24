@@ -17,14 +17,12 @@ public class MockGitVersionProvider : IGitVersionProvider
         CancellationToken cancellationToken = default
     )
     {
-        return Task.FromResult<IReadOnlyList<GitVersion>>(
-            [
-                new GitVersion { Tag = "v1.0.0" },
-                new GitVersion { Tag = "v1.0.1" },
-                new GitVersion { Tag = "v1.0.2" },
-                new GitVersion { Tag = "v1.0.3" }
-            ]
-        );
+        return Task.FromResult<IReadOnlyList<GitVersion>>([
+            new GitVersion { Tag = "v1.0.0" },
+            new GitVersion { Tag = "v1.0.1" },
+            new GitVersion { Tag = "v1.0.2" },
+            new GitVersion { Tag = "v1.0.3" },
+        ]);
     }
 
     public Task<IReadOnlyList<GitVersion>> FetchBranchesAsync(
@@ -32,14 +30,12 @@ public class MockGitVersionProvider : IGitVersionProvider
         CancellationToken cancellationToken = default
     )
     {
-        return Task.FromResult<IReadOnlyList<GitVersion>>(
-            [
-                new GitVersion { Branch = "main" },
-                new GitVersion { Branch = "develop" },
-                new GitVersion { Branch = "feature/1" },
-                new GitVersion { Branch = "feature/2" }
-            ]
-        );
+        return Task.FromResult<IReadOnlyList<GitVersion>>([
+            new GitVersion { Branch = "main" },
+            new GitVersion { Branch = "develop" },
+            new GitVersion { Branch = "feature/1" },
+            new GitVersion { Branch = "feature/2" },
+        ]);
     }
 
     public Task<IReadOnlyList<GitVersion>> FetchCommitsAsync(

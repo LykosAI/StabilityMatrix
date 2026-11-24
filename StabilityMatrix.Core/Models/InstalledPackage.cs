@@ -261,7 +261,7 @@ public class InstalledPackage : IJsonOnDeserialized
             Version = new InstalledPackageVersion
             {
                 InstalledReleaseVersion = PackageVersion,
-                IsPrerelease = false
+                IsPrerelease = false,
             };
         }
         else if (!string.IsNullOrWhiteSpace(PackageVersion))
@@ -270,7 +270,7 @@ public class InstalledPackage : IJsonOnDeserialized
             {
                 InstalledBranch = InstalledBranch,
                 InstalledCommitSha = PackageVersion,
-                IsPrerelease = false
+                IsPrerelease = false,
             };
         }
 #pragma warning restore CS0618 // Type or member is obsolete

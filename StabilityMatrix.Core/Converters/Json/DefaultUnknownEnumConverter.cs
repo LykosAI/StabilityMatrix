@@ -15,26 +15,21 @@ public class DefaultUnknownEnumConverter<
     /// <summary>
     /// Lazy initialization for <see cref="EnumMemberValues"/>.
     /// </summary>
-    private readonly Lazy<Dictionary<string, T>> _enumMemberValuesLazy =
-        new(
-            () =>
-                typeof(T)
-                    .GetFields()
-                    .Where(field => field.IsStatic)
-                    .Select(
-                        field =>
-                            new
-                            {
-                                FieldName = field.Name,
-                                FieldValue = (T)field.GetValue(null)!,
-                                EnumMemberValue = field
-                                    .GetCustomAttributes<EnumMemberAttribute>(false)
-                                    .FirstOrDefault()
-                                    ?.Value?.ToString()
-                            }
-                    )
-                    .ToDictionary(x => x.EnumMemberValue ?? x.FieldName, x => x.FieldValue)
-        );
+    private readonly Lazy<Dictionary<string, T>> _enumMemberValuesLazy = new(() =>
+        typeof(T)
+            .GetFields()
+            .Where(field => field.IsStatic)
+            .Select(field => new
+            {
+                FieldName = field.Name,
+                FieldValue = (T)field.GetValue(null)!,
+                EnumMemberValue = field
+                    .GetCustomAttributes<EnumMemberAttribute>(false)
+                    .FirstOrDefault()
+                    ?.Value?.ToString(),
+            })
+            .ToDictionary(x => x.EnumMemberValue ?? x.FieldName, x => x.FieldValue)
+    );
 
     /// <summary>
     /// Gets a dictionary of enum member values, keyed by the EnumMember attribute value, or the field name if no EnumMember attribute is present.
@@ -62,17 +57,13 @@ public class DefaultUnknownEnumConverter<
 
     public DefaultUnknownEnumConverter()
     {
-        _enumMemberNamesLazy = new Lazy<Dictionary<T, string>>(
-            () => EnumMemberValues.ToDictionary(x => x.Value, x => x.Key)
+        _enumMemberNamesLazy = new Lazy<Dictionary<T, string>>(() =>
+            EnumMemberValues.ToDictionary(x => x.Value, x => x.Key)
         );
     }
 
     /// <inheritdoc />
-    public override T Read(
-        ref Utf8JsonReader reader,
-        Type typeToConvert,
-        JsonSerializerOptions options
-    )
+    public override T Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         if (reader.TokenType is not (JsonTokenType.String or JsonTokenType.PropertyName))
         {
@@ -89,8 +80,8 @@ public class DefaultUnknownEnumConverter<
 
             // Otherwise try get case-insensitive match
             if (
-                EnumMemberValues.Keys.FirstOrDefault(
-                    key => key.Equals(readerString, StringComparison.OrdinalIgnoreCase)
+                EnumMemberValues.Keys.FirstOrDefault(key =>
+                    key.Equals(readerString, StringComparison.OrdinalIgnoreCase)
                 ) is
                 { } enumMemberName
             )

@@ -178,8 +178,8 @@ public partial class ConsoleViewModel : ObservableObject, IDisposable, IAsyncDis
         Dispatcher.UIThread.VerifyAccess();
 
         // Get cancellation token
-        var ct =
-            updateCts?.Token ?? throw new InvalidOperationException("Update cancellation token must be set");
+        var ct = updateCts?.Token
+            ?? throw new InvalidOperationException("Update cancellation token must be set");
 
         try
         {

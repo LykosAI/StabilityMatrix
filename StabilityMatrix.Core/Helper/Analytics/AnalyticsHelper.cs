@@ -28,7 +28,7 @@ public class AnalyticsHelper(
             PackageName = packageName,
             PackageVersion = packageVersion,
             IsSuccess = isSuccess,
-            Timestamp = DateTimeOffset.UtcNow
+            Timestamp = DateTimeOffset.UtcNow,
         };
 
         try
@@ -57,7 +57,7 @@ public class AnalyticsHelper(
             SelectedPackageName = selectedPackageName,
             SelectedRecommendedModels = selectedRecommendedModels,
             FirstTimeSetupSkipped = firstTimeSetupSkipped,
-            Timestamp = DateTimeOffset.UtcNow
+            Timestamp = DateTimeOffset.UtcNow,
         };
 
         try

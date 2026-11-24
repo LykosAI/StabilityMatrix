@@ -1,36 +1,35 @@
 <Project Sdk="Microsoft.NET.Sdk">
-    <Import Project="..\Runtimes.Default.props" />
-    
-    <PropertyGroup>
-        <IsPackable>false</IsPackable>
-        <IsTestProject>true</IsTestProject>
-    </PropertyGroup>
+  <Import Project="..\Runtimes.Default.props" />
 
-    <ItemGroup>
-        <PackageReference Include="Avalonia.Headless.XUnit" />
-        <PackageReference Include="DotNet.Bundle" />
-        <PackageReference Include="Microsoft.NET.Test.Sdk" />
-        <PackageReference Include="NSubstitute" />
-        <PackageReference Include="System.Drawing.Common" />
-        <PackageReference Include="Verify" />
-        <PackageReference Include="Verify.CommunityToolkit.Mvvm" />
-        <PackageReference Include="Verify.Avalonia" />
-        <PackageReference Include="Verify.Phash" />
-        <PackageReference Include="Verify.Xunit" />
-        <PackageReference Include="xunit" />
-        <PackageReference Include="xunit.runner.visualstudio">
-            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-            <PrivateAssets>all</PrivateAssets>
-        </PackageReference>
-        <PackageReference Include="coverlet.collector">
-            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-            <PrivateAssets>all</PrivateAssets>
-        </PackageReference>
-    </ItemGroup>
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
 
-    <ItemGroup>
-      <ProjectReference Include="..\StabilityMatrix.Avalonia\StabilityMatrix.Avalonia.csproj" />
-      <ProjectReference Include="..\StabilityMatrix.Core\StabilityMatrix.Core.csproj" />
-    </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Avalonia.Headless.XUnit" />
+    <PackageReference Include="DotNet.Bundle" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="NSubstitute" />
+    <PackageReference Include="System.Drawing.Common" />
+    <PackageReference Include="Verify" />
+    <PackageReference Include="Verify.CommunityToolkit.Mvvm" />
+    <PackageReference Include="Verify.Avalonia" />
+    <PackageReference Include="Verify.Phash" />
+    <PackageReference Include="Verify.Xunit" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="coverlet.collector">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\StabilityMatrix.Avalonia\StabilityMatrix.Avalonia.csproj" />
+    <ProjectReference Include="..\StabilityMatrix.Core\StabilityMatrix.Core.csproj" />
+  </ItemGroup>
 </Project>

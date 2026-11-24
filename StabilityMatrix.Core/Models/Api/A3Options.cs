@@ -575,7 +575,7 @@ public class A3Options
 
     [JsonPropertyName("canvas_swap_controls")]
     public bool? CanvasSwapControls { get; set; }
-    
+
     // TODO: List<object> ExtraOptions
 
     [JsonPropertyName("extra_options_accordion")]

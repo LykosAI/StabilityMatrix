@@ -751,8 +751,7 @@ public sealed class RichConsoleTarget : TargetWithLayout
                 }
                 catch (FormatException)
                 {
-                    numStr =
-                        formattableNum.ToString(null, System.Globalization.CultureInfo.InvariantCulture)
+                    numStr = formattableNum.ToString(null, System.Globalization.CultureInfo.InvariantCulture)
                         ?? "null";
                 }
 
@@ -965,9 +964,10 @@ public sealed class RichConsoleTarget : TargetWithLayout
                 }
                 catch (FormatException)
                 {
-                    textValue =
-                        formattableValue.ToString(null, System.Globalization.CultureInfo.InvariantCulture)
-                        ?? "null";
+                    textValue = formattableValue.ToString(
+                        null,
+                        System.Globalization.CultureInfo.InvariantCulture
+                    ) ?? "null";
                 } // Fallback on format error
 
                 break;

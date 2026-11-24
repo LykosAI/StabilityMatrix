@@ -13,6 +13,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Core.Plugins;
+using Avalonia.Gif;
 using Avalonia.Input;
 using Avalonia.Input.Platform;
 using Avalonia.Markup.Xaml;
@@ -100,6 +101,13 @@ public sealed class App : Application
     /// </summary>
     private bool isAsyncDisposeComplete;
 
+    /// <summary>
+    /// True once <see cref="ServiceProvider.DisposeAsync"/> has been entered. The container marks
+    /// itself disposed before it begins disposing services, so a dispose that throws partway still
+    /// leaves a provider that throws <see cref="ObjectDisposedException"/> on any further resolve.
+    /// </summary>
+    private bool isServiceProviderDisposeStarted;
+
     private bool isOnExitComplete;
 
     /// <summary>
@@ -185,6 +193,10 @@ public sealed class App : Application
         else
         {
             ConfigureServiceProvider();
+
+            // Templated VideoImage controls (image viewer, Inference gallery) can't bind an ffmpeg path
+            // per item, so they resolve the bundled binary through this hook.
+            VideoImage.FfmpegPathResolver = () => Services.GetService<IPrerequisiteHelper>()?.FfmpegPath;
         }
 
         // Remove DataAnnotations validation plugin since we're using INotifyDataErrorInfo from MvvmToolkit
@@ -413,6 +425,14 @@ public sealed class App : Application
 
         var settingsManager = Services.GetRequiredService<ISettingsManager>();
 
+        // Apply the user's log level once settings load, and whenever it changes
+        settingsManager.Loaded += (_, _) =>
+            AppLogLevelApplier.ApplyToActiveConfiguration(settingsManager.Settings.LogLevel);
+        settingsManager.RegisterPropertyChangedHandler(
+            settings => settings.LogLevel,
+            AppLogLevelApplier.ApplyToActiveConfiguration
+        );
+
         if (Program.Args.DataDirectoryOverride is not null)
         {
             var normalizedDataDirPath = Path.GetFullPath(Program.Args.DataDirectoryOverride);
@@ -458,7 +478,9 @@ public sealed class App : Application
             provider.GetRequiredService<INavigationService<MainWindowViewModel>>(),
             provider.GetRequiredService<INavigationService<SettingsViewModel>>(),
             provider.GetRequiredService<IDocumentationNavigationService>(),
-            provider.GetRequiredService<IDistributedSubscriber<string, Uri>>()
+            provider.GetRequiredService<IDistributedSubscriber<string, Uri>>(),
+            provider.GetRequiredService<IUvCacheService>(),
+            provider.GetRequiredService<IUvCachePurgeRunner>()
         )
         {
             Pages =
@@ -619,7 +641,6 @@ public sealed class App : Application
         jsonSerializerOptions.Converters.Add(new DefaultUnknownEnumConverter<CivitModelType>());
         jsonSerializerOptions.Converters.Add(new DefaultUnknownEnumConverter<CivitModelFormat>());
         jsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
-        jsonSerializerOptions.Converters.Add(new AnalyticsRequestConverter());
         jsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
 
         var defaultRefitSettings = new RefitSettings
@@ -930,11 +951,20 @@ public sealed class App : Application
     /// </summary>
     /// <remarks>This returns asynchronously *without waiting* for Shutdown</remarks>
     /// <param name="exitCode">Exit code for the application.</param>
+    /// <param name="skipConfirmation">
+    /// When true, the running-packages exit confirmation in <see cref="OnShutdownRequested"/>
+    /// is bypassed (used by the quick-hide hotkey's Exit mode).
+    /// </param>
     /// <exception cref="NullReferenceException">If Application.Current is null</exception>
-    public static void Shutdown(int exitCode = 0)
+    public static void Shutdown(int exitCode = 0, bool skipConfirmation = false)
     {
         if (Current is null)
             throw new NullReferenceException("Current Application was null when Shutdown called");
+
+        if (skipConfirmation && Current is App app)
+        {
+            app.isExitConfirmed = true;
+        }
 
         if (Current.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime lifetime)
         {
@@ -1056,6 +1086,7 @@ public sealed class App : Application
                 try
                 {
                     OnServiceProviderDisposing(serviceProvider);
+                    isServiceProviderDisposeStarted = true;
                     await serviceProvider.DisposeAsync();
                     isAsyncDisposeComplete = true;
                 }
@@ -1122,13 +1153,26 @@ public sealed class App : Application
                 return;
             }
 
-            // Dispose services only if async dispose has not completed
-            if (!isAsyncDisposeComplete)
+            // Dispose services only if the async dispose never reached the container
+            if (isServiceProviderDisposeStarted)
+            {
+                Logger.Debug("OnExit: Service provider already disposed, skipping");
+            }
+            else
             {
                 Logger.Debug("OnExit: Disposing App Services");
 
-                OnServiceProviderDisposing(serviceProvider);
-                serviceProvider.Dispose();
+                try
+                {
+                    OnServiceProviderDisposing(serviceProvider);
+                    serviceProvider.Dispose();
+                }
+                catch (Exception disposeEx)
+                {
+                    // The process is on its way out either way, so a failed dispose is logged
+                    // rather than surfaced as a crash dialog for an exit the user asked for
+                    Logger.Error(disposeEx, "OnExit: Failed to dispose App Services");
+                }
             }
 
             Logger.Debug("OnExit: Finished");
@@ -1324,12 +1368,14 @@ public sealed class App : Application
 
             // Console logging
             var consoleTarget = new RichConsoleTarget("console") { Theme = RichNLogTheme.Code2 };
-            builder.ForLogger().FilterMinLevel(NLog.LogLevel.Trace).WriteTo(consoleTarget).WithAsync();
+            // Minimum levels for the console and file are replaced by the user's setting once settings load
+            var defaultMinLevel = Settings.DefaultLogLevel.ToNLogLevel();
+            builder.ForLogger().FilterMinLevel(defaultMinLevel).WriteTo(consoleTarget).WithAsync();
 
             // File logging
             // Use Compat.AppDataHome so logs follow --home-dir overrides
             var fileTarget = LogFileTarget.Create(Compat.LogsDir);
-            builder.ForLogger().FilterMinLevel(NLog.LogLevel.Debug).WriteTo(fileTarget).WithAsync();
+            builder.ForLogger().FilterMinLevel(defaultMinLevel).WriteTo(fileTarget).WithAsync();
 
 #if SM_LOG_WINDOW
             // LogViewer target when debug mode

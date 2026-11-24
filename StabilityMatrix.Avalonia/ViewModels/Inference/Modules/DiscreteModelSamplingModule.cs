@@ -22,23 +22,19 @@ public class DiscreteModelSamplingModule : ModuleBase
     {
         var vm = GetCard<DiscreteModelSamplingCardViewModel>();
 
-        foreach (var modelConnections in e.Builder.Connections.Models.Values)
-        {
-            if (modelConnections.Model is not { } model)
-                continue;
-
-            var modelSamplingDiscrete = e.Nodes.AddTypedNode(
-                new ComfyNodeBuilder.ModelSamplingDiscrete
-                {
-                    Name = e.Nodes.GetUniqueName("ModelSamplingDiscrete"),
-                    Model = model,
-                    Sampling = vm.SelectedSamplingMethod,
-                    Zsnr = vm.IsZsnrEnabled
-                }
-            );
-
-            modelConnections.Model = modelSamplingDiscrete.Output;
-            e.Temp.Base.Model = modelSamplingDiscrete.Output;
-        }
+        e.PatchModels(
+            (_, model) =>
+                e
+                    .Nodes.AddTypedNode(
+                        new ComfyNodeBuilder.ModelSamplingDiscrete
+                        {
+                            Name = e.Nodes.GetUniqueName("ModelSamplingDiscrete"),
+                            Model = model,
+                            Sampling = vm.SelectedSamplingMethod,
+                            Zsnr = vm.IsZsnrEnabled,
+                        }
+                    )
+                    .Output
+        );
     }
 }

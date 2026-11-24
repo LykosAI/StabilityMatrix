@@ -82,8 +82,8 @@ public class AiToolkit(
             .ConfigureAwait(false);
         venvRunner.UpdateEnvironmentVariables(env => GetEnvVars(env, venvRunner.Version));
 
-        var isLegacyNvidia =
-            SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu() ?? HardwareHelper.HasLegacyNvidiaGpu();
+        var isLegacyNvidia = SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu()
+            ?? HardwareHelper.HasLegacyNvidiaGpu();
 
         var config = new PipInstallConfig
         {

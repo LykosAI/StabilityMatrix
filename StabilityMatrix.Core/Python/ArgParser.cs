@@ -20,7 +20,7 @@ public class ArgParser
         this.rootPath = rootPath;
         this.moduleName = moduleName;
     }
-    
+
     /// <summary>
     /// Convert a PyObject to a value that can be used as a LaunchOption value.
     /// </summary>
@@ -32,7 +32,7 @@ public class ArgParser
             "bool" => obj.As<bool>(),
             "int" => obj.As<int>(),
             "str" => obj.As<string>(),
-            _ => throw new ArgumentException($"Unknown option type {type}")
+            _ => throw new ArgumentException($"Unknown option type {type}"),
         };
     }
 
@@ -47,10 +47,10 @@ public class ArgParser
             "bool" => LaunchOptionType.Bool,
             "int" => LaunchOptionType.Int,
             "str" => LaunchOptionType.String,
-            _ => null
+            _ => null,
         };
     }
-    
+
     public async Task<List<LaunchOptionDefinition>> GetArgsAsync()
     {
         await pyRunner.Initialize();
@@ -82,7 +82,7 @@ public class ArgParser
             }
             // Loop through arguments
             var definitions = new List<LaunchOptionDefinition>();
-            
+
             foreach (var action in argParser._actions)
             {
                 var name = (action.dest as PyObject)?.As<string>();
@@ -90,7 +90,7 @@ public class ArgParser
                 {
                     throw new Exception("Argument option did not have a `dest` value");
                 }
-                var optionStrings = ((PyObject) action.option_strings).As<string[]>();
+                var optionStrings = ((PyObject)action.option_strings).As<string[]>();
                 var dest = (action.dest as PyObject)?.As<string>();
                 // var nArgs = (action.nargs as PyObject)?.As<int>();
                 var isConst = (action.@const as PyObject)?.IsTrue() ?? false;
@@ -109,16 +109,18 @@ public class ArgParser
 
                 var help = (action.help as PyObject)?.As<string>();
 
-                definitions.Add(new LaunchOptionDefinition
-                {
-                    Name = help ?? name,
-                    Description = help,
-                    Options = new List<string> { optionStrings[0] },
-                    // ReSharper disable once ConstantNullCoalescingCondition
-                    Type = optionType ?? LaunchOptionType.Bool,
-                    DefaultValue = defaultValue,
-                    MinSelectedOptions = isRequired ? 1 : 0,
-                });
+                definitions.Add(
+                    new LaunchOptionDefinition
+                    {
+                        Name = help ?? name,
+                        Description = help,
+                        Options = new List<string> { optionStrings[0] },
+                        // ReSharper disable once ConstantNullCoalescingCondition
+                        Type = optionType ?? LaunchOptionType.Bool,
+                        DefaultValue = defaultValue,
+                        MinSelectedOptions = isRequired ? 1 : 0,
+                    }
+                );
             }
 
             return definitions;

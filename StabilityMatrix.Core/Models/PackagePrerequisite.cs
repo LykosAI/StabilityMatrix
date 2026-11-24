@@ -10,5 +10,5 @@ public enum PackagePrerequisite
     Node,
     Dotnet,
     Tkinter,
-    VcBuildTools
+    VcBuildTools,
 }

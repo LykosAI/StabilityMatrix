@@ -111,7 +111,7 @@ public class ConnectedServiceManager(
         var vm = vmFactory.Get<OAuthDeviceAuthViewModel>();
         vm.ChallengeRequest = new OpenIddictClientModels.DeviceChallengeRequest
         {
-            ProviderName = OpenIdClientConstants.LykosAccount.ProviderName
+            ProviderName = OpenIdClientConstants.LykosAccount.ProviderName,
         };
         await vm.ShowDialogAsync();
 

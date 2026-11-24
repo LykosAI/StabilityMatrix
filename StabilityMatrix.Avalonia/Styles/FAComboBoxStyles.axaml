@@ -12,9 +12,9 @@
             <StackPanel Margin="8" Spacing="4">
                 <ui:FAComboBox
                     HorizontalAlignment="Stretch"
+                    ItemsSource="{x:Static mocks:DesignData.SampleHybridModels}"
                     SelectedIndex="0"
-                    Theme="{DynamicResource FAComboBoxHybridModelTheme}"
-                    ItemsSource="{x:Static mocks:DesignData.SampleHybridModels}"/>
+                    Theme="{DynamicResource FAComboBoxHybridModelTheme}" />
             </StackPanel>
         </Panel>
     </Design.PreviewWith>
@@ -76,9 +76,10 @@
     </ControlTheme>
 
     <!--  ReSharper disable once Xaml.StaticResourceNotResolved  -->
-    <ControlTheme x:Key="FAComboBoxHybridModelTheme"
-                  TargetType="ui:FAComboBox"
-                  BasedOn="{StaticResource {x:Type ui:FAComboBox}}">
+    <ControlTheme
+        x:Key="FAComboBoxHybridModelTheme"
+        BasedOn="{StaticResource {x:Type ui:FAComboBox}}"
+        TargetType="ui:FAComboBox">
         <Setter Property="ItemTemplate">
             <DataTemplate DataType="models:HybridModelFile">
                 <StackPanel>

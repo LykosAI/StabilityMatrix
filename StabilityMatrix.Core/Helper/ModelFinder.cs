@@ -11,6 +11,25 @@ namespace StabilityMatrix.Core.Helper;
 // return Model, ModelVersion, ModelFile
 public record struct ModelSearchResult(CivitModel Model, CivitModelVersion ModelVersion, CivitFile ModelFile);
 
+public enum RemoteModelLookupStatus
+{
+    Found,
+
+    /// <summary>The hash is not known to CivitAI (or the model page has no matching file).</summary>
+    NotFound,
+
+    /// <summary>CivitAI rejected the request with HTTP 429; retrying immediately will not help.</summary>
+    RateLimited,
+
+    /// <summary>The API could not be reached or returned an unexpected error.</summary>
+    Unavailable,
+}
+
+public readonly record struct RemoteModelLookupResult(
+    RemoteModelLookupStatus Status,
+    ModelSearchResult? Result
+);
+
 [RegisterSingleton<ModelFinder>]
 public class ModelFinder
 {
@@ -41,17 +60,26 @@ public class ModelFinder
     // Finds a model using Civit API using file hash
     public async Task<ModelSearchResult?> RemoteFindModel(string hashBlake3)
     {
+        return (await RemoteFindModelWithStatus(hashBlake3).ConfigureAwait(false)).Result;
+    }
+
+    /// <summary>
+    /// Finds a model on CivitAI by file hash, reporting why a lookup produced no result so
+    /// callers can distinguish "not on CivitAI" from rate limiting and connectivity failures.
+    /// </summary>
+    public async Task<RemoteModelLookupResult> RemoteFindModelWithStatus(string hashBlake3)
+    {
         Logger.Info("Searching Civit API for model version using hash {Hash}", hashBlake3);
         try
         {
-            var versionResponse = await civitApi.GetModelVersionByHash(hashBlake3);
+            var versionResponse = await civitApi.GetModelVersionByHash(hashBlake3).ConfigureAwait(false);
 
             Logger.Info(
                 "Found version {VersionId} with model id {ModelId}",
                 versionResponse.Id,
                 versionResponse.ModelId
             );
-            var model = await civitApi.GetModelById(versionResponse.ModelId);
+            var model = await civitApi.GetModelById(versionResponse.ModelId).ConfigureAwait(false);
 
             // VersionResponse is not actually the full data of ModelVersion, so find it again
             var version = model.ModelVersions!.First(version => version.Id == versionResponse.Id);
@@ -62,9 +90,12 @@ public class ModelFinder
 
             // Archived models do not have files
             if (file == null)
-                return null;
+                return new RemoteModelLookupResult(RemoteModelLookupStatus.NotFound, null);
 
-            return new ModelSearchResult(model, version, file);
+            return new RemoteModelLookupResult(
+                RemoteModelLookupStatus.Found,
+                new ModelSearchResult(model, version, file)
+            );
         }
         catch (TaskCanceledException e)
         {
@@ -73,25 +104,29 @@ public class ModelFinder
                 hashBlake3,
                 e.Message
             );
-            return null;
+            return new RemoteModelLookupResult(RemoteModelLookupStatus.Unavailable, null);
         }
         catch (ApiException e)
         {
             if (e.StatusCode == HttpStatusCode.NotFound)
             {
                 Logger.Info("Could not find remote model version using hash {Hash}", hashBlake3);
-            }
-            else
-            {
-                Logger.Warn(
-                    e,
-                    "Could not find remote model version using hash {Hash}: {Error}",
-                    hashBlake3,
-                    e.Message
-                );
+                return new RemoteModelLookupResult(RemoteModelLookupStatus.NotFound, null);
             }
 
-            return null;
+            Logger.Warn(
+                e,
+                "Could not find remote model version using hash {Hash}: {Error}",
+                hashBlake3,
+                e.Message
+            );
+
+            return new RemoteModelLookupResult(
+                e.StatusCode == HttpStatusCode.TooManyRequests
+                    ? RemoteModelLookupStatus.RateLimited
+                    : RemoteModelLookupStatus.Unavailable,
+                null
+            );
         }
         catch (HttpRequestException e)
         {
@@ -101,7 +136,7 @@ public class ModelFinder
                 hashBlake3,
                 e.Message
             );
-            return null;
+            return new RemoteModelLookupResult(RemoteModelLookupStatus.Unavailable, null);
         }
     }
 

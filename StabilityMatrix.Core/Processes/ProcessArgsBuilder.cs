@@ -54,7 +54,7 @@ public static class ProcessArgBuilderExtensions
     {
         return builder with
         {
-            Arguments = builder.Arguments.AddRange(arguments.Select(arg => new Argument(key, arg)))
+            Arguments = builder.Arguments.AddRange(arguments.Select(arg => new Argument(key, arg))),
         };
     }
 
@@ -82,7 +82,7 @@ public static class ProcessArgBuilderExtensions
         {
             Arguments = builder
                 .Arguments.Where(arg => (arg.Key ?? arg.Value) != argumentKey)
-                .ToImmutableList()
+                .ToImmutableList(),
         };
     }
 }

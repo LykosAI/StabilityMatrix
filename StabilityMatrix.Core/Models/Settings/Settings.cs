@@ -5,6 +5,7 @@ using Semver;
 using StabilityMatrix.Core.Converters.Json;
 using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models.Api.CivArchive;
+using StabilityMatrix.Core.Models.Api.HuggingFace;
 using StabilityMatrix.Core.Models.Update;
 
 namespace StabilityMatrix.Core.Models.Settings;
@@ -77,12 +78,28 @@ public class Settings
     [JsonConverter(typeof(SemVersionJsonConverter))]
     public SemVersion? UpdatingFromVersion { get; set; }
 
+    /// <summary>
+    /// The app version the "What's New" changelog was last shown for.
+    /// Null on a fresh install / first run of the feature.
+    /// </summary>
+    public string? LastSeenChangelogVersion { get; set; }
+
+    /// <summary>
+    /// Whether to show the "What's New" notice after the app is updated
+    /// </summary>
+    public bool ShowReleaseNotesAfterUpdate { get; set; } = true;
+
     // UI states
     public bool ModelBrowserNsfwEnabled { get; set; }
     public bool IsNavExpanded { get; set; }
     public bool IsImportAsConnected { get; set; }
     public bool ShowConnectedModelImages { get; set; }
     public WindowSettings? WindowSettings { get; set; }
+
+    // HuggingFace browser UI prefs
+    public bool HuggingFaceUseStructuredView { get; set; } = true;
+    public bool HuggingFaceHideInstalled { get; set; }
+    public HuggingFaceSearchSort HuggingFaceSearchSort { get; set; } = HuggingFaceSearchSort.Downloads;
 
     public ModelSearchOptions? ModelSearchOptions { get; set; }
     public CivArchiveBrowserOptions CivArchiveBrowserOptions { get; set; } = new();
@@ -113,6 +130,11 @@ public class Settings
     public bool IsImageViewerPixelGridEnabled { get; set; } = true;
 
     /// <summary>
+    /// Use the classic dropdown menu instead of the gallery dialog when adding a new Inference tab
+    /// </summary>
+    public bool UseClassicInferenceTabPicker { get; set; }
+
+    /// <summary>
     /// Whether Inference Image Browser delete action uses recycle bin if available
     /// </summary>
     public bool IsInferenceImageBrowserUseRecycleBinForDelete { get; set; } = true;
@@ -129,24 +151,55 @@ public class Settings
     /// </summary>
     public bool ScrollBarsAlwaysVisible { get; set; } = true;
 
+    /// <summary>
+    /// Enables the app-wide quick-hide hotkey that instantly minimizes the main window
+    /// or exits the app, per <see cref="QuickHideMode"/>.
+    /// </summary>
+    public bool IsQuickHideHotkeyEnabled { get; set; }
+
+    /// <summary>
+    /// What the quick-hide hotkey does when pressed.
+    /// </summary>
+    public QuickHideMode QuickHideMode { get; set; } = QuickHideMode.Minimize;
+
+    /// <summary>
+    /// Gesture string for the quick-hide hotkey, e.g. "Ctrl+Shift+H".
+    /// The Ctrl token maps to Cmd (⌘) on macOS.
+    /// </summary>
+    public string QuickHideHotkeyGesture { get; set; } = "Ctrl+Shift+H";
+
     public HashSet<string> DisabledBaseModelTypes { get; set; } = [];
 
     public HashSet<string> SavedInferenceDimensions { get; set; } =
-        [
-            "1024 x 1024",
-            "1152 x 896",
-            "1216 x 832",
-            "1280 x 720",
-            "1344 x 768",
-            "1536 x 640",
-            "768 x 768",
-            "512 x 512",
-            "640 x 1536",
-            "768 x 1344",
-            "720 x 1280",
-            "832 x 1216",
-            "896 x 1152",
-        ];
+    [
+        "1024 x 1024",
+        "1152 x 896",
+        "1216 x 832",
+        "1280 x 720",
+        "1344 x 768",
+        "1536 x 640",
+        "768 x 768",
+        "512 x 512",
+        "640 x 1536",
+        "768 x 1344",
+        "720 x 1280",
+        "832 x 1216",
+        "896 x 1152",
+    ];
+
+    /// <summary>
+    /// Size limit in GB for the uv package cache. When set, the cache size is checked at
+    /// startup and a warning notification is shown when exceeded (or the cache is purged,
+    /// if <see cref="IsUvCacheAutoPurgeEnabled"/>). 0 (the default) disables the startup
+    /// check entirely — the size scan is expensive on large caches, so it is opt-in.
+    /// </summary>
+    public int UvCacheMaxSizeGb { get; set; }
+
+    /// <summary>
+    /// When the uv cache exceeds <see cref="UvCacheMaxSizeGb"/> at startup, purge it
+    /// automatically instead of only warning.
+    /// </summary>
+    public bool IsUvCacheAutoPurgeEnabled { get; set; }
 
     [JsonIgnore]
     public Dictionary<string, string> DefaultEnvironmentVariables { get; } =
@@ -238,11 +291,22 @@ public class Settings
     [Obsolete("Use OutputsPageResizeFactor instead")]
     public Size OutputsImageSize { get; set; } = new(300, 300);
     public HolidayMode HolidayModeSetting { get; set; } = HolidayMode.Automatic;
+
+    /// <summary>
+    /// Minimum level of messages written to the log file and console
+    /// </summary>
+    public AppLogLevel LogLevel { get; set; } = DefaultLogLevel;
+
+    /// <summary>
+    /// Log level used until settings are loaded, and for settings files without a <see cref="LogLevel"/>
+    /// </summary>
+    public const AppLogLevel DefaultLogLevel = AppLogLevel.Debug;
     public bool IsWorkflowInfiniteScrollEnabled { get; set; } = true;
     public bool IsOutputsTreeViewEnabled { get; set; } = true;
     public CheckpointSortMode CheckpointSortMode { get; set; } = CheckpointSortMode.SharedFolderType;
     public ListSortDirection CheckpointSortDirection { get; set; } = ListSortDirection.Descending;
     public bool ShowModelsInSubfolders { get; set; } = true;
+    public bool ShowWorkflowsInSubfolders { get; set; } = true;
     public bool SortConnectedModelsFirst { get; set; } = true;
     public int ConsoleFontSize { get; set; } = 14;
     public bool AutoLoadCivitModels { get; set; } = true;
@@ -307,8 +371,32 @@ public class Settings
 
     public bool ModelPickerIsGridView { get; set; }
     public Dictionary<string, ModelPickerFilterState> ModelPickerFilterStates { get; set; } = [];
+    public CheckpointSortMode ModelPickerSortMode { get; set; } = CheckpointSortMode.Title;
+    public ListSortDirection ModelPickerSortDirection { get; set; } = ListSortDirection.Ascending;
+
+    /// <summary>
+    /// User-defined model categories (name + colour). Membership is stored per model, see
+    /// <see cref="UserModelMetadata"/>.
+    /// </summary>
+    public List<ModelCategory> ModelCategories { get; set; } = [];
+
+    /// <summary>
+    /// Category names selected in the Checkpoint Manager filter (any-of match).
+    /// </summary>
+    public List<string> CheckpointsSelectedCategories { get; set; } = [];
+
+    /// <summary>
+    /// Whether the Checkpoint Manager filter includes models with no categories.
+    /// </summary>
+    public bool CheckpointsIncludeUncategorized { get; set; }
 
     public int InferenceDimensionStepChange { get; set; } = 128;
+
+    /// <summary>
+    /// Last-used Inference dock layouts (serialized Dock layout JSON) keyed by
+    /// <see cref="Inference.InferenceProjectType"/> name, applied to new tabs of that type.
+    /// </summary>
+    public Dictionary<string, string> InferenceDockLayouts { get; set; } = [];
 
     [JsonIgnore]
     public bool IsHolidayModeActive =>
@@ -390,5 +478,7 @@ public class Settings
 [JsonSerializable(typeof(Dictionary<string, LastDownloadLocationInfo>))]
 [JsonSerializable(typeof(ModelPickerFilterState))]
 [JsonSerializable(typeof(Dictionary<string, ModelPickerFilterState>))]
+[JsonSerializable(typeof(ModelCategory))]
+[JsonSerializable(typeof(List<ModelCategory>))]
 [JsonSerializable(typeof(CivArchiveBrowserOptions))]
 internal partial class SettingsSerializerContext : JsonSerializerContext;

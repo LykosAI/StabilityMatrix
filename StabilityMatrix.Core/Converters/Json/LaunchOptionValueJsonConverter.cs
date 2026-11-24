@@ -16,7 +16,7 @@ public class LaunchOptionValueJsonConverter : JsonConverter<object?>
         {
             // ignored
         }
-        
+
         try
         {
             var intValue = reader.GetInt32();
@@ -26,7 +26,7 @@ public class LaunchOptionValueJsonConverter : JsonConverter<object?>
         {
             // ignored
         }
-        
+
         try
         {
             var strValue = reader.GetString();

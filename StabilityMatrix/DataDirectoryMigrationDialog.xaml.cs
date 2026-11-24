@@ -12,8 +12,11 @@ public partial class DataDirectoryMigrationDialog : ContentDialog
 {
     private readonly DataDirectoryMigrationViewModel viewModel;
 
-    public DataDirectoryMigrationDialog(IContentDialogService dialogService, DataDirectoryMigrationViewModel viewModel) : base(
-        dialogService.GetContentPresenter())
+    public DataDirectoryMigrationDialog(
+        IContentDialogService dialogService,
+        DataDirectoryMigrationViewModel viewModel
+    )
+        : base(dialogService.GetContentPresenter())
     {
         this.viewModel = viewModel;
         InitializeComponent();

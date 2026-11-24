@@ -1,14 +1,14 @@
 ﻿// Copyright (c) 2014 AlphaSierraPapa for the SharpDevelop Team
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy of this
 // software and associated documentation files (the "Software"), to deal in the Software
 // without restriction, including without limitation the rights to use, copy, modify, merge,
 // publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons
 // to whom the Software is furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in all copies or
 // substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
 // INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
 // PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
@@ -37,7 +37,8 @@ public sealed class TextMarkerService : DocumentColorizingTransformer, IBackgrou
 
     public TextMarkerService(TextEditor editor)
     {
-        if (editor == null) throw new ArgumentNullException(nameof(editor));
+        if (editor == null)
+            throw new ArgumentNullException(nameof(editor));
         _document = editor.Document;
         _markers = new TextSegmentCollection<TextMarker>(_document);
         _textViews = new List<TextView>();
@@ -76,9 +77,11 @@ public sealed class TextMarkerService : DocumentColorizingTransformer, IBackgrou
             throw new InvalidOperationException("Cannot create a marker when not attached to a document");
 
         var textLength = _document.TextLength;
-        if (startOffset < 0 || startOffset > textLength) return null;
+        if (startOffset < 0 || startOffset > textLength)
+            return null;
         //throw new ArgumentOutOfRangeException(nameof(startOffset), startOffset, "Value must be between 0 and " + textLength);
-        if (length < 0 || startOffset + length > textLength) return null;
+        if (length < 0 || startOffset + length > textLength)
+            return null;
         //throw new ArgumentOutOfRangeException(nameof(length), length, "length must not be negative and startOffset+length must not be after the end of the document");
 
         var marker = new TextMarker(this, startOffset, length);
@@ -97,7 +100,7 @@ public sealed class TextMarkerService : DocumentColorizingTransformer, IBackgrou
     {
         if (predicate == null)
             throw new ArgumentNullException(nameof(predicate));
-        
+
         foreach (var m in _markers.ToArray())
         {
             if (predicate(m))
@@ -107,7 +110,8 @@ public sealed class TextMarkerService : DocumentColorizingTransformer, IBackgrou
 
     public void Remove(TextMarker? marker)
     {
-        if (marker == null) throw new ArgumentNullException(nameof(marker));
+        if (marker == null)
+            throw new ArgumentNullException(nameof(marker));
 
         if (_markers.Remove(marker))
         {
@@ -152,12 +156,14 @@ public sealed class TextMarkerService : DocumentColorizingTransformer, IBackgrou
                         element.TextRunProperties.SetForegroundBrush(foregroundBrush);
                     }
                     var tf = element.TextRunProperties.Typeface;
-                    element.TextRunProperties.SetTypeface(new Typeface(
-                        tf.FontFamily,
-                        marker.FontStyle ?? tf.Style,
-                        marker.FontWeight ?? tf.Weight,
-                        tf.Stretch
-                    ));
+                    element.TextRunProperties.SetTypeface(
+                        new Typeface(
+                            tf.FontFamily,
+                            marker.FontStyle ?? tf.Style,
+                            marker.FontWeight ?? tf.Weight,
+                            tf.Stretch
+                        )
+                    );
                 }
             );
         }
@@ -189,7 +195,7 @@ public sealed class TextMarkerService : DocumentColorizingTransformer, IBackgrou
                 var geoBuilder = new BackgroundGeometryBuilder
                 {
                     AlignToWholePixels = true,
-                    CornerRadius = 3
+                    CornerRadius = 3,
                 };
                 geoBuilder.AddSegment(textView, marker);
                 var geometry = geoBuilder.CreateGeometry();

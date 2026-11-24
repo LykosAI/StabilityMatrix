@@ -52,12 +52,11 @@ public partial class SettingsPage : UserControlBase, IHandleNavigation
         if (!hasLoaded)
         {
             // Initial load, navigate to first page
-            Dispatcher.UIThread.Post(
-                () =>
-                    settingsNavigationService.NavigateTo(
-                        ViewModel.SubPages[0],
-                        new SuppressNavigationTransitionInfo()
-                    )
+            Dispatcher.UIThread.Post(() =>
+                settingsNavigationService.NavigateTo(
+                    ViewModel.SubPages[0],
+                    new SuppressNavigationTransitionInfo()
+                )
             );
 
             hasLoaded = true;

@@ -8,5 +8,5 @@ public enum CivitCommercialUse
     None,
     Image,
     Rent,
-    Sell
+    Sell,
 }

@@ -40,6 +40,7 @@ using StabilityMatrix.Avalonia.DesignData;
 using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Languages;
+using StabilityMatrix.Avalonia.MarkupExtensions;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.TagCompletion;
 using StabilityMatrix.Avalonia.Services;
@@ -90,6 +91,8 @@ public partial class MainSettingsViewModel : PageViewModelBase
     private readonly IDocumentationNavigationService documentationNavigationService;
     private readonly IAccountsService accountsService;
     private readonly ICivitBaseModelTypeService baseModelTypeService;
+    private readonly IUvCacheService uvCacheService;
+    private readonly IUvCachePurgeRunner uvCachePurgeRunner;
 
     public SharedState SharedState { get; }
 
@@ -126,6 +129,11 @@ public partial class MainSettingsViewModel : PageViewModelBase
 
     public IReadOnlyList<HolidayMode> HolidayModes { get; } = Enum.GetValues<HolidayMode>().ToList();
 
+    public IReadOnlyList<AppLogLevel> LogLevels { get; } = Enum.GetValues<AppLogLevel>().ToList();
+
+    [ObservableProperty]
+    public partial AppLogLevel SelectedLogLevel { get; set; }
+
     [ObservableProperty]
     private float selectedAnimationScale;
 
@@ -140,6 +148,18 @@ public partial class MainSettingsViewModel : PageViewModelBase
     // Appearance section
     [ObservableProperty]
     private bool scrollBarsAlwaysVisible = true;
+
+    // System section
+    [ObservableProperty]
+    public partial bool IsQuickHideHotkeyEnabled { get; set; }
+
+    public IReadOnlyList<QuickHideMode> QuickHideModes { get; } = Enum.GetValues<QuickHideMode>().ToList();
+
+    [ObservableProperty]
+    public partial QuickHideMode SelectedQuickHideMode { get; set; }
+
+    [ObservableProperty]
+    public partial string QuickHideHotkeyGesture { get; set; } = "Ctrl+Shift+H";
 
     // Console section
     [ObservableProperty]
@@ -172,6 +192,25 @@ public partial class MainSettingsViewModel : PageViewModelBase
 
     [ObservableProperty]
     private bool showAllAvailablePythonVersions;
+
+    // Package Environment section
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsUvCacheLimitSet))]
+    public partial int UvCacheMaxSizeGb { get; set; }
+
+    /// <summary>
+    /// The auto-purge toggle only means something once a startup size limit exists,
+    /// so it is disabled (not just inert) without one.
+    /// </summary>
+    public bool IsUvCacheLimitSet => UvCacheMaxSizeGb > 0;
+
+    [ObservableProperty]
+    public partial bool IsUvCacheAutoPurgeEnabled { get; set; }
+
+    [ObservableProperty]
+    public partial string? UvCacheSizeText { get; set; }
+
+    private long lastKnownUvCacheSizeBytes;
 
     [ObservableProperty]
     public partial List<BaseModelOptionViewModel> AllBaseModelTypes { get; set; } = [];
@@ -237,7 +276,9 @@ public partial class MainSettingsViewModel : PageViewModelBase
         INavigationService<SettingsViewModel> settingsNavigationService,
         IDocumentationNavigationService documentationNavigationService,
         IAccountsService accountsService,
-        ICivitBaseModelTypeService baseModelTypeService
+        ICivitBaseModelTypeService baseModelTypeService,
+        IUvCacheService uvCacheService,
+        IUvCachePurgeRunner uvCachePurgeRunner
     )
     {
         this.notificationService = notificationService;
@@ -252,6 +293,8 @@ public partial class MainSettingsViewModel : PageViewModelBase
         this.documentationNavigationService = documentationNavigationService;
         this.accountsService = accountsService;
         this.baseModelTypeService = baseModelTypeService;
+        this.uvCacheService = uvCacheService;
+        this.uvCachePurgeRunner = uvCachePurgeRunner;
 
         SharedState = sharedState;
 
@@ -283,6 +326,38 @@ public partial class MainSettingsViewModel : PageViewModelBase
             true
         );
 
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.IsQuickHideHotkeyEnabled,
+            settings => settings.IsQuickHideHotkeyEnabled,
+            true
+        );
+
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.SelectedQuickHideMode,
+            settings => settings.QuickHideMode,
+            true
+        );
+
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.UvCacheMaxSizeGb,
+            settings => settings.UvCacheMaxSizeGb,
+            true
+        );
+
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.IsUvCacheAutoPurgeEnabled,
+            settings => settings.IsUvCacheAutoPurgeEnabled,
+            true
+        );
+
+        // The gesture is validated in OnQuickHideHotkeyGestureChanged instead of relayed,
+        // so an unparsable string never reaches settings (and thus the live KeyBinding)
+        QuickHideHotkeyGesture = settingsManager.Settings.QuickHideHotkeyGesture;
+
         // Push the initial value into the global DynamicResources that the
         // ScrollBarStyles read from, so the loaded setting actually takes effect.
         ApplyScrollBarSetting(ScrollBarsAlwaysVisible);
@@ -309,6 +384,13 @@ public partial class MainSettingsViewModel : PageViewModelBase
             this,
             vm => vm.SelectedNumberFormatMode,
             settings => settings.NumberFormatMode,
+            true
+        );
+
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.SelectedLogLevel,
+            settings => settings.LogLevel,
             true
         );
 
@@ -421,10 +503,9 @@ public partial class MainSettingsViewModel : PageViewModelBase
 
         var gpuInfos = HardwareHelper.IterGpuInfo();
         GpuInfoCollection = new ObservableCollection<GpuInfo>(gpuInfos);
-        PreferredGpu ??=
-            GpuInfos.FirstOrDefault(gpu =>
-                gpu.Name?.Contains("nvidia", StringComparison.InvariantCultureIgnoreCase) ?? false
-            ) ?? GpuInfos.FirstOrDefault();
+        PreferredGpu ??= GpuInfos.FirstOrDefault(gpu =>
+            gpu.Name?.Contains("nvidia", StringComparison.InvariantCultureIgnoreCase) ?? false
+        ) ?? GpuInfos.FirstOrDefault();
 
         if (Design.IsDesignMode)
             return;
@@ -451,8 +532,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
     {
         try
         {
-            using var fsKey =
-                Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Control\FileSystem")
+            using var fsKey = Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Control\FileSystem")
                 ?? throw new InvalidOperationException(
                     "Could not open registry key 'SYSTEM\\CurrentControlSet\\Control\\FileSystem'"
                 );
@@ -550,6 +630,35 @@ public partial class MainSettingsViewModel : PageViewModelBase
     }
 
     /// <summary>
+    /// Validates the quick-hide gesture before persisting: an unparsable string is
+    /// reverted (with a toast) instead of written to settings.
+    /// </summary>
+    partial void OnQuickHideHotkeyGestureChanged(string value)
+    {
+        var storedValue = settingsManager.Settings.QuickHideHotkeyGesture;
+
+        if (value == storedValue)
+            return;
+
+        try
+        {
+            PlatformGestureExtension.Parse(value);
+        }
+        catch (Exception)
+        {
+            notificationService.Show(
+                "Invalid shortcut",
+                $"Could not parse \"{value}\". Use a gesture like \"Ctrl+Shift+H\".",
+                NotificationType.Warning
+            );
+            QuickHideHotkeyGesture = storedValue;
+            return;
+        }
+
+        settingsManager.Transaction(s => s.QuickHideHotkeyGesture, value);
+    }
+
+    /// <summary>
     /// Pushes the scrollbar-visibility setting into the global DynamicResources that
     /// the ScrollBarStyles consume. Called both on initial settings load and whenever
     /// the toggle changes, so changes take effect immediately without restart.
@@ -605,8 +714,8 @@ public partial class MainSettingsViewModel : PageViewModelBase
         }
         else
         {
-            var current =
-                settingsManager.Settings.UserEnvironmentVariables ?? new Dictionary<string, string>();
+            var current = settingsManager.Settings.UserEnvironmentVariables
+                ?? new Dictionary<string, string>();
             viewModel.EnvVars = new ObservableCollection<EnvVarKeyPair>(
                 current.Select(kvp => new EnvVarKeyPair(kvp.Key, kvp.Value))
             );
@@ -705,20 +814,22 @@ public partial class MainSettingsViewModel : PageViewModelBase
     }
 
     [RelayCommand]
-    private async Task ClearUvCache()
+    private async Task CheckUvCacheSize()
     {
-        await prerequisiteHelper.InstallUvIfNecessary();
-        var processPath = new FilePath(prerequisiteHelper.UvExePath);
+        lastKnownUvCacheSizeBytes = await uvCacheService.GetSizeBytesAsync();
+        UvCacheSizeText = Core.Helper.Size.FormatBase10Bytes(lastKnownUvCacheSizeBytes);
+    }
 
-        var step = new ProcessStep
+    [RelayCommand]
+    private async Task PurgeUvCache()
+    {
+        var freedBytes = await uvCachePurgeRunner.RunPurgeWithConfirmAsync(lastKnownUvCacheSizeBytes);
+
+        // Refresh the displayed size unless the user cancelled the dialog
+        if (freedBytes is not null)
         {
-            FileName = processPath,
-            Args = ["cache", "clean"],
-            WorkingDirectory = Compat.AppCurrentDir,
-            EnvironmentVariables = settingsManager.Settings.EnvironmentVariables.ToImmutableDictionary(),
-        };
-
-        ConsoleProcessRunner.RunProcessStepAsync(step).SafeFireAndForget();
+            await CheckUvCacheSize();
+        }
     }
 
     [RelayCommand]
@@ -1739,6 +1850,14 @@ public partial class MainSettingsViewModel : PageViewModelBase
     }
 
     [RelayCommand]
+    private void ShowWhatsNewDialog()
+    {
+        // Centralized in MainWindowViewModel so the same dialog is used by the
+        // post-update notification action.
+        EventManager.Instance.OnShowChangelogRequested();
+    }
+
+    [RelayCommand]
     private async Task ShowLicensesDialog()
     {
         try
@@ -1759,8 +1878,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
     {
         // Read licenses.json
         using var reader = new StreamReader(Assets.LicensesJson.Open());
-        var licenses =
-            JsonSerializer.Deserialize<IReadOnlyList<LicenseInfo>>(reader.ReadToEnd())
+        var licenses = JsonSerializer.Deserialize<IReadOnlyList<LicenseInfo>>(reader.ReadToEnd())
             ?? throw new InvalidOperationException("Failed to read licenses.json");
 
         // Generate markdown

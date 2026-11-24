@@ -74,7 +74,7 @@ public partial class CheckpointsPage : UserControlBase
             TreeViewItem treeView => treeView.DataContext,
             Border border => border.Parent?.Parent?.DataContext,
             TextBlock textBlock => textBlock.Parent?.DataContext,
-            _ => null
+            _ => null,
         };
 
         if (sourceDataContext is not CheckpointCategory category)
@@ -127,7 +127,7 @@ public partial class CheckpointsPage : UserControlBase
             TreeViewItem treeView => treeView.DataContext,
             Border border => border.Parent?.Parent?.DataContext,
             TextBlock textBlock => textBlock.Parent?.DataContext,
-            _ => null
+            _ => null,
         };
 
         if (sourceDataContext is not CheckpointCategory category)
@@ -143,7 +143,7 @@ public partial class CheckpointsPage : UserControlBase
             var newTimer = new DispatcherTimer
             {
                 Interval = TimeSpan.FromMilliseconds(500),
-                IsEnabled = true
+                IsEnabled = true,
             };
             newTimer.Tick += (timerObj, _) =>
             {
@@ -152,7 +152,7 @@ public partial class CheckpointsPage : UserControlBase
                     TreeViewItem treeView => treeView,
                     Border border => border.Parent?.Parent as TreeViewItem,
                     TextBlock textBlock => textBlock.Parent as TreeViewItem,
-                    _ => null
+                    _ => null,
                 };
 
                 if (treeViewItem != null && category.SubDirectories.Count > 0)
@@ -193,6 +193,18 @@ public partial class CheckpointsPage : UserControlBase
 
         switch (sourceDataContext)
         {
+            case CategoryOptionViewModel option:
+                if (e.Data.GetContext<CheckpointFileViewModel>() is { } draggedVm)
+                {
+                    var dropped = checkpointsVm.Models.Where(x => x.IsSelected).ToList();
+                    if (!checkpointsVm.DragMovesAllSelected || !dropped.Contains(draggedVm))
+                    {
+                        dropped = [draggedVm];
+                    }
+
+                    await checkpointsVm.AssignCategoryAsync(option, dropped.Select(x => x.CheckpointFile));
+                }
+                break;
             case CheckpointCategory category:
                 if (e.Data.GetContext<CheckpointFileViewModel>() is { } vm)
                 {

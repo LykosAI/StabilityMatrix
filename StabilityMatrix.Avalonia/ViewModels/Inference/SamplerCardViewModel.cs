@@ -154,11 +154,13 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
             [
                 typeof(FreeUModule),
                 typeof(ControlNetModule),
+                typeof(IPAdapterModule),
                 typeof(RegionalPromptModule),
                 typeof(LayerDiffuseModule),
                 typeof(FluxGuidanceModule),
                 typeof(DiscreteModelSamplingModule),
                 typeof(RescaleCfgModule),
+                typeof(SkipLayerGuidanceModule),
                 typeof(PlasmaNoiseModule),
                 typeof(NRSModule),
                 typeof(TiledVAEModule),
@@ -215,6 +217,12 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
     {
         // Sync height to TabContext so other components can access it
         tabContext.SamplerHeight = value;
+    }
+
+    partial void OnCfgScaleChanged(double value)
+    {
+        // Sync CFG to TabContext so other components can access it
+        tabContext.SamplerCfgScale = value;
     }
 
     [RelayCommand]

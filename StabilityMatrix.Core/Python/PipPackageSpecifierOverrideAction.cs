@@ -4,5 +4,5 @@ public enum PipPackageSpecifierOverrideAction
 {
     None,
     Update,
-    Remove
+    Remove,
 }

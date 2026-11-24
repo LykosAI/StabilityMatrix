@@ -30,7 +30,7 @@ public class PromptCard : TemplatedControlBase
             var editor in new[]
             {
                 e.NameScope.Find<TextEditor>("PromptEditor"),
-                e.NameScope.Find<TextEditor>("NegativePromptEditor")
+                e.NameScope.Find<TextEditor>("NegativePromptEditor"),
             }
         )
         {
@@ -48,13 +48,13 @@ public class PromptCard : TemplatedControlBase
                             new()
                             {
                                 Command = ApplicationCommands.Cut,
-                                Gesture = new KeyGesture(Key.Delete, KeyModifiers.Shift)
+                                Gesture = new KeyGesture(Key.Delete, KeyModifiers.Shift),
                             },
                             new()
                             {
                                 Command = ApplicationCommands.Paste,
-                                Gesture = new KeyGesture(Key.Insert, KeyModifiers.Shift)
-                            }
+                                Gesture = new KeyGesture(Key.Insert, KeyModifiers.Shift),
+                            },
                         }
                     );
                 }

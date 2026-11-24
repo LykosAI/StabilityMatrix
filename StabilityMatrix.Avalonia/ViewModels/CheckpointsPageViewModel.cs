@@ -1,4 +1,4 @@
-﻿using System.Collections.Immutable;
+using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Reactive.Linq;
@@ -17,6 +17,7 @@ using Fusillade;
 using Injectio.Attributes;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Animations;
+using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
@@ -58,6 +59,7 @@ public partial class CheckpointsPageViewModel(
     IMetadataImportService metadataImportService,
     IModelImportService modelImportService,
     ModelOrganizationService modelOrganizationService,
+    IModelCategoryService categoryService,
     OpenModelDbManager openModelDbManager,
     IServiceManager<ViewModelBase> dialogFactory,
     ICivitBaseModelTypeService baseModelTypeService,
@@ -155,6 +157,25 @@ public partial class CheckpointsPageViewModel(
     public IObservableCollection<BaseModelOptionViewModel> BaseModelOptions { get; set; } =
         new ObservableCollectionExtended<BaseModelOptionViewModel>();
 
+    /// <summary>
+    /// Sidebar category filter entries, rebuilt whenever the index or the registry changes.
+    /// </summary>
+    public ObservableCollection<CategoryOptionViewModel> CategoryOptions { get; } = [];
+
+    /// <summary>
+    /// Selected category names (any-of match). Empty means no category filtering.
+    /// </summary>
+    [ObservableProperty]
+    private ObservableCollection<string> selectedCategories = [];
+
+    /// <summary>
+    /// Whether models with no categories pass the category filter.
+    /// </summary>
+    [ObservableProperty]
+    private bool includeUncategorized;
+
+    public bool HasCategoryFilter => SelectedCategories.Count > 0 || IncludeUncategorized;
+
     protected override async Task OnInitialLoadedAsync()
     {
         if (Design.IsDesignMode)
@@ -207,6 +228,31 @@ public partial class CheckpointsPageViewModel(
 
         AddDisposable(settingsTransactionObservable);
 
+        SelectedCategories = new ObservableCollection<string>(
+            settingsManager.Settings.CheckpointsSelectedCategories
+        );
+        IncludeUncategorized = settingsManager.Settings.CheckpointsIncludeUncategorized;
+
+        AddDisposable(
+            this.WhenPropertyChanged(x => x.SelectedCategories)
+                .Throttle(TimeSpan.FromMilliseconds(50))
+                .Skip(1)
+                .ObserveOn(SynchronizationContext.Current)
+                .Subscribe(_ =>
+                    settingsManager.Transaction(settings =>
+                        settings.CheckpointsSelectedCategories = SelectedCategories.ToList()
+                    )
+                )
+        );
+
+        AddDisposable(
+            settingsManager.RelayPropertyFor(
+                this,
+                vm => vm.IncludeUncategorized,
+                settings => settings.CheckpointsIncludeUncategorized
+            )
+        );
+
         // Observable predicate from SearchQuery changes
         var searchPredicate = this.WhenPropertyChanged(vm => vm.SearchQuery)
             .Throttle(TimeSpan.FromMilliseconds(100))
@@ -220,17 +266,23 @@ public partial class CheckpointsPageViewModel(
                                 file.ConnectedModelInfo?.Tags.Contains(
                                     SearchQuery.Substring(1),
                                     StringComparer.OrdinalIgnoreCase
-                                ) ?? false
+                                )
+                                ?? false
                             )
                         )
-                        || file.DisplayModelFileName.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase)
-                        || file.DisplayModelName.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase)
-                        || file.DisplayModelVersion.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase)
                         || (
-                            file.ConnectedModelInfo?.TrainedWordsString.Contains(
-                                SearchQuery,
-                                StringComparison.OrdinalIgnoreCase
-                            ) ?? false
+                            SearchQuery.StartsWith("@")
+                            && file.Categories.Contains(SearchQuery[1..], StringComparer.OrdinalIgnoreCase)
+                        )
+                        || FuzzySearchHelper.IsMatch(
+                            SearchQuery,
+                            string.Join(
+                                ' ',
+                                file.DisplayModelFileName,
+                                file.DisplayModelName,
+                                file.DisplayModelVersion,
+                                file.ConnectedModelInfo?.TrainedWordsString ?? string.Empty
+                            )
                         )
                 )
             )
@@ -244,6 +296,8 @@ public partial class CheckpointsPageViewModel(
                     is nameof(SelectedCategory)
                         or nameof(ShowModelsInSubfolders)
                         or nameof(SelectedBaseModels)
+                        or nameof(SelectedCategories)
+                        or nameof(IncludeUncategorized)
             )
             .Throttle(TimeSpan.FromMilliseconds(50))
             .Select(_ => (Func<LocalModelFile, bool>)FilterModels)
@@ -592,13 +646,69 @@ public partial class CheckpointsPageViewModel(
         };
 
         EventManager.Instance.OnPackageInstallProgressAdded(runner);
-        await Dispatcher.UIThread.InvokeAsync(async () => await runner.ExecuteSteps([scanMetadataStep]));
+        await runner.ExecuteSteps([scanMetadataStep]);
 
         await modelIndexService.RefreshIndex();
-        var message = updateExistingMetadata
-            ? "Finished updating metadata."
-            : "Finished scanning for missing metadata.";
-        notificationService.Show("Scan Complete", message, NotificationType.Success);
+        ShowScanResultNotification(scanMetadataStep.Result, updateExistingMetadata);
+    }
+
+    private void ShowScanResultNotification(MetadataScanResult? result, bool updateExistingMetadata)
+    {
+        if (result is null)
+        {
+            notificationService.Show(
+                "Scan Complete",
+                updateExistingMetadata
+                    ? "Finished updating metadata."
+                    : "Finished scanning for missing metadata.",
+                NotificationType.Success
+            );
+            return;
+        }
+
+        if (result.Aborted)
+        {
+            notificationService.ShowPersistent(
+                "Scan Stopped Early",
+                $"CivitAI stopped responding (rate limited or unreachable) after "
+                    + $"{result.Found} of {result.Total} files. Try again in a few minutes.",
+                NotificationType.Warning
+            );
+            return;
+        }
+
+        if (result.Total == 0)
+        {
+            notificationService.Show(
+                "Nothing To Scan",
+                updateExistingMetadata
+                    ? "No files in this category have connected metadata to refresh."
+                    : "All files in this category already have metadata.",
+                NotificationType.Information
+            );
+            return;
+        }
+
+        var details = new List<string>();
+        if (result.NotFound > 0)
+            details.Add($"{result.NotFound} not found on CivitAI");
+        if (result.Failed > 0)
+            details.Add($"{result.Failed} failed");
+        if (result.Skipped > 0)
+            details.Add($"{result.Skipped} skipped (no file to hash)");
+
+        var verb = updateExistingMetadata ? "Refreshed metadata for" : "Found metadata for";
+        var message = $"{verb} {result.Found} of {result.Total} files.";
+        if (details.Count > 0)
+            message += $" ({string.Join(", ", details)})";
+
+        notificationService.Show(
+            "Scan Complete",
+            message,
+            result.Found > 0 || result.Total == result.NotFound
+                ? NotificationType.Success
+                : NotificationType.Warning
+        );
     }
 
     [RelayCommand]
@@ -781,8 +891,8 @@ public partial class CheckpointsPageViewModel(
 
         var newVm = dialogFactory.Get<CivitDetailsPageViewModel>(vm =>
         {
-            vm.CivitModel =
-                model ?? new CivitModel { Id = item.CheckpointFile.ConnectedModelInfo.ModelId.Value };
+            vm.CivitModel = model
+                ?? new CivitModel { Id = item.CheckpointFile.ConnectedModelInfo.ModelId.Value };
             vm.ModelIdList = allModelIds;
             vm.CurrentIndex = index;
             return vm;
@@ -1000,53 +1110,7 @@ public partial class CheckpointsPageViewModel(
                     return;
                 }
 
-                try
-                {
-                    var sourcePath = new FilePath(
-                        sourceFile.CheckpointFile.GetFullPath(settingsManager.ModelsDirectory)
-                    );
-                    var fileNameWithoutExt = Path.GetFileNameWithoutExtension(sourcePath);
-                    var sourceCmInfoPath = Path.Combine(
-                        sourcePath.Directory!,
-                        $"{fileNameWithoutExt}.cm-info.json"
-                    );
-                    var sourcePreviewPath = Path.Combine(
-                        sourcePath.Directory!,
-                        $"{fileNameWithoutExt}.preview.jpeg"
-                    );
-                    var destinationFilePath = Path.Combine(destinationFolder, sourcePath.Name);
-                    var destinationCmInfoPath = Path.Combine(
-                        destinationFolder,
-                        $"{fileNameWithoutExt}.cm-info.json"
-                    );
-                    var destinationPreviewPath = Path.Combine(
-                        destinationFolder,
-                        $"{fileNameWithoutExt}.preview.jpeg"
-                    );
-
-                    // Move files
-                    if (File.Exists(sourcePath))
-                        await FileTransfers.MoveFileAsync(sourcePath, destinationFilePath);
-
-                    if (File.Exists(sourceCmInfoPath))
-                        await FileTransfers.MoveFileAsync(sourceCmInfoPath, destinationCmInfoPath);
-
-                    if (File.Exists(sourcePreviewPath))
-                        await FileTransfers.MoveFileAsync(sourcePreviewPath, destinationPreviewPath);
-
-                    notificationService.Show(
-                        "Model moved successfully",
-                        $"Moved '{sourcePath.Name}' to '{Path.GetFileName(destinationFolder)}'"
-                    );
-                }
-                catch (FileTransferExistsException)
-                {
-                    notificationService.Show(
-                        "Failed to move file",
-                        "Destination file exists",
-                        NotificationType.Error
-                    );
-                }
+                await MoveModelFileAsync(sourceFile.CheckpointFile, destinationFolder);
             }
 
             SelectedCategory = Categories
@@ -1055,6 +1119,39 @@ public partial class CheckpointsPageViewModel(
 
             await modelIndexService.RefreshIndex();
             DelayedClearProgress(TimeSpan.FromSeconds(1.5));
+        }
+    }
+
+    /// <summary>
+    /// Moves one model and all of its sidecars, reporting the outcome as a notification.
+    /// </summary>
+    private async Task MoveModelFileAsync(LocalModelFile sourceFile, DirectoryPath destinationFolder)
+    {
+        try
+        {
+            await modelOrganizationService.MoveModelFileAsync(
+                sourceFile,
+                settingsManager.ModelsDirectory,
+                destinationFolder
+            );
+
+            notificationService.Show(
+                "Model moved successfully",
+                $"Moved '{sourceFile.FileName}' to '{Path.GetFileName(destinationFolder)}'"
+            );
+        }
+        catch (FileTransferExistsException)
+        {
+            notificationService.Show(
+                "Failed to move file",
+                "Destination file exists",
+                NotificationType.Error
+            );
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            logger.LogError(e, "Failed to move model {File}", sourceFile.RelativePath);
+            notificationService.Show("Failed to move file", e.Message, NotificationType.Error);
         }
     }
 
@@ -1076,39 +1173,7 @@ public partial class CheckpointsPageViewModel(
 
         try
         {
-            var sourcePath = new FilePath(sourceFile.GetFullPath(settingsManager.ModelsDirectory));
-            var fileNameWithoutExt = Path.GetFileNameWithoutExtension(sourcePath);
-            var sourceCmInfoPath = Path.Combine(sourcePath.Directory!, $"{fileNameWithoutExt}.cm-info.json");
-            var sourcePreviewPath = Path.Combine(sourcePath.Directory!, $"{fileNameWithoutExt}.preview.jpeg");
-            var destinationFilePath = Path.Combine(destinationFolder, sourcePath.Name);
-            var destinationCmInfoPath = Path.Combine(destinationFolder, $"{fileNameWithoutExt}.cm-info.json");
-            var destinationPreviewPath = Path.Combine(
-                destinationFolder,
-                $"{fileNameWithoutExt}.preview.jpeg"
-            );
-
-            // Move files
-            if (File.Exists(sourcePath))
-                await FileTransfers.MoveFileAsync(sourcePath, destinationFilePath);
-
-            if (File.Exists(sourceCmInfoPath))
-                await FileTransfers.MoveFileAsync(sourceCmInfoPath, destinationCmInfoPath);
-
-            if (File.Exists(sourcePreviewPath))
-                await FileTransfers.MoveFileAsync(sourcePreviewPath, destinationPreviewPath);
-
-            notificationService.Show(
-                "Model moved successfully",
-                $"Moved '{sourcePath.Name}' to '{Path.GetFileName(destinationFolder)}'"
-            );
-        }
-        catch (FileTransferExistsException)
-        {
-            notificationService.Show(
-                "Failed to move file",
-                "Destination file exists",
-                NotificationType.Error
-            );
+            await MoveModelFileAsync(sourceFile, destinationFolder);
         }
         finally
         {
@@ -1187,8 +1252,9 @@ public partial class CheckpointsPageViewModel(
             updater.Load([rootCategory, .. modelCategories]);
         });
 
-        SelectedCategory =
-            previouslySelectedCategory
+        RefreshCategoryOptions();
+
+        SelectedCategory = previouslySelectedCategory
             ?? Categories.FirstOrDefault(x => x.Path == previouslySelectedCategory?.Path)
             ?? Categories.FirstOrDefault()
             ?? (categoriesCache.Items.Any() ? categoriesCache.Items[0] : null);
@@ -1208,8 +1274,7 @@ public partial class CheckpointsPageViewModel(
 
         Dispatcher.UIThread.Post(() =>
         {
-            SelectedCategory =
-                previouslySelectedCategory
+            SelectedCategory = previouslySelectedCategory
                 ?? Categories.FirstOrDefault(x => x.Path == previouslySelectedCategory?.Path)
                 ?? Categories.FirstOrDefault()
                 ?? (categoriesCache.Items.Any() ? categoriesCache.Items[0] : null);
@@ -1298,11 +1363,11 @@ public partial class CheckpointsPageViewModel(
         if (folderPath?.Contains("diffusion_models", StringComparison.OrdinalIgnoreCase) ?? false)
             return false;
 
+        if (!MatchesCategoryFilter(file))
+            return false;
+
         if (SelectedCategory?.Path is null || SelectedCategory?.Path == settingsManager.ModelsDirectory)
-            return file.HasConnectedModel
-                ? SelectedBaseModels.Count == 0
-                    || SelectedBaseModels.Contains(file.ConnectedModelInfo.BaseModel ?? "Other")
-                : SelectedBaseModels.Count == 0 || SelectedBaseModels.Contains("Other");
+            return MatchesBaseModelFilter(file);
 
         var categoryRelativePath = SelectedCategory
             ?.Path.Replace(settingsManager.ModelsDirectory, string.Empty)
@@ -1311,15 +1376,7 @@ public partial class CheckpointsPageViewModel(
         if (categoryRelativePath == null || folderPath == null)
             return false;
 
-        if (
-            (
-                file.HasConnectedModel
-                    ? SelectedBaseModels.Count == 0
-                        || SelectedBaseModels.Contains(file.ConnectedModelInfo?.BaseModel ?? "Other")
-                    : SelectedBaseModels.Count == 0 || SelectedBaseModels.Contains("Other")
-            )
-            is false
-        )
+        if (!MatchesBaseModelFilter(file))
             return false;
 
         // If not showing nested models, just check if the file is directly in this folder
@@ -1340,9 +1397,251 @@ public partial class CheckpointsPageViewModel(
             .Any();
     }
 
+    private bool MatchesBaseModelFilter(LocalModelFile file)
+    {
+        return SelectedBaseModels.Count == 0
+            || SelectedBaseModels.Contains(file.ConnectedModelInfo?.BaseModel ?? "Other");
+    }
+
     private bool FilterCategories(CheckpointCategory category)
     {
         return !HideEmptyRootCategories || category is { Count: > 0 };
+    }
+
+    private bool MatchesCategoryFilter(LocalModelFile file)
+    {
+        if (!HasCategoryFilter)
+            return true;
+
+        if (file.Categories.Count == 0)
+            return IncludeUncategorized;
+
+        return file.Categories.Any(c => SelectedCategories.Contains(c, StringComparer.OrdinalIgnoreCase));
+    }
+
+    /// <summary>
+    /// Rebuilds the sidebar category list from the registry and the index, keeping the current selection.
+    /// </summary>
+    private void RefreshCategoryOptions()
+    {
+        foreach (var option in CategoryOptions)
+        {
+            option.PropertyChanged -= OnCategoryOptionPropertyChanged;
+        }
+        CategoryOptions.Clear();
+
+        var allModels = modelIndexService.ModelIndex.Values.SelectMany(x => x).ToList();
+
+        foreach (var category in categoryService.GetCategories())
+        {
+            CategoryOptions.Add(
+                new CategoryOptionViewModel
+                {
+                    Name = category.Name,
+                    ColorHex = category.Color,
+                    ColorBrush = ModelCategoryStyle.SwatchBrush(category.Color),
+                    Count = allModels.Count(m =>
+                        m.Categories.Contains(category.Name, StringComparer.OrdinalIgnoreCase)
+                    ),
+                    IsSelected = SelectedCategories.Contains(category.Name, StringComparer.OrdinalIgnoreCase),
+                }
+            );
+        }
+
+        CategoryOptions.Add(
+            new CategoryOptionViewModel
+            {
+                Name = Resources.Label_Uncategorized,
+                IsUncategorized = true,
+                Count = allModels.Count(m => m.Categories.Count == 0),
+                IsSelected = IncludeUncategorized,
+            }
+        );
+
+        foreach (var option in CategoryOptions)
+        {
+            option.PropertyChanged += OnCategoryOptionPropertyChanged;
+        }
+
+        foreach (var model in Models)
+        {
+            model.RefreshCategoryChips();
+        }
+    }
+
+    private void OnCategoryOptionPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (
+            e.PropertyName != nameof(CategoryOptionViewModel.IsSelected)
+            || sender is not CategoryOptionViewModel option
+        )
+            return;
+
+        if (option.IsUncategorized)
+        {
+            IncludeUncategorized = option.IsSelected;
+        }
+        else
+        {
+            var existing = SelectedCategories.FirstOrDefault(c =>
+                string.Equals(c, option.Name, StringComparison.OrdinalIgnoreCase)
+            );
+
+            switch (option.IsSelected)
+            {
+                case true when existing is null:
+                    SelectedCategories.Add(option.Name);
+                    break;
+                case false when existing is not null:
+                    SelectedCategories.Remove(existing);
+                    break;
+                default:
+                    return;
+            }
+        }
+
+        OnPropertyChanged(nameof(SelectedCategories));
+        OnPropertyChanged(nameof(HasCategoryFilter));
+    }
+
+    [RelayCommand]
+    private void ClearCategoryFilter()
+    {
+        foreach (var option in CategoryOptions)
+        {
+            option.IsSelected = false;
+        }
+    }
+
+    /// <summary>
+    /// Opens the Set Categories dialog for the right-clicked card, or for the whole selection
+    /// when that card is part of it. With no card, acts on the selection.
+    /// </summary>
+    [RelayCommand]
+    private async Task EditCategories(CheckpointFileViewModel? card)
+    {
+        var selected = Models.Where(m => m.IsSelected).ToList();
+        var targets =
+            card is null ? selected
+            : card.IsSelected && selected.Count > 1 ? selected
+            : [card];
+
+        if (targets.Count == 0)
+            return;
+
+        await ShowCategoriesDialogAsync(targets.Select(t => t.CheckpointFile).ToList());
+    }
+
+    [RelayCommand]
+    private async Task ManageCategories()
+    {
+        await ShowCategoriesDialogAsync([]);
+    }
+
+    private async Task ShowCategoriesDialogAsync(IReadOnlyList<LocalModelFile> targets)
+    {
+        var vm = dialogFactory.Get<ModelCategoriesDialogViewModel>(vm => vm.Targets = targets);
+        await vm.GetDialog().ShowAsync();
+
+        // Categories deleted in the dialog must not linger as an invisible filter
+        var known = categoryService
+            .GetCategories()
+            .Select(c => c.Name)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        if (SelectedCategories.Any(name => !known.Contains(name)))
+        {
+            SelectedCategories = new ObservableCollection<string>(SelectedCategories.Where(known.Contains));
+        }
+
+        // Colours, order and registry entries may have changed without an index refresh
+        RefreshCategoryOptions();
+    }
+
+    /// <summary>
+    /// Assigns a sidebar category to dropped models. Never moves files.
+    /// </summary>
+    public async Task AssignCategoryAsync(CategoryOptionViewModel option, IEnumerable<LocalModelFile> models)
+    {
+        if (option.IsUncategorized)
+            return;
+
+        try
+        {
+            await categoryService.AddToCategoryAsync(models, option.Name);
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "Failed to assign category {Category}", option.Name);
+            notificationService.Show(Resources.Label_Categories, e.Message, NotificationType.Error);
+        }
+    }
+
+    [RelayCommand]
+    private async Task RenameCategory(CategoryOptionViewModel? option)
+    {
+        if (option is null || option.IsUncategorized)
+            return;
+
+        var field = new TextBoxField { Label = Resources.Label_CategoryName, Text = option.Name };
+        var dialog = DialogHelper.CreateTextEntryDialog(Resources.Label_RenameCategory, "", [field]);
+
+        if (await dialog.ShowAsync() != ContentDialogResult.Primary || string.IsNullOrWhiteSpace(field.Text))
+            return;
+
+        try
+        {
+            await categoryService.RenameCategoryAsync(option.Name, field.Text);
+
+            if (SelectedCategories.Remove(option.Name))
+            {
+                SelectedCategories.Add(field.Text.Trim());
+                OnPropertyChanged(nameof(SelectedCategories));
+            }
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "Failed to rename category {Category}", option.Name);
+            notificationService.Show(Resources.Label_Categories, e.Message, NotificationType.Error);
+        }
+
+        RefreshCategoryOptions();
+    }
+
+    [RelayCommand]
+    private async Task DeleteCategory(CategoryOptionViewModel? option)
+    {
+        if (option is null || option.IsUncategorized)
+            return;
+
+        var confirm = new BetterContentDialog
+        {
+            Title = Resources.Action_Delete,
+            Content = string.Format(Resources.Label_DeleteCategoryConfirm, option.Name, option.Count),
+            PrimaryButtonText = Resources.Action_Delete,
+            CloseButtonText = Resources.Action_Cancel,
+            DefaultButton = ContentDialogButton.Close,
+            IsPrimaryButtonEnabled = true,
+        };
+
+        if (await confirm.ShowAsync() != ContentDialogResult.Primary)
+            return;
+
+        try
+        {
+            await categoryService.DeleteCategoryAsync(option.Name);
+
+            if (SelectedCategories.Remove(option.Name))
+            {
+                OnPropertyChanged(nameof(SelectedCategories));
+            }
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "Failed to delete category {Category}", option.Name);
+            notificationService.Show(Resources.Label_Categories, e.Message, NotificationType.Error);
+        }
+
+        RefreshCategoryOptions();
     }
 
     private async Task ShowFolderMapTipIfNecessaryAsync()

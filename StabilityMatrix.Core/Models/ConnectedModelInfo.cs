@@ -42,6 +42,38 @@ public class ConnectedModelInfo : IEquatable<ConnectedModelInfo>
     /// </summary>
     public string? SourceUrl { get; set; }
 
+    /// <summary>
+    /// User-owned metadata (categories, scan opt-out). Null until the user sets something.
+    /// </summary>
+    public UserModelMetadata? User { get; set; }
+
+    /// <summary>
+    /// Whether this metadata links the model to a remote source. Each source has its own
+    /// identity field: CivitAI an integer id, OpenModelDb and CivArchive only the source marker
+    /// (CivArchive ids are not integers, so it navigates via <see cref="SourceUrl"/>), and
+    /// HuggingFace a <see cref="SourceUrl"/>. Custom metadata written by the user, and models
+    /// the user disconnected, have none of these. Note <see cref="Source"/> alone is not enough:
+    /// it defaults to CivitAI, including on sidecars written before the field existed.
+    /// </summary>
+    [JsonIgnore]
+    public bool IsConnected =>
+        ModelId != null
+        || SourceUrl != null
+        || Source is ConnectedModelSource.OpenModelDb or ConnectedModelSource.CivArchive;
+
+    /// <summary>
+    /// Whether the user has authored display metadata (via Edit Metadata or Disconnect) that a
+    /// remote match must not overwrite.
+    /// </summary>
+    [JsonIgnore]
+    public bool HasCustomMetadata => !IsConnected && !string.IsNullOrWhiteSpace(ModelName);
+
+    /// <summary>
+    /// True when the sidecar carries nothing worth keeping and can be deleted.
+    /// </summary>
+    [JsonIgnore]
+    public bool IsEmpty => !IsConnected && !HasCustomMetadata && (User?.IsEmpty ?? true);
+
     public ConnectedModelInfo() { }
 
     public ConnectedModelInfo(
@@ -83,6 +115,31 @@ public class ConnectedModelInfo : IEquatable<ConnectedModelInfo>
         Source = ConnectedModelSource.OpenModelDb;
     }
 
+    /// <summary>
+    /// Minimal metadata for a file imported from a HuggingFace repository. Carries the content
+    /// SHA256 (so the model index can match it by hash) and a link back to the source repo. Unlike
+    /// the Civit/OpenModelDb sources there is no remote model id, description, or preview.
+    /// </summary>
+    public static ConnectedModelInfo FromHuggingFace(
+        string repositoryPath,
+        string fileName,
+        string sha256,
+        DateTimeOffset importedAt
+    ) =>
+        new()
+        {
+            ModelName = repositoryPath,
+            ModelDescription = string.Empty,
+            VersionName = fileName,
+            Tags = [],
+            ModelType = CivitModelType.Unknown,
+            RemoteFileName = fileName,
+            Hashes = new CivitFileHashes { SHA256 = sha256 },
+            ImportedAt = importedAt,
+            Source = ConnectedModelSource.HuggingFace,
+            SourceUrl = $"https://huggingface.co/{repositoryPath}",
+        };
+
     private void ApplyCivitMetadata(
         CivitModel civitModel,
         CivitModelVersion civitModelVersion,
@@ -120,16 +177,30 @@ public class ConnectedModelInfo : IEquatable<ConnectedModelInfo>
     }
 
     /// <summary>
-    /// Saves the model info to a json file in the specified directory.
-    /// Overwrites existing files.
+    /// Saves the model info to a json file in the specified directory, overwriting an existing
+    /// file. When this instance has no <see cref="User"/> block, the one already on disk is
+    /// carried across, so remote metadata writers can never discard user data.
     /// </summary>
     /// <param name="directoryPath">Path of directory to save file</param>
     /// <param name="modelFileName">Model file name without extensions</param>
     public async Task SaveJsonToDirectory(string directoryPath, string modelFileName)
     {
-        var name = modelFileName + FileExtension;
+        var path = Path.Combine(directoryPath, modelFileName + FileExtension);
+
+        if (User is null && File.Exists(path))
+        {
+            try
+            {
+                User = FromJson(await File.ReadAllTextAsync(path).ConfigureAwait(false))?.User;
+            }
+            catch (JsonException)
+            {
+                // Unreadable existing sidecar: nothing to preserve
+            }
+        }
+
         var json = JsonSerializer.Serialize(this);
-        await File.WriteAllTextAsync(Path.Combine(directoryPath, name), json);
+        await File.WriteAllTextAsync(path, json).ConfigureAwait(false);
     }
 
     [JsonIgnore]
@@ -204,7 +275,9 @@ public class ConnectedModelInfo : IEquatable<ConnectedModelInfo>
                 && x.UserTitle == y.UserTitle
                 && x.ThumbnailImageUrl == y.ThumbnailImageUrl
                 && x.InferenceDefaults == y.InferenceDefaults
-                && x.Source == y.Source;
+                && x.Source == y.Source
+                && x.SourceUrl == y.SourceUrl
+                && Equals(x.User, y.User);
         }
 
         public int GetHashCode(ConnectedModelInfo obj)
@@ -232,6 +305,8 @@ public class ConnectedModelInfo : IEquatable<ConnectedModelInfo>
             hashCode.Add(obj.ThumbnailImageUrl);
             hashCode.Add(obj.InferenceDefaults);
             hashCode.Add(obj.Source);
+            hashCode.Add(obj.SourceUrl);
+            hashCode.Add(obj.User);
             return hashCode.ToHashCode();
         }
     }

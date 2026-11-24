@@ -86,8 +86,7 @@ public partial class CivArchiveApiClient(
 
         var response = await GetNextDataAsync<CivArchiveListPageResponse>(relativePath, cancellationToken);
 
-        var pageProps =
-            response.PageProps
+        var pageProps = response.PageProps
             ?? throw new InvalidOperationException("CivArchive list page was missing pageProps");
 
         var effectiveFilters = pageProps.Filters?.ToSearchFilters() ?? filters;
@@ -137,8 +136,7 @@ public partial class CivArchiveApiClient(
                 cancellationToken
             );
 
-            var pageProps =
-                response.PageProps
+            var pageProps = response.PageProps
                 ?? throw new InvalidOperationException("CivArchive list page was missing pageProps");
 
             var result = new CivArchiveFilterOptions
@@ -175,8 +173,7 @@ public partial class CivArchiveApiClient(
 
         var response = await GetNextDataAsync<CivArchiveDetailPageResponse>(nextDataPath, cancellationToken);
 
-        var pageProps =
-            response.PageProps
+        var pageProps = response.PageProps
             ?? throw new InvalidOperationException("CivArchive detail page was missing pageProps");
 
         // A version-less /models/{id} data request returns a Next.js redirect payload pointing
@@ -196,8 +193,7 @@ public partial class CivArchiveApiClient(
             return redirected;
         }
 
-        var model =
-            pageProps.Model
+        var model = pageProps.Model
             ?? throw new InvalidOperationException("CivArchive detail page was missing model data");
 
         // The API returns version, platform, and platform_name as siblings of model

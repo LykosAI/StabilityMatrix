@@ -16,14 +16,20 @@ public class ImageIndexService : IImageIndexService
 {
     private readonly ILogger<ImageIndexService> logger;
     private readonly ISettingsManager settingsManager;
+    private readonly IVideoThumbnailService videoThumbnailService;
 
     /// <inheritdoc />
     public IndexCollection<LocalImageFile, string> InferenceImages { get; }
 
-    public ImageIndexService(ILogger<ImageIndexService> logger, ISettingsManager settingsManager)
+    public ImageIndexService(
+        ILogger<ImageIndexService> logger,
+        ISettingsManager settingsManager,
+        IVideoThumbnailService videoThumbnailService
+    )
     {
         this.logger = logger;
         this.settingsManager = settingsManager;
+        this.videoThumbnailService = videoThumbnailService;
 
         InferenceImages = new IndexCollection<LocalImageFile, string>(this, file => file.AbsolutePath)
         {
@@ -61,28 +67,28 @@ public class ImageIndexService : IImageIndexService
             {
                 var files = searchDir
                     .EnumerateFiles("*", EnumerationOptionConstants.AllDirectories)
-                    .Where(file => LocalImageFile.SupportedImageExtensions.Contains(file.Extension))
+                    .Where(file =>
+                        LocalImageFile.SupportedImageExtensions.Contains(file.Extension)
+                        || LocalImageFile.SupportedVideoExtensions.Contains(file.Extension)
+                    )
                     .Where(file => !file.FullPath.Contains(".sm-thumbs")); // Exclude video thumbnail directories
 
-                Parallel.ForEach(
-                    files,
-                    f =>
+                Parallel.ForEach(files, f =>
+                {
+                    try
                     {
-                        try
-                        {
-                            toAdd.Add(LocalImageFile.FromPath(f));
-                        }
-                        catch (Exception e)
-                        {
-                            Interlocked.Increment(ref errors);
-                            logger.LogWarning(
-                                e,
-                                "Failed to add indexed image file at {Path}, skipping",
-                                f.FullPath
-                            );
-                        }
+                        toAdd.Add(CreateIndexedFile(f));
                     }
-                );
+                    catch (Exception e)
+                    {
+                        Interlocked.Increment(ref errors);
+                        logger.LogWarning(
+                            e,
+                            "Failed to add indexed image file at {Path}, skipping",
+                            f.FullPath
+                        );
+                    }
+                });
             })
             .ConfigureAwait(false);
 
@@ -120,12 +126,28 @@ public class ImageIndexService : IImageIndexService
 
         try
         {
-            InferenceImages.Add(LocalImageFile.FromPath(filePath));
+            InferenceImages.Add(CreateIndexedFile(filePath));
         }
         catch (Exception e)
         {
             logger.LogWarning(e, "Failed to add image file at {Path}", filePath);
         }
+    }
+
+    /// <summary>
+    /// Builds the index entry for a file. Videos carry their poster frame path when one already exists;
+    /// none is generated here, so indexing stays cheap.
+    /// </summary>
+    private LocalImageFile CreateIndexedFile(FilePath filePath)
+    {
+        var file = LocalImageFile.FromPath(filePath);
+
+        return file.IsVideo
+            ? file with
+            {
+                ThumbnailPath = videoThumbnailService.GetExistingThumbnailPath(filePath.FullPath),
+            }
+            : file;
     }
 
     /// <inheritdoc />

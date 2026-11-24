@@ -1,0 +1,129 @@
+﻿<controls:UserControlBase
+    x:Class="StabilityMatrix.Avalonia.Views.Dialogs.ModelCategoriesDialog"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:dialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
+    xmlns:fluentIcons="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
+    xmlns:helpers="clr-namespace:StabilityMatrix.Avalonia.Helpers"
+    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:ui="using:FluentAvalonia.UI.Controls"
+    d:DesignHeight="480"
+    d:DesignWidth="440"
+    x:DataType="dialogs:ModelCategoriesDialogViewModel"
+    mc:Ignorable="d">
+
+    <StackPanel MinWidth="380" Spacing="12">
+        <TextBlock
+            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+            IsVisible="{Binding HasTargets}"
+            Text="{Binding TargetsDescription}"
+            TextTrimming="CharacterEllipsis" />
+
+        <TextBlock
+            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+            IsVisible="{Binding !HasRows}"
+            Text="{x:Static lang:Resources.Label_NoCategoriesHint}"
+            TextWrapping="Wrap" />
+
+        <!--  Right padding keeps the count and delete button clear of the overlay scrollbar  -->
+        <ListBox
+            MaxHeight="380"
+            Padding="0,0,14,0"
+            Classes="draggable"
+            IsVisible="{Binding HasRows}"
+            ItemsSource="{Binding Rows}"
+            Theme="{StaticResource DraggableListBoxTheme}">
+            <ListBox.ItemTemplate>
+                <DataTemplate DataType="{x:Type dialogs:ModelCategoryRowViewModel}">
+                    <Grid
+                        Margin="0,2"
+                        Background="Transparent"
+                        ColumnDefinitions="Auto,Auto,*,Auto,Auto"
+                        ColumnSpacing="10"
+                        Cursor="SizeAll"
+                        ToolTip.Tip="{x:Static lang:Resources.Label_DragToReorder}">
+                        <StackPanel
+                            Grid.Column="0"
+                            Orientation="Horizontal"
+                            Spacing="10">
+                            <fluentIcons:SymbolIcon
+                                Width="16"
+                                Height="16"
+                                VerticalAlignment="Center"
+                                FontSize="16"
+                                Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                Symbol="990684" />
+                            <CheckBox
+                                MinWidth="0"
+                                Padding="0"
+                                VerticalAlignment="Center"
+                                IsChecked="{Binding IsChecked, Mode=TwoWay}"
+                                IsThreeState="True"
+                                IsVisible="{Binding $parent[controls:UserControlBase].((dialogs:ModelCategoriesDialogViewModel)DataContext).HasTargets}" />
+                        </StackPanel>
+                        <ui:ColorPickerButton
+                            Grid.Column="1"
+                            Width="36"
+                            Height="28"
+                            VerticalAlignment="Center"
+                            CustomPaletteColors="{x:Static helpers:ModelCategoryStyle.Palette}"
+                            PaletteColumnCount="8"
+                            ToolTip.Tip="{x:Static lang:Resources.Label_Color}"
+                            UseColorPalette="True"
+                            Color="{Binding Color, Mode=TwoWay}" />
+                        <TextBlock
+                            Grid.Column="2"
+                            VerticalAlignment="Center"
+                            Text="{Binding Name}"
+                            TextTrimming="CharacterEllipsis" />
+                        <TextBlock
+                            Grid.Column="3"
+                            VerticalAlignment="Center"
+                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                            Text="{Binding Count}" />
+                        <Button
+                            Grid.Column="4"
+                            Padding="4"
+                            VerticalAlignment="Center"
+                            Classes="transparent"
+                            ToolTip.Tip="{x:Static lang:Resources.Action_Delete}">
+                            <ui:SymbolIcon FontSize="14" Symbol="Delete" />
+                            <Button.Flyout>
+                                <Flyout Placement="BottomEdgeAlignedRight">
+                                    <StackPanel MaxWidth="260" Spacing="12">
+                                        <TextBlock Text="{Binding DeleteConfirmation}" TextWrapping="Wrap" />
+                                        <Button
+                                            HorizontalAlignment="Right"
+                                            Classes="danger"
+                                            Command="{Binding $parent[controls:UserControlBase].((dialogs:ModelCategoriesDialogViewModel)DataContext).DeleteCategoryCommand}"
+                                            CommandParameter="{Binding}"
+                                            Content="{x:Static lang:Resources.Action_Delete}" />
+                                    </StackPanel>
+                                </Flyout>
+                            </Button.Flyout>
+                        </Button>
+                    </Grid>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+
+        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+            <TextBox
+                Grid.Column="0"
+                Text="{Binding NewCategoryName, Mode=TwoWay}"
+                Watermark="{x:Static lang:Resources.Label_NewCategory}">
+                <TextBox.KeyBindings>
+                    <KeyBinding Command="{Binding AddCategoryCommand}" Gesture="Enter" />
+                </TextBox.KeyBindings>
+            </TextBox>
+            <Button
+                Grid.Column="1"
+                Classes="accent"
+                Command="{Binding AddCategoryCommand}"
+                Content="{x:Static lang:Resources.Action_Add}" />
+        </Grid>
+    </StackPanel>
+</controls:UserControlBase>

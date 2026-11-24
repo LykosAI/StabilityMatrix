@@ -1,4 +1,10 @@
-﻿using System;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using FluentIcons.Common;
+using StabilityMatrix.Avalonia.Languages;
+using StabilityMatrix.Avalonia.Models;
+using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
 using StabilityMatrix.Core.Models.Inference;
 
@@ -14,12 +20,121 @@ public static class InferenceProjectTypeExtensions
             InferenceProjectType.ImageToImage => typeof(InferenceImageToImageViewModel),
             InferenceProjectType.Inpainting => null,
             InferenceProjectType.Upscale => typeof(InferenceImageUpscaleViewModel),
-            InferenceProjectType.ImageToVideo => typeof(InferenceImageToVideoViewModel),
+            InferenceProjectType.ImageToVideo => typeof(InferenceSvdImageToVideoViewModel),
             InferenceProjectType.FluxTextToImage => typeof(InferenceFluxTextToImageViewModel),
-            InferenceProjectType.WanTextToVideo => typeof(InferenceWanTextToVideoViewModel),
-            InferenceProjectType.WanImageToVideo => typeof(InferenceWanImageToVideoViewModel),
+            InferenceProjectType.WanTextToVideo => typeof(InferenceTextToVideoViewModel),
+            InferenceProjectType.WanImageToVideo => typeof(InferenceImageToVideoViewModel),
             InferenceProjectType.Unknown => null,
-            _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
+            _ => throw new ArgumentOutOfRangeException(nameof(type), type, null),
         };
     }
+
+    /// <summary>
+    /// Maps a loadable inference view model back to its project type.
+    /// Pattern order matters: derived view models must precede their bases.
+    /// </summary>
+    public static InferenceProjectType ToProjectType(this IJsonLoadableState loadableModel)
+    {
+        return loadableModel switch
+        {
+            InferenceImageToImageViewModel => InferenceProjectType.ImageToImage,
+            InferenceFluxTextToImageViewModel => InferenceProjectType.FluxTextToImage,
+            InferenceTextToImageViewModel => InferenceProjectType.TextToImage,
+            InferenceImageUpscaleViewModel => InferenceProjectType.Upscale,
+            InferenceSvdImageToVideoViewModel => InferenceProjectType.ImageToVideo,
+            InferenceImageToVideoViewModel => InferenceProjectType.WanImageToVideo,
+            InferenceTextToVideoViewModel => InferenceProjectType.WanTextToVideo,
+            _ => InferenceProjectType.Unknown,
+        };
+    }
+
+    /// <summary>
+    /// All user-selectable project types with their picker display metadata, in display order.
+    /// Types without a view model (Unknown, Inpainting) are intentionally excluded.
+    /// </summary>
+    public static IReadOnlyList<InferenceProjectTypeInfo> All { get; } =
+        new InferenceProjectTypeInfo[]
+        {
+            new()
+            {
+                Type = InferenceProjectType.TextToImage,
+                DisplayName = Resources.Label_TextToImage,
+                Icon = Symbol.Image,
+                Description = Resources.Label_TextToImageDescription,
+                Category = InferenceProjectCategory.Image,
+            },
+            new()
+            {
+                Type = InferenceProjectType.ImageToImage,
+                DisplayName = Resources.Label_ImageToImage,
+                Icon = Symbol.ImageMultiple,
+                Description = Resources.Label_ImageToImageDescription,
+                Category = InferenceProjectCategory.Image,
+            },
+            new()
+            {
+                Type = InferenceProjectType.Upscale,
+                DisplayName = Resources.Label_Upscale,
+                Icon = Symbol.ResizeImage,
+                Description = Resources.Label_UpscaleDescription,
+                Category = InferenceProjectCategory.Image,
+            },
+            new()
+            {
+                Type = InferenceProjectType.WanTextToVideo,
+                DisplayName = Resources.Label_TextToVideo,
+                Icon = Symbol.Video,
+                Description = Resources.Label_TextToVideoDescription,
+                Category = InferenceProjectCategory.Video,
+            },
+            new()
+            {
+                Type = InferenceProjectType.WanImageToVideo,
+                DisplayName = Resources.Label_ImageToVideo,
+                Icon = Symbol.VideoAdd,
+                Description = Resources.Label_ImageToVideoDescription,
+                Category = InferenceProjectCategory.Video,
+            },
+            new()
+            {
+                Type = InferenceProjectType.FluxTextToImage,
+                DisplayName = Resources.Label_FluxTextToImage,
+                Icon = Symbol.Sparkle,
+                Description = Resources.Label_FluxTextToImageDescription,
+                Category = InferenceProjectCategory.Legacy,
+            },
+            new()
+            {
+                Type = InferenceProjectType.ImageToVideo,
+                DisplayName = Resources.Label_SvdImageToVideo,
+                Icon = Symbol.VideoRecording,
+                Description = Resources.Label_SvdImageToVideoDescription,
+                Category = InferenceProjectCategory.Legacy,
+            },
+        };
+
+    /// <summary>
+    /// Returns the picker display metadata for a project type, or null if it has none
+    /// (e.g. Unknown / not-yet-implemented types).
+    /// </summary>
+    public static InferenceProjectTypeInfo? GetInfo(this InferenceProjectType type) =>
+        All.FirstOrDefault(x => x.Type == type);
+
+    /// <summary>
+    /// The project types grouped by category, in display order, for the grouped picker view.
+    /// </summary>
+    public static IReadOnlyList<InferenceProjectTypeCategoryGroup> GetGrouped() =>
+        new[]
+        {
+            (InferenceProjectCategory.Image, Header: Resources.Label_Image),
+            (InferenceProjectCategory.Video, Header: Resources.Label_Video),
+            (InferenceProjectCategory.Legacy, Header: Resources.Label_Legacy),
+        }
+            .Select(group => new InferenceProjectTypeCategoryGroup
+            {
+                Header = group.Header,
+                Items = All.Where(x => x.Category == group.Item1).ToList(),
+            })
+            .Where(group => group.Items.Count > 0)
+            .ToList();
 }

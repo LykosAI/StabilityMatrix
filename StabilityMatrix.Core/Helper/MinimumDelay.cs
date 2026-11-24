@@ -10,7 +10,7 @@ public class MinimumDelay : IAsyncDisposable
 {
     private readonly Stopwatch stopwatch = new();
     private readonly TimeSpan delay;
-    
+
     /// <summary>
     /// Minimum random delay in milliseconds.
     /// </summary>
@@ -20,7 +20,7 @@ public class MinimumDelay : IAsyncDisposable
         Random rand = new();
         delay = TimeSpan.FromMilliseconds(rand.Next(randMin, randMax));
     }
-    
+
     /// <summary>
     /// Minimum fixed delay in milliseconds.
     /// </summary>
@@ -29,7 +29,7 @@ public class MinimumDelay : IAsyncDisposable
         stopwatch.Start();
         delay = TimeSpan.FromMilliseconds(delayMilliseconds);
     }
-    
+
     public async ValueTask DisposeAsync()
     {
         stopwatch.Stop();

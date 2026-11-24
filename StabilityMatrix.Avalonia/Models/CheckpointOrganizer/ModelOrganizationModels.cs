@@ -19,6 +19,30 @@ public enum ModelOrganizationMetadataAction
     UpdateExisting,
 }
 
+/// <summary>
+/// Machine-readable reason a preview item was skipped, so consumers never have to
+/// classify items by parsing the localized <see cref="ModelOrganizationPreviewItem.Reason"/> text.
+/// </summary>
+public enum ModelOrganizationSkipReason
+{
+    None,
+
+    /// <summary>The model file no longer exists on disk.</summary>
+    MissingFile,
+
+    /// <summary>The model has no connected metadata at all.</summary>
+    MissingMetadata,
+
+    /// <summary>The template uses a variable that organizing does not support.</summary>
+    UnsupportedVariable,
+
+    /// <summary>A template variable has no value in this model's metadata.</summary>
+    VariableUnavailable,
+
+    /// <summary>The rendered template produced an invalid or empty path.</summary>
+    InvalidPath,
+}
+
 public sealed record ModelOrganizationFileMove
 {
     public required string SourcePath { get; init; }
@@ -32,6 +56,7 @@ public sealed record ModelOrganizationPreviewItem
     public string? TargetPath { get; init; }
     public required ModelOrganizationPreviewStatus Status { get; init; }
     public string? Reason { get; init; }
+    public ModelOrganizationSkipReason SkipReason { get; init; } = ModelOrganizationSkipReason.None;
     public IReadOnlyList<ModelOrganizationFileMove> FileMoves { get; init; } = [];
 
     public bool CanApply => Status == ModelOrganizationPreviewStatus.Ready;

@@ -60,8 +60,9 @@ public static class ProcessRunner
     {
         if (UsesPythonRuntime(fileName))
         {
-            var explicitKeys =
-                environmentVariables?.Select(kvp => kvp.Key).ToHashSet(StringComparer.OrdinalIgnoreCase)
+            var explicitKeys = environmentVariables
+                ?.Select(kvp => kvp.Key)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase)
                 ?? [];
 
             var removedKeys = new List<string>();

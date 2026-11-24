@@ -420,17 +420,17 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
     /// Available aspect ratio presets
     /// </summary>
     public ObservableCollection<AspectRatioOption> AvailableAspectRatios { get; } =
-        [
-            new("1:1", "Square", 1024, 1024),
-            new("16:9", "Landscape Wide", 1344, 768),
-            new("9:16", "Portrait Tall", 768, 1344),
-            new("4:3", "Landscape", 1152, 896),
-            new("3:4", "Portrait", 896, 1152),
-            new("3:2", "Photo Landscape", 1216, 832),
-            new("2:3", "Photo Portrait", 832, 1216),
-            new("21:9", "Ultrawide", 1536, 640),
-            new("9:21", "Ultra Tall", 640, 1536),
-        ];
+    [
+        new("1:1", "Square", 1024, 1024),
+        new("16:9", "Landscape Wide", 1344, 768),
+        new("9:16", "Portrait Tall", 768, 1344),
+        new("4:3", "Landscape", 1152, 896),
+        new("3:4", "Portrait", 896, 1152),
+        new("3:2", "Photo Landscape", 1216, 832),
+        new("2:3", "Photo Portrait", 832, 1216),
+        new("21:9", "Ultrawide", 1536, 640),
+        new("9:21", "Ultra Tall", 640, 1536),
+    ];
 
     /// <summary>
     /// Selected aspect ratio
@@ -1038,19 +1038,16 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
 
         PendingImages.Clear();
 
-        await RunGenerationAsync(
-            conversationId,
-            providerId,
-            progress =>
-                chatService.SendMessageAsync(
-                    conversationId,
-                    providerId,
-                    messageText,
-                    imagePaths.Count > 0 ? imagePaths : null,
-                    BuildProviderOptions(),
-                    progress,
-                    cancellationToken
-                )
+        await RunGenerationAsync(conversationId, providerId, progress =>
+            chatService.SendMessageAsync(
+                conversationId,
+                providerId,
+                messageText,
+                imagePaths.Count > 0 ? imagePaths : null,
+                BuildProviderOptions(),
+                progress,
+                cancellationToken
+            )
         );
     }
 
@@ -1276,17 +1273,14 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
         var providerId = SelectedProviderId;
 
         // Retry generation - this doesn't create a new user message
-        await RunGenerationAsync(
-            conversationId,
-            providerId,
-            progress =>
-                chatService.RetryGenerationAsync(
-                    conversationId,
-                    providerId,
-                    BuildProviderOptions(),
-                    progress,
-                    cancellationToken
-                )
+        await RunGenerationAsync(conversationId, providerId, progress =>
+            chatService.RetryGenerationAsync(
+                conversationId,
+                providerId,
+                BuildProviderOptions(),
+                progress,
+                cancellationToken
+            )
         );
     }
 
@@ -1324,25 +1318,21 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
             .Where(m => m.Role == MessageRole.Assistant)
             .ToList();
 
-        await RunGenerationAsync(
-            conversationId,
-            providerId,
-            async progress =>
-            {
-                await chatService.RetryGenerationAsync(
-                    conversationId,
-                    providerId,
-                    BuildProviderOptions(),
-                    progress,
-                    cancellationToken
-                );
+        await RunGenerationAsync(conversationId, providerId, async progress =>
+        {
+            await chatService.RetryGenerationAsync(
+                conversationId,
+                providerId,
+                BuildProviderOptions(),
+                progress,
+                cancellationToken
+            );
 
-                foreach (var oldResponse in oldResponses)
-                {
-                    await chatService.DeleteMessageAsync(oldResponse.Id, preserveImageFile: true);
-                }
+            foreach (var oldResponse in oldResponses)
+            {
+                await chatService.DeleteMessageAsync(oldResponse.Id, preserveImageFile: true);
             }
-        );
+        });
     }
 
     /// <summary>
@@ -2139,8 +2129,7 @@ public partial class BananaVisionPageViewModel : PageViewModelBase
     /// </summary>
     private static List<string> GetMessageImagePaths(ImageGenerationMessage message)
     {
-        var paths =
-            message.ImagePaths?.Where(p => !string.IsNullOrWhiteSpace(p)).ToList()
+        var paths = message.ImagePaths?.Where(p => !string.IsNullOrWhiteSpace(p)).ToList()
             ?? (!string.IsNullOrEmpty(message.ImagePath) ? [message.ImagePath] : []);
 
         return paths.Distinct(StringComparer.OrdinalIgnoreCase).ToList();

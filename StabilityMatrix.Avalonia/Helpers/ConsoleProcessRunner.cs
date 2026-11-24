@@ -15,7 +15,7 @@ public static class ConsoleProcessRunner
             CloseWhenFinished = false,
             ModificationCompleteMessage =
                 $"Process command executed successfully for '{Path.GetFileName(step.FileName)}'",
-            ModificationFailedMessage = $"Process command failed for '{Path.GetFileName(step.FileName)}'"
+            ModificationFailedMessage = $"Process command failed for '{Path.GetFileName(step.FileName)}'",
         };
 
         EventManager.Instance.OnPackageInstallProgressAdded(runner);

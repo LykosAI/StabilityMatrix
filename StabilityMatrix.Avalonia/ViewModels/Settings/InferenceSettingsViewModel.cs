@@ -99,6 +99,9 @@ public partial class InferenceSettingsViewModel : PageViewModelBase
     [ObservableProperty]
     private bool isImageViewerPixelGridEnabled = true;
 
+    [ObservableProperty]
+    private bool useClassicTabPicker;
+
     public InferenceSettingsViewModel(
         INotificationService notificationService,
         IPrerequisiteHelper prerequisiteHelper,
@@ -171,13 +174,13 @@ public partial class InferenceSettingsViewModel : PageViewModelBase
                 )
                 {
                     var format = FileNameFormat.Parse(template, provider);
-                    OutputImageFileNameFormatSample = format.GetFileName() + ".png";
+                    OutputImageFileNameFormatSample = format.GetOutputFileName("png");
                 }
                 else
                 {
                     // Use default format if empty
                     var defaultFormat = FileNameFormat.Parse(FileNameFormat.DefaultTemplate, provider);
-                    OutputImageFileNameFormatSample = defaultFormat.GetFileName() + ".png";
+                    OutputImageFileNameFormatSample = defaultFormat.GetOutputFileName("png");
                 }
             });
 
@@ -192,6 +195,13 @@ public partial class InferenceSettingsViewModel : PageViewModelBase
             this,
             vm => vm.IsImageViewerPixelGridEnabled,
             settings => settings.IsImageViewerPixelGridEnabled,
+            true
+        );
+
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.UseClassicTabPicker,
+            settings => settings.UseClassicInferenceTabPicker,
             true
         );
 

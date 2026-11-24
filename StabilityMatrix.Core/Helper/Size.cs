@@ -19,15 +19,21 @@ public static class Size
         return bytes switch
         {
             < KiB => $"{bytes:0} Bytes",
-            < MiB
-                => (trimZero ? $"{bytes / (double)KiB:0.0}".TrimEnd('0').TrimEnd('.') : $"{bytes / (double)KiB:0.0}")
-                    + " KiB",
-            < GiB
-                => (trimZero ? $"{bytes / (double)MiB:0.0}".TrimEnd('0').TrimEnd('.') : $"{bytes / (double)MiB:0.0}")
-                    + " MiB",
-            _
-                => (trimZero ? $"{bytes / (double)GiB:0.0}".TrimEnd('0').TrimEnd('.') : $"{bytes / (double)GiB:0.0}")
-                    + " GiB"
+            < MiB => (
+                trimZero
+                    ? $"{bytes / (double)KiB:0.0}".TrimEnd('0').TrimEnd('.')
+                    : $"{bytes / (double)KiB:0.0}"
+            ) + " KiB",
+            < GiB => (
+                trimZero
+                    ? $"{bytes / (double)MiB:0.0}".TrimEnd('0').TrimEnd('.')
+                    : $"{bytes / (double)MiB:0.0}"
+            ) + " MiB",
+            _ => (
+                trimZero
+                    ? $"{bytes / (double)GiB:0.0}".TrimEnd('0').TrimEnd('.')
+                    : $"{bytes / (double)GiB:0.0}"
+            ) + " GiB",
         };
     }
 
@@ -36,15 +42,21 @@ public static class Size
         return bytes switch
         {
             < KiB => $"{bytes:0} Bytes",
-            < MiB
-                => (trimZero ? $"{bytes / (double)KiB:0.0}".TrimEnd('0').TrimEnd('.') : $"{bytes / (double)KiB:0.0}")
-                    + " KB",
-            < GiB
-                => (trimZero ? $"{bytes / (double)MiB:0.0}".TrimEnd('0').TrimEnd('.') : $"{bytes / (double)MiB:0.0}")
-                    + " MB",
-            _
-                => (trimZero ? $"{bytes / (double)GiB:0.00}".TrimEnd('0').TrimEnd('.') : $"{bytes / (double)GiB:0.00}")
-                    + " GB"
+            < MiB => (
+                trimZero
+                    ? $"{bytes / (double)KiB:0.0}".TrimEnd('0').TrimEnd('.')
+                    : $"{bytes / (double)KiB:0.0}"
+            ) + " KB",
+            < GiB => (
+                trimZero
+                    ? $"{bytes / (double)MiB:0.0}".TrimEnd('0').TrimEnd('.')
+                    : $"{bytes / (double)MiB:0.0}"
+            ) + " MB",
+            _ => (
+                trimZero
+                    ? $"{bytes / (double)GiB:0.00}".TrimEnd('0').TrimEnd('.')
+                    : $"{bytes / (double)GiB:0.00}"
+            ) + " GB",
         };
     }
 

@@ -55,7 +55,8 @@ public partial class CivitDetailsPageViewModel(
     IServiceManager<ViewModelBase> vmFactory,
     IModelImportService modelImportService,
     IDownloadService downloadService,
-    IPackageFactory packageFactory
+    IPackageFactory packageFactory,
+    IWorkflowLibraryIndex workflowLibraryIndex
 ) : DisposableViewModelBase
 {
     [ObservableProperty]
@@ -97,6 +98,7 @@ public partial class CivitDetailsPageViewModel(
         "seed",
         "prompt",
         "negative_prompt",
+        "lora_name",
         "model_hash",
         "sampler",
         "cfgscale",
@@ -333,7 +335,11 @@ public partial class CivitDetailsPageViewModel(
             modelVersionCache
                 .Connect()
                 .DeferUntilLoaded()
-                .Transform(modelVersion => new ModelVersionViewModel(modelIndexService, modelVersion))
+                .Transform(modelVersion => new ModelVersionViewModel(
+                    modelIndexService,
+                    modelVersion,
+                    CivitModel.Type
+                ))
                 .DisposeMany()
                 .Filter(earlyAccessPredicate)
                 .SortAndBind(
@@ -389,15 +395,26 @@ public partial class CivitDetailsPageViewModel(
             civitFileCache
                 .Connect()
                 .Filter(includeTrainingDataPredicate)
-                .Transform(file => new CivitFileViewModel(
-                    modelIndexService,
-                    settingsManager,
-                    file,
-                    vmFactory,
-                    DownloadModelAsync
-                )
+                .Transform(file =>
                 {
-                    InstallLocations = new ObservableCollection<string>(LoadInstallLocations(file)),
+                    var fileVm = new CivitFileViewModel(
+                        modelIndexService,
+                        settingsManager,
+                        file,
+                        vmFactory,
+                        DownloadModelAsync,
+                        deleteActionOverride: IsWorkflowModel ? DeleteWorkflowFilesAsync : null
+                    )
+                    {
+                        InstallLocations = new ObservableCollection<string>(LoadInstallLocations(file)),
+                    };
+
+                    if (IsWorkflowModel)
+                    {
+                        RefreshWorkflowFileInstallStateAsync(fileVm).SafeFireAndForget();
+                    }
+
+                    return fileVm;
                 })
                 .Bind(CivitFiles)
                 .ObserveOn(SynchronizationContext.Current!)
@@ -409,6 +426,11 @@ public partial class CivitDetailsPageViewModel(
 
         SelectedVersion = ModelVersions.FirstOrDefault();
         Description = $"""<html><body class="markdown-body">{CivitModel.Description}</body></html>""";
+
+        if (IsWorkflowModel)
+        {
+            RefreshWorkflowVersionInstallStatesAsync().SafeFireAndForget();
+        }
     }
 
     [RelayCommand]
@@ -474,13 +496,12 @@ public partial class CivitDetailsPageViewModel(
                         CivitModel.BaseModelType,
                         viewModel.CivitFile.Name
                     );
-                    effectiveLocationKeyForPreference =
-                        viewModel.InstallLocations.FirstOrDefault(loc =>
-                            loc != "Custom..."
-                            && finalDestinationDir
-                                .ToString()
-                                .Contains(loc.Replace("Models\\", "").Replace("Models/", ""))
-                        ) ?? viewModel.InstallLocations.First();
+                    effectiveLocationKeyForPreference = viewModel.InstallLocations.FirstOrDefault(loc =>
+                        loc != "Custom..."
+                        && finalDestinationDir
+                            .ToString()
+                            .Contains(loc.Replace("Models\\", "").Replace("Models/", ""))
+                    ) ?? viewModel.InstallLocations.First();
                 }
 
                 break;
@@ -543,7 +564,7 @@ public partial class CivitDetailsPageViewModel(
             viewModel.CivitFile
         );
 
-        await modelImportService.DoImport(
+        var downloadStarted = await modelImportService.DoImport(
             CivitModel,
             finalDestinationDir,
             SelectedVersion?.ModelVersion,
@@ -557,14 +578,17 @@ public partial class CivitDetailsPageViewModel(
                 )
         );
 
-        notificationService.Show(
-            Resources.Label_DownloadStarted,
-            string.Format(
-                Resources.Label_DownloadWillBeSavedToLocation,
-                viewModel.CivitFile.Name,
-                finalDestinationDir.JoinFile(fileNameOverride).Directory
-            )
-        );
+        if (downloadStarted)
+        {
+            notificationService.Show(
+                Resources.Label_DownloadStarted,
+                string.Format(
+                    Resources.Label_DownloadWillBeSavedToLocation,
+                    viewModel.CivitFile.Name,
+                    finalDestinationDir.JoinFile(fileNameOverride).Directory
+                )
+            );
+        }
 
         if (CivitModel.Type != CivitModelType.Unknown)
         {
@@ -631,6 +655,12 @@ public partial class CivitDetailsPageViewModel(
 
         EventManager.Instance.OnWorkflowInstalled();
 
+        await RefreshWorkflowVersionInstallStatesAsync();
+        foreach (var fileVm in CivitFiles)
+        {
+            RefreshWorkflowFileInstallStateAsync(fileVm).SafeFireAndForget();
+        }
+
         // Offer custom node installs when the imported workflows need any the user can act on
         if (await WorkflowNodesDialogViewModel.HasRequiredPacksAsync(downloadStep.ImportedFiles))
         {
@@ -643,6 +673,88 @@ public partial class CivitDetailsPageViewModel(
         }
     }
 
+    /// <summary>
+    /// Sets a file row's installed state from the workflow library
+    /// (workflow imports never enter the hash-based model index).
+    /// </summary>
+    private async Task RefreshWorkflowFileInstallStateAsync(CivitFileViewModel fileVm)
+    {
+        if (SelectedVersion?.ModelVersion.Id is not { } versionId)
+            return;
+
+        var files = await workflowLibraryIndex.GetInstalledFilesAsync(CivitModel.Id, versionId);
+
+        Dispatcher.UIThread.Post(() => fileVm.IsInstalled = files.Count > 0);
+    }
+
+    /// <summary>
+    /// Sets the version pills' installed state from the workflow library.
+    /// </summary>
+    private async Task RefreshWorkflowVersionInstallStatesAsync()
+    {
+        var installed = await workflowLibraryIndex.GetInstalledCivitVersionsAsync();
+        var installedVersions = installed.GetValueOrDefault(CivitModel.Id);
+
+        Dispatcher.UIThread.Post(() =>
+        {
+            foreach (var versionVm in ModelVersions)
+            {
+                versionVm.IsInstalled = installedVersions?.Contains(versionVm.ModelVersion.Id) == true;
+            }
+        });
+    }
+
+    /// <summary>
+    /// Deletes the library files imported from the selected version of this workflow model,
+    /// along with their preview sidecars, after confirmation.
+    /// </summary>
+    private async Task DeleteWorkflowFilesAsync(CivitFileViewModel fileVm)
+    {
+        var files = await workflowLibraryIndex.GetInstalledFilesAsync(
+            CivitModel.Id,
+            SelectedVersion?.ModelVersion.Id
+        );
+
+        var paths = new List<string>();
+        foreach (var file in files.Where(File.Exists))
+        {
+            paths.Add(file);
+
+            if (Path.GetDirectoryName(file) is { } directory)
+            {
+                paths.AddRange(
+                    Directory.EnumerateFiles(directory, $"{Path.GetFileNameWithoutExtension(file)}.preview.*")
+                );
+            }
+        }
+
+        if (paths.Count == 0)
+            return;
+
+        var confirmDeleteVm = vmFactory.Get<ConfirmDeleteDialogViewModel>();
+        confirmDeleteVm.PathsToDelete = paths;
+
+        if (await confirmDeleteVm.GetDialog().ShowAsync() != ContentDialogResult.Primary)
+            return;
+
+        try
+        {
+            await confirmDeleteVm.ExecuteCurrentDeleteOperationAsync(failFast: true);
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "Failed to delete workflow files for {ModelName}", CivitModel.Name);
+            return;
+        }
+
+        fileVm.IsInstalled = false;
+
+        // Invalidates the library index and reloads the workflows page
+        EventManager.Instance.OnWorkflowInstalled();
+
+        await RefreshWorkflowVersionInstallStatesAsync();
+    }
+
     [RelayCommand]
     private async Task ShowBulkDownloadDialogAsync()
     {
@@ -652,6 +764,8 @@ public partial class CivitDetailsPageViewModel(
 
         if (result != ContentDialogResult.Primary)
             return;
+
+        var startedCount = 0;
 
         foreach (var file in dialogVm.FilesToDownload)
         {
@@ -675,7 +789,7 @@ public partial class CivitDetailsPageViewModel(
                 file.FileViewModel.CivitFile
             );
 
-            await modelImportService.DoImport(
+            var downloadStarted = await modelImportService.DoImport(
                 CivitModel,
                 destinationDir,
                 file.ModelVersion,
@@ -685,15 +799,25 @@ public partial class CivitDetailsPageViewModel(
                     TryMoveDownloadedCheckpointToDiffusionModelsIfNeededAsync(
                         file.FileViewModel.CivitFile,
                         destinationDir
-                    )
+                    ),
+                // Skip duplicates silently rather than prompting once per file
+                duplicateHandling: DuplicateDownloadHandling.Skip
             );
+
+            if (downloadStarted)
+            {
+                startedCount++;
+            }
         }
 
-        notificationService.Show(
-            Resources.Label_BulkDownloadStarted,
-            string.Format(Resources.Label_BulkDownloadStartedMessage, dialogVm.FilesToDownload.Count),
-            NotificationType.Success
-        );
+        if (startedCount > 0)
+        {
+            notificationService.Show(
+                Resources.Label_BulkDownloadStarted,
+                string.Format(Resources.Label_BulkDownloadStartedMessage, startedCount),
+                NotificationType.Success
+            );
+        }
     }
 
     [RelayCommand]
@@ -796,7 +920,7 @@ public partial class CivitDetailsPageViewModel(
 
         foreach (var file in modelVersion.Files)
         {
-            // Match install detection: hash-based only, so Unknown-typed files are also deleted
+            // Include every indexed file in the confirmation, including supporting components.
             if (file is not { Hashes.BLAKE3: not null })
                 continue;
 

@@ -40,6 +40,12 @@ dotnet tool restore && dotnet husky install
 ```bash
 dotnet husky install
 ```
+## Formatting
+- The pre-commit hook formats staged files: CSharpier for `.cs`, XamlStyler for `.axaml`.
+- Whole-repo formatting commits are listed in `.git-blame-ignore-revs`. GitHub's blame view skips them; to skip them locally too, run:
+```bash
+git config blame.ignoreRevsFile .git-blame-ignore-revs
+```
 ## Generated OpenApi clients
 - Refitter is used to generate some OpenApi clients. New clients should be added to `./.husky/task-runner.json`.
 - To regenerate clients, run the following command:

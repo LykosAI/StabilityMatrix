@@ -1,0 +1,106 @@
+﻿<Styles
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
+    xmlns:fluent="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
+    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages">
+    <Design.PreviewWith>
+        <StackPanel Width="320" Spacing="8">
+            <controls:SmolInfoBar
+                ActionText="Enable"
+                IsOpen="True"
+                Message="This looks like a Wan 2.2 14B expert — enable the second expert?"
+                Severity="Informational" />
+            <controls:SmolInfoBar
+                ActionText="Move"
+                IsOpen="True"
+                Message="This model looks like it belongs in the diffusion_models folder."
+                Severity="Warning" />
+        </StackPanel>
+    </Design.PreviewWith>
+
+    <Style Selector="controls|SmolInfoBar">
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <!--  Collapse the whole control (and its margin) when closed, so it leaves no gap behind.  -->
+        <Setter Property="IsVisible" Value="{Binding IsOpen, RelativeSource={RelativeSource Self}}" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border
+                    Name="PART_Root"
+                    Padding="8,5"
+                    Background="{DynamicResource SystemFillColorAttentionBackgroundBrush}"
+                    BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="4">
+                    <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+                        <fluent:SymbolIcon
+                            Name="PART_Icon"
+                            Grid.Column="0"
+                            Margin="0,1,6,0"
+                            VerticalAlignment="Top"
+                            FontSize="14"
+                            Foreground="{DynamicResource SystemFillColorAttentionBrush}"
+                            IconVariant="Filled"
+                            Symbol="Info" />
+                        <TextBlock
+                            Grid.Column="1"
+                            VerticalAlignment="Center"
+                            FontSize="11"
+                            Text="{TemplateBinding Message}"
+                            TextWrapping="Wrap" />
+                        <Button
+                            Grid.Column="2"
+                            Margin="8,0,0,0"
+                            Padding="8,3"
+                            VerticalAlignment="Center"
+                            Command="{TemplateBinding ActionCommand}"
+                            Content="{TemplateBinding ActionText}"
+                            FontSize="11"
+                            IsVisible="{TemplateBinding ActionText,
+                                                        Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                            ToolTip.Tip="{TemplateBinding ActionToolTip}" />
+                        <Button
+                            Grid.Column="3"
+                            Margin="4,0,0,0"
+                            Padding="5,3"
+                            VerticalAlignment="Center"
+                            Command="{TemplateBinding CloseCommand}"
+                            IsVisible="{TemplateBinding IsClosable}"
+                            ToolTip.Tip="{x:Static lang:Resources.Action_Dismiss}">
+                            <fluent:SymbolIcon FontSize="11" Symbol="Dismiss" />
+                        </Button>
+                    </Grid>
+                </Border>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+
+    <!--  Severity: Informational (default icon/colors set in the base template)  -->
+
+    <!--  Severity: Success  -->
+    <Style Selector="controls|SmolInfoBar[Severity=Success] /template/ Border#PART_Root">
+        <Setter Property="Background" Value="{DynamicResource SystemFillColorSuccessBackgroundBrush}" />
+    </Style>
+    <Style Selector="controls|SmolInfoBar[Severity=Success] /template/ fluent|SymbolIcon#PART_Icon">
+        <Setter Property="Symbol" Value="CheckmarkCircle" />
+        <Setter Property="Foreground" Value="{DynamicResource SystemFillColorSuccessBrush}" />
+    </Style>
+
+    <!--  Severity: Warning  -->
+    <Style Selector="controls|SmolInfoBar[Severity=Warning] /template/ Border#PART_Root">
+        <Setter Property="Background" Value="{DynamicResource SystemFillColorCautionBackgroundBrush}" />
+    </Style>
+    <Style Selector="controls|SmolInfoBar[Severity=Warning] /template/ fluent|SymbolIcon#PART_Icon">
+        <Setter Property="Symbol" Value="Warning" />
+        <Setter Property="Foreground" Value="{DynamicResource SystemFillColorCautionBrush}" />
+    </Style>
+
+    <!--  Severity: Error  -->
+    <Style Selector="controls|SmolInfoBar[Severity=Error] /template/ Border#PART_Root">
+        <Setter Property="Background" Value="{DynamicResource SystemFillColorCriticalBackgroundBrush}" />
+    </Style>
+    <Style Selector="controls|SmolInfoBar[Severity=Error] /template/ fluent|SymbolIcon#PART_Icon">
+        <Setter Property="Symbol" Value="ErrorCircle" />
+        <Setter Property="Foreground" Value="{DynamicResource SystemFillColorCriticalBrush}" />
+    </Style>
+</Styles>

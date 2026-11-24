@@ -9,5 +9,5 @@ public enum UpdateChannel
     Unknown,
     Stable,
     Preview,
-    Development
+    Development,
 }

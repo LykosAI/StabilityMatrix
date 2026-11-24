@@ -69,7 +69,7 @@ public partial class ExtensionSpecifier
         {
             Name = match.Groups["extension_name"].Value,
             Constraint = match.Groups["version_constraint"].Value,
-            Version = match.Groups["version"].Value
+            Version = match.Groups["version"].Value,
         };
 
         return true;

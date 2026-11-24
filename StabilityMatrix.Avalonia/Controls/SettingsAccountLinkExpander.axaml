@@ -27,8 +27,8 @@
                 Header="Service 3"
                 IconSource="CloudFilled"
                 IsConnected="True"
-                OnDescriptionExtra="(account)"
-                OffDescription="Manage account services like A, B, and C" />
+                OffDescription="Manage account services like A, B, and C"
+                OnDescriptionExtra="(account)" />
         </StackPanel>
     </Design.PreviewWith>
 

@@ -4,6 +4,7 @@
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
     xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
     xmlns:fluentIcons="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
+    xmlns:helpers="clr-namespace:StabilityMatrix.Avalonia.Helpers"
     xmlns:labs="clr-namespace:Avalonia.Labs.Controls;assembly=Avalonia.Labs.Controls"
     xmlns:mocks="using:StabilityMatrix.Avalonia.DesignData"
     xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
@@ -33,6 +34,7 @@
     </Design.PreviewWith>
 
     <converters:FileUriConverter x:Key="FileUriConverter" />
+    <converters:CategoryChipsFromSettingsConverter x:Key="CategoryChipsFromSettingsConverter" />
 
     <!--  ReSharper disable once Xaml.StaticResourceNotResolved  -->
     <ControlTheme
@@ -331,13 +333,23 @@
 
         <ControlTheme.Resources>
             <controls:HybridModelTemplateSelector x:Key="HybridModelTemplateSelector">
+                <!--
+                    MinHeight matches the Local template's thumbnail row: the dropdown is
+                    virtualized and estimates scroll extent from realized items, so mixed
+                    item heights make the scrollbar jump around (and fight reaching the
+                    end) once scrolling enters the downloadable block.
+                -->
                 <DataTemplate x:Key="{x:Static models:HybridModelType.Downloadable}" DataType="models:HybridModelFile">
-                    <Grid ColumnDefinitions="*,Auto">
-                        <TextBlock Foreground="{DynamicResource ThemeGreyColor}" Text="{Binding ShortDisplayName}" />
+                    <Grid MinHeight="42" ColumnDefinitions="*,Auto">
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            Foreground="{DynamicResource ThemeGreyColor}"
+                            Text="{Binding ShortDisplayName}" />
                         <Button
                             Grid.Column="1"
                             Margin="8,0,0,0"
                             Padding="0"
+                            VerticalAlignment="Center"
                             Classes="transparent-full">
                             <fluentIcons:SymbolIcon
                                 VerticalAlignment="Center"
@@ -407,9 +419,32 @@
                                     IsVisible="{Binding Local.ConfigFullPath, Converter={x:Static StringConverters.IsNotNullOrEmpty}, FallbackValue=False}"
                                     Symbol="BeakerSettings"
                                     ToolTip.Tip="{Binding Local.DisplayConfigFileName}" />
+                                <ItemsControl VerticalAlignment="Center" ItemsSource="{Binding Local.Categories, Converter={StaticResource CategoryChipsFromSettingsConverter}}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel Orientation="Horizontal" Spacing="4" />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate DataType="{x:Type helpers:CategoryChip}">
+                                            <Border
+                                                Height="18"
+                                                Margin="0"
+                                                Padding="6,0,6,1"
+                                                Background="{Binding Background}"
+                                                BorderBrush="{Binding Background}"
+                                                Classes="tag-chip">
+                                                <TextBlock
+                                                    FontSize="10"
+                                                    Foreground="{Binding Foreground}"
+                                                    Text="{Binding Name}" />
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
                                 <Label
                                     MinHeight="0"
-                                    Margin="0,0,0,0"
+                                    Margin="4,0,0,0"
                                     Padding="6,0,6,0"
                                     Classes="Circle LightBlue"
                                     Content="{Binding Local.ConnectedModelInfo.BaseModel}"
@@ -459,6 +494,7 @@
                             Width="36"
                             Height="36"
                             CornerRadius="36"
+                            IsVisible="{Binding Local.PreviewImageFullPathGlobal, Converter={x:Static StringConverters.IsNotNullOrEmpty}, FallbackValue=False}"
                             RenderOptions.BitmapInterpolationMode="HighQuality"
                             Source="{Binding Local.PreviewImageFullPathGlobal, Converter={StaticResource FileUriConverter}}"
                             Stretch="UniformToFill" />

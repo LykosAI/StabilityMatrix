@@ -159,10 +159,12 @@ public partial class PackageCardViewModel(
             var basePackage = packageFactory[value.PackageName!];
             CardImageSource = basePackage?.PreviewImageUri ?? Assets.NoImage;
             InstalledVersion = value.Version?.DisplayVersion ?? "Unknown";
-            CanUseConfigMethod =
-                basePackage?.AvailableSharedFolderMethods.Contains(SharedFolderMethod.Configuration) ?? false;
-            CanUseSymlinkMethod =
-                basePackage?.AvailableSharedFolderMethods.Contains(SharedFolderMethod.Symlink) ?? false;
+            CanUseConfigMethod = basePackage?.AvailableSharedFolderMethods.Contains(
+                SharedFolderMethod.Configuration
+            ) ?? false;
+            CanUseSymlinkMethod = basePackage?.AvailableSharedFolderMethods.Contains(
+                SharedFolderMethod.Symlink
+            ) ?? false;
             UseSharedOutput = Package?.UseSharedOutputFolder ?? false;
             CanUseSharedOutput = basePackage?.SharedOutputFolders != null;
             CanUseExtensions = basePackage?.SupportsExtensions ?? false;
@@ -741,7 +743,7 @@ public partial class PackageCardViewModel(
         if (Package is not { FullPath: not null })
             return;
 
-        var vm = vmFactory.Get<PythonPackagesViewModel>(vm =>
+        using var vm = vmFactory.Get<PythonPackagesViewModel>(vm =>
         {
             vm.VenvPath = new DirectoryPath(Package.FullPath, "venv");
             vm.PythonVersion = PyVersion.Parse(Package.PythonVersion);

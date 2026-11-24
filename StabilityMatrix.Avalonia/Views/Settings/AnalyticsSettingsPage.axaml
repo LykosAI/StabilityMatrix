@@ -6,6 +6,7 @@
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:fluent="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
+    xmlns:helpers="clr-namespace:StabilityMatrix.Avalonia.Helpers"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:settings="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Settings"
@@ -34,7 +35,7 @@
                 </ui:SettingsExpander.Footer>
                 <ui:SettingsExpanderItem Padding="8">
                     <StackPanel>
-                        <TextBlock Margin="8" Text="Example Telemetry" />
+                        <TextBlock Margin="8" Text="{x:Static lang:Resources.Label_ExampleTelemetry}" />
                         <avaloniaEdit:TextEditor
                             Margin="16,0,16,16"
                             Padding="8"
@@ -45,7 +46,7 @@
                             FontFamily="Cascadia Code,Consolas,Menlo,Monospace,DejaVu Sans Mono,monospace"
                             FontSize="14"
                             IsReadOnly="True"
-                            SyntaxHighlighting="JavaScript"
+                            SyntaxHighlighting="{x:Static helpers:JsonHighlighting.Dark}"
                             Text="{x:Static lang:Resources.AnalyticsExample_InstallData}" />
                     </StackPanel>
                 </ui:SettingsExpanderItem>

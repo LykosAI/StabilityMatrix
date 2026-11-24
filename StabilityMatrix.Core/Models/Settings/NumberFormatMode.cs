@@ -20,5 +20,5 @@ public enum NumberFormatMode
     /// Use the number format from the invariant culture
     /// </summary>
     [Display(Name = "Invariant")]
-    InvariantCulture
+    InvariantCulture,
 }

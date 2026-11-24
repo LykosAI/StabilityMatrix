@@ -1,7 +1,10 @@
 using Avalonia.Controls.Notifications;
 using NSubstitute;
+using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Api;
+using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Services;
@@ -11,13 +14,28 @@ namespace StabilityMatrix.Tests.Avalonia;
 [TestClass]
 public class ModelImportServiceTests
 {
+    private static ModelImportService CreateService(
+        IDownloadService downloadService,
+        INotificationService notificationService,
+        ITrackedDownloadService trackedDownloadService,
+        IModelIndexService? modelIndexService = null,
+        ISettingsManager? settingsManager = null
+    ) =>
+        new(
+            downloadService,
+            notificationService,
+            trackedDownloadService,
+            modelIndexService ?? Substitute.For<IModelIndexService>(),
+            settingsManager ?? Substitute.For<ISettingsManager>()
+        );
+
     [TestMethod]
     public async Task DoCustomImport_StartsTrackedDownloadBeforePreviewDownloadCompletes()
     {
         var downloadService = Substitute.For<IDownloadService>();
         var notificationService = Substitute.For<INotificationService>();
         var trackedDownloadService = Substitute.For<ITrackedDownloadService>();
-        var service = new ModelImportService(downloadService, notificationService, trackedDownloadService);
+        var service = CreateService(downloadService, notificationService, trackedDownloadService);
 
         var tempDir = Directory.CreateTempSubdirectory();
         var modelUri = new Uri("https://example.org/model.safetensors");
@@ -83,7 +101,7 @@ public class ModelImportServiceTests
         var downloadService = Substitute.For<IDownloadService>();
         var notificationService = Substitute.For<INotificationService>();
         var trackedDownloadService = Substitute.For<ITrackedDownloadService>();
-        var service = new ModelImportService(downloadService, notificationService, trackedDownloadService);
+        var service = CreateService(downloadService, notificationService, trackedDownloadService);
 
         var tempDir = Directory.CreateTempSubdirectory();
         var modelUri = new Uri("https://example.org/model.safetensors");
@@ -125,7 +143,7 @@ public class ModelImportServiceTests
         var downloadService = Substitute.For<IDownloadService>();
         var notificationService = Substitute.For<INotificationService>();
         var trackedDownloadService = Substitute.For<ITrackedDownloadService>();
-        var service = new ModelImportService(downloadService, notificationService, trackedDownloadService);
+        var service = CreateService(downloadService, notificationService, trackedDownloadService);
 
         var tempDir = Directory.CreateTempSubdirectory();
         var modelUri = new Uri("https://example.org/model.safetensors");
@@ -155,6 +173,273 @@ public class ModelImportServiceTests
                 Path.Combine(tempDir.FullName, "SDXL", "model.safetensors"),
                 capturedPath.FullPath
             );
+        }
+        finally
+        {
+            tempDir.Delete(recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public async Task DoImport_SkipsDownloadWhenDuplicateInstalled()
+    {
+        var downloadService = Substitute.For<IDownloadService>();
+        var notificationService = Substitute.For<INotificationService>();
+        var trackedDownloadService = Substitute.For<ITrackedDownloadService>();
+        var modelIndexService = Substitute.For<IModelIndexService>();
+        var settingsManager = Substitute.For<ISettingsManager>();
+        var service = CreateService(
+            downloadService,
+            notificationService,
+            trackedDownloadService,
+            modelIndexService,
+            settingsManager
+        );
+
+        var tempDir = Directory.CreateTempSubdirectory();
+
+        try
+        {
+            // Indexed duplicate that exists on disk
+            var installedRelativePath = Path.Combine("StableDiffusion", "installed.safetensors");
+            var installedFullPath = Path.Combine(tempDir.FullName, installedRelativePath);
+            Directory.CreateDirectory(Path.GetDirectoryName(installedFullPath)!);
+            await File.WriteAllTextAsync(installedFullPath, "weights");
+
+            settingsManager.ModelsDirectory.Returns(tempDir.FullName);
+            modelIndexService
+                .FindByHashAsync("test-blake3")
+                .Returns([
+                    new LocalModelFile
+                    {
+                        RelativePath = installedRelativePath,
+                        SharedFolderType = SharedFolderType.StableDiffusion,
+                    },
+                ]);
+
+            var canceledInvoked = false;
+
+            await service.DoImport(
+                new CivitModel(),
+                new DirectoryPath(tempDir.FullName),
+                selectedVersion: new CivitModelVersion(),
+                selectedFile: new CivitFile
+                {
+                    Name = "model.safetensors",
+                    Hashes = new CivitFileHashes { BLAKE3 = "test-blake3" },
+                },
+                onImportCanceled: () =>
+                {
+                    canceledInvoked = true;
+                    return Task.CompletedTask;
+                },
+                duplicateHandling: DuplicateDownloadHandling.Skip
+            );
+
+            await trackedDownloadService.DidNotReceive().TryStartDownload(Arg.Any<TrackedDownload>());
+            Assert.IsTrue(canceledInvoked, "Skipping a duplicate should invoke the cancel callback");
+        }
+        finally
+        {
+            tempDir.Delete(recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public async Task DoImport_SupersedesStalePausedDownloadForSameTarget()
+    {
+        var downloadService = Substitute.For<IDownloadService>();
+        var notificationService = Substitute.For<INotificationService>();
+        var trackedDownloadService = Substitute.For<ITrackedDownloadService>();
+        var service = CreateService(downloadService, notificationService, trackedDownloadService);
+
+        var tempDir = Directory.CreateTempSubdirectory();
+
+        try
+        {
+            // Stale paused download for the same target file (e.g. loaded from a previous
+            // session), with a temp file and a sidecar on disk
+            var staleTempPath = Path.Combine(tempDir.FullName, "Unconfirmed 1234567.smdownload");
+            var sidecarPath = Path.Combine(tempDir.FullName, "model.preview.jpeg");
+            await File.WriteAllTextAsync(staleTempPath, "partial");
+            await File.WriteAllTextAsync(sidecarPath, "preview");
+
+            var staleDownload = new TrackedDownload
+            {
+                Id = Guid.NewGuid(),
+                SourceUrl = new Uri("https://example.org/model.safetensors"),
+                DownloadDirectory = new DirectoryPath(tempDir.FullName),
+                FileName = "model.safetensors",
+                TempFileName = "Unconfirmed 1234567.smdownload",
+                ProgressState = ProgressState.Paused,
+                ExtraCleanupFileNames = { "model.preview.jpeg" },
+            };
+
+            trackedDownloadService.Downloads.Returns([staleDownload]);
+            trackedDownloadService
+                .NewDownload(Arg.Any<string>(), Arg.Any<FilePath>())
+                .Returns(call => new TrackedDownload
+                {
+                    Id = Guid.NewGuid(),
+                    SourceUrl = new Uri(call.Arg<string>()),
+                    DownloadDirectory = call.Arg<FilePath>().Directory!,
+                    FileName = call.Arg<FilePath>().Name,
+                    TempFileName = "model.safetensors.tmp",
+                });
+
+            var started = await service.DoImport(
+                new CivitModel(),
+                new DirectoryPath(tempDir.FullName),
+                selectedVersion: new CivitModelVersion(),
+                selectedFile: new CivitFile
+                {
+                    Name = "model.safetensors",
+                    DownloadUrl = "https://example.org/model.safetensors",
+                    Hashes = new CivitFileHashes(),
+                }
+            );
+
+            Assert.IsTrue(started);
+            Assert.AreEqual(ProgressState.Cancelled, staleDownload.ProgressState);
+            Assert.IsFalse(File.Exists(staleTempPath), "Stale temp file should be deleted");
+            Assert.IsTrue(
+                File.Exists(sidecarPath),
+                "Sidecar files must survive superseding — they belong to the new download"
+            );
+        }
+        finally
+        {
+            tempDir.Delete(recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public async Task DoImport_AllowBypassesDuplicateCheck()
+    {
+        var downloadService = Substitute.For<IDownloadService>();
+        var notificationService = Substitute.For<INotificationService>();
+        var trackedDownloadService = Substitute.For<ITrackedDownloadService>();
+        var modelIndexService = Substitute.For<IModelIndexService>();
+        var settingsManager = Substitute.For<ISettingsManager>();
+        var service = CreateService(
+            downloadService,
+            notificationService,
+            trackedDownloadService,
+            modelIndexService,
+            settingsManager
+        );
+
+        var tempDir = Directory.CreateTempSubdirectory();
+
+        try
+        {
+            // Installed duplicate present on disk, but Allow must not even consult the index
+            var installedRelativePath = Path.Combine("StableDiffusion", "installed.safetensors");
+            var installedFullPath = Path.Combine(tempDir.FullName, installedRelativePath);
+            Directory.CreateDirectory(Path.GetDirectoryName(installedFullPath)!);
+            await File.WriteAllTextAsync(installedFullPath, "weights");
+
+            settingsManager.ModelsDirectory.Returns(tempDir.FullName);
+            modelIndexService
+                .FindByHashAsync("test-blake3")
+                .Returns([
+                    new LocalModelFile
+                    {
+                        RelativePath = installedRelativePath,
+                        SharedFolderType = SharedFolderType.StableDiffusion,
+                    },
+                ]);
+
+            trackedDownloadService
+                .NewDownload(Arg.Any<string>(), Arg.Any<FilePath>())
+                .Returns(call => new TrackedDownload
+                {
+                    Id = Guid.NewGuid(),
+                    SourceUrl = new Uri(call.Arg<string>()),
+                    DownloadDirectory = call.Arg<FilePath>().Directory!,
+                    FileName = call.Arg<FilePath>().Name,
+                    TempFileName = "model.safetensors.tmp",
+                });
+
+            await service.DoImport(
+                new CivitModel(),
+                new DirectoryPath(tempDir.FullName),
+                selectedVersion: new CivitModelVersion(),
+                selectedFile: new CivitFile
+                {
+                    Name = "model.safetensors",
+                    DownloadUrl = "https://example.org/model.safetensors",
+                    Hashes = new CivitFileHashes { BLAKE3 = "test-blake3" },
+                },
+                duplicateHandling: DuplicateDownloadHandling.Allow
+            );
+
+            await trackedDownloadService.Received(1).TryStartDownload(Arg.Any<TrackedDownload>());
+            await modelIndexService.DidNotReceive().FindByHashAsync(Arg.Any<string>());
+        }
+        finally
+        {
+            tempDir.Delete(recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public async Task DoImport_ProceedsWhenIndexedDuplicateMissingOnDisk()
+    {
+        var downloadService = Substitute.For<IDownloadService>();
+        var notificationService = Substitute.For<INotificationService>();
+        var trackedDownloadService = Substitute.For<ITrackedDownloadService>();
+        var modelIndexService = Substitute.For<IModelIndexService>();
+        var settingsManager = Substitute.For<ISettingsManager>();
+        var service = CreateService(
+            downloadService,
+            notificationService,
+            trackedDownloadService,
+            modelIndexService,
+            settingsManager
+        );
+
+        var tempDir = Directory.CreateTempSubdirectory();
+
+        try
+        {
+            // Indexed duplicate whose file no longer exists — stale entry must not block
+            settingsManager.ModelsDirectory.Returns(tempDir.FullName);
+            modelIndexService
+                .FindByHashAsync("test-blake3")
+                .Returns([
+                    new LocalModelFile
+                    {
+                        RelativePath = Path.Combine("StableDiffusion", "deleted.safetensors"),
+                        SharedFolderType = SharedFolderType.StableDiffusion,
+                    },
+                ]);
+
+            // NSubstitute intercepts the default-interface string overload too, so stub it directly
+            trackedDownloadService
+                .NewDownload(Arg.Any<string>(), Arg.Any<FilePath>())
+                .Returns(call => new TrackedDownload
+                {
+                    Id = Guid.NewGuid(),
+                    SourceUrl = new Uri(call.Arg<string>()),
+                    DownloadDirectory = call.Arg<FilePath>().Directory!,
+                    FileName = call.Arg<FilePath>().Name,
+                    TempFileName = "model.safetensors.tmp",
+                });
+
+            await service.DoImport(
+                new CivitModel(),
+                new DirectoryPath(tempDir.FullName),
+                selectedVersion: new CivitModelVersion(),
+                selectedFile: new CivitFile
+                {
+                    Name = "model.safetensors",
+                    DownloadUrl = "https://example.org/model.safetensors",
+                    Hashes = new CivitFileHashes { BLAKE3 = "test-blake3" },
+                }
+            );
+
+            await trackedDownloadService.Received(1).TryStartDownload(Arg.Any<TrackedDownload>());
         }
         finally
         {

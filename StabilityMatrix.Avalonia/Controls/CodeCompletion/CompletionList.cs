@@ -113,7 +113,7 @@ public class CompletionList : TemplatedControlBase
             {
                 Item = item,
                 TriggeringEvent = triggeringEvent,
-                AppendText = appendText
+                AppendText = appendText,
             }
         );
     }

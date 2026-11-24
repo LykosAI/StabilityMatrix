@@ -20,12 +20,12 @@ public class A3WebApiManager : IA3WebApiManager
             return client;
         }
     }
-    
+
     private readonly ISettingsManager settingsManager;
     private readonly IHttpClientFactory httpClientFactory;
     public RefitSettings? RefitSettings { get; init; }
     public string? BaseUrl { get; set; }
-    
+
     public A3WebApiManager(ISettingsManager settingsManager, IHttpClientFactory httpClientFactory)
     {
         this.settingsManager = settingsManager;
@@ -40,7 +40,7 @@ public class A3WebApiManager : IA3WebApiManager
     private IA3WebApi CreateClient()
     {
         var settings = settingsManager.Settings;
-        
+
         // First check override
         if (settings.WebApiHost != null)
         {

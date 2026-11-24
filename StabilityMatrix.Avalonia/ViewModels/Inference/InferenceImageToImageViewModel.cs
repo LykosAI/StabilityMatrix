@@ -31,7 +31,8 @@ public class InferenceImageToImageViewModel : InferenceTextToImageViewModel
         ISettingsManager settingsManager,
         IModelIndexService modelIndexService,
         RunningPackageService runningPackageService,
-        TabContext tabContext
+        TabContext tabContext,
+        IPromptQueueService promptQueueService
     )
         : base(
             notificationService,
@@ -40,7 +41,8 @@ public class InferenceImageToImageViewModel : InferenceTextToImageViewModel
             vmFactory,
             modelIndexService,
             runningPackageService,
-            tabContext
+            tabContext,
+            promptQueueService
         )
     {
         SelectImageCardViewModel = vmFactory.Get<SelectImageCardViewModel>(vm =>
@@ -80,7 +82,7 @@ public class InferenceImageToImageViewModel : InferenceTextToImageViewModel
         ApplyModelSamplingForCurrentWorkflow(applyArgs);
 
         // Setup Sampler and Refiner if enabled
-        ApplySamplerForCurrentWorkflow(applyArgs, includeGgufAsFluxGuidance: true);
+        ApplySamplerForCurrentWorkflow(applyArgs);
 
         // Apply module steps
         foreach (var module in ModulesCardViewModel.Cards.OfType<ModuleBase>())

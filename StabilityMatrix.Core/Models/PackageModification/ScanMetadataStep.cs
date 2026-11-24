@@ -1,4 +1,4 @@
-﻿using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Services;
 
@@ -10,10 +10,19 @@ public class ScanMetadataStep(
     bool updateExistingMetadata = false
 ) : IPackageStep
 {
-    public Task ExecuteAsync(IProgress<ProgressReport>? progress = null) =>
-        updateExistingMetadata
-            ? metadataImportService.UpdateExistingMetadata(directoryPath, progress)
-            : metadataImportService.ScanDirectoryForMissingInfo(directoryPath, progress);
+    /// <summary>Outcome tally of the scan, available after <see cref="ExecuteAsync"/> completes.</summary>
+    public MetadataScanResult? Result { get; private set; }
+
+    public async Task ExecuteAsync(IProgress<ProgressReport>? progress = null)
+    {
+        Result = updateExistingMetadata
+            ? await metadataImportService
+                .UpdateExistingMetadata(directoryPath, progress)
+                .ConfigureAwait(false)
+            : await metadataImportService
+                .ScanDirectoryForMissingInfo(directoryPath, progress)
+                .ConfigureAwait(false);
+    }
 
     public string ProgressTitle => "Updating Metadata";
 }

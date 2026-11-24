@@ -1,4 +1,4 @@
-﻿using Nito.Disposables.Internals;
+using Nito.Disposables.Internals;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Database;
@@ -145,6 +145,17 @@ public class MockModelIndexService : IModelIndexService
     {
         return Task.FromResult(false);
     }
+
+    public Task UpsertModelsAsync(IEnumerable<LocalModelFile> models)
+    {
+        return Task.CompletedTask;
+    }
+
+    public IReadOnlySet<string> ModelIndexCategories =>
+        ModelIndex
+            .Values.SelectMany(x => x)
+            .SelectMany(x => x.Categories)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
     public Task CheckModelsForUpdateAsync()
     {

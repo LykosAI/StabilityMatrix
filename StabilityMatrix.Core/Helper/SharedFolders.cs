@@ -239,8 +239,8 @@ public class SharedFolders(ISettingsManager settingsManager, IPackageFactory pac
                     continue;
                 }
 
-                var sharedFolderMethod =
-                    package.PreferredSharedFolderMethod ?? basePackage.RecommendedSharedFolderMethod;
+                var sharedFolderMethod = package.PreferredSharedFolderMethod
+                    ?? basePackage.RecommendedSharedFolderMethod;
                 basePackage
                     .RemoveModelFolderLinks(package.FullPath, sharedFolderMethod)
                     .GetAwaiter()

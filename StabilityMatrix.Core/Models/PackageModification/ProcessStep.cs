@@ -32,7 +32,7 @@ public class ProcessStep : ICancellablePackageStep
             {
                 Message = "Running Process",
                 IsIndeterminate = true,
-                PrintToConsole = true
+                PrintToConsole = true,
             }
         );
 
@@ -68,7 +68,7 @@ public class ProcessStep : ICancellablePackageStep
                             {
                                 Message = output,
                                 IsIndeterminate = true,
-                                PrintToConsole = true
+                                PrintToConsole = true,
                             }
                         );
                     }

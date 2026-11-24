@@ -1,0 +1,129 @@
+{
+  "Version": 2,
+  "ProjectType": "WanTextToVideo",
+  "State": {
+    "Model": {
+      "ExtraNetworksStackCardViewModel": {
+        "$values": []
+      },
+      "WeightDTypes": [
+        "default",
+        "fp8_e4m3fn",
+        "fp8_e4m3fn_fast",
+        "fp8_e5m2"
+      ],
+      "SelectedModel": {
+        "RemoteName": null,
+        "Local": {
+          "RelativePath": "DiffusionModels/wan2.1_t2v_1.3B_fp16.safetensors",
+          "SharedFolderType": 2147483648,
+          "ConnectedModelInfo": null,
+          "PreviewImageRelativePath": null,
+          "PreviewImageFullPath": null,
+          "ConfigFullPath": null,
+          "HasUpdate": false,
+          "HasEarlyAccessUpdateOnly": false,
+          "LastUpdateCheck": "0001-01-01T00:00:00\u002B00:00",
+          "LatestModelInfo": null
+        },
+        "DownloadableResource": null,
+        "Type": 1
+      },
+      "SelectedClipModel": {
+        "RemoteName": null,
+        "Local": {
+          "RelativePath": "TextEncoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors",
+          "SharedFolderType": 262144,
+          "ConnectedModelInfo": null,
+          "PreviewImageRelativePath": null,
+          "PreviewImageFullPath": null,
+          "ConfigFullPath": null,
+          "HasUpdate": false,
+          "HasEarlyAccessUpdateOnly": false,
+          "LastUpdateCheck": "0001-01-01T00:00:00\u002B00:00",
+          "LatestModelInfo": null
+        },
+        "DownloadableResource": null,
+        "Type": 1
+      },
+      "SelectedVae": {
+        "RemoteName": null,
+        "Local": {
+          "RelativePath": "VAE/wan_2.1_vae.safetensors",
+          "SharedFolderType": 1024,
+          "ConnectedModelInfo": null,
+          "PreviewImageRelativePath": null,
+          "PreviewImageFullPath": null,
+          "ConfigFullPath": null,
+          "HasUpdate": false,
+          "HasEarlyAccessUpdateOnly": false,
+          "LastUpdateCheck": "0001-01-01T00:00:00\u002B00:00",
+          "LatestModelInfo": null
+        },
+        "DownloadableResource": null,
+        "Type": 1
+      },
+      "SelectedDType": "fp8_e4m3fn_fast",
+      "IsClipVisionEnabled": false,
+      "Shift": 8
+    },
+    "Sampler": {
+      "GroupedResolutionsByAspectRatio": {},
+      "DimensionStepChange": 0,
+      "Modules": {
+        "$values": []
+      },
+      "IsRefinerStepsEnabled": false,
+      "Steps": 23,
+      "RefinerSteps": 10,
+      "IsDenoiseStrengthEnabled": false,
+      "DenoiseStrength": 1,
+      "IsCfgScaleEnabled": true,
+      "CfgScale": 6.5,
+      "IsDimensionsEnabled": true,
+      "Width": 832,
+      "Height": 480,
+      "IsSamplerSelectionEnabled": true,
+      "SelectedSampler": {
+        "Name": "dpmpp_2m"
+      },
+      "IsSchedulerSelectionEnabled": true,
+      "SelectedScheduler": {
+        "Name": "karras"
+      },
+      "InheritPrimarySamplerAddons": true,
+      "EnableAddons": true,
+      "SelectedModelType": "SDXL",
+      "IsLengthEnabled": true,
+      "Length": 49
+    },
+    "BatchSize": {
+      "BatchSize": 1,
+      "BatchCount": 1,
+      "IsBatchIndexEnabled": false,
+      "BatchIndex": 1
+    },
+    "Seed": {
+      "Seed": "424242",
+      "IsRandomizeEnabled": true
+    },
+    "Prompt": {
+      "Prompt": "a white wolf in a snowy forest, \u003Clora:detail_tweaker_xl:0.8\u003E, detailed fur",
+      "NegativePrompt": "blurry, lowres",
+      "ModulesCardState": {
+        "$values": []
+      }
+    },
+    "VideoOutput": {
+      "Fps": 16,
+      "Lossless": true,
+      "Quality": 85,
+      "SelectedMethod": "Default",
+      "AvailableMethods": [
+        "Fastest",
+        "Default",
+        "Slowest"
+      ]
+    }
+  }
+}

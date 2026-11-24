@@ -150,6 +150,11 @@ public class ComfyUI(
                     TargetRelativePaths = ["models/hypernetworks"],
                     ConfigDocumentPaths = ["hypernetworks"],
                 },
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.LatentUpscaleModels],
+                    ConfigDocumentPaths = ["latent_upscale_models"],
+                },
                 new SharedFolderLayoutRule // IP-Adapter Base, SD1.5, SDXL
                 {
                     SourceTypes =
@@ -222,6 +227,16 @@ public class ComfyUI(
                     TargetRelativePaths = ["models/background_removal"],
                     ConfigDocumentPaths = ["background_removal"],
                 },
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.FrameInterpolation],
+                    ConfigDocumentPaths = ["frame_interpolation"],
+                },
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.GeometryEstimation],
+                    ConfigDocumentPaths = ["geometry_estimation"],
+                },
             ],
         };
 
@@ -233,6 +248,20 @@ public class ComfyUI(
         SharedFolderMethod sharedFolderMethod
     )
     {
+        if (sharedFolderMethod is SharedFolderMethod.Configuration)
+        {
+            SharedFolderType[] folderTypes =
+            [
+                SharedFolderType.LatentUpscaleModels,
+                SharedFolderType.FrameInterpolation,
+                SharedFolderType.GeometryEstimation,
+            ];
+            foreach (var folderType in folderTypes)
+            {
+                new DirectoryPath(settingsManager.ModelsDirectory, folderType.GetStringValue()).Create();
+            }
+        }
+
         await base.SetupModelFolders(installDirectory, sharedFolderMethod).ConfigureAwait(false);
 
         if (sharedFolderMethod is SharedFolderMethod.None)
@@ -989,8 +1018,7 @@ public class ComfyUI(
                         new ProgressReport(-1f, "Updating SageAttention...", isIndeterminate: true)
                     );
 
-                    var gpuInfo =
-                        SettingsManager.Settings.PreferredGpu
+                    var gpuInfo = SettingsManager.Settings.PreferredGpu
                         ?? HardwareHelper.IterGpuInfo().FirstOrDefault(x => x.IsNvidia);
 
                     await PipWheelService
@@ -1018,32 +1046,27 @@ public class ComfyUI(
         EventManager.Instance.OnPackageInstallProgressAdded(runner);
 
         await runner
-            .ExecuteSteps(
-                [
-                    new ActionPackageStep(
-                        async progress =>
-                        {
-                            await using var venvRunner = await SetupVenvPure(
-                                    installedPackage.FullPath,
-                                    pythonVersion: PyVersion.Parse(installedPackage.PythonVersion)
-                                )
-                                .ConfigureAwait(false);
+            .ExecuteSteps([
+                new ActionPackageStep(
+                    async progress =>
+                    {
+                        await using var venvRunner = await SetupVenvPure(
+                                installedPackage.FullPath,
+                                pythonVersion: PyVersion.Parse(installedPackage.PythonVersion)
+                            )
+                            .ConfigureAwait(false);
 
-                            var gpuInfo =
-                                SettingsManager.Settings.PreferredGpu
-                                ?? HardwareHelper.IterGpuInfo().FirstOrDefault(x => x.IsNvidia);
+                        var gpuInfo = SettingsManager.Settings.PreferredGpu
+                            ?? HardwareHelper.IterGpuInfo().FirstOrDefault(x => x.IsNvidia);
 
-                            await PipWheelService
-                                .InstallTritonAsync(venvRunner, progress)
-                                .ConfigureAwait(false);
-                            await PipWheelService
-                                .InstallSageAttentionAsync(venvRunner, gpuInfo, progress)
-                                .ConfigureAwait(false);
-                        },
-                        "Installing Triton and SageAttention"
-                    ),
-                ]
-            )
+                        await PipWheelService.InstallTritonAsync(venvRunner, progress).ConfigureAwait(false);
+                        await PipWheelService
+                            .InstallSageAttentionAsync(venvRunner, gpuInfo, progress)
+                            .ConfigureAwait(false);
+                    },
+                    "Installing Triton and SageAttention"
+                ),
+            ])
             .ConfigureAwait(false);
 
         if (runner.Failed)
@@ -1128,22 +1151,20 @@ public class ComfyUI(
         }
 
         await runner
-            .ExecuteSteps(
-                [
-                    new InstallWindowsRocmPackageCommandStep(
-                        downloadService,
-                        pyInstallationManager,
-                        prerequisiteHelper,
-                        rocmPackageHelper
-                    )
-                    {
-                        CommandType = commandType,
-                        InstalledPackage = installedPackage,
-                        WorkingDirectory = new DirectoryPath(installedPackage.FullPath),
-                        EnvironmentVariables = environmentVariables,
-                    },
-                ]
-            )
+            .ExecuteSteps([
+                new InstallWindowsRocmPackageCommandStep(
+                    downloadService,
+                    pyInstallationManager,
+                    prerequisiteHelper,
+                    rocmPackageHelper
+                )
+                {
+                    CommandType = commandType,
+                    InstalledPackage = installedPackage,
+                    WorkingDirectory = new DirectoryPath(installedPackage.FullPath),
+                    EnvironmentVariables = environmentVariables,
+                },
+            ])
             .ConfigureAwait(false);
 
         return !runner.Failed;
@@ -1199,29 +1220,26 @@ public class ComfyUI(
         EventManager.Instance.OnPackageInstallProgressAdded(runner);
 
         await runner
-            .ExecuteSteps(
-                [
-                    new ActionPackageStep(
-                        async progress =>
-                        {
-                            await using var venvRunner = await SetupVenvPure(
-                                    installedPackage.FullPath,
-                                    pythonVersion: PyVersion.Parse(installedPackage.PythonVersion)
-                                )
-                                .ConfigureAwait(false);
+            .ExecuteSteps([
+                new ActionPackageStep(
+                    async progress =>
+                    {
+                        await using var venvRunner = await SetupVenvPure(
+                                installedPackage.FullPath,
+                                pythonVersion: PyVersion.Parse(installedPackage.PythonVersion)
+                            )
+                            .ConfigureAwait(false);
 
-                            var gpuInfo =
-                                SettingsManager.Settings.PreferredGpu
-                                ?? HardwareHelper.IterGpuInfo().FirstOrDefault(x => x.IsNvidia || x.IsAmd);
+                        var gpuInfo = SettingsManager.Settings.PreferredGpu
+                            ?? HardwareHelper.IterGpuInfo().FirstOrDefault(x => x.IsNvidia || x.IsAmd);
 
-                            await PipWheelService
-                                .InstallNunchakuAsync(venvRunner, gpuInfo, progress)
-                                .ConfigureAwait(false);
-                        },
-                        "Installing Nunchaku"
-                    ),
-                ]
-            )
+                        await PipWheelService
+                            .InstallNunchakuAsync(venvRunner, gpuInfo, progress)
+                            .ConfigureAwait(false);
+                    },
+                    "Installing Nunchaku"
+                ),
+            ])
             .ConfigureAwait(false);
     }
 
@@ -1241,8 +1259,9 @@ public class ComfyUI(
             var ffmpegDir = Path.GetDirectoryName(PrerequisiteHelper.FfmpegPath);
             if (!string.IsNullOrEmpty(ffmpegDir))
             {
-                var currentPath =
-                    env.GetValueOrDefault("PATH") ?? Environment.GetEnvironmentVariable("PATH") ?? "";
+                var currentPath = env.GetValueOrDefault("PATH")
+                    ?? Environment.GetEnvironmentVariable("PATH")
+                    ?? "";
                 env = env.SetItem("PATH", Compat.GetEnvPathWithExtensions(ffmpegDir, currentPath));
             }
         }

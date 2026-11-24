@@ -25,7 +25,11 @@
   </PropertyGroup>
 
   <Target Name="EditInfoPlist" AfterTargets="BundleApp" Condition=" '$(RuntimeIdentifier)' == 'osx-arm64' ">
-    <XmlPeek XmlInputPath="$(PublishDir)/Stability Matrix.app/Contents/Info.plist" Query="//plist/dict">
+    <XmlPeek
+      XmlInputPath="$(PublishDir)/Stability Matrix.app/Contents/Info.plist"
+      Query="//plist/dict"
+      ProhibitDtd="false"
+    >
       <Output TaskParameter="Result" PropertyName="PlistDictOriginal" />
     </XmlPeek>
     <PropertyGroup>
@@ -58,10 +62,20 @@
                 ]]>
       </PlistDictAppend>
     </PropertyGroup>
+    <!-- Info.plist has a DTD. MSBuild 18.11 prohibits DTDs in XmlPoke by default and adds
+         ProhibitDtd to opt out; older versions ignore the DTD and don't have the parameter. -->
     <XmlPoke
+      Condition="$([MSBuild]::VersionLessThan('$(MSBuildVersion)', '18.11'))"
       XmlInputPath="$(PublishDir)/Stability Matrix.app/Contents/Info.plist"
       Query="//plist/dict"
       Value="$(PlistDictOriginalInner)$(PlistDictAppend)"
+    />
+    <XmlPoke
+      Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(MSBuildVersion)', '18.11'))"
+      XmlInputPath="$(PublishDir)/Stability Matrix.app/Contents/Info.plist"
+      Query="//plist/dict"
+      Value="$(PlistDictOriginalInner)$(PlistDictAppend)"
+      ProhibitDtd="false"
     />
   </Target>
 

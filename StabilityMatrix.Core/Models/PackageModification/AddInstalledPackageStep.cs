@@ -8,10 +8,7 @@ public class AddInstalledPackageStep : IPackageStep
     private readonly ISettingsManager settingsManager;
     private readonly InstalledPackage newInstalledPackage;
 
-    public AddInstalledPackageStep(
-        ISettingsManager settingsManager,
-        InstalledPackage newInstalledPackage
-    )
+    public AddInstalledPackageStep(ISettingsManager settingsManager, InstalledPackage newInstalledPackage)
     {
         this.settingsManager = settingsManager;
         this.newInstalledPackage = newInstalledPackage;

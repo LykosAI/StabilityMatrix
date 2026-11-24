@@ -17,7 +17,7 @@ public class MockDownloadProgressItemViewModel : PausableProgressItemViewModelBa
         Progress.IsIndeterminate = false;
         Progress.Text = "Downloading...";
     }
-    
+
     /// <inheritdoc />
     public override Task Cancel()
     {
@@ -38,28 +38,31 @@ public class MockDownloadProgressItemViewModel : PausableProgressItemViewModelBa
         cts?.Cancel();
         cts = null;
         dummyTask = null;
-        
+
         State = ProgressState.Inactive;
-        
+
         return Task.CompletedTask;
     }
-    
+
     /// <inheritdoc />
     public override Task Resume()
     {
         // Start a task that updates progress every 100ms
         cts = new CancellationTokenSource();
-        dummyTask = Task.Run(async () =>
-        {
-            while (State != ProgressState.Success)
+        dummyTask = Task.Run(
+            async () =>
             {
-                await Task.Delay(100, cts.Token);
-                Progress.Value += 1;
-            }
-        }, cts.Token);
-        
+                while (State != ProgressState.Success)
+                {
+                    await Task.Delay(100, cts.Token);
+                    Progress.Value += 1;
+                }
+            },
+            cts.Token
+        );
+
         State = ProgressState.Working;
-        
+
         return Task.CompletedTask;
     }
 }

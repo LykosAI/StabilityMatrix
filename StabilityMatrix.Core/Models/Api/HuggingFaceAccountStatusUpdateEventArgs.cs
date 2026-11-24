@@ -11,7 +11,11 @@ public class HuggingFaceAccountStatusUpdateEventArgs : EventArgs
     // Constructor to allow initialization, matching the usage in AccountSettingsViewModel
     public HuggingFaceAccountStatusUpdateEventArgs() { }
 
-    public HuggingFaceAccountStatusUpdateEventArgs(bool isConnected, string? username, string? errorMessage = null)
+    public HuggingFaceAccountStatusUpdateEventArgs(
+        bool isConnected,
+        string? username,
+        string? errorMessage = null
+    )
     {
         IsConnected = isConnected;
         Username = username;

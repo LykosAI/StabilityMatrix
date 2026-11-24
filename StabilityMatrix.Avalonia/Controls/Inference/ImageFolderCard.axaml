@@ -1,6 +1,7 @@
 ﻿<ResourceDictionary
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:behaviors="clr-namespace:StabilityMatrix.Avalonia.Behaviors"
     xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
     xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
     xmlns:dbModels="clr-namespace:StabilityMatrix.Core.Models.Database;assembly=StabilityMatrix.Core"
@@ -68,6 +69,12 @@
                                 VerticalAlignment="Stretch"
                                 ItemsSource="{Binding LocalImages}"
                                 VerticalCacheLength="8">
+
+                                <Interaction.Behaviors>
+                                    <BehaviorCollection>
+                                        <behaviors:ItemsRepeaterHiddenChangesBehavior />
+                                    </BehaviorCollection>
+                                </Interaction.Behaviors>
 
                                 <ItemsRepeater.Resources>
                                     <input:StandardUICommand x:Key="ImageClickCommand" Command="{Binding ImageClickCommand}" />
@@ -209,7 +216,10 @@
                                                         Command="{StaticResource ImageOpenCommand}"
                                                         CommandParameter="{Binding $self.DataContext}"
                                                         HotKey="{x:Null}" />
-                                                    <ui:MenuFlyoutSubItem IconSource="Share" Text="Export">
+                                                    <ui:MenuFlyoutSubItem
+                                                        IconSource="Share"
+                                                        IsVisible="{Binding !IsVideo}"
+                                                        Text="Export">
                                                         <ui:MenuFlyoutItem
                                                             Command="{StaticResource ImageExportPngWithMetadataCommand}"
                                                             CommandParameter="{Binding $self.DataContext}"
@@ -266,8 +276,25 @@
                                                     <vendorLabs:BetterAsyncImage
                                                         Width="{Binding $parent[ItemsRepeater].((vmInference:ImageFolderCardViewModel)DataContext).ImageSize.Width}"
                                                         Height="{Binding $parent[ItemsRepeater].((vmInference:ImageFolderCardViewModel)DataContext).ImageSize.Height}"
-                                                        Source="{Binding AbsolutePath, Converter={StaticResource FileUriConverter}}"
+                                                        Source="{Binding DisplayPath, Converter={StaticResource FileUriConverter}}"
                                                         Stretch="UniformToFill" />
+
+                                                    <!--  Video play badge  -->
+                                                    <Border
+                                                        Padding="8"
+                                                        HorizontalAlignment="Center"
+                                                        VerticalAlignment="Center"
+                                                        Background="#80000000"
+                                                        CornerRadius="24"
+                                                        IsHitTestVisible="False"
+                                                        IsVisible="{Binding IsVideo}">
+                                                        <PathIcon
+                                                            Width="28"
+                                                            Height="28"
+                                                            Margin="4,0,0,0"
+                                                            Data="M8,5.14V19.14L19,12.14L8,5.14Z"
+                                                            Foreground="White" />
+                                                    </Border>
 
                                                     <Border
                                                         Grid.Row="1"

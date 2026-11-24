@@ -7,6 +7,7 @@
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:dialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
+    xmlns:helpers="clr-namespace:StabilityMatrix.Avalonia.Helpers"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
@@ -73,7 +74,7 @@
             FontFamily="Cascadia Code,Consolas,Menlo,Monospace,DejaVu Sans Mono,monospace"
             FontSize="14"
             IsReadOnly="True"
-            SyntaxHighlighting="JavaScript"
+            SyntaxHighlighting="{x:Static helpers:JsonHighlighting.Dark}"
             Text="{x:Static lang:Resources.AnalyticsExample_InstallData}" />
         <StackPanel
             Grid.Row="6"

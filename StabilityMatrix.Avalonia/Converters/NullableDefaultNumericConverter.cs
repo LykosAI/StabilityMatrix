@@ -30,14 +30,14 @@ public class NullableDefaultNumericConverter<TSource, TTarget> : IValueConverter
             return NanHandling switch
             {
                 ReturnBehavior.DefaultValue => default,
-                ReturnBehavior.Throw
-                    => throw new InvalidCastException("Cannot convert NaN to a numeric type"),
-                _
-                    => throw new InvalidEnumArgumentException(
-                        nameof(NanHandling),
-                        (int)NanHandling,
-                        typeof(ReturnBehavior)
-                    )
+                ReturnBehavior.Throw => throw new InvalidCastException(
+                    "Cannot convert NaN to a numeric type"
+                ),
+                _ => throw new InvalidEnumArgumentException(
+                    nameof(NanHandling),
+                    (int)NanHandling,
+                    typeof(ReturnBehavior)
+                ),
             };
         }
 
@@ -79,6 +79,6 @@ public class NullableDefaultNumericConverter<TSource, TTarget> : IValueConverter
     public enum ReturnBehavior
     {
         DefaultValue,
-        Throw
+        Throw,
     }
 }

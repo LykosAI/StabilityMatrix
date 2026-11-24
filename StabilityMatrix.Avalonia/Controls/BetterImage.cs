@@ -15,14 +15,18 @@ public class BetterImage : Control
     /// <summary>
     /// Defines the <see cref="Source"/> property.
     /// </summary>
-    public static readonly StyledProperty<IImage?> SourceProperty =
-        AvaloniaProperty.Register<BetterImage, IImage?>(nameof(Source));
+    public static readonly StyledProperty<IImage?> SourceProperty = AvaloniaProperty.Register<
+        BetterImage,
+        IImage?
+    >(nameof(Source));
 
     /// <summary>
     /// Defines the <see cref="Stretch"/> property.
     /// </summary>
-    public static readonly StyledProperty<Stretch> StretchProperty =
-        AvaloniaProperty.Register<BetterImage, Stretch>(nameof(Stretch), Stretch.Uniform);
+    public static readonly StyledProperty<Stretch> StretchProperty = AvaloniaProperty.Register<
+        BetterImage,
+        Stretch
+    >(nameof(Stretch), Stretch.Uniform);
 
     /// <summary>
     /// Defines the <see cref="StretchDirection"/> property.
@@ -30,14 +34,16 @@ public class BetterImage : Control
     public static readonly StyledProperty<StretchDirection> StretchDirectionProperty =
         AvaloniaProperty.Register<BetterImage, StretchDirection>(
             nameof(StretchDirection),
-            StretchDirection.Both);
+            StretchDirection.Both
+        );
 
     static BetterImage()
     {
         AffectsRender<BetterImage>(SourceProperty, StretchProperty, StretchDirectionProperty);
         AffectsMeasure<BetterImage>(SourceProperty, StretchProperty, StretchDirectionProperty);
         AutomationProperties.ControlTypeOverrideProperty.OverrideDefaultValue<BetterImage>(
-            AutomationControlType.Image);
+            AutomationControlType.Image
+        );
     }
 
     /// <summary>
@@ -79,42 +85,39 @@ public class BetterImage : Control
     {
         var source = Source;
 
-        if (source == null || Bounds is not {Width: > 0, Height: > 0}) return;
-        
+        if (source == null || Bounds is not { Width: > 0, Height: > 0 })
+            return;
+
         var viewPort = new Rect(Bounds.Size);
         var sourceSize = source.Size;
 
         var scale = Stretch.CalculateScaling(Bounds.Size, sourceSize, StretchDirection);
         var scaledSize = sourceSize * scale;
-            
+
         // Calculate starting points for dest
         var destX = HorizontalAlignment switch
         {
             HorizontalAlignment.Left => 0,
-            HorizontalAlignment.Center => (int) (viewPort.Width - scaledSize.Width) / 2,
-            HorizontalAlignment.Right => (int) (viewPort.Width - scaledSize.Width),
+            HorizontalAlignment.Center => (int)(viewPort.Width - scaledSize.Width) / 2,
+            HorizontalAlignment.Right => (int)(viewPort.Width - scaledSize.Width),
             // Stretch is default, use center
-            HorizontalAlignment.Stretch => (int) (viewPort.Width - scaledSize.Width) / 2, 
-            _ => throw new ArgumentException(nameof(HorizontalAlignment))
+            HorizontalAlignment.Stretch => (int)(viewPort.Width - scaledSize.Width) / 2,
+            _ => throw new ArgumentException(nameof(HorizontalAlignment)),
         };
-            
-        var destRect = viewPort
-            .CenterRect(new Rect(scaledSize))
-            .WithX(destX)
-            .WithY(0)
-            .Intersect(viewPort);
+
+        var destRect = viewPort.CenterRect(new Rect(scaledSize)).WithX(destX).WithY(0).Intersect(viewPort);
         var destRectUnscaledSize = destRect.Size / scale;
-            
+
         var sourceX = HorizontalAlignment switch
         {
             HorizontalAlignment.Left => 0,
-            HorizontalAlignment.Center => (int) (sourceSize - destRectUnscaledSize).Width / 2,
-            HorizontalAlignment.Right => (int) (sourceSize - destRectUnscaledSize).Width,
+            HorizontalAlignment.Center => (int)(sourceSize - destRectUnscaledSize).Width / 2,
+            HorizontalAlignment.Right => (int)(sourceSize - destRectUnscaledSize).Width,
             // Stretch is default, use center
-            HorizontalAlignment.Stretch => (int) (sourceSize - destRectUnscaledSize).Width / 2, 
-            _ => throw new ArgumentException(nameof(HorizontalAlignment))
+            HorizontalAlignment.Stretch => (int)(sourceSize - destRectUnscaledSize).Width / 2,
+            _ => throw new ArgumentException(nameof(HorizontalAlignment)),
         };
-            
+
         var sourceRect = new Rect(sourceSize)
             .CenterRect(new Rect(destRect.Size / scale))
             .WithX(sourceX)

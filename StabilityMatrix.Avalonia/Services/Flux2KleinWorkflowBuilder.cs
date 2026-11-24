@@ -346,8 +346,7 @@ public static class Flux2KleinWorkflowBuilder
     /// </summary>
     private static (int Width, int Height)? TryGetReferenceImageDimensions(ImageGenerationRequest request)
     {
-        var base64 =
-            request.InputImages?.FirstOrDefault()?.Base64Data
+        var base64 = request.InputImages?.FirstOrDefault()?.Base64Data
             ?? request
                 .ConversationHistory?.LastOrDefault(m =>
                     m is { Role: MessageRole.Assistant, ImageContent: not null }

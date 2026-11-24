@@ -42,7 +42,7 @@ public class GifConverter
             new AnimatedGifConfiguration(gifBitmaps, TimeSpan.FromMilliseconds(150))
             {
                 Quantizer = OptimizedPaletteQuantizer.Wu(alphaThreshold: 0),
-                AllowDeltaFrames = true
+                AllowDeltaFrames = true,
             },
             gifOutput
         );

@@ -22,7 +22,7 @@ public class TreeFileExplorerDirectory(IPathObject path, TreeFileExplorerOptions
         {
             FilePath => Enumerable.Empty<TreeFileExplorerItem>(),
             DirectoryPath directoryPath => GetChildren(directoryPath, options),
-            _ => throw new NotSupportedException()
+            _ => throw new NotSupportedException(),
         };
     }
 

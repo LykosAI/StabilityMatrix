@@ -17,5 +17,5 @@ internal enum Win32ClipboardFormat : uint
     CF_PENDATA = 10,
     CF_RIFF = 11,
     CF_WAVE = 12,
-    CF_UNICODETEXT = 13
+    CF_UNICODETEXT = 13,
 }

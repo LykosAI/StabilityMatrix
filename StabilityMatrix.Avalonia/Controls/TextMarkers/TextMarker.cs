@@ -39,7 +39,8 @@ public sealed class TextMarker : TextSegment
 
     public Color? BackgroundColor
     {
-        get => _backgroundColor; set
+        get => _backgroundColor;
+        set
         {
             if (!EqualityComparer<Color?>.Default.Equals(_backgroundColor, value))
             {
@@ -53,7 +54,8 @@ public sealed class TextMarker : TextSegment
 
     public Color? ForegroundColor
     {
-        get => _foregroundColor; set
+        get => _foregroundColor;
+        set
         {
             if (!EqualityComparer<Color?>.Default.Equals(_foregroundColor, value))
             {
@@ -67,7 +69,8 @@ public sealed class TextMarker : TextSegment
 
     public FontWeight? FontWeight
     {
-        get => _fontWeight; set
+        get => _fontWeight;
+        set
         {
             if (_fontWeight != value)
             {
@@ -81,7 +84,8 @@ public sealed class TextMarker : TextSegment
 
     public FontStyle? FontStyle
     {
-        get => _fontStyle; set
+        get => _fontStyle;
+        set
         {
             if (_fontStyle != value)
             {
@@ -97,7 +101,8 @@ public sealed class TextMarker : TextSegment
 
     public Color MarkerColor
     {
-        get => _markerColor; set
+        get => _markerColor;
+        set
         {
             if (!EqualityComparer<Color>.Default.Equals(_markerColor, value))
             {

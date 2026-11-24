@@ -1,5 +1,5 @@
 {
-  "openApiPath": "http://localhost:5174/api/swagger.json",
+  "openApiPath": "https://promptgen.lykos.ai/api/swagger.json",
   "outputFolder": "./StabilityMatrix.Core/Api/PromptGen/Generated",
   "outputFilename": "Refitter.g.cs",
   "namespace": "StabilityMatrix.Core.Api.PromptGenApi",

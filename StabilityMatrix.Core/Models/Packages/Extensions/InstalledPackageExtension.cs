@@ -55,6 +55,6 @@ public record InstalledPackageExtension
         {
             null => "",
             DirectoryPath { Parent: { } parentDir } dir => $"{parentDir.Name}/{dir.Name}",
-            _ => PrimaryPath.Name
+            _ => PrimaryPath.Name,
         };
 }

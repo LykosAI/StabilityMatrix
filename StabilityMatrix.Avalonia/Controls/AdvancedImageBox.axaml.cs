@@ -790,9 +790,8 @@ public class AdvancedImageBox : TemplatedControlBase
     }
 
     public static readonly DirectProperty<AdvancedImageBox, Point> PointerPositionProperty =
-        AvaloniaProperty.RegisterDirect<AdvancedImageBox, Point>(
-            nameof(PointerPosition),
-            o => o.PointerPosition
+        AvaloniaProperty.RegisterDirect<AdvancedImageBox, Point>(nameof(PointerPosition), o =>
+            o.PointerPosition
         );
 
     /// <summary>
@@ -1309,10 +1308,10 @@ public class AdvancedImageBox : TemplatedControlBase
         // FocusableProperty.OverrideDefaultValue(typeof(AdvancedImageBox), true);
         AffectsRender<AdvancedImageBox>(ShowGridProperty);
 
-        HorizontalScrollBar =
-            e.NameScope.Find<ScrollBar>("PART_HorizontalScrollBar") ?? throw new NullReferenceException();
-        VerticalScrollBar =
-            e.NameScope.Find<ScrollBar>("PART_VerticalScrollBar") ?? throw new NullReferenceException();
+        HorizontalScrollBar = e.NameScope.Find<ScrollBar>("PART_HorizontalScrollBar")
+            ?? throw new NullReferenceException();
+        VerticalScrollBar = e.NameScope.Find<ScrollBar>("PART_VerticalScrollBar")
+            ?? throw new NullReferenceException();
         ViewPort = e.NameScope.Find<ContentPresenter>("PART_ViewPort") ?? throw new NullReferenceException();
 
         SizeModeChanged();

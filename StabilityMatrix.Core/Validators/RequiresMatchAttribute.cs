@@ -26,8 +26,7 @@ public sealed class RequiresMatchAttribute<T> : ValidationAttribute
     {
         var instance = validationContext.ObjectInstance;
 
-        var otherProperty =
-            instance.GetType().GetProperty(PropertyName)
+        var otherProperty = instance.GetType().GetProperty(PropertyName)
             ?? throw new ArgumentException($"Property {PropertyName} not found");
 
         if (otherProperty.PropertyType != typeof(T))
@@ -47,8 +46,6 @@ public sealed class RequiresMatchAttribute<T> : ValidationAttribute
             return ValidationResult.Success!;
         }
 
-        return new ValidationResult(
-            $"{validationContext.DisplayName} does not match {PropertyName}"
-        );
+        return new ValidationResult($"{validationContext.DisplayName} does not match {PropertyName}");
     }
 }

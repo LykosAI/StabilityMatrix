@@ -344,12 +344,19 @@ public partial class CompletionProvider : ICompletionProvider
 
         var models = modelIndexService.FindByModelType(folderTypes);
 
-        // Substring match, but prefix matches still rank first so typing the start of a name
-        // behaves the same as before.
+        // Substring match on file name, display name or a user category. Prefix matches on the
+        // file name still rank first so typing the start of a name behaves the same as before.
         var matches = models
-            .Where(model => model.FileName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+            .Where(model =>
+                model.FileName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
+                || model.DisplayModelName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
+                || model.Categories.Any(c => c.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+            )
             .OrderByDescending(model =>
                 model.FileName.StartsWith(searchTerm, StringComparison.OrdinalIgnoreCase)
+            )
+            .ThenByDescending(model =>
+                model.DisplayModelName.StartsWith(searchTerm, StringComparison.OrdinalIgnoreCase)
             )
             .ThenBy(model => model.FileName, StringComparer.OrdinalIgnoreCase)
             .Select(model => ModelCompletionData.FromLocalModel(model, networkType))

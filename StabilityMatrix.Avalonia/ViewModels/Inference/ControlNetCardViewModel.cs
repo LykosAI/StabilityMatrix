@@ -105,15 +105,16 @@ public partial class ControlNetCardViewModel : LoadableViewModelBase
 
         await ClientManager.UploadInputImageAsync(imageSource);
 
-        var image = args.Nodes.AddTypedNode(
-            new ComfyNodeBuilder.LoadImage
-            {
-                Name = args.Nodes.GetUniqueName("Preprocessor_LoadImage"),
-                Image =
-                    SelectImageCardViewModel.ImageSource?.GetHashGuidFileNameCached("Inference")
-                    ?? throw new ValidationException("No ImageSource")
-            }
-        ).Output1;
+        var image = args
+            .Nodes.AddTypedNode(
+                new ComfyNodeBuilder.LoadImage
+                {
+                    Name = args.Nodes.GetUniqueName("Preprocessor_LoadImage"),
+                    Image = SelectImageCardViewModel.ImageSource?.GetHashGuidFileNameCached("Inference")
+                        ?? throw new ValidationException("No ImageSource"),
+                }
+            )
+            .Output1;
 
         var aioPreprocessor = args.Nodes.AddTypedNode(
             new ComfyNodeBuilder.AIOPreprocessor
@@ -124,7 +125,7 @@ public partial class ControlNetCardViewModel : LoadableViewModelBase
                 // AIO wants the lower of the two resolutions. who knows why.
                 // also why can't we put in the low/high thresholds?
                 // Or any of the other parameters for the other preprocessors?
-                Resolution = Math.Min(Width, Height)
+                Resolution = Math.Min(Width, Height),
             }
         );
 
@@ -133,7 +134,7 @@ public partial class ControlNetCardViewModel : LoadableViewModelBase
                 new ComfyNodeBuilder.PreviewImage
                 {
                     Name = args.Nodes.GetUniqueName("Preprocessor_OutputImage"),
-                    Images = aioPreprocessor.Output
+                    Images = aioPreprocessor.Output,
                 }
             )
         );

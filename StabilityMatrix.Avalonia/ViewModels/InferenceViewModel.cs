@@ -6,6 +6,7 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
@@ -20,14 +21,19 @@ using FluentIcons.Common;
 using Injectio.Attributes;
 using Microsoft.Extensions.DependencyInjection;
 using NLog;
+using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Controls.Dock;
 using StabilityMatrix.Avalonia.Extensions;
+using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
+using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
 using StabilityMatrix.Avalonia.Views;
+using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Database;
 using StabilityMatrix.Core.Extensions;
@@ -62,6 +68,11 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
     private Guid? selectedPackageId;
     private List<IDisposable> scopes = [];
 
+    public IPromptQueueService PromptQueue { get; }
+
+    [ObservableProperty]
+    private bool isQueuePanelOpen;
+
     public override string Title => Resources.Label_Inference;
     public override IconSource IconSource =>
         new SymbolIconSource { Symbol = Symbol.AppGeneric, IconVariant = IconVariant.Filled };
@@ -78,6 +89,11 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
     public IInferenceClientManager ClientManager { get; }
 
     public SharedState SharedState { get; }
+
+    /// <summary>
+    /// Whether the "+" button opens the classic dropdown menu instead of the gallery picker dialog.
+    /// </summary>
+    public bool UseClassicTabPicker => settingsManager.Settings.UseClassicInferenceTabPicker;
 
     public ObservableCollection<InferenceTabViewModelBase> Tabs { get; } = new();
 
@@ -106,13 +122,15 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
         IModelIndexService modelIndexService,
         ILiteDbContext liteDbContext,
         RunningPackageService runningPackageService,
-        SharedState sharedState
+        SharedState sharedState,
+        IPromptQueueService promptQueueService
     )
     {
         this.vmFactory = vmFactory;
         this.notificationService = notificationService;
         this.settingsManager = settingsManager;
         this.modelIndexService = modelIndexService;
+        PromptQueue = promptQueueService;
         this.liteDbContext = liteDbContext;
         this.runningPackageService = runningPackageService;
 
@@ -175,10 +193,9 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
             return;
         }
 
-        var comfyViewModel = newItems.FirstOrDefault(
-            vm =>
-                vm.RunningPackage.InstalledPackage.Id == selectedPackageId
-                || vm.RunningPackage.BasePackage is ComfyUI
+        var comfyViewModel = newItems.FirstOrDefault(vm =>
+            vm.RunningPackage.InstalledPackage.Id == selectedPackageId
+            || vm.RunningPackage.BasePackage is ComfyUI
         );
 
         if (comfyViewModel is null && RunningPackage?.BasePackage is ComfyUI)
@@ -291,7 +308,7 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
                         {
                             IsOpen = false,
                             IsSelected = false,
-                            CurrentTabIndex = -1
+                            CurrentTabIndex = -1,
                         }
                     );
                 }
@@ -309,6 +326,23 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
     /// </summary>
     public async ValueTask DisposeAsync()
     {
+        // App shutdown never closes the window through the visual tree (services are disposed
+        // and the process exits instead), so views don't get their detach-time layout save.
+        // Capture dock layouts here while the visual tree is still alive; the selected tab
+        // goes last so its layout wins for its project type.
+        //
+        // The container's DisposeAsync resumes with ConfigureAwait(false) as soon as any service
+        // ahead of this one disposes asynchronously, so this can arrive on a thread pool thread
+        // and the dock controls it reads are UI-thread affine.
+        if (Dispatcher.UIThread.CheckAccess())
+        {
+            PersistDockLayouts();
+        }
+        else
+        {
+            await Dispatcher.UIThread.InvokeAsync(PersistDockLayouts);
+        }
+
         await SyncTabStatesWithDatabase();
 
         foreach (var scope in scopes)
@@ -317,6 +351,17 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
         }
 
         GC.SuppressFinalize(this);
+
+        void PersistDockLayouts()
+        {
+            foreach (var tab in Tabs.ToImmutableArray().OrderBy(tab => tab == SelectedTab))
+            {
+                if (((IPersistentViewProvider)tab).AttachedPersistentView is DockUserControlBase dockView)
+                {
+                    dockView.PersistDefaultTypeLayout();
+                }
+            }
+        }
     }
 
     /// <summary>
@@ -361,8 +406,8 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
             return;
         }
 
-        var entry = await liteDbContext.InferenceProjects.FindOneAsync(
-            p => p.FilePath == projectFile.ToString()
+        var entry = await liteDbContext.InferenceProjects.FindOneAsync(p =>
+            p.FilePath == projectFile.ToString()
         );
 
         // Create if not found
@@ -392,6 +437,7 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
 
         // Create a new scope for this tab
         var scope = vmFactory.CreateScope();
+        scopes.Add(scope);
 
         // Get the view model using the scope's service provider
         var tab =
@@ -405,6 +451,24 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
 
         // Update the database with the current tab
         SyncTabStateWithDatabase(tab).SafeFireAndForget();
+    }
+
+    /// <summary>
+    /// Shows the new-project gallery picker and adds a tab for the chosen type.
+    /// </summary>
+    [RelayCommand]
+    private async Task ShowAddTabDialogAsync()
+    {
+        using var scope = vmFactory.CreateScope();
+        var pickerVm = scope.ServiceManager.Get<InferenceProjectTypePickerViewModel>();
+
+        if (
+            await pickerVm.GetDialog().ShowAsync() == ContentDialogResult.Primary
+            && pickerVm.SelectedType is { } type
+        )
+        {
+            AddTab(type);
+        }
     }
 
     /// <summary>
@@ -547,7 +611,7 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
                     {
                         Patterns = new[] { "*.smproj" },
                         MimeTypes = new[] { "application/json" },
-                    }
+                    },
                 },
                 SuggestedStartLocation = startDir,
                 DefaultExtension = ".smproj",
@@ -562,6 +626,11 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
         }
 
         var document = InferenceProjectDocument.FromLoadable(currentTab);
+
+        if (await currentTab.TrySaveViewStateAsync() is { DockLayout: { } dockLayout })
+        {
+            document.DockLayout = JsonNode.Parse(dockLayout) as JsonObject;
+        }
 
         // Save to file
         try
@@ -615,6 +684,11 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
         // Otherwise, save to the current project file
         var document = InferenceProjectDocument.FromLoadable(currentTab);
 
+        if (await currentTab.TrySaveViewStateAsync() is { DockLayout: { } dockLayout })
+        {
+            document.DockLayout = JsonNode.Parse(dockLayout) as JsonObject;
+        }
+
         // Save to file
         try
         {
@@ -666,6 +740,165 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
         }
     }
 
+    [RelayCommand]
+    private void ToggleQueuePanel()
+    {
+        IsQueuePanelOpen = !IsQueuePanelOpen;
+    }
+
+    [RelayCommand]
+    private async Task ToggleQueueProcessing()
+    {
+        if (PromptQueue.IsProcessing)
+        {
+            PromptQueue.StopProcessing();
+            return;
+        }
+
+        // Establish a connection first if there's work to do: auto-connect when ComfyUI is
+        // already running, otherwise offer the same launch dialog as the Generate flow.
+        if (
+            !ClientManager.IsConnected
+            && PromptQueue.Items.Any(x => x.Status == PromptQueueItemStatus.Pending)
+        )
+        {
+            if (IsComfyRunning)
+            {
+                await Connect();
+            }
+            else
+            {
+                await InferenceConnectionHelper.PromptAndWaitForConnectionAsync(
+                    vmFactory,
+                    ClientManager,
+                    runningPackageService
+                );
+            }
+
+            // User cancelled the dialog or the connection failed - keep items pending
+            if (!ClientManager.IsConnected)
+                return;
+        }
+
+        PromptQueue.StartProcessing();
+    }
+
+    [RelayCommand]
+    private void ClearQueueFinished() => PromptQueue.ClearFinished();
+
+    [RelayCommand]
+    private void ClearQueuePending() => PromptQueue.ClearPending();
+
+    [RelayCommand]
+    private void MoveQueueItemUp(PromptQueueItem item) => PromptQueue.MoveUp(item);
+
+    [RelayCommand]
+    private void MoveQueueItemDown(PromptQueueItem item) => PromptQueue.MoveDown(item);
+
+    [RelayCommand]
+    private void RemoveQueueItem(PromptQueueItem item) => PromptQueue.Remove(item);
+
+    [RelayCommand]
+    private void RequeueQueueItem(PromptQueueItem item) => PromptQueue.Requeue(item);
+
+    [RelayCommand]
+    private void RequeueAllQueueFinished() => PromptQueue.RequeueAllFinished();
+
+    [RelayCommand]
+    private void CancelQueueItem(PromptQueueItem item)
+    {
+        if (item == PromptQueue.CurrentItem)
+        {
+            PromptQueue.CancelCurrent();
+        }
+    }
+
+    /// <summary>
+    /// Opens a finished queue item's full-resolution output image in the same viewer the
+    /// Inference output gallery uses.
+    /// </summary>
+    [RelayCommand]
+    private async Task OpenQueueItemImageAsync(PromptQueueItem item)
+    {
+        var path = item.OutputImagePaths.Select(p => new FilePath(p)).FirstOrDefault(p => p.Exists);
+
+        if (path is null)
+        {
+            notificationService.Show(
+                Resources.Label_PromptQueue,
+                Resources.Label_ImageFileNotFound,
+                NotificationType.Warning
+            );
+            return;
+        }
+
+        var image = new ImageSource(path);
+
+        // Preload so the viewer opens with the image ready
+        await image.GetBitmapAsync();
+
+        var viewerVm = vmFactory.Get<ImageViewerViewModel>();
+        viewerVm.ImageSource = image;
+        viewerVm.LocalImageFile = LocalImageFile.FromPath(path);
+
+        // GetDialog sizes the viewer to the window (matches the output gallery); a bare
+        // BetterContentDialog would collapse to the image's intrinsic size.
+        await viewerVm.GetDialog().ShowAsync();
+    }
+
+    /// <summary>
+    /// Opens a prompt queue item's saved project state in a new tab so it can be edited and re-queued.
+    /// </summary>
+    [RelayCommand]
+    private async Task OpenQueueItemInTabAsync(PromptQueueItem item)
+    {
+        try
+        {
+            if (item.Project.State is not { } state)
+            {
+                throw new ApplicationException("Queue item project does not have a 'State' key");
+            }
+
+            if (item.ProjectType.ToViewModelType() is not { } vmType)
+            {
+                throw new InvalidOperationException($"Unsupported project type: {item.ProjectType}");
+            }
+
+            var scope = vmFactory.CreateScope();
+            try
+            {
+                var vm =
+                    scope.ServiceManager.Get(vmType) as InferenceTabViewModelBase
+                    ?? throw new NullReferenceException($"Could not create view model of type {vmType}");
+
+                vm.LoadStateFromJsonObject(state);
+
+                // Commit the scope and tab together to keep the Tabs/scopes invariant
+                scopes.Add(scope);
+                Tabs.Add(vm);
+                SelectedTab = vm;
+            }
+            catch
+            {
+                scopes.Remove(scope);
+                scope.Dispose();
+                throw;
+            }
+
+            await SyncTabStatesWithDatabase();
+        }
+        catch (Exception e)
+        {
+            Logger.Warn(e, "Failed to open queue item in tab");
+
+            notificationService.ShowPersistent(
+                "Failed to open queue item",
+                $"[{e.GetType().Name}] {e.Message}",
+                NotificationType.Error
+            );
+        }
+    }
+
     private async Task AddTabFromFile(FilePath file)
     {
         await using var stream = file.Info.OpenRead();
@@ -700,6 +933,11 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
         vm.LoadStateFromJsonObject(document.State);
         vm.ProjectFile = file;
 
+        if (document.DockLayout is { } dockLayout)
+        {
+            vm.PendingViewState = new ViewState { DockLayout = dockLayout.ToJsonString() };
+        }
+
         Tabs.Add(vm);
 
         SelectedTab = vm;
@@ -718,10 +956,13 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
         {
             InferenceProjectType.TextToImage => scope.ServiceManager.Get<InferenceTextToImageViewModel>(),
             InferenceProjectType.ImageToImage => scope.ServiceManager.Get<InferenceImageToImageViewModel>(),
-            InferenceProjectType.ImageToVideo => scope.ServiceManager.Get<InferenceImageToVideoViewModel>(),
+            InferenceProjectType.ImageToVideo =>
+                scope.ServiceManager.Get<InferenceSvdImageToVideoViewModel>(),
+            InferenceProjectType.WanImageToVideo =>
+                scope.ServiceManager.Get<InferenceImageToVideoViewModel>(),
             InferenceProjectType.Upscale => scope.ServiceManager.Get<InferenceImageUpscaleViewModel>(),
-            InferenceProjectType.FluxTextToImage
-                => scope.ServiceManager.Get<InferenceFluxTextToImageViewModel>(),
+            InferenceProjectType.FluxTextToImage =>
+                scope.ServiceManager.Get<InferenceFluxTextToImageViewModel>(),
         };
 
         switch (vm)
@@ -737,8 +978,11 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
                 upscaleVm.IsUpscaleEnabled = true;
                 upscaleVm.SelectImageCardViewModel.ImageSource = new ImageSource(imageFile.AbsolutePath);
                 break;
-            case InferenceImageToVideoViewModel imgToVidVm:
+            case InferenceSvdImageToVideoViewModel imgToVidVm:
                 imgToVidVm.SelectImageCardViewModel.ImageSource = new ImageSource(imageFile.AbsolutePath);
+                break;
+            case InferenceImageToVideoViewModel videoVm:
+                videoVm.SelectImageCardViewModel.ImageSource = new ImageSource(imageFile.AbsolutePath);
                 break;
             case InferenceFluxTextToImageViewModel _:
                 vm.LoadImageMetadata(imageFile.AbsolutePath);
@@ -774,7 +1018,7 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
                     {
                         Patterns = new[] { "*.smproj" },
                         MimeTypes = new[] { "application/json" },
-                    }
+                    },
                 },
                 SuggestedStartLocation = startDir,
             }

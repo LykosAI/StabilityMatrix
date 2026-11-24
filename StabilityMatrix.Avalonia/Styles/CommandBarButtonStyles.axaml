@@ -1,39 +1,69 @@
-﻿<Styles xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia">
+﻿<Styles
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia">
     <Design.PreviewWith>
         <Border Padding="20">
             <ui:CommandBar
                 Margin="8"
-                VerticalAlignment="Center"
-                VerticalContentAlignment="Center"
                 HorizontalAlignment="Left"
+                VerticalAlignment="Center"
                 HorizontalContentAlignment="Left"
+                VerticalContentAlignment="Center"
                 DefaultLabelPosition="Right">
                 <ui:CommandBar.PrimaryCommands>
-                    <ui:CommandBarButton Classes="success" Label="Success Button" Margin="8"
-                                         HorizontalAlignment="Center" />
-                    <ui:CommandBarButton Classes="accent" Label="FA Accent Button" Margin="8"
-                                         HorizontalAlignment="Center" />
-                    <ui:CommandBarButton Classes="systemaccent" Label="System Accent Button" Margin="8"
-                                         HorizontalAlignment="Center" />
-                    <ui:CommandBarButton Classes="danger" Label="Danger Button" Margin="8" HorizontalAlignment="Center" />
-                    <ui:CommandBarButton Classes="info" Label="Info Button" Margin="8" HorizontalAlignment="Center" />
-                    <ui:CommandBarButton Classes="transparent-info" Label="Semi-Transparent Info Button" Margin="8"
-                                         HorizontalAlignment="Center" />
-                    <ui:CommandBarButton Classes="transparent" Label="Transparent Button" Margin="8"
-                                         HorizontalAlignment="Center" />
-                    <ui:CommandBarButton Classes="transparent-full" Label="Transparent Button" Margin="8"
-                                         HorizontalAlignment="Center" />
-                    <ui:CommandBarButton Label="Disabled Button" Margin="8" IsEnabled="False"
-                                         HorizontalAlignment="Center" />
+                    <ui:CommandBarButton
+                        Margin="8"
+                        HorizontalAlignment="Center"
+                        Classes="success"
+                        Label="Success Button" />
+                    <ui:CommandBarButton
+                        Margin="8"
+                        HorizontalAlignment="Center"
+                        Classes="accent"
+                        Label="FA Accent Button" />
+                    <ui:CommandBarButton
+                        Margin="8"
+                        HorizontalAlignment="Center"
+                        Classes="systemaccent"
+                        Label="System Accent Button" />
+                    <ui:CommandBarButton
+                        Margin="8"
+                        HorizontalAlignment="Center"
+                        Classes="danger"
+                        Label="Danger Button" />
+                    <ui:CommandBarButton
+                        Margin="8"
+                        HorizontalAlignment="Center"
+                        Classes="info"
+                        Label="Info Button" />
+                    <ui:CommandBarButton
+                        Margin="8"
+                        HorizontalAlignment="Center"
+                        Classes="transparent-info"
+                        Label="Semi-Transparent Info Button" />
+                    <ui:CommandBarButton
+                        Margin="8"
+                        HorizontalAlignment="Center"
+                        Classes="transparent"
+                        Label="Transparent Button" />
+                    <ui:CommandBarButton
+                        Margin="8"
+                        HorizontalAlignment="Center"
+                        Classes="transparent-full"
+                        Label="Transparent Button" />
+                    <ui:CommandBarButton
+                        Margin="8"
+                        HorizontalAlignment="Center"
+                        IsEnabled="False"
+                        Label="Disabled Button" />
                 </ui:CommandBar.PrimaryCommands>
             </ui:CommandBar>
         </Border>
     </Design.PreviewWith>
 
-    <!-- Success -->
-     <Style Selector="ui|CommandBarButton.success">
+    <!--  Success  -->
+    <Style Selector="ui|CommandBarButton.success">
         <Style Selector="^ /template/ Border#AppBarButtonInnerBorder">
             <Setter Property="Background" Value="{DynamicResource ThemeGreenColor}" />
             <Setter Property="BorderBrush" Value="{DynamicResource ThemeGreenColor}" />
@@ -44,7 +74,7 @@
 
         <Style Selector="^:pointerover">
             <Style Selector="^ /template/ Border#AppBarButtonInnerBorder">
-                <Setter Property="Background" Value="{DynamicResource ThemeDarkGreenColor}"/>
+                <Setter Property="Background" Value="{DynamicResource ThemeDarkGreenColor}" />
                 <Setter Property="BorderBrush" Value="{DynamicResource ThemeDarkGreenColor}" />
             </Style>
             <Style Selector="^">
@@ -72,8 +102,8 @@
             </Style>
         </Style>
     </Style>
-    
-    <!-- Danger -->
+
+    <!--  Danger  -->
     <Style Selector="ui|CommandBarButton.danger">
         <Style Selector="^ /template/ Border#AppBarButtonInnerBorder">
             <Setter Property="Background" Value="{DynamicResource ThemeRedColor}" />
@@ -85,7 +115,7 @@
 
         <Style Selector="^:pointerover">
             <Style Selector="^ /template/ Border#AppBarButtonInnerBorder">
-                <Setter Property="Background" Value="{DynamicResource ThemeDarkRedColor}"/>
+                <Setter Property="Background" Value="{DynamicResource ThemeDarkRedColor}" />
                 <Setter Property="BorderBrush" Value="{DynamicResource ThemeDarkRedColor}" />
             </Style>
             <Style Selector="^">
@@ -113,8 +143,8 @@
             </Style>
         </Style>
     </Style>
-    
-    <!-- Info -->
+
+    <!--  Info  -->
     <Style Selector="ui|CommandBarButton.info">
         <Style Selector="^ /template/ Border#AppBarButtonInnerBorder">
             <Setter Property="Background" Value="{DynamicResource ThemeLightBlueColor}" />
@@ -126,7 +156,7 @@
 
         <Style Selector="^:pointerover">
             <Style Selector="^ /template/ Border#AppBarButtonInnerBorder">
-                <Setter Property="Background" Value="{DynamicResource ThemeBlueColor}"/>
+                <Setter Property="Background" Value="{DynamicResource ThemeBlueColor}" />
                 <Setter Property="BorderBrush" Value="{DynamicResource ThemeBlueColor}" />
             </Style>
             <Style Selector="^">
@@ -154,8 +184,8 @@
             </Style>
         </Style>
     </Style>
-    
-    <!--Accent Button-->
+
+    <!--  Accent Button  -->
     <Style Selector="ui|CommandBarButton.accent">
         <Style Selector="^ /template/ Border#AppBarButtonInnerBorder">
             <Setter Property="Background" Value="{DynamicResource AccentButtonBackground}" />
@@ -195,8 +225,8 @@
             </Style>
         </Style>
     </Style>
-    
-    <!-- SystemAccent -->
+
+    <!--  SystemAccent  -->
     <Style Selector="ui|CommandBarButton.systemaccent">
         <Style Selector="^ /template/ Border#AppBarButtonInnerBorder">
             <Setter Property="Background" Value="{DynamicResource SystemAccentColor}" />
@@ -208,7 +238,7 @@
 
         <Style Selector="^:pointerover">
             <Style Selector="^ /template/ Border#AppBarButtonInnerBorder">
-                <Setter Property="Background" Value="{DynamicResource SystemAccentColorDark1}"/>
+                <Setter Property="Background" Value="{DynamicResource SystemAccentColorDark1}" />
                 <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColorDark1}" />
             </Style>
             <Style Selector="^">
@@ -236,8 +266,8 @@
             </Style>
         </Style>
     </Style>
-    
-    <!-- Transparent -->
+
+    <!--  Transparent  -->
     <Style Selector="ui|CommandBarButton.transparent">
         <Style Selector="^ /template/ Border#AppBarButtonInnerBorder">
             <Setter Property="Background" Value="{DynamicResource SystemControlTransparentBrush}" />
@@ -249,7 +279,7 @@
 
         <Style Selector="^:pointerover">
             <Style Selector="^ /template/ Border#AppBarButtonInnerBorder">
-                <Setter Property="Background" Value="{DynamicResource ButtonBackgroundDisabled}"/>
+                <Setter Property="Background" Value="{DynamicResource ButtonBackgroundDisabled}" />
                 <Setter Property="BorderBrush" Value="{DynamicResource ButtonBackgroundDisabled}" />
             </Style>
             <Style Selector="^">
@@ -277,8 +307,8 @@
             </Style>
         </Style>
     </Style>
-    
-    <!-- Semi-Transparent Info -->
+
+    <!--  Semi-Transparent Info  -->
     <Style Selector="ui|CommandBarButton.transparent-info">
         <Style Selector="^ /template/ Border#AppBarButtonInnerBorder">
             <Setter Property="Background" Value="{DynamicResource ThemeLightBlueColorTransparent}" />
@@ -290,7 +320,7 @@
 
         <Style Selector="^:pointerover">
             <Style Selector="^ /template/ Border#AppBarButtonInnerBorder">
-                <Setter Property="Background" Value="{DynamicResource ThemeBlueColorTransparent}"/>
+                <Setter Property="Background" Value="{DynamicResource ThemeBlueColorTransparent}" />
                 <Setter Property="BorderBrush" Value="{DynamicResource ThemeBlueColorTransparent}" />
             </Style>
             <Style Selector="^">
@@ -318,8 +348,8 @@
             </Style>
         </Style>
     </Style>
-    
-    <!-- Transparent red -->
+
+    <!--  Transparent red  -->
     <Style Selector="ui|CommandBarButton.transparent-red">
         <Style Selector="^ /template/ Border#AppBarButtonInnerBorder">
             <Setter Property="Background" Value="{DynamicResource SystemControlTransparentBrush}" />
@@ -331,7 +361,7 @@
 
         <Style Selector="^:pointerover">
             <Style Selector="^ /template/ Border#AppBarButtonInnerBorder">
-                <Setter Property="Background" Value="{DynamicResource ThemeCoralRedColor}"/>
+                <Setter Property="Background" Value="{DynamicResource ThemeCoralRedColor}" />
                 <Setter Property="BorderBrush" Value="{DynamicResource ThemeCoralRedColor}" />
             </Style>
             <Style Selector="^">
@@ -341,7 +371,7 @@
 
         <Style Selector="^:pressed">
             <Style Selector="^ /template/ Border#AppBarButtonInnerBorder">
-                <Setter Property="Background" Value="{DynamicResource ThemeDarkCoralRedColor}"/>
+                <Setter Property="Background" Value="{DynamicResource ThemeDarkCoralRedColor}" />
                 <Setter Property="BorderBrush" Value="{DynamicResource ThemeDarkCoralRedColor}" />
             </Style>
             <Style Selector="^">
@@ -359,8 +389,8 @@
             </Style>
         </Style>
     </Style>
-    
-    <!-- Full Transparent -->
+
+    <!--  Full Transparent  -->
     <Style Selector="ui|CommandBarButton.transparent-full">
         <Style Selector="^ /template/ Border#AppBarButtonInnerBorder">
             <Setter Property="Background" Value="{DynamicResource SystemControlTransparentBrush}" />
@@ -372,7 +402,7 @@
 
         <Style Selector="^:pointerover">
             <Style Selector="^ /template/ Border#AppBarButtonInnerBorder">
-                <Setter Property="Background" Value="{DynamicResource ButtonBackgroundDisabled}"/>
+                <Setter Property="Background" Value="{DynamicResource ButtonBackgroundDisabled}" />
                 <Setter Property="BorderBrush" Value="{DynamicResource ButtonBackgroundDisabled}" />
             </Style>
             <Style Selector="^">

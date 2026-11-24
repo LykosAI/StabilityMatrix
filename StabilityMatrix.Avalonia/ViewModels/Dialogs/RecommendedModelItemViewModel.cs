@@ -3,6 +3,7 @@ using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.Api;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
@@ -22,9 +23,12 @@ public partial class RecommendedModelItemViewModel : ViewModelBase
     private CivitModel civitModel;
 
     public Uri ThumbnailUrl =>
-        ModelVersion.Images?.FirstOrDefault(x => x.Type == "image")?.Url == null
-            ? Assets.NoImage
-            : new Uri(ModelVersion.Images.First(x => x.Type == "image").Url);
+        ModelVersion.Images?.FirstOrDefault(x => x.Type == "image")?.Url is { } url
+            ? new Uri(CivitaiUrlHelper.CapImageWidth(url, CardImageWidth))
+            : Assets.NoImage;
+
+    /// <summary>Cards render at 300px; request the smallest CDN transform that still looks crisp.</summary>
+    public const int CardImageWidth = 450;
 
     [RelayCommand]
     public void ToggleSelection() => IsSelected = !IsSelected;

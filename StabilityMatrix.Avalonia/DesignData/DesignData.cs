@@ -221,32 +221,30 @@ public static class DesignData
             null
         );
 
-        PackageInstallDetailViewModel.AvailablePythonVersions = new ObservableCollection<UvPythonInfo>(
-            [
-                new UvPythonInfo(
-                    PyInstallationManager.Python_3_10_17,
-                    "C:\\SMData\\Data\\Data\\Assets\\Python\\cpython-3.11.12-windows-x86_64-none",
-                    true,
-                    "cpython",
-                    "x86_64",
-                    "windows",
-                    "cpython-3.10.17-windows-x86_64-none",
-                    "default",
-                    "none"
-                ),
-                new UvPythonInfo(
-                    PyInstallationManager.Python_3_12_10,
-                    null,
-                    false,
-                    "cpython",
-                    "x86_64",
-                    "windows",
-                    "guh I can't be bothered",
-                    "freethreaded",
-                    "none"
-                ),
-            ]
-        );
+        PackageInstallDetailViewModel.AvailablePythonVersions = new ObservableCollection<UvPythonInfo>([
+            new UvPythonInfo(
+                PyInstallationManager.Python_3_10_17,
+                "C:\\SMData\\Data\\Data\\Assets\\Python\\cpython-3.11.12-windows-x86_64-none",
+                true,
+                "cpython",
+                "x86_64",
+                "windows",
+                "cpython-3.10.17-windows-x86_64-none",
+                "default",
+                "none"
+            ),
+            new UvPythonInfo(
+                PyInstallationManager.Python_3_12_10,
+                null,
+                false,
+                "cpython",
+                "x86_64",
+                "windows",
+                "guh I can't be bothered",
+                "freethreaded",
+                "none"
+            ),
+        ]);
 
         /*ObservableCacheEx.AddOrUpdate(
             OldCheckpointsPageViewModel.CheckpointFoldersCache,
@@ -421,104 +419,96 @@ public static class DesignData
             },
         };
 
-        ProgressManagerViewModel.ProgressItems.AddRange(
-            [
-                new ProgressItemViewModel(
-                    new ProgressItem(
-                        Guid.NewGuid(),
-                        "Test File.exe",
-                        new ProgressReport(0.5f, "Downloading...")
-                    )
-                ),
-                new MockDownloadProgressItemViewModel(
-                    "Very Long Test File Name Need Even More Longness Thanks That's pRobably good 2.exe"
-                ),
-                new MockDownloadProgressItemViewModel(
-                    "Very Long Test File Name Need Even More Longness Thanks That's pRobably good 2.exe"
-                )
+        ProgressManagerViewModel.ProgressItems.AddRange([
+            new ProgressItemViewModel(
+                new ProgressItem(Guid.NewGuid(), "Test File.exe", new ProgressReport(0.5f, "Downloading..."))
+            ),
+            new MockDownloadProgressItemViewModel(
+                "Very Long Test File Name Need Even More Longness Thanks That's pRobably good 2.exe"
+            ),
+            new MockDownloadProgressItemViewModel(
+                "Very Long Test File Name Need Even More Longness Thanks That's pRobably good 2.exe"
+            )
+            {
+                Progress = new ContentDialogProgressViewModelBase
                 {
-                    Progress = new ContentDialogProgressViewModelBase
-                    {
-                        Value = 50,
-                        IsIndeterminate = false,
-                        Text = "Waiting on other downloads to finish",
-                        Description = "Waiting on other downloads to finish",
-                    },
+                    Value = 50,
+                    IsIndeterminate = false,
+                    Text = "Waiting on other downloads to finish",
+                    Description = "Waiting on other downloads to finish",
                 },
-                packageInstall,
-            ]
-        );
+            },
+            packageInstall,
+        ]);
 
         // Seed sample notifications so the Notifications tab has something to preview
         var historyService = Services.GetRequiredService<INotificationHistoryService>();
         var actionDispatcher = Services.GetRequiredService<INotificationActionDispatcher>();
 
-        ProgressManagerViewModel.NotificationItems.AddRange(
-            [
-                new NotificationItemViewModel(
-                    new NotificationHistoryEntry
-                    {
-                        Timestamp = DateTimeOffset.Now.AddSeconds(-10),
-                        Title = "Prompt completed",
-                        Body = "Prompt [a1b2c3d] completed successfully",
-                        Level = NotificationLevel.Success,
-                        Action = new NavigateToPageAction(typeof(InferenceViewModel).AssemblyQualifiedName!),
-                    },
-                    historyService,
-                    actionDispatcher
-                ),
-                new NotificationItemViewModel(
-                    new NotificationHistoryEntry
-                    {
-                        Timestamp = DateTimeOffset.Now.AddMinutes(-3),
-                        Title = "Download Completed",
-                        Body = "Download of sd_xl_base_1.0.safetensors completed successfully.",
-                        Level = NotificationLevel.Success,
-                        Action = new OpenFolderAction(@"C:\StabilityMatrix\Models\StableDiffusion"),
-                    },
-                    historyService,
-                    actionDispatcher
-                ),
-                new NotificationItemViewModel(
-                    new NotificationHistoryEntry
-                    {
-                        Timestamp = DateTimeOffset.Now.AddMinutes(-12),
-                        Title = "Debug options enabled",
-                        Body = "Warning: Improper use may corrupt application state or cause loss of data.",
-                        Level = NotificationLevel.Warning,
-                        IsRead = true,
-                    },
-                    historyService,
-                    actionDispatcher
-                ),
-                new NotificationItemViewModel(
-                    new NotificationHistoryEntry
-                    {
-                        Timestamp = DateTimeOffset.Now.AddHours(-1),
-                        Title = "Download Failed",
-                        Body =
-                            "Download of really_long_model_name_v2_pruned_fp16.safetensors failed: (HttpRequestException) Connection timed out after 30 seconds. Please check your network and try again.",
-                        Level = NotificationLevel.Error,
-                        Action = new ToggleProgressFlyoutAction(),
-                        IsRead = true,
-                    },
-                    historyService,
-                    actionDispatcher
-                ),
-                new NotificationItemViewModel(
-                    new NotificationHistoryEntry
-                    {
-                        Timestamp = DateTimeOffset.Now.AddHours(-2),
-                        Title = "Content dialog closed",
-                        Body = "Result: Primary",
-                        Level = NotificationLevel.Information,
-                        IsRead = true,
-                    },
-                    historyService,
-                    actionDispatcher
-                ),
-            ]
-        );
+        ProgressManagerViewModel.NotificationItems.AddRange([
+            new NotificationItemViewModel(
+                new NotificationHistoryEntry
+                {
+                    Timestamp = DateTimeOffset.Now.AddSeconds(-10),
+                    Title = "Prompt completed",
+                    Body = "Prompt [a1b2c3d] completed successfully",
+                    Level = NotificationLevel.Success,
+                    Action = new NavigateToPageAction(typeof(InferenceViewModel).AssemblyQualifiedName!),
+                },
+                historyService,
+                actionDispatcher
+            ),
+            new NotificationItemViewModel(
+                new NotificationHistoryEntry
+                {
+                    Timestamp = DateTimeOffset.Now.AddMinutes(-3),
+                    Title = "Download Completed",
+                    Body = "Download of sd_xl_base_1.0.safetensors completed successfully.",
+                    Level = NotificationLevel.Success,
+                    Action = new OpenFolderAction(@"C:\StabilityMatrix\Models\StableDiffusion"),
+                },
+                historyService,
+                actionDispatcher
+            ),
+            new NotificationItemViewModel(
+                new NotificationHistoryEntry
+                {
+                    Timestamp = DateTimeOffset.Now.AddMinutes(-12),
+                    Title = "Debug options enabled",
+                    Body = "Warning: Improper use may corrupt application state or cause loss of data.",
+                    Level = NotificationLevel.Warning,
+                    IsRead = true,
+                },
+                historyService,
+                actionDispatcher
+            ),
+            new NotificationItemViewModel(
+                new NotificationHistoryEntry
+                {
+                    Timestamp = DateTimeOffset.Now.AddHours(-1),
+                    Title = "Download Failed",
+                    Body =
+                        "Download of really_long_model_name_v2_pruned_fp16.safetensors failed: (HttpRequestException) Connection timed out after 30 seconds. Please check your network and try again.",
+                    Level = NotificationLevel.Error,
+                    Action = new ToggleProgressFlyoutAction(),
+                    IsRead = true,
+                },
+                historyService,
+                actionDispatcher
+            ),
+            new NotificationItemViewModel(
+                new NotificationHistoryEntry
+                {
+                    Timestamp = DateTimeOffset.Now.AddHours(-2),
+                    Title = "Content dialog closed",
+                    Body = "Result: Primary",
+                    Level = NotificationLevel.Information,
+                    IsRead = true,
+                },
+                historyService,
+                actionDispatcher
+            ),
+        ]);
 
         UpdateViewModel = Services.GetRequiredService<UpdateViewModel>();
         UpdateViewModel.CurrentVersionText = "v2.0.0";
@@ -526,8 +516,35 @@ public static class DesignData
         UpdateViewModel.ReleaseNotes =
             "## v2.0.1\n- Fixed a bug\n- Added a feature\n- Removed a feature\n - Did some `--code` stuff";
 
+        var changelogEntries = new[]
+        {
+            new ChangelogEntry
+            {
+                Version = SemVersion.Parse("2.17.0-dev.2"),
+                Markdown =
+                    "## v2.17.0-dev.2\n### Added\n- In-app What's New changelog viewer\n### Fixed\n- Various bug fixes",
+            },
+            new ChangelogEntry
+            {
+                Version = SemVersion.Parse("2.17.0-dev.1"),
+                Markdown = "## v2.17.0-dev.1\n### Changed\n- Improved startup performance",
+            },
+            new ChangelogEntry
+            {
+                Version = SemVersion.Parse("2.16.1"),
+                Markdown = "## v2.16.1\n### Fixed\n- Fixed a `--crash` on launch",
+            },
+        };
+        ChangelogViewModel = Services.GetRequiredService<ChangelogViewModel>();
+        ChangelogViewModel.IsLoading = false;
+        ChangelogViewModel.Entries = changelogEntries;
+        ChangelogViewModel.SelectedEntry = changelogEntries[0];
+
         isInitialized = true;
     }
+
+    [NotNull]
+    public static ChangelogViewModel? ChangelogViewModel { get; private set; }
 
     [NotNull]
     public static PackageInstallBrowserViewModel? NewInstallerDialogViewModel { get; private set; }
@@ -591,70 +608,68 @@ public static class DesignData
         DialogFactory.Get<RecommendedModelsViewModel>(vm =>
         {
             // Populate the single RecommendedModels collection for design time
-            vm.RecommendedModels.AddRange(
-                [
-                    new RecommendedModelItemViewModel
+            vm.RecommendedModels.AddRange([
+                new RecommendedModelItemViewModel
+                {
+                    CivitModel = new CivitModel { Name = "BB95 Furry Mix", Id = 1 }, // Added Id for clarity
+                    ModelVersion = new CivitModelVersion
                     {
-                        CivitModel = new CivitModel { Name = "BB95 Furry Mix", Id = 1 }, // Added Id for clarity
-                        ModelVersion = new CivitModelVersion
-                        {
-                            Id = 101, // Added Id for clarity
-                            Name = "v1.0", // Example version name
-                            BaseModel = "SD 1.5", // Example base model
-                            Stats = new CivitModelStats { Rating = 4.5, RatingCount = 124 },
-                            Files = [new CivitFile { Type = CivitFileType.Model }], // Example file
-                            Images =
-                            [
-                                new CivitImage
-                                {
-                                    Type = "image", // Ensure type is set
-                                    Url =
-                                        "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/78fd2a0a-42b6-42b0-9815-81cb11bb3d05/00009-2423234823.jpeg",
-                                },
-                            ],
-                        },
-                        Author = "by bb95",
+                        Id = 101, // Added Id for clarity
+                        Name = "v1.0", // Example version name
+                        BaseModel = "SD 1.5", // Example base model
+                        Stats = new CivitModelStats { Rating = 4.5, RatingCount = 124 },
+                        Files = [new CivitFile { Type = CivitFileType.Model }], // Example file
+                        Images =
+                        [
+                            new CivitImage
+                            {
+                                Type = "image", // Ensure type is set
+                                Url =
+                                    "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/78fd2a0a-42b6-42b0-9815-81cb11bb3d05/00009-2423234823.jpeg",
+                            },
+                        ],
                     },
-                    new RecommendedModelItemViewModel
+                    Author = "by bb95",
+                },
+                new RecommendedModelItemViewModel
+                {
+                    CivitModel = new CivitModel { Name = "DreamShaper XL", Id = 2 },
+                    ModelVersion = new CivitModelVersion
                     {
-                        CivitModel = new CivitModel { Name = "DreamShaper XL", Id = 2 },
-                        ModelVersion = new CivitModelVersion
-                        {
-                            Id = 201,
-                            Name = "v2.1 Turbo",
-                            BaseModel = "SDXL 1.0",
-                            Stats = new CivitModelStats { Rating = 4.8, RatingCount = 589 },
-                            Files = [new CivitFile { Type = CivitFileType.Model, IsPrimary = true }],
-                            Images =
-                            [
-                                new CivitImage
-                                {
-                                    Type = "image",
-                                    // Placeholder - replace with an actual relevant image URL if possible
-                                    Url =
-                                        "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/0cf3e133-4dde-458b-8a70-7451a3361472/width=450/00016-3919014893.jpeg",
-                                },
-                            ],
-                        },
-                        Author = "by Lykon",
+                        Id = 201,
+                        Name = "v2.1 Turbo",
+                        BaseModel = "SDXL 1.0",
+                        Stats = new CivitModelStats { Rating = 4.8, RatingCount = 589 },
+                        Files = [new CivitFile { Type = CivitFileType.Model, IsPrimary = true }],
+                        Images =
+                        [
+                            new CivitImage
+                            {
+                                Type = "image",
+                                // Placeholder - replace with an actual relevant image URL if possible
+                                Url =
+                                    "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/0cf3e133-4dde-458b-8a70-7451a3361472/width=450/00016-3919014893.jpeg",
+                            },
+                        ],
                     },
-                    new RecommendedModelItemViewModel
+                    Author = "by Lykon",
+                },
+                new RecommendedModelItemViewModel
+                {
+                    CivitModel = new CivitModel { Name = "Another Model SD1.5", Id = 3 },
+                    ModelVersion = new CivitModelVersion
                     {
-                        CivitModel = new CivitModel { Name = "Another Model SD1.5", Id = 3 },
-                        ModelVersion = new CivitModelVersion
-                        {
-                            Id = 301,
-                            Name = "Final",
-                            BaseModel = "SD 1.5",
-                            Stats = new CivitModelStats { Rating = 4.2, RatingCount = 99 },
-                            Files = [new CivitFile { Type = CivitFileType.Model }],
-                            Images = [new CivitImage { Type = "image", Url = Assets.NoImage.ToString() }], // Use placeholder
-                        },
-                        Author = "by Creator3",
+                        Id = 301,
+                        Name = "Final",
+                        BaseModel = "SD 1.5",
+                        Stats = new CivitModelStats { Rating = 4.2, RatingCount = 99 },
+                        Files = [new CivitFile { Type = CivitFileType.Model }],
+                        Images = [new CivitImage { Type = "image", Url = Assets.NoImage.ToString() }], // Use placeholder
                     },
-                    // Add more items as needed for design-time preview
-                ]
-            );
+                    Author = "by Creator3",
+                },
+                // Add more items as needed for design-time preview
+            ]);
         });
 
     public static LayeredMaskEditorViewModel LayeredMaskEditorViewModel =>
@@ -778,33 +793,27 @@ public static class DesignData
                     new InstalledPackageExtension { Paths = [new DirectoryPath("example-dir-2")] },
                 ]
             );
-            vm.AddExtensionPacks(
-                [
-                    new ExtensionPack
-                    {
-                        Name = "Test Pack",
-                        PackageType = "ComfyUI",
-                        Extensions =
-                        [
-                            new SavedPackageExtension
+            vm.AddExtensionPacks([
+                new ExtensionPack
+                {
+                    Name = "Test Pack",
+                    PackageType = "ComfyUI",
+                    Extensions =
+                    [
+                        new SavedPackageExtension
+                        {
+                            PackageExtension = new PackageExtension
                             {
-                                PackageExtension = new PackageExtension
-                                {
-                                    Author = "TestAuthor",
-                                    Title = "Test",
-                                    Reference = new Uri("https://github.com/LykosAI/StabilityMatrix"),
-                                    Files = [new Uri("https://github.com/LykosAI/StabilityMatrix")],
-                                },
-                                Version = new PackageExtensionVersion
-                                {
-                                    Branch = "main",
-                                    CommitSha = "abcd123",
-                                },
+                                Author = "TestAuthor",
+                                Title = "Test",
+                                Reference = new Uri("https://github.com/LykosAI/StabilityMatrix"),
+                                Files = [new Uri("https://github.com/LykosAI/StabilityMatrix")],
                             },
-                        ],
-                    },
-                ]
-            );
+                            Version = new PackageExtensionVersion { Branch = "main", CommitSha = "abcd123" },
+                        },
+                    ],
+                },
+            ]);
         });
 
     public static CheckpointsPageViewModel CheckpointsPageViewModel =>
@@ -1008,7 +1017,8 @@ The gallery images are often inpainted, but you will get something very similar 
             };
             var sampleViewModel = new ModelVersionViewModel(
                 Services.GetRequiredService<IModelIndexService>(),
-                sampleCivitVersions[0]
+                sampleCivitVersions[0],
+                CivitModelType.Checkpoint
             );
 
             // Sample data for dialogs
@@ -1109,8 +1119,8 @@ The gallery images are often inpainted, but you will get something very similar 
             vm.OutputProgress.Text = "Sampler 10/30";
         });
 
-    public static InferenceImageToVideoViewModel InferenceImageToVideoViewModel =>
-        DialogFactory.Get<InferenceImageToVideoViewModel>(vm =>
+    public static InferenceSvdImageToVideoViewModel InferenceSvdImageToVideoViewModel =>
+        DialogFactory.Get<InferenceSvdImageToVideoViewModel>(vm =>
         {
             vm.OutputProgress.Value = 10;
             vm.OutputProgress.Maximum = 30;
@@ -1123,10 +1133,10 @@ The gallery images are often inpainted, but you will get something very similar 
     public static InferenceImageUpscaleViewModel InferenceImageUpscaleViewModel =>
         DialogFactory.Get<InferenceImageUpscaleViewModel>();
 
-    public static InferenceWanTextToVideoViewModel InferenceWanTextToVideoViewModel =>
-        DialogFactory.Get<InferenceWanTextToVideoViewModel>();
-    public static InferenceWanImageToVideoViewModel InferenceWanImageToVideoViewModel =>
-        DialogFactory.Get<InferenceWanImageToVideoViewModel>();
+    public static InferenceTextToVideoViewModel InferenceTextToVideoViewModel =>
+        DialogFactory.Get<InferenceTextToVideoViewModel>();
+    public static InferenceImageToVideoViewModel InferenceImageToVideoViewModel =>
+        DialogFactory.Get<InferenceImageToVideoViewModel>();
 
     public static PackageImportViewModel PackageImportViewModel =>
         DialogFactory.Get<PackageImportViewModel>();
@@ -1176,7 +1186,8 @@ The gallery images are often inpainted, but you will get something very similar 
         });
 
     public static ModelCardViewModel ModelCardViewModel => DialogFactory.Get<ModelCardViewModel>();
-    public static WanModelCardViewModel WanModelCardViewModel => DialogFactory.Get<WanModelCardViewModel>();
+    public static VideoModelCardViewModel VideoModelCardViewModel =>
+        DialogFactory.Get<VideoModelCardViewModel>();
 
     public static ImgToVidModelCardViewModel ImgToVidModelCardViewModel =>
         DialogFactory.Get<ImgToVidModelCardViewModel>();
@@ -1414,51 +1425,51 @@ The gallery images are often inpainted, but you will get something very similar 
     }
 
     public static IEnumerable<HybridModelFile> SampleHybridModels { get; } =
-        [
-            HybridModelFile.FromLocal(
-                new LocalModelFile
+    [
+        HybridModelFile.FromLocal(
+            new LocalModelFile
+            {
+                SharedFolderType = SharedFolderType.StableDiffusion,
+                RelativePath = "art_shaper_v8.safetensors",
+                PreviewImageFullPath =
+                    "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/dd9b038c-bd15-43ab-86ab-66e145ad7ff2/width=512",
+                ConnectedModelInfo = new ConnectedModelInfo
                 {
-                    SharedFolderType = SharedFolderType.StableDiffusion,
-                    RelativePath = "art_shaper_v8.safetensors",
-                    PreviewImageFullPath =
-                        "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/dd9b038c-bd15-43ab-86ab-66e145ad7ff2/width=512",
-                    ConnectedModelInfo = new ConnectedModelInfo
-                    {
-                        ModelName =
-                            "Art Shaper (very long name example) (very long name example) (very long name example)",
-                        VersionName = "Style v8 (very long name)",
-                        ModelId = 0,
-                        VersionId = 0,
-                        ModelDescription =
-                            "This is a very long description for the Art Shaper model, which is used to demonstrate how long descriptions can be handled in the UI. It should be able to display multiple lines and still look good.",
-                        ModelType = CivitModelType.Checkpoint,
-                        BaseModel = "SD 1.5",
-                    },
-                }
-            ),
-            HybridModelFile.FromLocal(
-                new LocalModelFile
+                    ModelName =
+                        "Art Shaper (very long name example) (very long name example) (very long name example)",
+                    VersionName = "Style v8 (very long name)",
+                    ModelId = 0,
+                    VersionId = 0,
+                    ModelDescription =
+                        "This is a very long description for the Art Shaper model, which is used to demonstrate how long descriptions can be handled in the UI. It should be able to display multiple lines and still look good.",
+                    ModelType = CivitModelType.Checkpoint,
+                    BaseModel = "SD 1.5",
+                },
+            }
+        ),
+        HybridModelFile.FromLocal(
+            new LocalModelFile
+            {
+                SharedFolderType = SharedFolderType.StableDiffusion,
+                RelativePath = "background_arts.safetensors",
+                PreviewImageFullPath =
+                    "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/71c81ddf-d8c3-46b4-843d-9f8f20a9254a/width=512",
+                ConnectedModelInfo = new ConnectedModelInfo
                 {
-                    SharedFolderType = SharedFolderType.StableDiffusion,
-                    RelativePath = "background_arts.safetensors",
-                    PreviewImageFullPath =
-                        "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/71c81ddf-d8c3-46b4-843d-9f8f20a9254a/width=512",
-                    ConnectedModelInfo = new ConnectedModelInfo
-                    {
-                        ModelName = "Background Arts",
-                        VersionName = "Anime Style v10",
-                        ModelId = 0,
-                        VersionId = 0,
-                        ModelDescription =
-                            "This is a very long description for the Art Shaper model, which is used to demonstrate how long descriptions can be handled in the UI. It should be able to display multiple lines and still look good.",
-                        ModelType = CivitModelType.Checkpoint,
-                        BaseModel = "SDXL 1.0",
-                    },
-                }
-            ),
-            HybridModelFile.FromRemote("v1-5-pruned-emaonly.safetensors"),
-            HybridModelFile.FromRemote("sample-model.pt"),
-        ];
+                    ModelName = "Background Arts",
+                    VersionName = "Anime Style v10",
+                    ModelId = 0,
+                    VersionId = 0,
+                    ModelDescription =
+                        "This is a very long description for the Art Shaper model, which is used to demonstrate how long descriptions can be handled in the UI. It should be able to display multiple lines and still look good.",
+                    ModelType = CivitModelType.Checkpoint,
+                    BaseModel = "SDXL 1.0",
+                },
+            }
+        ),
+        HybridModelFile.FromRemote("v1-5-pruned-emaonly.safetensors"),
+        HybridModelFile.FromRemote("sample-model.pt"),
+    ];
 
     public static HybridModelFile SampleHybridModel => SampleHybridModels.First();
 
@@ -1553,6 +1564,9 @@ The gallery images are often inpainted, but you will get something very similar 
     public static ControlNetCardViewModel ControlNetCardViewModel =>
         DialogFactory.Get<ControlNetCardViewModel>();
 
+    public static IPAdapterCardViewModel IPAdapterCardViewModel =>
+        DialogFactory.Get<IPAdapterCardViewModel>();
+
     public static ConfirmDeleteDialogViewModel ConfirmDeleteDialogViewModel =>
         DialogFactory.Get<ConfirmDeleteDialogViewModel>(vm =>
         {
@@ -1635,6 +1649,9 @@ The gallery images are often inpainted, but you will get something very similar 
 
     public static ModelPickerDialogViewModel ModelPickerDialogViewModel =>
         DialogFactory.Get<ModelPickerDialogViewModel>();
+
+    public static InferenceProjectTypePickerViewModel InferenceProjectTypePickerViewModel =>
+        DialogFactory.Get<InferenceProjectTypePickerViewModel>();
 
     public static PackageInstallProgressItemViewModel PackageInstallProgressItemViewModel =>
         new(

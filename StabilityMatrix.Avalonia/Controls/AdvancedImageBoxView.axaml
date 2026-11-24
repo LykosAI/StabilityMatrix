@@ -25,6 +25,10 @@
                         <gif:GifImage SourceUri="{Binding LocalFile.FullPath}" Stretch="Uniform" />
                     </DataTemplate>
 
+                    <DataTemplate x:Key="{x:Static models:ImageSourceTemplateType.Video}" DataType="models:ImageSource">
+                        <controls:VideoPlayerView />
+                    </DataTemplate>
+
                     <DataTemplate x:Key="{x:Static models:ImageSourceTemplateType.Image}" DataType="models:ImageSource">
                         <controls:AdvancedImageBox
                             CornerRadius="4"

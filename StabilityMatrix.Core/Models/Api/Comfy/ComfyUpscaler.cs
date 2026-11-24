@@ -27,7 +27,7 @@ public readonly record struct ComfyUpscaler(string Name, ComfyUpscalerType Type)
     {
         return new ComfyUpscaler(resource.FileName, ComfyUpscalerType.DownloadableModel)
         {
-            DownloadableResource = resource
+            DownloadableResource = resource,
         };
     }
 
@@ -51,7 +51,7 @@ public readonly record struct ComfyUpscaler(string Name, ComfyUpscalerType Type)
                 ComfyUpscalerType.ESRGAN => "ESRGAN",
                 ComfyUpscalerType.DownloadableModel => "Downloadable",
                 ComfyUpscalerType.None => "None",
-                _ => throw new ArgumentOutOfRangeException(nameof(Type), Type, null)
+                _ => throw new ArgumentOutOfRangeException(nameof(Type), Type, null),
             };
         }
     }

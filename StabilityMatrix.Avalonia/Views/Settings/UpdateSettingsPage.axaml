@@ -3,6 +3,7 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+    xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:fluentIcons="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
@@ -15,13 +16,12 @@
     xmlns:ui="using:FluentAvalonia.UI.Controls"
     xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
     xmlns:vmSettings="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Settings"
-    xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
     d:DataContext="{x:Static mocks:DesignData.UpdateSettingsViewModel}"
     d:DesignHeight="550"
     d:DesignWidth="800"
     x:DataType="vmSettings:UpdateSettingsViewModel"
     mc:Ignorable="d">
-    
+
     <controls:UserControlBase.Resources>
         <converters:BooleanChoiceMultiConverter x:Key="BoolChoiceMultiConverter" />
     </controls:UserControlBase.Resources>
@@ -44,31 +44,38 @@
                             HorizontalAlignment="Left"
                             Text="{Binding HeaderText}"
                             Theme="{DynamicResource SubtitleTextBlockStyle}" />
-                        <TextBlock 
+                        <TextBlock
                             HorizontalAlignment="Left"
                             Foreground="{DynamicResource TextFillColorTertiaryBrush}"
                             Text="{Binding SubtitleText}" />
                     </StackPanel>
                 </StackPanel>
-                
+
                 <Button
                     Grid.Column="1"
+                    HorizontalAlignment="Right"
                     Classes="accent"
-                    Content="{x:Static lang:Resources.Action_CheckForUpdates}"
                     Command="{Binding CheckForUpdatesCommand}"
-                    HorizontalAlignment="Right">
-                </Button>
+                    Content="{x:Static lang:Resources.Action_CheckForUpdates}" />
             </sg:SpacedGrid>
 
             <!--  Auto updates toggle  -->
-            <ui:SettingsExpander 
-                Description="Periodically checks for updates" 
-                Header="Notify when updates are ready to install">
+            <ui:SettingsExpander Description="Periodically checks for updates" Header="Notify when updates are ready to install">
                 <ui:SettingsExpander.IconSource>
                     <fluentIcons:SymbolIconSource Symbol="Megaphone" />
                 </ui:SettingsExpander.IconSource>
                 <ui:SettingsExpander.Footer>
                     <ToggleSwitch IsChecked="{Binding IsAutoCheckUpdatesEnabled}" />
+                </ui:SettingsExpander.Footer>
+            </ui:SettingsExpander>
+
+            <!--  Show release notes after update toggle  -->
+            <ui:SettingsExpander Description="Shows a notice with a link to the changelog after the app updates" Header="{x:Static lang:Resources.Label_ShowReleaseNotesAfterUpdate}">
+                <ui:SettingsExpander.IconSource>
+                    <fluentIcons:SymbolIconSource Symbol="DocumentBulletList" />
+                </ui:SettingsExpander.IconSource>
+                <ui:SettingsExpander.Footer>
+                    <ToggleSwitch IsChecked="{Binding ShowReleaseNotesAfterUpdate}" />
                 </ui:SettingsExpander.Footer>
             </ui:SettingsExpander>
 
@@ -80,59 +87,55 @@
 
                 <ui:SettingsExpanderItem>
                     <ListBox
-                        SelectionChanged="ChannelListBox_OnSelectionChanged"
                         IsEnabled="{Binding IsAutoCheckUpdatesEnabled}"
                         ItemContainerTheme="{DynamicResource ListBoxItemBorderlessTheme}"
                         ItemsSource="{Binding AvailableUpdateChannelCards}"
-                        SelectedItem="{Binding SelectedUpdateChannelCard}">
+                        SelectedItem="{Binding SelectedUpdateChannelCard}"
+                        SelectionChanged="ChannelListBox_OnSelectionChanged">
                         <ListBox.ItemTemplate>
                             <DataTemplate DataType="{x:Type models:UpdateChannelCard}">
-                                <RadioButton 
-                                    GroupName="UpdateChannel"
-                                    IsChecked="{Binding $parent[ListBoxItem].IsSelected}" >
-                                    <StackPanel VerticalAlignment="Top" HorizontalAlignment="Left">
+                                <RadioButton GroupName="UpdateChannel" IsChecked="{Binding $parent[ListBoxItem].IsSelected}">
+                                    <StackPanel HorizontalAlignment="Left" VerticalAlignment="Top">
                                         <StackPanel Orientation="Horizontal" Spacing="5">
-                                            <TextBlock 
-                                                VerticalAlignment="Center"
-                                                Text="{Binding DisplayName}">
+                                            <TextBlock VerticalAlignment="Center" Text="{Binding DisplayName}">
                                                 <TextBlock.Foreground>
                                                     <MultiBinding Converter="{StaticResource BoolChoiceMultiConverter}">
                                                         <Binding Path="IsSelectable" />
-                                                        <DynamicResource ResourceKey="TextFillColorPrimaryBrush"/>
-                                                        <DynamicResource ResourceKey="TextFillColorTertiaryBrush"/>
+                                                        <DynamicResource ResourceKey="TextFillColorPrimaryBrush" />
+                                                        <DynamicResource ResourceKey="TextFillColorTertiaryBrush" />
                                                     </MultiBinding>
                                                 </TextBlock.Foreground>
                                             </TextBlock>
                                             <Ellipse
-                                                HorizontalAlignment="Left"
-                                                VerticalAlignment="Center"
-                                                IsVisible="{Binding LatestVersionString, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
                                                 Width="4"
                                                 Height="4"
-                                                Fill="{DynamicResource TextFillColorTertiaryBrush}" />
+                                                HorizontalAlignment="Left"
+                                                VerticalAlignment="Center"
+                                                Fill="{DynamicResource TextFillColorTertiaryBrush}"
+                                                IsVisible="{Binding LatestVersionString, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
                                             <TextBlock
                                                 VerticalAlignment="Center"
                                                 FontSize="13"
                                                 Foreground="{DynamicResource TextFillColorTertiaryBrush}"
                                                 IsVisible="{Binding LatestVersionString, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
                                                 Text="{Binding LatestVersionString}" />
-                                            
-                                            <!-- Update available icon -->
+
+                                            <!--  Update available icon  -->
                                             <fluentIcons:SymbolIcon
-                                                ToolTip.Tip="{x:Static lang:Resources.Label_UpdateAvailable}"
-                                                IsVisible="{Binding IsLatestVersionUpdateable}"
                                                 VerticalAlignment="Center"
                                                 FontSize="16"
                                                 Foreground="#3592c4"
-                                                Symbol="ArrowCircleUpRight" />
+                                                IsVisible="{Binding IsLatestVersionUpdateable}"
+                                                Symbol="ArrowCircleUpRight"
+                                                ToolTip.Tip="{x:Static lang:Resources.Label_UpdateAvailable}" />
                                         </StackPanel>
 
                                         <TextBlock
-                                            FontSize="13"
-                                            TextAlignment="Start"
                                             Margin="0,0,0,0"
+                                            FontSize="13"
                                             Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                                             Text="{Binding Description}"
+                                            TextAlignment="Start"
                                             Theme="{DynamicResource CaptionTextBlockStyle}" />
                                     </StackPanel>
                                 </RadioButton>

@@ -11,7 +11,8 @@ namespace StabilityMatrix.Avalonia.Services;
 [RegisterSingleton<INotificationActionDispatcher, NotificationActionDispatcher>]
 public class NotificationActionDispatcher(
     ILogger<NotificationActionDispatcher> logger,
-    INavigationService<MainWindowViewModel> navigationService
+    INavigationService<MainWindowViewModel> navigationService,
+    IUvCachePurgeRunner uvCachePurgeRunner
 ) : INotificationActionDispatcher
 {
     public async Task DispatchAsync(NotificationAction action)
@@ -42,6 +43,16 @@ public class NotificationActionDispatcher(
 
                 case ToggleProgressFlyoutAction:
                     await Dispatcher.UIThread.InvokeAsync(() => EventManager.Instance.OnShowProgressFlyout());
+                    break;
+
+                case ShowChangelogAction:
+                    await Dispatcher.UIThread.InvokeAsync(() =>
+                        EventManager.Instance.OnShowChangelogRequested()
+                    );
+                    break;
+
+                case PurgeUvCacheAction purgeAction:
+                    await uvCachePurgeRunner.RunPurgeWithConfirmAsync(purgeAction.SizeBytes);
                     break;
 
                 default:

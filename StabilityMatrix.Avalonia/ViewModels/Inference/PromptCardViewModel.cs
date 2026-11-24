@@ -67,6 +67,8 @@ public partial class PromptCardViewModel
 
     public ICompletionProvider CompletionProvider { get; }
     public ITokenizerProvider TokenizerProvider { get; }
+    public PromptDiagnosticsProvider PromptDiagnostics { get; }
+    public PromptDiagnosticsProvider NegativePromptDiagnostics { get; }
     public SharedState SharedState { get; }
 
     public TextDocument PromptDocument { get; } = new();
@@ -88,6 +90,12 @@ public partial class PromptCardViewModel
 
     [ObservableProperty]
     private bool isThinkingEnabled;
+
+    [ObservableProperty]
+    public partial PromptAmplifierModel SelectedAmplifierModel { get; set; } = PromptAmplifierModel.SparkV2;
+
+    public IReadOnlyList<PromptAmplifierModel> AmplifierModels { get; } =
+        Enum.GetValues<PromptAmplifierModel>();
 
     [ObservableProperty]
     private bool isFocused;
@@ -142,6 +150,8 @@ public partial class PromptCardViewModel
         this.vmFactory = vmFactory;
         CompletionProvider = completionProvider;
         TokenizerProvider = tokenizerProvider;
+        PromptDiagnostics = new PromptDiagnosticsProvider(tokenizerProvider, modelIndexService);
+        NegativePromptDiagnostics = new PromptDiagnosticsProvider(tokenizerProvider);
         SharedState = sharedState;
 
         // Subscribe to tab context state changes
@@ -640,7 +650,7 @@ public partial class PromptCardViewModel
                         NegativePrompt = negativePrompt.ProcessedText ?? negativePrompt.RawText,
                         Model = selectedModel?.Local?.DisplayModelName,
                     },
-                    Model = IsThinkingEnabled ? "PromptV1ThinkingDev" : "PromptV1Dev",
+                    Model = SelectedAmplifierModel.ToPromptGenModelName(IsThinkingEnabled),
                     Mode = mode,
                     ModelTags = modelTags,
                 }
@@ -649,6 +659,7 @@ public partial class PromptCardViewModel
             PromptDocument.Text = expandedPrompt.Response.PositivePrompt;
             NegativePromptDocument.Text = expandedPrompt.Response.NegativePrompt;
 
+            // The server counts whole amplifications at the current price; RemainingBalance is credits.
             TokensRemaining = expandedPrompt.AvailableTokens;
         }
         catch (ApiException e)

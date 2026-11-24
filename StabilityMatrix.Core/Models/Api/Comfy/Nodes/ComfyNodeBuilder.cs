@@ -168,6 +168,22 @@ public class ComfyNodeBuilder
         public required int BatchSize { get; init; }
     }
 
+    /// <summary>
+    /// Empty (or image-seeded) latent sized for the Wan 2.2 TI2V 5B VAE. Unlike
+    /// <see cref="EmptyHunyuanLatentVideo"/>, this produces a 48-channel, 16x-spatial latent (the 5B VAE's
+    /// compression) so it must only be used with the 5B model + wan2.2_vae. The 14B / Wan 2.1 models keep
+    /// using <see cref="EmptyHunyuanLatentVideo"/> (16-channel, 8x-spatial). <c>start_image</c> is optional
+    /// and omitted for text-to-video.
+    /// </summary>
+    public record Wan22ImageToVideoLatent : ComfyTypedNodeBase<LatentNodeConnection>
+    {
+        public required VAENodeConnection Vae { get; init; }
+        public required int Width { get; init; }
+        public required int Height { get; init; }
+        public required int Length { get; init; }
+        public required int BatchSize { get; init; }
+    }
+
     public record CLIPSetLastLayer : ComfyTypedNodeBase<ClipNodeConnection>
     {
         public required ClipNodeConnection Clip { get; init; }
@@ -442,6 +458,42 @@ public class ComfyNodeBuilder
         public required string Method { get; init; }
     }
 
+    /// <summary>
+    /// Core ComfyUI node that assembles a frame sequence into a VIDEO at the given fps. Pair with
+    /// <see cref="SaveVideo"/> to write a real container (e.g. mp4). Requires a reasonably recent ComfyUI.
+    /// </summary>
+    public record CreateVideo : ComfyTypedNodeBase<VideoNodeConnection>
+    {
+        public required ImageNodeConnection Images { get; init; }
+        public required double Fps { get; init; }
+
+        /// <summary>Optional soundtrack, muxed into the container (models with native audio).</summary>
+        public AudioNodeConnection? Audio { get; init; }
+    }
+
+    /// <summary>
+    /// Decodes the audio half of a packed audio+video latent (e.g. MiniMax H3) with the
+    /// family's audio VAE. The node pulls its own half out of the latent, so it can share a
+    /// sampler output with the video <see cref="VAEDecode"/>.
+    /// </summary>
+    public record VAEDecodeAudio : ComfyTypedNodeBase<AudioNodeConnection>
+    {
+        public required LatentNodeConnection Samples { get; init; }
+        public required VAENodeConnection Vae { get; init; }
+    }
+
+    /// <summary>
+    /// Core ComfyUI node that encodes a VIDEO to a container file in the output folder.
+    /// <c>format</c>/<c>codec</c> accept "auto" or explicit values like "mp4" / "h264".
+    /// </summary>
+    public record SaveVideo : ComfyTypedNodeBase
+    {
+        public required VideoNodeConnection Video { get; init; }
+        public required string FilenamePrefix { get; init; }
+        public required string Format { get; init; }
+        public required string Codec { get; init; }
+    }
+
     public record UNETLoader : ComfyTypedNodeBase<ModelNodeConnection>
     {
         public required string UnetName { get; init; }
@@ -457,7 +509,8 @@ public class ComfyNodeBuilder
         public required string ClipName { get; init; }
 
         /// <summary>
-        /// possible values: "stable_diffusion", "stable_cascade", "sd3", "stable_audio", "mochi"
+        /// possible values: "stable_diffusion", "stable_cascade", "sd3", "stable_audio",
+        /// "mochi", "wan", "minimax", ... (passed through to ComfyUI's CLIPLoader)
         /// </summary>
         public required string Type { get; init; }
     }
@@ -695,6 +748,19 @@ public class ComfyNodeBuilder
         public required double Multiplier { get; init; }
     }
 
+    /// <summary>
+    /// Skips the given DiT blocks on the negative (uncond) pass within the start/end range.
+    /// Layers are comma-separated block indices; an empty list skips nothing.
+    /// </summary>
+    public record SkipLayerGuidanceDiTSimple : ComfyTypedNodeBase<ModelNodeConnection>
+    {
+        public required ModelNodeConnection Model { get; init; }
+        public required string DoubleLayers { get; init; }
+        public required string SingleLayers { get; init; }
+        public required double StartPercent { get; init; }
+        public required double EndPercent { get; init; }
+    }
+
     public record SetLatentNoiseMask : ComfyTypedNodeBase<LatentNodeConnection>
     {
         public required LatentNodeConnection Samples { get; init; }
@@ -740,6 +806,25 @@ public class ComfyNodeBuilder
         public required int Height { get; init; }
         public required int Length { get; init; }
         public required int BatchSize { get; init; }
+    }
+
+    /// <summary>
+    /// MiniMax H3 conditioning + packed audio/video empty latent (comfy-core, ComfyUI >= 0.33).
+    /// Covers text-to-video (no frames connected) and first/last-frame image-to-video. The
+    /// prompt is encoded by the node itself, and there is no negative conditioning — sample
+    /// with CFG 1. <c>Length</c> must sit on the model's 17k+5 frame grid at 24 fps.
+    /// outputs: positive, latent
+    /// </summary>
+    public record MiniMaxH3ImageToVideo : ComfyTypedNodeBase<ConditioningNodeConnection, LatentNodeConnection>
+    {
+        public required ClipNodeConnection Clip { get; init; }
+        public required VAENodeConnection Vae { get; init; }
+        public ImageNodeConnection? FirstFrame { get; init; }
+        public ImageNodeConnection? LastFrame { get; init; }
+        public required string Prompt { get; init; }
+        public required int Width { get; init; }
+        public required int Height { get; init; }
+        public required int Length { get; init; }
     }
 
     [TypedNodeOptions(
@@ -848,7 +933,7 @@ public class ComfyNodeBuilder
 
     [TypedNodeOptions(
         Name = "Inference_Core_ReferenceOnlySimple",
-        RequiredExtensions = ["https://github.com/LykosAI/ComfyUI-Inference-Core-Nodes >= 0.3.0"]
+        RequiredExtensions = ["https://github.com/LykosAI/ComfyUI-Inference-Core-Nodes >= 0.5.3"]
     )]
     public record ReferenceOnlySimple : ComfyTypedNodeBase<ModelNodeConnection, LatentNodeConnection>
     {
@@ -858,6 +943,58 @@ public class ComfyNodeBuilder
 
         [Range(1, 64)]
         public int BatchSize { get; init; } = 1;
+    }
+
+    [TypedNodeOptions(
+        Name = "IPAdapterModelLoader",
+        RequiredExtensions = ["https://github.com/cubiq/ComfyUI_IPAdapter_plus"]
+    )]
+    public record IPAdapterModelLoader : ComfyTypedNodeBase<IpAdapterNodeConnection>
+    {
+        [JsonPropertyName("ipadapter_file")]
+        public required string IpadapterFile { get; init; }
+    }
+
+    [TypedNodeOptions(
+        Name = "IPAdapterAdvanced",
+        RequiredExtensions = ["https://github.com/cubiq/ComfyUI_IPAdapter_plus"]
+    )]
+    public record IPAdapterAdvanced : ComfyTypedNodeBase<ModelNodeConnection>
+    {
+        public required ModelNodeConnection Model { get; init; }
+
+        public required IpAdapterNodeConnection Ipadapter { get; init; }
+
+        public required ImageNodeConnection Image { get; init; }
+
+        [Range(-1d, 5d)]
+        public double Weight { get; init; } = 1.0;
+
+        /// <summary>
+        /// One of: "linear", "ease in", "ease out", "ease in-out", "reverse in-out",
+        /// "weak input", "weak output", "weak middle", "strong middle", "style transfer",
+        /// "composition", "strong style transfer", "style and composition",
+        /// "style transfer precise", "composition precise"
+        /// </summary>
+        public string WeightType { get; init; } = "linear";
+
+        /// <summary>
+        /// One of: "concat", "add", "subtract", "average", "norm average"
+        /// </summary>
+        public string CombineEmbeds { get; init; } = "concat";
+
+        [Range(0d, 1d)]
+        public double StartAt { get; init; }
+
+        [Range(0d, 1d)]
+        public double EndAt { get; init; } = 1.0;
+
+        /// <summary>
+        /// One of: "V only", "K+V", "K+V w/ C penalty", "K+mean(V) w/ C penalty"
+        /// </summary>
+        public string EmbedsScaling { get; init; } = "V only";
+
+        public ClipVisionNodeConnection? ClipVision { get; init; }
     }
 
     [TypedNodeOptions(
@@ -882,7 +1019,7 @@ public class ComfyNodeBuilder
 
     [TypedNodeOptions(
         Name = "Inference_Core_LayeredDiffusionDecodeRGBA",
-        RequiredExtensions = ["https://github.com/LykosAI/ComfyUI-Inference-Core-Nodes >= 0.5.2"]
+        RequiredExtensions = ["https://github.com/LykosAI/ComfyUI-Inference-Core-Nodes >= 0.5.3"]
     )]
     public record LayeredDiffusionDecodeRgba : ComfyTypedNodeBase<ImageNodeConnection>
     {
@@ -1819,6 +1956,32 @@ public class ComfyNodeBuilder
 
         public ComfySampler? PrimarySampler { get; set; }
         public ComfyScheduler? PrimaryScheduler { get; set; }
+
+        /// <summary>
+        /// The Wan 2.2 14B low-noise expert model (post-LoRA), set by the Wan model card when its
+        /// low-noise slot is filled. The Wan sampler runs a second low-noise pass on this model.
+        /// </summary>
+        public ModelNodeConnection? WanLowNoiseModel { get; set; }
+
+        /// <summary>
+        /// Fraction of sampling steps handled by the high-noise expert before switching to the
+        /// low-noise expert (Wan 2.2 14B MoE). Range 0-1; defaults to 0.5 when unset.
+        /// </summary>
+        public double? WanMoeBoundary { get; set; }
+
+        /// <summary>
+        /// Audio VAE for families whose sampler output is a packed audio+video latent
+        /// (MiniMax H3). When set, the video output step decodes the soundtrack with
+        /// <c>VAEDecodeAudio</c> and muxes it into containers that support audio.
+        /// </summary>
+        public VAENodeConnection? AudioVAE { get; set; }
+
+        /// <summary>
+        /// Set when the tab already built the family's conditioning + initial latent (e.g. the
+        /// MiniMax H3 node emits both). The video sampler then samples what's present instead
+        /// of running its own conditioning path.
+        /// </summary>
+        public bool HasPrebuiltVideoConditioning { get; set; }
 
         public GuiderNodeConnection PrimaryGuider { get; set; }
         public NoiseNodeConnection PrimaryNoise { get; set; }

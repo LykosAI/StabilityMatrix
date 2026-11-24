@@ -8,6 +8,7 @@
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
     xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:fluent="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
     xmlns:helpers="clr-namespace:StabilityMatrix.Avalonia.Helpers"
     xmlns:input="clr-namespace:FluentAvalonia.UI.Input;assembly=FluentAvalonia"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
@@ -366,67 +367,167 @@
             </ui:CommandBar>
         </Grid>
 
-        <TreeView
-            x:Name="CategoryTree"
-            Name="CategoryTree"
+        <Grid
             Grid.Row="1"
             Grid.Column="0"
             Margin="0,0,12,0"
-            DragDrop.AllowDrop="True"
-            IsVisible="{Binding ShowFolders}"
-            ItemsSource="{Binding Categories}"
-            SelectedItem="{Binding SelectedCategory}"
-            SelectionMode="AlwaysSelected">
-            <TreeView.Styles>
-                <Style Selector="TreeViewItem">
-                    <Setter Property="IsExpanded" Value="{Binding $self.((models1:CheckpointCategory)DataContext).IsExpanded, Mode=TwoWay}" />
-                </Style>
-            </TreeView.Styles>
-            <TreeView.ContextFlyout>
-                <ui:FAMenuFlyout>
-                    <ui:MenuFlyoutItem
-                        Command="{Binding OpenFolderFromTreeviewCommand}"
-                        CommandParameter="{Binding $parent[TreeView].SelectedItem}"
-                        Text="{x:Static lang:Resources.Action_OpenInExplorer}">
-                        <ui:MenuFlyoutItem.IconSource>
-                            <ui:SymbolIconSource Symbol="OpenFolder" />
-                        </ui:MenuFlyoutItem.IconSource>
-                    </ui:MenuFlyoutItem>
-                    <ui:MenuFlyoutItem
-                        Command="{Binding CreateFolderCommand}"
-                        CommandParameter="{Binding $parent[TreeView].SelectedItem}"
-                        Text="{x:Static lang:Resources.Label_NewFolder}">
-                        <ui:MenuFlyoutItem.IconSource>
-                            <ui:SymbolIconSource Symbol="NewFolder" />
-                        </ui:MenuFlyoutItem.IconSource>
-                    </ui:MenuFlyoutItem>
+            RowDefinitions="*,Auto">
+            <TreeView
+                x:Name="CategoryTree"
+                Name="CategoryTree"
+                Grid.Row="0"
+                DragDrop.AllowDrop="True"
+                IsVisible="{Binding ShowFolders}"
+                ItemsSource="{Binding Categories}"
+                SelectedItem="{Binding SelectedCategory}"
+                SelectionMode="AlwaysSelected">
+                <TreeView.Styles>
+                    <Style Selector="TreeViewItem">
+                        <Setter Property="IsExpanded" Value="{Binding $self.((models1:CheckpointCategory)DataContext).IsExpanded, Mode=TwoWay}" />
+                    </Style>
+                </TreeView.Styles>
+                <TreeView.ContextFlyout>
+                    <ui:FAMenuFlyout>
+                        <ui:MenuFlyoutItem
+                            Command="{Binding OpenFolderFromTreeviewCommand}"
+                            CommandParameter="{Binding $parent[TreeView].SelectedItem}"
+                            Text="{x:Static lang:Resources.Action_OpenInExplorer}">
+                            <ui:MenuFlyoutItem.IconSource>
+                                <ui:SymbolIconSource Symbol="OpenFolder" />
+                            </ui:MenuFlyoutItem.IconSource>
+                        </ui:MenuFlyoutItem>
+                        <ui:MenuFlyoutItem
+                            Command="{Binding CreateFolderCommand}"
+                            CommandParameter="{Binding $parent[TreeView].SelectedItem}"
+                            Text="{x:Static lang:Resources.Label_NewFolder}">
+                            <ui:MenuFlyoutItem.IconSource>
+                                <ui:SymbolIconSource Symbol="NewFolder" />
+                            </ui:MenuFlyoutItem.IconSource>
+                        </ui:MenuFlyoutItem>
 
-                    <ui:MenuFlyoutSeparator />
+                        <ui:MenuFlyoutSeparator />
 
-                    <ui:MenuFlyoutItem
-                        Command="{Binding DeleteFolderCommand}"
-                        CommandParameter="{Binding $parent[TreeView].SelectedItem}"
-                        Text="{x:Static lang:Resources.Action_Delete}">
-                        <ui:MenuFlyoutItem.IconSource>
-                            <ui:SymbolIconSource Symbol="Delete" />
-                        </ui:MenuFlyoutItem.IconSource>
-                    </ui:MenuFlyoutItem>
-                </ui:FAMenuFlyout>
-            </TreeView.ContextFlyout>
-            <TreeView.ItemTemplate>
-                <TreeDataTemplate ItemsSource="{Binding SubDirectories}">
-                    <TextBlock
-                        MaxWidth="250"
-                        Margin="0,0,12,0"
-                        TextTrimming="CharacterEllipsis"
-                        TextWrapping="NoWrap"
-                        ToolTip.Tip="{Binding Tooltip}">
-                        <Run Text="{Binding Name}" />
-                        <Run Text=" (" /><Run Text="{Binding Count}" /><Run Text=")" />
-                    </TextBlock>
-                </TreeDataTemplate>
-            </TreeView.ItemTemplate>
-        </TreeView>
+                        <ui:MenuFlyoutItem
+                            Command="{Binding DeleteFolderCommand}"
+                            CommandParameter="{Binding $parent[TreeView].SelectedItem}"
+                            Text="{x:Static lang:Resources.Action_Delete}">
+                            <ui:MenuFlyoutItem.IconSource>
+                                <ui:SymbolIconSource Symbol="Delete" />
+                            </ui:MenuFlyoutItem.IconSource>
+                        </ui:MenuFlyoutItem>
+                    </ui:FAMenuFlyout>
+                </TreeView.ContextFlyout>
+                <TreeView.ItemTemplate>
+                    <TreeDataTemplate ItemsSource="{Binding SubDirectories}">
+                        <TextBlock
+                            MaxWidth="250"
+                            Margin="0,0,12,0"
+                            TextTrimming="CharacterEllipsis"
+                            TextWrapping="NoWrap"
+                            ToolTip.Tip="{Binding Tooltip}">
+                            <Run Text="{Binding Name}" />
+                            <Run Text=" (" /><Run Text="{Binding Count}" /><Run Text=")" />
+                        </TextBlock>
+                    </TreeDataTemplate>
+                </TreeView.ItemTemplate>
+            </TreeView>
+
+            <!--  User categories: click to filter (any-of), drop cards to assign  -->
+            <Border
+                Grid.Row="1"
+                MaxHeight="300"
+                Margin="0,8,0,0"
+                Padding="0,8,0,0"
+                BorderBrush="{DynamicResource DividerStrokeColorDefaultBrush}"
+                BorderThickness="0,1,0,0">
+                <Grid RowDefinitions="Auto,*">
+                    <Grid
+                        Grid.Row="0"
+                        Margin="8,0,4,4"
+                        ColumnDefinitions="*,Auto,Auto">
+                        <TextBlock
+                            Grid.Column="0"
+                            VerticalAlignment="Center"
+                            FontSize="12"
+                            FontWeight="SemiBold"
+                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                            Text="{x:Static lang:Resources.Label_Categories}"
+                            ToolTip.Tip="{x:Static lang:Resources.Label_CategoriesFilterHint}" />
+                        <Button
+                            Grid.Column="1"
+                            Padding="4"
+                            Classes="transparent"
+                            Command="{Binding ClearCategoryFilterCommand}"
+                            IsVisible="{Binding HasCategoryFilter}"
+                            ToolTip.Tip="{x:Static lang:Resources.Action_ClearSelection}">
+                            <ui:SymbolIcon FontSize="14" Symbol="Dismiss" />
+                        </Button>
+                        <Button
+                            Grid.Column="2"
+                            Padding="4"
+                            Classes="transparent"
+                            Command="{Binding ManageCategoriesCommand}"
+                            ToolTip.Tip="{x:Static lang:Resources.Label_ManageCategories}">
+                            <ui:SymbolIcon FontSize="14" Symbol="Settings" />
+                        </Button>
+                    </Grid>
+                    <ScrollViewer Grid.Row="1">
+                        <!--  Right margin keeps the counts clear of the overlay scrollbar  -->
+                        <ItemsControl Margin="0,0,14,0" ItemsSource="{Binding CategoryOptions}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="{x:Type checkpointManager:CategoryOptionViewModel}">
+                                    <ToggleButton
+                                        MaxWidth="250"
+                                        Padding="8,5"
+                                        HorizontalAlignment="Stretch"
+                                        HorizontalContentAlignment="Stretch"
+                                        Classes="transparent"
+                                        DragDrop.AllowDrop="True"
+                                        IsChecked="{Binding IsSelected, Mode=TwoWay}">
+                                        <ToggleButton.ContextFlyout>
+                                            <ui:FAMenuFlyout>
+                                                <ui:MenuFlyoutItem
+                                                    Command="{Binding $parent[controls:UserControlBase].((viewModels:CheckpointsPageViewModel)DataContext).RenameCategoryCommand}"
+                                                    CommandParameter="{Binding}"
+                                                    IconSource="Rename"
+                                                    IsVisible="{Binding !IsUncategorized}"
+                                                    Text="{x:Static lang:Resources.Action_Rename}" />
+                                                <ui:MenuFlyoutItem
+                                                    Command="{Binding $parent[controls:UserControlBase].((viewModels:CheckpointsPageViewModel)DataContext).DeleteCategoryCommand}"
+                                                    CommandParameter="{Binding}"
+                                                    IconSource="Delete"
+                                                    IsVisible="{Binding !IsUncategorized}"
+                                                    Text="{x:Static lang:Resources.Action_Delete}" />
+                                            </ui:FAMenuFlyout>
+                                        </ToggleButton.ContextFlyout>
+                                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+                                            <Ellipse
+                                                Grid.Column="0"
+                                                Width="9"
+                                                Height="9"
+                                                VerticalAlignment="Center"
+                                                Fill="{Binding ColorBrush}"
+                                                IsVisible="{Binding !IsUncategorized}" />
+                                            <TextBlock
+                                                Grid.Column="1"
+                                                VerticalAlignment="Center"
+                                                Text="{Binding Name}"
+                                                TextTrimming="CharacterEllipsis" />
+                                            <!--  Inherits the toggle's foreground so it stays legible on the checked (accent) state  -->
+                                            <TextBlock
+                                                Grid.Column="2"
+                                                VerticalAlignment="Center"
+                                                Opacity="0.7"
+                                                Text="{Binding Count}" />
+                                        </Grid>
+                                    </ToggleButton>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+        </Grid>
 
         <scroll:BetterScrollViewer
             Name="ImageScrollViewer"
@@ -531,6 +632,11 @@
                                         IsVisible="{Binding CheckpointFile.IsSafetensorFile}"
                                         Text="View Safetensor Metadata" />
                                     <ui:MenuFlyoutItem
+                                        Command="{Binding $parent[scroll:BetterScrollViewer].((viewModels:CheckpointsPageViewModel)DataContext).EditCategoriesCommand}"
+                                        CommandParameter="{Binding}"
+                                        IconSource="Tag"
+                                        Text="{x:Static lang:Resources.Label_SetCategories}" />
+                                    <ui:MenuFlyoutItem
                                         Command="{Binding OpenMetadataEditorCommand}"
                                         IconSource="Edit"
                                         Text="Edit Metadata" />
@@ -602,74 +708,60 @@
                                     <LayoutTransformControl.LayoutTransform>
                                         <ScaleTransform ScaleX="{Binding $parent[scroll:BetterScrollViewer].((viewModels:CheckpointsPageViewModel)DataContext).ModelCardBottomResizeFactor, FallbackValue=1, TargetNullValue=1}" ScaleY="{Binding $parent[scroll:BetterScrollViewer].((viewModels:CheckpointsPageViewModel)DataContext).ModelCardBottomResizeFactor, FallbackValue=1, TargetNullValue=1}" />
                                     </LayoutTransformControl.LayoutTransform>
-                                    <WrapPanel IsVisible="{Binding CheckpointFile.HasConnectedModel}" Orientation="Horizontal">
-                                        <controls:Card
-                                            Height="24"
-                                            Margin="8,8,0,0"
-                                            Padding="4"
-                                            HorizontalAlignment="Left"
-                                            VerticalAlignment="Top"
-                                            Classes="info">
-
-                                            <TextBlock
-                                                HorizontalAlignment="Center"
-                                                VerticalAlignment="Center"
-                                                FontSize="11"
-                                                FontWeight="Medium"
-                                                Text="{Binding ModelType}" />
-                                        </controls:Card>
-                                        <controls:Card
-                                            Height="24"
-                                            Margin="4,8,0,0"
-                                            Padding="4"
-                                            HorizontalAlignment="Left"
-                                            VerticalAlignment="Top"
-                                            Classes="info">
-
-                                            <TextBlock
-                                                HorizontalAlignment="Center"
-                                                VerticalAlignment="Center"
-                                                FontSize="11"
-                                                FontWeight="Medium"
-                                                IsVisible="{Binding BaseModelName, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                                                Text="{Binding BaseModelName}" />
-                                        </controls:Card>
-                                        <controls:Card
-                                            Height="24"
-                                            Margin="4,8,0,0"
-                                            Padding="4"
-                                            HorizontalAlignment="Left"
-                                            VerticalAlignment="Top"
-                                            Classes="success"
-                                            IsVisible="{Binding HasStandardUpdate}">
-
-                                            <TextBlock
-                                                HorizontalAlignment="Center"
-                                                VerticalAlignment="Center"
-                                                FontSize="11"
-                                                FontWeight="Medium">
-                                                <Run Text="{x:Static lang:Resources.Label_UpdateAvailable}" />
-                                                <Run Text="{Binding CheckpointFile.LatestModelInfo.LatestVersionCreatedAt}" />
-                                            </TextBlock>
-                                        </controls:Card>
-                                        <controls:Card
-                                            Height="24"
-                                            Margin="4,8,0,0"
-                                            Padding="4"
-                                            HorizontalAlignment="Left"
-                                            VerticalAlignment="Top"
-                                            Classes="early-access"
-                                            IsVisible="{Binding HasEarlyAccessUpdateOnly}">
-
-                                            <TextBlock
-                                                HorizontalAlignment="Center"
-                                                VerticalAlignment="Center"
-                                                FontSize="11"
-                                                FontWeight="Medium">
-                                                <Run Text="{x:Static lang:Resources.Label_EarlyAccessUpdateAvailable}" />
-                                                <Run Text="{Binding CheckpointFile.LatestModelInfo.LatestVersionCreatedAt}" />
-                                            </TextBlock>
-                                        </controls:Card>
+                                    <WrapPanel Margin="8,8,44,0" Orientation="Horizontal">
+                                        <Border Classes="tag-chip" IsVisible="{Binding HasKnownModelType}">
+                                            <TextBlock Text="{Binding ModelType}" />
+                                        </Border>
+                                        <Border Classes="tag-chip" IsVisible="{Binding BaseModelName, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                                            <TextBlock Text="{Binding BaseModelName}" />
+                                        </Border>
+                                        <Border Classes="tag-chip success" IsVisible="{Binding HasStandardUpdate}">
+                                            <ToolTip.Tip>
+                                                <TextBlock>
+                                                    <Run Text="{x:Static lang:Resources.Label_UpdateAvailable}" />
+                                                    <Run Text="{Binding CheckpointFile.LatestModelInfo.LatestVersionCreatedAt}" />
+                                                </TextBlock>
+                                            </ToolTip.Tip>
+                                            <StackPanel>
+                                                <fluent:SymbolIcon
+                                                    Width="14"
+                                                    Height="14"
+                                                    Margin="1,1,0,0"
+                                                    FontSize="14"
+                                                    IconVariant="Filled"
+                                                    Symbol="CloudArrowUp" />
+                                                <TextBlock IsVisible="{Binding CheckpointFile.LatestModelInfo.LatestVersionCreatedAtShort, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" Text="{Binding CheckpointFile.LatestModelInfo.LatestVersionCreatedAtShort}" />
+                                            </StackPanel>
+                                        </Border>
+                                        <Border Classes="tag-chip caution" IsVisible="{Binding HasEarlyAccessUpdateOnly}">
+                                            <ToolTip.Tip>
+                                                <TextBlock>
+                                                    <Run Text="{x:Static lang:Resources.Label_EarlyAccessUpdateAvailable}" />
+                                                    <Run Text="{Binding CheckpointFile.LatestModelInfo.LatestVersionCreatedAt}" />
+                                                </TextBlock>
+                                            </ToolTip.Tip>
+                                            <StackPanel>
+                                                <ui:SymbolIcon Symbol="Clock" />
+                                                <TextBlock Text="{x:Static lang:Resources.Label_EarlyAccess}" />
+                                            </StackPanel>
+                                        </Border>
+                                        <ItemsControl ItemsSource="{Binding CategoryChips}">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <WrapPanel Orientation="Horizontal" />
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate DataType="{x:Type helpers:CategoryChip}">
+                                                    <Border
+                                                        Background="{Binding Background}"
+                                                        BorderBrush="{Binding Background}"
+                                                        Classes="tag-chip">
+                                                        <TextBlock Foreground="{Binding Foreground}" Text="{Binding Name}" />
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
                                     </WrapPanel>
                                 </LayoutTransformControl>
 
@@ -677,6 +769,10 @@
                                     <LayoutTransformControl.LayoutTransform>
                                         <ScaleTransform ScaleX="{Binding $parent[scroll:BetterScrollViewer].((viewModels:CheckpointsPageViewModel)DataContext).ModelCardBottomResizeFactor, FallbackValue=1, TargetNullValue=1}" ScaleY="{Binding $parent[scroll:BetterScrollViewer].((viewModels:CheckpointsPageViewModel)DataContext).ModelCardBottomResizeFactor, FallbackValue=1, TargetNullValue=1}" />
                                     </LayoutTransformControl.LayoutTransform>
+                                    <!--
+                                        The scrim is a fixed dark overlay in both themes, so its text
+                                        uses fixed light foregrounds rather than theme brushes
+                                    -->
                                     <Border
                                         Name="ModelCardBottom"
                                         Padding="8"
@@ -688,6 +784,7 @@
                                                 <TextBlock
                                                     MaxWidth="300"
                                                     HorizontalAlignment="Left"
+                                                    Foreground="#F5FFFFFF"
                                                     Text="{Binding CheckpointFile.DisplayModelName}"
                                                     TextWrapping="NoWrap"
                                                     ToolTip.Tip="{Binding CheckpointFile.DisplayModelName}" />
@@ -698,7 +795,7 @@
                                                     HorizontalAlignment="Left"
                                                     VerticalAlignment="Center"
                                                     FontSize="13"
-                                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                    Foreground="#C9FFFFFF"
                                                     Text="{Binding FileSize, Converter={x:Static converters:FileSizeConverters.HumanizeBinaryFileSizeConverter}}"
                                                     TextWrapping="NoWrap" />
                                             </Grid>
@@ -706,8 +803,8 @@
                                                 Margin="0,4"
                                                 HorizontalAlignment="Left"
                                                 FontSize="13"
-                                                Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                                                IsVisible="{Binding CheckpointFile.HasConnectedModel}"
+                                                Foreground="#A6FFFFFF"
+                                                IsVisible="{Binding CheckpointFile.DisplayModelVersion, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
                                                 Text="{Binding CheckpointFile.DisplayModelVersion, FallbackValue=''}"
                                                 TextWrapping="NoWrap" />
 
@@ -716,7 +813,7 @@
                                                 Margin="0,0,0,4"
                                                 HorizontalAlignment="Left"
                                                 FontSize="13"
-                                                Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                                Foreground="#A6FFFFFF"
                                                 Text="{Binding CheckpointFile.FileName}"
                                                 TextWrapping="NoWrap"
                                                 ToolTip.Tip="{Binding CheckpointFile.FileName}" />
@@ -725,7 +822,7 @@
                                                 MaxWidth="300"
                                                 HorizontalAlignment="Left"
                                                 FontSize="13"
-                                                Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                                Foreground="#A6FFFFFF"
                                                 IsVisible="{Binding CanShowTriggerWords}"
                                                 TextWrapping="NoWrap"
                                                 ToolTip.Tip="{Binding CheckpointFile.ConnectedModelInfo.TrainedWordsString}">
@@ -834,6 +931,7 @@
                         Classes="accent"
                         Command="{Binding SelectAllCommand}"
                         Content="{x:Static lang:Resources.Action_SelectAll}" />
+                    <Button Command="{Binding EditCategoriesCommand}" Content="{x:Static lang:Resources.Label_Categories}" />
                     <Rectangle
                         Width="2"
                         Margin="4,2"

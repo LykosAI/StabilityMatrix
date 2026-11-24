@@ -23,8 +23,7 @@ internal partial class FileOperationWrapper : IDisposable
     public FileOperationWrapper(IFileOperationProgressSink? callbackSink, IntPtr ownerHandle)
     {
         _callbackSink = callbackSink;
-        _fileOperation =
-            (IFileOperation?)Activator.CreateInstance(FileOperationType)
+        _fileOperation = (IFileOperation?)Activator.CreateInstance(FileOperationType)
             ?? throw new NullReferenceException("Failed to create FileOperation instance.");
 
         if (_callbackSink != null)
@@ -217,8 +216,7 @@ internal partial class FileOperationWrapper : IDisposable
     );
 
     private static readonly Guid ClsidFileOperation = new("3ad05575-8857-4850-9277-11b85bdb8e09");
-    private static readonly Type FileOperationType =
-        Type.GetTypeFromCLSID(ClsidFileOperation)
+    private static readonly Type FileOperationType = Type.GetTypeFromCLSID(ClsidFileOperation)
         ?? throw new NullReferenceException("Failed to get FileOperation type from CLSID");
     private static Guid _shellItemGuid = typeof(IShellItem).GUID;
 }

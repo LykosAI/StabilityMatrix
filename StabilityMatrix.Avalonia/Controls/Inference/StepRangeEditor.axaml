@@ -1,0 +1,68 @@
+﻿<Styles
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
+    xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
+    xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia">
+    <Design.PreviewWith>
+        <controls:StepRangeEditor
+            Width="300"
+            End="0.8"
+            Header="Control Steps"
+            Start="0.2" />
+    </Design.PreviewWith>
+
+    <Style Selector="controls|StepRangeEditor">
+        <Setter Property="Template">
+            <ControlTemplate>
+                <sg:SpacedGrid RowDefinitions="Auto,Auto" RowSpacing="0">
+                    <sg:SpacedGrid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" SharedSizeGroup="StepRangeStart" />
+                        <ColumnDefinition Width="Auto" SharedSizeGroup="StepRangeEnd" />
+                    </sg:SpacedGrid.ColumnDefinitions>
+                    <sg:SpacedGrid.Styles>
+                        <Style Selector="ui|NumberBox">
+                            <Setter Property="HorizontalAlignment" Value="Stretch" />
+                            <Setter Property="Minimum" Value="0" />
+                            <Setter Property="Maximum" Value="1" />
+                            <Setter Property="SimpleNumberFormat" Value="P0" />
+                            <Setter Property="SmallChange" Value="0.01" />
+                            <Setter Property="ValidationMode" Value="InvalidInputOverwritten" />
+                        </Style>
+                    </sg:SpacedGrid.Styles>
+
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        Text="{TemplateBinding Header}"
+                        TextAlignment="Left" />
+
+                    <ui:NumberBox
+                        x:Name="PART_StartBox"
+                        Grid.Column="1"
+                        Value="{TemplateBinding Start,
+                                                Mode=TwoWay}" />
+                    <ui:NumberBox
+                        x:Name="PART_EndBox"
+                        Grid.Column="2"
+                        Value="{TemplateBinding End,
+                                                Mode=TwoWay}" />
+
+                    <ui:RangeSlider
+                        Grid.Row="1"
+                        Grid.Column="0"
+                        Grid.ColumnSpan="3"
+                        Margin="0,4,0,0"
+                        Maximum="1"
+                        Minimum="0"
+                        RangeEnd="{TemplateBinding End,
+                                                   Mode=TwoWay}"
+                        RangeStart="{TemplateBinding Start,
+                                                     Mode=TwoWay}"
+                        ShowValueToolTip="False"
+                        StepFrequency="0.01" />
+                </sg:SpacedGrid>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+</Styles>

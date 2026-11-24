@@ -3,7 +3,10 @@
 /// <summary>
 /// Combination of the positive and negative conditioning connections.
 /// </summary>
-public record ConditioningConnections(ConditioningNodeConnection Positive, ConditioningNodeConnection Negative)
+public record ConditioningConnections(
+    ConditioningNodeConnection Positive,
+    ConditioningNodeConnection Negative
+)
 {
     // Implicit from tuple
     public static implicit operator ConditioningConnections(

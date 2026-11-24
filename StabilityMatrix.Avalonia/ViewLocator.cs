@@ -101,10 +101,7 @@ public class ViewLocator : IDataTemplate, INavigationPageFactory
     /// <inheritdoc />
     public Control? GetPage(Type srcType)
     {
-        if (
-            Attribute.GetCustomAttribute(srcType, typeof(ViewAttribute))
-            is not ViewAttribute viewAttr
-        )
+        if (Attribute.GetCustomAttribute(srcType, typeof(ViewAttribute)) is not ViewAttribute viewAttr)
         {
             throw new InvalidOperationException("View not found for " + srcType.FullName);
         }

@@ -16,13 +16,13 @@ public static class ThemeColors
 
     public static readonly SolidColorBrush BrilliantAzure = SolidColorBrush.Parse("#3990f6");
 
-    public static readonly SolidColorBrush CompletionSelectionBackgroundBrush =
-        SolidColorBrush.Parse("#2E436E");
-    public static readonly SolidColorBrush CompletionSelectionForegroundBrush =
-        SolidColorBrush.Parse("#5389F4");
-    public static readonly SolidColorBrush CompletionForegroundBrush = SolidColorBrush.Parse(
-        "#B4B8BF"
+    public static readonly SolidColorBrush CompletionSelectionBackgroundBrush = SolidColorBrush.Parse(
+        "#2E436E"
     );
+    public static readonly SolidColorBrush CompletionSelectionForegroundBrush = SolidColorBrush.Parse(
+        "#5389F4"
+    );
+    public static readonly SolidColorBrush CompletionForegroundBrush = SolidColorBrush.Parse("#B4B8BF");
 
     public static readonly SolidColorBrush EditorSelectionBrush = SolidColorBrush.Parse("#214283");
 }

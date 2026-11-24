@@ -7,5 +7,5 @@ public enum LaunchOptionType
 {
     Bool,
     String,
-    Int
+    Int,
 }

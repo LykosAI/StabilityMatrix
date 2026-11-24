@@ -11,12 +11,24 @@ namespace StabilityMatrix.ViewModels;
 public partial class SelectModelVersionDialogViewModel : ObservableObject
 {
     private readonly ISettingsManager settingsManager;
-    [ObservableProperty] private CivitModel civitModel;
-    [ObservableProperty] private BitmapImage previewImage;
-    [ObservableProperty] private ObservableCollection<CivitModelVersion> versions;
-    [ObservableProperty] private CivitModelVersion selectedVersion;
-    [ObservableProperty] private CivitFile selectedFile;
-    [ObservableProperty] private bool isImportEnabled;
+
+    [ObservableProperty]
+    private CivitModel civitModel;
+
+    [ObservableProperty]
+    private BitmapImage previewImage;
+
+    [ObservableProperty]
+    private ObservableCollection<CivitModelVersion> versions;
+
+    [ObservableProperty]
+    private CivitModelVersion selectedVersion;
+
+    [ObservableProperty]
+    private CivitFile selectedFile;
+
+    [ObservableProperty]
+    private bool isImportEnabled;
 
     public SelectModelVersionDialogViewModel(CivitModel civitModel, ISettingsManager settingsManager)
     {
@@ -26,31 +38,34 @@ public partial class SelectModelVersionDialogViewModel : ObservableObject
         SelectedVersion = Versions.First();
 
         var nsfwEnabled = settingsManager.Settings.ModelBrowserNsfwEnabled;
-        var firstImageUrl = Versions.FirstOrDefault()?.Images
-            ?.FirstOrDefault(img => nsfwEnabled || img.Nsfw == "None")?.Url;
-        
-        PreviewImage = firstImageUrl != null
-            ? new BitmapImage(new Uri(firstImageUrl))
-            : new BitmapImage(
-                new Uri("pack://application:,,,/StabilityMatrix;component/Assets/noimage.png"));
+        var firstImageUrl = Versions
+            .FirstOrDefault()
+            ?.Images?.FirstOrDefault(img => nsfwEnabled || img.Nsfw == "None")
+            ?.Url;
+
+        PreviewImage =
+            firstImageUrl != null
+                ? new BitmapImage(new Uri(firstImageUrl))
+                : new BitmapImage(
+                    new Uri("pack://application:,,,/StabilityMatrix;component/Assets/noimage.png")
+                );
     }
 
     partial void OnSelectedVersionChanged(CivitModelVersion value)
     {
         var nsfwEnabled = settingsManager.Settings.ModelBrowserNsfwEnabled;
-        var firstImageUrl = value.Images?.FirstOrDefault(img => nsfwEnabled || img.Nsfw == "None")
-            ?.Url;
-        
-        PreviewImage = firstImageUrl != null
-            ? new BitmapImage(new Uri(firstImageUrl))
-            : new BitmapImage(
-                new Uri("pack://application:,,,/StabilityMatrix;component/Assets/noimage.png"));
+        var firstImageUrl = value.Images?.FirstOrDefault(img => nsfwEnabled || img.Nsfw == "None")?.Url;
+
+        PreviewImage =
+            firstImageUrl != null
+                ? new BitmapImage(new Uri(firstImageUrl))
+                : new BitmapImage(
+                    new Uri("pack://application:,,,/StabilityMatrix;component/Assets/noimage.png")
+                );
     }
 
     partial void OnSelectedFileChanged(CivitFile value)
     {
         IsImportEnabled = value != null;
     }
-    
-    
 }

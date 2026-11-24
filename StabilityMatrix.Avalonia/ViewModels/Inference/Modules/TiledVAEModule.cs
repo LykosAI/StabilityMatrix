@@ -44,7 +44,7 @@ public class TiledVAEModule : ModuleBase
                     TileSize = card.TileSize,
                     Overlap = card.Overlap,
                     TemporalSize = card.TemporalSize,
-                    TemporalOverlap = card.TemporalOverlap
+                    TemporalOverlap = card.TemporalOverlap,
                 }
             );
 

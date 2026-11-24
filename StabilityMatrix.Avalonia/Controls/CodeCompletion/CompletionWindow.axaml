@@ -1,9 +1,10 @@
-﻿<Styles xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:controls="using:StabilityMatrix.Avalonia.Controls.CodeCompletion"
-        xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia">
-    
-    <!-- Style used for tooltip next to completion list box.  -->
+﻿<Styles
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:StabilityMatrix.Avalonia.Controls.CodeCompletion"
+    xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia">
+
+    <!--  Style used for tooltip next to completion list box.  -->
     <!--<Style Selector="ContentControl.ToolTip">
         <Setter Property="BorderThickness" Value="{DynamicResource CompletionToolTipBorderThickness}" />
         <Setter Property="BorderBrush" Value="{DynamicResource CompletionToolTipBorderBrush}" />
@@ -12,7 +13,7 @@
         <Setter Property="Padding" Value="4,2" />
     </Style>-->
 
-    
+
     <!--<Style Selector="controls|CompletionWindow">
         ~1~<Style Selector="^ /template/ ContentControl.ToolTip">
             <Setter Property="BorderThickness" Value="{DynamicResource CompletionToolTipBorderThickness}" />
@@ -28,7 +29,7 @@
             </ControlTemplate>
         </Setter>@1@
     </Style>-->
-    
+
     <!--<Style Selector="controls|CompletionWindow">
         <Setter Property="TransparencyLevelHint" Value="Transparent" />
         <Setter Property="Background" Value="{x:Null}" />

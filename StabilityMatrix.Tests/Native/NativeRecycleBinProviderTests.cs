@@ -106,8 +106,8 @@ public class NativeRecycleBinProviderTests
     {
         var targetDirectories = Enumerable
             .Range(0, 2)
-            .Select(
-                i => Path.Combine(tempFolder, $"{nameof(RecycleDirectories)}_{i}_{Guid.NewGuid().ToString()}")
+            .Select(i =>
+                Path.Combine(tempFolder, $"{nameof(RecycleDirectories)}_{i}_{Guid.NewGuid().ToString()}")
             )
             .ToArray();
 

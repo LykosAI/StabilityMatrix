@@ -5,11 +5,8 @@
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:dock="clr-namespace:StabilityMatrix.Avalonia.Controls.Dock"
-    xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
-    xmlns:markupExtensions="clr-namespace:StabilityMatrix.Avalonia.MarkupExtensions"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
-    xmlns:modelsInference="clr-namespace:StabilityMatrix.Avalonia.Models.Inference"
     xmlns:vmInference="using:StabilityMatrix.Avalonia.ViewModels.Inference"
     d:DataContext="{x:Static mocks:DesignData.InferenceTextToImageViewModel}"
     d:DesignHeight="800"
@@ -89,7 +86,7 @@
                         <ToolDock
                             x:Name="GeneratePane"
                             Alignment="Left"
-                            Id="PromptPane"
+                            Id="GeneratePane"
                             Proportion="0.1">
                             <Tool
                                 x:Name="GenerateTool"
@@ -99,73 +96,12 @@
                                 Id="GenerateTool">
                                 <!--  Generate Buttons  -->
 
-                                <controls:Card
+                                <controls:GenerateButtonBar
                                     Margin="0,6,0,0"
-                                    Padding="8"
                                     x:CompileBindings="False"
-                                    DataContext="{Binding ElementName=Dock, Path=DataContext}">
-                                    <Grid
-                                        HorizontalAlignment="Center"
-                                        ColumnDefinitions="Auto,*,Auto"
-                                        RowDefinitions="Auto,*">
-                                        <Grid.Styles>
-                                            <Style Selector="Button">
-                                                <Setter Property="MinHeight" Value="32" />
-                                            </Style>
-                                        </Grid.Styles>
-                                        <Button
-                                            Grid.Row="1"
-                                            Margin="4,0"
-                                            Padding="12,8"
-                                            HorizontalAlignment="Left"
-                                            icons:Attached.Icon="fa-solid fa-magnifying-glass-plus"
-                                            Classes="transparent"
-                                            Command="{Binding GenerateImageCommand}"
-                                            CommandParameter="{x:Static modelsInference:GenerateFlags.HiresFixAndUseCurrentSeed}"
-                                            ToolTip.Tip="Generate with Hires Scaling" />
-
-                                        <!--  Main Generate Button  -->
-                                        <Button
-                                            x:Name="GenerateButton"
-                                            Grid.Row="1"
-                                            Grid.Column="1"
-                                            Width="130"
-                                            HorizontalAlignment="Stretch"
-                                            Classes="accent"
-                                            Command="{Binding GenerateImageCommand}"
-                                            CommandParameter="{x:Static modelsInference:GenerateFlags.None}"
-                                            HotKey="{markupExtensions:PlatformGesture Ctrl+Enter}"
-                                            IsVisible="{Binding !GenerateImageCommand.CanBeCanceled}"
-                                            ToolTip.Tip="{Binding $self.HotKey}">
-                                            <Panel>
-                                                <TextBlock IsVisible="{Binding #GenerateButton.IsEnabled}" Text="Generate Image" />
-                                                <controls:ProgressRing IsIndeterminate="True" IsVisible="{Binding !#GenerateButton.IsEnabled}" />
-                                            </Panel>
-                                        </Button>
-                                        <!--  Cancel Button  -->
-                                        <Button
-                                            x:Name="CancelButton"
-                                            Grid.Row="1"
-                                            Grid.Column="1"
-                                            Width="130"
-                                            HorizontalAlignment="Stretch"
-                                            icons:Attached.Icon="fa-solid fa-stop"
-                                            Command="{Binding GenerateImageCancelCommand}"
-                                            IsVisible="{Binding GenerateImageCommand.CanBeCanceled}" />
-
-                                        <Button
-                                            Grid.Row="1"
-                                            Grid.Column="2"
-                                            Margin="4,0"
-                                            Padding="12,8"
-                                            HorizontalAlignment="Left"
-                                            icons:Attached.Icon="fa-solid fa-repeat"
-                                            Classes="transparent"
-                                            Command="{Binding GenerateImageCommand}"
-                                            CommandParameter="{x:Static modelsInference:GenerateFlags.UseCurrentSeed}"
-                                            ToolTip.Tip="Generate with current seed" />
-                                    </Grid>
-                                </controls:Card>
+                                    DataContext="{Binding ElementName=Dock, Path=DataContext}"
+                                    ShowCurrentSeedButton="True"
+                                    ShowHiresFixButton="True" />
                             </Tool>
                         </ToolDock>
                     </ProportionalDock>

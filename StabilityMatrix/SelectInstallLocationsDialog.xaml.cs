@@ -7,8 +7,11 @@ namespace StabilityMatrix;
 
 public partial class SelectInstallLocationsDialog : ContentDialog
 {
-    public SelectInstallLocationsDialog(IContentDialogService dialogService, SelectInstallLocationsViewModel viewModel) : base(
-        dialogService.GetContentPresenter())
+    public SelectInstallLocationsDialog(
+        IContentDialogService dialogService,
+        SelectInstallLocationsViewModel viewModel
+    )
+        : base(dialogService.GetContentPresenter())
     {
         InitializeComponent();
         DataContext = viewModel;
@@ -21,6 +24,6 @@ public partial class SelectInstallLocationsDialog : ContentDialog
 
     private void SelectInstallLocationsDialog_OnLoaded(object sender, RoutedEventArgs e)
     {
-        ((SelectInstallLocationsViewModel) DataContext).OnLoaded();
+        ((SelectInstallLocationsViewModel)DataContext).OnLoaded();
     }
 }

@@ -20,8 +20,7 @@ public sealed class OpenModelDbBrowserCardViewModel(OpenModelDbManager openModel
     public Uri? ThumbnailUri =>
         Model?.Thumbnail?.GetImageAbsoluteUris().FirstOrDefault()
         ?? Model
-            ?.Images
-            ?.Select(image => image.GetImageAbsoluteUris().FirstOrDefault())
+            ?.Images?.Select(image => image.GetImageAbsoluteUris().FirstOrDefault())
             .WhereNotNull()
             .FirstOrDefault()
         ?? Assets.NoImage;

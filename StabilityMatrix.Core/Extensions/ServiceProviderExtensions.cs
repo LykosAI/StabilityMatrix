@@ -15,8 +15,7 @@ public static class ServiceProviderExtensions
     public static List<object> GetDisposables(this ServiceProvider serviceProvider)
     {
         // ServiceProvider: internal ServiceProviderEngineScope Root { get; }
-        var root =
-            serviceProvider.GetProtectedProperty("Root")
+        var root = serviceProvider.GetProtectedProperty("Root")
             ?? throw new InvalidOperationException("Could not get ServiceProviderEngineScope Root.");
 
         // ServiceProviderEngineScope: private List<object>? _disposables

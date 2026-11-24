@@ -17,7 +17,7 @@ public class PyIOStream
         TextBuilder = builder ?? new StringBuilder();
         TextWriter = new StringWriter(TextBuilder);
     }
-    
+
     public event EventHandler<string>? OnWriteUpdate;
 
     public void ClearBuffer()

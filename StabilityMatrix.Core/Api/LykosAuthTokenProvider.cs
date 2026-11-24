@@ -41,7 +41,7 @@ public class LykosAuthTokenProvider(
                 new OpenIddictClientModels.RefreshTokenAuthenticationRequest
                 {
                     ProviderName = OpenIdClientConstants.LykosAccount.ProviderName,
-                    RefreshToken = secrets.LykosAccountV2.RefreshToken
+                    RefreshToken = secrets.LykosAccountV2.RefreshToken,
                 }
             )
             .ConfigureAwait(false);
@@ -57,7 +57,7 @@ public class LykosAuthTokenProvider(
                 result.AccessToken,
                 result.RefreshToken,
                 result.IdentityToken
-            )
+            ),
         };
 
         await secretsManager.SaveAsync(secrets).ConfigureAwait(false);

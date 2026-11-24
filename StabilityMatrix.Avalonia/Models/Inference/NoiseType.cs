@@ -6,5 +6,5 @@ public enum NoiseType
     Random,
     Greyscale,
     Pink,
-    Brown
+    Brown,
 }

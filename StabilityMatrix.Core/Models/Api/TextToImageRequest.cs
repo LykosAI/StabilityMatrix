@@ -2,7 +2,6 @@
 
 namespace StabilityMatrix.Core.Models.Api;
 
-
 public class TextToImageRequest
 {
     [JsonPropertyName("enable_hr")]

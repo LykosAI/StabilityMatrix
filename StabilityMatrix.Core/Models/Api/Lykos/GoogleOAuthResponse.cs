@@ -21,7 +21,7 @@ public class GoogleOAuthResponse
             Code = queryCollection.Get("code"),
             State = queryCollection.Get("state"),
             Nonce = queryCollection.Get("nonce"),
-            Error = queryCollection.Get("error")
+            Error = queryCollection.Get("error"),
         };
     }
 }

@@ -5,14 +5,11 @@ namespace StabilityMatrix.Core.Helper;
 /// </summary>
 public class ReaderWriterLockAdvanced : ReaderWriterLockSlim
 {
-    public ReaderWriterLockAdvanced()
-    {
-    }
-    
-    public ReaderWriterLockAdvanced(LockRecursionPolicy recursionPolicy) : base(recursionPolicy)
-    {
-    }
-    
+    public ReaderWriterLockAdvanced() { }
+
+    public ReaderWriterLockAdvanced(LockRecursionPolicy recursionPolicy)
+        : base(recursionPolicy) { }
+
     public DisposableLock EnterReadContext(TimeSpan timeout = default)
     {
         if (!TryEnterReadLock(timeout))
@@ -21,7 +18,7 @@ public class ReaderWriterLockAdvanced : ReaderWriterLockSlim
         }
         return new DisposableLock(this, LockType.Read);
     }
-    
+
     public DisposableLock EnterWriteContext(TimeSpan timeout = default)
     {
         if (!TryEnterWriteLock(timeout))
@@ -30,7 +27,7 @@ public class ReaderWriterLockAdvanced : ReaderWriterLockSlim
         }
         return new DisposableLock(this, LockType.Write);
     }
-    
+
     public DisposableLock EnterUpgradeableReadContext(TimeSpan timeout = default)
     {
         if (!TryEnterUpgradeableReadLock(timeout))
@@ -48,7 +45,7 @@ public class DisposableLock : IDisposable
 {
     private readonly ReaderWriterLockAdvanced readerWriterLock;
     private readonly LockType lockType;
-    
+
     public DisposableLock(ReaderWriterLockAdvanced @lock, LockType lockType)
     {
         readerWriterLock = @lock;
@@ -88,5 +85,5 @@ public enum LockType
 {
     Read,
     Write,
-    UpgradeableRead
+    UpgradeableRead,
 }

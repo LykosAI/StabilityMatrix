@@ -145,13 +145,14 @@ public class TestBase
     internal static IEnumerable<BetterContentDialog> EnumerateWindowDialogs(Visual window)
     {
         return window
-                .FindDescendantOfType<VisualLayerManager>()
-                ?.FindDescendantOfType<OverlayLayer>()
-                ?.FindDescendantOfType<DialogHost>()
-                ?.FindDescendantOfType<LayoutTransformControl>()
-                ?.FindDescendantOfType<VisualLayerManager>()
-                ?.GetVisualDescendants()
-                .OfType<BetterContentDialog>() ?? Enumerable.Empty<BetterContentDialog>();
+            .FindDescendantOfType<VisualLayerManager>()
+            ?.FindDescendantOfType<OverlayLayer>()
+            ?.FindDescendantOfType<DialogHost>()
+            ?.FindDescendantOfType<LayoutTransformControl>()
+            ?.FindDescendantOfType<VisualLayerManager>()
+            ?.GetVisualDescendants()
+            .OfType<BetterContentDialog>()
+            ?? Enumerable.Empty<BetterContentDialog>();
     }
 
     internal async Task<(BetterContentDialog, T)> WaitForDialog<T>(Visual window)

@@ -66,6 +66,8 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
 
     private readonly SourceCache<HybridModelFile, string> vaeModelsSource = new(p => p.GetId());
 
+    private readonly SourceCache<HybridModelFile, string> downloadableVaeModelsSource = new(p => p.GetId());
+
     private readonly SourceCache<HybridModelFile, string> vaeModelsDefaults = new(p => p.GetId());
 
     public IObservableCollection<HybridModelFile> VaeModels { get; } =
@@ -153,6 +155,14 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
     );
 
     public IObservableCollection<HybridModelFile> ClipVisionModels { get; } =
+        new ObservableCollectionExtended<HybridModelFile>();
+
+    private readonly SourceCache<HybridModelFile, string> ipAdapterModelsSource = new(p => p.GetId());
+    private readonly SourceCache<HybridModelFile, string> downloadableIpAdapterModelsSource = new(p =>
+        p.GetId()
+    );
+
+    public IObservableCollection<HybridModelFile> IpAdapterModels { get; } =
         new ObservableCollectionExtended<HybridModelFile>();
 
     public InferenceClientManager(
@@ -266,29 +276,42 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             .ObserveOn(SynchronizationContext.Current)
             .Subscribe();
 
+        // Type-first sort (matching ControlNet/SAM/etc.) groups installed files above the
+        // cloud-download entries instead of interleaving them alphabetically.
         clipModelsSource
             .Connect()
             .Or(downloadableClipModelsSource.Connect())
-            .SortBy(
-                f => f.ShortDisplayName,
-                SortDirection.Ascending,
-                SortOptimisations.ComparesImmutableValuesOnly
-            )
             .DeferUntilLoaded()
-            .Bind(ClipModels)
+            .SortAndBind(
+                ClipModels,
+                SortExpressionComparer<HybridModelFile>
+                    .Ascending(f => f.Type)
+                    .ThenByAscending(f => f.ShortDisplayName)
+            )
             .ObserveOn(SynchronizationContext.Current)
             .Subscribe();
 
         clipVisionModelsSource
             .Connect()
             .Or(downloadableClipVisionModelsSource.Connect())
-            .SortBy(
-                f => f.ShortDisplayName,
-                SortDirection.Ascending,
-                SortOptimisations.ComparesImmutableValuesOnly
-            )
             .DeferUntilLoaded()
-            .Bind(ClipVisionModels)
+            .SortAndBind(
+                ClipVisionModels,
+                SortExpressionComparer<HybridModelFile>
+                    .Ascending(f => f.Type)
+                    .ThenByAscending(f => f.ShortDisplayName)
+            )
+            .ObserveOn(SynchronizationContext.Current)
+            .Subscribe();
+
+        ipAdapterModelsSource
+            .Connect()
+            .Or(downloadableIpAdapterModelsSource.Connect())
+            .DeferUntilLoaded()
+            .SortAndBind(
+                IpAdapterModels,
+                SortExpressionComparer<HybridModelFile>.Ascending(f => f.ShortDisplayName)
+            )
             .ObserveOn(SynchronizationContext.Current)
             .Subscribe();
 
@@ -297,7 +320,14 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         vaeModelsDefaults
             .Connect()
             .Or(vaeModelsSource.Connect())
-            .Bind(VaeModels)
+            .Or(downloadableVaeModelsSource.Connect())
+            .SortAndBind(
+                VaeModels,
+                // Keep the "Default" entry pinned to the top, then sort the rest alphabetically.
+                SortExpressionComparer<HybridModelFile>
+                    .Descending(f => f.IsDefault)
+                    .ThenByAscending(f => f.ShortDisplayName)
+            )
             .ObserveOn(SynchronizationContext.Current)
             .Subscribe();
 
@@ -513,17 +543,35 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         // Get Unet model names from UNETLoader node
         if (await Client.GetNodeOptionNamesAsync("UNETLoader", "unet_name") is { } unetModelNames)
         {
-            var unetModels = unetModelNames.Select(HybridModelFile.FromRemote);
+            var remoteNames = unetModelNames.ToHashSet();
 
             if (
                 await Client.GetRequiredNodeOptionNamesFromOptionalNodeAsync("UnetLoaderGGUF", "unet_name") is
                 { } ggufModelNames
             )
             {
-                unetModels = unetModels.Concat(ggufModelNames.Select(HybridModelFile.FromRemote));
+                remoteNames.UnionWith(ggufModelNames);
             }
 
-            unetModelsSource.AddOrUpdate(unetModels, HybridModelFile.RemoteLocalComparer);
+            // Prefer local index entries, and keep local files the server didn't report: core ComfyUI
+            // never lists .gguf models, and keeping them lets picking one prompt to install the GGUF
+            // extension.
+            var localModels = modelIndexService
+                .FindByModelType(SharedFolderType.DiffusionModels)
+                .Select(HybridModelFile.FromLocal)
+                .ToList();
+
+            var localIds = localModels.Select(m => m.GetId()).ToHashSet();
+
+            IEnumerable<HybridModelFile> models =
+            [
+                .. localModels,
+                .. remoteNames
+                    .Select(HybridModelFile.FromRemote)
+                    .Where(remote => !localIds.Contains(remote.GetId())),
+            ];
+
+            unetModelsSource.EditDiff(models, HybridModelFile.RemoteLocalComparer);
         }
 
         // Get CLIP model names from DualCLIPLoader node
@@ -578,26 +626,45 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
     }
 
     /// <summary>
+    /// Applies the local model index (or built-in defaults) to a list the server also fills.
+    /// While connected, adds new local items and replaces entries whose local version differs (a remote entry
+    /// that is now indexed, or changed metadata), but removes nothing: <see cref="LoadSharedPropertiesAsync"/>
+    /// rebuilds the full list from the server, and a local-only diff here would briefly drop server-only
+    /// items, clearing any ComboBox selection on one of them.
+    /// </summary>
+    private void ResetToLocal<T>(
+        SourceCache<T, string> source,
+        IEnumerable<T> localItems,
+        IEqualityComparer<T> comparer
+    )
+        where T : notnull
+    {
+        if (!IsConnected)
+        {
+            source.EditDiff(localItems, comparer);
+            return;
+        }
+
+        source.AddOrUpdate(localItems, comparer);
+    }
+
+    /// <summary>
     /// Clears shared properties and sets them to local defaults
     /// </summary>
     protected void ResetSharedProperties()
     {
-        // Load local models.
-        // When connected, the checkpoint list is refreshed as a single combined (local + remote)
-        // diff in LoadSharedPropertiesAsync, so skip the local-only reset here to avoid transiently
-        // removing remote-only models (which resets the scroll position of an open model dropdown).
-        if (!IsConnected)
-        {
-            modelsSource.EditDiff(
-                modelIndexService
-                    .FindByModelType(SharedFolderType.StableDiffusion)
-                    .Select(HybridModelFile.FromLocal),
-                HybridModelFile.Comparer
-            );
-        }
+        // Load local models
+        ResetToLocal(
+            modelsSource,
+            modelIndexService
+                .FindByModelType(SharedFolderType.StableDiffusion)
+                .Select(HybridModelFile.FromLocal),
+            HybridModelFile.Comparer
+        );
 
         // Load local control net models
-        controlNetModelsSource.EditDiff(
+        ResetToLocal(
+            controlNetModelsSource,
             modelIndexService.FindByModelType(SharedFolderType.ControlNet).Select(HybridModelFile.FromLocal),
             HybridModelFile.Comparer
         );
@@ -609,7 +676,8 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         downloadableControlNetModelsSource.EditDiff(downloadableControlNets, HybridModelFile.Comparer);
 
         // Load local Lora / LyCORIS models
-        loraModelsSource.EditDiff(
+        ResetToLocal(
+            loraModelsSource,
             modelIndexService
                 .FindByModelType(SharedFolderType.Lora | SharedFolderType.LyCORIS)
                 .Select(HybridModelFile.FromLocal),
@@ -638,6 +706,11 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             HybridModelFile.Comparer
         );
 
+        var downloadableVaeModels = RemoteModels.VaeModelFiles.Where(u =>
+            !vaeModelsSource.Lookup(u.GetId()).HasValue
+        );
+        downloadableVaeModelsSource.EditDiff(downloadableVaeModels, HybridModelFile.Comparer);
+
         // Load Ultralytics models
         IEnumerable<HybridModelFile> ultralyticsModels =
         [
@@ -646,7 +719,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
                 .FindByModelType(SharedFolderType.Ultralytics)
                 .Select(HybridModelFile.FromLocal),
         ];
-        ultralyticsModelsSource.EditDiff(ultralyticsModels, HybridModelFile.Comparer);
+        ResetToLocal(ultralyticsModelsSource, ultralyticsModels, HybridModelFile.Comparer);
 
         var downloadableUltralyticsModels = RemoteModels.UltralyticsModelFiles.Where(u =>
             !ultralyticsModelsSource.Lookup(u.GetId()).HasValue
@@ -659,21 +732,23 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             HybridModelFile.None,
             .. modelIndexService.FindByModelType(SharedFolderType.Sams).Select(HybridModelFile.FromLocal),
         ];
-        samModelsSource.EditDiff(samModels, HybridModelFile.Comparer);
+        ResetToLocal(samModelsSource, samModels, HybridModelFile.Comparer);
 
         var downloadableSamModels = RemoteModels.SamModelFiles.Where(u =>
             !samModelsSource.Lookup(u.GetId()).HasValue
         );
         downloadableSamModelsSource.EditDiff(downloadableSamModels, HybridModelFile.Comparer);
 
-        unetModelsSource.EditDiff(
+        ResetToLocal(
+            unetModelsSource,
             modelIndexService
                 .FindByModelType(SharedFolderType.DiffusionModels)
                 .Select(HybridModelFile.FromLocal),
             HybridModelFile.Comparer
         );
 
-        clipModelsSource.EditDiff(
+        ResetToLocal(
+            clipModelsSource,
             modelIndexService
                 .FindByModelType(SharedFolderType.TextEncoders)
                 .Select(HybridModelFile.FromLocal),
@@ -685,7 +760,8 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         );
         downloadableClipModelsSource.EditDiff(downloadableClipModels, HybridModelFile.Comparer);
 
-        clipVisionModelsSource.EditDiff(
+        ResetToLocal(
+            clipVisionModelsSource,
             modelIndexService.FindByModelType(SharedFolderType.ClipVision).Select(HybridModelFile.FromLocal),
             HybridModelFile.Comparer
         );
@@ -695,20 +771,27 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         );
         downloadableClipVisionModelsSource.EditDiff(downloadableClipVisionModels, HybridModelFile.Comparer);
 
-        // When connected, skip resetting samplers/schedulers to defaults only.
-        // EditDiff would remove server-only items (e.g. custom samplers from extensions),
-        // causing the ComboBox to clear its selection before LoadSharedPropertiesAsync
-        // re-fetches the full list from the server.
-        if (!IsConnected)
-        {
-            samplersSource.EditDiff(ComfySampler.Defaults, ComfySampler.Comparer);
-            schedulersSource.EditDiff(ComfyScheduler.Defaults, ComfyScheduler.Comparer);
-        }
+        ipAdapterModelsSource.EditDiff(
+            modelIndexService
+                .FindByModelType(
+                    SharedFolderType.IpAdapter | SharedFolderType.IpAdapters15 | SharedFolderType.IpAdaptersXl
+                )
+                .Select(HybridModelFile.FromLocal),
+            HybridModelFile.Comparer
+        );
 
-        latentUpscalersSource.EditDiff(ComfyUpscaler.Defaults, ComfyUpscaler.Comparer);
+        var downloadableIpAdapterModels = RemoteModels.IpAdapterModelFiles.Where(u =>
+            !ipAdapterModelsSource.Lookup(u.GetId()).HasValue
+        );
+        downloadableIpAdapterModelsSource.EditDiff(downloadableIpAdapterModels, HybridModelFile.Comparer);
+
+        ResetToLocal(samplersSource, ComfySampler.Defaults, ComfySampler.Comparer);
+        ResetToLocal(schedulersSource, ComfyScheduler.Defaults, ComfyScheduler.Comparer);
+        ResetToLocal(latentUpscalersSource, ComfyUpscaler.Defaults, ComfyUpscaler.Comparer);
 
         // Load Upscalers
-        modelUpscalersSource.EditDiff(
+        ResetToLocal(
+            modelUpscalersSource,
             modelIndexService
                 .FindByModelType(
                     SharedFolderType.ESRGAN | SharedFolderType.RealESRGAN | SharedFolderType.SwinIR
@@ -840,7 +923,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
     }
 
     [MemberNotNull(nameof(Client))]
-    private async Task ConnectAsyncImpl(
+    internal async Task ConnectAsyncImpl(
         Uri uri,
         PackagePair? localServerPackage = null,
         CancellationToken cancellationToken = default

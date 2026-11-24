@@ -122,8 +122,8 @@ public partial class BetterAsyncImage : TemplatedControlBase
 
         var uri = Source;
 
-        // Read styled property on the UI thread before dispatching to the background decode.
-        var decodeWidth = DecodeWidth;
+        // Read on the UI thread before dispatching to the background decode.
+        var decodeWidth = GetDecodePixelWidth();
 
         if (!uri.IsAbsoluteUri)
         {
@@ -157,7 +157,9 @@ public partial class BetterAsyncImage : TemplatedControlBase
                         if (!IsCacheEnabled)
                         {
                             return decodeWidth > 0
-                                ? SkiaExtensions.DecodeFileToAvaloniaImageScaled(uri.LocalPath, decodeWidth)
+                                ? LocalThumbnailCache
+                                    .Default.Decode(uri.LocalPath, decodeWidth)
+                                    .ToAvaloniaImage()
                                 : new Bitmap(uri.LocalPath);
                         }
 
@@ -231,6 +233,22 @@ public partial class BetterAsyncImage : TemplatedControlBase
 
             RaiseEvent(new RoutedEventArgs(OpenedEvent));
         }
+    }
+
+    /// <summary>
+    /// <see cref="DecodeWidth"/> in device pixels for the window this control is shown in.
+    /// </summary>
+    private int GetDecodePixelWidth()
+    {
+        var decodeWidth = DecodeWidth;
+        if (decodeWidth <= 0)
+        {
+            return decodeWidth;
+        }
+
+        var scaling = TopLevel.GetTopLevel(this)?.RenderScaling ?? 1.0;
+
+        return (int)Math.Ceiling(decodeWidth * scaling);
     }
 
     private async Task<IImage?> LoadImageAsync(Uri url, int decodeWidth, CancellationToken cancellationToken)

@@ -84,6 +84,7 @@
                             Width="300"
                             Height="300"
                             CornerRadius="8"
+                            DecodeWidth="450"
                             Source="{Binding ThumbnailUrl}"
                             Stretch="UniformToFill" />
                         <Border

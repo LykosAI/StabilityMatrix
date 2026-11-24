@@ -39,6 +39,8 @@ public class UnixPrerequisiteHelper(
     private const string UvLinuxDownloadUrl =
         "https://github.com/astral-sh/uv/releases/download/0.12.5/uv-x86_64-unknown-linux-gnu.tar.gz";
 
+    private const string NodeVersion = "24.22.1";
+
     private DirectoryPath HomeDir => settingsManager.LibraryDir;
     private DirectoryPath AssetsDir => HomeDir.JoinDir("Assets");
 
@@ -524,7 +526,7 @@ public class UnixPrerequisiteHelper(
             try
             {
                 var result = await RunNode("-v");
-                if (result.Contains("20.19.3"))
+                if (result.Contains(NodeVersion))
                 {
                     Logger.Debug("Node.js already installed at {NodeExistsPath}", NodeDir);
                     return;
@@ -542,8 +544,8 @@ public class UnixPrerequisiteHelper(
         Logger.Info("Downloading node");
 
         var downloadUrl = Compat.IsMacOS
-            ? "https://nodejs.org/dist/v20.19.3/node-v20.19.3-darwin-arm64.tar.gz"
-            : "https://nodejs.org/dist/v20.19.3/node-v20.19.3-linux-x64.tar.gz";
+            ? $"https://nodejs.org/dist/v{NodeVersion}/node-v{NodeVersion}-darwin-arm64.tar.gz"
+            : $"https://nodejs.org/dist/v{NodeVersion}/node-v{NodeVersion}-linux-x64.tar.gz";
 
         var nodeDownloadPath = AssetsDir.JoinFile(Path.GetFileName(downloadUrl));
 
@@ -563,8 +565,8 @@ public class UnixPrerequisiteHelper(
         await TarGZipExtractor.ExtractAsync(nodeDownloadPath, AssetsDir);
 
         var nodeDir = Compat.IsMacOS
-            ? AssetsDir.JoinDir("node-v20.19.3-darwin-arm64")
-            : AssetsDir.JoinDir("node-v20.19.3-linux-x64");
+            ? AssetsDir.JoinDir($"node-v{NodeVersion}-darwin-arm64")
+            : AssetsDir.JoinDir($"node-v{NodeVersion}-linux-x64");
         Directory.Move(nodeDir, NodeDir);
 
         progress?.Report(
@@ -812,8 +814,7 @@ public class UnixPrerequisiteHelper(
 
     public string? GetGfxArchFromAmdGpuName(GpuInfo? gpu = null)
     {
-        gpu ??=
-            settingsManager.Settings.PreferredGpu
+        gpu ??= settingsManager.Settings.PreferredGpu
             ?? HardwareHelper.IterGpuInfo().FirstOrDefault(x => x is { Name: not null, IsAmd: true });
 
         if (gpu?.Name is null || !gpu.IsAmd)

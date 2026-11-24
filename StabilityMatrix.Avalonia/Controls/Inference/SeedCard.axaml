@@ -1,20 +1,21 @@
-﻿<Styles xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
-        xmlns:vmInference="using:StabilityMatrix.Avalonia.ViewModels.Inference"
-        xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
-        x:DataType="vmInference:SeedCardViewModel"
-        xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
-        xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages">
+﻿<Styles
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
+    xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
+    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+    xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:vmInference="using:StabilityMatrix.Avalonia.ViewModels.Inference"
+    x:DataType="vmInference:SeedCardViewModel">
     <Design.PreviewWith>
         <Grid MinWidth="400">
-            <controls:SeedCard DataContext="{x:Static mocks:DesignData.SeedCardViewModel}"/>
+            <controls:SeedCard DataContext="{x:Static mocks:DesignData.SeedCardViewModel}" />
         </Grid>
     </Design.PreviewWith>
 
     <Style Selector="controls|SeedCard">
-        <!-- Set Defaults -->
-        <Setter Property="HorizontalAlignment" Value="Stretch"/>
+        <!--  Set Defaults  -->
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
         <Setter Property="Template">
             <ControlTemplate>
                 <controls:Card Padding="8" HorizontalAlignment="{TemplateBinding HorizontalAlignment}">
@@ -26,36 +27,37 @@
                                 VerticalAlignment="Center"
                                 Text="{x:Static lang:Resources.Label_Seed}" />
                             <NumericUpDown
-                                Grid.Column="1"
                                 Name="SeedNumberBox"
-                                ShowButtonSpinner="False"
-                                IsReadOnly="{Binding !#RandomizeToggleButton.IsChecked}"
+                                Grid.Column="1"
+                                HorizontalAlignment="Stretch"
                                 FormatString="F0"
+                                IsReadOnly="{Binding !#RandomizeToggleButton.IsChecked}"
                                 ParsingNumberStyle="Integer"
-                                Value="{Binding Seed, Mode=TwoWay}"
-                                HorizontalAlignment="Stretch" />
-                            <RepeatButton 
-                                Grid.Column="2"
+                                ShowButtonSpinner="False"
+                                Value="{Binding Seed, Mode=TwoWay}" />
+                            <RepeatButton
                                 Name="GenerateRandomSeedButton"
+                                Grid.Column="2"
+                                Margin="8,0,0,0"
                                 Command="{Binding GenerateNewSeedCommand}"
-                                IsVisible="{Binding #RandomizeToggleButton.IsChecked}"
-                                Margin="8,0,0,0">
+                                IsVisible="{Binding #RandomizeToggleButton.IsChecked}">
                                 <icons:Icon Margin="1" Value="fa-solid fa-rotate" />
                             </RepeatButton>
                             <ToggleButton
                                 Name="RandomizeToggleButton"
-                                ToolTip.Tip="{Binding RandomizeButtonToolTip}"
+                                Grid.Column="3"
+                                Margin="8,0,0,0"
                                 IsChecked="{Binding !IsRandomizeEnabled}"
-                                Grid.Column="3" Margin="8,0,0,0">
+                                ToolTip.Tip="{Binding RandomizeButtonToolTip}">
                                 <Panel>
-                                    <icons:Icon 
-                                        Margin="1" 
-                                        Value="fa-solid fa-lock"
-                                        IsVisible="{Binding #RandomizeToggleButton.IsChecked}"/>
-                                    <icons:Icon 
-                                        Margin="1" 
-                                        Value="fa-solid fa-dice-d20"
-                                        IsVisible="{Binding !#RandomizeToggleButton.IsChecked}"/>
+                                    <icons:Icon
+                                        Margin="1"
+                                        IsVisible="{Binding #RandomizeToggleButton.IsChecked}"
+                                        Value="fa-solid fa-lock" />
+                                    <icons:Icon
+                                        Margin="1"
+                                        IsVisible="{Binding !#RandomizeToggleButton.IsChecked}"
+                                        Value="fa-solid fa-dice-d20" />
                                 </Panel>
                             </ToggleButton>
                         </Grid>

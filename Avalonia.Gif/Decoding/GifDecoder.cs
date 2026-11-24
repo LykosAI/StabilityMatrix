@@ -79,7 +79,7 @@ namespace Avalonia.Gif.Decoding
                 -1 => new GifRepeatBehavior { Count = 1 },
                 0 => new GifRepeatBehavior { LoopForever = true },
                 > 0 => new GifRepeatBehavior { Count = Header.Iterations },
-                _ => Header.IterationCount
+                _ => Header.IterationCount,
             };
 
             var pixelCount = _gifDimensions.TotalPixels;
@@ -467,7 +467,7 @@ namespace Avalonia.Gif.Decoding
                 GlobarColorTable = ProcessColorTable(ref str, tmpB, _gctSize),
                 GlobalColorTableSize = _gctSize,
                 BackgroundColorIndex = _bgIndex,
-                HeaderSize = _fileStream.Position
+                HeaderSize = _fileStream.Position,
             };
 
             ArrayPool<byte>.Shared.Return(tmpB);

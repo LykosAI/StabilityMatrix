@@ -56,9 +56,7 @@
     </controls:UserControlBase.Resources>
 
     <ScrollViewer Padding="16" VerticalScrollBarVisibility="Auto">
-        <ItemsControl 
-            ItemTemplate="{StaticResource ItemTemplate}" 
-            ItemsSource="{Binding Items}">
+        <ItemsControl ItemTemplate="{StaticResource ItemTemplate}" ItemsSource="{Binding Items}">
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
                     <StackPanel Spacing="8" />

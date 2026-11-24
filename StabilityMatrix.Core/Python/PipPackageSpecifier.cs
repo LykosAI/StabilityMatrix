@@ -55,7 +55,7 @@ public partial record PipPackageSpecifier
         {
             Name = match.Groups["package_name"].Value,
             Constraint = match.Groups["version_constraint"].Value,
-            Version = match.Groups["version"].Value
+            Version = match.Groups["version"].Value,
         };
 
         return true;

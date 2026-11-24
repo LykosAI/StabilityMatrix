@@ -8,8 +8,8 @@ namespace StabilityMatrix;
 
 public sealed partial class TextToImagePage : Page
 {
-    private TextToImageViewModel ViewModel => (TextToImageViewModel) DataContext;
-    
+    private TextToImageViewModel ViewModel => (TextToImageViewModel)DataContext;
+
     public TextToImagePage(TextToImageViewModel viewModel, PageContentDialogService pageContentDialogService)
     {
         InitializeComponent();
@@ -17,15 +17,20 @@ public sealed partial class TextToImagePage : Page
         pageContentDialogService.SetContentPresenter(PageContentDialog);
     }
 
-    private void PositivePromptBox_OnQuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
-    {
-    }
+    private void PositivePromptBox_OnQuerySubmitted(
+        AutoSuggestBox sender,
+        AutoSuggestBoxQuerySubmittedEventArgs args
+    ) { }
 
-    private void PositivePromptBox_OnSuggestionChosen(AutoSuggestBox sender, AutoSuggestBoxSuggestionChosenEventArgs args)
-    {
-    }
+    private void PositivePromptBox_OnSuggestionChosen(
+        AutoSuggestBox sender,
+        AutoSuggestBoxSuggestionChosenEventArgs args
+    ) { }
 
-    private void PositivePromptBox_OnTextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
+    private void PositivePromptBox_OnTextChanged(
+        AutoSuggestBox sender,
+        AutoSuggestBoxTextChangedEventArgs args
+    )
     {
         // Update the prompt text when the user types
         if (args.Reason == AutoSuggestionBoxTextChangeReason.UserInput)
@@ -35,15 +40,20 @@ public sealed partial class TextToImagePage : Page
         }
     }
 
-    private void NegativePromptBox_OnQuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
-    {
-    }
+    private void NegativePromptBox_OnQuerySubmitted(
+        AutoSuggestBox sender,
+        AutoSuggestBoxQuerySubmittedEventArgs args
+    ) { }
 
-    private void NegativePromptBox_OnSuggestionChosen(AutoSuggestBox sender, AutoSuggestBoxSuggestionChosenEventArgs args)
-    {
-    }
+    private void NegativePromptBox_OnSuggestionChosen(
+        AutoSuggestBox sender,
+        AutoSuggestBoxSuggestionChosenEventArgs args
+    ) { }
 
-    private void NegativePromptBox_OnTextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
+    private void NegativePromptBox_OnTextChanged(
+        AutoSuggestBox sender,
+        AutoSuggestBoxTextChangedEventArgs args
+    )
     {
         // Update the prompt text when the user types
         if (args.Reason == AutoSuggestionBoxTextChangeReason.UserInput)

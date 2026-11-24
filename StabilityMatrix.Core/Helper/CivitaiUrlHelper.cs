@@ -12,22 +12,22 @@ public static class CivitaiUrlHelper
     }
 
     /// <summary>
-    /// Returns a CivitAI CDN image url with its width transform capped at
-    /// <paramref name="maxWidth"/>. Urls without a width transform, or from
-    /// other hosts, are returned unchanged.
+    /// Returns a CivitAI CDN image url that delivers at most <paramref name="maxWidth"/> pixels wide.
+    /// The API returns <c>original=true</c> urls (full-resolution PNGs, often several MB) and those are
+    /// swapped for a <c>width=</c> transform; an existing wider <c>width=</c> transform is capped.
+    /// Urls from other hosts are returned unchanged.
     /// </summary>
     public static string CapImageWidth(string url, int maxWidth)
     {
         if (!url.Contains("image.civitai.com", StringComparison.OrdinalIgnoreCase))
             return url;
 
-        return System.Text.RegularExpressions.Regex.Replace(
-            url,
-            @"width=(\d+)",
-            match =>
-                int.TryParse(match.Groups[1].Value, out var width) && width > maxWidth
-                    ? $"width={maxWidth}"
-                    : match.Value
+        url = url.Replace("original=true", $"width={maxWidth}", StringComparison.OrdinalIgnoreCase);
+
+        return System.Text.RegularExpressions.Regex.Replace(url, @"width=(\d+)", match =>
+            int.TryParse(match.Groups[1].Value, out var width) && width > maxWidth
+                ? $"width={maxWidth}"
+                : match.Value
         );
     }
 

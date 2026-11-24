@@ -9,11 +9,11 @@
     Title="Log Viewer"
     Width="900"
     Height="750"
-    Focusable="True"
     d:DesignHeight="450"
     d:DesignWidth="800"
     x:CompileBindings="True"
     x:DataType="vm:LogWindowViewModel"
+    Focusable="True"
     WindowStartupLocation="CenterScreen"
     mc:Ignorable="d">
 

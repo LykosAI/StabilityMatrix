@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Controls;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using Microsoft.Extensions.DependencyInjection;
@@ -28,20 +29,20 @@ public partial class BetterDownloadableComboBox : BetterComboBox
         // On downloadable added
         if (e.AddedItems.Count > 0 && e.AddedItems[0] is IDownloadableResource { IsDownloadable: true } item)
         {
-            // Reset the selection
             e.Handled = true;
 
-            if (
+            var restoreItem =
                 e.RemovedItems.Count > 0
                 && e.RemovedItems[0] is IDownloadableResource { IsDownloadable: false } removedItem
-            )
-            {
-                SelectedItem = removedItem;
-            }
-            else
-            {
-                SelectedItem = null;
-            }
+                    ? (object)removedItem
+                    : null;
+
+            // Reset the selection AFTER the control finishes committing it. Assigning
+            // SelectedItem synchronously inside the SelectionChanged handler races that
+            // commit; when the control wins, the downloadable stays "selected" and
+            // re-clicking it raises no SelectionChanged at all — the historical
+            // "clicking a cloud entry sometimes does nothing" flakiness.
+            Dispatcher.UIThread.Post(() => SelectedItem = restoreItem);
 
             // Show dialog to download the model
             PromptDownloadCommand.ExecuteAsync(item).SafeFireAndForget();

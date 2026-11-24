@@ -24,7 +24,7 @@ public class PipStep : IPackageStep
             _ when Args.Contains("install") => "Installing Pip Packages",
             _ when Args.Contains("uninstall") => "Uninstalling Pip Packages",
             _ when Args.Contains("-U") || Args.Contains("--upgrade") => "Updating Pip Packages",
-            _ => "Running Pip"
+            _ => "Running Pip",
         };
 
     /// <inheritdoc />

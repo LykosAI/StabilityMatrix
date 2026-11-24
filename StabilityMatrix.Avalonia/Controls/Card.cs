@@ -10,8 +10,10 @@ public class Card : ContentControl
     protected override Type StyleKeyOverride => typeof(Card);
 
     // ReSharper disable MemberCanBePrivate.Global
-    public static readonly StyledProperty<bool> IsCardVisualsEnabledProperty =
-        AvaloniaProperty.Register<Card, bool>("IsCardVisualsEnabled", true);
+    public static readonly StyledProperty<bool> IsCardVisualsEnabledProperty = AvaloniaProperty.Register<
+        Card,
+        bool
+    >("IsCardVisualsEnabled", true);
 
     /// <summary>
     /// Whether to show card visuals.

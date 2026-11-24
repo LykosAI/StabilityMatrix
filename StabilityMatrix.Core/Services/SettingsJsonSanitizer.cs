@@ -223,8 +223,7 @@ public static class SettingsJsonSanitizer
                     normalized.Append(c);
                     stack.Push(']');
                     break;
-                case '}'
-                or ']':
+                case '}' or ']':
                     ConsumeClosingToken(c, stack, normalized);
                     break;
                 default:

@@ -352,9 +352,7 @@ internal class MemoryImageCache : IImageCache
 
     private static IImage? LoadLocalImageWithSkia(Uri uri, int decodeWidth)
     {
-        using var skFileStream = new SKFileStream(uri.LocalPath);
-
-        return SKBitmap.Decode(skFileStream).ToAvaloniaImageScaled(decodeWidth);
+        return LocalThumbnailCache.Default.Decode(uri.LocalPath, decodeWidth).ToAvaloniaImage();
     }
 
     private async Task<IImage?> DownloadImageAsync(

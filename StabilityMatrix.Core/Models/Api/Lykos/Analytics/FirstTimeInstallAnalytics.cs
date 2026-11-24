@@ -7,6 +7,4 @@ public class FirstTimeInstallAnalytics : AnalyticsRequest
     public IEnumerable<string>? SelectedRecommendedModels { get; set; }
 
     public bool FirstTimeSetupSkipped { get; set; }
-
-    public override string Type { get; set; } = "first-time-install";
 }

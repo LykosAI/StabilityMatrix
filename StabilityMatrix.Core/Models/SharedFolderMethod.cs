@@ -4,5 +4,5 @@ public enum SharedFolderMethod
 {
     Symlink,
     Configuration,
-    None
+    None,
 }

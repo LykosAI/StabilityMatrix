@@ -1,15 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RuntimeIdentifiers>osx-x64;osx-arm64</RuntimeIdentifiers>
+  </PropertyGroup>
 
-    <PropertyGroup>
-        <RuntimeIdentifiers>osx-x64;osx-arm64</RuntimeIdentifiers>
-    </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\StabilityMatrix.Native.Abstractions\StabilityMatrix.Native.Abstractions.csproj" />
+  </ItemGroup>
 
-    <ItemGroup>
-      <ProjectReference Include="..\StabilityMatrix.Native.Abstractions\StabilityMatrix.Native.Abstractions.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <PackageReference Include="JetBrains.Annotations" PrivateAssets="all" />
-    </ItemGroup>
-
+  <ItemGroup>
+    <PackageReference Include="JetBrains.Annotations" PrivateAssets="all" />
+  </ItemGroup>
 </Project>

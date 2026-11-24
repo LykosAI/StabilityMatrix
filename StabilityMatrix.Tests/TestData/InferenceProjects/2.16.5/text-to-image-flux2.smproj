@@ -1,0 +1,150 @@
+{
+  "Version": 2,
+  "ProjectType": "TextToImage",
+  "State": {
+    "Modules": {
+      "$values": [
+        {
+          "$values": [
+            {
+              "Scale": 2,
+              "SelectedUpscaler": {
+                "Name": "nearest-exact",
+                "Type": 1,
+                "DownloadableResource": null,
+                "IsDownloadable": false
+              },
+              "$type": "Upscaler"
+            },
+            {
+              "GroupedResolutionsByAspectRatio": {},
+              "DimensionStepChange": 0,
+              "Modules": {
+                "$values": []
+              },
+              "IsRefinerStepsEnabled": false,
+              "Steps": 20,
+              "RefinerSteps": 10,
+              "IsDenoiseStrengthEnabled": true,
+              "DenoiseStrength": 0.699999988079071,
+              "IsCfgScaleEnabled": false,
+              "CfgScale": 5,
+              "IsDimensionsEnabled": false,
+              "Width": 1024,
+              "Height": 1024,
+              "IsSamplerSelectionEnabled": false,
+              "SelectedSampler": {
+                "Name": "euler_ancestral"
+              },
+              "IsSchedulerSelectionEnabled": false,
+              "SelectedScheduler": {
+                "Name": "normal"
+              },
+              "InheritPrimarySamplerAddons": true,
+              "EnableAddons": true,
+              "SelectedModelType": "SDXL",
+              "IsLengthEnabled": false,
+              "Length": 0,
+              "$type": "Sampler"
+            }
+          ],
+          "IsEnabled": false,
+          "$type": "HiresFixModule"
+        },
+        {
+          "$values": [
+            {
+              "Scale": 2,
+              "SelectedUpscaler": {
+                "Name": "nearest-exact",
+                "Type": 1,
+                "DownloadableResource": null,
+                "IsDownloadable": false
+              },
+              "$type": "Upscaler"
+            }
+          ],
+          "IsEnabled": false,
+          "$type": "UpscalerModule"
+        }
+      ]
+    },
+    "Model": {
+      "SelectedModelName": "custom_unet_v3.safetensors",
+      "SelectedRefinerName": "@none",
+      "SelectedVaeName": "flux2-vae.safetensors",
+      "SelectedClip1Name": "mistral_3_small_flux2_fp8.safetensors",
+      "SelectedClip2Name": null,
+      "SelectedClip3Name": null,
+      "SelectedClip4Name": null,
+      "TextEncoderNames": [
+        "mistral_3_small_flux2_fp8.safetensors"
+      ],
+      "SelectedClipType": "flux2",
+      "SelectedWorkflowProfile": 3,
+      "SelectedDType": null,
+      "Shift": 3,
+      "ModelLoader": 3,
+      "ClipSkip": 1,
+      "IsVaeSelectionEnabled": true,
+      "IsRefinerSelectionEnabled": false,
+      "IsClipSkipEnabled": false,
+      "IsExtraNetworksEnabled": false,
+      "IsModelLoaderSelectionEnabled": false,
+      "IsClipModelSelectionEnabled": true,
+      "ShowRefinerOption": true,
+      "IsAdvancedOptionsExpanded": false,
+      "IsTextEncodersExpanded": true,
+      "ExtraNetworks": {
+        "$values": []
+      }
+    },
+    "Sampler": {
+      "GroupedResolutionsByAspectRatio": {},
+      "DimensionStepChange": 0,
+      "Modules": {
+        "$values": []
+      },
+      "IsRefinerStepsEnabled": false,
+      "Steps": 23,
+      "RefinerSteps": 10,
+      "IsDenoiseStrengthEnabled": false,
+      "DenoiseStrength": 1,
+      "IsCfgScaleEnabled": true,
+      "CfgScale": 4,
+      "IsDimensionsEnabled": true,
+      "Width": 1024,
+      "Height": 1024,
+      "IsSamplerSelectionEnabled": true,
+      "SelectedSampler": {
+        "Name": "dpmpp_2m"
+      },
+      "IsSchedulerSelectionEnabled": true,
+      "SelectedScheduler": {
+        "Name": "karras"
+      },
+      "InheritPrimarySamplerAddons": true,
+      "EnableAddons": true,
+      "SelectedModelType": "SDXL",
+      "IsLengthEnabled": false,
+      "Length": 0
+    },
+    "Prompt": {
+      "Prompt": "a white wolf in a snowy forest, \u003Clora:detail_tweaker_xl:0.8\u003E, detailed fur",
+      "NegativePrompt": "blurry, lowres",
+      "ModulesCardState": {
+        "$values": []
+      }
+    },
+    "BatchSize": {
+      "BatchSize": 1,
+      "BatchCount": 1,
+      "IsBatchIndexEnabled": false,
+      "BatchIndex": 1
+    },
+    "Seed": {
+      "Seed": "424242",
+      "IsRandomizeEnabled": true
+    }
+  }
+}

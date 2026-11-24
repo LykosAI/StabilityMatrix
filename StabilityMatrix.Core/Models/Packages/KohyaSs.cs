@@ -164,8 +164,7 @@ public class KohyaSs(
         else if (Compat.IsWindows)
         {
             // Windows path is a perfect fit for the orchestrator.
-            var isLegacyNvidia =
-                SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu()
+            var isLegacyNvidia = SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu()
                 ?? HardwareHelper.HasLegacyNvidiaGpu();
 
             var config = new PipInstallConfig

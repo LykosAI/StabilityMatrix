@@ -81,7 +81,7 @@ public partial class ProcessArgs : OneOfBase<string, ImmutableArray<Argument>>, 
     /// </summary>
     [Pure]
     public ImmutableArray<Argument> ToArgumentArray() =>
-        Match(str => [..ParseArguments(str)], argsArray => argsArray);
+        Match(str => [.. ParseArguments(str)], argsArray => argsArray);
 
     IEnumerator IEnumerable.GetEnumerator()
     {

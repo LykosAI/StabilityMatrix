@@ -251,7 +251,7 @@ public static partial class ArchiveHelper
         var progressMonitor = progress switch
         {
             null => null,
-            _ => new Timer(TimeSpan.FromMilliseconds(36))
+            _ => new Timer(TimeSpan.FromMilliseconds(36)),
         };
 
         if (progressMonitor != null)
@@ -264,28 +264,29 @@ public static partial class ArchiveHelper
             };
         }
 
-        await Task.Factory.StartNew(
-            () =>
-            {
-                var extractOptions = new ExtractionOptions { Overwrite = true, ExtractFullPath = true, };
-                using var stream = File.OpenRead(archivePath);
-                using var archive = ReaderFactory.Open(stream);
-
-                // Start the progress reporting timer
-                progressMonitor?.Start();
-
-                while (archive.MoveToNextEntry())
+        await Task
+            .Factory.StartNew(
+                () =>
                 {
-                    var entry = archive.Entry;
-                    if (!entry.IsDirectory)
+                    var extractOptions = new ExtractionOptions { Overwrite = true, ExtractFullPath = true };
+                    using var stream = File.OpenRead(archivePath);
+                    using var archive = ReaderFactory.Open(stream);
+
+                    // Start the progress reporting timer
+                    progressMonitor?.Start();
+
+                    while (archive.MoveToNextEntry())
                     {
-                        count += (ulong)entry.CompressedSize;
+                        var entry = archive.Entry;
+                        if (!entry.IsDirectory)
+                        {
+                            count += (ulong)entry.CompressedSize;
+                        }
+                        archive.WriteEntryToDirectory(outputDirectory, extractOptions);
                     }
-                    archive.WriteEntryToDirectory(outputDirectory, extractOptions);
-                }
-            },
-            TaskCreationOptions.LongRunning
-        )
+                },
+                TaskCreationOptions.LongRunning
+            )
             .ConfigureAwait(false);
 
         progress?.Report(new ProgressReport(progress: 1, message: "Done extracting"));

@@ -35,9 +35,9 @@ public class BetterEntranceNavigationTransition : BaseTransitionInfo
                     {
                         new Setter(Visual.OpacityProperty, 0.0),
                         new Setter(TranslateTransform.XProperty, FromHorizontalOffset),
-                        new Setter(TranslateTransform.YProperty, FromVerticalOffset)
+                        new Setter(TranslateTransform.YProperty, FromVerticalOffset),
                     },
-                    Cue = new Cue(0d)
+                    Cue = new Cue(0d),
                 },
                 new KeyFrame
                 {
@@ -45,13 +45,13 @@ public class BetterEntranceNavigationTransition : BaseTransitionInfo
                     {
                         new Setter(Visual.OpacityProperty, 1d),
                         new Setter(TranslateTransform.XProperty, 0.0),
-                        new Setter(TranslateTransform.YProperty, 0.0)
+                        new Setter(TranslateTransform.YProperty, 0.0),
                     },
-                    Cue = new Cue(1d)
-                }
+                    Cue = new Cue(1d),
+                },
             },
             Duration = Duration,
-            FillMode = FillMode.Forward
+            FillMode = FillMode.Forward,
         };
 
         await animation.RunAsync(ctrl, cancellationToken);

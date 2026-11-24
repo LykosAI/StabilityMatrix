@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Globalization;
@@ -37,6 +37,7 @@ public partial class ModelIndexService : IModelIndexService
     private HashSet<string>? _modelIndexBlake3Hashes;
     private HashSet<string>? _modelIndexSha256Hashes;
     private HashSet<string>? _modelIndexCivArchiveUrls;
+    private HashSet<string>? _modelIndexCategories;
 
     /// <summary>
     /// Whether the database has been initially loaded.
@@ -61,6 +62,9 @@ public partial class ModelIndexService : IModelIndexService
 
     public IReadOnlySet<string> ModelIndexCivArchiveUrls =>
         _modelIndexCivArchiveUrls ??= CollectCivArchiveUrls(ModelIndex.Values.SelectMany(x => x));
+
+    public IReadOnlySet<string> ModelIndexCategories =>
+        _modelIndexCategories ??= CollectCategories(ModelIndex.Values.SelectMany(x => x));
 
     [AutoPostConstruct]
     private void Initialize()
@@ -152,10 +156,10 @@ public partial class ModelIndexService : IModelIndexService
         foreach (var modelFile in modelFiles)
         {
             var pathParts = modelFile.RelativePath.Split(Path.DirectorySeparatorChar);
-            var currentFolder = rootFolders.GetOrAdd(
-                modelFile.SharedFolderType,
-                _ => new LocalModelFolder { RelativePath = pathParts[0] }
-            );
+            var currentFolder = rootFolders.GetOrAdd(modelFile.SharedFolderType, _ => new LocalModelFolder
+            {
+                RelativePath = pathParts[0],
+            });
             for (var i = 1; i < pathParts.Length - 1; i++)
             {
                 var folderName = pathParts[i];
@@ -467,112 +471,108 @@ public partial class ModelIndexService : IModelIndexService
             _ => 1,
         };
 
-        Parallel.ForEach(
-            partitioner,
-            new ParallelOptions { MaxDegreeOfParallelism = numThreads },
-            path =>
+        Parallel.ForEach(partitioner, new ParallelOptions { MaxDegreeOfParallelism = numThreads }, path =>
+        {
+            // Skip if not supported extension
+            if (!LocalModelFile.SupportedCheckpointExtensions.Contains(Path.GetExtension(path)))
             {
-                // Skip if not supported extension
-                if (!LocalModelFile.SupportedCheckpointExtensions.Contains(Path.GetExtension(path)))
+                return;
+            }
+
+            var relativePath = Path.GetRelativePath(modelsDir, path);
+
+            // Get shared folder name
+            var sharedFolderName = relativePath.Split(
+                Path.DirectorySeparatorChar,
+                StringSplitOptions.RemoveEmptyEntries
+            )[0];
+            // Try Convert to enum
+            var sharedFolderType = ParseSharedFolderType(sharedFolderName);
+
+            // Since RelativePath is the database key, for LiteDB this is limited to 1021 bytes
+            if (Encoding.UTF8.GetByteCount(relativePath) is var byteCount and > 1021)
+            {
+                logger.LogWarning(
+                    "Skipping model {Path} because it's path is too long ({Length} bytes)",
+                    relativePath,
+                    byteCount
+                );
+
+                return;
+            }
+
+            var localModel = new LocalModelFile
+            {
+                RelativePath = relativePath,
+                SharedFolderType = sharedFolderType,
+            };
+
+            // Try to find a connected model info
+            var fileDirectory = new DirectoryPath(Path.GetDirectoryName(path)!);
+            var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(path);
+            var jsonPath = fileDirectory.JoinFile($"{fileNameWithoutExtension}.cm-info.json");
+
+            if (paths.Contains(jsonPath))
+            {
+                try
                 {
-                    return;
-                }
+                    using var stream = jsonPath.Info.OpenRead();
 
-                var relativePath = Path.GetRelativePath(modelsDir, path);
-
-                // Get shared folder name
-                var sharedFolderName = relativePath.Split(
-                    Path.DirectorySeparatorChar,
-                    StringSplitOptions.RemoveEmptyEntries
-                )[0];
-                // Try Convert to enum
-                var sharedFolderType = ParseSharedFolderType(sharedFolderName);
-
-                // Since RelativePath is the database key, for LiteDB this is limited to 1021 bytes
-                if (Encoding.UTF8.GetByteCount(relativePath) is var byteCount and > 1021)
-                {
-                    logger.LogWarning(
-                        "Skipping model {Path} because it's path is too long ({Length} bytes)",
-                        relativePath,
-                        byteCount
+                    var connectedModelInfo = JsonSerializer.Deserialize(
+                        stream,
+                        ConnectedModelInfoSerializerContext.Default.ConnectedModelInfo
                     );
 
-                    return;
-                }
-
-                var localModel = new LocalModelFile
-                {
-                    RelativePath = relativePath,
-                    SharedFolderType = sharedFolderType,
-                };
-
-                // Try to find a connected model info
-                var fileDirectory = new DirectoryPath(Path.GetDirectoryName(path)!);
-                var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(path);
-                var jsonPath = fileDirectory.JoinFile($"{fileNameWithoutExtension}.cm-info.json");
-
-                if (paths.Contains(jsonPath))
-                {
-                    try
+                    // Seems there is a limitation of LiteDB datetime resolution, so drop nanoseconds on load
+                    // Otherwise new loaded models with ns will cause mismatching equality with models loaded from db with no ns
+                    if (connectedModelInfo?.ImportedAt is { } importedAt && importedAt.Nanosecond != 0)
                     {
-                        using var stream = jsonPath.Info.OpenRead();
-
-                        var connectedModelInfo = JsonSerializer.Deserialize(
-                            stream,
-                            ConnectedModelInfoSerializerContext.Default.ConnectedModelInfo
-                        );
-
-                        // Seems there is a limitation of LiteDB datetime resolution, so drop nanoseconds on load
-                        // Otherwise new loaded models with ns will cause mismatching equality with models loaded from db with no ns
-                        if (connectedModelInfo?.ImportedAt is { } importedAt && importedAt.Nanosecond != 0)
-                        {
-                            connectedModelInfo.ImportedAt = new DateTimeOffset(
-                                importedAt.Year,
-                                importedAt.Month,
-                                importedAt.Day,
-                                importedAt.Hour,
-                                importedAt.Minute,
-                                importedAt.Second,
-                                importedAt.Millisecond,
-                                importedAt.Offset
-                            );
-                        }
-
-                        localModel.ConnectedModelInfo = connectedModelInfo;
-                    }
-                    catch (Exception e)
-                    {
-                        logger.LogWarning(
-                            e,
-                            "Failed to deserialize connected model info for {Path}, skipping",
-                            jsonPath
+                        connectedModelInfo.ImportedAt = new DateTimeOffset(
+                            importedAt.Year,
+                            importedAt.Month,
+                            importedAt.Day,
+                            importedAt.Hour,
+                            importedAt.Minute,
+                            importedAt.Second,
+                            importedAt.Millisecond,
+                            importedAt.Offset
                         );
                     }
+
+                    localModel.ConnectedModelInfo = connectedModelInfo;
                 }
-
-                // Try to find a preview image
-                var previewImagePath = LocalModelFile
-                    .SupportedImageExtensions.Select(ext =>
-                        fileDirectory.JoinFile($"{fileNameWithoutExtension}.preview{ext}")
-                    )
-                    .FirstOrDefault(filePath => paths.Contains(filePath));
-
-                if (previewImagePath is not null)
+                catch (Exception e)
                 {
-                    localModel.PreviewImageRelativePath = Path.GetRelativePath(modelsDir, previewImagePath);
+                    logger.LogWarning(
+                        e,
+                        "Failed to deserialize connected model info for {Path}, skipping",
+                        jsonPath
+                    );
                 }
-
-                // Try to find a config file (same name as model file but with .yaml extension)
-                var configFile = fileDirectory.JoinFile($"{fileNameWithoutExtension}.yaml");
-                if (paths.Contains(configFile))
-                {
-                    localModel.ConfigFullPath = configFile;
-                }
-
-                // Add to index
-                newIndexFlat.Add(localModel);
             }
-        );
+
+            // Try to find a preview image
+            var previewImagePath = LocalModelFile
+                .SupportedImageExtensions.Select(ext =>
+                    fileDirectory.JoinFile($"{fileNameWithoutExtension}.preview{ext}")
+                )
+                .FirstOrDefault(filePath => paths.Contains(filePath));
+
+            if (previewImagePath is not null)
+            {
+                localModel.PreviewImageRelativePath = Path.GetRelativePath(modelsDir, previewImagePath);
+            }
+
+            // Try to find a config file (same name as model file but with .yaml extension)
+            var configFile = fileDirectory.JoinFile($"{fileNameWithoutExtension}.yaml");
+            if (paths.Contains(configFile))
+            {
+                localModel.ConfigFullPath = configFile;
+            }
+
+            // Add to index
+            newIndexFlat.Add(localModel);
+        });
 
         var newIndexComplete = newIndexFlat.ToArray();
 
@@ -774,8 +774,8 @@ public partial class ModelIndexService : IModelIndexService
 
     /// <summary>
     /// Decides whether a newer installable version of a model exists on CivitAI. Prefers hash
-    /// evidence (any of the latest version's files already installed somewhere in the library);
-    /// falls back to version-id position when the latest version publishes no hashable files.
+    /// evidence (any main model variant of the latest version installed in the library);
+    /// falls back to version-id position when the latest version publishes no hashable main files.
     /// Indeterminate cases resolve to false so we never show an update badge we can't substantiate.
     /// Multi-architecture models publish parallel version tracks in one list (v7_Illustrious,
     /// v1_Anima, v4_Pony, ...), so comparisons stay within the installed file's base-model track —
@@ -799,15 +799,15 @@ public partial class ModelIndexService : IModelIndexService
         if (installedVersionId != null && installedVersionId == latestVersion.Id)
             return false;
 
-        var latestHashes = (latestVersion.Files ?? [])
-            .Where(f => f.Type.IsDownloadableModelFile())
+        var latestHashes = latestVersion
+            .GetMainModelFiles(remoteModel.Type)
             .Select(f => f.Hashes?.BLAKE3)
-            .Where(hash => !string.IsNullOrEmpty(hash))
+            .Where(hash => !string.IsNullOrWhiteSpace(hash))
             .ToList();
 
         if (latestHashes.Count > 0)
         {
-            return !latestHashes.Any(hash => installedHashes.Contains(hash!));
+            return !latestVersion.IsInstalled(remoteModel.Type, installedHashes);
         }
 
         // No hash evidence — flag only when the installed version verifiably sits below the
@@ -841,11 +841,35 @@ public partial class ModelIndexService : IModelIndexService
         await LoadFromDbAsync().ConfigureAwait(false);
     }
 
+    /// <inheritdoc />
+    public async Task UpsertModelsAsync(IEnumerable<LocalModelFile> models)
+    {
+        var list = models as IReadOnlyCollection<LocalModelFile> ?? models.ToList();
+        if (list.Count == 0)
+        {
+            return;
+        }
+
+        await liteDbContext.LocalModelFiles.UpsertAsync(list).ConfigureAwait(false);
+        await LoadFromDbAsync().ConfigureAwait(false);
+    }
+
     private void OnModelIndexReset()
     {
         _modelIndexBlake3Hashes = null;
         _modelIndexSha256Hashes = null;
         _modelIndexCivArchiveUrls = null;
+        _modelIndexCategories = null;
+    }
+
+    private static HashSet<string> CollectCategories(IEnumerable<LocalModelFile> models)
+    {
+        var categories = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var model in models)
+        {
+            categories.UnionWith(model.Categories);
+        }
+        return categories;
     }
 
     private static HashSet<string> CollectModelHashes(IEnumerable<LocalModelFile> models)

@@ -2,7 +2,4 @@
 
 namespace StabilityMatrix.Services;
 
-public class PageContentDialogService : ContentDialogService
-{
-    
-}
+public class PageContentDialogService : ContentDialogService { }

@@ -32,12 +32,10 @@ public class MockInferenceClientManager : InferenceClientManager
             return Task.CompletedTask;
         }
 
-        Models.Add(
-            [
-                HybridModelFile.FromRemote("v1-5-pruned-emaonly.safetensors"),
-                HybridModelFile.FromRemote("art-shaper1.safetensors"),
-            ]
-        );
+        Models.Add([
+            HybridModelFile.FromRemote("v1-5-pruned-emaonly.safetensors"),
+            HybridModelFile.FromRemote("art-shaper1.safetensors"),
+        ]);
 
         return Task.CompletedTask;
     }

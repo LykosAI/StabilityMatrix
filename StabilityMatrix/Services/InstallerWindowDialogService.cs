@@ -2,7 +2,4 @@
 
 namespace StabilityMatrix.Services;
 
-public class InstallerWindowDialogService : ContentDialogService
-{
-    
-}
+public class InstallerWindowDialogService : ContentDialogService { }

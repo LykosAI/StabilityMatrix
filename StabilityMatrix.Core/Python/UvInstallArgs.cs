@@ -202,24 +202,23 @@ public record UvInstallArgs : ProcessArgsBuilder
         return this with
         {
             Arguments = Arguments
-                .Where(
-                    arg =>
-                        arg.HasKey
-                            ? (arg.Key != argumentKey)
-                            : (
-                                arg.Value != argumentKey
-                                && !(
-                                    arg.Value.StartsWith($"{argumentKey}==")
-                                    || arg.Value.StartsWith($"{argumentKey}~=")
-                                    || arg.Value.StartsWith($"{argumentKey}>=")
-                                    || arg.Value.StartsWith($"{argumentKey}<=")
-                                    || arg.Value.StartsWith($"{argumentKey}!=")
-                                    || arg.Value.StartsWith($"{argumentKey}>")
-                                    || arg.Value.StartsWith($"{argumentKey}<")
-                                )
+                .Where(arg =>
+                    arg.HasKey
+                        ? (arg.Key != argumentKey)
+                        : (
+                            arg.Value != argumentKey
+                            && !(
+                                arg.Value.StartsWith($"{argumentKey}==")
+                                || arg.Value.StartsWith($"{argumentKey}~=")
+                                || arg.Value.StartsWith($"{argumentKey}>=")
+                                || arg.Value.StartsWith($"{argumentKey}<=")
+                                || arg.Value.StartsWith($"{argumentKey}!=")
+                                || arg.Value.StartsWith($"{argumentKey}>")
+                                || arg.Value.StartsWith($"{argumentKey}<")
                             )
+                        )
                 )
-                .ToImmutableList()
+                .ToImmutableList(),
         };
     }
 

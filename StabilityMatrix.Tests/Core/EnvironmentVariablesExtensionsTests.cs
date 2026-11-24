@@ -119,15 +119,11 @@ public class EnvironmentVariablesExtensionsTests
         );
 
         string? valueDuringAction = null;
-        await venvRunner.RunWithTemporaryEnvironmentVariableAsync(
-            "UV_SKIP_WHEEL_FILENAME_CHECK",
-            "1",
-            () =>
-            {
-                valueDuringAction = venvRunner.EnvironmentVariables["UV_SKIP_WHEEL_FILENAME_CHECK"];
-                return Task.CompletedTask;
-            }
-        );
+        await venvRunner.RunWithTemporaryEnvironmentVariableAsync("UV_SKIP_WHEEL_FILENAME_CHECK", "1", () =>
+        {
+            valueDuringAction = venvRunner.EnvironmentVariables["UV_SKIP_WHEEL_FILENAME_CHECK"];
+            return Task.CompletedTask;
+        });
 
         Assert.AreEqual("1", valueDuringAction);
         Assert.AreEqual("0", venvRunner.EnvironmentVariables["UV_SKIP_WHEEL_FILENAME_CHECK"]);
@@ -138,10 +134,8 @@ public class EnvironmentVariablesExtensionsTests
     {
         var venvRunner = CreateFakeVenvRunner(ImmutableDictionary<string, string>.Empty);
 
-        await venvRunner.RunWithTemporaryEnvironmentVariableAsync(
-            "UV_SKIP_WHEEL_FILENAME_CHECK",
-            "1",
-            () => Task.CompletedTask
+        await venvRunner.RunWithTemporaryEnvironmentVariableAsync("UV_SKIP_WHEEL_FILENAME_CHECK", "1", () =>
+            Task.CompletedTask
         );
 
         Assert.IsFalse(venvRunner.EnvironmentVariables.ContainsKey("UV_SKIP_WHEEL_FILENAME_CHECK"));
@@ -155,10 +149,8 @@ public class EnvironmentVariablesExtensionsTests
         );
 
         await Assert.ThrowsExceptionAsync<InvalidOperationException>(() =>
-            venvRunner.RunWithTemporaryEnvironmentVariableAsync(
-                "UV_SKIP_WHEEL_FILENAME_CHECK",
-                "1",
-                () => throw new InvalidOperationException()
+            venvRunner.RunWithTemporaryEnvironmentVariableAsync("UV_SKIP_WHEEL_FILENAME_CHECK", "1", () =>
+                throw new InvalidOperationException()
             )
         );
 

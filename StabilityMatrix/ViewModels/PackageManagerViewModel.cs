@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.IO;
-using System.Threading.Tasks;
-using StabilityMatrix.Helper;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -14,6 +13,7 @@ using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Services;
+using StabilityMatrix.Helper;
 using Wpf.Ui.Contracts;
 using Wpf.Ui.Controls;
 using Wpf.Ui.Controls.ContentDialogControl;
@@ -35,34 +35,40 @@ public partial class PackageManagerViewModel : ObservableObject
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ProgressBarVisibility))]
     private int progressValue;
-    
+
     [ObservableProperty]
     private InstalledPackage selectedPackage;
-    
+
     [ObservableProperty]
     private string progressText;
-    
+
     [ObservableProperty]
     private bool isIndeterminate;
 
     [ObservableProperty]
     private string installButtonText;
 
-    [ObservableProperty] 
+    [ObservableProperty]
     private bool installButtonEnabled;
 
-    [ObservableProperty] 
+    [ObservableProperty]
     private Visibility installButtonVisibility;
 
-    [ObservableProperty] 
+    [ObservableProperty]
     private bool isUninstalling;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(SelectedPackage))]
     private bool updateAvailable;
 
-    public PackageManagerViewModel(ILogger<PackageManagerViewModel> logger, ISettingsManager settingsManager,
-        IPackageFactory packageFactory, IDialogFactory dialogFactory, IContentDialogService contentDialogService, ISnackbarService snackbarService)
+    public PackageManagerViewModel(
+        ILogger<PackageManagerViewModel> logger,
+        ISettingsManager settingsManager,
+        IPackageFactory packageFactory,
+        IDialogFactory dialogFactory,
+        IContentDialogService contentDialogService,
+        ISnackbarService snackbarService
+    )
     {
         this.logger = logger;
         this.settingsManager = settingsManager;
@@ -86,7 +92,7 @@ public partial class PackageManagerViewModel : ObservableObject
         {
             SelectedPackage = new InstalledPackage
             {
-                DisplayName = "Click \"Add Package\" to install a package"
+                DisplayName = "Click \"Add Package\" to install a package",
             };
             InstallButtonVisibility = Visibility.Collapsed;
         }
@@ -100,22 +106,23 @@ public partial class PackageManagerViewModel : ObservableObject
         {
             SelectedPackage = new InstalledPackage
             {
-                DisplayName = "Click \"Add Package\" to install a package"
+                DisplayName = "Click \"Add Package\" to install a package",
             };
             InstallButtonVisibility = Visibility.Collapsed;
-            
+
             return;
         }
-        
-        
+
         foreach (var packageToUpdate in installedPackages)
         {
             var basePackage = packageFactory.FindPackageByName(packageToUpdate.PackageName);
-            if (basePackage == null) continue;
-            
-            var canCheckUpdate = packageToUpdate.LastUpdateCheck == null ||
-                            packageToUpdate.LastUpdateCheck.Value.AddMinutes(MinutesToWaitForUpdateCheck) <
-                            DateTimeOffset.Now;
+            if (basePackage == null)
+                continue;
+
+            var canCheckUpdate =
+                packageToUpdate.LastUpdateCheck == null
+                || packageToUpdate.LastUpdateCheck.Value.AddMinutes(MinutesToWaitForUpdateCheck)
+                    < DateTimeOffset.Now;
             if (canCheckUpdate)
             {
                 var hasUpdate = await basePackage.CheckForUpdates(packageToUpdate.DisplayName);
@@ -127,23 +134,25 @@ public partial class PackageManagerViewModel : ObservableObject
             Packages.Add(packageToUpdate);
         }
 
-        SelectedPackage =
-            installedPackages.FirstOrDefault(x => x.Id == settingsManager.Settings.ActiveInstalledPackageId) ??
-            Packages[0];
+        SelectedPackage = installedPackages.FirstOrDefault(x =>
+            x.Id == settingsManager.Settings.ActiveInstalledPackageId
+        ) ?? Packages[0];
     }
 
     public ObservableCollection<InstalledPackage> Packages { get; }
 
     partial void OnSelectedPackageChanged(InstalledPackage? value)
     {
-        if (value == null) return;
-        
+        if (value == null)
+            return;
+
         UpdateAvailable = value.UpdateAvailable;
         InstallButtonText = value.UpdateAvailable ? "Update" : "Launch";
         InstallButtonVisibility = Visibility.Visible;
     }
 
-    public Visibility ProgressBarVisibility => ProgressValue > 0 || IsIndeterminate ? Visibility.Visible : Visibility.Collapsed;
+    public Visibility ProgressBarVisibility =>
+        ProgressValue > 0 || IsIndeterminate ? Visibility.Visible : Visibility.Collapsed;
 
     [RelayCommand]
     private async Task Install()
@@ -167,10 +176,11 @@ public partial class PackageManagerViewModel : ObservableObject
             logger.LogError("No package selected to uninstall");
             return;
         }
-        
+
         var dialog = contentDialogService.CreateDialog();
         dialog.Title = "Are you sure?";
-        dialog.Content = "This will delete all folders in the package directory, including any generated images in that directory as well as any files you may have added.";
+        dialog.Content =
+            "This will delete all folders in the package directory, including any generated images in that directory as well as any files you may have added.";
         dialog.PrimaryButtonText = "Yes, delete it";
         dialog.CloseButtonText = "No, keep it";
         var result = await dialog.ShowAsync();
@@ -179,14 +189,22 @@ public partial class PackageManagerViewModel : ObservableObject
         {
             IsUninstalling = true;
             InstallButtonEnabled = false;
-            var deleteTask = DeleteDirectoryAsync(Path.Combine(settingsManager.LibraryDir,
-                SelectedPackage.LibraryPath));
-            var taskResult = await snackbarService.TryAsync(deleteTask,
-                "Some files could not be deleted. Please close any open files in the package directory and try again.");
+            var deleteTask = DeleteDirectoryAsync(
+                Path.Combine(settingsManager.LibraryDir, SelectedPackage.LibraryPath)
+            );
+            var taskResult = await snackbarService.TryAsync(
+                deleteTask,
+                "Some files could not be deleted. Please close any open files in the package directory and try again."
+            );
             if (taskResult.IsSuccessful)
             {
-                snackbarService.ShowSnackbarAsync($"Package {SelectedPackage.DisplayName} uninstalled", "Success",
-                    ControlAppearance.Success).SafeFireAndForget();
+                snackbarService
+                    .ShowSnackbarAsync(
+                        $"Package {SelectedPackage.DisplayName} uninstalled",
+                        "Success",
+                        ControlAppearance.Success
+                    )
+                    .SafeFireAndForget();
 
                 settingsManager.Transaction(settings =>
                 {
@@ -198,7 +216,7 @@ public partial class PackageManagerViewModel : ObservableObject
             InstallButtonEnabled = true;
         }
     }
-    
+
     /// <summary>
     /// Deletes a directory and all of its contents recursively.
     /// Uses Polly to retry the deletion if it fails, up to 5 times with an exponential backoff.
@@ -206,15 +224,21 @@ public partial class PackageManagerViewModel : ObservableObject
     /// <param name="targetDirectory"></param>
     private Task DeleteDirectoryAsync(string targetDirectory)
     {
-        var policy = Policy.Handle<IOException>()
-            .WaitAndRetryAsync(3, attempt => TimeSpan.FromMilliseconds(50 * Math.Pow(2, attempt)),
+        var policy = Policy
+            .Handle<IOException>()
+            .WaitAndRetryAsync(
+                3,
+                attempt => TimeSpan.FromMilliseconds(50 * Math.Pow(2, attempt)),
                 onRetry: (exception, calculatedWaitDuration) =>
                 {
                     logger.LogWarning(
-                        exception, 
-                        "Deletion of {TargetDirectory} failed. Retrying in {CalculatedWaitDuration}", 
-                        targetDirectory, calculatedWaitDuration);
-                });
+                        exception,
+                        "Deletion of {TargetDirectory} failed. Retrying in {CalculatedWaitDuration}",
+                        targetDirectory,
+                        calculatedWaitDuration
+                    );
+                }
+            );
 
         return policy.ExecuteAsync(async () =>
         {
@@ -224,7 +248,7 @@ public partial class PackageManagerViewModel : ObservableObject
             });
         });
     }
-    
+
     private void DeleteDirectory(string targetDirectory)
     {
         // Skip if directory does not exist
@@ -305,11 +329,11 @@ public partial class PackageManagerViewModel : ObservableObject
             EventManager.Instance.OnGlobalProgressChanged(percent);
         });
         var updateResult = await package.Update(SelectedPackage, progress);
-        
+
         ProgressText = "Update complete";
         SelectedPackage.UpdateAvailable = false;
         UpdateAvailable = false;
-        
+
         settingsManager.UpdatePackageVersionNumber(SelectedPackage.Id, updateResult);
         await OnLoaded();
     }

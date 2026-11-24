@@ -261,6 +261,6 @@ public partial class GitVersionSelector : TemplatedControlBase
     {
         Disabled,
         Required,
-        Optional
+        Optional,
     }
 }

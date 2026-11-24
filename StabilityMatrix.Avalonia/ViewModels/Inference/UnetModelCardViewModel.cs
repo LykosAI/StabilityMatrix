@@ -138,7 +138,7 @@ public partial class UnetModelCardViewModel(IInferenceClientManager clientManage
 
         SelectedModel = model.SelectedModelName is null
             ? null
-            : ClientManager.Models.FirstOrDefault(x => x.RelativePath == model.SelectedModelName);
+            : ClientManager.UnetModels.FirstOrDefault(x => x.RelativePath == model.SelectedModelName);
 
         SelectedVae = model.SelectedVaeName is null
             ? HybridModelFile.Default
@@ -146,11 +146,11 @@ public partial class UnetModelCardViewModel(IInferenceClientManager clientManage
 
         SelectedClip1 = model.SelectedClip1Name is null
             ? HybridModelFile.None
-            : ClientManager.Models.FirstOrDefault(x => x.RelativePath == model.SelectedClip1Name);
+            : ClientManager.ClipModels.FirstOrDefault(x => x.RelativePath == model.SelectedClip1Name);
 
         SelectedClip2 = model.SelectedClip2Name is null
             ? HybridModelFile.None
-            : ClientManager.Models.FirstOrDefault(x => x.RelativePath == model.SelectedClip2Name);
+            : ClientManager.ClipModels.FirstOrDefault(x => x.RelativePath == model.SelectedClip2Name);
     }
 
     internal class UnetModelCardModel

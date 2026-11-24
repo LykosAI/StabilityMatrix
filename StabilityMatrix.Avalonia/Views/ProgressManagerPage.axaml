@@ -1,4 +1,4 @@
-<controls:UserControlBase
+﻿<controls:UserControlBase
     x:Class="StabilityMatrix.Avalonia.Views.ProgressManagerPage"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -70,6 +70,15 @@
                                                     <Run Text="{Binding Progress.Value, Mode=OneWay}" /><Run Text="%" />
                                                     <Run Text=" - " />
                                                     <Run Foreground="Lime" Text="{Binding Progress.FormattedDownloadSpeed}" />
+                                                </TextBlock>
+
+                                                <TextBlock Margin="4,0,0,0" Text="{Binding Progress.FormattedDownloadSize, Mode=OneWay, StringFormat='- {0}'}">
+                                                    <TextBlock.IsVisible>
+                                                        <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                                            <Binding Path="!IsCompleted" />
+                                                            <Binding Converter="{x:Static StringConverters.IsNotNullOrEmpty}" Path="Progress.FormattedDownloadSize" />
+                                                        </MultiBinding>
+                                                    </TextBlock.IsVisible>
                                                 </TextBlock>
 
                                             </StackPanel>
